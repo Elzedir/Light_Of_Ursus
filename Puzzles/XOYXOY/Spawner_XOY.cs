@@ -31,7 +31,7 @@ public class Spawner_XOY : MonoBehaviour
 
         InitialisePuzzle();
 
-        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 0, -30));
+        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 0, -30), Quaternion.Euler(0, 0, 0));
     }
 
     void InitialisePuzzle()

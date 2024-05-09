@@ -16,13 +16,13 @@ public class Controller_Puzzle_XOY : Controller
         if (_cooldownTimer >= _cooldown)
         {
             PlayerMove();
-            _cooldownTimer %= _cooldown;
+            _cooldown = 0;
         }
     }
 
     void PlayerMove()
     {
-        transform.position += new Vector3(_move.x, _move.y, 0);
+        transform.position += new Vector3((int)_move.x, (int)_move.y, 0);
     }
 
     //void Start()

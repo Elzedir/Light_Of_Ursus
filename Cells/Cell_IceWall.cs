@@ -21,10 +21,12 @@ public class Cell_IceWall : Cell_Base
         _spawner = spawner;
         CellHealth = cellHealth;
 
-        _spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-        _spriteRenderer.sprite = Resources.Load<Sprite>("Sprites/Grid");
+        _meshFilter = gameObject.AddComponent<MeshFilter>();
+        _meshFilter.mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        _meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_White");
 
-        _boxCollider = gameObject.AddComponent<BoxCollider2D>();
+        _boxCollider = gameObject.AddComponent<BoxCollider>();
         _boxCollider.size = new Vector2(0.75f, 0.75f);
         _boxCollider.isTrigger = true;
 
@@ -74,28 +76,29 @@ public class Cell_IceWall : Cell_Base
     IEnumerator AutoBreak()
     {
         ChangeColour(1);
-        List<Sprite> cracks = new();
+        List<Material> cracks = new();
 
-        cracks.Add(Resources.Load<Sprite>("Sprites/Grid"));
-        cracks.Add(Resources.Load<Sprite>("Sprites/Grid_OpenOneSide"));
-        cracks.Add(Resources.Load<Sprite>("Sprites/Grid_OpenTwoSides"));
-        cracks.Add(Resources.Load<Sprite>("Sprites/Grid_OpenThreeSides"));
-        cracks.Add(Resources.Load<Sprite>("Sprites/Grid_OpenAllSides"));
+        cracks.Add(Resources.Load<Material>("Sprites/Grid"));
+        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenOneSide"));
+        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenTwoSides"));
+        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenThreeSides"));
+        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenAllSides"));
 
-        foreach (Sprite sprite in cracks)
+        foreach (Material material in cracks)
         {
-            _spriteRenderer.sprite = sprite;
+            _meshRenderer.material = material;
             yield return new WaitForSeconds(1f);
         }
 
-        _spriteRenderer.color = Color.black;
+        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_Black");
 
         Break();
     }
 
     public void ChangeColour(float colourScale)
     {
-        _spriteRenderer.color = new Color(colourScale, colourScale, colourScale);
+        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_Test");
+        _meshRenderer.material.color = new Color(colourScale, colourScale, colourScale);
     }
 
     IEnumerator _healthCooldown()
@@ -106,7 +109,7 @@ public class Cell_IceWall : Cell_Base
 
     public void StaminaFinishCell()
     {
-        MarkCell(Color.red);
+        MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
         _staminaFinishCell = true;
     }
 }

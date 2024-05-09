@@ -8,21 +8,19 @@ public class Column : MonoBehaviour
     public Vector3 Move;
     public float Speed;
 
-    public void Initialise(float columnHeight, Transform spawner, Sprite sprite, float speed)
+    public void Initialise(float columnHeight, Transform spawner, Mesh mesh, Material material,  float speed)
     {
         transform.parent = spawner.transform;
         transform.localPosition = new Vector3(0, spawner.localPosition.y + columnHeight / 2, 0);
-        transform.localScale = new Vector3(1, columnHeight, 1);
+        transform.localScale = new Vector3(1, Mathf.Abs(columnHeight), 1);
 
-        SpriteRenderer columnSprite = gameObject.AddComponent<SpriteRenderer>();
-        columnSprite.sprite = sprite;
-        columnSprite.sortingLayerName = "Actors";
+        gameObject.AddComponent<MeshFilter>().mesh = mesh;
+        gameObject.AddComponent<MeshRenderer>().material = material;
+        gameObject.AddComponent<BoxCollider>();
 
-        gameObject.AddComponent<BoxCollider2D>();
-
-        Rigidbody2D columnBody = gameObject.AddComponent<Rigidbody2D>();
-        columnBody.gravityScale = 0;
-        columnBody.mass = 1000;
+        //Rigidbody columnBody = gameObject.AddComponent<Rigidbody>();
+        //columnBody.useGravity = false;
+        //columnBody.mass = 1000;
 
         Speed = speed;
     }

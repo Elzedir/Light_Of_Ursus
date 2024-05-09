@@ -7,15 +7,14 @@ public class Bullet : MonoBehaviour
     public Vector3 Move;
     public float Speed;
 
-    public void Initialise(Sprite sprite, Vector3 move, Vector3 spawnPosition, float speed = 3)
+    public void Initialise(Mesh mesh, Material material, Vector3 move, Vector3 spawnPosition, float speed = 2)
     {
-        transform.localScale = new Vector3(0.2f, 0.2f, 1);
+        transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
         transform.position = new Vector3(spawnPosition.x + 0.5f, spawnPosition.y, spawnPosition.z);
 
-        SpriteRenderer bulletSprite = gameObject.AddComponent<SpriteRenderer>();
-        bulletSprite.sprite = sprite;
-
-        gameObject.AddComponent<BoxCollider2D>();
+        gameObject.AddComponent<MeshFilter>().mesh = mesh;
+        gameObject.AddComponent<MeshRenderer>().material = material;
+        gameObject.AddComponent<BoxCollider>();
 
         Move = move;
         Speed = speed;
@@ -26,7 +25,7 @@ public class Bullet : MonoBehaviour
         if (Move == Vector3.zero) Move = Vector3.right; transform.position += (Move.normalized * Speed * Time.deltaTime);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.GetComponent<Mine>() 
             || collision.gameObject.GetComponent<Column>() 

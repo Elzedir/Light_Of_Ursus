@@ -4,22 +4,35 @@ using UnityEngine;
 
 public class Cell_Base : MonoBehaviour
 {
-    protected SpriteRenderer _spriteRenderer;
-    protected BoxCollider2D _boxCollider;
+    protected MeshFilter _meshFilter;
+    protected Mesh _previousMesh;
+    protected MeshRenderer _meshRenderer;
+    protected BoxCollider _boxCollider;
     public Vector3Int Position { get; protected set; }
 
     public virtual void Show()
     {
-        _spriteRenderer.enabled = true;
+        _meshRenderer.enabled = true;
     }
 
     public virtual void Hide()
     {
-        _spriteRenderer.enabled = false;
+        _meshRenderer.enabled = false;
     }
 
-    public virtual void MarkCell(Color color)
+    public virtual void Enable()
     {
-        _spriteRenderer.color = color;
+        _meshFilter.mesh = _previousMesh;
+    }
+
+    public virtual void Disable()
+    {
+        _previousMesh = _meshFilter.mesh;
+        _meshFilter.mesh = null;
+    }
+
+    public virtual void MarkCell(Material material)
+    {
+        _meshRenderer.material = material;
     }
 }

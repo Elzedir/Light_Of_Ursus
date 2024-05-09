@@ -12,19 +12,26 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     Coroutine _chasingCoroutine;
     public Spawner_Maze Spawner;
 
-    public void InitialiseChaser(Cell_MouseMaze startCell, Spawner_Maze spawner, float chaserSpeed = 1)
+    public void InitialiseChaser(Cell_MouseMaze startCell, Spawner_Maze spawner, Mesh mesh, Material material, float chaserSpeed = 1)
     {
         CurrentCell = startCell;
         Spawner = spawner;
-        SpriteRenderer chaserSprite = gameObject.AddComponent<SpriteRenderer>();
-        chaserSprite.sprite = Resources.Load<Sprite>("Sprites/Mine");
-        chaserSprite.sortingLayerName = "Actors";
-        BoxCollider2D chaserColl = gameObject.AddComponent<BoxCollider2D>();
-        chaserColl.size = new Vector3(0.4f, 0.4f, 0.4f);
+
+        MeshFilter chaserFilter = gameObject.AddComponent<MeshFilter>();
+        chaserFilter.mesh = mesh;
+
+        MeshRenderer chaserRenderer = gameObject.AddComponent<MeshRenderer>();
+        chaserRenderer.material = material;
+
+        CapsuleCollider chaserColl = gameObject.AddComponent<CapsuleCollider>();
         chaserColl.isTrigger = true;
-        Rigidbody2D chaserBody = gameObject.AddComponent<Rigidbody2D>();
-        chaserBody.gravityScale = 0;
+
+        Rigidbody chaserBody = gameObject.AddComponent<Rigidbody>();
         chaserBody.freezeRotation = true;
+        chaserBody.useGravity = false;
+
+        transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+
         Pathfinder = new Pathfinder_Base_3D();
         _chaserSpeed = chaserSpeed;
     }

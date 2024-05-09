@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 public enum MazeType { Standard, Chase, Collect, Doors }
 public class Spawner_Maze : MonoBehaviour
@@ -15,9 +16,9 @@ public class Spawner_Maze : MonoBehaviour
     int _maxDistance;
 
     int _width = 20;
-    int _height = 1;
+    int _height = 2;
     int _depth = 20;
-    int _visibility = 50;
+    int _visibility = 5;
     int _wallBreaks = 100;
     float _newPathChance = 0.8f;
 
@@ -63,6 +64,8 @@ public class Spawner_Maze : MonoBehaviour
 
     void InitialisePuzzle()
     {
+        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
+
         _cellParent = GameObject.Find("CellParent").transform;
         _chaserParent = GameObject.Find("ChaserParent").transform;
         _collectParent = GameObject.Find("CollectParent").transform;
@@ -71,7 +74,7 @@ public class Spawner_Maze : MonoBehaviour
         _player.OnBreakWall += BreakWall;
 
         if (Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType == PuzzleType.Fixed) SpawnFixedPuzzle();
-        else SpawnRandomPuzzle();
+        else StartCoroutine(SpawnRandomPuzzle());
     }
 
     void SpawnFixedPuzzle()
@@ -79,7 +82,7 @@ public class Spawner_Maze : MonoBehaviour
         
     }
 
-    void SpawnRandomPuzzle()
+    IEnumerator SpawnRandomPuzzle()
     {
         Cells = new Cell_MouseMaze[_width, _height, _depth];
 
@@ -98,7 +101,7 @@ public class Spawner_Maze : MonoBehaviour
 
         VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth);
 
-        CreateMaze(null, Cells[0, 0, 0], 0);
+        yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 
         StartCoroutine(processMazeTypes());
 
@@ -118,7 +121,9 @@ public class Spawner_Maze : MonoBehaviour
                 switch (type)
                 {
                     case MazeType.Standard:
-                        _furthestCell.MarkCell(Color.red);
+                        Debug.Log(_furthestCell);
+                        _furthestCell.MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
+                        Cells[_furthestCell.Position.x, _furthestCell.Position.y - 1, _furthestCell.Position.z].MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
                         break;
                     case MazeType.Chase:
                         StartCoroutine(SpawnChasers());
@@ -168,14 +173,19 @@ public class Spawner_Maze : MonoBehaviour
         return cell;
     }
 
-    void CreateMaze(Cell_MouseMaze previousCell, Cell_MouseMaze currentCell, int distanceFromStart)
+    IEnumerator CreateMaze(Cell_MouseMaze previousCell, Cell_MouseMaze currentCell, int distanceFromStart)
     {
         currentCell.Visited = true;
         _cellCount++;
 
-        if (_mousemazeTypes.Contains(MazeType.Collect) && _collectables.Count < _collectableCount && _cellCount > _collectableMinimumDistance && Random.Range(0, 100) <= _collectableSpawnChance) { SpawnCollectable(currentCell.transform.position); }
+        currentCell.Disable();
 
         ClearWalls(previousCell, currentCell);
+
+        if (_mousemazeTypes.Contains(MazeType.Collect) && _collectables.Count < _collectableCount && _cellCount > _collectableMinimumDistance && Random.Range(0, 100) <= _collectableSpawnChance)
+        {
+            SpawnCollectable(currentCell.transform.position);
+        }
 
         if (distanceFromStart > _maxDistance)
         {
@@ -185,18 +195,26 @@ public class Spawner_Maze : MonoBehaviour
 
         var unvisitedNeighbors = GetNextUnvisitedCell(currentCell).OrderBy(_ => Random.Range(1, 10)).ToList();
 
+        if (unvisitedNeighbors.Count <= 0) yield break;
+
         if (Random.Range(0, 1f) < _newPathChance && unvisitedNeighbors.Count > 0)
         {
-            foreach(Cell_MouseMaze nextCell in unvisitedNeighbors)
+            foreach (Cell_MouseMaze neighbour in unvisitedNeighbors)
             {
-                if (nextCell != null && !nextCell.Visited) CreateMaze(currentCell, unvisitedNeighbors[Random.Range(0, unvisitedNeighbors.Count)], distanceFromStart + 1);
+                if (neighbour != null && !neighbour.Visited)
+                {
+                    yield return StartCoroutine(CreateMaze(currentCell, unvisitedNeighbors[Random.Range(0, unvisitedNeighbors.Count)], distanceFromStart + 1));
+                }
             }
         }
         else
         {
-            foreach (Cell_MouseMaze nextCell in unvisitedNeighbors)
+            foreach (Cell_MouseMaze neighbour in unvisitedNeighbors)
             {
-                if (nextCell != null && !nextCell.Visited) CreateMaze(currentCell, nextCell, distanceFromStart + 1);
+                if (neighbour != null && !neighbour.Visited)
+                {
+                    yield return StartCoroutine(CreateMaze(currentCell, neighbour, distanceFromStart + 1));
+                }
             }
         }
     }
@@ -204,9 +222,6 @@ public class Spawner_Maze : MonoBehaviour
     void ClearWalls(Cell_MouseMaze currentCell, Cell_MouseMaze nextCell)
     {
         if (currentCell == null) return;
-
-        Voxel_Base currentNode = Pathfinder_Base_3D.GetVoxelAtPosition(currentCell.Position);
-        Voxel_Base nextNode = Pathfinder_Base_3D.GetVoxelAtPosition(nextCell.Position);
 
         if (currentCell.transform.position.x < nextCell.transform.position.x)
         {
@@ -222,14 +237,14 @@ public class Spawner_Maze : MonoBehaviour
             return;
         }
 
-        if (currentCell.transform.position.y < nextCell.transform.position.y)
+        if (currentCell.transform.position.z < nextCell.transform.position.z)
         {
             currentCell.ClearWall(Wall.Top);
             nextCell.ClearWall(Wall.Bottom);
             return;
         }
 
-        if (currentCell.transform.position.y > nextCell.transform.position.y)
+        if (currentCell.transform.position.z > nextCell.transform.position.z)
         {
             currentCell.ClearWall(Wall.Bottom);
             nextCell.ClearWall(Wall.Top);
@@ -242,24 +257,24 @@ public class Spawner_Maze : MonoBehaviour
         int x = (int)currentCell.transform.position.x;
         int z = (int)currentCell.transform.position.z;
 
-        if (x + 1 < _width && !Cells[x + 1, 0, z].Visited)
+        if (x + 1 < _width && !Cells[x + 1, 1, z].Visited)
         {
-            yield return Cells[x + 1, 0, z];
+            yield return Cells[x + 1, 1, z];
         }
 
-        if (x - 1 >= 0 && !Cells[x - 1, 0, z].Visited)
+        if (x - 1 >= 0 && !Cells[x - 1, 1, z].Visited)
         {
-            yield return Cells[x - 1, 0, z];
+            yield return Cells[x - 1, 1, z];
         }
 
-        if (z + 1 < _depth && !Cells[x, 0, z + 1].Visited)
+        if (z + 1 < _depth && !Cells[x, 1, z + 1].Visited)
         {
-            yield return Cells[x, 0, z + 1];
+            yield return Cells[x, 1, z + 1];
         }
 
-        if (z - 1 >= 0 && !Cells[x, 0, z - 1].Visited)
+        if (z - 1 >= 0 && !Cells[x, 1, z - 1].Visited)
         {
-            yield return Cells[x, 0, z - 1];
+            yield return Cells[x, 1, z - 1];
         }
     }
 
@@ -270,30 +285,37 @@ public class Spawner_Maze : MonoBehaviour
         collectableGO.transform.position = position;
         Collectable collectable = collectableGO.AddComponent<Collectable>();
         _collectables.Add(collectable, false);
-        collectable.SpawnCollectable(this);
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Blue");
+        collectable.SpawnCollectable(this, mesh, material);
     }
 
     IEnumerator SpawnChasers()
     {
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Capsule.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Red");
+
         yield return new WaitForSeconds(_chaserSpawnDelay);
 
         _chasers = new();
 
         for (int i = 0; i < _chaserCount; i++)
         {
-            SpawnChaser();
+            SpawnChaser(mesh, material);
 
             yield return new WaitForSeconds(_chaserSpawnInterval);
         }
     }
 
-    void SpawnChaser()
+    void SpawnChaser(Mesh mesh, Material material)
     {
         GameObject chaserGO = new GameObject($"Chaser_{_chasers.Count}");
         chaserGO.transform.parent = _chaserParent;
+        chaserGO.transform.localPosition = new Vector3(0, 1, 0);
         Chaser chaser = chaserGO.AddComponent<Chaser>();
         _chasers.Add(chaser);
-        chaser.InitialiseChaser(Cells[0,0,0], this, Random.Range(_chaserSpeeds.Item1, _chaserSpeeds.Item2));
+        chaser.InitialiseChaser(Cells[0,1,0], this, mesh, material, Random.Range(_chaserSpeeds.Item1, _chaserSpeeds.Item2));
+        Debug.Log(chaser.CurrentCell.Position);
         chaser.Pathfinder.RunPathfinder(chaser.CurrentCell.Position, _playerLastCell.Position, chaser,  PuzzleSet.MouseMaze);
     }
 
@@ -375,8 +397,6 @@ public class Spawner_Maze : MonoBehaviour
 
             closestCell = Cells[neighborWid, neighborHei, neighbourDep];
         }
-
-        ClearWalls(_playerLastCell, closestCell);
 
         if (_mousemazeTypes.Contains(MazeType.Chase)) RefreshChaserPaths();
     }

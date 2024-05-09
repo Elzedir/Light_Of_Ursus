@@ -278,4 +278,14 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
             StartCoroutine(Player.PickUpStaffAction());
         }
     }
+
+    public Coroutine StartVirtualCoroutine(IEnumerator coroutine)
+    {
+        return StartCoroutine(coroutine);
+    }
+
+    public void StopVirtualCoroutine(IEnumerator coroutine)
+    {
+        StopCoroutine(coroutine);
+    }
 }

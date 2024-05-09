@@ -9,7 +9,19 @@ public class Controller_Puzzle_MouseMaze : Controller
 {
     public event Action OnBreakWall;
     public MouseMazeColour PlayerColour { get; private set; }
-    float _playerSpeed = 1;
+    float _playerSpeed = 0.1f;
+
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        _playerMove();
+    }
+
+    void _playerMove()
+    {
+        transform.position += new Vector3(_move.x * _playerSpeed, 0 ,_move.y * _playerSpeed);
+    }
 
     //void Start()
     //{

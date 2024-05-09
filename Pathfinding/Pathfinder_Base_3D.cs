@@ -1,14 +1,18 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Pathfinder_Base_3D
 {
+    Coroutine _pathfinderCoroutine;
     PriorityQueue_3D _mainPriorityQueue;
     double _priorityModifier;
     Voxel_Base _targetNode;
     Voxel_Base _startNode;
     PuzzleSet _puzzleSet;
+    PathfinderMover_3D _mover;
 
     #region Initialisation
     static int _width;
@@ -21,15 +25,22 @@ public class Pathfinder_Base_3D
         _height = height;
         _depth = depth;
     }
-    public void RunPathfinder(Vector3Int start, Vector3Int target, PathfinderMover_3D mover, PuzzleSet puzzleSet)
-    {
-        if (start.Equals(target)) return;
 
+    public void SetPath(Vector3Int start, Vector3Int target, PathfinderMover_3D mover, PuzzleSet puzzleSet)
+    {
         _puzzleSet = puzzleSet;
+        _mover = mover;
         _startNode = new Voxel_Base();
         _startNode.Position = start;
         _targetNode = new Voxel_Base();
         _targetNode.Position = target;
+
+        _pathfinderCoroutine = Manager_Game.Instance.StartVirtualCoroutine(RunPathfinder());
+    }
+
+    public IEnumerator RunPathfinder()
+    {
+        if (_startNode.Equals(_targetNode)) yield break;
 
         Voxel_Base lastNode = _startNode;
 
@@ -37,12 +48,10 @@ public class Pathfinder_Base_3D
 
         _computeShortestPath();
 
-        int infinity = 0;
-
-        while (!_startNode.Equals(_targetNode) && infinity < 1000)
+        while (!_startNode.Equals(_targetNode))
         {
             _startNode = _minimumSuccessorNode(_startNode);
-            LinkedList<Vector3Int> obstacleCoordinates = mover.GetObstaclesInVision();
+            LinkedList<Vector3Int> obstacleCoordinates = _mover.GetObstaclesInVision();
             double oldPriorityModifier = _priorityModifier;
             Voxel_Base oldLastNode = lastNode;
             _priorityModifier += _manhattanDistance(_startNode, lastNode);
@@ -67,10 +76,10 @@ public class Pathfinder_Base_3D
             }
             _computeShortestPath();
 
-            infinity++;
-        }
+            _mover.MoveTo(_targetNode);
 
-        mover.MoveTo(_targetNode);
+            yield return new WaitForSeconds(1);
+        }
     }
 
     void _initialise()

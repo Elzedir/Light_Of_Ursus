@@ -26,7 +26,8 @@ public class CameraController : MonoBehaviour
     public bool IsCoroutineRunning { get; private set; } = false;
 
     [SerializeField] float _smoothTime = 0.3f;
-    [SerializeField] Vector3 _offset;
+    [SerializeField] Vector3 _offsetPosition;
+    [SerializeField] Quaternion _targetRotation;
     Vector3 _velocity = Vector3.one;
 
     public void Awake()
@@ -39,9 +40,10 @@ public class CameraController : MonoBehaviour
         _camera = GetComponent<Camera>();
     }
 
-    public void SetOffset(Vector3 offset)
+    public void SetOffset(Vector3 position, Quaternion rotation)
     {
-        _offset = offset;
+        _offsetPosition = position;
+        _targetRotation = rotation;
     }
 
     private void LateUpdate()
@@ -97,7 +99,8 @@ public class CameraController : MonoBehaviour
 
             //transform.position += new Vector3(delta.x, delta.y, 0);
 
-            transform.position = Vector3.SmoothDamp(transform.position, _lookAt.position + _offset, ref _velocity, _smoothTime);
+            transform.position = Vector3.SmoothDamp(transform.position, _lookAt.position + _offsetPosition, ref _velocity, _smoothTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, _smoothTime);
         }
 
         if (_shakeTime > 0)

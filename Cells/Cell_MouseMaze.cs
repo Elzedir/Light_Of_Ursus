@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,18 +11,11 @@ public class Cell_MouseMaze : Cell_Base
 {
     public Node_Base_2D Node { get; private set; }
     
-    SpriteRenderer _mazeTile;
-    BoxCollider2D _colliderTop;
-    BoxCollider2D _colliderBottom;
-    BoxCollider2D _colliderLeft;
-    BoxCollider2D _colliderRight;
-
     public bool Visited;
     bool _initialised = false;
-
-    public Dictionary<Wall, bool> Sides { get; private set; }
-
     public TextMeshPro CellText;
+
+    public List<Wall_MouseMaze> Walls { get; private set; } = new();
 
     Spawner_Maze _spawner;
     
@@ -30,118 +24,58 @@ public class Cell_MouseMaze : Cell_Base
         Position = position;
         _spawner = spawner;
 
-        _spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-        if (_spawner.Background) _spriteRenderer.sprite = Resources.Load<Sprite>("Sprites/White ground");
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_White");
 
-        _mazeTile = new GameObject("CellSprite").AddComponent<SpriteRenderer>();
-        _mazeTile.transform.parent = transform;
-        _mazeTile.transform.localPosition = Vector3.zero;
+        _meshFilter = gameObject.AddComponent<MeshFilter>();
+        _meshFilter.mesh = mesh;
+        _meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        _meshRenderer.material = material;
 
-        BoxCollider2D coll = gameObject.AddComponent<BoxCollider2D>();
-        coll.size = new Vector2(0.9f, 0.9f);
+        BoxCollider coll = gameObject.AddComponent<BoxCollider>();
+        coll.size = new Vector3(0.75f, 0.75f, 0.75f);
         coll.isTrigger = true;
 
-        _colliderTop = _createSideCollider(Wall.Top);
-        _colliderBottom = _createSideCollider(Wall.Bottom);
-        _colliderLeft = _createSideCollider(Wall.Left);
-        _colliderRight = _createSideCollider(Wall.Right);
+        _createWalls(mesh, material);
 
-        GameObject textGO = new GameObject();
-        textGO.transform.parent = transform;
-        textGO.transform.localPosition = Vector3.zero;
-        CellText = textGO.AddComponent<TextMeshPro>();
-        CellText.text = $"{Position}";
-        CellText.alignment = TextAlignmentOptions.Center;
-        CellText.sortingLayerID = -967159649;
-        CellText.fontSize = 3; CellText.color = Color.black;
+        //GameObject textGO = new GameObject();
+        //textGO.transform.parent = transform;
+        //textGO.transform.localPosition = Vector3.zero;
+        //CellText = textGO.AddComponent<TextMeshPro>();
+        //CellText.text = $"{Position}";
+        //CellText.alignment = TextAlignmentOptions.Center;
+        //CellText.sortingLayerID = -967159649;
+        //CellText.fontSize = 3; CellText.color = Color.black;
     }
 
-    BoxCollider2D _createSideCollider(Wall wall)
+    void _createWalls(Mesh mesh, Material material)
     {
-        BoxCollider2D collider = new GameObject($"Collider{wall}").AddComponent<BoxCollider2D>();
-        collider.transform.parent = transform;
-        switch(wall)
-        {
-            case Wall.Top: collider.transform.localPosition = new Vector3(0, 0.5f, 0); collider.size = new Vector2(1, 0.12f); break;
-            case Wall.Bottom: collider.transform.localPosition = new Vector3(0, -0.5f, 0); collider.size = new Vector2(1, 0.12f); break;
-            case Wall.Left: collider.transform.localPosition = new Vector3(-0.5f, 0, 0); collider.size = new Vector2(0.12f, 1); break;
-            case Wall.Right: collider.transform.localPosition = new Vector3(0.5f, 0, 0); collider.size = new Vector2(0.12f, 1); break;
-            default: break;
-        }
-
-        return collider;
+        Walls.Add(new GameObject($"Wall_Top").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Top, mesh, material, this.transform));
+        Walls.Add(new GameObject($"Wall_Bottom").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Bottom, mesh, material, this.transform));
+        Walls.Add(new GameObject($"Wall_Left").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Left, mesh, material, this.transform));
+        Walls.Add(new GameObject($"Wall_Right").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Right, mesh, material, this.transform));
     }
 
     public void ClearWall(Wall wall)
     {
-        if (!_initialised)
+        Wall_MouseMaze toRemove = null;
+
+        foreach (Wall_MouseMaze side in Walls)
         {
-            Sides = new Dictionary<Wall, bool>
+            if (side.Wall == wall)
             {
-                { Wall.Top, true },
-                { Wall.Bottom, true },
-                { Wall.Left, true },
-                { Wall.Right, true }
-            };
-
-            _initialised = true;
+                toRemove = side;
+                break;
+            }
         }
 
-        switch (wall)
-        {
-            case Wall.Top: if (_colliderTop != null) Destroy(_colliderTop.gameObject); break; // Node.IsPassableTop = true; 
-            case Wall.Bottom: if (_colliderBottom != null) Destroy(_colliderBottom.gameObject); break;// Node.IsPassableBottom = true;
-            case Wall.Left: if (_colliderLeft != null) Destroy(_colliderLeft.gameObject); break; // Node.IsPassableLeft = true;
-            case Wall.Right: if (_colliderRight != null) Destroy(_colliderRight.gameObject); break; //Node.IsPassableRight = true;
-            default: break;
-        }
+        if (!toRemove) return;
 
-        Sides[wall] = false;
-
-        Sprite sprite = null;
-
-        if (Sides[Wall.Top] && Sides[Wall.Bottom] && Sides[Wall.Left] && Sides[Wall.Right]) sprite = Resources.Load<Sprite>("Sprites/Grid");
-        
-        if (!Sides[Wall.Top] && Sides[Wall.Bottom] && Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenOneSide"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 270); }
-        if (Sides[Wall.Top] && !Sides[Wall.Bottom] && Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenOneSide"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 90); }
-        if (Sides[Wall.Top] && Sides[Wall.Bottom] && !Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenOneSide"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 0); }
-        if (Sides[Wall.Top] && Sides[Wall.Bottom] && Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenOneSide"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 180); }
-
-        if (!Sides[Wall.Top] && !Sides[Wall.Bottom] && Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenTwoSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 90); }
-        if (Sides[Wall.Top] && Sides[Wall.Bottom] && !Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenTwoSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 0); }
-
-        if (!Sides[Wall.Top] && Sides[Wall.Bottom] && !Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_Corner"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 90); }
-        if (!Sides[Wall.Top] && Sides[Wall.Bottom] && Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_Corner"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 0); }
-        if (Sides[Wall.Top] && !Sides[Wall.Bottom] && !Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_Corner"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 180); }
-        if (Sides[Wall.Top] && !Sides[Wall.Bottom] && Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_Corner"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 270); }
-        
-        if (!Sides[Wall.Top] && !Sides[Wall.Bottom] && !Sides[Wall.Left] && Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenThreeSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 180); }
-        if (!Sides[Wall.Top] && !Sides[Wall.Bottom] && Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenThreeSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 0); }
-        if (!Sides[Wall.Top] && Sides[Wall.Bottom] && !Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenThreeSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 90); }
-        if (Sides[Wall.Top] && !Sides[Wall.Bottom] && !Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenThreeSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 270); }
-
-        if (!Sides[Wall.Top] && !Sides[Wall.Bottom] && !Sides[Wall.Left] && !Sides[Wall.Right]) 
-        { sprite = Resources.Load<Sprite>("Sprites/Grid_OpenAllSides"); _mazeTile.transform.eulerAngles = new Vector3(0, 0, 0); }
-
-        if (sprite != null) _mazeTile.sprite = sprite;
-        else Debug.Log("Sprite not found.");
+        Destroy(toRemove.gameObject);
+        Walls.Remove(toRemove);
     }
 
-    void OnTriggerEnter2D(Collider2D collider)
+    void OnTriggerEnter(Collider collider)
     {
         if (collider.gameObject.name == "Focus") _spawner.RefreshMaze(this);
         else if (collider.gameObject.name.StartsWith("Chaser_")) 
@@ -154,18 +88,64 @@ public class Cell_MouseMaze : Cell_Base
 
     public override void Show()
     {
-        if (_spawner.Background) _spriteRenderer.enabled = false;
-        _mazeTile.enabled = true;
+        if (_spawner.Background) _meshRenderer.enabled = false;
     }
 
     public override void Hide()
     {
-        if (_spawner.Background) _spriteRenderer.enabled = true;
-        _mazeTile.enabled = false;
+        if (_spawner.Background) _meshRenderer.enabled = true;
     }
 
-    public override void MarkCell(Color color)
+    public override void MarkCell(Material material)
     {
-        _mazeTile.color = color;
+        base.MarkCell(material);
+
+        foreach (Wall_MouseMaze wall in Walls)
+        {
+            wall.Mark(material);
+        }
+    }
+}
+
+public class Wall_MouseMaze : MonoBehaviour
+{
+    public Wall Wall;
+    public BoxCollider BoxCollider;
+    public MeshFilter MeshFilter;
+    public MeshRenderer MeshRenderer;
+
+    public Wall_MouseMaze CreateWall(Wall wall, Mesh mesh, Material material, Transform parent)
+    {
+        Wall = wall;
+        MeshFilter = gameObject.AddComponent<MeshFilter>();
+        MeshFilter.mesh = mesh;
+        MeshRenderer = gameObject.AddComponent<MeshRenderer>();
+        MeshRenderer.material = material;
+        transform.parent = parent;
+
+        switch (Wall)
+        {
+            case Wall.Top: transform.localPosition = new Vector3(0, 0, 0.5f); gameObject.transform.localScale = new Vector3(1f, 1f, 0.1f); break;
+            case Wall.Bottom: transform.localPosition = new Vector3(0, 0, -0.5f); gameObject.transform.localScale = new Vector3(1f, 1f, 0.1f); break;
+            case Wall.Left: transform.localPosition = new Vector3(-0.5f, 0, 0); gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f); break;
+            case Wall.Right: transform.localPosition = new Vector3(0.5f, 0, 0); gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f); break;
+            default: break;
+        }
+
+        return this;
+    }
+
+    public void Mark(Material material)
+    {
+        MeshRenderer.material = material;
+
+        switch (Wall)
+        {
+            case Wall.Top: gameObject.transform.localScale = new Vector3(1.01f, 1.01f, 0.11f); break;
+            case Wall.Bottom: gameObject.transform.localScale = new Vector3(1.01f, 1.01f, 0.11f); break;
+            case Wall.Left: gameObject.transform.localScale = new Vector3(0.11f, 1.01f, 1.01f); break;
+            case Wall.Right: gameObject.transform.localScale = new Vector3(0.11f, 1.01f, 1.01f); break;
+            default: break;
+        }
     }
 }

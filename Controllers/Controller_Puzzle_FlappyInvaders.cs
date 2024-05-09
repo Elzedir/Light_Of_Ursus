@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Controller_Puzzle_FlappyInvaders : Controller
 {
@@ -13,7 +14,19 @@ public class Controller_Puzzle_FlappyInvaders : Controller
     //    _bulletParent = GameObject.Find("BulletParent").transform;
     //}
 
-    void OnCollisionEnter2D(Collision2D collision)
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        PlayerMove();
+    }
+
+    void PlayerMove()
+    {
+        transform.position += new Vector3(_move.x * 0.1f, _move.y * 0.1f, 0);
+    }
+
+    void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.GetComponent<Mine>() || collision.gameObject.GetComponent<Bullet>()) Hit(collision);
     }
@@ -43,15 +56,23 @@ public class Controller_Puzzle_FlappyInvaders : Controller
     //    Shoot();
     //}
 
-    void Shoot()
+    public void Shoot(InputAction.CallbackContext context)
     {
-        GameObject bulletGO = new GameObject("Bullet");
-        Bullet bullet = bulletGO.AddComponent<Bullet>();
-        bulletGO.transform.parent = _bulletParent;
-        bullet.Initialise(Manager_Puzzle.Instance.BulletSprite, Vector3.right, transform.position);
+        if (context.started)
+        {
+            GameObject bulletGO = new GameObject("Bullet");
+            Bullet bullet = bulletGO.AddComponent<Bullet>();
+            bulletGO.transform.parent = _bulletParent;
+            bullet.Initialise(
+                Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
+                Resources.Load<Material>("Meshes/Material_Green"),
+                Vector3.right,
+                transform.position
+                );
+        }
     }
 
-    void Hit(Collision2D collision)
+    void Hit(Collision collision)
     {
         Debug.Log("Hit");
     }

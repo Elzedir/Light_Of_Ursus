@@ -11,8 +11,6 @@ public class Spawner_Column : MonoBehaviour
     PuzzleSet _puzzleSet;
     PuzzleType _puzzleType;
 
-    Sprite _columnSprite;
-    Sprite _mineSprite;
     int _columnsSpawned;
     int _minesSpawned;
 
@@ -33,6 +31,10 @@ public class Spawner_Column : MonoBehaviour
 
     void Start()
     {
+        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 0, -30), Quaternion.Euler(0, 0, 0));
+
+        GameObject.Find("Focus").transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+
         foreach (Transform child in transform)
         {
             switch (child.name)
@@ -43,9 +45,6 @@ public class Spawner_Column : MonoBehaviour
                 default: break;
             }
         }
-
-        _columnSprite = Resources.Load<Sprite>("Sprites/Grid");
-        _mineSprite = Resources.Load<Sprite>("Sprites/Mine");
 
         _puzzleSet = Manager_Puzzle.Instance.Puzzle.PuzzleSet;
         _puzzleType = Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType;
@@ -88,7 +87,13 @@ public class Spawner_Column : MonoBehaviour
 
         GameObject columnGO = new GameObject($"Column{_columnsSpawned}");
         Column column = columnGO.AddComponent<Column>();
-        column.Initialise(columnHeight, spawner: spawner, _columnSprite, ColumnSpeed);
+        column.Initialise(
+            columnHeight, 
+            spawner: spawner,
+            Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
+            Resources.Load<Material>("Meshes/Material_Yellow"),
+            ColumnSpeed
+            );
         _columnsSpawned++;
     }
 
@@ -109,7 +114,12 @@ public class Spawner_Column : MonoBehaviour
         mineGO.transform.parent = spawner.transform;
 
         Mine mine = mineGO.AddComponent<Mine>();
-        mine.Initialise(_bulletParent, _mineSprite, ColumnSpeed);
+        mine.Initialise(
+            _bulletParent, 
+            Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
+            Resources.Load<Material>("Meshes/Material_Red"), 
+            ColumnSpeed
+            );
         _minesSpawned++;
     }
 }

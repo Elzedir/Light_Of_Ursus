@@ -9,17 +9,15 @@ public class Mine : MonoBehaviour
 
     Transform _bulletParent;
     
-    public void Initialise(Transform bulletParent, Sprite sprite, float speed)
+    public void Initialise(Transform bulletParent, Mesh mesh, Material material, float speed)
     {
-        SpriteRenderer columnSprite = gameObject.AddComponent<SpriteRenderer>();
-        columnSprite.sprite = sprite;
-        columnSprite.sortingLayerName = "Actors";
-
-        gameObject.AddComponent<BoxCollider2D>();
-
-        Rigidbody2D columnBody = gameObject.AddComponent<Rigidbody2D>();
-        columnBody.gravityScale = 0;
-        columnBody.mass = 1000;
+        transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        gameObject.AddComponent<MeshFilter>().mesh = mesh;
+        gameObject.AddComponent<MeshRenderer>().material = material;
+        gameObject.AddComponent<BoxCollider>();
+        Rigidbody mineBody = gameObject.AddComponent<Rigidbody>();
+        mineBody.mass = 1000;
+        mineBody.useGravity = false;
 
         _speed = speed;
         _bulletParent = bulletParent;
@@ -51,7 +49,12 @@ public class Mine : MonoBehaviour
         GameObject bulletGO = new GameObject("Bullet");
         bulletGO.transform.parent = _bulletParent;
         Bullet bullet = bulletGO.AddComponent<Bullet>();
-        bullet.Initialise(Manager_Puzzle.Instance.BulletSprite, Vector3.left, transform.position);
+        bullet.Initialise(
+            Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
+            Resources.Load<Material>("Meshes/Material_Green"),
+            Vector3.left, 
+            transform.position
+            );
     }
 
     void DestroyMine()
