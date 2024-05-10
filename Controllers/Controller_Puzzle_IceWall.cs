@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public enum IceWallDirection { None, Up, Down, Left, Right }
 
@@ -87,25 +88,47 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     {
         base.FixedUpdate();
 
-        if (Direction.Item2 == IceWallDirection.None) return;
-
-        if (Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S) || Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D) 
-            || Input.GetKeyUp(KeyCode.UpArrow) || Input.GetKeyUp(KeyCode.DownArrow) || Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.RightArrow)) _returnToCenter();
+        _playerMove();
     }
 
-    void _lean(IceWallDirection direction)
+    void _playerMove()
     {
-        if (Direction.Item1) return;
+        if ((_move.x != 0 || _move.y != 0) && !Direction.Item1) _lean();
+
+        else if ((_move.x == 0 && _move.y == 0) && Direction.Item1) _returnToCenter();
+    }
+
+    void _lean()
+    {
+        IceWallDirection direction = IceWallDirection.None;
+
+        if (_move.x > 0) direction = IceWallDirection.Right;
+        if (_move.x < 0) direction = IceWallDirection.Left;
+        if (_move.y > 0) direction = IceWallDirection.Up;
+        if (_move.y < 0) direction = IceWallDirection.Down;
 
         transform.position += _leanDirection(direction) * 0.3f;
         Direction = (true, direction);
     }
 
+    public void Jump(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            if (!Direction.Item1) return;
+
+            if (!_spawner.PlayerCanMove(Direction.Item2)) return;
+
+            transform.position = _centrePosition + _leanDirection(Direction.Item2);
+
+            Direction = (false, IceWallDirection.None);
+        }
+    }
+
     void _returnToCenter()
     {
-        if (!Direction.Item1) return;
-
-        transform.position = _centrePosition; // Change to an IENumerator to move over time.
+        Vector3 velocity = Vector3.one;
+        transform.position = _centrePosition;
         Direction = (false, IceWallDirection.None);
     }
 
@@ -113,8 +136,8 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     {
         switch (direction)
         {
-            case IceWallDirection.Up: return Vector3.up;
-            case IceWallDirection.Down: return Vector3.down;
+            case IceWallDirection.Up: return Vector3.forward;
+            case IceWallDirection.Down: return Vector3.back;
             case IceWallDirection.Left: return Vector3.left;
             case IceWallDirection.Right: return Vector3.right;
             default: return Vector3.zero;
@@ -141,25 +164,26 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
 
     public void MoveTo(Voxel_Base target)
     {
-        List<Vector3Int> path = Pathfinder.RetrievePath(Pathfinder_Base_3D.GetVoxelAtPosition(CurrentCell.Position), target);
+        List<Vector3> path = Pathfinder.RetrievePath(VoxelGrid.GetVoxelAtPosition(CurrentCell.Position), target);
 
-        foreach (Vector3Int position in path)
+        foreach (Vector3 position in path)
         {
-            _playerStaminaMax += (int)Pathfinder_Base_3D.GetVoxelAtPosition(position).MovementCost;
+            _playerStaminaMax += (int)VoxelGrid.GetVoxelAtPosition(position).MovementCost;
         }
 
         _playerStaminaMax += (int)(_playerStaminaMax * (_playerExtraStamina / 100));
         _playerStaminaCurrent = _playerStaminaMax;
     }
 
-    public LinkedList<Vector3Int> GetObstaclesInVision()
+    public LinkedList<Vector3> GetObstaclesInVision()
     {
-        return new LinkedList<Vector3Int>();
+        return new LinkedList<Vector3>();
     }
 
     public void SetCurrentCell(Cell_IceWall cell)
     {
         CurrentCell = cell;
-        _centrePosition = cell.transform.position;
+        _centrePosition = new Vector3(CurrentCell.transform.position.x, CurrentCell.transform.position.y + 1, CurrentCell.transform.position.z);
+        _returnToCenter();
     }
 }

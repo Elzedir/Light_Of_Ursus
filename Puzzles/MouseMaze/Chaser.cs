@@ -9,7 +9,10 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     public Cell_MouseMaze CurrentCell;
     float _chaserSpeed;
 
+    Rigidbody _chaserBody;
+
     Coroutine _chasingCoroutine;
+    Coroutine _moveCoroutine;
     public Spawner_Maze Spawner;
 
     public void InitialiseChaser(Cell_MouseMaze startCell, Spawner_Maze spawner, Mesh mesh, Material material, float chaserSpeed = 1)
@@ -26,11 +29,14 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         CapsuleCollider chaserColl = gameObject.AddComponent<CapsuleCollider>();
         chaserColl.isTrigger = true;
 
-        Rigidbody chaserBody = gameObject.AddComponent<Rigidbody>();
-        chaserBody.freezeRotation = true;
-        chaserBody.useGravity = false;
+        //_chaserBody = gameObject.AddComponent<Rigidbody>();
+        //_chaserBody.freezeRotation = true;
+        //_chaserBody.useGravity = false;
+        //_chaserBody.isKinematic = true;
 
         transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+
+        gameObject.layer = LayerMask.NameToLayer("Chaser");
 
         Pathfinder = new Pathfinder_Base_3D();
         _chaserSpeed = chaserSpeed;
@@ -38,8 +44,9 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
 
     public Voxel_Base GetStartVoxel()
     {
-        return Pathfinder_Base_3D.GetVoxelAtPosition(CurrentCell.Position);
+        return VoxelGrid.GetVoxelAtPosition(CurrentCell.Position);
     }
+
     public void BlowUp()
     {
         Destroy(gameObject);
@@ -52,13 +59,16 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         _chasingCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
     }
 
-    IEnumerator FollowPath(List<Vector3Int> path)
+    IEnumerator FollowPath(List<Vector3> path)
     {
-        foreach (Vector3Int position in path)
+        yield return null;
+
+        foreach (Vector3 position in path)
         {
-            yield return Move(Spawner.Cells[position.x, position.y, position.z].transform.position);
+            yield return _moveCoroutine = StartCoroutine(Move(Spawner.Cells[(int)position.x, (int)position.y, (int)position.z].transform.position));
         }
 
+        _moveCoroutine = null;
         _chasingCoroutine = null;
         Spawner.GetNewRoute(this);
     }
@@ -77,12 +87,14 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     {
         if (_chasingCoroutine == null) return;
 
+        StopCoroutine(_moveCoroutine);
         StopCoroutine(_chasingCoroutine);
+        _moveCoroutine = null;
         _chasingCoroutine = null;
     }
 
-    public LinkedList<Vector3Int> GetObstaclesInVision()
+    public LinkedList<Vector3> GetObstaclesInVision()
     {
-        return new LinkedList<Vector3Int>();
+        return Spawner.GetWalls(transform);
     }
 }

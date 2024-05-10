@@ -8,7 +8,7 @@ public class Cell_Base : MonoBehaviour
     protected Mesh _previousMesh;
     protected MeshRenderer _meshRenderer;
     protected BoxCollider _boxCollider;
-    public Vector3Int Position { get; protected set; }
+    public Vector3 Position { get; protected set; }
 
     public virtual void Show()
     {

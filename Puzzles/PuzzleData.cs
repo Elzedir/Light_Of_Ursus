@@ -95,9 +95,9 @@ public class PuzzleObjectives
 public class IceWallData
 {
     [Range(0, 50)] public int Width = 10;
-    [Range(0, 50)] public int Height = 10;
+    [Range(0, 50)] public int Height = 2;
     [Range(0, 50)] public int Depth = 10;
-    public Vector3Int StartPosition = new Vector3Int(0,0,0);
+    public Vector3Int StartPosition = new Vector3Int(0,1,0);
     public int CellHealthMin = 5;
     public int CellHealthMax = 20;
     public int PlayerExtraStaminaPercentage = 10;

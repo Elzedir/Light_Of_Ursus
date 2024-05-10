@@ -41,7 +41,8 @@ public class Spawner_Arrow : MonoBehaviour
         if (_puzzleSet == PuzzleSet.Directional) offset = _directionalOffset;
         else if (_puzzleSet == PuzzleSet.AntiDirectional) offset = _antiDirectionalOffset;
 
-        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(offset, Quaternion.Euler(0, 0, 0));
+        Controller_Camera.Instance.SetOffset(offset, Quaternion.Euler(0, 0, 0));
+        Controller_Sun.Instance.SetLightPositionAndRotation(new Vector3(0, 10, 0), Quaternion.Euler(50, -30, 0));
     }
 
     private void Update()

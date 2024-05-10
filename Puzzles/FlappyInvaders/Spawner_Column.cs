@@ -31,7 +31,8 @@ public class Spawner_Column : MonoBehaviour
 
     void Start()
     {
-        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 0, -30), Quaternion.Euler(0, 0, 0));
+        Controller_Camera.Instance.SetOffset(new Vector3(0, 0, -30), Quaternion.Euler(0, 0, 0));
+        Controller_Sun.Instance.SetLightPositionAndRotation(new Vector3(0, 10, 0), Quaternion.Euler(50, -30, 0));
 
         GameObject.Find("Focus").transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
 

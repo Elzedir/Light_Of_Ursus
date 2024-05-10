@@ -18,22 +18,24 @@ public class Spawner_Maze : MonoBehaviour
     int _width = 20;
     int _height = 2;
     int _depth = 20;
+    int _scale = 10;
+
     int _visibility = 5;
     int _wallBreaks = 100;
     float _newPathChance = 0.8f;
 
     public bool Background = false;
-    Vector3Int _startPosition;
+    Vector3 _startPosition;
 
     Controller_Puzzle_MouseMaze _player;
 
     #region Chaser
     Transform _chaserParent;
-    List<Chaser> _chasers;
+    List<Chaser> _chasers = new();
     int _chaserCount = 5;
     float _chaserSpawnDelay = 4f;
     float _chaserSpawnInterval = 2f;
-    (float, float) _chaserSpeeds = (0.5f, 2);
+    (float, float) _chaserSpeeds = (0.75f, 2);
     #endregion
     #region Collect
     Transform _collectParent;
@@ -64,7 +66,8 @@ public class Spawner_Maze : MonoBehaviour
 
     void InitialisePuzzle()
     {
-        GameObject.Find("Main Camera").GetComponent<CameraController>().SetOffset(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
+        Controller_Camera.Instance.SetOffset(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
+        Controller_Sun.Instance.SetLightPositionAndRotation(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
 
         _cellParent = GameObject.Find("CellParent").transform;
         _chaserParent = GameObject.Find("ChaserParent").transform;
@@ -99,7 +102,7 @@ public class Spawner_Maze : MonoBehaviour
 
         _startPosition = Cells[0, 0, 0].Position;
 
-        VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth);
+        VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, new Vector3(-0.5f, 0, 0));
 
         yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 
@@ -121,9 +124,8 @@ public class Spawner_Maze : MonoBehaviour
                 switch (type)
                 {
                     case MazeType.Standard:
-                        Debug.Log(_furthestCell);
                         _furthestCell.MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
-                        Cells[_furthestCell.Position.x, _furthestCell.Position.y - 1, _furthestCell.Position.z].MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
+                        Cells[(int)_furthestCell.Position.x, (int)_furthestCell.Position.y - 1, (int)_furthestCell.Position.z].MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
                         break;
                     case MazeType.Chase:
                         StartCoroutine(SpawnChasers());
@@ -146,7 +148,7 @@ public class Spawner_Maze : MonoBehaviour
         {
             var cell = Cells[Random.Range(0, _width), Random.Range(0, _height), Random.Range(0, _depth)];
 
-            if (Vector3Int.Distance(cell.Position, _startPosition) >= _collectableMinimumDistance) SpawnCollectable(cell.transform.position);
+            if (Vector3.Distance(cell.Position, _startPosition) >= _collectableMinimumDistance) SpawnCollectable(cell.transform.position);
         }
     }
 
@@ -297,8 +299,6 @@ public class Spawner_Maze : MonoBehaviour
 
         yield return new WaitForSeconds(_chaserSpawnDelay);
 
-        _chasers = new();
-
         for (int i = 0; i < _chaserCount; i++)
         {
             SpawnChaser(mesh, material);
@@ -315,8 +315,7 @@ public class Spawner_Maze : MonoBehaviour
         Chaser chaser = chaserGO.AddComponent<Chaser>();
         _chasers.Add(chaser);
         chaser.InitialiseChaser(Cells[0,1,0], this, mesh, material, Random.Range(_chaserSpeeds.Item1, _chaserSpeeds.Item2));
-        Debug.Log(chaser.CurrentCell.Position);
-        chaser.Pathfinder.RunPathfinder(chaser.CurrentCell.Position, _playerLastCell.Position, chaser,  PuzzleSet.MouseMaze);
+        chaser.Pathfinder.SetPath(chaser.CurrentCell.Position, _playerLastCell.Position, chaser,  PuzzleSet.MouseMaze);
     }
 
     Door_Base SpawnDoor(Cell_MouseMaze cell)
@@ -374,16 +373,12 @@ public class Spawner_Maze : MonoBehaviour
 
         _wallBreaks--;
 
-        int wid = _playerLastCell.Position.x;
-        int hei = _playerLastCell.Position.y;
-        int dep = _playerLastCell.Position.z;
-
         Cell_MouseMaze closestCell = null; float minDistance = float.MaxValue;
 
-        CheckNeighbor(wid - 1, hei, dep);
-        CheckNeighbor(wid + 1, hei, dep);
-        CheckNeighbor(wid, hei, dep - 1);
-        CheckNeighbor(wid, hei, dep + 1);
+        CheckNeighbor((int)_playerLastCell.Position.x + 1, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z);
+        CheckNeighbor((int)_playerLastCell.Position.x - 1, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z);
+        CheckNeighbor((int)_playerLastCell.Position.x, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z + 1);
+        CheckNeighbor((int)_playerLastCell.Position.x, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z - 1);
 
         void CheckNeighbor(int neighborWid, int neighborHei, int neighbourDep)
         {
@@ -398,6 +393,8 @@ public class Spawner_Maze : MonoBehaviour
             closestCell = Cells[neighborWid, neighborHei, neighbourDep];
         }
 
+        ClearWalls(_playerLastCell, closestCell);
+
         if (_mousemazeTypes.Contains(MazeType.Chase)) RefreshChaserPaths();
     }
 
@@ -407,12 +404,12 @@ public class Spawner_Maze : MonoBehaviour
 
         foreach (Chaser chaser in _chasers)
         {
-            chaser.Pathfinder.RunPathfinder(chaser.CurrentCell.Position, _playerLastCell.Position, chaser, PuzzleSet.MouseMaze);
+            chaser.Pathfinder.UpdatePath(chaser.CurrentCell.Position, _playerLastCell.Position);
         }
     }
     public void GetNewRoute(Chaser chaser)
     {
-        chaser.Pathfinder.RunPathfinder(chaser.CurrentCell.Position, _playerLastCell.Position, chaser, PuzzleSet.MouseMaze);
+        chaser.Pathfinder.SetPath(chaser.CurrentCell.Position, _playerLastCell.Position, chaser, PuzzleSet.MouseMaze);
     }
 
     void OnDestroy()
@@ -437,5 +434,20 @@ public class Spawner_Maze : MonoBehaviour
         if (wid >= 0 && wid < Cells.GetLength(0) && hei >= 0 && hei < Cells.GetLength(1)) return Cells[wid, hei, dep];
         
         return null;
+    }
+
+    public LinkedList<Vector3> GetWalls(Transform objectTransform)
+    {
+        int layerMask = 1 << LayerMask.NameToLayer("Wall");
+        Collider[] wallColliders = Physics.OverlapSphere(objectTransform.position, 10, layerMask);
+
+        LinkedList<Vector3> wallPositions = new LinkedList<Vector3>();
+
+        foreach (Collider wallCollider in wallColliders)
+        {
+            wallPositions.AddLast(wallCollider.transform.position);
+        }
+
+        return wallPositions;
     }
 }

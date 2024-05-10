@@ -10,7 +10,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     public Pathfinder_Base_3D Pathfinder { get; set; }
     Coroutine _movingCoroutine;
     [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 1;
-    [SerializeField] Vector3Int _testTargetPositions;
+    [SerializeField] Vector3 _testTargetPositions;
 
     protected NavMeshAgent _agent;
     Animator _animator;
@@ -68,7 +68,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
             if (_targetPosition != Vector3.zero && Vector2.Distance(transform.localPosition, _targetPosition) > 0.9f)
             {
                 Debug.Log("Moving");
-                Pathfinder.RunPathfinder(new Vector3Int((int)transform.position.x, (int)transform.position.y, (int)transform.position.z), new Vector3Int((int)_targetPosition.x, (int)_targetPosition.y, (int)_targetPosition.z), this, PuzzleSet.None); 
+                Pathfinder.SetPath(new Vector3(transform.position.x, transform.position.y, transform.position.z), new Vector3(_targetPosition.x, _targetPosition.y, _targetPosition.z), this, PuzzleSet.None); 
                 _pathfinderCooldown = 1.0f;
             }
         }
@@ -156,7 +156,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     public Voxel_Base GetStartVoxel()
     {
-        return Pathfinder_Base_3D.GetVoxelAtPosition(new Vector3Int((int)transform.localPosition.x, (int)transform.localPosition.y, (int)transform.localPosition.z));
+        return VoxelGrid.GetVoxelAtPosition(new Vector3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z));
     }
 
     public void MoveTo(Voxel_Base target)
@@ -166,9 +166,9 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _movingCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
     }
 
-    IEnumerator FollowPath(List<Vector3Int> path)
+    IEnumerator FollowPath(List<Vector3> path)
     {
-        foreach (Vector3Int position in path)
+        foreach (Vector3 position in path)
         {
             _testTargetPositions = position;
             yield return Move(position);
@@ -178,7 +178,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _movingCoroutine = null;
     }
 
-    IEnumerator Move(Vector3Int nextPosition)
+    IEnumerator Move(Vector3 nextPosition)
     {
         while (Vector3.Distance(transform.localPosition, nextPosition) > 0.1f)
         {
@@ -196,9 +196,9 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _movingCoroutine = null;
     }
 
-    public LinkedList<Vector3Int> GetObstaclesInVision()
+    public LinkedList<Vector3> GetObstaclesInVision()
     {
-        return new LinkedList<Vector3Int>();
+        return new LinkedList<Vector3>();
     }
 }
 

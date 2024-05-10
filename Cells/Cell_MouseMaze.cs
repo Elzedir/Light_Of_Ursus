@@ -19,24 +19,25 @@ public class Cell_MouseMaze : Cell_Base
 
     Spawner_Maze _spawner;
     
-    public void InitialiseCell(Vector3Int position, Spawner_Maze spawner)
+    public void InitialiseCell(Vector3 position, Spawner_Maze spawner)
     {
         Position = position;
         _spawner = spawner;
 
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_White");
+        Material materialFloor = Resources.Load<Material>("Meshes/Material_White");
+        Material materialWalls = Resources.Load<Material>("Meshes/Material_Black");
 
         _meshFilter = gameObject.AddComponent<MeshFilter>();
         _meshFilter.mesh = mesh;
         _meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        _meshRenderer.material = material;
+        _meshRenderer.material = materialFloor;
 
         BoxCollider coll = gameObject.AddComponent<BoxCollider>();
         coll.size = new Vector3(0.75f, 0.75f, 0.75f);
         coll.isTrigger = true;
 
-        _createWalls(mesh, material);
+        if (Position.y != 0) _createWalls(mesh, materialWalls);
 
         //GameObject textGO = new GameObject();
         //textGO.transform.parent = transform;
@@ -122,6 +123,14 @@ public class Wall_MouseMaze : MonoBehaviour
         MeshRenderer = gameObject.AddComponent<MeshRenderer>();
         MeshRenderer.material = material;
         transform.parent = parent;
+
+        BoxCollider = gameObject.AddComponent<BoxCollider>();
+
+        gameObject.layer = LayerMask.NameToLayer("Wall");
+
+        Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>();
+        rigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+        rigidbody.freezeRotation = true;
 
         switch (Wall)
         {

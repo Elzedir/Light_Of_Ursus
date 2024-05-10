@@ -101,18 +101,7 @@ public abstract class Controller : MonoBehaviour
 
     protected virtual void FixedUpdate()
     {
-        // _movePlayer();
-    }
 
-    void _movePlayer()
-    {
-        Vector3 movement = new Vector3(_move.x, 0, _move.y);
-
-        if (movement != Vector3.zero) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
-
-        //transform.Translate(movement * _speed * Time.deltaTime, Space.World);
-
-        _rigidbody.velocity = new Vector3(_move.x, 0, _move.y) * _speed;
     }
 
     public void OnInput(InputAction.CallbackContext context)

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEditor.Build.Content;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class Controller_Camera : MonoBehaviour
 {
-    public static CameraController Instance;
+    public static Controller_Camera Instance;
     Transform _lookAt;
     public Player _player;
     public float boundX = 0.15f;

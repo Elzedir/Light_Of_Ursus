@@ -19,10 +19,12 @@ public class Spawner_IceWall : MonoBehaviour
     int _width;
     int _height;
     int _depth;
+    int _scale;
+
     int _maxDistance = 0;
     Cell_IceWall _furthestCell;
 
-    Vector3Int _startPosition;
+    Vector3 _startPosition;
 
     Controller_Puzzle_IceWall _player;
 
@@ -30,6 +32,8 @@ public class Spawner_IceWall : MonoBehaviour
     int _maxCellHealth;
 
     int _playerExtraStamina;
+
+    bool _disableRefresh = false;
 
     void Start()
     {
@@ -44,13 +48,18 @@ public class Spawner_IceWall : MonoBehaviour
 
     public void InitialisePuzzle(List<IceWallType> gameModes, IceWallData iceWallData)
     {
+        Controller_Camera.Instance.SetOffset(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
+        Controller_Sun.Instance.SetLightPositionAndRotation(new Vector3(0, 30, 0), Quaternion.Euler(90, 0, 0));
+
         _width = iceWallData.Width;
         _height = iceWallData.Height;
+        _depth = iceWallData.Depth;
+
         _startPosition = iceWallData.StartPosition;
         _playerExtraStamina = iceWallData.PlayerExtraStaminaPercentage;
         _cellHealthRange = (iceWallData.CellHealthMin, iceWallData.CellHealthMax);
 
-        NodeArray_2D.Nodes = NodeArray_2D.InitializeArray(_width, _height);
+        VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, Vector3.zero);
         _cellParent = GameObject.Find("CellParent").transform;
         _player = GameObject.Find("Focus").GetComponent<Controller_Puzzle_IceWall>();
         _player.Initialise(this, _playerExtraStamina);
@@ -77,9 +86,9 @@ public class Spawner_IceWall : MonoBehaviour
                 {
                     Cells[wid, hei, dep] = CreateCell(wid, hei, dep);
 
-                    if ((wid + hei) > _maxDistance)
+                    if ((wid + hei + dep) > _maxDistance)
                     {
-                        _maxDistance = wid + hei;
+                        _maxDistance = wid + hei + dep;
                         _furthestCell = Cells[wid, hei, dep];
                     }
                 }
@@ -87,7 +96,6 @@ public class Spawner_IceWall : MonoBehaviour
         }
 
         _playerLastCell = Cells[0, 0, 0];
-        _player.transform.position = _playerLastCell.transform.position;
         _player.SetCurrentCell(_playerLastCell);
         _startPosition = _playerLastCell.Position;
         
@@ -108,22 +116,22 @@ public class Spawner_IceWall : MonoBehaviour
 
     Cell_IceWall CreateCell(int width, int height, int depth)
     {
-        GameObject cellGO = new GameObject($"cell{width}_{height}");
-        cellGO.transform.position = new Vector3(width, height, 0);
+        GameObject cellGO = new GameObject($"cell{width}_{height}_{depth}");
+        cellGO.transform.position = new Vector3(width, height, depth);
         cellGO.transform.rotation = Quaternion.identity;
         cellGO.transform.parent = _cellParent;
         Cell_IceWall cell = cellGO.AddComponent<Cell_IceWall>();
         int cellHealth = Random.Range(_cellHealthRange.Item1, _cellHealthRange.Item2);
         if (cellHealth > _maxCellHealth) _maxCellHealth = cellHealth;
-        Pathfinder_Base_3D.GetVoxelAtPosition(new Vector3Int(width, height, depth)).UpdateMovementCost(cellHealth);
-        cell.InitialiseCell(new Vector3Int(width, height, depth), this, cellHealth);
+        VoxelGrid.GetVoxelAtPosition(new Vector3(width, height, depth)).UpdateMovementCost(cellHealth);
+        cell.InitialiseCell(new Vector3(width, height, depth), this, cellHealth);
 
         return cell;
     }
 
     void _calculatePlayerMaxStamina()
     {
-        _player.Pathfinder.RunPathfinder(_playerLastCell.Position, _furthestCell.Position, _player, PuzzleSet.IceWall);
+        _player.Pathfinder.SetPath(_playerLastCell.Position, _furthestCell.Position, _player, PuzzleSet.IceWall);
     }
 
     void Update()
@@ -145,7 +153,7 @@ public class Spawner_IceWall : MonoBehaviour
 
                 // Show an animation first.
 
-                _player.transform.position = Cells[_startPosition.x, _startPosition.y, _startPosition.z].transform.position;
+                // _player.transform.position = Cells[_startPosition.x, _startPosition.y, _startPosition.z].transform.position;
             }
         }
         if (_icewallTypes.Contains(IceWallType.Shatter))
@@ -159,13 +167,13 @@ public class Spawner_IceWall : MonoBehaviour
 
     public bool PlayerCanMove(IceWallDirection direction)
     {
-        //switch(direction)
-        //{
-        //    case IceWallDirection.Up: if (_playerLastCell.Position.Y + 1 < _height && !Cells[_playerLastCell.Position.X, _playerLastCell.Position.Y + 1].Broken) return true; break;
-        //    case IceWallDirection.Down: if (_playerLastCell.Position.Y - 1 >= 0 && !Cells[_playerLastCell.Position.X, _playerLastCell.Position.Y - 1].Broken) return true; break;
-        //    case IceWallDirection.Left: if (_playerLastCell.Position.X - 1 >= 0 && !Cells[_playerLastCell.Position.X - 1, _playerLastCell.Position.Y].Broken) return true; break;
-        //    case IceWallDirection.Right: if (_playerLastCell.Position.X + 1 < _width && !Cells[_playerLastCell.Position.X + 1, _playerLastCell.Position.Y].Broken) return true; break;
-        //}
+        switch (direction)
+        {
+            case IceWallDirection.Up: if (_playerLastCell.Position.x + 1 < _width && !Cells[(int)_playerLastCell.Position.x + 1, 0, (int)_playerLastCell.Position.z].Broken) return true; break;
+            case IceWallDirection.Down: if (_playerLastCell.Position.x - 1 >= 0 && !Cells[(int)_playerLastCell.Position.x - 1, 0, (int)_playerLastCell.Position.z].Broken) return true; break;
+            case IceWallDirection.Left: if (_playerLastCell.Position.z - 1 >= 0 && !Cells[(int)_playerLastCell.Position.x, 0, (int)_playerLastCell.Position.z - 1].Broken) return true; break;
+            case IceWallDirection.Right: if (_playerLastCell.Position.z + 1 < _depth && !Cells[(int)_playerLastCell.Position.x, 0, (int)_playerLastCell.Position.z + 1].Broken) return true; break;
+        }
 
         return false;
     }

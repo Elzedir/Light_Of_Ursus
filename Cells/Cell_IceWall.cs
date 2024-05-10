@@ -15,7 +15,7 @@ public class Cell_IceWall : Cell_Base
 
     bool _staminaFinishCell = false;
 
-    public void InitialiseCell(Vector3Int position, Spawner_IceWall spawner, int cellHealth)
+    public void InitialiseCell(Vector3 position, Spawner_IceWall spawner, int cellHealth)
     {
         Position = position;
         _spawner = spawner;
@@ -27,24 +27,24 @@ public class Cell_IceWall : Cell_Base
         _meshRenderer.material = Resources.Load<Material>("Meshes/Material_White");
 
         _boxCollider = gameObject.AddComponent<BoxCollider>();
-        _boxCollider.size = new Vector2(0.75f, 0.75f);
+        _boxCollider.size = new Vector3(0.75f, 2f, 0.75f);
         _boxCollider.isTrigger = true;
 
-        GameObject textGO = new GameObject();
-        textGO.transform.parent = transform;
-        textGO.transform.localPosition = Vector3.zero;
-        CellText = textGO.AddComponent<TextMeshPro>();
-        CellText.text = CellHealth.ToString();
-        CellText.alignment = TextAlignmentOptions.Center;
-        CellText.sortingLayerID = -967159649;
-        CellText.fontSize = 2; 
-        CellText.color = Color.red;
+        //GameObject textGO = new GameObject();
+        //textGO.transform.parent = transform;
+        //textGO.transform.localPosition = Vector3.zero;
+        //CellText = textGO.AddComponent<TextMeshPro>();
+        //CellText.text = CellHealth.ToString();
+        //CellText.alignment = TextAlignmentOptions.Center;
+        //CellText.sortingLayerID = -967159649;
+        //CellText.fontSize = 2; 
+        //CellText.color = Color.red;
     }
 
-    void OnTriggerEnter2D(Collider2D collider)
+    void OnTriggerEnter(Collider collider)
     {
         if (collider.gameObject.name == "Focus") 
-        { 
+        {
             _spawner.RefreshWall(this);
 
             if (_staminaFinishCell) Manager_Puzzle.Instance.PuzzleEnd(true);
@@ -78,11 +78,11 @@ public class Cell_IceWall : Cell_Base
         ChangeColour(1);
         List<Material> cracks = new();
 
-        cracks.Add(Resources.Load<Material>("Sprites/Grid"));
-        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenOneSide"));
-        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenTwoSides"));
-        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenThreeSides"));
-        cracks.Add(Resources.Load<Material>("Sprites/Grid_OpenAllSides"));
+        cracks.Add(Resources.Load<Material>("Meshes/Material_White"));
+        cracks.Add(Resources.Load<Material>("Meshes/Material_Yellow"));
+        cracks.Add(Resources.Load<Material>("Meshes/Material_Green"));
+        cracks.Add(Resources.Load<Material>("Meshes/Material_Blue"));
+        cracks.Add(Resources.Load<Material>("Meshes/Material_Black"));
 
         foreach (Material material in cracks)
         {

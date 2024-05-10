@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public enum MouseMazeColour { None, Blue, Green, Red }
 
@@ -20,7 +21,17 @@ public class Controller_Puzzle_MouseMaze : Controller
 
     void _playerMove()
     {
+        //_rigidbody.MovePosition(_rigidbody.position + new Vector3(_move.x * _playerSpeed, 0, _move.y * _playerSpeed) * Time.fixedDeltaTime);
+
         transform.position += new Vector3(_move.x * _playerSpeed, 0 ,_move.y * _playerSpeed);
+    }
+
+    public void BreakWall(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            OnBreakWall?.Invoke();
+        }
     }
 
     //void Start()
