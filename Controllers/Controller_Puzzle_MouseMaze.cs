@@ -16,6 +16,8 @@ public class Controller_Puzzle_MouseMaze : Controller
     {
         base.FixedUpdate();
 
+        if (!Spawner_Maze.Initialised) return;
+
         _playerMove();
     }
 

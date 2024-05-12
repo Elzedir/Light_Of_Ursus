@@ -186,4 +186,14 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
         _centrePosition = new Vector3(CurrentCell.transform.position.x, CurrentCell.transform.position.y + 1, CurrentCell.transform.position.z);
         _returnToCenter();
     }
+
+    public void StartPathfindingCoroutine(IEnumerator coroutine)
+    {
+
+    }
+
+    public void StopPathfindingCoroutine()
+    {
+
+    }
 }

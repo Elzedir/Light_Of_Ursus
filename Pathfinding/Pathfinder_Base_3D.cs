@@ -40,7 +40,7 @@ public class Pathfinder_Base_3D
         _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
         _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
 
-        _pathfinderCoroutine = Manager_Game.Instance.StartVirtualCoroutine(_runPathfinder());
+        mover.StartPathfindingCoroutine(_runPathfinder());
     }
 
     public void UpdatePath(Vector3 start, Vector3 target)
@@ -56,54 +56,58 @@ public class Pathfinder_Base_3D
 
         if (_startVoxel.Equals(_targetVoxel)) yield break;
 
-        Voxel_Base lastNode = _startVoxel;
+        Voxel_Base currentVoxel = _startVoxel;
 
         _initialise();
 
-        _computeShortestPath();
+        
 
-        while (!_startVoxel.Equals(_targetVoxel))
+        int infinity = 0;
+
+        while (!currentVoxel.Equals(_targetVoxel) && infinity < 1000)
         {
-            _startVoxel = _minimumSuccessorNode(_startVoxel);
+            bool changesInEnvironment = false;
             LinkedList<Vector3> obstacleCoordinates = _mover.GetObstaclesInVision();
-            double oldPriorityModifier = _priorityModifier;
-            Voxel_Base oldLastNode = lastNode;
-            _priorityModifier += _manhattanDistance(_startVoxel, lastNode);
-            lastNode = _startVoxel;
-            bool change = false;
 
             foreach (Vector3 position in obstacleCoordinates)
             {
-                Voxel_Base voxel = VoxelGrid.GetVoxelAtPosition(position);
+                Voxel_Base obstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
 
-                if (voxel != null) continue;
-                
-                voxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
-                change = true;
+                if (obstacleVoxel.IsObstacle) continue;
 
-                foreach (Voxel_Base p in voxel.GetPredecessors(VoxelGrid.Voxels))
+                obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
+                changesInEnvironment = true;
+
+                foreach (Voxel_Base p in obstacleVoxel.GetPredecessors())
                 {
                     _updateVertex(p);
                 }
             }
 
-            if (!change)
+            Voxel_Base nextVoxel = _minimumSuccessorVoxel(currentVoxel);
+
+            double previousPriorityModifier = _priorityModifier;
+            currentVoxel = nextVoxel;
+
+            _priorityModifier += _manhattanDistance(currentVoxel, nextVoxel);
+
+            if (!changesInEnvironment)
             {
-                _priorityModifier = oldPriorityModifier;
-                lastNode = oldLastNode;
+                _priorityModifier = previousPriorityModifier;
             }
             else
             {
-                _mover.MoveTo(_targetVoxel);
+                //_mover.MoveTo(_targetVoxel);
             }
 
-            yield return new WaitForSeconds(0.5f);
+            _computeShortestPath();
+            infinity++;
         }
     }
 
     void _initialise()
     {
-        foreach (Voxel_Base node in VoxelGrid.Voxels) { node.RHS = double.PositiveInfinity; node.G = double.PositiveInfinity; }
+        foreach (Voxel_Base voxel in VoxelGrid.Voxels) { if (voxel != null) { voxel.RHS = double.PositiveInfinity; voxel.G = double.PositiveInfinity; } }
         _mainPriorityQueue = new PriorityQueue_3D(_gridWidth * _gridHeight * _gridDepth);
         _priorityModifier = 0;
         _targetVoxel.RHS = 0;
@@ -120,44 +124,51 @@ public class Pathfinder_Base_3D
         return Math.Abs(distance.x) + Math.Abs(distance.y) + Math.Abs(distance.z);
     }
 
-    void _updateVertex(Voxel_Base node)
+    void _updateVertex(Voxel_Base voxel)
     {
-        if (!node.Equals(_targetVoxel))
+        if (!voxel.Equals(_targetVoxel))
         {
-            node.RHS = _minimumSuccessorCost(node);
+            voxel.RHS = _minimumSuccessorCost(voxel);
         }
-        if (_mainPriorityQueue.Contains(node))
+        if (_mainPriorityQueue.Contains(voxel))
         {
-            _mainPriorityQueue.Remove(node);
+            _mainPriorityQueue.Remove(voxel);
         }
-        if (node.G != node.RHS)
+        if (voxel.G != voxel.RHS)
         {
-            _mainPriorityQueue.Enqueue(node, _calculatePriority(node));
+            _mainPriorityQueue.Enqueue(voxel, _calculatePriority(voxel));
         }
     }
-    Voxel_Base _minimumSuccessorNode(Voxel_Base node)
+    Voxel_Base _minimumSuccessorVoxel(Voxel_Base voxel)
     {
         double minimumCostToMove = Double.PositiveInfinity;
-        Voxel_Base newNode = null;
-        foreach (Voxel_Base successor in node.GetSuccessors(VoxelGrid.Voxels))
+        Voxel_Base bestSucessor = null;
+
+        Debug.Log($"WorldPos: {voxel.WorldPosition} Cost: {voxel.MovementCost}");
+
+        foreach (Voxel_Base successor in voxel.GetSuccessors())
         {
-            double costToMove = node.GetMovementCostTo(successor, _puzzleSet) + successor.G;
+            Debug.Log($"WorldPos: {successor.WorldPosition} Cost: {successor.MovementCost}");
+
+            double costToMove = voxel.GetMovementCostTo(successor, _puzzleSet) + successor.G;
 
             if (costToMove <= minimumCostToMove && !successor.IsObstacle)
             {
                 minimumCostToMove = costToMove;
-                newNode = successor;
+                bestSucessor = successor;
             }
         }
 
-        newNode.Predecessor = node;
+        bestSucessor.SetPredecessor(voxel);
 
-        return newNode;
+        Debug.Log($"Best Succ WorldPos: {bestSucessor.WorldPosition} Cost: {bestSucessor.MovementCost}");
+
+        return bestSucessor;
     }
     double _minimumSuccessorCost(Voxel_Base node)
     {
         double minimumCost = Double.PositiveInfinity;
-        foreach (Voxel_Base successor in node.GetSuccessors(VoxelGrid.Voxels))
+        foreach (Voxel_Base successor in node.GetSuccessors())
         {
             double costToMove = node.GetMovementCostTo(successor, _puzzleSet) + successor.G;
             if (costToMove < minimumCost && !successor.IsObstacle) minimumCost = costToMove;
@@ -179,7 +190,7 @@ public class Pathfinder_Base_3D
             else if (node.G > node.RHS)
             {
                 node.G = node.RHS;
-                foreach (Voxel_Base neighbour in node.GetPredecessors(VoxelGrid.Voxels))
+                foreach (Voxel_Base neighbour in node.GetPredecessors())
                 {
                     _updateVertex(neighbour);
                 }
@@ -188,7 +199,7 @@ public class Pathfinder_Base_3D
             {
                 node.G = Double.PositiveInfinity;
                 _updateVertex(node);
-                foreach (Voxel_Base neighbour in node.GetPredecessors(VoxelGrid.Voxels))
+                foreach (Voxel_Base neighbour in node.GetPredecessors())
                 {
                     _updateVertex(neighbour);
                 }
@@ -197,22 +208,26 @@ public class Pathfinder_Base_3D
     }
     #endregion
 
-    public List<Vector3> RetrievePath(Voxel_Base startNode, Voxel_Base targetNode)
+    public List<Vector3> RetrievePath(Voxel_Base startVoxel, Voxel_Base targetVoxel)
     {
         List<Vector3> path = new List<Vector3>();
-        Voxel_Base currentNode = targetNode;
+        Voxel_Base currentVoxel = targetVoxel;
 
-        while (currentNode != null && !currentNode.Equals(startNode))
+        while (currentVoxel != null && !currentVoxel.Equals(startVoxel))
         {
-            if (currentNode == null || currentNode.Equals(startNode)) break;
+            if (currentVoxel == null || currentVoxel.Equals(startVoxel)) break;
 
-            path.Add(new Vector3(currentNode.WorldPosition.x, currentNode.WorldPosition.y, currentNode.WorldPosition.z));
-            currentNode = currentNode.Predecessor;
+            Debug.Log($"CurrentVoxelPos: {currentVoxel.WorldPosition}");
+            Debug.Log($"Predecessor: {currentVoxel.Predecessor}");
+            Debug.Log($"PredecessorPos: {currentVoxel.Predecessor.WorldPosition}");
+
+            path.Add(currentVoxel.WorldPosition);
+            currentVoxel = currentVoxel.Predecessor;
         }
 
-        if (currentNode != null)
+        if (currentVoxel != null)
         {
-            path.Add(new Vector3(startNode.WorldPosition.x, startNode.WorldPosition.y, startNode.WorldPosition.z));
+            path.Add(startVoxel.WorldPosition);
         }
 
         path.Reverse();
@@ -234,12 +249,12 @@ public class Pathfinder_Base_3D
 public class VoxelGrid
 {
     public static Voxel_Base[,,] Voxels;
-    static float _scale;
+    public static float Scale { get; private set; }
     static Vector3 _offset;
 
     public static void InitializeVoxelGrid(float width, float height, float depth, float scale, Vector3 offset)
     {
-        _scale = scale;
+        Scale = scale;
         _offset = offset;
 
         int gridWidth = (int)((width + 1) * scale);
@@ -250,17 +265,20 @@ public class VoxelGrid
 
         Voxels = new Voxel_Base[gridWidth, gridHeight, gridDepth];
 
-        for (int x = 0; x < gridWidth; x += (int)_scale)
-        {
-            for (int y = 0; y < gridHeight; y += (int)_scale)
-            {
-                for (int z = 0; z < gridDepth; z += (int)_scale)
-                {
-                    if (y < 1 * scale || y > 2 * _scale) continue;
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Green");
 
-                    float worldX = ((float)x / scale) - offset.x;
-                    float worldY = ((float)y / scale) - offset.y;
-                    float worldZ = ((float)z / scale) - offset.z;
+        for (int x = 0; x < gridWidth; x += (int)Scale)
+        {
+            for (int y = 0; y < gridHeight; y += (int)Scale)
+            {
+                for (int z = 0; z < gridDepth; z += (int)Scale)
+                {
+                    if (y < 1 * scale || y > 2 * Scale) continue;
+
+                    float worldX = ((float)x / scale);// - _offset.x;
+                    float worldY = ((float)y / scale);// - _offset.y;
+                    float worldZ = ((float)z / scale);// - _offset.z;
 
                     Voxels[x, y, z] = new Voxel_Base
                     {
@@ -271,20 +289,17 @@ public class VoxelGrid
                         RHS = double.PositiveInfinity
                     };
 
-                    Debug.Log(Voxels[x, y, z].WorldPosition);
+                    Voxels[x, y, z].UpdateMovementCost(1);
+
+                    // Voxels[x, y, z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
                 }
             }
-        }
-
-        foreach (Voxel_Base voxel in Voxels)
-        {
-            Debug.Log(voxel.WorldPosition);
         }
     }
 
     public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle)
     {
-        Collider[] hitColliders = Physics.OverlapSphere(position, 0.5f);
+        Collider[] hitColliders = Physics.OverlapSphere(position, 0.1f);
         Collider collider = null;
 
         if (hitColliders.Length > 0)
@@ -334,7 +349,7 @@ public class VoxelGrid
 
         if (Voxels[gridPosition.x, gridPosition.y, gridPosition.z] != null && Voxels[gridPosition.x, gridPosition.y, gridPosition.z].Size == subVoxelSize)
         {
-            Debug.Log("Voxel with same scale already exists at this position.");
+            Debug.Log($"Voxel already exists at Pos: {position} GridPos: {gridPosition} WorldPos: {Voxels[gridPosition.x, gridPosition.y, gridPosition.z].WorldPosition} with same scale: {subVoxelSize}.");
             return null;
         }
 
@@ -349,7 +364,10 @@ public class VoxelGrid
 
         if (isObstacle) Voxels[gridPosition.x, gridPosition.y, gridPosition.z].UpdateMovementCost(double.PositiveInfinity);
 
-        Voxels[gridPosition.x, gridPosition.y, gridPosition.z].TestShowVoxel(GameObject.Find("TestTransform").transform);
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Red");
+
+        //Voxels[gridPosition.x, gridPosition.y, gridPosition.z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
 
         return Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
     }
@@ -364,18 +382,16 @@ public class VoxelGrid
         {
             if (Voxels[gridPosition.x, gridPosition.y, gridPosition.z] == null)
             {
-                if (Voxels[(int)(((int)(gridPosition.x / _scale)) * _scale), (int)(((int)(gridPosition.y / _scale)) * _scale), (int)(((int)(gridPosition.z / _scale)) * _scale)] == null)
+                if (Voxels[(int)(((int)(gridPosition.x / Scale)) * Scale), (int)(((int)(gridPosition.y / Scale)) * Scale), (int)(((int)(gridPosition.z / Scale)) * Scale)] == null)
                 {
                     Debug.Log("Voxel does not exist at:");
                     Debug.Log($"WorldPos: {position}");
-                    Debug.Log($"GridPos: {position * _scale}");
+                    Debug.Log($"GridPos: {position * Scale}");
                     Debug.Log($"OffsetGridPos: {gridPosition}");
                     return null;
                 }
 
-                Debug.Log(Voxels[(int)(((int)(gridPosition.x / _scale)) * _scale), (int)(((int)(gridPosition.y / _scale)) * _scale), (int)(((int)(gridPosition.z / _scale)) * _scale)].GridPosition);
-                Debug.Log(Voxels[(int)(((int)(gridPosition.x / _scale)) * _scale), (int)(((int)(gridPosition.y / _scale)) * _scale), (int)(((int)(gridPosition.z / _scale)) * _scale)].WorldPosition);
-                return Voxels[(int)(((int)(gridPosition.x / _scale)) * _scale), (int)(((int)(gridPosition.y / _scale)) * _scale), (int)(((int)(gridPosition.z / _scale)) * _scale)];
+                return Voxels[(int)(((int)(gridPosition.x / Scale)) * Scale), (int)(((int)(gridPosition.y / Scale)) * Scale), (int)(((int)(gridPosition.z / Scale)) * Scale)];
             }
 
             return Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
@@ -383,7 +399,7 @@ public class VoxelGrid
         else
         {
             Debug.Log($"WorldPos: {position}");
-            Debug.Log($"GridPos: {position * _scale}");
+            Debug.Log($"GridPos: {position * Scale}");
             Debug.Log($"OffsetGridPos: {gridPosition}");
             Debug.Log($"Grid: {Voxels.GetLength(0)}_{Voxels.GetLength(1)}_{Voxels.GetLength(2)}");
 
@@ -395,9 +411,9 @@ public class VoxelGrid
     public static Vector3Int WorldToGridPosition(Vector3 worldPosition)
     {
         return new Vector3Int(
-            (int)((worldPosition.x + _offset.x) * _scale),
-            (int)((worldPosition.y + _offset.y) * _scale),
-            (int)((worldPosition.z + _offset.z) * _scale)
+            (int)((worldPosition.x + _offset.x) * Scale),
+            (int)((worldPosition.y + _offset.y) * Scale),
+            (int)((worldPosition.z + _offset.z) * Scale)
         );
     }
 }
@@ -409,21 +425,25 @@ public class Voxel_Base
     public Vector3 Size;
     public double G;
     public double RHS;
-    private Voxel_Base _predecessor;
-    public Voxel_Base Predecessor { get; set; }
+    public Voxel_Base Predecessor { get; private set; }
 
     public double MovementCost;
 
     public bool IsObstacle { get; private set; }
 
-    public void TestShowVoxel(Transform transform)
+    public void TestShowVoxel(Transform transform, Mesh mesh, Material material)
     {
         GameObject voxelGO = new GameObject($"{WorldPosition}");
-        voxelGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        voxelGO.AddComponent<MeshRenderer>().material = Resources.Load<Material>("Meshes/Material_White");
+        voxelGO.AddComponent<MeshFilter>().mesh = mesh;
+        voxelGO.AddComponent<MeshRenderer>().material = material;
         voxelGO.transform.SetParent(transform);
         voxelGO.transform.localPosition = WorldPosition;
         voxelGO.transform.localScale = Size;
+    }
+
+    public void SetPredecessor(Voxel_Base predecessor)
+    {
+        Predecessor = predecessor;
     }
 
     public void UpdateMovementCost(double cost)
@@ -446,76 +466,100 @@ public class Voxel_Base
         return false;
     }
 
-    public LinkedList<Voxel_Base> GetSuccessors(Voxel_Base[,,] nodes)
+    public LinkedList<Voxel_Base> GetSuccessors()
     {
+        // Find out why it's only returning three of the possible six sucessor directions.
+
         LinkedList<Voxel_Base> successors = new LinkedList<Voxel_Base>();
+        int scale = (int)VoxelGrid.Scale;
 
-        int width = nodes.GetLength(0);
-        int height = nodes.GetLength(1);
-        int depth = nodes.GetLength(2);
+        TryAddDirectionalSuccessors(1, 0, 0);
+        TryAddDirectionalSuccessors(-1, 0, 0);
+        TryAddDirectionalSuccessors(0, 1, 0);
+        TryAddDirectionalSuccessors(0, -1, 0);
+        TryAddDirectionalSuccessors(0, 0, 1);
+        TryAddDirectionalSuccessors(0, 0, -1);
 
-        if (GridPosition.x + 1 < width)
-            successors.AddFirst(nodes[GridPosition.x + 1, GridPosition.y, GridPosition.z]);
-        if (GridPosition.x - 1 >= 0)
-            successors.AddFirst(nodes[GridPosition.x - 1, GridPosition.y, GridPosition.z]);
+        void TryAddDirectionalSuccessors(int x, int y, int z)
+        {
+            
+            bool subVoxelExists = false;
+            bool subVoxelIsObstacle = false;
 
-        if (GridPosition.y + 1 < height)
-            successors.AddFirst(nodes[GridPosition.x, GridPosition.y + 1, GridPosition.z]);
-        if (GridPosition.y - 1 >= 0)
-            successors.AddFirst(nodes[GridPosition.x, GridPosition.y - 1, GridPosition.z]);
+            for (int i = 1; i < 10; i++)
+            {
+                (subVoxelExists, subVoxelIsObstacle) = TryAddSuccessor(GridPosition.x + x * i, GridPosition.y + y * i, GridPosition.z + z * i);
+                if (subVoxelExists && subVoxelIsObstacle) break;
+            }
 
-        if (GridPosition.z + 1 < depth)
-            successors.AddFirst(nodes[GridPosition.x, GridPosition.y, GridPosition.z + 1]);
-        if (GridPosition.z - 1 >= 0)
-            successors.AddFirst(nodes[GridPosition.x, GridPosition.y, GridPosition.z - 1]);
+            if (!subVoxelIsObstacle) TryAddSuccessor(GridPosition.x + x * scale, GridPosition.y + y * scale, GridPosition.z + z * scale);
+        }
+
+        (bool subVoxelExists, bool subVoxelIsObstacle) TryAddSuccessor(int x, int y, int z)
+        {
+            if (x >= 0 && x < VoxelGrid.Voxels.GetLength(0) &&
+                y >= 0 && y < VoxelGrid.Voxels.GetLength(1) &&
+                z >= 0 && z < VoxelGrid.Voxels.GetLength(2))
+            {
+                Voxel_Base voxel = VoxelGrid.Voxels[x, y, z];
+
+                if (voxel == null) return (false, false);
+
+                successors.AddFirst(voxel);
+
+                if (!voxel.IsObstacle) return (true, false);
+
+                else return (true, true);
+            }
+
+            return (false, false);
+        }
 
         return successors;
     }
 
-    public LinkedList<Voxel_Base> GetPredecessors(Voxel_Base[,,] nodes)
+    public LinkedList<Voxel_Base> GetPredecessors()
     {
-        LinkedList<Voxel_Base> neighbours = new();
+        LinkedList<Voxel_Base> predecessors = new();
+        int scale = (int)VoxelGrid.Scale;
 
-        int width = nodes.GetLength(0);
-        int height = nodes.GetLength(1);
-        int depth = nodes.GetLength(2);
+        if (!TryAddPredecessor(GridPosition.x + 1, GridPosition.y, GridPosition.z))
+        TryAddPredecessor(GridPosition.x + scale, GridPosition.y, GridPosition.z);
 
-        Voxel_Base tempNode;
+        if (!TryAddPredecessor(GridPosition.x - 1, GridPosition.y, GridPosition.z))
+        TryAddPredecessor(GridPosition.x - scale, GridPosition.y, GridPosition.z);
 
-        if (GridPosition.x + 1 < width)
-        {
-            tempNode = nodes[GridPosition.x + 1, GridPosition.y, GridPosition.z];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
-        }
-        if (GridPosition.x - 1 >= 0)
-        {
-            tempNode = nodes[GridPosition.x - 1, GridPosition.y, GridPosition.z];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
-        }
+        if (!TryAddPredecessor(GridPosition.x, GridPosition.y + 1, GridPosition.z))
+        TryAddPredecessor(GridPosition.x, GridPosition.y + scale, GridPosition.z);
 
-        if (GridPosition.y + 1 < height)
-        {
-            tempNode = nodes[GridPosition.x, GridPosition.y + 1, GridPosition.z];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
-        }
-        if (GridPosition.y - 1 >= 0)
-        {
-            tempNode = nodes[GridPosition.x, GridPosition.y - 1, GridPosition.z];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
-        }
+        if (!TryAddPredecessor(GridPosition.x, GridPosition.y - 1, GridPosition.z))
+        TryAddPredecessor(GridPosition.x, GridPosition.y - scale, GridPosition.z);
 
-        if (GridPosition.z + 1 < depth)
+        if (!TryAddPredecessor(GridPosition.x, GridPosition.y, GridPosition.z + 1))
+        TryAddPredecessor(GridPosition.x, GridPosition.y, GridPosition.z + scale);
+
+        if (!TryAddPredecessor(GridPosition.x, GridPosition.y, GridPosition.z - 1))
+        TryAddPredecessor(GridPosition.x, GridPosition.y, GridPosition.z - scale);
+
+        bool TryAddPredecessor(int x, int y, int z)
         {
-            tempNode = nodes[GridPosition.x, GridPosition.y, GridPosition.z + 1];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
-        }
-        if (GridPosition.z - 1 >= 0)
-        {
-            tempNode = nodes[GridPosition.x, GridPosition.y, GridPosition.z - 1];
-            if (!tempNode.IsObstacle) neighbours.AddFirst(tempNode);
+            if (x >= 0 && x < VoxelGrid.Voxels.GetLength(0) &&
+                y >= 0 && y < VoxelGrid.Voxels.GetLength(1) &&
+                z >= 0 && z < VoxelGrid.Voxels.GetLength(2))
+            {
+                Voxel_Base voxel = VoxelGrid.Voxels[x, y, z];
+
+                if (voxel != null && !voxel.IsObstacle)
+                {
+                    predecessors.AddFirst(voxel);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        return neighbours;
+        return predecessors;
     }
 }
 
@@ -681,6 +725,8 @@ public class PriorityQueue_3D
 
 public interface PathfinderMover_3D
 {
+    void StartPathfindingCoroutine(IEnumerator coroutine);
+    void StopPathfindingCoroutine();
     void MoveTo(Voxel_Base target);
     LinkedList<Vector3> GetObstaclesInVision();
 }

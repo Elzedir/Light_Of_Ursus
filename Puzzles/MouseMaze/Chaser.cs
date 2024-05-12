@@ -53,9 +53,9 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         Destroy(gameObject);
     }
 
-    public void StartPathfindingCoroutine(Coroutine coroutine)
+    public void StartPathfindingCoroutine(IEnumerator coroutine)
     {
-        _pathfindingCoroutine = coroutine;
+        _pathfindingCoroutine = StartCoroutine(coroutine);
     }
 
     public void StopPathfindingCoroutine()
@@ -76,8 +76,15 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
 
         foreach (Vector3 position in path)
         {
+            Debug.Log(position);
+        }
+
+        foreach (Vector3 position in path)
+        {
             yield return _moveCoroutine = StartCoroutine(Move(Spawner.Cells[(int)position.x, (int)position.y, (int)position.z].transform.position));
         }
+
+        Debug.Log("Chaser Finished Moving");
 
         _moveCoroutine = null;
         _chasingCoroutine = null;
@@ -94,12 +101,19 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         }
     }
 
+    public void UpdateChaserPath()
+    {
+        Spawner.UpdateChaserPaths(this);
+    }
+
     public void StopChasing()
     {
         if (_chasingCoroutine == null) return;
 
+        StopCoroutine(_pathfindingCoroutine);
         StopCoroutine(_moveCoroutine);
         StopCoroutine(_chasingCoroutine);
+        _pathfindingCoroutine = null;
         _moveCoroutine = null;
         _chasingCoroutine = null;
     }

@@ -200,6 +200,16 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     {
         return new LinkedList<Vector3>();
     }
+
+    public void StartPathfindingCoroutine(IEnumerator coroutine)
+    {
+
+    }
+
+    public void StopPathfindingCoroutine()
+    {
+
+    }
 }
 
 [System.Serializable]

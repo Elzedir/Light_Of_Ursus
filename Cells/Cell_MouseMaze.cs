@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public enum Wall { Top, Bottom, Left, Right }
 
@@ -49,12 +51,17 @@ public class Cell_MouseMaze : Cell_Base
         //CellText.fontSize = 3; CellText.color = Color.black;
     }
 
+    public void RecreateWalls(Mesh mesh, Material material)
+    {
+        _createWalls(mesh, material);
+    }
+
     void _createWalls(Mesh mesh, Material material)
     {
-        Walls.Add(new GameObject($"Wall_Top").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Top, mesh, material, this.transform));
-        Walls.Add(new GameObject($"Wall_Bottom").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Bottom, mesh, material, this.transform));
-        Walls.Add(new GameObject($"Wall_Left").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Left, mesh, material, this.transform));
-        Walls.Add(new GameObject($"Wall_Right").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Right, mesh, material, this.transform));
+        Walls.Add(new GameObject("Wall_Top").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Top, mesh, material, this.transform));
+        Walls.Add(new GameObject("Wall_Bottom").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Bottom, mesh, material, this.transform));
+        Walls.Add(new GameObject("Wall_Right").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Right, mesh, material, this.transform));
+        Walls.Add(new GameObject("Wall_Left").AddComponent<Wall_MouseMaze>().CreateWall(Wall.Left, mesh, material, this.transform));
     }
 
     public void ClearWall(Wall wall)
@@ -84,6 +91,7 @@ public class Cell_MouseMaze : Cell_Base
             collider.TryGetComponent<Chaser>(out Chaser chaser);
             
             chaser.CurrentCell = this;
+            chaser.UpdateChaserPath();
         } 
     }
 
@@ -136,8 +144,8 @@ public class Wall_MouseMaze : MonoBehaviour
         {
             case Wall.Top: transform.localPosition = new Vector3(0, 0, 0.5f); gameObject.transform.localScale = new Vector3(1f, 1f, 0.1f); break;
             case Wall.Bottom: transform.localPosition = new Vector3(0, 0, -0.5f); gameObject.transform.localScale = new Vector3(1f, 1f, 0.1f); break;
-            case Wall.Left: transform.localPosition = new Vector3(-0.5f, 0, 0); gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f); break;
             case Wall.Right: transform.localPosition = new Vector3(0.5f, 0, 0); gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f); break;
+            case Wall.Left: transform.localPosition = new Vector3(-0.5f, 0, 0); gameObject.transform.localScale = new Vector3(0.1f, 1f, 1f); break;
             default: break;
         }
 
