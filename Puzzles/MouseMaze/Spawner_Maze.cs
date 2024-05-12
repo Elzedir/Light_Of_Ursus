@@ -15,9 +15,9 @@ public class Spawner_Maze : MonoBehaviour
     Cell_MouseMaze _furthestCell;
     int _maxDistance;
 
-    int _width = 20;
+    int _width = 5;
     int _height = 2;
-    int _depth = 20;
+    int _depth = 5;
     int _scale = 10;
 
     int _visibility = 5;
@@ -32,7 +32,7 @@ public class Spawner_Maze : MonoBehaviour
     #region Chaser
     Transform _chaserParent;
     List<Chaser> _chasers = new();
-    int _chaserCount = 5;
+    int _chaserCount = 1;
     float _chaserSpawnDelay = 4f;
     float _chaserSpawnInterval = 2f;
     (float, float) _chaserSpeeds = (0.75f, 2);
@@ -102,7 +102,7 @@ public class Spawner_Maze : MonoBehaviour
 
         _startPosition = Cells[0, 0, 0].Position;
 
-        VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, new Vector3(-0.5f, 0, 0));
+        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, new Vector3(0.5f, 0, 0.5f));
 
         yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 

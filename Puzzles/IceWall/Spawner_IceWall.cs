@@ -59,7 +59,7 @@ public class Spawner_IceWall : MonoBehaviour
         _playerExtraStamina = iceWallData.PlayerExtraStaminaPercentage;
         _cellHealthRange = (iceWallData.CellHealthMin, iceWallData.CellHealthMax);
 
-        VoxelGrid.Voxels = VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, Vector3.zero);
+        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, Vector3.zero);
         _cellParent = GameObject.Find("CellParent").transform;
         _player = GameObject.Find("Focus").GetComponent<Controller_Puzzle_IceWall>();
         _player.Initialise(this, _playerExtraStamina);

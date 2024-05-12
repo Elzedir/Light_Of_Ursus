@@ -11,6 +11,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
 
     Rigidbody _chaserBody;
 
+    Coroutine _pathfindingCoroutine;
     Coroutine _chasingCoroutine;
     Coroutine _moveCoroutine;
     public Spawner_Maze Spawner;
@@ -50,6 +51,16 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     public void BlowUp()
     {
         Destroy(gameObject);
+    }
+
+    public void StartPathfindingCoroutine(Coroutine coroutine)
+    {
+        _pathfindingCoroutine = coroutine;
+    }
+
+    public void StopPathfindingCoroutine()
+    {
+        StopCoroutine(_pathfindingCoroutine);
     }
 
     public void MoveTo(Voxel_Base target)
