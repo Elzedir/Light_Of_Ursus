@@ -18,6 +18,7 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     Cell_IceWall _lastCell;
     public Pathfinder_Base_3D Pathfinder { get; private set; }
     public Cell_IceWall CurrentCell { get; private set; }
+    public bool CanGetNewPath { get; set; }
 
     //void Start()
     //{

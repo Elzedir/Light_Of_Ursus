@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.XR;
 
 public class Pathfinder_Base_3D
 {
-    Coroutine _pathfinderCoroutine;
     PriorityQueue_3D _mainPriorityQueue;
     double _priorityModifier;
     Voxel_Base _targetVoxel;
@@ -29,48 +29,52 @@ public class Pathfinder_Base_3D
 
     public void SetPath(Vector3 start, Vector3 target, PathfinderMover_3D mover, PuzzleSet puzzleSet)
     {
-        if( _pathfinderCoroutine != null )
-        {
-            Manager_Game.Instance.StopCoroutine(_pathfinderCoroutine);
-            _pathfinderCoroutine = null;
-        }
-        
         _puzzleSet = puzzleSet;
         _mover = mover;
+
         _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
         _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
 
         mover.StartPathfindingCoroutine(_runPathfinder());
     }
 
-    public void UpdatePath(Vector3 start, Vector3 target)
+    public void UpdatePath(PathfinderMover_3D mover, Vector3 start, Vector3 target)
     {
         _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
         _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
+
+        if (mover.CanGetNewPath)
+        {
+            mover.StartPathfindingCoroutine(_runPathfinder());
+        }
     }
 
     IEnumerator _runPathfinder()
     {
-        if (_startVoxel == null) Debug.Log("StartVoxel is null");
-        if (_targetVoxel == null) Debug.Log("TargetVoxel is null");
-
-        if (_startVoxel.Equals(_targetVoxel)) yield break;
+        if (_startVoxel == null || _targetVoxel == null || _startVoxel.Equals(_targetVoxel))
+        {
+            Debug.Log($"StartVoxel: {_startVoxel} or TargetVoxel: {_targetVoxel} is null or equal.");
+            yield break;
+        }
 
         Voxel_Base currentVoxel = _startVoxel;
+        LinkedList<Voxel_Base> currentPath = new LinkedList<Voxel_Base>();
+        LinkedList<Voxel_Base> previousPath = null;
+        bool pathIsComplete = false;
 
         _initialise();
 
-        
+        int iterationCount = 0;
 
-        int infinity = 0;
-
-        while (!currentVoxel.Equals(_targetVoxel) && infinity < 1000)
+        while (true)
         {
             bool changesInEnvironment = false;
             LinkedList<Vector3> obstacleCoordinates = _mover.GetObstaclesInVision();
 
             foreach (Vector3 position in obstacleCoordinates)
             {
+                // Maybe put something in to check which obstacles have disappeared, like with currentpath and previouspath
+
                 Voxel_Base obstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
 
                 if (obstacleVoxel.IsObstacle) continue;
@@ -78,31 +82,78 @@ public class Pathfinder_Base_3D
                 obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
                 changesInEnvironment = true;
 
-                foreach (Voxel_Base p in obstacleVoxel.GetPredecessors())
+                foreach (Voxel_Base predecessor in obstacleVoxel.GetPredecessors())
                 {
-                    _updateVertex(p);
+                    _updateVertex(predecessor);
                 }
             }
 
-            Voxel_Base nextVoxel = _minimumSuccessorVoxel(currentVoxel);
+            _computeShortestPath();
 
-            double previousPriorityModifier = _priorityModifier;
+            if (pathIsComplete)
+            {
+                currentVoxel = _startVoxel;
+            }
+
+            Voxel_Base nextVoxel = _minimumSuccessorVoxel(currentVoxel);
+            currentPath.AddLast(nextVoxel);
             currentVoxel = nextVoxel;
 
+            double previousPriorityModifier = _priorityModifier;
             _priorityModifier += _manhattanDistance(currentVoxel, nextVoxel);
 
             if (!changesInEnvironment)
             {
                 _priorityModifier = previousPriorityModifier;
             }
-            else
+
+            if (currentVoxel.Equals(_targetVoxel))
             {
-                //_mover.MoveTo(_targetVoxel);
+                pathIsComplete = true;
             }
 
-            _computeShortestPath();
-            infinity++;
+            if (pathIsComplete && (previousPath == null || !IsPathEqual(previousPath, currentPath)))
+            {
+                _mover.MoveTo(_targetVoxel);
+                currentVoxel = _startVoxel;
+
+                previousPath = new LinkedList<Voxel_Base>(currentPath);
+                currentPath.Clear();
+                pathIsComplete = false;
+
+                iterationCount = 0;
+                yield return null;
+            }
+            
+            iterationCount++;
+
+            if (iterationCount >= 1000) break;
         }
+
+        Debug.Log($"IterationCount: {iterationCount}");
+    }
+
+    bool IsPathEqual(LinkedList<Voxel_Base> path1, LinkedList<Voxel_Base> path2)
+    {
+        if (path1.Count != path2.Count)
+        {
+            return false;
+        }
+
+        LinkedListNode<Voxel_Base> node1 = path1.First;
+        LinkedListNode<Voxel_Base> node2 = path2.First;
+
+        while (node1 != null && node2 != null)
+        {
+            if (!node1.Value.Equals(node2.Value))
+            {
+                return false;
+            }
+            node1 = node1.Next;
+            node2 = node2.Next;
+        }
+
+        return true;
     }
 
     void _initialise()
@@ -144,11 +195,11 @@ public class Pathfinder_Base_3D
         double minimumCostToMove = Double.PositiveInfinity;
         Voxel_Base bestSucessor = null;
 
-        Debug.Log($"WorldPos: {voxel.WorldPosition} Cost: {voxel.MovementCost}");
+        //Debug.Log($"Original: WorldPos: {voxel.WorldPosition} Cost: {voxel.MovementCost}");
 
         foreach (Voxel_Base successor in voxel.GetSuccessors())
         {
-            Debug.Log($"WorldPos: {successor.WorldPosition} Cost: {successor.MovementCost}");
+            //Debug.Log($"WorldPos: {successor.WorldPosition} Cost: {successor.MovementCost} G: {successor.G}");
 
             double costToMove = voxel.GetMovementCostTo(successor, _puzzleSet) + successor.G;
 
@@ -161,7 +212,9 @@ public class Pathfinder_Base_3D
 
         bestSucessor.SetPredecessor(voxel);
 
-        Debug.Log($"Best Succ WorldPos: {bestSucessor.WorldPosition} Cost: {bestSucessor.MovementCost}");
+        //Debug.Log($"Predecessor: {bestSucessor.Predecessor.WorldPosition}");
+
+        //Debug.Log($"Best Succ WorldPos: {bestSucessor.WorldPosition} Cost: {bestSucessor.MovementCost}");
 
         return bestSucessor;
     }
@@ -213,16 +266,14 @@ public class Pathfinder_Base_3D
         List<Vector3> path = new List<Vector3>();
         Voxel_Base currentVoxel = targetVoxel;
 
-        while (currentVoxel != null && !currentVoxel.Equals(startVoxel))
+        int iterationCount = 0;
+
+        while (currentVoxel != null && !currentVoxel.Equals(startVoxel) && iterationCount < 1000)
         {
             if (currentVoxel == null || currentVoxel.Equals(startVoxel)) break;
-
-            Debug.Log($"CurrentVoxelPos: {currentVoxel.WorldPosition}");
-            Debug.Log($"Predecessor: {currentVoxel.Predecessor}");
-            Debug.Log($"PredecessorPos: {currentVoxel.Predecessor.WorldPosition}");
-
             path.Add(currentVoxel.WorldPosition);
             currentVoxel = currentVoxel.Predecessor;
+            iterationCount++;
         }
 
         if (currentVoxel != null)
@@ -251,6 +302,7 @@ public class VoxelGrid
     public static Voxel_Base[,,] Voxels;
     public static float Scale { get; private set; }
     static Vector3 _offset;
+    static List<Voxel_Base> _testShowPathfinding = new();
 
     public static void InitializeVoxelGrid(float width, float height, float depth, float scale, Vector3 offset)
     {
@@ -268,17 +320,17 @@ public class VoxelGrid
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material material = Resources.Load<Material>("Meshes/Material_Green");
 
-        for (int x = 0; x < gridWidth; x += (int)Scale)
+        for (int x = (int)(_offset.x * Scale); x < gridWidth; x += (int)Scale)
         {
-            for (int y = 0; y < gridHeight; y += (int)Scale)
+            for (int y = (int)(_offset.y * Scale); y < gridHeight; y += (int)Scale)
             {
-                for (int z = 0; z < gridDepth; z += (int)Scale)
+                for (int z = (int)(_offset.z * Scale); z < gridDepth; z += (int)Scale)
                 {
-                    if (y < 1 * scale || y > 2 * Scale) continue;
+                    if (y < 1 * Scale || y >= 2 * Scale) continue;
 
-                    float worldX = ((float)x / scale);// - _offset.x;
-                    float worldY = ((float)y / scale);// - _offset.y;
-                    float worldZ = ((float)z / scale);// - _offset.z;
+                    float worldX = ((float)x / scale) - _offset.x;
+                    float worldY = ((float)y / scale) - _offset.y;
+                    float worldZ = ((float)z / scale) - _offset.z;
 
                     Voxels[x, y, z] = new Voxel_Base
                     {
@@ -289,9 +341,9 @@ public class VoxelGrid
                         RHS = double.PositiveInfinity
                     };
 
-                    Voxels[x, y, z].UpdateMovementCost(1);
+                    // Debug.Log($"Voxel: GridPos: {new Vector3Int(x, y, z)} WorldPos: {new Vector3(worldX, worldY, worldZ)}");
 
-                    // Voxels[x, y, z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
+                    Voxels[x, y, z].UpdateMovementCost(1);
                 }
             }
         }
@@ -299,22 +351,11 @@ public class VoxelGrid
 
     public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle)
     {
-        Collider[] hitColliders = Physics.OverlapSphere(position, 0.1f);
-        Collider collider = null;
+        Collider collider = Physics.OverlapSphere(position, 0.1f).FirstOrDefault(hitCollider => hitCollider.gameObject.name.Contains("Wall"));
 
-        if (hitColliders.Length > 0)
+        if (collider == null)
         {
-            foreach (Collider hitCollider in hitColliders)
-            {
-                if (hitCollider.gameObject.name.Contains("Wall"))
-                {
-                    collider = hitCollider;
-                }
-            }
-        }
-        else
-        {
-            Debug.Log($"No cells at this position {position}.");
+            Debug.Log($"No cells at Pos: {position}.");
             return null;
         }
 
@@ -332,28 +373,22 @@ public class VoxelGrid
         vertices[6] = center + new Vector3(-extents.x, extents.y, extents.z);
         vertices[7] = center + new Vector3(extents.x, extents.y, extents.z);
 
-        Vector3 minExtents = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-        Vector3 maxExtents = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-
-        foreach (Vector3 vertex in vertices)
-        {
-            Vector3 relativePosition = vertex - voxelCenter;
-            minExtents = Vector3.Min(minExtents, relativePosition);
-            maxExtents = Vector3.Max(maxExtents, relativePosition);
-        }
+        Vector3 minExtents = vertices.Select(vertex => vertex - voxelCenter).Aggregate(Vector3.Min);
+        Vector3 maxExtents = vertices.Select(vertex => vertex - voxelCenter).Aggregate(Vector3.Max);
 
         Vector3 subVoxelSize = maxExtents - minExtents;
         Vector3 subVoxelCenter = voxelCenter + (minExtents + maxExtents) / 2;
 
         Vector3Int gridPosition = WorldToGridPosition(subVoxelCenter);
+        Voxel_Base existingVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
 
-        if (Voxels[gridPosition.x, gridPosition.y, gridPosition.z] != null && Voxels[gridPosition.x, gridPosition.y, gridPosition.z].Size == subVoxelSize)
+        if (existingVoxel != null && existingVoxel.Size == subVoxelSize)
         {
-            Debug.Log($"Voxel already exists at Pos: {position} GridPos: {gridPosition} WorldPos: {Voxels[gridPosition.x, gridPosition.y, gridPosition.z].WorldPosition} with same scale: {subVoxelSize}.");
+            Debug.Log($"Voxel already exists at Pos: {position} GridPos: {gridPosition} WorldPos: {existingVoxel.WorldPosition} with same scale: {subVoxelSize}.");
             return null;
         }
 
-        Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base
+        Voxel_Base newVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base
         {
             GridPosition = new Vector3Int(gridPosition.x, gridPosition.y, gridPosition.z),
             WorldPosition = new Vector3(subVoxelCenter.x, subVoxelCenter.y, subVoxelCenter.z),
@@ -362,50 +397,70 @@ public class VoxelGrid
             RHS = double.PositiveInfinity
         };
 
-        if (isObstacle) Voxels[gridPosition.x, gridPosition.y, gridPosition.z].UpdateMovementCost(double.PositiveInfinity);
+        if (isObstacle) newVoxel.UpdateMovementCost(double.PositiveInfinity);
+
+        _testShowPathfinding.Add(newVoxel);
 
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material material = Resources.Load<Material>("Meshes/Material_Red");
 
-        //Voxels[gridPosition.x, gridPosition.y, gridPosition.z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
+        //newVoxel.TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
 
-        return Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
+        return newVoxel;
+    }
+
+    public static void RemoveVoxelAtPosition(Vector3? position)
+    {
+        if (!position.HasValue) return;
+        if (position == null) { Debug.Log("Position has value, but is null."); return; }
+        else Debug.Log(position.Value);
+
+        Voxel_Base voxel = GetVoxelAtPosition(position.Value);
+
+        if (voxel != null)
+        {
+            _testShowPathfinding.Remove(voxel);
+            //voxel.TestHideVoxel();
+            VoxelGrid.Voxels[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] = null;
+            return;
+        }
+
+        return;
     }
 
     public static Voxel_Base GetVoxelAtPosition(Vector3 position)
     {
         Vector3Int gridPosition = WorldToGridPosition(position);
 
-        if (gridPosition.x >= 0 && gridPosition.x < Voxels.GetLength(0) &&
-            gridPosition.y >= 0 && gridPosition.y < Voxels.GetLength(1) &&
-            gridPosition.z >= 0 && gridPosition.z < Voxels.GetLength(2))
+        if (gridPosition.x < 0 && gridPosition.x >= Voxels.GetLength(0) &&
+            gridPosition.y < 0 && gridPosition.y >= Voxels.GetLength(1) &&
+            gridPosition.z < 0 && gridPosition.z >= Voxels.GetLength(2))
         {
-            if (Voxels[gridPosition.x, gridPosition.y, gridPosition.z] == null)
-            {
-                if (Voxels[(int)(((int)(gridPosition.x / Scale)) * Scale), (int)(((int)(gridPosition.y / Scale)) * Scale), (int)(((int)(gridPosition.z / Scale)) * Scale)] == null)
-                {
-                    Debug.Log("Voxel does not exist at:");
-                    Debug.Log($"WorldPos: {position}");
-                    Debug.Log($"GridPos: {position * Scale}");
-                    Debug.Log($"OffsetGridPos: {gridPosition}");
-                    return null;
-                }
-
-                return Voxels[(int)(((int)(gridPosition.x / Scale)) * Scale), (int)(((int)(gridPosition.y / Scale)) * Scale), (int)(((int)(gridPosition.z / Scale)) * Scale)];
-            }
-
-            return Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
-        }
-        else
-        {
-            Debug.Log($"WorldPos: {position}");
-            Debug.Log($"GridPos: {position * Scale}");
-            Debug.Log($"OffsetGridPos: {gridPosition}");
-            Debug.Log($"Grid: {Voxels.GetLength(0)}_{Voxels.GetLength(1)}_{Voxels.GetLength(2)}");
-
-            Debug.LogError("Converted position is out of voxel grid bounds.");
+            Debug.Log($"Converted position WorldPos: {position} GridPos: {gridPosition} is out of Voxel Grid bounds: {Voxels.GetLength(0)}_{Voxels.GetLength(1)}_{Voxels.GetLength(2)}");
             return null;
         }
+
+        Voxel_Base voxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
+
+        if (voxel == null)
+        {
+            Vector3 scaledPosition = new Vector3(
+                (int)(((int)(gridPosition.x / Scale) + _offset.x) * Scale),
+                (int)(((int)(gridPosition.y / Scale) + _offset.y) * Scale),
+                (int)(((int)(gridPosition.z / Scale) + _offset.z) * Scale));
+
+            voxel = Voxels[(int)scaledPosition.x, (int)scaledPosition.y, (int)scaledPosition.z];
+
+            if (voxel == null)
+            {
+                Debug.Log($"Voxel and Subvoxel does not exist at: GridPos: {gridPosition} WorldPos: {position} ScaledPosition: {scaledPosition}");
+                return null;
+            }
+
+            return voxel;
+        }
+
+        return voxel;
     }
 
     public static Vector3Int WorldToGridPosition(Vector3 worldPosition)
@@ -430,15 +485,21 @@ public class Voxel_Base
     public double MovementCost;
 
     public bool IsObstacle { get; private set; }
+    GameObject _pathfindingVoxelGO;
 
     public void TestShowVoxel(Transform transform, Mesh mesh, Material material)
     {
         GameObject voxelGO = new GameObject($"{WorldPosition}");
+        _pathfindingVoxelGO = voxelGO;
         voxelGO.AddComponent<MeshFilter>().mesh = mesh;
         voxelGO.AddComponent<MeshRenderer>().material = material;
         voxelGO.transform.SetParent(transform);
         voxelGO.transform.localPosition = WorldPosition;
         voxelGO.transform.localScale = Size;
+    }
+    public void TestHideVoxel()
+    {
+        _pathfindingVoxelGO.SetActive(false);
     }
 
     public void SetPredecessor(Voxel_Base predecessor)
@@ -468,8 +529,6 @@ public class Voxel_Base
 
     public LinkedList<Voxel_Base> GetSuccessors()
     {
-        // Find out why it's only returning three of the possible six sucessor directions.
-
         LinkedList<Voxel_Base> successors = new LinkedList<Voxel_Base>();
         int scale = (int)VoxelGrid.Scale;
 
@@ -482,7 +541,6 @@ public class Voxel_Base
 
         void TryAddDirectionalSuccessors(int x, int y, int z)
         {
-            
             bool subVoxelExists = false;
             bool subVoxelIsObstacle = false;
 
@@ -725,8 +783,9 @@ public class PriorityQueue_3D
 
 public interface PathfinderMover_3D
 {
+    bool CanGetNewPath { get; set; }
+    void MoveTo(Voxel_Base target);
     void StartPathfindingCoroutine(IEnumerator coroutine);
     void StopPathfindingCoroutine();
-    void MoveTo(Voxel_Base target);
     LinkedList<Vector3> GetObstaclesInVision();
 }

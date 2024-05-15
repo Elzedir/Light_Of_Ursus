@@ -21,6 +21,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     float _followDistance;
     WanderData _wanderData;
     bool _canMove = false;
+    public bool CanGetNewPath { get; set; }
 
     protected virtual void Awake()
     {
