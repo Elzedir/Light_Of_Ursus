@@ -41,7 +41,7 @@ public class Spawner_Maze : MonoBehaviour
     #endregion
     #region Collect
     Transform _collectParent;
-    Dictionary<Collectable, bool> _collectables = new();
+    Dictionary<Collectable_MouseMaze, bool> _collectables = new();
     int _collectableMinimumDistance = 1;
     int _collectableSpawnChance = 1;
     int _collectableCount = 5;
@@ -104,7 +104,7 @@ public class Spawner_Maze : MonoBehaviour
 
         _startPosition = Cells[0, 0, 0].Position;
 
-        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _subVoxelScale, new Vector3(0.5f, 0, 0.5f));
+        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _subVoxelScale, new Vector3(0.5f, 0, 0.5f), true);
 
         yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 
@@ -332,7 +332,7 @@ public class Spawner_Maze : MonoBehaviour
         GameObject collectableGO = new GameObject($"Collectable_{_collectables.Count}");
         collectableGO.transform.parent = _collectParent;
         collectableGO.transform.position = position;
-        Collectable collectable = collectableGO.AddComponent<Collectable>();
+        Collectable_MouseMaze collectable = collectableGO.AddComponent<Collectable_MouseMaze>();
         _collectables.Add(collectable, false);
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material material = Resources.Load<Material>("Meshes/Material_Blue");
@@ -485,7 +485,7 @@ public class Spawner_Maze : MonoBehaviour
         _player.OnBreakWall -= BreakWall;
     }
 
-    public void CollectableCollected(Collectable collectable)
+    public void CollectableCollected(Collectable_MouseMaze collectable)
     {
         if (!_collectables.ContainsKey(collectable)) return;
 

@@ -60,6 +60,8 @@ public class Pathfinder_Base_3D
         Voxel_Base currentVoxel = _startVoxel;
         LinkedList<Voxel_Base> currentPath = new LinkedList<Voxel_Base>();
         LinkedList<Voxel_Base> previousPath = null;
+        LinkedList<Vector3> currentObstacles = new();
+        LinkedList<Vector3> previousObstacles = null;
         bool pathIsComplete = false;
 
         _initialise();
@@ -69,23 +71,60 @@ public class Pathfinder_Base_3D
         while (true)
         {
             bool changesInEnvironment = false;
-            LinkedList<Vector3> obstacleCoordinates = _mover.GetObstaclesInVision();
+            currentObstacles = _mover.GetObstaclesInVision();
 
-            foreach (Vector3 position in obstacleCoordinates)
+            if (previousObstacles == null || !AreObstaclesEqual(previousObstacles, currentObstacles))
             {
-                // Maybe put something in to check which obstacles have disappeared, like with currentpath and previouspath
-
-                Voxel_Base obstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
-
-                if (obstacleVoxel.IsObstacle) continue;
-
-                obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
                 changesInEnvironment = true;
 
-                foreach (Voxel_Base predecessor in obstacleVoxel.GetPredecessors())
+                foreach (Vector3 position in currentObstacles)
                 {
-                    _updateVertex(predecessor);
+                    Voxel_Base obstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
+
+                    if (obstacleVoxel.IsObstacle) continue;
+
+                    obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
+
+                    foreach (Voxel_Base predecessor in obstacleVoxel.GetPredecessors())
+                    {
+                        _updateVertex(predecessor);
+                    }
                 }
+
+                if (previousObstacles == null)
+                {
+                    previousObstacles = new LinkedList<Vector3>(currentObstacles);
+                }
+            }
+
+            if (previousObstacles != null)
+            {
+                foreach (Vector3 position in previousObstacles)
+                {
+                    if (currentObstacles.Contains(position))
+                    {
+                        continue;
+                    }
+
+                    Voxel_Base removedObstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
+
+                    if (removedObstacleVoxel == null)
+                    {
+                        Debug.Log($"{removedObstacleVoxel.WorldPosition} exists in obstacle lists but does not exist in VoxelGrid.");
+                        continue;
+                    }
+
+                    removedObstacleVoxel.UpdateMovementCost(1);
+
+                    foreach (Voxel_Base predecessor in removedObstacleVoxel.GetPredecessors())
+                    {
+                        _updateVertex(predecessor);
+                    }
+
+                    VoxelGrid.RemoveVoxelAtPosition(position);
+                }
+
+                previousObstacles = new LinkedList<Vector3>(currentObstacles);
             }
 
             _computeShortestPath();
@@ -131,6 +170,32 @@ public class Pathfinder_Base_3D
         }
 
         Debug.Log($"IterationCount: {iterationCount}");
+    }
+
+    bool AreObstaclesEqual(LinkedList<Vector3> previousObstacles, LinkedList<Vector3> currentObstacles)
+    {
+        if (previousObstacles == null)
+        {
+            return false;
+        }
+
+        if (previousObstacles.Count != currentObstacles.Count)
+        {
+            return false;
+        }
+
+        var previousEnumerator = previousObstacles.GetEnumerator();
+        var currentEnumerator = currentObstacles.GetEnumerator();
+
+        while (previousEnumerator.MoveNext() && currentEnumerator.MoveNext())
+        {
+            if (!previousEnumerator.Current.Equals(currentEnumerator.Current))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool IsPathEqual(LinkedList<Voxel_Base> path1, LinkedList<Voxel_Base> path2)
@@ -303,8 +368,9 @@ public class VoxelGrid
     public static float Scale { get; private set; }
     static Vector3 _offset;
     static List<Voxel_Base> _testShowPathfinding = new();
+    static List<GameObject> _testShowVoxels = new();
 
-    public static void InitializeVoxelGrid(float width, float height, float depth, float scale, Vector3 offset)
+    public static void InitializeVoxelGrid(float width, float height, float depth, float scale, Vector3 offset, bool isMouseMaze = false)
     {
         Scale = scale;
         _offset = offset;
@@ -317,16 +383,13 @@ public class VoxelGrid
 
         Voxels = new Voxel_Base[gridWidth, gridHeight, gridDepth];
 
-        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Green");
-
         for (int x = (int)(_offset.x * Scale); x < gridWidth; x += (int)Scale)
         {
             for (int y = (int)(_offset.y * Scale); y < gridHeight; y += (int)Scale)
             {
                 for (int z = (int)(_offset.z * Scale); z < gridDepth; z += (int)Scale)
                 {
-                    if (y < 1 * Scale || y >= 2 * Scale) continue;
+                    if (isMouseMaze && (y < 1 * Scale || y >= 2 * Scale)) continue;
 
                     float worldX = ((float)x / scale) - _offset.x;
                     float worldY = ((float)y / scale) - _offset.y;
@@ -340,8 +403,6 @@ public class VoxelGrid
                         G = double.PositiveInfinity,
                         RHS = double.PositiveInfinity
                     };
-
-                    // Debug.Log($"Voxel: GridPos: {new Vector3Int(x, y, z)} WorldPos: {new Vector3(worldX, worldY, worldZ)}");
 
                     Voxels[x, y, z].UpdateMovementCost(1);
                 }
@@ -412,13 +473,16 @@ public class VoxelGrid
     public static void RemoveVoxelAtPosition(Vector3? position)
     {
         if (!position.HasValue) return;
-        if (position == null) { Debug.Log("Position has value, but is null."); return; }
-        else Debug.Log(position.Value);
+
+        //Debug.Log(position);
 
         Voxel_Base voxel = GetVoxelAtPosition(position.Value);
 
         if (voxel != null)
         {
+            Debug.Log(position);
+
+            voxel.UpdateMovementCost(1);
             _testShowPathfinding.Remove(voxel);
             //voxel.TestHideVoxel();
             VoxelGrid.Voxels[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] = null;
@@ -471,6 +535,28 @@ public class VoxelGrid
             (int)((worldPosition.z + _offset.z) * Scale)
         );
     }
+
+    public static void TestShowAllVoxels()
+    {
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Green");
+
+        foreach (Voxel_Base voxel in Voxels)
+        {
+            if (voxel == null) continue;
+
+            GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
+            _testShowVoxels.Add(voxelGO);
+        }
+    }
+
+    public static void HideAllVoxels()
+    {
+        for(int i = 0; i < _testShowVoxels.Count; i++)
+        {
+            Manager_Game.Destroy(_testShowVoxels[i]);
+        }
+    }
 }
 
 public class Voxel_Base
@@ -487,7 +573,7 @@ public class Voxel_Base
     public bool IsObstacle { get; private set; }
     GameObject _pathfindingVoxelGO;
 
-    public void TestShowVoxel(Transform transform, Mesh mesh, Material material)
+    public GameObject TestShowVoxel(Transform transform, Mesh mesh, Material material)
     {
         GameObject voxelGO = new GameObject($"{WorldPosition}");
         _pathfindingVoxelGO = voxelGO;
@@ -496,6 +582,7 @@ public class Voxel_Base
         voxelGO.transform.SetParent(transform);
         voxelGO.transform.localPosition = WorldPosition;
         voxelGO.transform.localScale = Size;
+        return voxelGO;
     }
     public void TestHideVoxel()
     {

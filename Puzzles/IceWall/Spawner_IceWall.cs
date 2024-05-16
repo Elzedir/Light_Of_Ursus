@@ -24,6 +24,8 @@ public class Spawner_IceWall : MonoBehaviour
     int _maxDistance = 0;
     Cell_IceWall _furthestCell;
 
+    int _subVoxelScale = 10;
+
     Vector3 _startPosition;
 
     Controller_Puzzle_IceWall _player;
@@ -59,10 +61,11 @@ public class Spawner_IceWall : MonoBehaviour
         _playerExtraStamina = iceWallData.PlayerExtraStaminaPercentage;
         _cellHealthRange = (iceWallData.CellHealthMin, iceWallData.CellHealthMax);
 
-        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _scale, Vector3.zero);
         _cellParent = GameObject.Find("CellParent").transform;
         _player = GameObject.Find("Focus").GetComponent<Controller_Puzzle_IceWall>();
         _player.Initialise(this, _playerExtraStamina);
+
+        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _subVoxelScale, new Vector3(0.5f, 0, 0.5f));
 
         _icewallTypes = new List<IceWallType>(gameModes);
         if (Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType == PuzzleType.Fixed) SpawnFixedPuzzle();
@@ -98,10 +101,10 @@ public class Spawner_IceWall : MonoBehaviour
         _playerLastCell = Cells[0, 0, 0];
         _player.SetCurrentCell(_playerLastCell);
         _startPosition = _playerLastCell.Position;
-        
+
         //if (_icewallTypes.Contains(IceWallType.Shatter))
         //{
-            foreach (Cell_IceWall cell in Cells)
+        foreach (Cell_IceWall cell in Cells)
             {
                 cell.ChangeColour((float)cell.CellHealth / _maxCellHealth);
             }
