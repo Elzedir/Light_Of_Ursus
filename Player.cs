@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class Player : Controller, IDataPersistence
@@ -13,6 +14,7 @@ public class Player : Controller, IDataPersistence
     public Interactable ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
     List<Interactable> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
+    bool _strafe = false;
 
     public BoxCollider2D _fireflyWanderZone; public BoxCollider2D FireflyWanderZone { get { return _fireflyWanderZone; } }
 
@@ -63,28 +65,6 @@ public class Player : Controller, IDataPersistence
         //_playerActor = GameManager.Instance.Player.PlayerActor;
     }
 
-    //public override void HandleWPressed()
-    //{
-    //    PlayerMove(y: 1);
-    //}
-    //public override void HandleSPressed()
-    //{
-    //    PlayerMove(y: -1);
-    //}
-    //public override void HandleAPressed()
-    //{
-    //    PlayerMove(x: -1);
-    //}
-    //public override void HandleDPressed()
-    //{
-    //    PlayerMove(x: 1);
-    //}
-
-    //public override void HandleEscapePressed()
-    //{
-    //    Menu_Escape.Instance.ToggleMenu();
-    //}
-
     public virtual void PlayerMove()
     {
         _moved = true;
@@ -95,13 +75,35 @@ public class Player : Controller, IDataPersistence
 
         Vector3 movement = new Vector3(_move.x, 0, _move.y);
 
-        if (movement != Vector3.zero) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+        if (movement != Vector3.zero && !_strafe) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+        else if (_strafe) _playerStrafe();
 
         //transform.Translate(movement * _speed * Time.deltaTime, Space.World);
 
         _rigidbody.velocity = new Vector3(_move.x, 0, _move.y) * _speed;
 
         _animator.SetFloat("Speed", _move.magnitude);
+
+        void _playerStrafe()
+        {
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+            {
+                Vector3 direction = (hit.point - transform.position).normalized;
+                transform.rotation = Quaternion.LookRotation(direction);
+            }
+        }
+    }
+
+    public void Strafe(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            _strafe = true;
+        }
+        else if (context.canceled)
+        {
+            _strafe = false;
+        }
     }
 
     public virtual void TargetCheck()
