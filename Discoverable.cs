@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
 
+public enum DiscoverState { Undiscovered, Discovered, Revealed }
+public enum DiscoverStyle { Time, Pattern }
+
 public class Discoverable : MonoBehaviour
 {
-    public enum DiscoverState { Undiscovered, Discovered, Revealed }
-    public enum DiscoverStyle { Time, Pattern }
-
     [SerializeField] DiscoverState _discoveredState = DiscoverState.Undiscovered;
     [SerializeField] DiscoverStyle _discoveredStyle = DiscoverStyle.Time;
 
@@ -13,88 +13,79 @@ public class Discoverable : MonoBehaviour
     Coroutine _discoveryCoroutine;
     MaterialPropertyBlock _propertyBlock;
 
-    float _discoverProgress = 0f;
+    bool _inLight = false;
+    Coroutine _outOfLightTimer;
+    [SerializeField] [Range(0, 1)] float _discoverProgress = 0f;
 
     void Start()
     {
         _objectRenderer = GetComponent<Renderer>();
         _propertyBlock = new MaterialPropertyBlock();
-        SetMaterial();
+        _setAlpha();
     }
 
     void Update()
     {
-        if (IsLightShiningOnObject() && _discoveredState == DiscoverState.Undiscovered)
+        if (_discoverProgress > 0 && _discoveredState != DiscoverState.Undiscovered && !_inLight)
         {
-            StartDiscovery();
-        }
-        else if (!IsLightShiningOnObject() && _discoveredState != DiscoverState.Undiscovered)
-        {
-            if (_discoveredStyle == DiscoverStyle.Time)
+            switch(_discoveredStyle)
             {
-                ResetDiscovery();
+                case DiscoverStyle.Time:
+                    ResetDiscoveryTime();
+                    break;
             }
         }
     }
 
-    public void SetDiscoverStyle(DiscoverStyle discoverStyle)
-    {
-        _discoveredStyle = discoverStyle;
-    }
-
-    void ResetDiscovery()
+    void ResetDiscoveryTime()
     {
         _discoverProgress -= Time.deltaTime;
 
         if (_discoverProgress <= 0)
         {
+            _discoverProgress = 0;
             _discoveredState = DiscoverState.Undiscovered;
+            _setAlpha();
         }
-    }
-
-    bool IsLightShiningOnObject()
-    {
-        // Find a way to set true
-        return false;
-    }
-
-    void StartDiscovery()
-    {
-        if (_discoveryCoroutine != null) StopCoroutine(_discoveryCoroutine);
-        _discoveryCoroutine = StartCoroutine(DiscoverObject());
-    }
-
-    IEnumerator DiscoverObject()
-    {
-        _discoveredState = DiscoverState.Discovered;
-        SetMaterial();
-
-        yield return new WaitForSeconds(2f);
-
-        _discoveredState = DiscoverState.Revealed;
-        SetMaterial();
-    }
-
-    private void SetMaterial()
-    {
-        switch (_discoveredState)
+        else
         {
-            case DiscoverState.Undiscovered:
-                SetMaterialProperties(0f, 0f);
-                break;
-            case DiscoverState.Discovered:
-                SetMaterialProperties(0.5f, 1f);
-                break;
-            case DiscoverState.Revealed:
-                SetMaterialProperties(1f, 0f);
-                break;
+            _setAlpha();
         }
     }
 
-    private void SetMaterialProperties(float alpha, float twinkle)
+    public void UpdateDiscovery(float lightPercentage)
     {
-        _propertyBlock.SetFloat("_Alpha", alpha);
-        _propertyBlock.SetFloat("_Twinkle", twinkle);
+        if (_discoverProgress >= 1 && _discoveredState == DiscoverState.Revealed) return;
+
+        _inLight = true;
+
+        if (_discoveredState == DiscoverState.Undiscovered) _discoveredState = DiscoverState.Discovered;
+
+        _discoverProgress += lightPercentage * Time.deltaTime;
+
+        if (_discoverProgress >= 1)
+        {
+            _discoverProgress = 1;
+            _discoveredState = DiscoverState.Revealed;
+        }
+
+        _setAlpha();
+
+        if (_outOfLightTimer != null) { StopCoroutine(_outOfLightTimer); }
+        _outOfLightTimer = StartCoroutine(_startOutOfLightTimer());
+    }
+
+    IEnumerator _startOutOfLightTimer()
+    {
+        yield return new WaitForSeconds(0.5f);
+        _inLight = false;
+    }
+
+    void _setAlpha()
+    {
+        _propertyBlock.SetFloat("_Alpha", _discoverProgress);
         _objectRenderer.SetPropertyBlock(_propertyBlock);
+
+        Debug.Log($"SetMaterialProperties: Alpha={_discoverProgress}");
     }
 }

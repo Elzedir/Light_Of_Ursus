@@ -504,18 +504,24 @@ public class Spawner_Maze : MonoBehaviour
         return null;
     }
 
-    public LinkedList<Vector3> GetWalls(Transform objectTransform)
+    public List<Vector3> GetAllObstacles(Vector3 moverPosition)
     {
-        int layerMask = 1 << LayerMask.NameToLayer("Wall");
-        Collider[] wallColliders = Physics.OverlapSphere(objectTransform.position, 10, layerMask);
+        List<Vector3> obstaclePositions = new();
 
-        LinkedList<Vector3> wallPositions = new LinkedList<Vector3>();
+        GetObstacles(moverPosition, "Wall", obstaclePositions);
+        GetObstacles(moverPosition, "Water", obstaclePositions);
 
-        foreach (Collider wallCollider in wallColliders)
+        return obstaclePositions;
+    }
+
+    void GetObstacles(Vector3 moverPosition, string layerName, List<Vector3> obstaclePositions)
+    {
+        int layerMask = 1 << LayerMask.NameToLayer(layerName);
+        Collider[] colliders = Physics.OverlapSphere(moverPosition, 10, layerMask);
+
+        foreach (Collider collider in colliders)
         {
-            wallPositions.AddFirst(wallCollider.transform.position);
+            obstaclePositions.Add(collider.transform.position);
         }
-
-        return wallPositions;
     }
 }

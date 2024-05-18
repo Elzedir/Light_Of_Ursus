@@ -97,15 +97,9 @@ public abstract class Controller : MonoBehaviour
     #endregion
 
     [SerializeField] protected float _speed;
-    protected Vector2 _move;
 
     protected virtual void FixedUpdate()
     {
 
-    }
-
-    public void OnInput(InputAction.CallbackContext context)
-    {
-        _move = context.ReadValue<Vector2>();
     }
 }

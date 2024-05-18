@@ -15,6 +15,7 @@ public class Player : Controller, IDataPersistence
     List<Interactable> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
     bool _strafe = false;
+    Vector2 _move;
 
     public BoxCollider2D _fireflyWanderZone; public BoxCollider2D FireflyWanderZone { get { return _fireflyWanderZone; } }
 
@@ -92,6 +93,11 @@ public class Player : Controller, IDataPersistence
                 transform.rotation = Quaternion.LookRotation(direction);
             }
         }
+    }
+
+    public void OnInput(InputAction.CallbackContext context)
+    {
+        _move = context.ReadValue<Vector2>();
     }
 
     public void Strafe(InputAction.CallbackContext context)

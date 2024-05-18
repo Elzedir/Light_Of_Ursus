@@ -21,6 +21,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     public bool CanGetNewPath { get; set; }
     float _getPathCooldown = 2f;
     float _getPathTime = 0f;
+    public List<MoverType> MoverType { get; set; } = new();
 
     Voxel_Base _target;
 
@@ -184,9 +185,9 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         }
     }
 
-    public LinkedList<Vector3> GetObstaclesInVision()
+    public List<Vector3> GetObstaclesInVision()
     {
-        return Spawner.GetWalls(transform);
+        return Spawner.GetAllObstacles(transform.position);
     }
 
     public void StartPathfindingCoroutine(IEnumerator coroutine)

@@ -11,6 +11,7 @@ public class Controller_Puzzle_MouseMaze : Controller
     public event Action OnBreakWall;
     public MouseMazeColour PlayerColour { get; private set; }
     float _playerSpeed = 3f;
+    Vector2 _move;
 
     protected override void FixedUpdate()
     {
@@ -19,6 +20,11 @@ public class Controller_Puzzle_MouseMaze : Controller
         if (!Spawner_Maze.Initialised) return;
 
         _playerMove();
+    }
+
+    public void OnInput(InputAction.CallbackContext context)
+    {
+        _move = context.ReadValue<Vector2>();
     }
 
     void _playerMove()

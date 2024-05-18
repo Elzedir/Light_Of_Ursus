@@ -6,7 +6,9 @@ using UnityEngine.InputSystem;
 
 public class Controller_Puzzle_FlappyInvaders : Controller
 {
+    Vector2 _move;
     Transform _bulletParent;
+
     //void Start()
     //{
     //    KeyBindings.ContinuousPressKeyActions.Remove(ActionKey.Space);
@@ -24,6 +26,11 @@ public class Controller_Puzzle_FlappyInvaders : Controller
     void PlayerMove()
     {
         transform.position += new Vector3(_move.x * 0.1f, _move.y * 0.1f, 0);
+    }
+
+    public void OnInput(InputAction.CallbackContext context)
+    {
+        _move = context.ReadValue<Vector2>();
     }
 
     void OnCollisionEnter(Collision collision)

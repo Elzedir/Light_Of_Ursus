@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Controller_Puzzle_XOY : Controller
 {
     float _cooldownTimer;
     float _cooldown = 0.5f;
+    Vector2 _move;
 
     protected override void FixedUpdate()
     {
@@ -18,6 +20,11 @@ public class Controller_Puzzle_XOY : Controller
             PlayerMove();
             _cooldown = 0;
         }
+    }
+
+    public void OnInput(InputAction.CallbackContext context)
+    {
+        _move = context.ReadValue<Vector2>();
     }
 
     void PlayerMove()

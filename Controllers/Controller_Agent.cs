@@ -22,6 +22,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     WanderData _wanderData;
     bool _canMove = false;
     public bool CanGetNewPath { get; set; }
+    public List<MoverType> MoverType { get; set; } = new();
 
     protected virtual void Awake()
     {
@@ -197,9 +198,9 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _movingCoroutine = null;
     }
 
-    public LinkedList<Vector3> GetObstaclesInVision()
+    public List<Vector3> GetObstaclesInVision()
     {
-        return new LinkedList<Vector3>();
+        return new List<Vector3>();
     }
 
     public void StartPathfindingCoroutine(IEnumerator coroutine)

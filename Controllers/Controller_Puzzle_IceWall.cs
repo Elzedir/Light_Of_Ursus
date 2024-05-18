@@ -19,6 +19,9 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     public Pathfinder_Base_3D Pathfinder { get; private set; }
     public Cell_IceWall CurrentCell { get; private set; }
     public bool CanGetNewPath { get; set; }
+    public List<MoverType> MoverType { get; set; } = new();
+
+    Vector2 _move;
 
     //void Start()
     //{
@@ -112,6 +115,11 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
         Direction = (true, direction);
     }
 
+    public void OnInput(InputAction.CallbackContext context)
+    {
+        _move = context.ReadValue<Vector2>();
+    }
+
     public void Jump(InputAction.CallbackContext context)
     {
         if (context.started)
@@ -176,9 +184,9 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
         _playerStaminaCurrent = _playerStaminaMax;
     }
 
-    public LinkedList<Vector3> GetObstaclesInVision()
+    public List<Vector3> GetObstaclesInVision()
     {
-        return new LinkedList<Vector3>();
+        return new List<Vector3>();
     }
 
     public void SetCurrentCell(Cell_IceWall cell)

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,14 +5,14 @@ using UnityEngine.InputSystem;
 public class Controller_Light : MonoBehaviour
 {
     Light _light;
-    MeshCollider _meshCollider;
     bool _aimLight = false;
     float _meshLength = 20.0f;
+    Collider[] _targetsInRange = new Collider[100];
+    List<Discoverable> _discoveredObjects = new List<Discoverable>();
 
     void Awake()
     {
         _getLight();
-        _getCollider();
     }
 
     void _getLight()
@@ -21,54 +20,39 @@ public class Controller_Light : MonoBehaviour
         _light = GetComponent<Light>();
     }
 
-    void _getCollider() 
-    {
-        _meshCollider = GetComponentInChildren<MeshCollider>();
-        _meshCollider.sharedMesh = _createPyramidMesh();
-    }
-
-    Mesh _createPyramidMesh()
-    {
-        Mesh mesh = new Mesh();
-
-        Vector3[] vertices = new Vector3[]
-        {
-            new Vector3(0, 0, 0),   // Top vertex at the origin
-            new Vector3(-5, -1, _meshLength),  // Bottom front-left
-            new Vector3(5, -1, _meshLength),   // Bottom front-right
-            new Vector3(5, 1, _meshLength),  // Bottom back-right
-            new Vector3(-5, 1, _meshLength)  // Bottom back-left
-        };
-
-        // Define the triangles of the pyramid
-        int[] triangles = new int[]
-        {
-            0, 1, 2,  // Front face
-            0, 2, 3,  // Right face
-            0, 3, 4,  // Back face
-            0, 4, 1,  // Left face
-            1, 4, 3,  // Bottom face (part 1)
-            1, 3, 2   // Bottom face (part 2)
-        };
-
-        mesh.vertices = vertices;
-        mesh.triangles = triangles;
-
-        // Calculate normals for lighting
-        mesh.RecalculateNormals();
-
-        return mesh;
-    }
-
-    void Update()
+    void FixedUpdate()
     {
         if (_aimLight)
         {
             _moveLightWithMouse();
         }
+
+        CheckTargetsInLight();
     }
 
-    void _moveLightWithMouse()
+    void CheckTargetsInLight()
+    {
+        int targetsCount = Physics.OverlapSphereNonAlloc(_light.transform.position, _light.range, _targetsInRange, LayerMask.GetMask("Discoverable"));
+
+        _discoveredObjects.Clear();
+
+        for (int i = 0; i < targetsCount; i++)
+        {
+            Discoverable discoverable = _targetsInRange[i].GetComponent<Discoverable>();
+            if (discoverable != null)
+            {
+                float lightPercentage = _calculateLightPercentage(_light, discoverable.transform);
+
+                if (lightPercentage > 0)
+                {
+                    _discoveredObjects.Add(discoverable);
+                    discoverable.UpdateDiscovery(lightPercentage);
+                }
+            }
+        }
+    }
+
+        void _moveLightWithMouse()
     {
         if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
         {
@@ -95,12 +79,28 @@ public class Controller_Light : MonoBehaviour
         transform.localRotation = Quaternion.identity;
     }
 
-    void OnDrawGizmos()
+    float _calculateLightPercentage(Light spotlight, Transform target)
     {
-        if (_meshCollider == null)
-            return;
+        Vector3 directionToTarget = target.position - spotlight.transform.position;
+        float distanceToTarget = directionToTarget.magnitude;
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireMesh(_meshCollider.sharedMesh, transform.position, transform.rotation, transform.localScale);
+        if (distanceToTarget > spotlight.range)
+        {
+            return 0f;
+        }
+
+        float angle = Vector3.Angle(spotlight.transform.forward, directionToTarget);
+        if (angle > spotlight.spotAngle / 2)
+        {
+            return 0f;
+        }
+
+        float distanceFactor = 1 - (distanceToTarget / spotlight.range);
+        float lightIntensity = spotlight.intensity * distanceFactor;
+
+        float maxIntensity = spotlight.intensity;
+        float lightPercentage = lightIntensity / maxIntensity;
+
+        return Mathf.Clamp01(lightPercentage);
     }
 }

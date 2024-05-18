@@ -35,7 +35,7 @@ public class Pathfinder_Base_3D
         _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
         _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
 
-        mover.StartPathfindingCoroutine(_runPathfinder());
+        mover.StartPathfindingCoroutine(_runPathfinder(mover));
     }
 
     public void UpdatePath(PathfinderMover_3D mover, Vector3 start, Vector3 target)
@@ -45,11 +45,11 @@ public class Pathfinder_Base_3D
 
         if (mover.CanGetNewPath)
         {
-            mover.StartPathfindingCoroutine(_runPathfinder());
+            mover.StartPathfindingCoroutine(_runPathfinder(mover));
         }
     }
 
-    IEnumerator _runPathfinder()
+    IEnumerator _runPathfinder(PathfinderMover_3D mover)
     {
         if (_startVoxel == null || _targetVoxel == null || _startVoxel.Equals(_targetVoxel))
         {
@@ -58,10 +58,10 @@ public class Pathfinder_Base_3D
         }
 
         Voxel_Base currentVoxel = _startVoxel;
-        LinkedList<Voxel_Base> currentPath = new LinkedList<Voxel_Base>();
-        LinkedList<Voxel_Base> previousPath = null;
-        LinkedList<Vector3> currentObstacles = new();
-        LinkedList<Vector3> previousObstacles = null;
+        List<Voxel_Base> currentPath = new();
+        List<Voxel_Base> previousPath = null;
+        List<Vector3> currentObstacles = new();
+        List<Vector3> previousObstacles = null;
         bool pathIsComplete = false;
 
         _initialise();
@@ -93,7 +93,7 @@ public class Pathfinder_Base_3D
 
                 if (previousObstacles == null)
                 {
-                    previousObstacles = new LinkedList<Vector3>(currentObstacles);
+                    previousObstacles = new List<Vector3>(currentObstacles);
                 }
             }
 
@@ -124,7 +124,7 @@ public class Pathfinder_Base_3D
                     VoxelGrid.RemoveVoxelAtPosition(position);
                 }
 
-                previousObstacles = new LinkedList<Vector3>(currentObstacles);
+                previousObstacles = new List<Vector3>(currentObstacles);
             }
 
             _computeShortestPath();
@@ -135,7 +135,7 @@ public class Pathfinder_Base_3D
             }
 
             Voxel_Base nextVoxel = _minimumSuccessorVoxel(currentVoxel);
-            currentPath.AddLast(nextVoxel);
+            currentPath.Add(nextVoxel);
             currentVoxel = nextVoxel;
 
             double previousPriorityModifier = _priorityModifier;
@@ -156,7 +156,7 @@ public class Pathfinder_Base_3D
                 _mover.MoveTo(_targetVoxel);
                 currentVoxel = _startVoxel;
 
-                previousPath = new LinkedList<Voxel_Base>(currentPath);
+                previousPath = new List<Voxel_Base>(currentPath);
                 currentPath.Clear();
                 pathIsComplete = false;
 
@@ -172,7 +172,7 @@ public class Pathfinder_Base_3D
         Debug.Log($"IterationCount: {iterationCount}");
     }
 
-    bool AreObstaclesEqual(LinkedList<Vector3> previousObstacles, LinkedList<Vector3> currentObstacles)
+    bool AreObstaclesEqual(List<Vector3> previousObstacles, List<Vector3> currentObstacles)
     {
         if (previousObstacles == null)
         {
@@ -198,28 +198,24 @@ public class Pathfinder_Base_3D
         return true;
     }
 
-    bool IsPathEqual(LinkedList<Voxel_Base> path1, LinkedList<Voxel_Base> path2)
+    bool IsPathEqual(List<Voxel_Base> path1, List<Voxel_Base> path2)
     {
         if (path1.Count != path2.Count)
         {
             return false;
         }
 
-        LinkedListNode<Voxel_Base> node1 = path1.First;
-        LinkedListNode<Voxel_Base> node2 = path2.First;
-
-        while (node1 != null && node2 != null)
+        for (int i = 0; i < path1.Count; i++)
         {
-            if (!node1.Value.Equals(node2.Value))
+            if (!path1[i].Equals(path2[i]))
             {
                 return false;
             }
-            node1 = node1.Next;
-            node2 = node2.Next;
         }
 
         return true;
     }
+
 
     void _initialise()
     {
@@ -389,8 +385,6 @@ public class VoxelGrid
             {
                 for (int z = (int)(_offset.z * Scale); z < gridDepth; z += (int)Scale)
                 {
-                    if (isMouseMaze && (y < 1 * Scale || y >= 2 * Scale)) continue;
-
                     float worldX = ((float)x / scale) - _offset.x;
                     float worldY = ((float)y / scale) - _offset.y;
                     float worldZ = ((float)z / scale) - _offset.z;
@@ -867,12 +861,14 @@ public class PriorityQueue_3D
         _priorityQueue[tempQueue.Node] = indexB;
     }
 }
+public enum MoverType { Ground, Fly, Dig, Swim }
 
 public interface PathfinderMover_3D
 {
+    List<MoverType> MoverType { get; set; }
     bool CanGetNewPath { get; set; }
     void MoveTo(Voxel_Base target);
     void StartPathfindingCoroutine(IEnumerator coroutine);
     void StopPathfindingCoroutine();
-    LinkedList<Vector3> GetObstaclesInVision();
+    List<Vector3> GetObstaclesInVision();
 }

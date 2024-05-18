@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using static UnityEngine.GraphicsBuffer;
 
 public class Controller_Puzzle_Directional : Controller
@@ -10,6 +11,12 @@ public class Controller_Puzzle_Directional : Controller
     PuzzleSet _puzzleSet;
     PuzzleType _puzzleType;
     Transform Target;
+
+    Vector2 _move;
+    bool _upHeld = false;
+    bool _downHeld = false;
+    bool _leftHeld = false;
+    bool _rightHeld = false;
 
     public float shieldRadius = 1.5f;
 
@@ -31,26 +38,40 @@ public class Controller_Puzzle_Directional : Controller
 
     void OnCollisionStay(Collision collision)
     {
-        //if (Manager_Puzzle.Instance.Puzzle.PuzzleSet == PuzzleSet.Directional)
-        //{
-        //    int zAngle = Mathf.RoundToInt(collision.transform.localRotation.eulerAngles.z) % 360;
-        //    if (zAngle < 0) zAngle += 360;
+        if (Manager_Puzzle.Instance.Puzzle.PuzzleSet == PuzzleSet.Directional)
+        {
+            int zAngle = Mathf.RoundToInt(collision.transform.localRotation.eulerAngles.z) % 360;
+            if (zAngle < 0) zAngle += 360;
 
-        //    if (zAngle == 0 && (Input.GetKey(KeyCode.UpArrow) || Input.GetKeyDown(KeyBindings.Keys[ActionKey.Move_Up])) &&
-        //        !(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.RightArrow)))
-        //        collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-        //    else if (zAngle == 90 && (Input.GetKey(KeyCode.LeftArrow) || Input.GetKeyDown(KeyBindings.Keys[ActionKey.Move_Left])) &&
-        //        !(Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.RightArrow)))
-        //        collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-        //    else if (zAngle == 180 && (Input.GetKey(KeyCode.DownArrow) || Input.GetKeyDown(KeyBindings.Keys[ActionKey.Move_Down])) &&
-        //        !(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.RightArrow)))
-        //        collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-        //    else if (zAngle == 270 && (Input.GetKey(KeyCode.RightArrow) || Input.GetKeyDown(KeyBindings.Keys[ActionKey.Move_Right])) &&
-        //        !(Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.UpArrow)))
-        //        collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-        //}
+            if (zAngle == 0 && _upHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+            else if (zAngle == 90 && _leftHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+            else if (zAngle == 180 && _downHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+            else if (zAngle == 270 && _rightHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+        }
 
         if (Manager_Puzzle.Instance.Puzzle.PuzzleSet == PuzzleSet.AntiDirectional && collision.gameObject.name != "Focus") collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+    }
+
+    public void Move(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            if (_upHeld || _downHeld || _leftHeld || _rightHeld) return;
+
+            _move = context.ReadValue<Vector2>();
+
+            if (_move.y > 0) _upHeld = true;
+            else if (_move.y < 0) _downHeld = true;
+            else if (_move.x > 0) _rightHeld = true;
+            else if (_move.x < 0) _leftHeld = true;
+        }
+        if (context.canceled)
+        {
+            _upHeld = false;
+            _downHeld = false;
+            _leftHeld = false;
+            _rightHeld = false;
+        }
     }
 
     void MoveShield()

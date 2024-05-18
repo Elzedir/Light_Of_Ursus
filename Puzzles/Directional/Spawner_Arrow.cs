@@ -14,6 +14,8 @@ public class Spawner_Arrow : MonoBehaviour
     Mesh _arrowMesh;
     Material _arrowMaterial;
     float _arrowsSpawned;
+    Vector4 _arrowSize = new Vector4(1, 0.25f, 0.5f, 0.5f);
+
     Transform Target;
 
     float _spawnTime;
@@ -26,8 +28,8 @@ public class Spawner_Arrow : MonoBehaviour
 
     void Start()
     {
-        _arrowMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        _arrowMaterial = Resources.Load<Material>("Meshes/ArrowMaterial");
+        _arrowMesh = Manager_Mesh.GenerateArrow(1, 0.25f, 0.5f, 0.5f);
+        _arrowMaterial = Resources.Load<Material>("Meshes/Material_Red");
 
         _puzzleSet = Manager_Puzzle.Instance.Puzzle.PuzzleSet;
         _puzzleType = Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType;
@@ -78,9 +80,16 @@ public class Spawner_Arrow : MonoBehaviour
 
         arrowGO.transform.parent = spawner; 
         arrowGO.transform.localRotation = Quaternion.Euler(0, 0, rotation);
-        rotation = rotation == 0 ? 0 : (rotation == 90 ? 1 : (rotation == 180 ? 0 : -1));
-        arrowGO.transform.localPosition = new Vector3(rotation, 0, 1);
-        arrowGO.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        rotation = rotation == 0 ? 0 : (rotation == 90 ? 1 : (rotation == 180 ? 2 : -1));
+
+        float xOffset = 0;
+        if (rotation % 2 == 0)
+        {
+            xOffset = rotation < 2 ? -_arrowSize.x / 2 : _arrowSize.x / 2;
+        }
+
+        arrowGO.transform.localPosition = new Vector3(xOffset, 0, -1);
+        arrowGO.transform.localScale = new Vector3(1f, 1f, 1f);
 
         arrowGO.AddComponent<MeshFilter>().mesh = _arrowMesh;
         arrowGO.AddComponent<MeshRenderer>().material = _arrowMaterial;
@@ -88,6 +97,8 @@ public class Spawner_Arrow : MonoBehaviour
         BoxCollider arrowCollider = arrowGO.AddComponent<BoxCollider>();
 
         Arrow arrow = arrowGO.AddComponent<Arrow>(); arrow.Move = move ?? Vector3.down;
+
+        arrow.Speed = 3;
     }
 
     void SpawnArrowAntiDirectional(Transform spawner)
@@ -103,6 +114,6 @@ public class Spawner_Arrow : MonoBehaviour
 
         Arrow arrow = arrowGO.AddComponent<Arrow>(); arrow.Target = Target;
 
-        arrow.Speed = 10;
+        arrow.Speed = 5;
     }
 }
