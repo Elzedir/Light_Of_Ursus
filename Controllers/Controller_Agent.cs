@@ -262,7 +262,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     public List<Vector3> GetObstaclesInVision()
     {
-        return new List<Vector3>();
+        return Manager_Game.GetAllObstacles(this.transform.position);
     }
 
     public void StartPathfindingCoroutine(IEnumerator coroutine)

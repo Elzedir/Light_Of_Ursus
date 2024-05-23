@@ -1,6 +1,7 @@
 using FMODUnity;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
@@ -33,6 +34,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     public Player Player;
     Vector3 _playerLastPosition;
+    public Collider GroundCollider { get; private set; }
     [SerializeField] public float InteractRange { get; private set; } = 1;
 
     public string LastScene;
@@ -50,9 +52,13 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); } else if (Instance != this) Destroy(gameObject);
 
-        if (string.IsNullOrEmpty(LastScene)) LastScene = SceneManager.GetActiveScene().name;
+        string currentScene = SceneManager.GetActiveScene().name;
 
-        if(SceneManager.GetActiveScene().name == "Main_Menu") CurrentState = GameState.MainMenu;
+        if (string.IsNullOrEmpty(LastScene)) LastScene = currentScene;
+
+        if (currentScene == "Main_Menu") CurrentState = GameState.MainMenu;
+
+        if (currentScene != "Main_Menu" || currentScene != "Puzzle") GroundCollider = GameObject.Find("Ground").GetComponent<Collider>();
 
         Manager_Spawner.OnPuzzleStatesRestored += OnPuzzleStatesRestored;
 
@@ -287,5 +293,26 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
     public void StopVirtualCoroutine(IEnumerator coroutine)
     {
         StopCoroutine(coroutine);
+    }
+
+    public static List<Vector3> GetAllObstacles(Vector3 moverPosition)
+    {
+        List<Vector3> obstaclePositions = new();
+
+        GetObstacles(moverPosition, "Wall", obstaclePositions);
+        GetObstacles(moverPosition, "Water", obstaclePositions);
+
+        return obstaclePositions;
+    }
+
+    static void GetObstacles(Vector3 moverPosition, string layerName, List<Vector3> obstaclePositions)
+    {
+        int layerMask = 1 << LayerMask.NameToLayer(layerName);
+        Collider[] colliders = Physics.OverlapSphere(moverPosition, Mathf.Max(Manager_Game.Instance.GroundCollider.bounds.size.x, Manager_Game.Instance.GroundCollider.bounds.size.z), layerMask);
+
+        foreach (Collider collider in colliders)
+        {
+            obstaclePositions.Add(collider.transform.position);
+        }
     }
 }
