@@ -124,6 +124,13 @@ public class Manager_Puzzle : MonoBehaviour
         OnUseStamina?.Invoke(stamina);
     }
 
+    public event Action<string> OnAddScore;
+    public void AddScore(string score)
+    {
+        Debug.Log("Invoked Add Score");
+        OnAddScore?.Invoke(score);
+    }
+
     IEnumerator InvulnerabilityPhase()
     {
         Invulnerable = true;

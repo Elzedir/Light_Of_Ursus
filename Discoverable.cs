@@ -85,7 +85,5 @@ public class Discoverable : MonoBehaviour
     {
         _propertyBlock.SetFloat("_Alpha", _discoverProgress);
         _objectRenderer.SetPropertyBlock(_propertyBlock);
-
-        Debug.Log($"SetMaterialProperties: Alpha={_discoverProgress}");
     }
 }

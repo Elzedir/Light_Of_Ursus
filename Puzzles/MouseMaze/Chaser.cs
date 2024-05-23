@@ -95,7 +95,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
 
         for (int i = 0; i < path.Count; i++)
         {
-            Vector3? nextPos = (i + 1 < path.Count) ? (Vector3?)path[i + 1] : new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
 
             yield return _moveCoroutine = StartCoroutine(Move(path[i], nextPos.Value));
         }
@@ -122,7 +122,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         }
     }
 
-    void _hidePath(Vector3? point = (Vector3?)null)
+    void _hidePath(Vector3? point = null)
     {
         List<GameObject> toRemove = new List<GameObject>();
 

@@ -3,9 +3,17 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Pina : Controller_Agent
+public class Pina : MonoBehaviour
 {
-    protected override void SubscribeToEvents()
+    Controller_Agent _agent;
+
+    void Start()
+    {
+        _subscribeToEvents();
+        _agent = gameObject.AddComponent<Controller_Agent>();
+    }
+
+    void _subscribeToEvents()
     {
         Manager_Dialogue.Instance.pinaIntroEvent?.AddListener(PinaIntro);
     }
@@ -17,7 +25,7 @@ public class Pina : Controller_Agent
 
     void FollowUrsus()
     {
-        SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, followDistance: 1.5f);
+        _agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, followDistance: 1.5f);
     }
 
     void OnDestroy()

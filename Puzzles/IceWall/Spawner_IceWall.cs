@@ -65,7 +65,7 @@ public class Spawner_IceWall : MonoBehaviour
         _player = GameObject.Find("Focus").GetComponent<Controller_Puzzle_IceWall>();
         _player.Initialise(this, _playerExtraStamina);
 
-        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _subVoxelScale, new Vector3(0.5f, 0, 0.5f));
+        VoxelGrid.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
 
         _icewallTypes = new List<IceWallType>(gameModes);
         if (Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType == PuzzleType.Fixed) SpawnFixedPuzzle();

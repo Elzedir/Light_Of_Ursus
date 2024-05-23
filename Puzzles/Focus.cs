@@ -11,7 +11,7 @@ public class Focus : MonoBehaviour
         _collider = GetComponent<BoxCollider>();
     }
 
-    private void OnCollisionEnter(Collision collision)
+    void OnTriggerEnter(Collider collision)
     {
         if (collision.gameObject.TryGetComponent<Arrow>(out Arrow arrow))
         {

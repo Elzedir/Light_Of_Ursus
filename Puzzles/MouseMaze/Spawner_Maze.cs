@@ -104,7 +104,7 @@ public class Spawner_Maze : MonoBehaviour
 
         _startPosition = Cells[0, 0, 0].Position;
 
-        VoxelGrid.InitializeVoxelGrid(_width, _height, _depth, _subVoxelScale, new Vector3(0.5f, 0, 0.5f), true);
+        VoxelGrid.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
 
         yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 

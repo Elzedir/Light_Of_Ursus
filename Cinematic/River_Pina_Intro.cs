@@ -39,10 +39,6 @@ public class River_Pina_Intro : Cinematic
 
         if (playerAgent == null) { Debug.Log("Player does not have Controller_Agent script."); yield break; }
 
-        if (!playerAgent.isActiveAndEnabled) playerAgent.enabled = true;
-
-        playerAgent.ToggleAgent(true);
-
         foreach (CinematicWaitPoint point in _points)
         {
             playerAgent.SetAgentDetails(targetPosition: point.Position, speed: 0.5f);
@@ -52,8 +48,6 @@ public class River_Pina_Intro : Cinematic
             yield return new WaitForSeconds(point.WaitTime);
         }
 
-        playerAgent.ResetAgent();
-        playerAgent.ToggleAgent(false);
         Manager_Game.Instance.ChangeGameState(GameState.Playing);
     }
 }

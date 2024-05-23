@@ -62,7 +62,7 @@ public class Spawner_Arrow : MonoBehaviour
 
     void SpawnArrowRandom()
     {
-        int rotation = Random.Range(0, 3); rotation = rotation == 0 ? 0 : (rotation == 1 ? 90 : (rotation == 2 ? 180 : 270));
+        int rotation = Random.Range(0, 4); rotation = rotation == 0 ? 0 : (rotation == 1 ? 90 : (rotation == 2 ? 180 : 270));
 
         if (_puzzleSet == PuzzleSet.Directional) SpawnArrowDirectional(ArrowSpawners[Random.Range(0, ArrowSpawners.Count)], rotation: rotation);
 
@@ -78,7 +78,7 @@ public class Spawner_Arrow : MonoBehaviour
     {
         GameObject arrowGO = new GameObject($"Arrow{_arrowsSpawned}"); _arrowsSpawned++;
 
-        arrowGO.transform.parent = spawner; 
+        arrowGO.transform.parent = spawner;
         arrowGO.transform.localRotation = Quaternion.Euler(0, 0, rotation);
         rotation = rotation == 0 ? 0 : (rotation == 90 ? 1 : (rotation == 180 ? 2 : -1));
 
@@ -95,6 +95,7 @@ public class Spawner_Arrow : MonoBehaviour
         arrowGO.AddComponent<MeshRenderer>().material = _arrowMaterial;
         
         BoxCollider arrowCollider = arrowGO.AddComponent<BoxCollider>();
+        arrowCollider.size = new Vector3(arrowCollider.size.x, arrowCollider.size.y, 1);
 
         Arrow arrow = arrowGO.AddComponent<Arrow>(); arrow.Move = move ?? Vector3.down;
 

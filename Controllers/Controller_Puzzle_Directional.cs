@@ -20,6 +20,8 @@ public class Controller_Puzzle_Directional : Controller
 
     public float shieldRadius = 1.5f;
 
+    int _score = 0;
+
     void Start()
     {
         _collider = GetComponent<BoxCollider>();
@@ -36,29 +38,36 @@ public class Controller_Puzzle_Directional : Controller
         }
     }
 
-    void OnCollisionStay(Collision collision)
+    void OnTriggerStay(Collider collision)
     {
         if (Manager_Puzzle.Instance.Puzzle.PuzzleSet == PuzzleSet.Directional)
         {
             int zAngle = Mathf.RoundToInt(collision.transform.localRotation.eulerAngles.z) % 360;
             if (zAngle < 0) zAngle += 360;
 
-            if (zAngle == 0 && _upHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-            else if (zAngle == 90 && _leftHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-            else if (zAngle == 180 && _downHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
-            else if (zAngle == 270 && _rightHeld) collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+            if (zAngle == 0 && _rightHeld) { collision.gameObject.GetComponent<Arrow>().DestroyArrow(); _addToScore(); }
+            else if (zAngle == 90 && _upHeld) { collision.gameObject.GetComponent<Arrow>().DestroyArrow(); _addToScore(); }
+            else if (zAngle == 180 && _leftHeld) { collision.gameObject.GetComponent<Arrow>().DestroyArrow(); _addToScore(); }
+            else if (zAngle == 270 && _downHeld) { collision.gameObject.GetComponent<Arrow>().DestroyArrow(); _addToScore(); }
         }
 
         if (Manager_Puzzle.Instance.Puzzle.PuzzleSet == PuzzleSet.AntiDirectional && collision.gameObject.name != "Focus") collision.gameObject.GetComponent<Arrow>().DestroyArrow();
+    }
+
+    void _addToScore()
+    {
+        _score++;
+        Debug.Log(_score.ToString());
+        Manager_Puzzle.Instance.AddScore(_score.ToString());
     }
 
     public void Move(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            if (_upHeld || _downHeld || _leftHeld || _rightHeld) return;
-
             _move = context.ReadValue<Vector2>();
+
+            if ((_upHeld && _move.y <= 0) || (_downHeld && _move.y >= 0) || (_leftHeld && _move.x <= 0) || (_rightHeld && _move.x >= 0)) { resetMovement();  return; }
 
             if (_move.y > 0) _upHeld = true;
             else if (_move.y < 0) _downHeld = true;
@@ -67,10 +76,16 @@ public class Controller_Puzzle_Directional : Controller
         }
         if (context.canceled)
         {
+            resetMovement();
+        }
+
+        void resetMovement()
+        {
             _upHeld = false;
             _downHeld = false;
             _leftHeld = false;
             _rightHeld = false;
+            _move = Vector2.zero;
         }
     }
 

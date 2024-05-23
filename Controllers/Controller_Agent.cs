@@ -8,25 +8,29 @@ using UnityEngine.Tilemaps;
 public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 {
     public Pathfinder_Base_3D Pathfinder { get; set; }
-    Coroutine _movingCoroutine;
+    Coroutine _followCoroutine;
+    Coroutine _moveCoroutine;
     [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 1;
     [SerializeField] Vector3 _testTargetPositions;
 
-    protected NavMeshAgent _agent;
     Animator _animator;
     [SerializeField] protected Vector3 _targetPosition;
     [SerializeField] protected GameObject _targetGO;
     float _speed = 5;
+    bool _pathSet = false;
+    Coroutine _pathfindingCoroutine;
+    List<GameObject> _shownPath = new();
 
     float _followDistance;
     WanderData _wanderData;
     bool _canMove = false;
     public bool CanGetNewPath { get; set; }
+    float _getPathCooldown = 2f;
+    float _getPathTime = 0f;
     public List<MoverType> MoverType { get; set; } = new();
 
     protected virtual void Awake()
     {
-        _agent = GetComponent<NavMeshAgent>();
         _animator = GetComponent<Animator>();
         Pathfinder = new Pathfinder_Base_3D();
     }
@@ -41,13 +45,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     }
 
-    public void ToggleAgent(bool toggle)
-    {
-        _agent.enabled = toggle;
-        this.enabled = toggle;
-    }
-
-    public void SetAgentDetails(Vector3? targetPosition = null, GameObject targetGO = null, float speed = 1, float followDistance = 0.5f, WanderData wanderData = null)
+    public void SetAgentDetails(Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f)
     {
         _targetPosition = targetPosition ?? transform.position;
         _targetGO = targetGO;
@@ -55,6 +53,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followDistance = followDistance;
         wanderData = _wanderData;
         _canMove = true;
+        _getPathCooldown = getPathCooldown;
+        _getPathTime = getPathTime;
     }
 
     protected virtual void Update()
@@ -67,14 +67,22 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         if (_pathfinderCooldown <= 0)
         {
-            if (_targetPosition != Vector3.zero && Vector2.Distance(transform.localPosition, _targetPosition) > 0.9f)
+            if (_targetPosition != Vector3.zero && Vector3.Distance(transform.localPosition, _targetPosition) > 1.9f)
             {
-                Debug.Log("Moving");
-                Pathfinder.SetPath(new Vector3(transform.position.x, transform.position.y, transform.position.z), new Vector3(_targetPosition.x, _targetPosition.y, _targetPosition.z), this, PuzzleSet.None); 
-                _pathfinderCooldown = 1.0f;
+                if (!_pathSet)
+                {
+                    Pathfinder.SetPath(transform.position, _targetPosition, this, PuzzleSet.None);
+                    _pathSet = true;
+                }
+                else
+                {
+                    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
+                }
+                
+                _pathfinderCooldown = 2.0f;
             }
         }
-        
+
         //if (_wanderData != null) Wander();
         //else Follow();
         //AnimationAndDirection();
@@ -91,8 +99,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         if (_targetGO != null) _targetPosition = _targetGO.transform.position;
         else if (_targetPosition == transform.position) return;
 
-        if (Vector2.Distance(transform.position, _targetPosition) > _followDistance) { _agent.isStopped = false; _agent.SetDestination(_targetPosition); }
-        else _agent.isStopped = true;
+        //if (Vector3.Distance(transform.position, _targetPosition) > _followDistance) { _agent.isStopped = false; _agent.SetDestination(_targetPosition); }
+        //else _agent.isStopped = true;
     }
 
     void Wander()
@@ -106,8 +114,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
             _wanderData.WanderTargetPosition = new Vector3(x, y, transform.position.z);
 
-            _agent.SetDestination(_wanderData.WanderTargetPosition);
-            _agent.speed = _wanderData.WanderSpeed;
+            //_agent.SetDestination(_wanderData.WanderTargetPosition);
+            //_agent.speed = _wanderData.WanderSpeed;
 
             _wanderData.IsWandering = true;
         }
@@ -136,66 +144,120 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     void AnimationAndDirection()
     {
-        if (_animator.runtimeAnimatorController != null) _animator.SetFloat("Speed", _agent.velocity.magnitude);
+        //if (_animator.runtimeAnimatorController != null) _animator.SetFloat("Speed", _agent.velocity.magnitude);
 
-        if (_agent.velocity != Vector3.zero)
-        {
-            transform.localScale = new Vector3(Mathf.Sign(_agent.velocity.x), transform.localScale.y, transform.localScale.z);
+        //if (_agent.velocity != Vector3.zero)
+        //{
+        //    transform.localScale = new Vector3(Mathf.Sign(_agent.velocity.x), transform.localScale.y, transform.localScale.z);
             
-            //ActorScripts.Actor_VFX.transform.localScale = new Vector3(Mathf.Sign(direction.x), 1, 1);
-        }
-    }
-
-    public void ResetAgent()
-    {
-        _agent.isStopped = true;
-        _speed = 0;
-        _targetPosition = transform.position;
-        _followDistance = 0;
-        _wanderData = null;
-        _canMove = false;
+        //    //ActorScripts.Actor_VFX.transform.localScale = new Vector3(Mathf.Sign(direction.x), 1, 1);
+        //}
     }
 
     public Voxel_Base GetStartVoxel()
     {
-        return VoxelGrid.GetVoxelAtPosition(new Vector3(transform.localPosition.x, transform.localPosition.y, transform.localPosition.z));
+        return VoxelGrid.GetVoxelAtPosition(transform.localPosition);
     }
 
     public void MoveTo(Voxel_Base target)
     {
-        if (_movingCoroutine != null) StopMoving();
+        if (_followCoroutine != null) StopMoving();
 
-        _movingCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
+        _hidePath();
+
+        _followCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
     }
 
     IEnumerator FollowPath(List<Vector3> path)
     {
-        foreach (Vector3 position in path)
+        _showPath(path);
+
+        for (int i = 0; i < path.Count; i++)
         {
-            _testTargetPositions = position;
-            yield return Move(position);
+            Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+
+            yield return _moveCoroutine = StartCoroutine(Move(path[i], nextPos.Value));
         }
 
-        _targetPosition = Vector3.zero;
-        _movingCoroutine = null;
+        _moveCoroutine = null;
+        _followCoroutine = null;
+        _pathSet = false;
+        CanGetNewPath = true;
     }
 
-    IEnumerator Move(Vector3 nextPosition)
+    void _showPath(List<Vector3> path)
     {
-        while (Vector3.Distance(transform.localPosition, nextPosition) > 0.1f)
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Green");
+
+        foreach (Vector3 point in path)
         {
-            transform.localPosition = Vector3.MoveTowards(transform.localPosition, nextPosition, _speed * Time.deltaTime);
-            if (_movingCoroutine == null) break;
+            GameObject voxelGO = new GameObject($"{point}");
+            _shownPath.Add(voxelGO);
+            voxelGO.AddComponent<MeshFilter>().mesh = mesh;
+            voxelGO.AddComponent<MeshRenderer>().material = material;
+            voxelGO.transform.SetParent(GameObject.Find("TestTransform").transform);
+            voxelGO.transform.localPosition = point;
+            voxelGO.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+        }
+    }
+
+    void _hidePath(Vector3? point = null)
+    {
+        List<GameObject> toRemove = new List<GameObject>();
+
+        foreach (GameObject go in _shownPath)
+        {
+            if (!point.HasValue || go.transform.localPosition == point.Value)
+            {
+                toRemove.Add(go);
+                Destroy(go);
+            }
+        }
+
+        foreach (GameObject go in toRemove)
+        {
+            _shownPath.Remove(go);
+            Destroy(go);
+        }
+    }
+
+    IEnumerator Move(Vector3 nextPosition, Vector3 followingPosition)
+    {
+        while (Vector3.Distance(transform.position, nextPosition) > 0.1f)
+        {
+            if (followingPosition == new Vector3(int.MaxValue, int.MaxValue, int.MaxValue) || Vector3.Distance(nextPosition, followingPosition) > Vector3.Distance(transform.position, followingPosition))
+            {
+                yield break;
+            }
+
+            transform.position = Vector3.MoveTowards(transform.position, nextPosition, _speed * Time.deltaTime);
+
             yield return null;
         }
+
+        _hidePath(nextPosition);
     }
 
     public void StopMoving()
     {
-        if (_movingCoroutine == null) return;
+        if (_followCoroutine != null)
+        {
+            StopCoroutine(_followCoroutine);
+            _followCoroutine = null;
+        }
 
-        StopCoroutine(_movingCoroutine);
-        _movingCoroutine = null;
+        if (_moveCoroutine != null)
+        {
+            StopCoroutine(_moveCoroutine);
+            _moveCoroutine = null;
+        }
+
+        if (_pathfindingCoroutine != null)
+        {
+            StopPathfindingCoroutine();
+            _pathfindingCoroutine = null;
+        }
     }
 
     public List<Vector3> GetObstaclesInVision()
@@ -205,12 +267,16 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     public void StartPathfindingCoroutine(IEnumerator coroutine)
     {
+        StopMoving();
 
+        CanGetNewPath = false;
+        _pathfindingCoroutine = StartCoroutine(coroutine);
     }
 
     public void StopPathfindingCoroutine()
     {
-
+        StopCoroutine(_pathfindingCoroutine);
+        CanGetNewPath = true;
     }
 }
 

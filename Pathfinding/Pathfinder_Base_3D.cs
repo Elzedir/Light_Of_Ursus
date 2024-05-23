@@ -29,6 +29,8 @@ public class Pathfinder_Base_3D
 
     public void SetPath(Vector3 start, Vector3 target, PathfinderMover_3D mover, PuzzleSet puzzleSet)
     {
+        if (!VoxelGrid.Initialised) VoxelGrid.InitializeVoxelGrid();
+
         _puzzleSet = puzzleSet;
         _mover = mover;
 
@@ -45,6 +47,7 @@ public class Pathfinder_Base_3D
 
         if (mover.CanGetNewPath)
         {
+            Debug.Log("Ran pathfinder again");
             mover.StartPathfindingCoroutine(_runPathfinder(mover));
         }
     }
@@ -360,20 +363,43 @@ public class Pathfinder_Base_3D
 
 public class VoxelGrid
 {
+    public static bool Initialised { get; private set; }
     public static Voxel_Base[,,] Voxels;
     public static float Scale { get; private set; }
     static Vector3 _offset;
     static List<Voxel_Base> _testShowPathfinding = new();
     static List<GameObject> _testShowVoxels = new();
+    static Vector3 _defaultOffset = new Vector3(0.5f, 0, 0.5f);
 
-    public static void InitializeVoxelGrid(float width, float height, float depth, float scale, Vector3 offset, bool isMouseMaze = false)
+    public static void InitializeVoxelGrid(float width = 100, float height = 2, float depth = 100, float scale = 10, Vector3? offset = null)
     {
-        Scale = scale;
-        _offset = offset;
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Green");
 
-        int gridWidth = (int)((width + 1) * scale);
-        int gridHeight = (int)((height + 1) * scale);
-        int gridDepth = (int)((depth + 1) * scale);
+        Scale = scale;
+
+        Collider groundCollider = GameObject.Find("Ground").GetComponent<Collider>();
+        bool hasGroundCollider = false;
+
+        _offset = offset ?? getCollider();
+        
+
+        Vector3 getCollider()
+        {
+            if (groundCollider != null)
+            {
+                hasGroundCollider = true;
+                return groundCollider.bounds.size / 2f;
+            }
+
+            return Vector3.zero;
+        }
+
+        _offset = new Vector3( _offset.x, 0, _offset.z);
+
+        int gridWidth = (int)((width + 1) * Scale);
+        int gridHeight = (int)((height + 1) * Scale);
+        int gridDepth = (int)((depth + 1) * Scale);
 
         Pathfinder_Base_3D.SetGrid(gridWidth, gridHeight, gridDepth);
 
@@ -385,9 +411,22 @@ public class VoxelGrid
             {
                 for (int z = (int)(_offset.z * Scale); z < gridDepth; z += (int)Scale)
                 {
-                    float worldX = ((float)x / scale) - _offset.x;
-                    float worldY = ((float)y / scale) - _offset.y;
-                    float worldZ = ((float)z / scale) - _offset.z;
+                    float worldX = 0;
+                    float worldY = 0;
+                    float worldZ = 0;
+
+                    if (hasGroundCollider)
+                    {
+                        worldX = (x / Scale) - (_offset.x * 2);
+                        worldY = (y / Scale) - (_offset.y * 2);
+                        worldZ = (z / Scale) - (_offset.z * 2);
+                    }
+                    else
+                    {
+                        worldX = (x / Scale) - _offset.x;
+                        worldY = (y / Scale) - _offset.y;
+                        worldZ = (z / Scale) - _offset.z;
+                    }
 
                     Voxels[x, y, z] = new Voxel_Base
                     {
@@ -399,9 +438,15 @@ public class VoxelGrid
                     };
 
                     Voxels[x, y, z].UpdateMovementCost(1);
+
+                    // Voxels[x, y, z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
                 }
             }
         }
+
+        //Debug.Log($"Grid Size: {gridWidth}_{gridHeight}_{gridDepth}");
+
+        Initialised = true;
     }
 
     public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle)
@@ -456,8 +501,8 @@ public class VoxelGrid
 
         _testShowPathfinding.Add(newVoxel);
 
-        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Red");
+        //Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        //Material material = Resources.Load<Material>("Meshes/Material_Red");
 
         //newVoxel.TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material);
 
@@ -467,8 +512,6 @@ public class VoxelGrid
     public static void RemoveVoxelAtPosition(Vector3? position)
     {
         if (!position.HasValue) return;
-
-        //Debug.Log(position);
 
         Voxel_Base voxel = GetVoxelAtPosition(position.Value);
 

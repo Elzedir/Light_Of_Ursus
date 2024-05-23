@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 
 public class Controller_Puzzle_XOY : Controller
 {
-    float _cooldownTimer;
-    float _cooldown = 0.5f;
+    [SerializeField] [Range(0, 1)] float _cooldownTimer;
+    float _cooldown = 0.25f;
     Vector2 _move;
 
     protected override void FixedUpdate()
@@ -18,7 +18,7 @@ public class Controller_Puzzle_XOY : Controller
         if (_cooldownTimer >= _cooldown)
         {
             PlayerMove();
-            _cooldown = 0;
+            _cooldownTimer = 0;
         }
     }
 
