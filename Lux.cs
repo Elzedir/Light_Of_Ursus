@@ -62,7 +62,9 @@ public class Lux : MonoBehaviour
 
     void WanderAroundUrsus()
     {
-        Debug.Log("Wander around Ursus called");
-        _agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
+        //Debug.Log("Wander around Ursus called");
+        //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
+
+        VoxelGrid.InitialiseVoxelGridTest();
     }
 }

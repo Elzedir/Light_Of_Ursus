@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using UnityEngine;
 
@@ -52,6 +53,8 @@ public class Pathfinder_Base_3D
 
     IEnumerator _runPathfinder(PathfinderMover_3D mover)
     {
+        yield break;
+
         if (_startVoxel == null || _targetVoxel == null || _startVoxel.Equals(_targetVoxel))
         {
             Debug.Log($"StartVoxel: {_startVoxel} or TargetVoxel: {_targetVoxel} is null or equal.");
@@ -369,83 +372,209 @@ public class VoxelGrid
     public static bool Initialised { get; private set; }
     public static Voxel_Base[,,] Voxels;
     public static int Scale { get; private set; }
-    static Vector3 _offset;
+    //static Vector3 _offset;
     public static bool VoxelsTestShown { get; private set; } = false;
     static List<Voxel_Base> _testShowPathfinding = new();
     static List<GameObject> _testShowVoxels = new();
     static List<GameObject> _testShowSubVoxels = new();
     static Vector3 _defaultOffset = new Vector3(0.5f, 0, 0.5f);
 
-    public static void InitializeVoxelGrid(float width = 100, float height = 4, float depth = 100, int scale = 10, Vector3? offset = null)
+    public static List<Voxel_Base> VoxelsTest = new();
+
+    public static void InitialiseVoxelGridTest(float width = 100, float height = 4, float depth = 100)
     {
-        Scale = scale;
-
         Collider groundCollider = Manager_Game.Instance.GroundCollider;
-        bool hasGroundCollider = false;
+        bool hasGroundCollider = groundCollider != null;
 
-        _offset = offset ?? getCollider();
-
-        Vector3 getCollider()
+        if (hasGroundCollider)
         {
-            if (groundCollider != null)
+            List<Collider> obstacles = new List<Collider>(UnityEngine.Object.FindObjectsByType<Collider>(FindObjectsSortMode.None));
+            obstacles.Sort((a, b) => a.transform.position.x.CompareTo(b.transform.position.x));
+
+            for (int i = 0; i < obstacles.Count; i++)
             {
-                hasGroundCollider = true;
-                return groundCollider.bounds.size / 2f;
-            }
+                Collider collider = obstacles[i];
+                Voxel_Base newVoxel = new Voxel_Base();
 
-            return Vector3.zero;
-        }
+                newVoxel.SetVoxelProperties(
+                    worldPosition: collider.transform.position,
+                    size: collider.bounds.size,
+                    voxelType: _getVoxelType(collider.gameObject),
+                    g: double.PositiveInfinity,
+                    rhs: double.PositiveInfinity
+                    );
 
-        _offset = new Vector3(_offset.x, 0, _offset.z);
+                newVoxel.UpdateMovementCostTest();
 
-        int gridWidth = (int)((width + 1) * Scale);
-        int gridHeight = (int)((height + 1) * Scale);
-        int gridDepth = (int)((depth + 1) * Scale);
+                VoxelsTest.Add(newVoxel);
 
-        Pathfinder_Base_3D.SetGrid(gridWidth, gridHeight, gridDepth);
-
-        Voxels = new Voxel_Base[gridWidth, gridHeight, gridDepth];
-
-        for (int x = (int)(_offset.x * Scale); x < gridWidth; x += Scale)
-        {
-            for (int y = (int)(_offset.y * Scale); y < gridHeight; y += Scale)
-            {
-                for (int z = (int)(_offset.z * Scale); z < gridDepth; z += Scale)
+                for (int j = i + 1; j < obstacles.Count; j++)
                 {
-                    float worldX = 0;
-                    float worldY = 0;
-                    float worldZ = 0;
+                    Collider nextCollider = obstacles[j];
 
-                    if (hasGroundCollider)
+                    if (IsAdjacent(collider.bounds, nextCollider.bounds))
                     {
-                        worldX = (x / Scale) - (_offset.x * 2);
-                        worldY = (y / Scale) - (_offset.y * 2);
-                        worldZ = (z / Scale) - (_offset.z * 2);
+                        Vector3 openSpaceSize = CalculateOpenSpaceSize(collider.bounds, nextCollider.bounds);
+
+                        Vector3 openSpacePosition = (collider.bounds.center + nextCollider.bounds.center) / 2;
+
+                        Voxel_Base openSpaceVoxel = new Voxel_Base();
+                        openSpaceVoxel.SetVoxelProperties(
+                            worldPosition: openSpacePosition,
+                            size: openSpaceSize,
+                            voxelType: VoxelType.Open,
+                            g: double.PositiveInfinity,
+                            rhs: double.PositiveInfinity
+                        );
+
+                        openSpaceVoxel.UpdateMovementCostTest();
+
+                        VoxelsTest.Add(openSpaceVoxel);
                     }
-                    else
-                    {
-                        worldX = (x / Scale) - _offset.x;
-                        worldY = (y / Scale) - _offset.y;
-                        worldZ = (z / Scale) - _offset.z;
-                    }
-
-                    Voxels[x, y, z] = new Voxel_Base
-                    {
-                        GridPosition = new Vector3Int(x, y, z),
-                        WorldPosition = new Vector3(worldX, worldY, worldZ),
-                        Size = Vector3.one,
-                        G = double.PositiveInfinity,
-                        RHS = double.PositiveInfinity
-                    };
-
-                    Voxels[x, y, z].UpdateMovementCost(1);
                 }
             }
         }
 
-        //Debug.Log($"Grid Size: {new Vector3(gridWidth, gridHeight, gridDepth)}");
-
         Initialised = true;
+        TestTestShowAllVoxels();
+    }
+
+    public static bool IsAdjacent(Bounds a, Bounds b)
+    {
+        return Mathf.Approximately(a.max.x, b.min.x) || Mathf.Approximately(a.min.x, b.max.x) ||
+               Mathf.Approximately(a.max.y, b.min.y) || Mathf.Approximately(a.min.y, b.max.y) ||
+               Mathf.Approximately(a.max.z, b.min.z) || Mathf.Approximately(a.min.z, b.max.z);
+    }
+
+    public static Vector3 CalculateOpenSpaceSize(Bounds a, Bounds b)
+    {
+        float xSize = Mathf.Abs(a.max.x - b.min.x);
+        float ySize = Mathf.Abs(a.max.y - b.min.y);
+        float zSize = Mathf.Abs(a.max.z - b.min.z);
+
+        return new Vector3(xSize, ySize, zSize);
+    }
+
+    public static void TestTestShowAllVoxels(bool showOpen = true, bool showObstacles = true, bool showGround = true)
+    {
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material green = Resources.Load<Material>("Meshes/Material_Green");
+        Material red = Resources.Load<Material>("Meshes/Material_Red");
+        Material blue = Resources.Load<Material>("Meshes/Material_Blue");
+        Material white = Resources.Load<Material>("Meshes/Material_White");
+
+        foreach (Voxel_Base voxel in VoxelsTest)
+        {
+            if (voxel == null) continue;
+
+            if (voxel.VoxelType == VoxelType.Open && showOpen)
+            {
+                GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("OpenTest").transform, mesh, white);
+                _testShowVoxels.Add(voxelGO);
+            }
+            else if (voxel.VoxelType == VoxelType.Obstacle && showObstacles)
+            {
+                GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("ObstacleTest").transform, mesh, green);
+                _testShowVoxels.Add(voxelGO);
+            }
+            else if (voxel.VoxelType == VoxelType.Ground && showGround)
+            {
+                GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("GroundTest").transform, mesh, red);
+                _testShowSubVoxels.Add(voxelGO);
+            }
+        }
+
+        VoxelsTestShown = true;
+    }
+
+    static VoxelType _getVoxelType(GameObject voxelGO)
+    {
+        if (voxelGO.name.Contains("Water"))
+        {
+            return VoxelType.Water;
+        }
+        if (voxelGO.name.Contains("Air"))
+        {
+            return VoxelType.Air;
+        }
+        if (voxelGO.name.Contains("Ground"))
+        {
+            return VoxelType.Ground;
+        }
+        if (voxelGO.name.Contains("Obstacle"))
+        {
+            return VoxelType.Obstacle;
+        }
+        else
+        {
+            return VoxelType.Open;
+        }
+    }
+
+    public static void InitializeVoxelGrid(float width = 100, float height = 4, float depth = 100, int scale = 10, Vector3? offset = null)
+    {
+        //Scale = scale;
+
+        //Collider groundCollider = Manager_Game.Instance.GroundCollider;
+        //bool hasGroundCollider = false;
+
+        //_offset = offset ?? getCollider();
+
+        //Vector3 getCollider()
+        //{
+        //    if (groundCollider != null)
+        //    {
+        //        hasGroundCollider = true;
+        //        return groundCollider.bounds.size / 2f;
+        //    }
+
+        //    return Vector3.zero;
+        //}
+
+        //_offset = new Vector3(_offset.x, 0, _offset.z);
+
+        //int gridWidth = (int)((width + 1) * Scale);
+        //int gridHeight = (int)((height + 1) * Scale);
+        //int gridDepth = (int)((depth + 1) * Scale);
+
+        //Pathfinder_Base_3D.SetGrid(gridWidth, gridHeight, gridDepth);
+
+        //Voxels = new Voxel_Base[gridWidth, gridHeight, gridDepth];
+
+        //for (int x = (int)(_offset.x * Scale); x < gridWidth; x += Scale)
+        //{
+        //    for (int y = (int)(_offset.y * Scale); y < gridHeight; y += Scale)
+        //    {
+        //        for (int z = (int)(_offset.z * Scale); z < gridDepth; z += Scale)
+        //        {
+        //            Vector3Int gridPos = new Vector3Int(x, y, z);
+        //            Vector3 worldPos = Vector3.zero;
+
+        //            if (hasGroundCollider)
+        //            {
+        //                worldPos.x = (x / Scale) - (_offset.x * 2);
+        //                worldPos.y = (y / Scale) - (_offset.y * 2);
+        //                worldPos.z = (z / Scale) - (_offset.z * 2);
+        //            }
+        //            else
+        //            {
+        //                worldPos.x = (x / Scale) - _offset.x;
+        //                worldPos.y = (y / Scale) - _offset.y;
+        //                worldPos.z = (z / Scale) - _offset.z;
+        //            }
+
+        //            Voxel_Base newVoxel = Voxels[x, y, z] = new Voxel_Base();
+
+        //            newVoxel.SetVoxelProperties(gridPosition: gridPos, worldPosition: worldPos, size: Vector3.one, g: double.PositiveInfinity, rhs: double.PositiveInfinity, isObstacle: false);
+
+        //            Voxels[x, y, z].UpdateMovementCost(1);
+        //        }
+        //    }
+        //}
+
+        ////Debug.Log($"Grid Size: {new Vector3(gridWidth, gridHeight, gridDepth)}");
+
+        //Initialised = true;
     }
 
     public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle = false)
@@ -473,7 +602,7 @@ public class VoxelGrid
             {
                 for (int z = (int)minBounds.z; z < maxBounds.z; z += Scale)
                 {
-                    Vector3Int positionToRemove = new Vector3Int(WorldToGridPosition(x, y, z));
+                    Vector3Int positionToRemove = Vector3Int.zero; //= new Vector3Int(WorldToGridPosition(x, y, z));
                     Voxel_Base voxelToRemove = Voxels[positionToRemove.x, positionToRemove.y, positionToRemove.z];
 
                     Debug.Log($"Trying to remove Voxel: {voxelToRemove} WorldPos: {position} GridPos: {positionToRemove}");
@@ -512,14 +641,9 @@ public class VoxelGrid
             return null;
         }
 
-        Voxel_Base newVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base
-        {
-            GridPosition = new Vector3Int(gridPosition.x, gridPosition.y, gridPosition.z),
-            WorldPosition = new Vector3(subVoxelCenter.x, subVoxelCenter.y, subVoxelCenter.z),
-            Size = subVoxelSize,
-            G = double.PositiveInfinity,
-            RHS = double.PositiveInfinity
-        };
+        Voxel_Base newVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base();
+
+        newVoxel.SetVoxelProperties(gridPosition: gridPosition, worldPosition: subVoxelCenter, size: subVoxelSize, g: double.PositiveInfinity, rhs: double.PositiveInfinity, isObstacle: isObstacle);
 
         if (isObstacle) newVoxel.UpdateMovementCost(double.PositiveInfinity);
 
@@ -551,49 +675,52 @@ public class VoxelGrid
 
     public static Voxel_Base GetVoxelAtPosition(Vector3 position)
     {
-        Vector3Int gridPosition = WorldToGridPosition(position);
+        //Vector3Int gridPosition = WorldToGridPosition(position);
 
-        if (gridPosition.x < 0 && gridPosition.x >= Voxels.GetLength(0) &&
-            gridPosition.y < 0 && gridPosition.y >= Voxels.GetLength(1) &&
-            gridPosition.z < 0 && gridPosition.z >= Voxels.GetLength(2))
-        {
-            Debug.Log($"Converted position WorldPos: {position} GridPos: {gridPosition} is out of Voxel Grid bounds: {Voxels.GetLength(0)}_{Voxels.GetLength(1)}_{Voxels.GetLength(2)}");
-            return null;
-        }
+        //if (gridPosition.x < 0 && gridPosition.x >= Voxels.GetLength(0) &&
+        //    gridPosition.y < 0 && gridPosition.y >= Voxels.GetLength(1) &&
+        //    gridPosition.z < 0 && gridPosition.z >= Voxels.GetLength(2))
+        //{
+        //    Debug.Log($"Converted position WorldPos: {position} GridPos: {gridPosition} is out of Voxel Grid bounds: {Voxels.GetLength(0)}_{Voxels.GetLength(1)}_{Voxels.GetLength(2)}");
+        //    return null;
+        //}
 
-        //Debug.Log($"WorldPos: {position} GridPos: {new Vector3(gridPosition.x,gridPosition.y, gridPosition.z)}");
+        ////Debug.Log($"WorldPos: {position} GridPos: {new Vector3(gridPosition.x,gridPosition.y, gridPosition.z)}");
 
-        Voxel_Base voxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
+        //Voxel_Base voxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
 
-        if (voxel == null)
-        {
-            Vector3 scaledPosition = new Vector3(
-                (int)(((int)(gridPosition.x / Scale) + _offset.x) * Scale),
-                (int)(((int)(gridPosition.y / Scale) + _offset.y) * Scale),
-                (int)(((int)(gridPosition.z / Scale) + _offset.z) * Scale)
-                );
+        //if (voxel == null)
+        //{
+        //    Vector3 scaledPosition = new Vector3(
+        //        (int)(((int)(gridPosition.x / Scale) + _offset.x) * Scale),
+        //        (int)(((int)(gridPosition.y / Scale) + _offset.y) * Scale),
+        //        (int)(((int)(gridPosition.z / Scale) + _offset.z) * Scale)
+        //        );
 
-            voxel = Voxels[(int)scaledPosition.x, (int)scaledPosition.y, (int)scaledPosition.z];
+        //    voxel = Voxels[(int)scaledPosition.x, (int)scaledPosition.y, (int)scaledPosition.z];
 
-            if (voxel == null)
-            {
-                Debug.Log($"Voxel and Subvoxel does not exist at: GridPos: {gridPosition} WorldPos: {position} ScaledPosition: {scaledPosition}");
-                return null;
-            }
+        //    if (voxel == null)
+        //    {
+        //        Debug.Log($"Voxel and Subvoxel does not exist at: GridPos: {gridPosition} WorldPos: {position} ScaledPosition: {scaledPosition}");
+        //        return null;
+        //    }
 
-            return voxel;
-        }
+        //    return voxel;
+        //}
 
-        return voxel;
+        //return voxel;
+
+        return null;
     }
 
     public static Vector3Int WorldToGridPosition(Vector3 worldPosition)
     {
-        return new Vector3Int(
-            (int)((worldPosition.x + _offset.x) * Scale),
-            (int)((worldPosition.y + _offset.y) * Scale),
-            (int)((worldPosition.z + _offset.z) * Scale)
-        );
+        return Vector3Int.zero;
+        //return new Vector3Int(
+        //    (int)((worldPosition.x + _offset.x) * Scale),
+        //    (int)((worldPosition.y + _offset.y) * Scale),
+        //    (int)((worldPosition.z + _offset.z) * Scale)
+        //);
     }
 
     public static void TestShowAllVoxels(bool showVoxels = true, bool showSubvoxels = true)
@@ -601,6 +728,7 @@ public class VoxelGrid
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material green = Resources.Load<Material>("Meshes/Material_Green");
         Material red = Resources.Load<Material>("Meshes/Material_Red");
+        Material blue = Resources.Load<Material>("Meshes/Material_Blue");
 
         foreach (Voxel_Base voxel in Voxels)
         {
@@ -632,11 +760,14 @@ public class VoxelGrid
     }
 }
 
+public enum VoxelType { Open, Ground, Obstacle, Air, Water }
+
 public class Voxel_Base
 {
-    public Vector3Int GridPosition;
-    public Vector3 WorldPosition;
-    public Vector3 Size;
+    public Vector3Int GridPosition { get; private set; }
+    public Vector3 WorldPosition { get; private set; }
+    public Vector3 Size { get; private set; }
+    public VoxelType VoxelType { get; private set; }
     public double G;
     public double RHS;
     public Voxel_Base Predecessor { get; private set; }
@@ -645,6 +776,27 @@ public class Voxel_Base
 
     public bool IsObstacle { get; private set; }
     GameObject _pathfindingVoxelGO;
+
+    public Voxel_Base SetVoxelProperties(
+        Vector3Int? gridPosition = null, 
+        Vector3? worldPosition = null, 
+        Vector3? size = null, 
+        VoxelType? voxelType = null, 
+        double? g = null, 
+        double? rhs = null, 
+        bool? isObstacle = null
+        )
+    {
+        if (gridPosition != null) GridPosition = gridPosition.Value;
+        if (worldPosition != null) WorldPosition = worldPosition.Value;
+        if (size != null) Size = size.Value;
+        if (voxelType != null) VoxelType = voxelType.Value;
+        if (g != null) G = g.Value;
+        if (rhs != null) rhs = rhs.Value;
+        if (isObstacle != null) IsObstacle = isObstacle.Value;
+
+        return this;
+    }
 
     public GameObject TestShowVoxel(Transform transform, Mesh mesh, Material material)
     {
@@ -665,6 +817,31 @@ public class Voxel_Base
     public void SetPredecessor(Voxel_Base predecessor)
     {
         Predecessor = predecessor;
+    }
+
+    public void UpdateMovementCostTest()
+    {
+        switch(VoxelType)
+        {
+            case VoxelType.Open:
+                MovementCost = 1;
+                break;
+            case VoxelType.Ground:
+                MovementCost = 1.5;
+                break;
+            case VoxelType.Obstacle:
+                MovementCost = double.PositiveInfinity;
+                break;
+            case VoxelType.Air:
+                MovementCost = 0.75;
+                break;
+            case VoxelType.Water:
+                MovementCost = 1.5;
+                break;
+            default:
+                MovementCost = double.PositiveInfinity;
+                break;
+        }
     }
 
     public void UpdateMovementCost(double cost)
