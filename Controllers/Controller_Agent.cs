@@ -196,7 +196,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
             _shownPath.Add(voxelGO);
             voxelGO.AddComponent<MeshFilter>().mesh = mesh;
             voxelGO.AddComponent<MeshRenderer>().material = material;
-            voxelGO.transform.SetParent(GameObject.Find("TestTransform").transform);
+            voxelGO.transform.SetParent(GameObject.Find("TestPath").transform);
             voxelGO.transform.localPosition = point;
             voxelGO.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
         }

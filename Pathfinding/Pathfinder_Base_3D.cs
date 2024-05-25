@@ -67,9 +67,6 @@ public class Pathfinder_Base_3D
 
         _initialise();
 
-        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Red");
-
         int iterationCount = 0;
 
         while (true)
@@ -87,7 +84,7 @@ public class Pathfinder_Base_3D
 
                     if (obstacleVoxel.IsObstacle) continue;
 
-                    obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true, mesh, material);
+                    obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
 
                     foreach (Voxel_Base predecessor in obstacleVoxel.GetPredecessors())
                     {
@@ -157,7 +154,11 @@ public class Pathfinder_Base_3D
 
             if (pathIsComplete && (previousPath == null || !IsPathEqual(previousPath, currentPath)))
             {
-                VoxelGrid.TestShowAllVoxels();
+                if (!VoxelGrid.VoxelsTestShown)
+                {
+                    VoxelGrid.TestShowAllVoxels();
+                }
+                
                 _mover.MoveTo(_targetVoxel);
                 currentVoxel = _startVoxel;
 
@@ -367,18 +368,16 @@ public class VoxelGrid
 {
     public static bool Initialised { get; private set; }
     public static Voxel_Base[,,] Voxels;
-    public static float Scale { get; private set; }
+    public static int Scale { get; private set; }
     static Vector3 _offset;
+    public static bool VoxelsTestShown { get; private set; } = false;
     static List<Voxel_Base> _testShowPathfinding = new();
     static List<GameObject> _testShowVoxels = new();
     static List<GameObject> _testShowSubVoxels = new();
     static Vector3 _defaultOffset = new Vector3(0.5f, 0, 0.5f);
 
-    public static void InitializeVoxelGrid(float width = 100, float height = 4, float depth = 100, float scale = 10, Vector3? offset = null)
+    public static void InitializeVoxelGrid(float width = 100, float height = 4, float depth = 100, int scale = 10, Vector3? offset = null)
     {
-        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Green");
-
         Scale = scale;
 
         Collider groundCollider = Manager_Game.Instance.GroundCollider;
@@ -407,11 +406,11 @@ public class VoxelGrid
 
         Voxels = new Voxel_Base[gridWidth, gridHeight, gridDepth];
 
-        for (int x = (int)(_offset.x * Scale); x < gridWidth; x += (int)Scale)
+        for (int x = (int)(_offset.x * Scale); x < gridWidth; x += Scale)
         {
-            for (int y = (int)(_offset.y * Scale); y < gridHeight; y += (int)Scale)
+            for (int y = (int)(_offset.y * Scale); y < gridHeight; y += Scale)
             {
-                for (int z = (int)(_offset.z * Scale); z < gridDepth; z += (int)Scale)
+                for (int z = (int)(_offset.z * Scale); z < gridDepth; z += Scale)
                 {
                     float worldX = 0;
                     float worldY = 0;
@@ -430,8 +429,6 @@ public class VoxelGrid
                         worldZ = (z / Scale) - _offset.z;
                     }
 
-                    if (worldY == 3) Debug.Log($"Node at WorldPos: {new Vector3(worldX, worldY, worldZ)} GridPos: {new Vector3Int(x, y, z)}");
-
                     Voxels[x, y, z] = new Voxel_Base
                     {
                         GridPosition = new Vector3Int(x, y, z),
@@ -442,8 +439,6 @@ public class VoxelGrid
                     };
 
                     Voxels[x, y, z].UpdateMovementCost(1);
-
-                    //_testShowSubVoxels.Add(Voxels[x, y, z].TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material));
                 }
             }
         }
@@ -453,7 +448,7 @@ public class VoxelGrid
         Initialised = true;
     }
 
-    public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle, Mesh mesh, Material material)
+    public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle = false)
     {
         Collider collider = Physics.OverlapSphere(position, 0.1f).FirstOrDefault(); // hitCollider => hitCollider.gameObject.layer == "Wall");
 
@@ -465,7 +460,32 @@ public class VoxelGrid
 
         Vector3 center = collider.bounds.center;
         Vector3 extents = collider.bounds.extents;
-        Vector3 voxelCenter = position;
+
+        Vector3 minBounds = center - extents;
+        Vector3 maxBounds = center + extents;
+
+        //Vector3Int minGridPosition = WorldToGridPosition(minBounds);
+        //Vector3Int maxGridPosition = WorldToGridPosition(maxBounds);
+
+        for (int x = (int)minBounds.x; x < maxBounds.x; x += Scale)
+        {
+            for (int y = (int)minBounds.y; y < maxBounds.y; y += Scale)
+            {
+                for (int z = (int)minBounds.z; z < maxBounds.z; z += Scale)
+                {
+                    Vector3Int positionToRemove = new Vector3Int(WorldToGridPosition(x, y, z));
+                    Voxel_Base voxelToRemove = Voxels[positionToRemove.x, positionToRemove.y, positionToRemove.z];
+
+                    Debug.Log($"Trying to remove Voxel: {voxelToRemove} WorldPos: {position} GridPos: {positionToRemove}");
+
+                    if (voxelToRemove != null && !voxelToRemove.IsObstacle)
+                    {
+                        Debug.Log($"Removing voxel at {positionToRemove}");
+                        RemoveVoxelAtPosition(positionToRemove);
+                    }
+                }
+            }
+        }
 
         Vector3[] vertices = new Vector3[8];
         vertices[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
@@ -477,11 +497,11 @@ public class VoxelGrid
         vertices[6] = center + new Vector3(-extents.x, extents.y, extents.z);
         vertices[7] = center + new Vector3(extents.x, extents.y, extents.z);
 
-        Vector3 minExtents = vertices.Select(vertex => vertex - voxelCenter).Aggregate(Vector3.Min);
-        Vector3 maxExtents = vertices.Select(vertex => vertex - voxelCenter).Aggregate(Vector3.Max);
+        Vector3 minExtents = vertices.Select(vertex => vertex - position).Aggregate(Vector3.Min);
+        Vector3 maxExtents = vertices.Select(vertex => vertex - position).Aggregate(Vector3.Max);
 
         Vector3 subVoxelSize = maxExtents - minExtents;
-        Vector3 subVoxelCenter = voxelCenter + (minExtents + maxExtents) / 2;
+        Vector3 subVoxelCenter = position + (minExtents + maxExtents) / 2;
 
         Vector3Int gridPosition = WorldToGridPosition(subVoxelCenter);
         Voxel_Base existingVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
@@ -505,8 +525,6 @@ public class VoxelGrid
 
         _testShowPathfinding.Add(newVoxel);
 
-        //_testShowSubVoxels.Add(newVoxel.TestShowVoxel(GameObject.Find("TestTransform").transform, mesh, material));
-
         return newVoxel;
     }
 
@@ -518,14 +536,15 @@ public class VoxelGrid
 
         if (voxel != null)
         {
-            Debug.Log(position);
-
             voxel.UpdateMovementCost(1);
             _testShowPathfinding.Remove(voxel);
-            //voxel.TestHideVoxel();
             VoxelGrid.Voxels[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] = null;
+            if (VoxelGrid.Voxels?[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] == null) Debug.Log($"Voxel removed at {position}");
             return;
         }
+
+        TestHideAllVoxels();
+        TestShowAllVoxels();
 
         return;
     }
@@ -577,7 +596,7 @@ public class VoxelGrid
         );
     }
 
-    public static void TestShowAllVoxels()
+    public static void TestShowAllVoxels(bool showVoxels = true, bool showSubvoxels = true)
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material green = Resources.Load<Material>("Meshes/Material_Green");
@@ -587,25 +606,29 @@ public class VoxelGrid
         {
             if (voxel == null) continue;
 
-            if (!voxel.IsObstacle)
+            if (!voxel.IsObstacle && showVoxels)
             {
                 GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("!Obstacle").transform, mesh, green);
                 _testShowVoxels.Add(voxelGO);
             }
-            else if (voxel.IsObstacle)
+            else if (voxel.IsObstacle && showSubvoxels)
             {
                 GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("Obstacle").transform, mesh, red);
                 _testShowSubVoxels.Add(voxelGO);
             }
         }
+
+        VoxelsTestShown = true;
     }
 
-    public static void HideAllVoxels()
+    public static void TestHideAllVoxels()
     {
         for (int i = 0; i < _testShowVoxels.Count; i++)
         {
             Manager_Game.Destroy(_testShowVoxels[i]);
         }
+
+        VoxelsTestShown = false;
     }
 }
 
