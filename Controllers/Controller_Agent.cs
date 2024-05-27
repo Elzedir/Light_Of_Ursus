@@ -168,6 +168,15 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
     }
 
+    public void MoveToTest(List<Vector3> path)
+    {
+        if (_followCoroutine != null) StopMoving();
+
+        _hidePath();
+
+        _followCoroutine = StartCoroutine(FollowPath(path));
+    }
+
     IEnumerator FollowPath(List<Vector3> path)
     {
         _showPath(path);

@@ -12,11 +12,13 @@ public class Lux : MonoBehaviour
     float _duration = 2f;
 
     private float timer = 0f;
+    Collider _collider;
 
     void Start()
     {
         fireflyLight = GetComponent<Light>();
         _agent = gameObject.AddComponent<Controller_Agent>();
+        _collider = gameObject.GetComponent<Collider>();
         _subscribeToEvents();
         StartCoroutine(_testWanderUrsus());
     }
@@ -66,5 +68,6 @@ public class Lux : MonoBehaviour
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
         VoxelGrid.InitialiseVoxelGridTest();
+        VoxelGrid.Move(transform.position, Manager_Game.Instance.Player.transform.position, _collider.bounds.size, _agent);
     }
 }

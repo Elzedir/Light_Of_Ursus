@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Pathfinder_Base_3D
 {
@@ -380,6 +380,7 @@ public class VoxelGrid
     static Vector3 _defaultOffset = new Vector3(0.5f, 0, 0.5f);
 
     public static List<Voxel_Base> VoxelsTest = new();
+    public static List<Vector3> NavigationList = new();
 
     public static void InitialiseVoxelGridTest(float width = 100, float height = 4, float depth = 100)
     {
@@ -407,52 +408,265 @@ public class VoxelGrid
                 newVoxel.UpdateMovementCostTest();
 
                 VoxelsTest.Add(newVoxel);
-
-                for (int j = i + 1; j < obstacles.Count; j++)
-                {
-                    Collider nextCollider = obstacles[j];
-
-                    if (IsAdjacent(collider.bounds, nextCollider.bounds))
-                    {
-                        Vector3 openSpaceSize = CalculateOpenSpaceSize(collider.bounds, nextCollider.bounds);
-
-                        Vector3 openSpacePosition = (collider.bounds.center + nextCollider.bounds.center) / 2;
-
-                        Voxel_Base openSpaceVoxel = new Voxel_Base();
-                        openSpaceVoxel.SetVoxelProperties(
-                            worldPosition: openSpacePosition,
-                            size: openSpaceSize,
-                            voxelType: VoxelType.Open,
-                            g: double.PositiveInfinity,
-                            rhs: double.PositiveInfinity
-                        );
-
-                        openSpaceVoxel.UpdateMovementCostTest();
-
-                        VoxelsTest.Add(openSpaceVoxel);
-                    }
-                }
             }
         }
 
         Initialised = true;
-        TestTestShowAllVoxels();
+        //TestTestShowAllVoxels();
     }
 
-    public static bool IsAdjacent(Bounds a, Bounds b)
+    static Dictionary<int, List<Vector3>> _allPaths = new();
+    static int pathCount = 0;
+
+    public static void Move(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
-        return Mathf.Approximately(a.max.x, b.min.x) || Mathf.Approximately(a.min.x, b.max.x) ||
-               Mathf.Approximately(a.max.y, b.min.y) || Mathf.Approximately(a.min.y, b.max.y) ||
-               Mathf.Approximately(a.max.z, b.min.z) || Mathf.Approximately(a.min.z, b.max.z);
+        if (Physics.Raycast(startPosition, targetPosition - startPosition, out RaycastHit hit))
+        {
+            if (hit.transform.name.Contains("Player"))
+            {
+                Debug.Log($"Hit player at {hit.point}. Direct path to target: {targetPosition}.");
+
+                // Implement your movement logic here
+                return;
+            }
+            else if (hit.transform.name.Contains("Wall"))
+            {
+                Debug.Log($"Hit wall at position: {hit.point}");
+
+                List<Vector3> bestPath = _findBestPath(startPosition, targetPosition, characterSize, hit.collider.bounds, 0);
+
+                foreach (Vector3 position in bestPath)
+                {
+                    Debug.Log($"Moving to {position}");
+                }
+
+                agent.MoveToTest(bestPath);
+
+                // Move through the path
+            }
+            else
+            {
+                Debug.Log($"Hit at position: {hit.point} but was not a wall, instead was a {hit.transform.name}");
+            }
+        }
+        else
+        {
+            Debug.Log($"Hit nothing. Direct path to target: {targetPosition}.");
+            // Implement your movement logic here
+        }
     }
 
-    public static Vector3 CalculateOpenSpaceSize(Bounds a, Bounds b)
+    static List<Vector3> _findBestPath(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int iteration, List<Vector3> path = null)
     {
-        float xSize = Mathf.Abs(a.max.x - b.min.x);
-        float ySize = Mathf.Abs(a.max.y - b.min.y);
-        float zSize = Mathf.Abs(a.max.z - b.min.z);
+        if (iteration > 100) return null;
+        iteration++;
 
-        return new Vector3(xSize, ySize, zSize);
+        _selectVertices(startPosition, bounds, characterSize, out (Vector3, Vector3) position_1, out (Vector3, Vector3) position_2);
+
+        addOrUpdatePath();
+
+        for (int i = 0; i < _allPaths.Count; i++)
+        {
+            foreach(Vector3 position in _allPaths[i])
+            {
+                Debug.Log(position);
+            }
+
+            Vector3 lastPosition = _allPaths[i].Last();
+
+            if (Physics.Raycast(lastPosition, targetPosition - lastPosition, out RaycastHit pathHit))
+            {
+                if (pathHit.transform.name.Contains("Player"))
+                {
+                    _allPaths[i].Add(pathHit.point);
+                    continue;
+                }
+                else if (pathHit.transform.name.Contains("Wall"))
+                {
+                    _findBestPath(lastPosition, targetPosition, characterSize, bounds, iteration, _allPaths[i]);
+                }
+            }
+        }
+
+        float shortestDistance = float.MaxValue;
+        List<Vector3> shortestPath = null;
+
+        foreach(var distancePath in _allPaths)
+        {
+            float currentDistance = 0;
+
+            for (int i = 0; i < distancePath.Value.Count - 1; i++)
+            {
+                currentDistance += Vector3.Distance(distancePath.Value[i], distancePath.Value[i + 1]);
+            }
+
+            if (currentDistance < shortestDistance)
+            {
+                shortestDistance = currentDistance;
+                shortestPath = distancePath.Value;
+            }
+        }
+
+        return shortestPath;
+
+        void addOrUpdatePath()
+        {
+            List<Vector3> path1 = new List<Vector3>(path) { startPosition, position_1.Item1, position_1.Item2 };
+            List<Vector3> path2 = new List<Vector3>(path) { startPosition, position_2.Item1, position_2.Item2 };
+
+            bool path1Exists = _allPaths.Any(keyValuePair => keyValuePair.Value.SequenceEqual(path1));
+            bool path2Exists = _allPaths.Any(keyValuePair => keyValuePair.Value.SequenceEqual(path2));
+
+            if (!path1Exists)
+            {
+                _allPaths[pathCount] = path1;
+                pathCount++;
+            }
+            else
+            {
+                int existingKeyPath1 = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(path1)).Key;
+
+                if (existingKeyPath1 != 0)
+                {
+                    _allPaths[existingKeyPath1].Add(position_1.Item1);
+                    _allPaths[existingKeyPath1].Add(position_1.Item2);
+                }
+            }
+
+            if (!path2Exists)
+            {
+                _allPaths[pathCount] = path2;
+                pathCount++;
+            }
+            else
+            {
+                int existingKeyPath2 = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(path2)).Key;
+
+                if (existingKeyPath2 != 0)
+                {
+                    _allPaths[existingKeyPath2].Add(position_2.Item1);
+                    _allPaths[existingKeyPath2].Add(position_2.Item2);
+                }
+            }
+        }
+    }
+    
+    public static void _selectVertices(Vector3 point, Bounds bounds, Vector3 characterSize, out (Vector3, Vector3) position_1, out (Vector3, Vector3) position_2)
+    {
+        position_1 = (Vector3.zero, Vector3.zero);
+        position_2 = (Vector3.zero, Vector3.zero);
+
+        float dxMin = Mathf.Abs(point.x - bounds.min.x);
+        float dxMax = Mathf.Abs(point.x - bounds.max.x);
+        float dyMin = Mathf.Abs(point.y - bounds.min.y);
+        float dyMax = Mathf.Abs(point.y - bounds.max.y);
+        float dzMin = Mathf.Abs(point.z - bounds.min.z);
+        float dzMax = Mathf.Abs(point.z - bounds.max.z);
+
+        float minDistance = Mathf.Min(dxMin, dxMax, dyMin, dyMax, dzMin, dzMax);
+
+        if (minDistance == dxMin)
+        {
+            if (dyMin < dzMin)
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
+                              new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+                position_2 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y + characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+            }
+        }
+        else if (minDistance == dxMax)
+        {
+            if (dyMin < dzMin)
+            {
+                position_1 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y + characterSize.y, bounds.min.z),
+                              new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+            }
+        }
+        else if (minDistance == dyMin)
+        {
+            if (dxMin < dzMin)
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z));
+                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.min.x, bounds.max.y + characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.max.y + characterSize.y, bounds.max.z + characterSize.z));
+            }
+        }
+        else if (minDistance == dyMax)
+        {
+            if (dxMin < dzMin)
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
+                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.min.x, bounds.max.y + characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.max.y + characterSize.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
+            }
+        }
+        else if (minDistance == dzMin)
+        {
+            if (dxMin < dyMin)
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z));
+                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z));
+                position_2 = (new Vector3(bounds.min.x, bounds.min.y + characterSize.y, bounds.max.z + characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y + characterSize.y, bounds.max.z + characterSize.z));
+            }
+        }
+        else if (minDistance == dzMax)
+        {
+            if (dxMin < dyMin)
+            {
+                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z));
+            }
+            else
+            {
+                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
+                position_2 = (new Vector3(bounds.min.x, bounds.min.y + characterSize.y, bounds.min.z - characterSize.z),
+                              new Vector3(bounds.max.x, bounds.min.y + characterSize.y, bounds.min.z - characterSize.z));
+            }
+        }
     }
 
     public static void TestTestShowAllVoxels(bool showOpen = true, bool showObstacles = true, bool showGround = true)
