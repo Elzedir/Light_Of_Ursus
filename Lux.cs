@@ -25,7 +25,7 @@ public class Lux : MonoBehaviour
 
     IEnumerator _testWanderUrsus()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(0.5f);
 
         WanderAroundUrsus();
     }

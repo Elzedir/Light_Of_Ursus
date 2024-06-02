@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static UnityEditor.PlayerSettings;
 
 public class Pathfinder_Base_3D
 {
@@ -433,7 +435,7 @@ public class VoxelGrid
             {
                 Debug.Log($"Hit wall at position: {hit.point}");
 
-                List<Vector3> bestPath = _findBestPath(startPosition, targetPosition, characterSize, hit.collider.bounds, 0);
+                List<Vector3> bestPath = _findBestPath(agent, startPosition, targetPosition, characterSize, hit.collider.bounds, 0);
 
                 foreach (Vector3 position in bestPath)
                 {
@@ -456,20 +458,26 @@ public class VoxelGrid
         }
     }
 
-    static List<Vector3> _findBestPath(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int iteration, List<Vector3> path = null)
+    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int iteration, bool iterated = false, List<Vector3> path = null)
     {
         if (iteration > 100) return null;
         iteration++;
 
-        _selectVertices(startPosition, bounds, characterSize, out (Vector3, Vector3) position_1, out (Vector3, Vector3) position_2);
+        _selectVertices(agent, direction: startPosition - targetPosition, startPosition, targetPosition, bounds, characterSize, out Vector3 position_1, out Vector3 position_2);
 
-        addOrUpdatePath();
+        if (iterated)
+        {
+            Debug.Log("Iterated");
+            return null;
+        }
+
+        addOrUpdatePaths();
 
         for (int i = 0; i < _allPaths.Count; i++)
         {
             foreach(Vector3 position in _allPaths[i])
             {
-                Debug.Log(position);
+                Debug.Log($"Path: {i} Pos: {position}");
             }
 
             Vector3 lastPosition = _allPaths[i].Last();
@@ -483,7 +491,7 @@ public class VoxelGrid
                 }
                 else if (pathHit.transform.name.Contains("Wall"))
                 {
-                    _findBestPath(lastPosition, targetPosition, characterSize, bounds, iteration, _allPaths[i]);
+                    _findBestPath(agent, lastPosition, targetPosition, characterSize, bounds, iteration, true, _allPaths[i]);
                 }
             }
         }
@@ -509,163 +517,117 @@ public class VoxelGrid
 
         return shortestPath;
 
-        void addOrUpdatePath()
+        void addOrUpdatePaths()
         {
-            List<Vector3> path1 = new List<Vector3>(path) { startPosition, position_1.Item1, position_1.Item2 };
-            List<Vector3> path2 = new List<Vector3>(path) { startPosition, position_2.Item1, position_2.Item2 };
+            List<Vector3> path_1 = path != null 
+                ? new List<Vector3>(path) { position_1 }
+                : new List<Vector3> { startPosition, position_1 };
 
-            bool path1Exists = _allPaths.Any(keyValuePair => keyValuePair.Value.SequenceEqual(path1));
-            bool path2Exists = _allPaths.Any(keyValuePair => keyValuePair.Value.SequenceEqual(path2));
+            List<Vector3> path_2 = path != null 
+                ? new List<Vector3>(path) { position_2 }         
+                : new List<Vector3> { startPosition, position_2 };
 
-            if (!path1Exists)
+            if (path != null)
             {
-                _allPaths[pathCount] = path1;
+                foreach (Vector3 pos in path)
+                {
+                    Debug.Log($"Path Pos: {pos}");
+                }
+            }
+            foreach (Vector3 pos in path_1)
+            {
+                Debug.Log($"Path_1 Pos: {pos}");
+            }
+            foreach(Vector3 pos in path_2)
+            {
+                Debug.Log($"Path_2 Pos: {pos}");
+            }
+
+            addOrUpdatePath(path_1, position_1);
+            addOrUpdatePath(path_2, position_2);
+        }
+
+        void addOrUpdatePath(List<Vector3> newPath, Vector3 position)
+        {
+            var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(newPath));
+
+            //if (existingPath.Key == null || existingPath.Value == null)
+            //{
+            //    Debug.Log($"ExistingPath Key: {existingPath.Key} or Value: {existingPath.Value} doesn't exist");
+            //    Debug.Log(newPath);
+            //    return;
+            //}
+
+            if (existingPath.Value == null)
+            {
+                _allPaths.Add(pathCount, newPath);
+                //Debug.Log(_allPaths[pathCount]);
+                //return;
                 pathCount++;
             }
             else
             {
-                int existingKeyPath1 = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(path1)).Key;
-
-                if (existingKeyPath1 != 0)
-                {
-                    _allPaths[existingKeyPath1].Add(position_1.Item1);
-                    _allPaths[existingKeyPath1].Add(position_1.Item2);
-                }
-            }
-
-            if (!path2Exists)
-            {
-                _allPaths[pathCount] = path2;
-                pathCount++;
-            }
-            else
-            {
-                int existingKeyPath2 = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(path2)).Key;
-
-                if (existingKeyPath2 != 0)
-                {
-                    _allPaths[existingKeyPath2].Add(position_2.Item1);
-                    _allPaths[existingKeyPath2].Add(position_2.Item2);
-                }
+                Debug.Log(existingPath.Key);
+                return;
+                _allPaths[existingPath.Key].Add(position);
+                Debug.Log("Completed");
             }
         }
     }
     
-    public static void _selectVertices(Vector3 point, Bounds bounds, Vector3 characterSize, out (Vector3, Vector3) position_1, out (Vector3, Vector3) position_2)
+    public static void _selectVertices(Controller_Agent agent, Vector3 direction, Vector3 start, Vector3 target, Bounds bounds, Vector3 characterSize, out Vector3 position_1, out Vector3 position_2)
     {
-        position_1 = (Vector3.zero, Vector3.zero);
-        position_2 = (Vector3.zero, Vector3.zero);
+        position_1 = start;
+        position_2 = start;
 
-        float dxMin = Mathf.Abs(point.x - bounds.min.x);
-        float dxMax = Mathf.Abs(point.x - bounds.max.x);
-        float dyMin = Mathf.Abs(point.y - bounds.min.y);
-        float dyMax = Mathf.Abs(point.y - bounds.max.y);
-        float dzMin = Mathf.Abs(point.z - bounds.min.z);
-        float dzMax = Mathf.Abs(point.z - bounds.max.z);
+        Vector3 min = bounds.min;
+        Vector3 max = bounds.max;
 
-        float minDistance = Mathf.Min(dxMin, dxMax, dyMin, dyMax, dzMin, dzMax);
+        float dxMin = Mathf.Abs(start.x - min.x);
+        float dxMax = Mathf.Abs(start.x - max.x);
+        float dyMin = Mathf.Abs(start.y - min.y);
+        float dyMax = Mathf.Abs(start.y - max.y);
+        float dzMin = Mathf.Abs(start.z - min.z);
+        float dzMax = Mathf.Abs(start.z - max.z);
 
-        if (minDistance == dxMin)
+        Vector3 characterCanMoveInY = characterSize;
+        // Need to put in what type of obstacle it is, and therefore whether the different types of movers can move over, under or through it.
+        if (!agent.MoverType.Contains(MoverType.Fly) || !agent.MoverType.Contains(MoverType.Dig))
         {
-            if (dyMin < dzMin)
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
-                              new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-                position_2 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y + characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-            }
+            characterCanMoveInY.y = 0;
         }
-        else if (minDistance == dxMax)
+
+        if (direction.x < 0) // Moving left to right
         {
-            if (dyMin < dzMin)
-            {
-                position_1 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y + characterSize.y, bounds.min.z),
-                              new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-            }
+            position_1.x = (dxMax < dxMin) ? max.x + characterCanMoveInY.x : min.x - characterCanMoveInY.x;
+            position_2.x = (dxMax > dxMin) ? max.x + characterCanMoveInY.x : min.x - characterCanMoveInY.x;
         }
-        else if (minDistance == dyMin)
+        else // Moving right to left
         {
-            if (dxMin < dzMin)
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z));
-                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.min.x, bounds.max.y + characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.max.y + characterSize.y, bounds.max.z + characterSize.z));
-            }
+            position_1.x = (dxMin < dxMax) ? min.x - characterCanMoveInY.x : max.x + characterCanMoveInY.x;
+            position_2.x = (dxMin > dxMax) ? min.x - characterCanMoveInY.x : max.x + characterCanMoveInY.x;
         }
-        else if (minDistance == dyMax)
+
+        if (direction.y < 0) // Moving down to up
         {
-            if (dxMin < dzMin)
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.max.y + characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.max.y + characterSize.y, bounds.min.z));
-                position_2 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y - characterSize.y, bounds.min.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y - characterSize.y, bounds.min.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.min.x, bounds.max.y + characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.max.y + characterSize.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
-            }
+            position_1.y = (dyMax < dyMin) ? max.y : min.y;
+            position_2.y = (dyMax < dyMin) ? max.y : min.y;
         }
-        else if (minDistance == dzMin)
+        else // Moving up to down
         {
-            if (dxMin < dyMin)
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z));
-                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.min.z - characterSize.z));
-                position_2 = (new Vector3(bounds.min.x, bounds.min.y + characterSize.y, bounds.max.z + characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y + characterSize.y, bounds.max.z + characterSize.z));
-            }
+            position_1.y = (dyMin < dyMax) ? min.y : max.y;
+            position_2.y = (dyMin < dyMax) ? min.y : max.y;
         }
-        else if (minDistance == dzMax)
+
+        if (direction.z < 0) // Moving back to front
         {
-            if (dxMin < dyMin)
-            {
-                position_1 = (new Vector3(bounds.min.x - characterSize.x, bounds.min.y, bounds.max.z + characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.min.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x + characterSize.x, bounds.min.y, bounds.min.z - characterSize.z));
-            }
-            else
-            {
-                position_1 = (new Vector3(bounds.min.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y - characterSize.y, bounds.max.z + characterSize.z));
-                position_2 = (new Vector3(bounds.min.x, bounds.min.y + characterSize.y, bounds.min.z - characterSize.z),
-                              new Vector3(bounds.max.x, bounds.min.y + characterSize.y, bounds.min.z - characterSize.z));
-            }
+            position_1.z = min.z - characterCanMoveInY.z;
+            position_2.z = max.z + characterCanMoveInY.z;
+        }
+        else // Moving front to back
+        {
+            position_1.z = max.z + characterCanMoveInY.z;
+            position_2.z = min.z - characterCanMoveInY.z;
         }
     }
 
