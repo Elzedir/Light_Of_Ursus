@@ -417,8 +417,8 @@ public class VoxelGrid
         //TestTestShowAllVoxels();
     }
 
-    static Dictionary<int, List<Vector3>> _allPaths = new();
-    static int pathCount = 0;
+    static Dictionary<int, (List<Vector3>, bool)> _allPaths = new();
+    static int _pathCount = 0;
 
     public static void Move(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
@@ -458,60 +458,73 @@ public class VoxelGrid
         }
     }
 
-    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int iteration, bool iterated = false, List<Vector3> path = null)
+    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int pathID = -1)
     {
-        if (iteration > 100) return null;
-        iteration++;
+        if (pathID > 100) return null;
+        pathID++;
 
         _selectVertices(agent, direction: startPosition - targetPosition, startPosition, targetPosition, bounds, characterSize, out Vector3 position_1, out Vector3 position_2);
-
-        if (iterated)
-        {
-            Debug.Log("Iterated");
-            return null;
-        }
 
         addOrUpdatePaths();
 
         for (int i = 0; i < _allPaths.Count; i++)
         {
-            foreach(Vector3 position in _allPaths[i])
+            if (_allPaths[i].Item2)
             {
-                Debug.Log($"Path: {i} Pos: {position}");
+                continue;
             }
 
-            Vector3 lastPosition = _allPaths[i].Last();
+            foreach (Vector3 position in _allPaths[i].Item1)
+            {
+                Debug.Log($"PathPositions for Path: {i} Pos: {position}");
+            }
+
+            Vector3 lastPosition = _allPaths[i].Item1.Last();
 
             if (Physics.Raycast(lastPosition, targetPosition - lastPosition, out RaycastHit pathHit))
             {
                 if (pathHit.transform.name.Contains("Player"))
                 {
-                    _allPaths[i].Add(pathHit.point);
+                    _allPaths[i].Item1.Add(pathHit.point);
+                    _allPaths[i] = (_allPaths[i].Item1, true);
                     continue;
                 }
                 else if (pathHit.transform.name.Contains("Wall"))
                 {
-                    _findBestPath(agent, lastPosition, targetPosition, characterSize, bounds, iteration, true, _allPaths[i]);
+                    if (pathID > 2)
+                    {
+                        Debug.Log($"PathID: {pathID} FindBestPath ForLoop");
+                        Debug.Log($"i: {i} Path: {_allPaths[i]}");
+                        continue;
+                    }
+
+                    _findBestPath(agent, lastPosition, targetPosition, characterSize, bounds, i);
                 }
             }
+        }
+
+        if (pathID > 2)
+        {
+            Debug.Log($"PathID: {pathID} after for loop");
+            return null;
         }
 
         float shortestDistance = float.MaxValue;
         List<Vector3> shortestPath = null;
 
-        foreach(var distancePath in _allPaths)
+        for(int i = 0; i < _allPaths.Count; i++)
         {
             float currentDistance = 0;
 
-            for (int i = 0; i < distancePath.Value.Count - 1; i++)
+            for (int j = 0; j < _allPaths[i].Item1.Count - 1; j++)
             {
-                currentDistance += Vector3.Distance(distancePath.Value[i], distancePath.Value[i + 1]);
+                currentDistance += Vector3.Distance(_allPaths[i].Item1[j], _allPaths[i].Item1[j + 1]);
             }
 
             if (currentDistance < shortestDistance)
             {
                 shortestDistance = currentDistance;
-                shortestPath = distancePath.Value;
+                shortestPath = _allPaths[i].Item1;
             }
         }
 
@@ -519,17 +532,36 @@ public class VoxelGrid
 
         void addOrUpdatePaths()
         {
-            List<Vector3> path_1 = path != null 
-                ? new List<Vector3>(path) { position_1 }
-                : new List<Vector3> { startPosition, position_1 };
+            int path_1_PathID = 0;
+            int path_2_PathID = 0;
+            List<Vector3> path_1;
+            List<Vector3> path_2;
 
-            List<Vector3> path_2 = path != null 
-                ? new List<Vector3>(path) { position_2 }         
-                : new List<Vector3> { startPosition, position_2 };
-
-            if (path != null)
+            if (_allPaths.ContainsKey(pathID) && _allPaths[pathID].Item1 != null)
             {
-                foreach (Vector3 pos in path)
+                path_1 = new List<Vector3>(_allPaths[pathID].Item1) { position_1 };
+                path_2 = new List<Vector3>(_allPaths[pathID].Item1) { position_2 };
+            }
+            else
+            {
+                path_1 = new List<Vector3> { startPosition, position_1 };
+                path_2 = new List<Vector3> { startPosition, position_2 };
+            }
+
+            if (pathID > 1)
+            {
+                Debug.Log($"PathID: {pathID} AddOrUpdatePaths");
+                Debug.Log($"Path: {_allPaths[pathID]} ");
+                Debug.Log($"Existing Path Pos_1: {new List<Vector3>(_allPaths[pathID].Item1) { position_1 }}");
+                Debug.Log($"New Path Pos_1: {new List<Vector3> { startPosition, position_1 }}");
+                Debug.Log($"Existing Path Pos_2: {new List<Vector3>(_allPaths[pathID].Item1) { position_2 }}");
+                Debug.Log($"New Path Pos_2: {new List<Vector3> { startPosition, position_2 }}");
+                return;
+            }
+
+            if (_allPaths.ContainsKey(pathID))
+            {
+                foreach (Vector3 pos in _allPaths[pathID].Item1)
                 {
                     Debug.Log($"Path Pos: {pos}");
                 }
@@ -549,7 +581,7 @@ public class VoxelGrid
 
         void addOrUpdatePath(List<Vector3> newPath, Vector3 position)
         {
-            var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.SequenceEqual(newPath));
+            var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.Item1.SequenceEqual(newPath));
 
             //if (existingPath.Key == null || existingPath.Value == null)
             //{
@@ -558,19 +590,20 @@ public class VoxelGrid
             //    return;
             //}
 
-            if (existingPath.Value == null)
+            if (!_allPaths.ContainsKey(pathID))
             {
-                _allPaths.Add(pathCount, newPath);
-                //Debug.Log(_allPaths[pathCount]);
-                //return;
-                pathCount++;
+                Debug.Log($"Existing Path: {existingPath}");
+                Debug.Log($"_allPaths does not contain PathID{pathID}, with pathCount {_pathCount}, and path {newPath}");
+                return;
+                _allPaths.Add(_pathCount, (newPath, false));
+                _pathCount++;
+                Debug.Log("Added new path");
             }
             else
             {
-                Debug.Log(existingPath.Key);
                 return;
-                _allPaths[existingPath.Key].Add(position);
-                Debug.Log("Completed");
+                _allPaths[existingPath.Key].Item1.Add(position);
+                Debug.Log("Added to existing path");
             }
         }
     }
