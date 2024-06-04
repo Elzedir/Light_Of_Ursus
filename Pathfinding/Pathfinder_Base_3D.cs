@@ -417,31 +417,40 @@ public class VoxelGrid
         //TestTestShowAllVoxels();
     }
 
-    static Dictionary<int, (List<Vector3>, bool)> _allPaths = new();
+    static Dictionary<int, (List<Vector3>, float, bool)> _allPaths = new();
     static int _pathCount = 0;
-    private static object setPosition_2;
+    static List<Vector3> _bestPath = new();
+    static float _shortestDistance = float.PositiveInfinity;
 
-    public static void Move(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
+    public static IEnumerator Move(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
+        yield return new WaitForSeconds(0.5f);
+
         if (Physics.Raycast(startPosition, targetPosition - startPosition, out RaycastHit hit))
         {
+            Debug.DrawRay(startPosition, targetPosition - startPosition, Color.red, 50.0f);
+
             if (hit.transform.name.Contains("Player"))
             {
                 Debug.Log($"Hit player at {hit.point}. Direct path to target: {targetPosition}.");
 
                 // Implement your movement logic here
-                return;
+                yield break;
             }
             else if (hit.transform.name.Contains("Wall"))
             {
-                List<Vector3> bestPath = _findBestPath(agent, startPosition, targetPosition, characterSize, hit);
+                yield return Manager_Game.Instance.StartVirtualCoroutine((_findBestPath(agent, startPosition, targetPosition, characterSize, hit)));
 
-                foreach (Vector3 position in bestPath)
+                Vector3 lastPosition = startPosition;
+
+                foreach (Vector3 position in _bestPath)
                 {
-                    Debug.Log($"Moving to {position}");
+                    Debug.DrawRay(position, lastPosition - position, Color.green, 1f);
+                    lastPosition = position;
+                    yield return new WaitForSeconds(0.5f);
                 }
 
-                agent.MoveToTest(bestPath);
+                agent.MoveToTest(_bestPath);
 
                 // Move through the path
             }
@@ -457,124 +466,103 @@ public class VoxelGrid
         }
     }
 
-    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, RaycastHit hit, Collider previousCollider = null, int pathID = 0)
+    static IEnumerator _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, RaycastHit hit, Collider previousCollider = null, int pathID = 0)
     {
-        if (pathID > 100) return null;
+        if (pathID > 100) yield break;
 
-        _selectVertices(agent, direction: targetPosition - startPosition, startPosition, targetPosition, characterSize,  hit, out Vector3 position_1, out Vector3 position_2, previousCollider);
+        _selectVertices(agent, direction: targetPosition - startPosition, startPosition, targetPosition, characterSize, hit, out (Vector3 position, float distance) position_1, out (Vector3 position, float distance) position_2, previousCollider);
 
         addOrUpdatePaths();
 
-        for (int i = 0; i < _allPaths.Count; i++)
+        for (int i = 0; i < _pathCount; i++)
         {
-            if (!_allPaths.ContainsKey(i)) continue;
-            if (_allPaths[i].Item2) continue;
+            if (!_allPaths.ContainsKey(i) || _allPaths[i].Item3) continue;
 
             Vector3 lastPosition = _allPaths[i].Item1.Last();
 
-            if (Physics.Raycast(lastPosition, targetPosition - lastPosition, out RaycastHit pathHit))
+            if (!Physics.Raycast(lastPosition, targetPosition - lastPosition, out RaycastHit pathHit)) continue;
+
+            Debug.DrawRay(startPosition, targetPosition - startPosition, Color.red, 50.0f);
+
+            string hitName = pathHit.transform.name;
+
+            if (hitName.Contains("Player"))
             {
-                if (pathHit.transform.name.Contains("Player"))
+                _allPaths[i].Item1.Add(pathHit.point);
+                _allPaths[i] = (_allPaths[i].Item1, _allPaths[i].Item2, true);
+
+                if (_allPaths[i].Item2 < _shortestDistance)
                 {
-                    _allPaths[i].Item1.Add(pathHit.point);
-                    _allPaths[i] = (_allPaths[i].Item1, true);
-                    continue;
-                }
-                else if (pathHit.transform.name.Contains("Wall"))
-                {
-                    _findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: hit.collider, i);
+                    _bestPath = _allPaths[i].Item1;
+                    _shortestDistance = _allPaths[i].Item2;
                 }
             }
-        }
-
-        float shortestDistance = float.MaxValue;
-        List<Vector3> shortestPath = null;
-
-        for (int i = 0; i < _allPaths.Count; i++)
-        {
-            if (!_allPaths.ContainsKey(i)) continue;
-
-            float currentDistance = 0;
-
-            for (int j = 0; j < _allPaths[i].Item1.Count - 1; j++)
+            else if (pathHit.transform.name.Contains("Wall"))
             {
-                currentDistance += Vector3.Distance(_allPaths[i].Item1[j], _allPaths[i].Item1[j + 1]);
+                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: hit.collider, pathID: i));
             }
 
-            if (currentDistance < shortestDistance)
-            {
-                shortestDistance = currentDistance;
-                shortestPath = _allPaths[i].Item1;
-            }
         }
-
-        return shortestPath;
 
         void addOrUpdatePaths()
         {
-            Debug.Log($"Pos_1: {position_1} Pos_2: {position_2}");
+            float distancePath_01 = float.PositiveInfinity;
+            float distancePath_02 = float.PositiveInfinity;
 
             var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.Item1.SequenceEqual(_allPaths[pathID].Item1));
 
-            if (!existingPath.Equals(default(KeyValuePair<int, (List<Vector3>, bool)>)))
+            if (!existingPath.Equals(default(KeyValuePair<int, (List<Vector3>, float, bool)>)))
             {
-                if (_allPaths[existingPath.Key].Item2)
-                {
-                    return;
-                }
-                else
-                {
-                    _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[existingPath.Key].Item1) { position_1 }, false));
-                    _pathCount++;
+                if (_allPaths[existingPath.Key].Item3) return;
 
-                    if (position_2 != position_1)
-                    {
-                        _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[existingPath.Key].Item1) { position_2 }, false));
-                        _pathCount++;
-                    }
-
-                    _allPaths.Remove(existingPath.Key);
-
-                    //Debug.Log($"Existing Path: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
-                }
+                UpdatePathDistances(ref distancePath_01, ref distancePath_02, existingPath.Key);
+                AddPathsIfShorter(distancePath_01, position_1.position, existingPath.Key);
+                AddPathsIfShorter(distancePath_02, position_2.position, existingPath.Key, position_2 != position_1);
+                _allPaths.Remove(existingPath.Key);
             }
             else if (_allPaths.ContainsKey(pathID))
             {
-                _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[pathID].Item1) { position_1 }, false));
-                _pathCount++;
-
-                if (position_2 != position_1)
-                {
-                    _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[pathID].Item1) { position_2 }, false));
-                    _pathCount++;
-                }
-                    
+                UpdatePathDistances(ref distancePath_01, ref distancePath_02, pathID);
+                AddPathsIfShorter(distancePath_01, position_1.position, pathID);
+                AddPathsIfShorter(distancePath_02, position_2.position, pathID, position_2 != position_1);
                 _allPaths.Remove(pathID);
-
-                //Debug.Log($"Existing PathID: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
             }
             else
             {
-                _allPaths.Add(_pathCount, (new List<Vector3> { startPosition, position_1 }, false));
-                _pathCount++;
+                AddNewPathIfShorter(position_1.distance, position_1.position);
+                AddNewPathIfShorter(position_2.distance, position_2.position, position_2 != position_1);
+            }
 
-                if (position_2 != position_1)
+            void UpdatePathDistances(ref float distancePath_01, ref float distancePath_02, int key)
+            {
+                distancePath_01 = position_1.distance + _allPaths[key].Item2;
+                distancePath_02 = position_2.distance + _allPaths[key].Item2;
+            }
+
+            void AddPathsIfShorter(float distance, Vector3 position, int key, bool differentObstacles = true)
+            {
+                if (differentObstacles && distance < _shortestDistance)
                 {
-                    _allPaths.Add(_pathCount, (new List<Vector3> { startPosition, position_2 }, false));
+                    _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[key].Item1) { position }, distance, false));
                     _pathCount++;
                 }
+            }
 
-                //Debug.Log($"New Path: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
+            void AddNewPathIfShorter(float distance, Vector3 position, bool differentObstacles = true)
+            {
+                if (differentObstacles && distance < _shortestDistance)
+                {
+                    _allPaths.Add(_pathCount, (new List<Vector3> { startPosition, position }, distance, false));
+                    _pathCount++;
+                }
             }
         }
     }
 
-    public static void _selectVertices(Controller_Agent agent, Vector3 direction, Vector3 start, Vector3 target, Vector3 characterSize, RaycastHit hit, out Vector3 position_1, out Vector3 position_2, Collider previousCollider = null)
+    public static void _selectVertices(Controller_Agent agent, Vector3 direction, Vector3 start, Vector3 target, Vector3 characterSize, RaycastHit hit, out (Vector3 position, float distance) position_1, out (Vector3 position, float distance) position_2, Collider previousCollider = null)
     {
-        position_1 = start;
-        position_2 = start;
-
-
+        position_1 = (start, 0);
+        position_2 = (start, 0);
 
         Vector3 min = hit.collider.bounds.min;
         Vector3 max = hit.collider.bounds.max;
@@ -595,46 +583,49 @@ public class VoxelGrid
 
         bool sameObstacle = hit.collider == previousCollider;
 
-        if ()
+        Vector3 findClosestBoundPoint(Vector3 point) =>
+        new Vector3(Math.Abs(point.x - min.x) < Math.Abs(point.x - max.x) ? min.x : max.x, point.y, Math.Abs(point.z - min.z) < Math.Abs(point.z - max.z) ? min.z : max.z);
+
+        Vector3 closestBound = Vector3.zero;
+        closestBound.x = dxMin < dxMax ? min.x - characterSize.x : max.x + characterSize.x;
+        closestBound.z = dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z;
+
+        Vector3? findPosition_1()
         {
-
-        }
-
-        position_1.x = setPosition_1Vector(direction.x, dxMin, dxMax, min.x, max.x, characterCanMoveInY.x, "x");
-        position_1.y = setPosition_1Vector(direction.y, dyMin, dyMax, min.y, max.y, characterCanMoveInY.y, "y");
-        position_1.z = setPosition_1Vector(direction.z, dzMin, dzMax, min.z, max.z, characterCanMoveInY.z, "z");
-
-        setPosition_2(position_1, out position_2);
-
-        float setPosition_1Vector(float direction, float dMin, float dMax, float bMin, float bMax, float size, string axis)
-        {
-            float vector = 0f;
-
-            if (direction > 0) vector = (dMin < dMax) ? bMin - size : bMax + size;
-            else vector = (dMax < dMin) ? bMax + size : bMin - size;
-
-            if (axis == "y")
+            if (hit.point.x == min.x || hit.point.x == max.x)
             {
-                // For now, setting y to the same as the character position, to not go up or down.
-                vector = start.y;
+                return new Vector3(hit.point.x, start.y, closestBound.z);
             }
-
-            return vector;
+            else if (hit.point.x == min.z || hit.point.z == max.z)
+            {
+                return new Vector3(closestBound.x, start.y, hit.point.z);
+            }
+            else
+            {
+                Debug.LogError($"Raycast hit at {hit.point} did not hit any bounds.");
+                return null;
+            }
         }
+
+        position_1.position = findPosition_1().Value;
+
+        if (sameObstacle && findClosestBoundPoint(start) == findClosestBoundPoint(position_1.position))
+        {
+            closestBound.x = max.x + characterSize.x;
+            closestBound.z = max.z + characterSize.z;
+            position_1.position = findPosition_1().Value;
+        }
+
+        setPosition_2(position_1.position, out position_2.position);
+
+        position_1.distance = Vector3.Distance(start, position_1.position);
+        position_2.distance = Vector3.Distance(start, position_2.position);
 
         void setPosition_2(Vector3 p_1, out Vector3 p_2)
         {
-            // Use the original raycast and check the position of the hit against the minx and minz bounds to see which way we're going to go.
             if (!sameObstacle)
             {
-                if (dxMin < dzMin)
-                {
-                    p_2 = new Vector3(-p_1.x, p_1.y, p_1.z);
-                }
-                else
-                {
-                    p_2 = new Vector3(p_1.x, p_1.y, -p_1.z);
-                }
+                p_2 = (Mathf.Abs(direction.x) < Mathf.Abs(direction.z)) ? new Vector3(-p_1.x, p_1.y, p_1.z) : new Vector3(p_1.x, p_1.y, -p_1.z);
             }
             else
             {
