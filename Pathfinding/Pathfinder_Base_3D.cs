@@ -419,6 +419,7 @@ public class VoxelGrid
 
     static Dictionary<int, (List<Vector3>, bool)> _allPaths = new();
     static int _pathCount = 0;
+    private static object setPosition_2;
 
     public static void Move(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
@@ -433,9 +434,7 @@ public class VoxelGrid
             }
             else if (hit.transform.name.Contains("Wall"))
             {
-                Debug.Log($"Hit wall at position: {hit.point}");
-
-                List<Vector3> bestPath = _findBestPath(agent, startPosition, targetPosition, characterSize, hit.collider.bounds, 0);
+                List<Vector3> bestPath = _findBestPath(agent, startPosition, targetPosition, characterSize, hit);
 
                 foreach (Vector3 position in bestPath)
                 {
@@ -458,26 +457,18 @@ public class VoxelGrid
         }
     }
 
-    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Bounds bounds, int pathID = -1)
+    static List<Vector3> _findBestPath(Controller_Agent agent, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, RaycastHit hit, Collider previousCollider = null, int pathID = 0)
     {
         if (pathID > 100) return null;
-        pathID++;
 
-        _selectVertices(agent, direction: startPosition - targetPosition, startPosition, targetPosition, bounds, characterSize, out Vector3 position_1, out Vector3 position_2);
+        _selectVertices(agent, direction: targetPosition - startPosition, startPosition, targetPosition, characterSize,  hit, out Vector3 position_1, out Vector3 position_2, previousCollider);
 
         addOrUpdatePaths();
 
         for (int i = 0; i < _allPaths.Count; i++)
         {
-            if (_allPaths[i].Item2)
-            {
-                continue;
-            }
-
-            foreach (Vector3 position in _allPaths[i].Item1)
-            {
-                Debug.Log($"PathPositions for Path: {i} Pos: {position}");
-            }
+            if (!_allPaths.ContainsKey(i)) continue;
+            if (_allPaths[i].Item2) continue;
 
             Vector3 lastPosition = _allPaths[i].Item1.Last();
 
@@ -491,29 +482,18 @@ public class VoxelGrid
                 }
                 else if (pathHit.transform.name.Contains("Wall"))
                 {
-                    if (pathID > 2)
-                    {
-                        Debug.Log($"PathID: {pathID} FindBestPath ForLoop");
-                        Debug.Log($"i: {i} Path: {_allPaths[i]}");
-                        continue;
-                    }
-
-                    _findBestPath(agent, lastPosition, targetPosition, characterSize, bounds, i);
+                    _findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: hit.collider, i);
                 }
             }
-        }
-
-        if (pathID > 2)
-        {
-            Debug.Log($"PathID: {pathID} after for loop");
-            return null;
         }
 
         float shortestDistance = float.MaxValue;
         List<Vector3> shortestPath = null;
 
-        for(int i = 0; i < _allPaths.Count; i++)
+        for (int i = 0; i < _allPaths.Count; i++)
         {
+            if (!_allPaths.ContainsKey(i)) continue;
+
             float currentDistance = 0;
 
             for (int j = 0; j < _allPaths[i].Item1.Count - 1; j++)
@@ -532,96 +512,79 @@ public class VoxelGrid
 
         void addOrUpdatePaths()
         {
-            int path_1_PathID = 0;
-            int path_2_PathID = 0;
-            List<Vector3> path_1;
-            List<Vector3> path_2;
+            Debug.Log($"Pos_1: {position_1} Pos_2: {position_2}");
 
-            if (_allPaths.ContainsKey(pathID) && _allPaths[pathID].Item1 != null)
-            {
-                path_1 = new List<Vector3>(_allPaths[pathID].Item1) { position_1 };
-                path_2 = new List<Vector3>(_allPaths[pathID].Item1) { position_2 };
-            }
-            else
-            {
-                path_1 = new List<Vector3> { startPosition, position_1 };
-                path_2 = new List<Vector3> { startPosition, position_2 };
-            }
+            var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.Item1.SequenceEqual(_allPaths[pathID].Item1));
 
-            if (pathID > 1)
+            if (!existingPath.Equals(default(KeyValuePair<int, (List<Vector3>, bool)>)))
             {
-                Debug.Log($"PathID: {pathID} AddOrUpdatePaths");
-                Debug.Log($"Path: {_allPaths[pathID]} ");
-                Debug.Log($"Existing Path Pos_1: {new List<Vector3>(_allPaths[pathID].Item1) { position_1 }}");
-                Debug.Log($"New Path Pos_1: {new List<Vector3> { startPosition, position_1 }}");
-                Debug.Log($"Existing Path Pos_2: {new List<Vector3>(_allPaths[pathID].Item1) { position_2 }}");
-                Debug.Log($"New Path Pos_2: {new List<Vector3> { startPosition, position_2 }}");
-                return;
-            }
-
-            if (_allPaths.ContainsKey(pathID))
-            {
-                foreach (Vector3 pos in _allPaths[pathID].Item1)
+                if (_allPaths[existingPath.Key].Item2)
                 {
-                    Debug.Log($"Path Pos: {pos}");
+                    return;
+                }
+                else
+                {
+                    _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[existingPath.Key].Item1) { position_1 }, false));
+                    _pathCount++;
+
+                    if (position_2 != position_1)
+                    {
+                        _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[existingPath.Key].Item1) { position_2 }, false));
+                        _pathCount++;
+                    }
+
+                    _allPaths.Remove(existingPath.Key);
+
+                    //Debug.Log($"Existing Path: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
                 }
             }
-            foreach (Vector3 pos in path_1)
+            else if (_allPaths.ContainsKey(pathID))
             {
-                Debug.Log($"Path_1 Pos: {pos}");
-            }
-            foreach(Vector3 pos in path_2)
-            {
-                Debug.Log($"Path_2 Pos: {pos}");
-            }
-
-            addOrUpdatePath(path_1, position_1);
-            addOrUpdatePath(path_2, position_2);
-        }
-
-        void addOrUpdatePath(List<Vector3> newPath, Vector3 position)
-        {
-            var existingPath = _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.Item1.SequenceEqual(newPath));
-
-            //if (existingPath.Key == null || existingPath.Value == null)
-            //{
-            //    Debug.Log($"ExistingPath Key: {existingPath.Key} or Value: {existingPath.Value} doesn't exist");
-            //    Debug.Log(newPath);
-            //    return;
-            //}
-
-            if (!_allPaths.ContainsKey(pathID))
-            {
-                Debug.Log($"Existing Path: {existingPath}");
-                Debug.Log($"_allPaths does not contain PathID{pathID}, with pathCount {_pathCount}, and path {newPath}");
-                return;
-                _allPaths.Add(_pathCount, (newPath, false));
+                _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[pathID].Item1) { position_1 }, false));
                 _pathCount++;
-                Debug.Log("Added new path");
+
+                if (position_2 != position_1)
+                {
+                    _allPaths.Add(_pathCount, (new List<Vector3>(_allPaths[pathID].Item1) { position_2 }, false));
+                    _pathCount++;
+                }
+                    
+                _allPaths.Remove(pathID);
+
+                //Debug.Log($"Existing PathID: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
             }
             else
             {
-                return;
-                _allPaths[existingPath.Key].Item1.Add(position);
-                Debug.Log("Added to existing path");
+                _allPaths.Add(_pathCount, (new List<Vector3> { startPosition, position_1 }, false));
+                _pathCount++;
+
+                if (position_2 != position_1)
+                {
+                    _allPaths.Add(_pathCount, (new List<Vector3> { startPosition, position_2 }, false));
+                    _pathCount++;
+                }
+
+                //Debug.Log($"New Path: Path_1: {_allPaths[_pathCount - 2]} Path_2: {_allPaths[_pathCount - 1]}");
             }
         }
     }
-    
-    public static void _selectVertices(Controller_Agent agent, Vector3 direction, Vector3 start, Vector3 target, Bounds bounds, Vector3 characterSize, out Vector3 position_1, out Vector3 position_2)
+
+    public static void _selectVertices(Controller_Agent agent, Vector3 direction, Vector3 start, Vector3 target, Vector3 characterSize, RaycastHit hit, out Vector3 position_1, out Vector3 position_2, Collider previousCollider = null)
     {
         position_1 = start;
         position_2 = start;
 
-        Vector3 min = bounds.min;
-        Vector3 max = bounds.max;
 
-        float dxMin = Mathf.Abs(start.x - min.x);
-        float dxMax = Mathf.Abs(start.x - max.x);
-        float dyMin = Mathf.Abs(start.y - min.y);
-        float dyMax = Mathf.Abs(start.y - max.y);
-        float dzMin = Mathf.Abs(start.z - min.z);
-        float dzMax = Mathf.Abs(start.z - max.z);
+
+        Vector3 min = hit.collider.bounds.min;
+        Vector3 max = hit.collider.bounds.max;
+
+        float dxMin = Mathf.Abs(hit.point.x - min.x);
+        float dxMax = Mathf.Abs(hit.point.x - max.x);
+        float dyMin = Mathf.Abs(hit.point.y - min.y);
+        float dyMax = Mathf.Abs(hit.point.y - max.y);
+        float dzMin = Mathf.Abs(hit.point.z - min.z);
+        float dzMax = Mathf.Abs(hit.point.z - max.z);
 
         Vector3 characterCanMoveInY = characterSize;
         // Need to put in what type of obstacle it is, and therefore whether the different types of movers can move over, under or through it.
@@ -630,37 +593,53 @@ public class VoxelGrid
             characterCanMoveInY.y = 0;
         }
 
-        if (direction.x < 0) // Moving left to right
+        bool sameObstacle = hit.collider == previousCollider;
+
+        if ()
         {
-            position_1.x = (dxMax < dxMin) ? max.x + characterCanMoveInY.x : min.x - characterCanMoveInY.x;
-            position_2.x = (dxMax > dxMin) ? max.x + characterCanMoveInY.x : min.x - characterCanMoveInY.x;
-        }
-        else // Moving right to left
-        {
-            position_1.x = (dxMin < dxMax) ? min.x - characterCanMoveInY.x : max.x + characterCanMoveInY.x;
-            position_2.x = (dxMin > dxMax) ? min.x - characterCanMoveInY.x : max.x + characterCanMoveInY.x;
+
         }
 
-        if (direction.y < 0) // Moving down to up
+        position_1.x = setPosition_1Vector(direction.x, dxMin, dxMax, min.x, max.x, characterCanMoveInY.x, "x");
+        position_1.y = setPosition_1Vector(direction.y, dyMin, dyMax, min.y, max.y, characterCanMoveInY.y, "y");
+        position_1.z = setPosition_1Vector(direction.z, dzMin, dzMax, min.z, max.z, characterCanMoveInY.z, "z");
+
+        setPosition_2(position_1, out position_2);
+
+        float setPosition_1Vector(float direction, float dMin, float dMax, float bMin, float bMax, float size, string axis)
         {
-            position_1.y = (dyMax < dyMin) ? max.y : min.y;
-            position_2.y = (dyMax < dyMin) ? max.y : min.y;
-        }
-        else // Moving up to down
-        {
-            position_1.y = (dyMin < dyMax) ? min.y : max.y;
-            position_2.y = (dyMin < dyMax) ? min.y : max.y;
+            float vector = 0f;
+
+            if (direction > 0) vector = (dMin < dMax) ? bMin - size : bMax + size;
+            else vector = (dMax < dMin) ? bMax + size : bMin - size;
+
+            if (axis == "y")
+            {
+                // For now, setting y to the same as the character position, to not go up or down.
+                vector = start.y;
+            }
+
+            return vector;
         }
 
-        if (direction.z < 0) // Moving back to front
+        void setPosition_2(Vector3 p_1, out Vector3 p_2)
         {
-            position_1.z = min.z - characterCanMoveInY.z;
-            position_2.z = max.z + characterCanMoveInY.z;
-        }
-        else // Moving front to back
-        {
-            position_1.z = max.z + characterCanMoveInY.z;
-            position_2.z = min.z - characterCanMoveInY.z;
+            // Use the original raycast and check the position of the hit against the minx and minz bounds to see which way we're going to go.
+            if (!sameObstacle)
+            {
+                if (dxMin < dzMin)
+                {
+                    p_2 = new Vector3(-p_1.x, p_1.y, p_1.z);
+                }
+                else
+                {
+                    p_2 = new Vector3(p_1.x, p_1.y, -p_1.z);
+                }
+            }
+            else
+            {
+                p_2 = p_1;
+            }
         }
     }
 
