@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 public class Pathfinder_Base_3D
@@ -450,7 +449,7 @@ public class VoxelGrid
                     Debug.Log(position);
                     Debug.DrawRay(position, lastPosition - position, Color.green, 50f);
                     lastPosition = position;
-                    yield return new WaitForSeconds(0.5f);
+                    yield return new WaitForSeconds(0.1f);
                 }
 
                 //agent.MoveToTest(_bestPath);
@@ -673,169 +672,93 @@ public class VoxelGrid
 
         void getBounds(out Vector3 closestBound, out Vector3 furthestBound)
         {
-            Vector3 direction = startPosition - targetPosition;
+            bool enableDebugs = startPosition.Equals(new Vector3(-6.25f, 2.00f, -3.75f));
+
             Vector3 obstacleCenter = vertexHit.collider.transform.position;
 
             bool zMinOrMax = vertexHit.point.z == min.z || vertexHit.point.z == max.z;
-            bool xMinOrMax = vertexHit.point.x == min.x || vertexHit.point.x == max.x;
-            bool xDirectionGreater = direction.x >= direction.z;
+            float directionAngle = Mathf.Atan2(Mathf.Abs((startPosition - targetPosition).z), Mathf.Abs((startPosition - targetPosition).x)) * Mathf.Rad2Deg;
+            bool xDirectionGreater = Mathf.Abs(directionAngle) < 45  || Mathf.Abs(directionAngle) > 135;
+            if (enableDebugs) Debug.Log($"Angle: {Mathf.Atan2(Mathf.Abs((startPosition - targetPosition).z), Mathf.Abs((startPosition - targetPosition).x)) * Mathf.Rad2Deg}");
+            if (enableDebugs) Debug.DrawRay(startPosition, new Vector3(40, 0, -40), Color.magenta, 50.0f);
             bool dzMinOrMax = dzMin < dzMax;
+            bool targetCloserToXMin = Mathf.Abs(targetPosition.x - min.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
+            bool targetCloserToXMax = Mathf.Abs(targetPosition.x - max.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
 
-            bool activateDebugs = false;
+            if (enableDebugs) Debug.Log($"zMinOrMax: {zMinOrMax} xDirectionGreater: {xDirectionGreater} TargetCloserToXMin: {targetCloserToXMin} TargetCloserToXMax: {targetCloserToXMax}");
 
-            closestBound = new Vector3(
-                dxMin < dxMax ? min.x - characterSize.x : max.x + characterSize.x, 
-                startPosition.y, 
-                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
-
-            Vector3 calculateFurthestBound(float x, float z)
-            {
-                return new Vector3(x, startPosition.y, z);
-            }
+            closestBound = calculateFurthestBound(
+                dxMin < dxMax ? min.x - characterSize.x : max.x + characterSize.x,
+                dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z);
 
             if (targetPosition.x <= obstacleCenter.x)
             {
                 if (startPosition.x <= obstacleCenter.x)
                 {
-                    if (zMinOrMax)
-                    {
-                        furthestBound = calculateFurthestBound(
+                    furthestBound = zMinOrMax
+                        ? calculateFurthestBound(
                             xDirectionGreater ? min.x - characterSize.x : max.x + characterSize.x,
-                            xDirectionGreater ? (dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z) : (dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
-                            );
-
-                        //if (xDirectionGreater)
-                        //{
-                        //    furthestBound = new Vector3(
-                        //        min.x - characterSize.x,
-                        //        startPosition.y,
-                        //        dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                        //}
-                        //else
-                        //{
-                        //    furthestBound = new Vector3(
-                        //        max.x + characterSize.x,
-                        //        startPosition.y,
-                        //        dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
-                        //}
-                    }
-                    else
-                    {
-                        furthestBound = new Vector3(
-                        vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                        startPosition.y,
-                        dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                    }
+                            xDirectionGreater ? (dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z) : (dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z))
+                        : calculateFurthestBound(
+                            vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
+                            dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
                 }
                 else
                 {
-                    if (vertexHit.point.z == min.z || vertexHit.point.z == max.z)
-                    {
-                        if (direction.x >= direction.z)
-                        {
-                            furthestBound = Math.Abs(targetPosition.x - vertexHit.collider.transform.position.x) < Math.Abs(targetPosition.x - min.x)
-                            ? new Vector3(
-                                max.x + characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z)
-                            : new Vector3(
-                                min.x - characterSize.x,
-                                startPosition.y,
+                    furthestBound = zMinOrMax
+                        ? xDirectionGreater
+                            ? calculateFurthestBound(
+                                targetCloserToXMin ? min.x - characterSize.x : max.x + characterSize.x,
+                                dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
+                            : calculateFurthestBound(
+                                targetCloserToXMin ? max.x + characterSize.x : min.x - characterSize.x,
+                                dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
+                        : furthestBound = 
+                            calculateFurthestBound(
+                                vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
                                 dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                        }
-                        else
-                        {
-                            furthestBound = Math.Abs(targetPosition.x - vertexHit.collider.transform.position.x) < Math.Abs(targetPosition.x - min.x)
-                            ? new Vector3(
-                                min.x - characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z)
-                            : new Vector3(
-                                max.x + characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
-                        }
-                    }
-                    else
-                    {
-                        furthestBound = new Vector3(
-                        vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                        startPosition.y,
-                        dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                    }
                 }
             }
             else
             {
                 if (startPosition.x <= vertexHit.collider.transform.position.x)
                 {
-                    if (vertexHit.point.z == max.z || vertexHit.point.z == min.z)
-                    {
-                        if (direction.x >= direction.z)
-                        {
-                            furthestBound = Math.Abs(targetPosition.x - vertexHit.collider.transform.position.x) > Math.Abs(targetPosition.x - max.x)
-                            ? new Vector3(
-                                max.x + characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z)
-                            : new Vector3(
-                                min.x - characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                        }
-                        else
-                        {
-                            furthestBound = Math.Abs(targetPosition.x - vertexHit.collider.transform.position.x) > Math.Abs(targetPosition.x - max.x)
-                            ? new Vector3(
-                                min.x - characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z)
-                            : new Vector3(
-                                max.x + characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
-                        }
-                    }
-                    else
-                    {
-                        furthestBound = new Vector3(
-                        vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                        startPosition.y,
-                        dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                    }
+                    if (enableDebugs) Debug.Log($"Target: {targetPosition} is right and start: {startPosition} is left of obstacle centre: {obstacleCenter}");
+
+                    furthestBound = zMinOrMax
+                        ? xDirectionGreater
+                            ? calculateFurthestBound(
+                                targetCloserToXMax ? max.x + characterSize.x : min.x - characterSize.x,
+                                dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
+                            : calculateFurthestBound(
+                                targetCloserToXMax ? min.x - characterSize.x : max.x + characterSize.x,
+                                dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
+                        : calculateFurthestBound(
+                            vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
+                            dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z);
                 }
                 else
                 {
-                    if (activateDebugs) Debug.Log($"Start: {startPosition} is right of obstacle centre: {vertexHit.collider.transform.position}");
-
-                    if (vertexHit.point.z == max.z || vertexHit.point.z == min.z)
-                    {
-                        if (direction.x >= direction.z)
-                        {
-                            furthestBound = new Vector3(
+                    furthestBound = zMinOrMax
+                        ? xDirectionGreater
+                            ? calculateFurthestBound(
                                 max.x + characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                        }
-                        else
-                        {
-                            furthestBound = new Vector3(
+                                dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
+                            : calculateFurthestBound(
                                 min.x - characterSize.x,
-                                startPosition.y,
-                                dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
-                        }
-                    }
-                    else
-                    {
-                        furthestBound = new Vector3(
-                        vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                        startPosition.y,
-                        dzMin < dzMax ? max.z + characterSize.z : min.z - characterSize.z);
-                    }
+                                dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
+                        : calculateFurthestBound(
+                            vertexHit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
+                            dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z);
                 }
             }
 
-            if (activateDebugs) Debug.Log($"Closest: {closestBound} Furthest: {furthestBound}");
+            //Debug.Log($"Closest: {closestBound} Furthest: {furthestBound}");
+
+            Vector3 calculateFurthestBound(float x, float z)
+            {
+                return new Vector3(x, startPosition.y, z);
+            }
         }
 
 
@@ -849,23 +772,33 @@ public class VoxelGrid
             }
         }
 
-        RaycastHit nextAvailablePointCheck(RaycastHit nextHit, Vector3 point)
+        RaycastHit nextAvailablePointCheck(RaycastHit previousHit, Vector3 point, Collider previousCollider = null)
         {
             iterations++;
-            if (iterations > 10) { Debug.Log($"Iteratred to {iterations}"); return nextHit; }
+            if (iterations > 10) { Debug.Log($"Iterated to {iterations}"); return previousHit; }
 
-            if (Physics.Raycast(startPosition, point - startPosition, out RaycastHit subsequentHit, (point - startPosition).magnitude))
+            if (Physics.Raycast(startPosition, point - startPosition, out RaycastHit currentHit, (point - startPosition).magnitude))
             {
-                getMinAndMax(subsequentHit.collider, out min, out max);
+                Debug.DrawRay(startPosition, point - startPosition, Color.white, 50.0f);
+                if (iterations > 2) Debug.Log($"Current hit point: {currentHit.point}");
+
+                if (currentHit.collider == previousCollider)
+                {
+                    // Fix this so that it can return a correct side since it's returning one on the other end of the obstacle
+                }
+
+                getMinAndMax(currentHit.collider, out min, out max);
                 getDistances(out dxMin, out dxMax, out dyMin, out dymax, out dzMin, out dzMax);
                 getBounds(out closestBound, out furthestBound);
 
-                nextHit = subsequentHit;
+                if (iterations > 2) Debug.Log($"ClosestBound: {closestBound} FurthestBound: {furthestBound}");
 
-                return nextAvailablePointCheck(subsequentHit, _findPositions(subsequentHit, min, max, startPosition, targetPosition, closestBound, furthestBound, ignoreClosestBound: true).Item1.Value);
+                previousHit = currentHit;
+
+                return nextAvailablePointCheck(currentHit, _findPositions(currentHit, min, max, startPosition, targetPosition, closestBound, furthestBound, ignoreClosestBound: true).Item1.Value, currentHit.collider);
             }
 
-            return nextHit;
+            return previousHit;
         }
 
         Vector3 findClosestBoundPoint(Vector3 point) =>
@@ -874,31 +807,20 @@ public class VoxelGrid
 
     static (Vector3?, Vector3?) _findPositions(RaycastHit hit, Vector3 min, Vector3 max, Vector3 startPosition, Vector3 targetPosition, Vector3 closestBound, Vector3 furthestBound, bool ignoreClosestBound = false)
     {
-        Vector3 direction = startPosition - targetPosition;
-        bool activateDebugs = false;
-
-        if (startPosition == new Vector3(-2.75f, 2, -10.75f)) activateDebugs = true;
-
         if (hit.point.x == min.x)
         {
-            if (activateDebugs) Debug.Log($"Hit xMin");
-
             return !ignoreClosestBound
                 ? (new Vector3(closestBound.x, startPosition.y, closestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z))
                 : (new Vector3(furthestBound.x, startPosition.y, furthestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z));
         }
         else if (hit.point.x == max.x)
         {
-            if (activateDebugs) Debug.Log($"Hit xMax");
-
             return !ignoreClosestBound
                 ? (new Vector3(closestBound.x, startPosition.y, closestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z))
                 : (new Vector3(furthestBound.x, startPosition.y, furthestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z));
         }
         else if (hit.point.z == min.z)
         {
-            if (activateDebugs) Debug.Log($"Hit zMin");
-
             return !ignoreClosestBound
             ? (new Vector3(closestBound.x, startPosition.y, closestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z))
             : (new Vector3(furthestBound.x, startPosition.y, furthestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z));
@@ -906,8 +828,6 @@ public class VoxelGrid
         }
         else if (hit.point.z == max.z)
         {
-            if (activateDebugs) Debug.Log($"Hit zMax with ignore: {ignoreClosestBound} and so using furthest x: {furthestBound.x} and hitpoint.z: {hit.point.z} to make z: {hit.point.z} to make point: {new Vector3(furthestBound.x, startPosition.y, hit.point.z)}");
-
             return !ignoreClosestBound
             ? (new Vector3(closestBound.x, startPosition.y, closestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z))
             : (new Vector3(furthestBound.x, startPosition.y, furthestBound.z), new Vector3(furthestBound.x, startPosition.y, furthestBound.z));
