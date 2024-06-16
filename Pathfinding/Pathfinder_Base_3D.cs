@@ -604,17 +604,15 @@ public class VoxelGrid
         getDistances(hit, min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
         getBounds(hit.point, targetPosition, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
 
-        // Should call next available point anyway regardless of same obstacle since it will check whether it hits anything.
+        Debug.Log($"Same obstacle check: {sameObstacle} at start {startPosition} with hit: {hit.point} going to target: {targetPosition} with closest: {closestBound} and furthest: {furthestBound}");
 
-        position_1.position = sameObstacle
-            ? position_1.position = new Vector3(furthestBound.x, startPosition.y, furthestBound.z)
-            : position_1.position = nextAvailablePoint(hit.point, closestBound, characterSize);
+        // Merge the pos_1 and pos_2 so that when pos_1 hits an obstacle, it doesn't allow pos_2 to continue and call nextAvailable point on a different obstacle
+
+        position_1.position = nextAvailablePoint(startPosition, sameObstacle ? furthestBound : closestBound, characterSize, out position_2.position);
         
         position_2.position = sameObstacle
             ? position_2.position = null
-            : !position_2.position.HasValue
-                ? position_2.position = null
-                : position_2.position = nextAvailablePoint(hit.point, furthestBound, characterSize);
+            : position_2.position = nextAvailablePoint(startPosition, furthestBound, characterSize);
         
         Debug.Log($"Start: {startPosition} Pos_1: {position_1.position}, Pos_2: {position_2.position}");
 
@@ -652,18 +650,20 @@ public class VoxelGrid
 
     static void getBounds(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, RaycastHit hit, Vector3 min, Vector3 max, float dxMin, float dxMax, float dzMin, float dzMax, out Vector3 closestBound, out Vector3 furthestBound)
     {
-        bool enableDebugs = startPosition.Equals(new Vector3(-6.25f, 2.00f, -3.75f));
+        bool enableDebugs = startPosition.z == -4f;
 
         Vector3 obstacleCenter = hit.collider.transform.position;
 
         bool zMinOrMax = hit.point.z == min.z || hit.point.z == max.z;
         bool xDirectionGreater = Math.Abs(startPosition.x - targetPosition.x) > Math.Abs(startPosition.z - targetPosition.z);
-        if (enableDebugs) Debug.Log($"{startPosition - targetPosition}");
+        if (enableDebugs) Debug.Log($"GetBounds: Start {startPosition} to target: {targetPosition} Direction: {startPosition - targetPosition}");
         if (enableDebugs) Debug.DrawRay(startPosition, new Vector3(40, 0, -40), Color.magenta, 50.0f);
         bool dzMinOrMax = dzMin < dzMax;
         bool targetCloserToXMin = Mathf.Abs(targetPosition.x - min.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
         bool targetCloserToXMax = Mathf.Abs(targetPosition.x - max.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
 
+        if (enableDebugs) Debug.Log($"Start: {startPosition} Target: {targetPosition}");
+        if (enableDebugs) Debug.Log($"Min: {min} Max: {max}");
         if (enableDebugs) Debug.Log($"zMinOrMax: {zMinOrMax} xDirectionGreater: {xDirectionGreater} TargetCloserToXMin: {targetCloserToXMin} TargetCloserToXMax: {targetCloserToXMax}");
 
         closestBound = calculateFurthestBound(
@@ -712,7 +712,8 @@ public class VoxelGrid
                             dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
                         //dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
                         : calculateFurthestBound(
-                            targetCloserToXMax ? min.x - characterSize.x : max.x + characterSize.x,
+                            //targetCloserToXMax ? min.x - characterSize.x : max.x + characterSize.x,
+                            targetCloserToXMax ? max.x + characterSize.x : min.x - characterSize.x,
                             dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
                     : calculateFurthestBound(
                         hit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
@@ -759,13 +760,14 @@ public class VoxelGrid
 
         if (Physics.Raycast(startPosition, targetPosition - startPosition, out RaycastHit hit, (targetPosition - startPosition).magnitude))
         {
+            Debug.Log($"Hit obstacle between start: {startPosition} and target: {targetPosition} at point: {hit.point}");
             Debug.DrawRay(startPosition, targetPosition - startPosition, Color.white, 50.0f);
-            if (iterations > 1) Debug.Log($"Current hit point: {hit.point}");
+
             getMinAndMax(hit.collider, out Vector3 min, out Vector3 max);
             getDistances(hit , min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
             getBounds(startPosition, targetPosition, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
 
-            if (iterations > 1) Debug.Log($"ClosestBound: {closestBound} FurthestBound: {furthestBound}");
+            Debug.Log($"ClosestBound: {closestBound} FurthestBound: {furthestBound}");
 
             return nextAvailablePoint(hit.point, closestBound, characterSize, previousCollider: hit.collider);
         }
