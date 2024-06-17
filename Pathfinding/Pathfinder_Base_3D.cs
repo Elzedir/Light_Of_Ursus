@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEditor.PlayerSettings;
 
 public class Pathfinder_Base_3D
@@ -416,7 +417,7 @@ public class VoxelGrid
         //TestTestShowAllVoxels();
     }
 
-    static Dictionary<(Vector3Int, int), (List<Vector3>, float, bool)> _allPaths = new();
+    static Dictionary<(Vector3Int, int), (List<Vector3>, Collider, float, bool)> _allPaths = new();
     static int _pathCount = 0;
     static List<Vector3> _bestPath = new();
     static float _shortestDistance = float.PositiveInfinity;
@@ -476,11 +477,13 @@ public class VoxelGrid
 
         (Vector3Int, int) pathKey = (Vector3Int.RoundToInt(targetPosition), pathID);
 
-        bool sameObstacle = hit.collider == previousCollider;
+        Debug.Log($"Current collider: {hit.collider.transform.position} Previous collider: {previousCollider?.transform.position}");
 
-        ((Vector3 position, float distance) position_1, (Vector3? position, float distance) position_2) = _selectVertices(agent, hit, startPosition, targetPosition, characterSize, sameObstacle);
+        ((Vector3 position, float distance, Collider previousCollider) position_1, 
+            (Vector3? position, float distance, Collider previousCollider) position_2) 
+            = _selectVertices(agent, hit, startPosition, targetPosition, characterSize, hit.collider, previousCollider);
 
-        addOrUpdatePaths();
+        _addOrUpdatePaths(pathKey, position_1, position_2, startPosition, targetPosition);
 
         for (int i = 0; i < _pathCount; i++)
         {
@@ -488,7 +491,7 @@ public class VoxelGrid
 
             if (!_allPaths.ContainsKey(pathKeyI)) continue;
 
-            if (_allPaths[pathKeyI].Item3)
+            if (_allPaths[pathKeyI].Item4)
             {
                 //if (pathExists(pathKeyI)) yield break;
                 continue;
@@ -505,17 +508,17 @@ public class VoxelGrid
             if (hitName.Contains("Player"))
             {
                 _allPaths[pathKeyI].Item1.Add(pathHit.point);
-                _allPaths[pathKeyI] = (_allPaths[pathKeyI].Item1, _allPaths[pathKeyI].Item2, true);
+                _allPaths[pathKeyI] = (_allPaths[pathKeyI].Item1, _allPaths[pathKeyI].Item2, _allPaths[pathKeyI].Item3, true);
 
-                if (_allPaths[pathKeyI].Item2 < _shortestDistance)
+                if (_allPaths[pathKeyI].Item3 < _shortestDistance)
                 {
                     _bestPath = _allPaths[pathKeyI].Item1;
-                    _shortestDistance = _allPaths[pathKeyI].Item2;
+                    _shortestDistance = _allPaths[pathKeyI].Item3;
                 }
             }
             else if (pathHit.transform.name.Contains("Wall"))
             {
-                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: hit.collider, pathID: i));
+                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: _allPaths[pathKeyI].Item2, pathID: i));
             }
         }
 
@@ -534,69 +537,88 @@ public class VoxelGrid
 
             return false;
         }
+    }
 
-        void addOrUpdatePaths()
+    static void _addOrUpdatePaths((Vector3Int, int) pathKey, (Vector3 position, float distance, Collider previousCollider) position_1, (Vector3? position, float distance, Collider previousCollider) position_2,
+        Vector3 startPosition, Vector3 targetPosition)
+    {
+        float distancePath_01 = float.PositiveInfinity;
+        float distancePath_02 = float.PositiveInfinity;
+
+        var existingPath = _allPaths.ContainsKey(pathKey)
+            ? _allPaths.FirstOrDefault(kvp => kvp.Value.Item1.SequenceEqual(_allPaths[pathKey].Item1))
+            : default(KeyValuePair<(Vector3Int, int), (List<Vector3>, Collider, float, bool)>);
+
+        if (!existingPath.Equals(default(KeyValuePair<(Vector3Int, int), (List<Vector3>, Collider, float, bool)>)))
         {
-            float distancePath_01 = float.PositiveInfinity;
-            float distancePath_02 = float.PositiveInfinity;
+            if (_allPaths[existingPath.Key].Item4) return;
 
-            var existingPath = _allPaths.ContainsKey(pathKey) 
-                ? _allPaths.FirstOrDefault(keyValuePair => keyValuePair.Value.Item1.SequenceEqual(_allPaths[pathKey].Item1)) 
-                : default(KeyValuePair<(Vector3Int, int), (List<Vector3>, float, bool)>);
+            UpdatePathDistances(ref distancePath_01, ref distancePath_02, existingPath.Key);
+            AddOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, existingPath.Key);
+        }
+        else if (_allPaths.ContainsKey(pathKey))
+        {
+            UpdatePathDistances(ref distancePath_01, ref distancePath_02, pathKey);
+            AddOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, pathKey);
+        }
+        else
+        {
+            AddOrUpdatePath(position_1.distance, position_1.position, distancePath_02, position_2.position, null);
+        }
 
-            if (!existingPath.Equals(default(KeyValuePair<(Vector3Int, int), (List<Vector3>, float, bool)>)))
-            {
-                if (_allPaths[existingPath.Key].Item3) return;
+        void UpdatePathDistances(ref float distancePath_01, ref float distancePath_02, (Vector3Int, int) key)
+        {
+            distancePath_01 = position_1.distance + _allPaths[key].Item3;
+            if (position_2.position.HasValue) distancePath_02 = position_2.distance + _allPaths[key].Item3;
+        }
 
-                UpdatePathDistances(ref distancePath_01, ref distancePath_02, existingPath.Key);
-                AddPathsIfShorter(distancePath_01, position_1.position, existingPath.Key);
-                if (position_2.position.HasValue) AddPathsIfShorter(distancePath_02, position_2.position.Value, existingPath.Key);
-                _allPaths.Remove(existingPath.Key);
-            }
-            else if (_allPaths.ContainsKey(pathKey))
+        void AddOrUpdatePath(float distance_01, Vector3 position_01, float distance_02, Vector3? position_02, (Vector3Int, int)? key)
+        {
+            if (distance_02 < _shortestDistance && position_02.HasValue)
             {
-                UpdatePathDistances(ref distancePath_01, ref distancePath_02, pathKey);
-                AddPathsIfShorter(distancePath_01, position_1.position, pathKey);
-                if (position_2.position.HasValue) AddPathsIfShorter(distancePath_02, position_2.position.Value, pathKey);
-                _allPaths.Remove(pathKey);
-            }
-            else
-            {
-                AddNewPathIfShorter(position_1.distance, position_1.position);
-                if (position_2.position.HasValue) AddNewPathIfShorter(position_2.distance, position_2.position.Value);
-            }
-
-            void UpdatePathDistances(ref float distancePath_01, ref float distancePath_02, (Vector3Int, int) key)
-            {
-                distancePath_01 = position_1.distance + _allPaths[key].Item2;
-                if (position_2.position.HasValue) distancePath_02 = position_2.distance + _allPaths[key].Item2;
+                insertPathWithPosition(position_02.Value, position_2.previousCollider, distance_02, _pathCount);
+                _pathCount++;
             }
 
-            void AddPathsIfShorter(float distance, Vector3 position, (Vector3Int, int) key)
+            if (distance_01 < _shortestDistance)
             {
-                if (distance < _shortestDistance)
-                {
-                    _allPaths.Add((Vector3Int.RoundToInt(targetPosition), _pathCount), (new List<Vector3>(_allPaths[key].Item1) { position }, distance, false));
-                    _pathCount++;
-                }
+                insertPathWithPosition(position_01, position_1.previousCollider, distance_01, _pathCount);
+                _pathCount++;
             }
 
-            void AddNewPathIfShorter(float distance, Vector3 position)
+            if (key.HasValue) _allPaths.Remove(pathKey);
+
+            void insertPathWithPosition(Vector3 position, Collider previousCollider, float distance, int pathID)
             {
-                if (distance < _shortestDistance)
-                {
-                    _allPaths.Add((Vector3Int.RoundToInt(targetPosition), _pathCount), (new List<Vector3> { startPosition, position }, distance, false));
-                    _pathCount++;
-                }
+                List<Vector3> pathPoints = key.HasValue
+                    ? new List<Vector3>(_allPaths[key.Value].Item1) { position }
+                    : new List<Vector3> { startPosition, position };
+
+                insertPath(Vector3Int.RoundToInt(targetPosition), pathID, pathPoints, previousCollider, distance, false);
             }
         }
     }
 
-    static ((Vector3 position, float distance) position_1, (Vector3? position, float distance) position_2) _selectVertices(
-        Controller_Agent agent, RaycastHit hit, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, bool sameObstacle)
+    static void insertPath(Vector3Int targetDestination, int newPathID, List<Vector3> pathPoints, Collider previousCollider, float distance, bool reachesTarget)
     {
-        (Vector3 position, float distance) position_1 = (startPosition, float.PositiveInfinity);
-        (Vector3? position, float distance) position_2 = (startPosition, float.PositiveInfinity);
+        Dictionary<(Vector3Int, int), (List<Vector3>, Collider, float, bool)> updatedPaths = new();
+
+        foreach (var path in _allPaths)
+        {
+            updatedPaths[(path.Key.Item1, path.Key.Item2 >= newPathID ? path.Key.Item2 + 1 : path.Key.Item2)] = path.Value;
+        }
+
+        updatedPaths[(targetDestination, newPathID)] = (pathPoints, previousCollider, distance, reachesTarget);
+        _allPaths = updatedPaths;
+    }
+
+    static ((Vector3 position, float distance, Collider previousCollider) position_1, (Vector3? position, float distance, Collider previousCollider) position_2) _selectVertices(
+        Controller_Agent agent, RaycastHit hit, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Collider currentCollider, Collider previousCollider)
+    {
+        bool sameObstacle = currentCollider == previousCollider;
+
+        (Vector3 position, float distance, Collider previousCollider) position_1 = (startPosition, float.PositiveInfinity, previousCollider);
+        (Vector3? position, float distance, Collider previousCollider) position_2 = (null, float.PositiveInfinity, previousCollider);
 
         checkMoverType(agent, characterSize);
 
@@ -606,20 +628,17 @@ public class VoxelGrid
 
         Debug.Log($"Same obstacle check: {sameObstacle} at start {startPosition} with hit: {hit.point} going to target: {targetPosition} with closest: {closestBound} and furthest: {furthestBound}");
 
-        // Merge the pos_1 and pos_2 so that when pos_1 hits an obstacle, it doesn't allow pos_2 to continue and call nextAvailable point on a different obstacle
-
-        position_1.position = nextAvailablePoint(startPosition, sameObstacle ? furthestBound : closestBound, characterSize, out position_2.position);
-        
+        position_1.position = nextAvailablePoint(startPosition, sameObstacle ? furthestBound : closestBound, characterSize, out position_1.previousCollider, previousCollider: previousCollider);
         position_2.position = sameObstacle
-            ? position_2.position = null
-            : position_2.position = nextAvailablePoint(startPosition, furthestBound, characterSize);
-        
+            ? null
+            : nextAvailablePoint(startPosition, furthestBound, characterSize, out position_2.previousCollider, previousCollider: previousCollider);
+
         Debug.Log($"Start: {startPosition} Pos_1: {position_1.position}, Pos_2: {position_2.position}");
 
         // Temporary while flying isn't implemented
         position_1.position.y = startPosition.y;
 
-        if (position_2.position.HasValue) position_2 = (new Vector3(position_2.position.Value.x, startPosition.y, position_2.position.Value.z), float.PositiveInfinity);
+        if (position_2.position.HasValue) position_2 = (new Vector3(position_2.position.Value.x, startPosition.y, position_2.position.Value.z), float.PositiveInfinity, position_2.previousCollider);
 
         position_1.distance = Vector3.Distance(startPosition, position_1.position);
         position_2.distance = position_2.position.HasValue ? Vector3.Distance(startPosition, position_2.position.Value) : float.PositiveInfinity;
@@ -753,8 +772,10 @@ public class VoxelGrid
         }
     }
 
-    static Vector3 nextAvailablePoint(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, int iterations = 0, Collider previousCollider = null)
+    static Vector3 nextAvailablePoint(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, out Collider priorCollider, int iterations = 0, Collider previousCollider = null)
     {
+        priorCollider = previousCollider;
+
         iterations++;
         if (iterations > 10) { Debug.Log($"Iterated to {iterations}"); return targetPosition; }
 
@@ -769,10 +790,14 @@ public class VoxelGrid
 
             Debug.Log($"ClosestBound: {closestBound} FurthestBound: {furthestBound}");
 
-            return nextAvailablePoint(hit.point, closestBound, characterSize, previousCollider: hit.collider);
-        }
+            Debug.Log($"NextAvailablePoint on closestBound: {nextAvailablePoint(hit.point, closestBound, characterSize, out priorCollider, previousCollider: hit.collider)}");
 
-        return targetPosition;
+            return nextAvailablePoint(hit.point, hit.collider == previousCollider ? closestBound : furthestBound, characterSize, out Collider secondPriorCollider, previousCollider: hit.collider);
+        }
+        else
+        {
+            return targetPosition;
+        }
     }
 
     public static void TestTestShowAllVoxels(bool showOpen = true, bool showObstacles = true, bool showGround = true)
