@@ -449,17 +449,7 @@ public class VoxelGrid
 
                 if (_bestPath == null) { Debug.Log($"Best Path is null"); yield break; }
 
-                foreach (Vector3 position in _bestPath)
-                {
-                    Debug.Log(position);
-                    Debug.DrawRay(position, lastPosition - position, Color.green, 50f);
-                    lastPosition = position;
-                    yield return new WaitForSeconds(0.1f);
-                }
-
-                //agent.MoveToTest(_bestPath);
-
-                // Move through the path
+                agent.MoveToTest(_bestPath);
             }
             else
             {
@@ -479,8 +469,6 @@ public class VoxelGrid
 
         (Vector3Int, int) pathKey = (Vector3Int.RoundToInt(targetPosition), pathID);
 
-        Debug.Log($"{pathID} Current collider: {hit.collider.transform.position} Previous collider: {previousCollider?.transform.position}");
-
         ((Vector3 position, float distance, Collider previousCollider) position_1, 
             (Vector3? position, float distance, Collider previousCollider) position_2) 
             = _selectVertices(pathID, agent, hit, startPosition, targetPosition, characterSize, hit.collider, previousCollider);
@@ -493,34 +481,35 @@ public class VoxelGrid
 
             if (!_allPaths.ContainsKey(pathKeyI)) continue;
 
-            if (_allPaths[pathKeyI].Item4)
+            var path = _allPaths[pathKeyI];
+
+            if (path.Item4)
             {
                 //if (pathExists(pathKeyI)) yield break;
                 continue;
             }
 
-            Vector3 lastPosition = _allPaths[pathKeyI].Item1.Last();
+            Vector3 lastPosition = path.Item1.Last();
 
             if (!Physics.Raycast(lastPosition, targetPosition - lastPosition, out RaycastHit pathHit)) continue;
-
-            Debug.DrawRay(startPosition, targetPosition - startPosition, Color.red, 50.0f);
 
             string hitName = pathHit.transform.name;
 
             if (hitName.Contains("Player"))
             {
-                _allPaths[pathKeyI].Item1.Add(pathHit.point);
-                _allPaths[pathKeyI] = (_allPaths[pathKeyI].Item1, _allPaths[pathKeyI].Item2, _allPaths[pathKeyI].Item3, true);
+                path.Item1.Add(pathHit.point);
+                path.Item3 += Vector3.Distance(pathHit.point, lastPosition);
+                path = (path.Item1, path.Item2, path.Item3, true);
 
-                if (_allPaths[pathKeyI].Item3 < _shortestDistance)
+                if (path.Item3 < _shortestDistance)
                 {
-                    _bestPath = _allPaths[pathKeyI].Item1;
-                    _shortestDistance = _allPaths[pathKeyI].Item3;
+                    _bestPath = path.Item1;
+                    _shortestDistance = path.Item3;
                 }
             }
             else if (pathHit.transform.name.Contains("Wall"))
             {
-                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: _allPaths[pathKeyI].Item2, pathID: i));
+                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(agent, lastPosition, targetPosition, characterSize, pathHit, previousCollider: path.Item2, pathID: i));
             }
         }
 
@@ -544,9 +533,6 @@ public class VoxelGrid
     static void _addOrUpdatePaths((Vector3Int, int) pathKey, (Vector3 position, float distance, Collider previousCollider) position_1, (Vector3? position, float distance, Collider previousCollider) position_2,
         Vector3 startPosition, Vector3 targetPosition)
     {
-        float distancePath_01 = float.PositiveInfinity;
-        float distancePath_02 = float.PositiveInfinity;
-
         var existingPath = _allPaths.ContainsKey(pathKey)
             ? _allPaths.FirstOrDefault(kvp => kvp.Value.Item1.SequenceEqual(_allPaths[pathKey].Item1))
             : default(KeyValuePair<(Vector3Int, int), (List<Vector3>, Collider, float, bool)>);
@@ -555,32 +541,20 @@ public class VoxelGrid
         {
             if (_allPaths[existingPath.Key].Item4) return;
 
-            Debug.Log($"Existing path KeyID: {existingPath.Key.Item2} exists.");
-
-            UpdatePathDistances(ref distancePath_01, ref distancePath_02, existingPath.Key);
-            AddOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, existingPath.Key);
+            _updatePathDistances(position_1, position_2, existingPath.Key, out float distancePath_01, out float distancePath_02);
+            addOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, existingPath.Key);
         }
         else if (_allPaths.ContainsKey(pathKey))
         {
-            Debug.Log($"PathKeyID: {pathKey.Item2} exists.");
-
-            UpdatePathDistances(ref distancePath_01, ref distancePath_02, pathKey);
-            AddOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, pathKey);
+            _updatePathDistances(position_1, position_2, pathKey, out float distancePath_01, out float distancePath_02);
+            addOrUpdatePath(distancePath_01, position_1.position, distancePath_02, position_2.position, pathKey);
         }
         else
         {
-            Debug.Log($"Path does not exist yet.");
-
-            AddOrUpdatePath(position_1.distance, position_1.position, distancePath_02, position_2.position, null);
+            addOrUpdatePath(position_1.distance, position_1.position, position_2.distance, position_2.position, null);
         }
 
-        void UpdatePathDistances(ref float distancePath_01, ref float distancePath_02, (Vector3Int, int) key)
-        {
-            distancePath_01 = position_1.distance + _allPaths[key].Item3;
-            if (position_2.position.HasValue) distancePath_02 = position_2.distance + _allPaths[key].Item3;
-        }
-
-        void AddOrUpdatePath(float distance_01, Vector3 position_01, float distance_02, Vector3? position_02, (Vector3Int, int)? key)
+        void addOrUpdatePath(float distance_01, Vector3 position_01, float distance_02, Vector3? position_02, (Vector3Int, int)? key)
         {
             if (distance_02 < _shortestDistance && position_02.HasValue)
             {
@@ -591,7 +565,6 @@ public class VoxelGrid
             if (distance_01 < _shortestDistance)
             {
                 insertPathWithPosition(position_01, position_1.previousCollider, distance_01, key.HasValue ? key.Value.Item2 + 1 : _pathCount);
-                // insertPathWithPosition(position_01, position_1.previousCollider, distance_01, _pathCount);
                 _pathCount++;
             }
 
@@ -608,18 +581,16 @@ public class VoxelGrid
         }
     }
 
+    static void _updatePathDistances((Vector3 position, float distance, Collider previousCollider) position_1, (Vector3? position, float distance, Collider previousCollider) position_2, (Vector3Int, int) key,
+        out float distance_01, out float distance_02)
+    {
+        distance_01 = position_1.distance + _allPaths[key].Item3;
+        distance_02 = position_2.position.HasValue ? position_2.distance + _allPaths[key].Item3 : float.PositiveInfinity;
+    }
+
     static void insertPath(Vector3Int targetDestination, int newPathID, List<Vector3> pathPoints, Collider previousCollider, float distance, bool reachesTarget)
     {
         Dictionary<(Vector3Int, int), (List<Vector3>, Collider, float, bool)> updatedPaths = new();
-
-        //for (int i = newPathID; i < _allPaths.Count; i++)
-        //{
-        //    (Vector3Int, int) pathKeyI = (Vector3Int.RoundToInt(targetDestination), i);
-
-        //    if (!_allPaths.ContainsKey(pathKeyI)) continue;
-
-        //    updatedPaths[(pathKeyI.Item1, pathKeyI.Item2 >= newPathID ? pathKeyI.Item2 + 1 : pathKeyI.Item2)] = _allPaths[pathKeyI];
-        //}
 
         foreach (var path in _allPaths)
         {
@@ -641,10 +612,8 @@ public class VoxelGrid
         checkMoverType(agent, characterSize);
 
         getMinAndMax(hit.collider, out Vector3 min, out Vector3 max);
-        getDistances(hit, min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
-        getBounds(pathID, hit.point, targetPosition, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
-
-        Debug.Log($"{pathID} Same obstacle check: {sameObstacle} at start {startPosition} with hit: {hit.point} going to target: {targetPosition} with closest: {closestBound} and furthest: {furthestBound}");
+        getDistances(startPosition, min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
+        getBounds(pathID, startPosition, targetPosition, sameObstacle, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
 
         position_1.position = nextAvailablePoint(pathID, startPosition, sameObstacle ? furthestBound : closestBound, characterSize, currentCollider, out position_1.previousCollider, previousCollider: previousCollider);
         position_2.position = sameObstacle
@@ -656,18 +625,10 @@ public class VoxelGrid
 
         if (position_2.position.HasValue) position_2 = (new Vector3(position_2.position.Value.x, startPosition.y, position_2.position.Value.z), float.PositiveInfinity, position_2.previousCollider);
 
-        Debug.Log($"{pathID} Start: {startPosition} Pos_1: {position_1.position}, Pos_2: {position_2.position}");
-        Debug.Log($"{pathID} PreviousCollider: Pos_1: {position_1.previousCollider.transform.position} Pos_2: {position_2.previousCollider.transform.position}");
-
         position_1.distance = Vector3.Distance(startPosition, position_1.position);
         position_2.distance = position_2.position.HasValue ? Vector3.Distance(startPosition, position_2.position.Value) : float.PositiveInfinity;
 
-        Manager_Game.SetPositions(position_1.position, position_2.position, characterSize);
-
         return (position_1, position_2);
-
-        Vector3 findClosestBoundPoint(Vector3 point) =>
-        new Vector3(Math.Abs(point.x - min.x) < Math.Abs(point.x - max.x) ? min.x : max.x, startPosition.y, Math.Abs(point.z - min.z) < Math.Abs(point.z - max.z) ? min.z : max.z);
     }
 
     static void getMinAndMax(Collider collider, out Vector3 min, out Vector3 max)
@@ -676,110 +637,94 @@ public class VoxelGrid
         max = collider.bounds.max;
     }
 
-    static void getDistances(RaycastHit hit, Vector3 min, Vector3 max, out float dxMin, out float dxMax, out float dyMin, out float dyMax, out float dzMin, out float dzMax)
+    static void getDistances(Vector3 startPosition, Vector3 min, Vector3 max, out float dxMin, out float dxMax, out float dyMin, out float dyMax, out float dzMin, out float dzMax)
     {
-        dxMin = Mathf.Abs(hit.point.x - min.x);
-        dxMax = Mathf.Abs(hit.point.x - max.x);
-        dyMin = Mathf.Abs(hit.point.y - min.y);
-        dyMax = Mathf.Abs(hit.point.y - max.y);
-        dzMin = Mathf.Abs(hit.point.z - min.z);
-        dzMax = Mathf.Abs(hit.point.z - max.z);
+        dxMin = Mathf.Abs(startPosition.x - min.x);
+        dxMax = Mathf.Abs(startPosition.x - max.x);
+        dyMin = Mathf.Abs(startPosition.y - min.y);
+        dyMax = Mathf.Abs(startPosition.y - max.y);
+        dzMin = Mathf.Abs(startPosition.z - min.z);
+        dzMax = Mathf.Abs(startPosition.z - max.z);
     }
 
-    static void getBounds(int pathID, Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, RaycastHit hit, Vector3 min, Vector3 max, float dxMin, float dxMax, float dzMin, float dzMax, out Vector3 closestBound, out Vector3 furthestBound)
+    static void getBounds(int pathID, Vector3 startPosition, Vector3 targetPosition, bool sameObstacle, Vector3 characterSize, RaycastHit hit, Vector3 min, Vector3 max, float dxMin, float dxMax, float dzMin, float dzMax, out Vector3 closestBound, out Vector3 furthestBound)
     {
-        bool enableDebugs = true;
-
         Vector3 obstacleCenter = hit.collider.transform.position;
 
-        bool zMinOrMax = hit.point.z == min.z || hit.point.z == max.z;
-        bool xDirectionGreater = Math.Abs(startPosition.x - targetPosition.x) > Math.Abs(startPosition.z - targetPosition.z);
-        //if (enableDebugs) Debug.Log($"{pathID} GetBounds: Start {startPosition} to target: {targetPosition} Direction: {startPosition - targetPosition}");
-        // if (enableDebugs) Debug.DrawRay(startPosition, new Vector3(40, 0, -40), Color.magenta, 50.0f);
-        bool dzMinOrMax = dzMin < dzMax;
-        bool targetCloserToXMin = Mathf.Abs(targetPosition.x - min.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
-        bool targetCloserToXMax = Mathf.Abs(targetPosition.x - max.x) < Mathf.Abs(targetPosition.x - obstacleCenter.x);
+        closestBound = calculateBound(dxMin < dxMax ? min.x - characterSize.x : max.x + characterSize.x, dzMin < dzMax ? min.z - characterSize.z : max.z + characterSize.z);
 
-        //if (enableDebugs) Debug.Log($"Start: {startPosition} Target: {targetPosition}");
-        //if (enableDebugs) Debug.Log($"Min: {min} Max: {max}");
-        if (enableDebugs) Debug.Log($"{pathID} zMinOrMax: {zMinOrMax} xDirectionGreater: {xDirectionGreater} TargetCloserToXMin: {targetCloserToXMin} TargetCloserToXMax: {targetCloserToXMax}");
-
-        closestBound = calculateFurthestBound(
-            dxMin < dxMax ? min.x - characterSize.x : max.x + characterSize.x,
-            dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z);
-
-        if (targetPosition.x <= obstacleCenter.x)
+        if (startPosition.x > max.x)
         {
-            if (startPosition.x <= obstacleCenter.x)
+            if (startPosition.z > max.z)
             {
-                if (enableDebugs) Debug.Log($"{pathID} Target: {targetPosition} is left and start: {startPosition} is left of obstacle centre: {obstacleCenter}");
-
-                furthestBound = zMinOrMax
-                    ? xDirectionGreater
-                        ? calculateFurthestBound(min.x - characterSize.x, dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
-                        : calculateFurthestBound(max.x + characterSize.x, dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
-                    : calculateFurthestBound(min.x - characterSize.x, dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z);
-
-                // 3 Target: (6.25, 1.50, -14.78) is left and start: (0.71, 1.72, -11.00) is left of obstacle centre: (6.50, 3.00, -12.00)
-                // This raycast is to the right and needs its furthest point to be (14.25, 2.00, -10.75)
-                // But it has the same things as
-                // 4 Start: (-1.25, 2.00, -10.75) Pos_1: (-1.25, 2.00, -13.25), Pos_2: 
-                // Which is currently correct since it needs to be at Pos_2: (-1.25, 2.00, -13.25)
-                // Find the difference so that they can be set right. Look at the Raycasts
+                furthestBound = startPosition.x - targetPosition.x < startPosition.z - targetPosition.z
+                    ? sameObstacle
+                        ? calculateBound(max.x + characterSize.x, min.z - characterSize.z)
+                        : calculateBound(min.x - characterSize.x, max.z + characterSize.z)
+                    : calculateBound(max.x + characterSize.x, min.z - characterSize.z);
+            }
+            else if (startPosition.z < min.z)
+            {
+                furthestBound = startPosition.x - targetPosition.x < startPosition.z - targetPosition.z
+                    ? sameObstacle
+                        ? calculateBound(max.x + characterSize.x, max.z + characterSize.z)
+                        : calculateBound(min.x - characterSize.x, min.z - characterSize.z)
+                    : calculateBound(max.x + characterSize.x, max.z + characterSize.z);
             }
             else
             {
-                if (enableDebugs) Debug.Log($"{pathID} Target: {targetPosition} is right and start: {startPosition} is left of obstacle centre: {obstacleCenter}");
-
-                furthestBound = zMinOrMax
-                    ? xDirectionGreater
-                        ? calculateFurthestBound(
-                            targetCloserToXMin ? min.x - characterSize.x : max.x + characterSize.x,
-                            dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
-                        : calculateFurthestBound(
-                            targetCloserToXMin ? max.x + characterSize.x : min.x - characterSize.x,
-                            dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
-                    : furthestBound =
-                        calculateFurthestBound(
-                            hit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                            dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z);
+                furthestBound = startPosition.z > obstacleCenter.z
+                    ? calculateBound(max.x + characterSize.x, min.z - characterSize.z)
+                    : calculateBound(max.x + characterSize.x, max.z + characterSize.z);
+            }
+        }
+        else if (startPosition.x < min.x)
+        {
+            if (startPosition.z > max.z)
+            {
+                furthestBound = startPosition.x - targetPosition.x < startPosition.z - targetPosition.z
+                    ? sameObstacle
+                        ? calculateBound(min.x - characterSize.x, min.z - characterSize.z)
+                        : calculateBound(max.x + characterSize.x, max.z + characterSize.z)
+                    : calculateBound(min.x - characterSize.x, min.z - characterSize.z);
+            }
+            else if (startPosition.z < min.z)
+            {
+                furthestBound = startPosition.x - targetPosition.x < startPosition.z - targetPosition.z
+                    ? sameObstacle
+                        ? calculateBound(min.x - characterSize.x, max.z + characterSize.z)
+                        : calculateBound(max.x + characterSize.x, min.z - characterSize.z)
+                    : calculateBound(min.x - characterSize.x, max.z + characterSize.z);
+            }
+            else
+            {
+                furthestBound = startPosition.z > obstacleCenter.z
+                    ? calculateBound(min.x - characterSize.x, min.z - characterSize.z)
+                    : calculateBound(min.x - characterSize.x, max.z + characterSize.z);
             }
         }
         else
         {
-            if (startPosition.x <= hit.collider.transform.position.x)
+            if (startPosition.z > max.z)
             {
-                if (enableDebugs) Debug.Log($"{pathID} Target: {targetPosition} is right and start: {startPosition} is left of obstacle centre: {obstacleCenter}");
-
-                furthestBound = zMinOrMax
-                    ? xDirectionGreater
-                        ? calculateFurthestBound(
-                            // This is right
-                            targetCloserToXMax ? min.x - characterSize.x : max.x + characterSize.x,
-                            dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
-                        : calculateFurthestBound( 
-                            // This is right
-                            targetCloserToXMax ? max.x + characterSize.x : min.x - characterSize.x,
-                            dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
-                    : calculateFurthestBound(
-                        hit.point.x == min.x ? min.x - characterSize.x : max.x + characterSize.x,
-                        dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z);
+                furthestBound = startPosition.x > obstacleCenter.x
+                    ? calculateBound(min.x - characterSize.x, max.z + characterSize.z)
+                    : calculateBound(max.x + characterSize.x, max.z + characterSize.z);
+            }
+            else if (startPosition.z < min.z)
+            {
+                furthestBound = startPosition.x > obstacleCenter.x
+                    ? calculateBound(min.x - characterSize.x, min.z - characterSize.z)
+                    : calculateBound(max.x + characterSize.x, min.z - characterSize.z);
             }
             else
             {
-                if (enableDebugs) Debug.Log($"{pathID} Target: {targetPosition} is right and start: {startPosition} is right of obstacle centre: {obstacleCenter}");
-
-                furthestBound = zMinOrMax
-                    ? xDirectionGreater
-                        ? calculateFurthestBound(max.x + characterSize.x, dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z)
-                        : calculateFurthestBound(min.x - characterSize.x, dzMinOrMax ? min.z - characterSize.z : max.z + characterSize.z)
-                    : calculateFurthestBound(max.x + characterSize.x, dzMinOrMax ? max.z + characterSize.z : min.z - characterSize.z);
+                Debug.LogError("You are inside the obstacle");
+                furthestBound = closestBound;
             }
         }
 
-        //Debug.Log($"Closest: {closestBound} Furthest: {furthestBound}");
-
-        Vector3 calculateFurthestBound(float x, float z)
+        Vector3 calculateBound(float x, float z)
         {
             return new Vector3(x, startPosition.y, z);
         }
@@ -800,22 +745,15 @@ public class VoxelGrid
         returnedCollider = currentCollider;
 
         iterations++;
-        if (iterations > 10) { Debug.Log($"{pathID} Iterated to {iterations}"); return targetPosition; }
+        if (iterations > 100) { Debug.Log($"{pathID} Iterated to {iterations}"); return targetPosition; }
 
         if (Physics.Raycast(startPosition, targetPosition - startPosition, out RaycastHit hit, (targetPosition - startPosition).magnitude))
         {
-            Debug.Log($"{pathID} Hit obstacle between start: {startPosition} and target: {targetPosition} at point: {hit.point}");
-            Debug.DrawRay(startPosition, targetPosition - startPosition, Color.white, 50.0f);
-
             getMinAndMax(hit.collider, out Vector3 min, out Vector3 max);
-            getDistances(hit , min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
-            getBounds(pathID, startPosition, targetPosition, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
+            getDistances(startPosition , min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
+            getBounds(pathID, startPosition, targetPosition, hit.collider == previousCollider, characterSize, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
 
-            Debug.Log($"{pathID} ClosestBound: {closestBound} FurthestBound: {furthestBound}");
-
-            Debug.Log($"{pathID} NextAvailablePoint: {nextAvailablePoint(pathID, hit.point, hit.collider == previousCollider ? furthestBound : closestBound, characterSize, hit.collider, out Collider testReturnedCollider, previousCollider: hit.collider)}");
-
-            return nextAvailablePoint(pathID, hit.point, hit.collider == previousCollider ? furthestBound : closestBound, characterSize, hit.collider, out returnedCollider, previousCollider: hit.collider);
+            return nextAvailablePoint(pathID, startPosition, hit.collider == previousCollider ? furthestBound : closestBound, characterSize, hit.collider, out returnedCollider, previousCollider: currentCollider);
         }
         else
         {

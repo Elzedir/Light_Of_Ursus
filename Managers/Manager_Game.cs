@@ -269,30 +269,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Player = FindFirstObjectByType<Player>();
     }
 
-    public static void SetPositions(Vector3 position_1, Vector3? position_2, Vector3 characterSize)
-    {
-        _position_1 = position_1;
-        _position_2 = position_2;
-        _characterSize = characterSize;
-        _drawCubes.Add((_position_1, true));
-        //Debug.Log($"Added pos_1: {_position_1}");
-        if (_position_2.HasValue) _drawCubes.Add((_position_2.Value, false));
-        //Debug.Log($"Added pos_2: {_position_2}");
-    }
-
-    static Vector3 _position_1;
-    static Vector3? _position_2;
-    static Vector3 _characterSize;
-    static List<(Vector3, bool)> _drawCubes = new();
-
     void OnDrawGizmos()
     {
-        foreach (var cube in _drawCubes)
-        {
-            Gizmos.color = cube.Item2 ? Color.yellow : Color.cyan;
-            Gizmos.DrawCube(cube.Item1, _characterSize);
-        }
-
         if (Player == null) return;
 
         Gizmos.color = Color.yellow;

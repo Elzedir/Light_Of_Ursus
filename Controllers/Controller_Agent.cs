@@ -181,8 +181,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     {
         _showPath(path);
 
-        yield return new WaitForSeconds(20);
-
         for (int i = 0; i < path.Count; i++)
         {
             Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
