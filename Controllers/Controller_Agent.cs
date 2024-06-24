@@ -7,14 +7,15 @@ using UnityEngine.Tilemaps;
 
 public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 {
-    public Pathfinder_Base_3D Pathfinder { get; set; }
+    public Pathfinder_Vertex_3D Pathfinder { get; set; }
+    public Pathfinder_Base_3D Pathfinder_3D { get; set; }
     Coroutine _followCoroutine;
     Coroutine _moveCoroutine;
     [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 1;
     [SerializeField] Vector3 _testTargetPositions;
 
     Animator _animator;
-    [SerializeField] protected Vector3 _targetPosition;
+    [SerializeField] protected Vector3? _targetPosition;
     [SerializeField] protected GameObject _targetGO;
     float _speed = 5;
     bool _pathSet = false;
@@ -29,10 +30,14 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     float _getPathTime = 0f;
     public List<MoverType> MoverType { get; set; } = new();
 
+    Collider _collider;
+
     protected virtual void Awake()
     {
         _animator = GetComponent<Animator>();
-        Pathfinder = new Pathfinder_Base_3D();
+        Pathfinder_3D = new Pathfinder_Base_3D();
+        _collider = gameObject.GetComponent<Collider>();
+        Pathfinder = new Pathfinder_Vertex_3D();
     }
 
     protected virtual void Start()
@@ -57,6 +62,13 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _getPathTime = getPathTime;
     }
 
+    public void SetPathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize)
+    {
+        _targetPosition = targetPosition;
+
+        Pathfinder.SetPathfinder(startPosition, targetPosition, characterSize, this);
+    }
+
     protected virtual void Update()
     {
         //if (!_canMove) return;
@@ -67,17 +79,22 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         if (_pathfinderCooldown <= 0)
         {
-            if (_targetPosition != Vector3.zero && Vector3.Distance(transform.localPosition, _targetPosition) > 1.9f)
+            if (_targetPosition != null && _pathfindingCoroutine == null)
             {
-                if (!_pathSet)
+                if (Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
                 {
-                    Pathfinder.SetPath(transform.position, _targetPosition, this, PuzzleSet.None);
-                    _pathSet = true;
+                    StartCoroutine(TestMove());
                 }
-                else
-                {
-                    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
-                }
+
+                //if (!_pathSet)
+                //{
+                //    Pathfinder.SetPath(transform.position, _targetPosition, this, PuzzleSet.None);
+                //    _pathSet = true;
+                //}
+                //else
+                //{
+                //    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
+                //}
                 
                 _pathfinderCooldown = 2.0f;
             }
@@ -88,11 +105,24 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         //AnimationAndDirection();
     }
 
+    IEnumerator TestMove()
+    {
+        yield return _pathfindingCoroutine = StartCoroutine(Pathfinder.Move());
+        _stopPathfinder();
+    }
+
     //void OnDrawGizmos()
     //{
     //    Gizmos.color = Color.red;
     //    Gizmos.DrawLine(transform.localPosition, _testTargetPositions);
     //}
+
+    void _stopPathfinder()
+    {
+        _targetPosition = null;
+        Manager_Game.Instance.StopVirtualCoroutine(_pathfindingCoroutine);
+        _pathfindingCoroutine = null;
+    }
 
     void Follow()
     {
@@ -165,7 +195,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         _hidePath();
 
-        _followCoroutine = StartCoroutine(FollowPath(Pathfinder.RetrievePath(GetStartVoxel(), target)));
+        _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3D.RetrievePath(GetStartVoxel(), target)));
     }
 
     public void MoveToTest(List<Vector3> path)

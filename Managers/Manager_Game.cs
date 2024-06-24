@@ -292,7 +292,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         return StartCoroutine(coroutine);
     }
 
-    public void StopVirtualCoroutine(IEnumerator coroutine)
+    public void StopVirtualCoroutine(Coroutine coroutine)
     {
         StopCoroutine(coroutine);
     }

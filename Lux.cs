@@ -68,6 +68,6 @@ public class Lux : MonoBehaviour
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
         VoxelGrid.InitialiseVoxelGridTest();
-        StartCoroutine(VoxelGrid.Move(transform.position, Manager_Game.Instance.Player.transform.position, _collider.bounds.size, _agent));
+        _agent.SetPathfinder(transform.position, Manager_Game.Instance.Player.transform.position, _collider.bounds.size);
     }
 }
