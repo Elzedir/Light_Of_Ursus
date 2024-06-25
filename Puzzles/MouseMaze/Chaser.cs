@@ -21,7 +21,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     public bool CanGetNewPath { get; set; }
     float _getPathCooldown = 2f;
     float _getPathTime = 0f;
-    public List<MoverType> MoverType { get; set; } = new();
+    public List<MoverType> MoverTypes { get; set; } = new();
 
     Voxel_Base _target;
 

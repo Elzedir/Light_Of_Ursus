@@ -1085,7 +1085,7 @@ public enum MoverType { Ground, Fly, Dig, Swim }
 
 public interface PathfinderMover_3D
 {
-    List<MoverType> MoverType { get; set; }
+    List<MoverType> MoverTypes { get; set; }
     bool CanGetNewPath { get; set; }
     void MoveTo(Voxel_Base target);
     void StartPathfindingCoroutine(IEnumerator coroutine);

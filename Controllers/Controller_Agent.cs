@@ -11,13 +11,13 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     public Pathfinder_Base_3D Pathfinder_3D { get; set; }
     Coroutine _followCoroutine;
     Coroutine _moveCoroutine;
-    [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 1;
+    [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 2;
     [SerializeField] Vector3 _testTargetPositions;
 
     Animator _animator;
     [SerializeField] protected Vector3? _targetPosition;
     [SerializeField] protected GameObject _targetGO;
-    float _speed = 5;
+    float _speed = 1;
     bool _pathSet = false;
     Coroutine _pathfindingCoroutine;
     List<GameObject> _shownPath = new();
@@ -28,9 +28,10 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     public bool CanGetNewPath { get; set; }
     float _getPathCooldown = 2f;
     float _getPathTime = 0f;
-    public List<MoverType> MoverType { get; set; } = new();
+    public List<MoverType> MoverTypes { get; set; } = new();
 
     Collider _collider;
+    Vector3 _characterSize;
 
     protected virtual void Awake()
     {
@@ -50,7 +51,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     }
 
-    public void SetAgentDetails(Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f)
+    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f)
     {
         _targetPosition = targetPosition ?? transform.position;
         _targetGO = targetGO;
@@ -60,13 +61,15 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _canMove = true;
         _getPathCooldown = getPathCooldown;
         _getPathTime = getPathTime;
+        MoverTypes = new List<MoverType> (moverTypes);
     }
 
-    public void SetPathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize)
+    public void UpdatePathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize)
     {
         _targetPosition = targetPosition;
+        _characterSize = characterSize;
 
-        Pathfinder.SetPathfinder(startPosition, targetPosition, characterSize, this);
+        Pathfinder.UpdatePathfinder(startPosition, _targetPosition.Value, _characterSize, this);
     }
 
     protected virtual void Update()
@@ -79,11 +82,15 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         if (_pathfinderCooldown <= 0)
         {
-            if (_targetPosition != null && _pathfindingCoroutine == null)
+            if (_targetPosition.HasValue)
             {
-                if (Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
+                if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
                 {
-                    StartCoroutine(TestMove());
+                    StartCoroutine(_testMoveFromStart());
+                }
+                else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
+                {
+                    UpdatePathfinder(transform.position, _targetPosition.Value, _characterSize);
                 }
 
                 //if (!_pathSet)
@@ -105,9 +112,12 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         //AnimationAndDirection();
     }
 
-    IEnumerator TestMove()
+    IEnumerator _testMoveFromStart()
     {
-        yield return _pathfindingCoroutine = StartCoroutine(Pathfinder.Move());
+        Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
+
+        yield return _pathfindingCoroutine = StartCoroutine(Pathfinder.MoveFromStart());
+
         _stopPathfinder();
     }
 
@@ -120,7 +130,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     void _stopPathfinder()
     {
         _targetPosition = null;
-        Manager_Game.Instance.StopVirtualCoroutine(_pathfindingCoroutine);
+        StopCoroutine(_pathfindingCoroutine);
         _pathfindingCoroutine = null;
     }
 
@@ -198,13 +208,13 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3D.RetrievePath(GetStartVoxel(), target)));
     }
 
-    public void MoveToTest(List<Vector3> path)
+    public IEnumerator MoveToTest(List<Vector3> path)
     {
         if (_followCoroutine != null) StopMoving();
 
         _hidePath();
 
-        _followCoroutine = StartCoroutine(FollowPath(path));
+        yield return _followCoroutine = StartCoroutine(FollowPath(path));
     }
 
     IEnumerator FollowPath(List<Vector3> path)
@@ -213,9 +223,11 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         for (int i = 0; i < path.Count; i++)
         {
-            Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : new Vector3(int.MaxValue, int.MaxValue, int.MaxValue);
+            Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : null;
 
-            yield return _moveCoroutine = StartCoroutine(Move(path[i], nextPos.Value));
+            yield return _moveCoroutine = StartCoroutine(Move(path[i], nextPos));
+
+            Debug.Log($"Reached {path[i]}");
         }
 
         _moveCoroutine = null;
@@ -261,14 +273,11 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         }
     }
 
-    IEnumerator Move(Vector3 nextPosition, Vector3 followingPosition)
+    IEnumerator Move(Vector3 nextPosition, Vector3? followingPosition)
     {
         while (Vector3.Distance(transform.position, nextPosition) > 0.1f)
         {
-            if (followingPosition == new Vector3(int.MaxValue, int.MaxValue, int.MaxValue) || Vector3.Distance(nextPosition, followingPosition) > Vector3.Distance(transform.position, followingPosition))
-            {
-                yield break;
-            }
+            if (followingPosition.HasValue && Vector3.Distance(nextPosition, followingPosition.Value) > Vector3.Distance(transform.position, followingPosition.Value)) yield break;
 
             transform.position = Vector3.MoveTowards(transform.position, nextPosition, _speed * Time.deltaTime);
 

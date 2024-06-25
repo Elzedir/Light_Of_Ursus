@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Lux : MonoBehaviour
@@ -68,6 +69,6 @@ public class Lux : MonoBehaviour
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
         VoxelGrid.InitialiseVoxelGridTest();
-        _agent.SetPathfinder(transform.position, Manager_Game.Instance.Player.transform.position, _collider.bounds.size);
+        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetPosition: Manager_Game.Instance.Player.transform.position, speed: 1);
     }
 }

@@ -25,7 +25,7 @@ public class Pina : MonoBehaviour
 
     void FollowUrsus()
     {
-        _agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, followDistance: 1.5f);
+        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, followDistance: 1.5f);
     }
 
     void OnDestroy()

@@ -41,7 +41,7 @@ public class River_Pina_Intro : Cinematic
 
         foreach (CinematicWaitPoint point in _points)
         {
-            playerAgent.SetAgentDetails(targetPosition: point.Position, speed: 0.5f);
+            playerAgent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetPosition: point.Position, speed: 0.5f);
 
             yield return new WaitUntil(() => Vector2.Distance(playerAgent.transform.position, point.Position) < 0.1f);
 

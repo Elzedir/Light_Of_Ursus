@@ -19,7 +19,7 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     public Pathfinder_Base_3D Pathfinder { get; private set; }
     public Cell_IceWall CurrentCell { get; private set; }
     public bool CanGetNewPath { get; set; }
-    public List<MoverType> MoverType { get; set; } = new();
+    public List<MoverType> MoverTypes { get; set; } = new();
 
     Vector2 _move;
 
