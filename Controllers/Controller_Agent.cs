@@ -33,6 +33,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     Collider _collider;
     Vector3 _characterSize;
 
+    Lux _lux { get; set; }
+
     protected virtual void Awake()
     {
         _animator = GetComponent<Animator>();
@@ -51,7 +53,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     }
 
-    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f)
+    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f, Lux lux = null)
     {
         _targetPosition = targetPosition ?? transform.position;
         _targetGO = targetGO;
@@ -62,6 +64,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _getPathCooldown = getPathCooldown;
         _getPathTime = getPathTime;
         MoverTypes = new List<MoverType> (moverTypes);
+
+        _lux = lux;
     }
 
     public void UpdatePathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize)
@@ -117,6 +121,13 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
 
         yield return _pathfindingCoroutine = StartCoroutine(Pathfinder.MoveFromStart());
+
+        _stopPathfinder();
+    }
+
+    public IEnumerator TestRecalculate(IEnumerator recalculateCoroutine)
+    {
+        yield return _pathfindingCoroutine = StartCoroutine(recalculateCoroutine);
 
         _stopPathfinder();
     }
@@ -208,13 +219,15 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3D.RetrievePath(GetStartVoxel(), target)));
     }
 
-    public IEnumerator MoveToTest(List<Vector3> path)
+    public IEnumerator MoveToTest(List<(Vector3 position, Collider)> path, float distance)
     {
         if (_followCoroutine != null) StopMoving();
 
+        _lux.TestPath(path, distance);
+
         _hidePath();
 
-        yield return _followCoroutine = StartCoroutine(FollowPath(path));
+        yield return _followCoroutine = StartCoroutine(FollowPathTest(path));
     }
 
     IEnumerator FollowPath(List<Vector3> path)
@@ -226,8 +239,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
             Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1] : null;
 
             yield return _moveCoroutine = StartCoroutine(Move(path[i], nextPos));
-
-            Debug.Log($"Reached {path[i]}");
         }
 
         _moveCoroutine = null;
@@ -236,12 +247,46 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         CanGetNewPath = true;
     }
 
+    IEnumerator FollowPathTest(List<(Vector3 position, Collider)> path)
+    {
+        _showPathTest(path);
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1].position : null;
+
+            yield return _moveCoroutine = StartCoroutine(Move(path[i].position, nextPos));
+        }
+
+        _moveCoroutine = null;
+        _followCoroutine = null;
+        _pathSet = false;
+        CanGetNewPath = true;
+    }
+
+    void _showPathTest(List<(Vector3 position, Collider)> path)
+    {
+        Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        Material material = Resources.Load<Material>("Meshes/Material_Green");
+
+        foreach (var point in path)
+        {
+            GameObject voxelGO = new GameObject($"{point}");
+            _shownPath.Add(voxelGO);
+            voxelGO.AddComponent<MeshFilter>().mesh = mesh;
+            voxelGO.AddComponent<MeshRenderer>().material = material;
+            voxelGO.transform.SetParent(GameObject.Find("TestPath").transform);
+            voxelGO.transform.localPosition = point.position;
+            voxelGO.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
+        }
+    }
+
     void _showPath(List<Vector3> path)
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         Material material = Resources.Load<Material>("Meshes/Material_Green");
 
-        foreach (Vector3 point in path)
+        foreach (var point in path)
         {
             GameObject voxelGO = new GameObject($"{point}");
             _shownPath.Add(voxelGO);

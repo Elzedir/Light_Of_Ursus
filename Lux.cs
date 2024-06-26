@@ -15,6 +15,9 @@ public class Lux : MonoBehaviour
     private float timer = 0f;
     Collider _collider;
 
+    [SerializeField] List<Vector3> _path = new();
+    [SerializeField] float _distance = 0;
+
     void Start()
     {
         fireflyLight = GetComponent<Light>();
@@ -69,6 +72,18 @@ public class Lux : MonoBehaviour
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
         VoxelGrid.InitialiseVoxelGridTest();
-        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetPosition: Manager_Game.Instance.Player.transform.position, speed: 1);
+        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, speed: 1f, lux: this);
+    }
+
+    public void TestPath(List<(Vector3 position, Collider)> path, float distance)
+    {
+        _path.Clear();
+
+        foreach (var point in path)
+        {
+            _path.Add(point.position);
+        }
+
+        _distance = distance;
     }
 }
