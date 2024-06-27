@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem.HID;
+using UnityEngine.Rendering;
 
 public class Pathfinder_Vertex_3D
 {
@@ -18,6 +20,9 @@ public class Pathfinder_Vertex_3D
     Vector3 _characterSize;
     Controller_Agent _agent;
 
+    //Can also set 3rd previous collider, and do a check that if we are going around the same collider 3 times, then we might as well check the other direction, do a move from start.
+
+
     public void UpdatePathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
         _startPosition = startPosition;
@@ -25,26 +30,53 @@ public class Pathfinder_Vertex_3D
         _characterSize = characterSize;
         _agent = agent;
 
-        if (_bestPath.HasValue)
-        {
-            Manager_Game.Instance.StartVirtualCoroutine(_agent.TestRecalculate(_recalculatePath()));
-        }
+        _recalculatePath();
     }
 
-    IEnumerator _recalculatePath()
+    void _recalculatePath()
     {
-        List<(Vector3 position, Collider previousCollider)> path = _bestPath.Value.value.pointPath;
+        Physics.Raycast(_startPosition, _targetPosition.Value - _startPosition, out RaycastHit directHitCheck);
+
+        Debug.DrawRay(_startPosition, _targetPosition.Value - _startPosition, Color.magenta, 50);
+
+        if (directHitCheck.transform.name.Contains("Player") || !_bestPath.HasValue)
+        {
+            if (directHitCheck.transform.name.Contains("Player")) Debug.Log($"Direct path to player from start: {_startPosition} to target: {_targetPosition.Value} with hit: {directHitCheck.point}");
+            else if (!_bestPath.HasValue) Debug.Log($"_bestPath is null {_bestPath}");
+
+            Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
+
+            return;
+        }
+
+        var path = _bestPath.Value.value.pointPath;
+
+        if (_targetPosition.HasValue && _bestPath.HasValue)
+        {
+            if (Vector3Int.RoundToInt(_targetPosition.Value) == _bestPath.Value.key.targetPosInt)
+            {
+                path[^1] = (_targetPosition.Value, path[^1].previousCollider);
+
+                _updateBestPath(path, true);
+
+                Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
+
+                _bestPath = null;
+
+                return;
+            }
+        }
 
         bool earlierHitAvailable = false;
-        int earlierHitIteration = -1;
+        RaycastHit? earlyHit = null;
 
-        for (int i = 0; i < path.Count; i++)
+        for (int i = _agent.CurrentPathIndex; i < path.Count; i++)
         {
-            if (!earlierHitAvailable) Debug.DrawRay(path[i].position, _targetPosition.Value - path[i].position, Color.magenta, 5);
-
             if (earlierHitAvailable)
             {
                 path.RemoveAt(i);
+                i--;
+                continue;
             }
             else
             {
@@ -52,53 +84,94 @@ public class Pathfinder_Vertex_3D
 
                 if (!hit.transform.name.Contains("Player")) continue;
 
-                earlierHitAvailable = true;
-                earlierHitIteration = i;
+                Debug.Log($"Earlier hit available at {path[i]}");
 
-                Debug.Log($"earlierHit available at {earlierHitIteration} : {path[i].position}");
+                earlyHit = hit;
+                earlierHitAvailable = true;
             }
         }
 
         if (earlierHitAvailable)
         {
-            float distance = 0;
-
-            for (int i = 1; i < path.Count; i++)
+            if (_bestPath.Value.value.pointPath.Count > 2)
             {
-                distance += Vector3.Distance(path[i].position, path[i - 1].position);
+                if (!earlyHit.HasValue)
+                {
+                    Debug.Log("RaycastHit earlyHit is null");
+                    return;
+                }
+
+                Debug.Log("Move from early");
+
+                _updateBestPath(path);
+
+                Manager_Game.Instance.StartVirtualCoroutine(_startVirtualCoroutinesForBestPath(earlyHit.Value));
             }
+            else
+            {
+                Debug.Log("Move from start");
 
-            _bestPath = ((_bestPath.Value.key.targetPosInt, _bestPath.Value.key.pathID), (path, distance, _bestPath.Value.value.reachedTarget));
-
-            _findBestPath(_bestPath.Value.value.pointPath[earlierHitIteration], hit: null);
-
-            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance));
-
-            _bestPath = null;
+                Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
+            }
         }
         else
         {
+            Debug.Log("Early hit not available");
+
+            if (Vector3.Distance(_targetPosition.Value, path[^1].position) < 0.25f) return;
+
             Physics.Raycast(path[^1].position, _targetPosition.Value - path[^1].position, out RaycastHit hit);
 
-            if (hit.transform.name.Contains("Player"))
+            if (hit.transform.name.Contains("Player") && _bestPath.Value.value.pointPath.Count > 2)
             {
                 path[^1] = (_targetPosition.Value, path[^1].previousCollider);
 
-                _bestPath = ((_bestPath.Value.key.targetPosInt, _bestPath.Value.key.pathID), (path, _bestPath.Value.value.distance, _bestPath.Value.value.reachedTarget));
+                _updateBestPath(path, true);
 
-                yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance));
+                Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
 
                 _bestPath = null;
             }
             else
             {
-                MoveFromStart();
+                Debug.Log("Moving from start");
+
+                Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
             }
         }
     }
 
+    void _updateBestPath(List<(Vector3 position, Collider previousCollider)> path, bool reachedTarget = false)
+    {
+        float distance = _calculatePathDistance(path);
+        _bestPath = ((_bestPath.Value.key.targetPosInt, _bestPath.Value.key.pathID), (path, distance, reachedTarget));
+    }
+
+    float _calculatePathDistance(List<(Vector3 position, Collider previousCollider)> path)
+    {
+        float distance = 0;
+        for (int i = 1; i < path.Count; i++)
+        {
+            distance += Vector3.Distance(path[i].position, path[i - 1].position);
+        }
+        return distance;
+    }
+
+    IEnumerator _startVirtualCoroutinesForBestPath(RaycastHit earlyHit)
+    {
+        yield return Manager_Game.Instance.StartVirtualCoroutine(
+            _findBestPath(_bestPath.Value.value.pointPath[^1], earlyHit, earlyHit: true));
+
+        yield return Manager_Game.Instance.StartVirtualCoroutine(
+            _agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
+
+        _bestPath = null;
+    }
+
     public IEnumerator MoveFromStart()
     {
+        _bestPath = null;
+
         if (!Physics.Raycast(_startPosition, _targetPosition.Value - _startPosition, out RaycastHit hit))
         {
             Debug.Log($"Raycast hit nothing somehow.");
@@ -107,7 +180,7 @@ public class Pathfinder_Vertex_3D
 
         if (hit.transform.name.Contains("Player"))
         {
-            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(new List<(Vector3 position, Collider)> { (_targetPosition.Value, null) }, Vector3.Distance(_startPosition, _targetPosition.Value)));
+            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(_agent.MoveToTest(new List<(Vector3 position, Collider)> { (_startPosition, null), (_targetPosition.Value, null) }, Vector3.Distance(_startPosition, _targetPosition.Value))));
         }
         else if (hit.transform.name.Contains("Wall"))
         {
@@ -115,7 +188,7 @@ public class Pathfinder_Vertex_3D
 
             if (_bestPath == null) { Debug.Log($"Best Path is null after running pathfinder."); yield break; }
 
-            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance));
+            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID)));
 
             Debug.Log("Nulled Best Path");
 
@@ -127,33 +200,35 @@ public class Pathfinder_Vertex_3D
         }
     }
 
-    IEnumerator _findBestPath((Vector3 position, Collider previousCollider) currentPosition, RaycastHit? hit, int pathID = 0)
+    IEnumerator _findBestPath((Vector3 position, Collider previousCollider) currentPosition, RaycastHit hit, int pathID = 0, bool earlyHit = false)
     {
-        if (pathID > 100) yield break;
-
-        if (!_targetPosition.HasValue) { Debug.Log($"TargetPosition: {_targetPosition} is null."); yield break; }
-
-        var bestPath = _bestPath;
-
-        (Vector3Int, int) pathKey = (Vector3Int.RoundToInt(_targetPosition.Value), pathID);
-
-        if (!hit.HasValue)
+        if (pathID > 100 || !_targetPosition.HasValue)
         {
-            _addOrUpdatePaths(pathKey,
-                (_targetPosition.Value, currentPosition.previousCollider, Vector3.Distance(_targetPosition.Value, currentPosition.position)),
-                null,
-                currentPosition,
-                bestPath.Value);
-
+            Debug.Log($"TargetPosition: {_targetPosition} is null or pathID exceeded.");
             yield break;
         }
 
-        ((Vector3 position, Collider previousCollider, float distance) position_1,
-            (Vector3 position, Collider previousCollider, float distance)? position_2)
-            = _selectVertices(pathID, hit.Value, currentPosition, hit.Value.collider);
+        (Vector3Int, int) pathKey = (Vector3Int.RoundToInt(_targetPosition.Value), pathID);
 
-        _addOrUpdatePaths(pathKey, position_1, position_2, currentPosition, bestPath);
+        if (earlyHit)
+        {
+            _bestPath.Value.value.pointPath.Add((hit.point, currentPosition.previousCollider));
+            _bestPath = ((_bestPath.Value.key.targetPosInt, _bestPath.Value.key.pathID), (_bestPath.Value.value.pointPath, _bestPath.Value.value.distance + Vector3.Distance(hit.point, currentPosition.position), true));
+            _shortestDistance = _bestPath.Value.value.distance;
+        }
+        else
+        {
+            (var position_1, var position_2) = _selectVertices(pathID, hit, currentPosition, hit.collider);
+            _addOrUpdatePaths(pathKey, position_1, position_2, currentPosition);
 
+            Debug.Log($"Start: {currentPosition} going to target: {_targetPosition.Value} with pos_1: {position_1} pos_2: {position_2}");
+        }
+
+        yield return Manager_Game.Instance.StartVirtualCoroutine(_evaluatePaths(pathID));
+    }
+
+    IEnumerator _evaluatePaths(int pathID)
+    {
         for (int i = 0; i < _pathCount; i++)
         {
             (Vector3Int, int) pathKeyI = (Vector3Int.RoundToInt(_targetPosition.Value), i);
@@ -162,54 +237,50 @@ public class Pathfinder_Vertex_3D
 
             var path = _allPaths[pathKeyI];
 
-            if (path.reachedTarget)
+            if (path.reachedTarget) continue;
+
+            var lastPosition = path.pointPath[^1];
+
+            if (!Physics.Raycast(lastPosition.position, _targetPosition.Value - lastPosition.position, out RaycastHit pathHit))
             {
-                //if (pathExists(pathKeyI)) yield break;
+                Debug.Log("Raycast hit nothing.");
                 continue;
             }
 
-            (Vector3 position, Collider previousCollider) lastPosition = path.pointPath.Last();
-
-            if (!Physics.Raycast(lastPosition.position, _targetPosition.Value - lastPosition.position, out RaycastHit pathHit)) { Debug.Log("Raycast hit nothing."); continue; }
-
-            string hitName = pathHit.transform.name;
-
-            if (hitName.Contains("Player"))
-            {
-                path.pointPath.Add((pathHit.point, path.pointPath.Last().previousCollider));
-                path = (path.pointPath, path.distance += Vector3.Distance(pathHit.point, lastPosition.position), true);
-
-                if (path.distance < _shortestDistance)
-                {
-                    _bestPath = (pathKeyI, path);
-                    _shortestDistance = path.distance;
-                }
-            }
-            else if (pathHit.transform.name.Contains("Wall"))
-            {
-                Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(lastPosition, pathHit, pathID: i));
-            }
+            _handleRaycastHit(path, pathKeyI, pathHit, lastPosition, i);
         }
 
-        //bool pathExists((Vector3Int, int) pathKeyI)
-        //{
-        //    foreach (var path in _allPaths)
-        //    {
-        //        if (path.Key.Item1 != pathKeyI.Item1 ||
-        //            path.Value.Item1[pathKeyI.Item2] != startPosition ||
-        //            path.Value.Item1.Last() != targetPosition
-        //            )
-        //            continue;
+        yield return null;
+    }
 
-        //        return true;
-        //    }
+    void _handleRaycastHit((List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget) path,
+                              (Vector3Int, int) pathKeyI,
+                              RaycastHit pathHit,
+                              (Vector3 position, Collider previousCollider) lastPosition,
+                              int pathID)
+    {
+        if (pathHit.transform.name.Contains("Player"))
+        {
+            path.pointPath.Add((pathHit.point, path.pointPath[^1].previousCollider));
+            path.distance += Vector3.Distance(pathHit.point, lastPosition.position);
+            path.reachedTarget = true;
 
-        //    return false;
-        //}
+            if (path.distance < _shortestDistance)
+            {
+                _bestPath = (pathKeyI, path);
+                _shortestDistance = path.distance;
+            }
+        }
+        else if (pathHit.transform.name.Contains("Wall"))
+        {
+            Debug.Log($"PathID: {pathID} going from: {lastPosition} hit at :{pathHit.point}");
+
+            Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(lastPosition, pathHit, pathID));
+        }
     }
 
     void _addOrUpdatePaths((Vector3Int, int) pathKey, (Vector3 position, Collider previousCollider, float distance) position_1, (Vector3 position, Collider previousCollider, float distance)? position_2, 
-        (Vector3, Collider) currentPosition, ((Vector3Int targetPosInt, int pathID) key, (List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget) value)? preExistingPath)
+        (Vector3, Collider) currentPosition, ((Vector3Int targetPosInt, int pathID) key, (List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget) value)? preExistingPath = null)
     {
         var existingPath = _allPaths.ContainsKey(pathKey)
             ? _allPaths.FirstOrDefault(kvp => kvp.Value.Item1.SequenceEqual(_allPaths[pathKey].Item1))
@@ -267,7 +338,8 @@ public class Pathfinder_Vertex_3D
                 if (preExistingPathUsed)
                 {
                     List<(Vector3, Collider)> pathPoints = new List<(Vector3, Collider)>(preExistingPath.Value.value.pointPath) { position };
-                    _insertPath(pathID, pathPoints, distance, false);
+
+                    _insertPath(pathID, pathPoints, distance, true);
                 }
                 else
                 {
@@ -307,7 +379,7 @@ public class Pathfinder_Vertex_3D
         bool sameObstacle = currentCollider == currentPosition.previousCollider;
 
         (Vector3 position, Collider previousCollider, float distance) position_1 = (currentPosition.position, currentPosition.previousCollider, float.PositiveInfinity);
-        (Vector3 position, Collider previousCollider, float distance)? position_2 = sameObstacle ? (currentPosition.position, currentPosition.previousCollider, float.PositiveInfinity) : null;
+        (Vector3 position, Collider previousCollider, float distance)? position_2 = sameObstacle ? null : (currentPosition.position, currentPosition.previousCollider, float.PositiveInfinity);
 
         checkMoverType(); // Doesn't do anything for now. Assume only ground movement.
 
@@ -445,15 +517,29 @@ public class Pathfinder_Vertex_3D
         returnedCollider = currentCollider;
 
         iterations++;
-        if (iterations > 100) { Debug.Log($"{pathID} Iterated to {iterations}"); return currentTargetPosition; }
+        if (iterations > 25) { Debug.Log($"{pathID} Iterated to {iterations}"); return currentTargetPosition; }
 
         if (Physics.Raycast(currentPosition.position, currentTargetPosition - currentPosition.position, out RaycastHit hit, (currentTargetPosition - currentPosition.position).magnitude))
         {
+            if (hit.transform.name.Contains("Player"))
+            {
+                Debug.Log("Hit player");
+                return currentTargetPosition;
+            }
+
             getMinAndMax(hit.collider, out Vector3 min, out Vector3 max);
             getDistances(currentPosition.position, min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
             getBounds(pathID, currentPosition.position, currentTargetPosition, hit.collider == currentPosition.previousCollider, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
 
-            return nextAvailablePoint(pathID, currentPosition, hit.collider == currentPosition.previousCollider ? furthestBound : closestBound, hit.collider, out returnedCollider);
+            Debug.Log($"Iter: {iterations}" +
+                $" PathID: {pathID}\n" +
+                $" CurrPos: {currentPosition}" +
+                $" CurrTarPos: {(hit.collider == currentPosition.previousCollider ? furthestBound : closestBound)}\n" +
+                $" HitPos: {hit.point}" +
+                $" HitCol: {hit.collider.name}" +
+                $" out retCol: {returnedCollider.name}");
+
+            return nextAvailablePoint(pathID, currentPosition, hit.collider == currentPosition.previousCollider ? furthestBound : closestBound, hit.collider, out returnedCollider, iterations);
         }
         else
         {

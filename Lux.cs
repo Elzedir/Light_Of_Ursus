@@ -15,9 +15,11 @@ public class Lux : MonoBehaviour
     private float timer = 0f;
     Collider _collider;
 
+    [SerializeField] int _pathID = -1;
+    [SerializeField] int _currentPathIndex = -1;
     [SerializeField] List<Vector3> _path = new();
     [SerializeField] float _distance = 0;
-
+    
     void Start()
     {
         fireflyLight = GetComponent<Light>();
@@ -75,7 +77,7 @@ public class Lux : MonoBehaviour
         _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, speed: 1f, lux: this);
     }
 
-    public void TestPath(List<(Vector3 position, Collider)> path, float distance)
+    public void TestPath(List<(Vector3 position, Collider)> path, float distance, int pathID = -1)
     {
         _path.Clear();
 
@@ -85,5 +87,11 @@ public class Lux : MonoBehaviour
         }
 
         _distance = distance;
+        _pathID = pathID;
+    }
+
+    public void TestPathIndex(int currentPathIndex)
+    {
+        _currentPathIndex = currentPathIndex;
     }
 }

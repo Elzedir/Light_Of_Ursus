@@ -5,12 +5,13 @@ using UnityEngine;
 
 public class Controller_Camera : MonoBehaviour
 {
+    public bool PlayerCameraEnabled = true;
+
     public static Controller_Camera Instance;
     Transform _lookAt;
     public Player _player;
     public float boundX = 0.15f;
     public float boundY = 0.05f;
-    public bool PlayerCameraEnabled = true;
     public AnimationCurve Curve = AnimationCurve.EaseInOut(0, 1, 1, 0);
     protected Vector3 _originalPosition;
     protected Vector3 _lastPos;
@@ -42,8 +43,10 @@ public class Controller_Camera : MonoBehaviour
 
     public void SetOffset(Vector3 position, Quaternion rotation)
     {
-        _offsetPosition = position;
-        _targetRotation = rotation;
+        
+            _offsetPosition = position;
+            _targetRotation = rotation;
+        
     }
 
     private void LateUpdate()

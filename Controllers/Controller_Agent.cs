@@ -9,19 +9,21 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 {
     public Pathfinder_Vertex_3D Pathfinder { get; set; }
     public Pathfinder_Base_3D Pathfinder_3D { get; set; }
+    Coroutine _pathfindingCoroutine;
     Coroutine _followCoroutine;
     Coroutine _moveCoroutine;
-    [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 2;
+    [SerializeField] float _pathfinderTickRate = 2f;
+    [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 0;
     [SerializeField] Vector3 _testTargetPositions;
+    [SerializeField] public int CurrentPathIndex { get; private set; }
 
     Animator _animator;
     [SerializeField] protected Vector3? _targetPosition;
     [SerializeField] protected GameObject _targetGO;
     float _speed = 1;
     bool _pathSet = false;
-    Coroutine _pathfindingCoroutine;
+    
     List<GameObject> _shownPath = new();
-
     float _followDistance;
     WanderData _wanderData;
     bool _canMove = false;
@@ -31,7 +33,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     public List<MoverType> MoverTypes { get; set; } = new();
 
     Collider _collider;
-    Vector3 _characterSize;
 
     Lux _lux { get; set; }
 
@@ -68,33 +69,38 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _lux = lux;
     }
 
-    public void UpdatePathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize)
+    public IEnumerator RunPathfinding(IEnumerator coroutine)
     {
-        _targetPosition = targetPosition;
-        _characterSize = characterSize;
+        _stopPathfinder();
 
-        Pathfinder.UpdatePathfinder(startPosition, _targetPosition.Value, _characterSize, this);
+        yield return _pathfindingCoroutine = StartCoroutine(coroutine);
     }
 
     protected virtual void Update()
     {
         //if (!_canMove) return;
 
-        _pathfinderCooldown -= Time.deltaTime;
+        _pathfinderCooldown += Time.deltaTime;
 
         if (_targetGO != null) _targetPosition = _targetGO.transform.position;
 
-        if (_pathfinderCooldown <= 0)
+        if (_pathfinderCooldown > _pathfinderTickRate)
         {
             if (_targetPosition.HasValue)
             {
-                if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
+                if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
                 {
-                    StartCoroutine(_testMoveFromStart());
+                    _testMoveFromStart();
                 }
-                else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > 1.9f)
+                else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
                 {
-                    UpdatePathfinder(transform.position, _targetPosition.Value, _characterSize);
+                    Debug.Log($"Updated pathfinder with start: {transform.position} and target: {_targetPosition.Value}");
+
+                    Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
+                }
+                else
+                {
+                    //Debug.Log($"Neither since Coroutine: {_pathfindingCoroutine} or Distance is less than _followDistance: {Vector3.Distance(transform.localPosition, _targetPosition.Value)}");
                 }
 
                 //if (!_pathSet)
@@ -106,9 +112,9 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
                 //{
                 //    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
                 //}
-                
-                _pathfinderCooldown = 2.0f;
             }
+
+            _pathfinderCooldown = 0;
         }
 
         //if (_wanderData != null) Wander();
@@ -116,20 +122,13 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         //AnimationAndDirection();
     }
 
-    IEnumerator _testMoveFromStart()
+    void _testMoveFromStart()
     {
+        _stopPathfinder();
+
         Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
 
-        yield return _pathfindingCoroutine = StartCoroutine(Pathfinder.MoveFromStart());
-
-        _stopPathfinder();
-    }
-
-    public IEnumerator TestRecalculate(IEnumerator recalculateCoroutine)
-    {
-        yield return _pathfindingCoroutine = StartCoroutine(recalculateCoroutine);
-
-        _stopPathfinder();
+        StartCoroutine(Pathfinder.MoveFromStart());
     }
 
     //void OnDrawGizmos()
@@ -140,9 +139,11 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     void _stopPathfinder()
     {
-        _targetPosition = null;
-        StopCoroutine(_pathfindingCoroutine);
-        _pathfindingCoroutine = null;
+        if (_pathfindingCoroutine != null)
+        {
+            StopCoroutine(_pathfindingCoroutine);
+            _pathfindingCoroutine = null;
+        }
     }
 
     void Follow()
@@ -219,11 +220,11 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3D.RetrievePath(GetStartVoxel(), target)));
     }
 
-    public IEnumerator MoveToTest(List<(Vector3 position, Collider)> path, float distance)
+    public IEnumerator MoveToTest(List<(Vector3 position, Collider)> path, float distance, int pathID = -1)
     {
         if (_followCoroutine != null) StopMoving();
 
-        _lux.TestPath(path, distance);
+        _lux.TestPath(path, distance, pathID);
 
         _hidePath();
 
@@ -253,6 +254,10 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         for (int i = 0; i < path.Count; i++)
         {
+            CurrentPathIndex = i;
+
+            _lux.TestPathIndex(CurrentPathIndex);
+
             Vector3? nextPos = (i + 1 < path.Count) ? path[i + 1].position : null;
 
             yield return _moveCoroutine = StartCoroutine(Move(path[i].position, nextPos));
@@ -346,11 +351,11 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
             _moveCoroutine = null;
         }
 
-        if (_pathfindingCoroutine != null)
-        {
-            StopPathfindingCoroutine();
-            _pathfindingCoroutine = null;
-        }
+        //if (_pathfindingCoroutine != null)
+        //{
+        //    StopPathfindingCoroutine();
+        //    _pathfindingCoroutine = null;
+        //}
     }
 
     public List<Vector3> GetObstaclesInVision()
