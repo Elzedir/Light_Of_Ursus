@@ -90,7 +90,9 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
             {
                 if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
                 {
-                    _testMoveFromStart();
+                    _stopPathfinder();
+
+                    Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
                 }
                 else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
                 {
@@ -120,15 +122,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         //if (_wanderData != null) Wander();
         //else Follow();
         //AnimationAndDirection();
-    }
-
-    void _testMoveFromStart()
-    {
-        _stopPathfinder();
-
-        Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
-
-        StartCoroutine(Pathfinder.MoveFromStart());
     }
 
     //void OnDrawGizmos()
