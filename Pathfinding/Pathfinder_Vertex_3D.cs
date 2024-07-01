@@ -42,9 +42,6 @@ public class Pathfinder_Vertex_3D
 
         if (directHitCheck.transform.name.Contains("Player") || !_bestPath.HasValue || _bestPath == null)
         {
-            if (directHitCheck.transform.name.Contains("Player")) Debug.Log($"Direct path to player from start: {_startPosition} to target: {_targetPosition.Value} with hit: {directHitCheck.point}");
-            else if (!_bestPath.HasValue) Debug.Log($"_bestPath is null {_bestPath}");
-
             Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
 
             return;
@@ -102,23 +99,17 @@ public class Pathfinder_Vertex_3D
                     return;
                 }
 
-                Debug.Log("Move from early");
-
                 _updateBestPath(path);
 
                 Manager_Game.Instance.StartVirtualCoroutine(_startVirtualCoroutinesForBestPath(earlyHit.Value));
             }
             else
             {
-                Debug.Log("Move from start");
-
                 Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
             }
         }
         else
         {
-            Debug.Log("Early hit not available");
-
             if (Vector3.Distance(_targetPosition.Value, path[^1].position) < 0.25f) return;
 
             Physics.Raycast(path[^1].position, _targetPosition.Value - path[^1].position, out RaycastHit hit);
@@ -219,11 +210,8 @@ public class Pathfinder_Vertex_3D
         }
         else
         {
-            Debug.Log($"pathID: {pathID} hit: {hit.point} currPos: {currentPosition} hit.coll: {hit.collider.name}");
             (var position_1, var position_2) = _selectVertices(pathID, hit, currentPosition, hit.collider);
             _addOrUpdatePaths(pathKey, position_1, position_2, currentPosition);
-
-            Debug.Log($"Start: {currentPosition} going to target: {_targetPosition.Value} with pos_1: {position_1} pos_2: {position_2}");
         }
 
         yield return Manager_Game.Instance.StartVirtualCoroutine(_evaluatePaths(pathID));
@@ -238,8 +226,6 @@ public class Pathfinder_Vertex_3D
             if (!_allPaths.ContainsKey(pathKeyI)) continue;
 
             var path = _allPaths[pathKeyI];
-
-            if (pathKeyI.Item2 == 29) Debug.LogError($"{pathKeyI} {path} last: {path.pointPath[^1]}");
 
             if (path.reachedTarget) continue;
 
@@ -275,8 +261,6 @@ public class Pathfinder_Vertex_3D
             path.distance += Vector3.Distance(pathHit.point, lastPosition.position);
             path.reachedTarget = true;
 
-            if (pathKeyI.Item2 == 29) Debug.LogError($"{pathKeyI} {path} last: {lastPosition}");
-
             if (path.distance < _shortestDistance)
             {
                 _bestPath = (pathKeyI, path);
@@ -289,74 +273,83 @@ public class Pathfinder_Vertex_3D
         }
     }
 
-    void _addOrUpdatePaths((Vector3Int, int) pathKey, (Vector3 position, Collider previousCollider, float distance) position_1, (Vector3 position, Collider previousCollider, float distance)? position_2, 
+    void _addOrUpdatePaths((Vector3Int, int) pathKey, (Vector3 position, Collider previousCollider, float distance) position_1, (Vector3 position, Collider previousCollider, float distance)? position_2,
         (Vector3, Collider) currentPosition, ((Vector3Int targetPosInt, int pathID) key, (List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget) value)? preExistingPath = null)
     {
-        Debug.Log(pathKey);
+        if (!_allPaths.ContainsKey(pathKey))
+        {
+            addToPath(position_2.HasValue ? position_2.Value.distance : float.PositiveInfinity, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null,
+                position_1.distance, (position_1.position, position_1.previousCollider), null);
 
-        var existingPath = _allPaths.ContainsKey(pathKey)
-            ? _allPaths.FirstOrDefault(kvp => kvp.Value.Item1.SequenceEqual(_allPaths[pathKey].Item1))
-            : default(KeyValuePair<(Vector3Int, int), (List<(Vector3, Collider)>, float, bool)>);
+            return;
+        }
 
         if (preExistingPath.HasValue)
         {
-            Debug.Log("Preexisting path");
-            _updatePathDistances(position_1, position_2, preExistingPath.Value.key, out float distancePath_01, out float distancePath_02);
-            addToPath(distancePath_01, (position_1.position, position_1.previousCollider), distancePath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, preExistingPath.Value.key, true);
+            _updatePathDistances(position_1, position_2, preExistingPath.Value.key, out float distancePrePath_01, out float distancePrePath_02);
+            addToPath(distancePrePath_01, (position_1.position, position_1.previousCollider), 
+                distancePrePath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, preExistingPath.Value.key, preExistingPathUsed: true);
+
+            return;
         }
-        else if (!existingPath.Equals(default(KeyValuePair<(Vector3Int, int), (List<(Vector3, Collider)>, float, bool)>)))
+
+        if (_allPaths[pathKey].reachedTarget) { Debug.LogError("Equal path already reached target"); return; }
+
+        var allIdenticalPaths = _allPaths.Where(kvp => kvp.Key.Item1 == pathKey.Item1 && kvp.Value.reachedTarget).ToList();
+        float shortestDistance = float.PositiveInfinity;
+        var firstIdenticalPath = default(KeyValuePair<(Vector3Int, int), (List<(Vector3, Collider)>, float, bool)>);
+
+        foreach (var path in allIdenticalPaths)
         {
-            if (_allPaths[existingPath.Key].reachedTarget) { Debug.LogError("Equal path already reached target"); return; }
-
-            Debug.Log("Equal path");
-
-            _updatePathDistances(position_1, position_2, existingPath.Key, out float distancePath_01, out float distancePath_02);
-            addToPath(distancePath_01, (position_1.position, position_1.previousCollider), distancePath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, existingPath.Key);
+            if (path.Value.distance < shortestDistance)
+            {
+                shortestDistance = path.Value.distance;
+                firstIdenticalPath = path;
+            }
         }
-        else if (_allPaths.ContainsKey(pathKey))
+        
+        if (!firstIdenticalPath.Equals(default(KeyValuePair<(Vector3Int, int), (List<(Vector3, Collider)>, float, bool)>)))
         {
-            Debug.Log("Existing key");
+            firstIdenticalPath.Value.Item1.RemoveAt(firstIdenticalPath.Value.Item1.Count - 1);
 
-            _updatePathDistances(position_1, position_2, pathKey, out float distancePath_01, out float distancePath_02);
-            addToPath(distancePath_01, (position_1.position, position_1.previousCollider), distancePath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, pathKey);
+            _updatePathDistances(position_1, position_2, firstIdenticalPath.Key, out float distanceIdenticalPath_01, out float distanceIdenticalPath_02);
+            addToPath(distanceIdenticalPath_01, (position_1.position, position_1.previousCollider), 
+                distanceIdenticalPath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, firstIdenticalPath.Key, removePath: false);
         }
-        else
+
+        _updatePathDistances(position_1, position_2, pathKey, out float distancePath_01, out float distancePath_02);
+        addToPath(distancePath_01, (position_1.position, position_1.previousCollider), distancePath_02, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, pathKey);
+
+        void _updatePathDistances((Vector3 position, Collider previousCollider, float distance) position_1, (Vector3 position, Collider previousCollider, float distance)? position_2, (Vector3Int, int) key,
+        out float distance_01, out float distance_02)
         {
-            Debug.Log("No previous path");
-
-            addToPath(position_1.distance, (position_1.position, position_1.previousCollider), 
-                position_2.HasValue ? position_2.Value.distance : float.PositiveInfinity, position_2.HasValue ? (position_2.Value.position, position_2.Value.previousCollider) : null, null);
+            distance_01 = position_1.distance + _allPaths[key].distance;
+            distance_02 = position_2.HasValue ? position_2.Value.distance + _allPaths[key].distance : float.PositiveInfinity;
         }
 
-        void addToPath(float distance_01, (Vector3, Collider) position_01, float distance_02, (Vector3, Collider)? position_02, (Vector3Int, int)? key, bool preExistingPathUsed = false)
+        void addToPath(float distance_01, (Vector3, Collider)? position_01, float distance_02, (Vector3, Collider)? position_02, (Vector3Int, int)? key, bool preExistingPathUsed = false, bool removePath = true)
         {
             if (preExistingPathUsed)
             {
-                insertPathWithPosition((position_01), distance_01, key.HasValue ? key.Value.Item2 + 1 : _pathCount, true);
+                insertPathWithPosition((position_01.Value), distance_01, key.HasValue ? key.Value.Item2 + 1 : _pathCount, preExistingPathUsed: true);
                 _pathCount++;
             }
             else
             {
-                Debug.Log($"Added pathkey {pathKey}");
-
                 if (position_02.HasValue && distance_02 < _shortestDistance * _allowedPathExtraPercent)
                 {
-                    Debug.Log($"Added pos_2: {position_02}");
-
                     insertPathWithPosition(position_02.Value, distance_02, key.HasValue ? key.Value.Item2 + 1 : _pathCount);
                     _pathCount++;
                 }
 
                 if (distance_01 < _shortestDistance * _allowedPathExtraPercent)
                 {
-                    Debug.Log($"Added pos_1 {position_01} with key existing: {key.HasValue}");
-
-                    insertPathWithPosition(position_01, distance_01, key.HasValue ? key.Value.Item2 + 1 : _pathCount);
+                    insertPathWithPosition(position_01.Value, distance_01, key.HasValue ? key.Value.Item2 + 1 : _pathCount);
                     _pathCount++;
                 }
             }
 
-            if (key.HasValue) { Debug.Log($"Removed path with key {pathKey}"); _allPaths.Remove(pathKey); }
+            if (key.HasValue && removePath) _allPaths.Remove(pathKey);
 
             void insertPathWithPosition((Vector3, Collider) position, float distance, int pathID, bool preExistingPathUsed = false)
             {
@@ -364,27 +357,18 @@ public class Pathfinder_Vertex_3D
                 {
                     List<(Vector3, Collider)> pathPoints = new List<(Vector3, Collider)>(preExistingPath.Value.value.pointPath) { position };
 
-                    _insertPath(pathID, pathPoints, distance, true);
+                    _insertPath(pathID, pathPoints, distance, reachesTarget: true);
                 }
                 else
                 {
-                    Debug.Log($"Inserted pathkey {pathKey} with new pathID: {pathID} and pathCount: {_pathCount}");
-
                     List<(Vector3, Collider)> pathPoints = key.HasValue
                     ? new List<(Vector3, Collider)>(_allPaths[key.Value].pointPath) { position }
                     : new List<(Vector3, Collider)> { currentPosition, position };
 
-                    _insertPath(pathID, pathPoints, distance, false);
+                    _insertPath(pathID, pathPoints, distance, reachesTarget: false);
                 }
             }
         }
-    }
-
-    void _updatePathDistances((Vector3 position, Collider previousCollider, float distance) position_1, (Vector3 position, Collider previousCollider, float distance)? position_2, (Vector3Int, int) key,
-        out float distance_01, out float distance_02)
-    {
-        distance_01 = position_1.distance + _allPaths[key].distance;
-        distance_02 = position_2.HasValue ? position_2.Value.distance + _allPaths[key].distance : float.PositiveInfinity;
     }
 
     void _insertPath(int newPathID, List<(Vector3, Collider)> pathPoints, float distance, bool reachesTarget)
@@ -395,8 +379,6 @@ public class Pathfinder_Vertex_3D
         {
             updatedPaths[(path.Key.Item1, path.Key.Item2 >= newPathID ? path.Key.Item2 + 1 : path.Key.Item2)] = path.Value;
         }
-
-        Debug.Log($"New path ID: {newPathID}");
 
         updatedPaths[(Vector3Int.RoundToInt(_targetPosition.Value), newPathID)] = (pathPoints, distance, reachesTarget);
         _allPaths = updatedPaths;
@@ -546,9 +528,9 @@ public class Pathfinder_Vertex_3D
         returnedCollider = currentCollider;
 
         iterations++;
-        if (iterations > 25) { Debug.Log($"{pathID} Iterated to {iterations}"); return currentTargetPosition; }
+        if (iterations > 5) return currentTargetPosition; //Debug.Log($"{pathID} Iterated to {iterations}");  }
 
-        if (Physics.Raycast(currentPosition.position, currentTargetPosition - currentPosition.position, out RaycastHit hit, (currentTargetPosition - currentPosition.position).magnitude))
+            if (Physics.Raycast(currentPosition.position, currentTargetPosition - currentPosition.position, out RaycastHit hit, (currentTargetPosition - currentPosition.position).magnitude))
         {
             if (hit.transform.name.Contains("Player"))
             {
@@ -559,14 +541,6 @@ public class Pathfinder_Vertex_3D
             getMinAndMax(hit.collider, out Vector3 min, out Vector3 max);
             getDistances(currentPosition.position, min, max, out float dxMin, out float dxMax, out float dyMin, out float dymax, out float dzMin, out float dzMax);
             getBounds(pathID, currentPosition.position, currentTargetPosition, hit.collider == currentPosition.previousCollider, hit, min, max, dxMin, dxMax, dzMin, dzMax, out Vector3 closestBound, out Vector3 furthestBound);
-
-            Debug.Log($"Iter: {iterations}" +
-                $" PathID: {pathID}\n" +
-                $" CurrPos: {currentPosition}" +
-                $" CurrTarPos: {(hit.collider == currentPosition.previousCollider ? furthestBound : closestBound)}\n" +
-                $" HitPos: {hit.point}" +
-                $" HitCol: {hit.collider.name}" +
-                $" out retCol: {returnedCollider.name}");
 
             return nextAvailablePoint(pathID, currentPosition, hit.collider == currentPosition.previousCollider ? furthestBound : closestBound, hit.collider, out returnedCollider, iterations);
         }
