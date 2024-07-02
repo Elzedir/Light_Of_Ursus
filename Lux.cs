@@ -74,7 +74,7 @@ public class Lux : MonoBehaviour
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
         VoxelGrid.InitialiseVoxelGridTest();
-        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, speed: 1f, lux: this);
+        //_agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, speed: 1f, lux: this);
     }
 
     public void TestPath(List<(Vector3 position, Collider)> path, float distance, int pathID = -1)

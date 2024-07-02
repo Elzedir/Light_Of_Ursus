@@ -12,7 +12,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     Coroutine _pathfindingCoroutine;
     Coroutine _followCoroutine;
     Coroutine _moveCoroutine;
-    [SerializeField] float _pathfinderTickRate = 2f;
+    [SerializeField] float _pathfinderTickRate;
     [SerializeField] [Range(0, 1)] float _pathfinderCooldown = 0;
     [SerializeField] Vector3 _testTargetPositions;
     [SerializeField] public int CurrentPathIndex { get; private set; }
@@ -28,8 +28,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     WanderData _wanderData;
     bool _canMove = false;
     public bool CanGetNewPath { get; set; }
-    float _getPathCooldown = 2f;
-    float _getPathTime = 0f;
     public List<MoverType> MoverTypes { get; set; } = new();
 
     Collider _collider;
@@ -54,7 +52,8 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     }
 
-    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, WanderData wanderData = null, float getPathCooldown = 2f, float getPathTime = 0f, Lux lux = null)
+    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, 
+        WanderData wanderData = null, float pathfinderTickRate = 0.5f, Lux lux = null)
     {
         _targetPosition = targetPosition ?? transform.position;
         _targetGO = targetGO;
@@ -62,8 +61,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followDistance = followDistance;
         wanderData = _wanderData;
         _canMove = true;
-        _getPathCooldown = getPathCooldown;
-        _getPathTime = getPathTime;
+        _pathfinderTickRate = pathfinderTickRate;
         MoverTypes = new List<MoverType> (moverTypes);
 
         _lux = lux;
@@ -84,6 +82,10 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         if (_targetGO != null) _targetPosition = _targetGO.transform.position;
 
+        //Disabling for now, Pathfinder Vertex still has some issues.
+
+        return;
+
         if (_pathfinderCooldown > _pathfinderTickRate)
         {
             if (_targetPosition.HasValue)
@@ -96,8 +98,6 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
                 }
                 else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
                 {
-                    Debug.Log($"Updated pathfinder with start: {transform.position} and target: {_targetPosition.Value}");
-
                     Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
                 }
                 else
@@ -238,6 +238,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _moveCoroutine = null;
         _followCoroutine = null;
         _pathSet = false;
+        Pathfinder.ResetBestPath();
         CanGetNewPath = true;
     }
 

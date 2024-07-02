@@ -23,6 +23,7 @@ public class Pathfinder_Vertex_3D
 
     //Can also set 3rd previous collider, and do a check that if we are going around the same collider 3 times, then we might as well check the other direction, do a move from start.
 
+    public void ResetBestPath() {  _bestPath = null; }
 
     public void UpdatePathfinder(Vector3 startPosition, Vector3 targetPosition, Vector3 characterSize, Controller_Agent agent)
     {
@@ -59,8 +60,6 @@ public class Pathfinder_Vertex_3D
 
                 Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
 
-                _bestPath = null;
-
                 return;
             }
         }
@@ -81,8 +80,6 @@ public class Pathfinder_Vertex_3D
                 Physics.Raycast(path[i].position, _targetPosition.Value - path[i].position, out RaycastHit hit);
 
                 if (!hit.transform.name.Contains("Player")) continue;
-
-                Debug.Log($"Earlier hit available at {path[i]}");
 
                 earlyHit = hit;
                 earlierHitAvailable = true;
@@ -121,13 +118,9 @@ public class Pathfinder_Vertex_3D
                 _updateBestPath(path, true);
 
                 Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
-
-                _bestPath = null;
             }
             else
             {
-                Debug.Log("Moving from start");
-
                 Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
             }
         }
@@ -156,12 +149,11 @@ public class Pathfinder_Vertex_3D
 
         yield return Manager_Game.Instance.StartVirtualCoroutine(
             _agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
-
-        _bestPath = null;
     }
 
     public IEnumerator MoveFromStart()
     {
+        _allPaths.Clear();
         _bestPath = null;
 
         if (!Physics.Raycast(_startPosition, _targetPosition.Value - _startPosition, out RaycastHit hit))
@@ -181,10 +173,6 @@ public class Pathfinder_Vertex_3D
             if (_bestPath == null) { Debug.Log($"Best Path is null after running pathfinder."); yield break; }
 
             yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID)));
-
-            Debug.Log("Nulled Best Path");
-
-            _bestPath = null;
         }
         else
         {

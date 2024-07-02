@@ -16,7 +16,6 @@ public class Player : Controller, IDataPersistence
     [SerializeField] bool _hasStaff;
     bool _strafe = false;
     Vector2 _move;
-
     public BoxCollider2D _fireflyWanderZone; public BoxCollider2D FireflyWanderZone { get { return _fireflyWanderZone; } }
 
     public void Start()
@@ -91,13 +90,97 @@ public class Player : Controller, IDataPersistence
             {
                 Vector3 direction = (hit.point - transform.position).normalized;
                 transform.rotation = Quaternion.LookRotation(direction);
+
+                _animator.SetBool("Block", true);
             }
         }
     }
 
-    public void OnInput(InputAction.CallbackContext context)
+    public void Move(InputAction.CallbackContext context)
     {
         _move = context.ReadValue<Vector2>();
+    }
+
+    Coroutine _attackChainCoroutine;
+    float _attackChainWindow;
+    bool _ableToContinueAttackChain = false;
+
+    public void Attack(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            // Coroutine is null when it shouldn't be.
+
+            Debug.Log($"AbleToChain: {_ableToContinueAttackChain} Coroutine: {_attackChainCoroutine}");
+
+            if (_attackChainCoroutine != null)
+            {
+                if (!_ableToContinueAttackChain) return;
+
+                _animator.SetBool("ContinueAttackChain", true);
+            }
+            else
+            {
+                _animator.SetBool("Attack", true);
+                StartCheckAttackChain();
+            }
+        }
+        if (context.canceled)
+        {
+            _animator.SetBool("Attack", false);
+        }
+    }
+
+    public void ToggleAttackChainContinuity()
+    {
+        _ableToContinueAttackChain = !_ableToContinueAttackChain;
+    }
+
+    public void StartCheckAttackChain()
+    {
+        if (_attackChainCoroutine != null) { StopCoroutine(_attackChainCoroutine); }
+
+        _animator.SetBool("ContinueAttackChain", false);
+        _attackChainCoroutine = StartCoroutine(_checkAttackChain());
+    }
+
+    IEnumerator _checkAttackChain()
+    {
+        float elapsed = 0f;
+        float temporaryAttackChainWindow = _animator.GetCurrentAnimatorClipInfo(1)[0].clip.length;
+
+        Debug.Log(temporaryAttackChainWindow);
+
+        while (elapsed < temporaryAttackChainWindow)
+        {
+            elapsed += Time.deltaTime;
+
+            yield return null;
+        }
+
+        _attackChainCoroutine = null;
+    }
+
+    public void SetTime(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            switch (context.control.name)
+            {
+                case "numpadMinus":
+                    Manager_Time.DecreaseTimeScale();
+                    break;
+                case "numpadPlus":
+                    Manager_Time.IncreaseTimeScale();
+                    break;
+                case "numpad0":
+                    Manager_Time.ResetTimeScale();
+                    break;
+                default:
+                    Debug.LogWarning($"{context.control.name} key pressed");
+                    break;
+            }
+        }
     }
 
     public void Strafe(InputAction.CallbackContext context)
@@ -109,6 +192,7 @@ public class Player : Controller, IDataPersistence
         else if (context.canceled)
         {
             _strafe = false;
+            _animator.SetBool("Block", false);
         }
     }
 
