@@ -85,6 +85,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Spawner", _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
         _createManager("Manager_Progress", _manager_Parent).AddComponent<Manager_Progress>().OnSceneLoaded();
 
+        Manager_Ability.Initialise();
+
         GameObject _createManager(string name, Transform parent)
         {
             GameObject manager = new GameObject(name);

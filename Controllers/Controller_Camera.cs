@@ -20,16 +20,23 @@ public class Controller_Camera : MonoBehaviour
     protected float _nextFoV;
     protected float _shakeTime;
     public bool DeltaMovement = true;
-    public Vector3 Amount = new Vector3(1f, 1f, 0);
-    public float Duration;
-    public float Speed;
+    public Vector3 ShakeAmount = new Vector3(1f, 1f, 0);
+    public float ShakeDuration;
+    public float ShakeSpeed;
     protected Camera _camera;
     public bool IsCoroutineRunning { get; private set; } = false;
 
-    [SerializeField] float _smoothTime = 0.3f;
-    [SerializeField] Vector3 _offsetPosition;
+    [SerializeField] float _smoothTime = 0.1f;
+    [SerializeField] Vector3 _offsetPosition = new Vector3(0, 2, -4);
+    //[SerializeField] Quaternion _offsetRotation;
+    [SerializeField] float _xMouseSensitivity = 500f;
+    [SerializeField] float _yMouseSensitivity = 50f;
+    [SerializeField] float _orbitRadius = 5f;
     [SerializeField] Quaternion _targetRotation;
     Vector3 _velocity = Vector3.one;
+
+    float _yaw;
+    float _pitch;
 
     public void Awake()
     {
@@ -39,14 +46,13 @@ public class Controller_Camera : MonoBehaviour
         }
 
         _camera = GetComponent<Camera>();
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public void SetOffset(Vector3 position, Quaternion rotation)
     {
-        
-            _offsetPosition = position;
-            _targetRotation = rotation;
-        
+        _offsetPosition = position;
+        // _targetRotation = rotation;
     }
 
     private void LateUpdate()
@@ -61,6 +67,8 @@ public class Controller_Camera : MonoBehaviour
                 _player = Manager_Game.Instance.Player;
                 _lookAt = _player.transform;
             }
+
+            _handleCameraRotation();
         }
         
         if (Manager_Game.Instance.CurrentState == GameState.Puzzle)
@@ -70,40 +78,12 @@ public class Controller_Camera : MonoBehaviour
 
         if (_lookAt != null && PlayerCameraEnabled)
         {
-            //Vector3 delta = Vector3.zero;
+            transform.position = Vector3.SmoothDamp(transform.position, CalculateCameraPosition(), ref _velocity, _smoothTime);
 
-            //float deltaX = _lookAt.position.x - transform.position.x;
+            transform.LookAt(_lookAt);
 
-            //if (deltaX > boundX || deltaX < -boundX)
-            //{
-            //    if (transform.position.x < _lookAt.position.x)
-            //    {
-            //        delta.x = deltaX - boundX;
-            //    }
-            //    else
-            //    {
-            //        delta.x = deltaX + boundX;
-            //    }
-            //}
-
-            //float deltaY = _lookAt.position.y - transform.position.y;
-
-            //if (deltaY > boundY || deltaY < -boundY)
-            //{
-            //    if (transform.position.y < _lookAt.position.y)
-            //    {
-            //        delta.y = deltaY - boundY;
-            //    }
-            //    else
-            //    {
-            //        delta.y = deltaY + boundY;
-            //    }
-            //}
-
-            //transform.position += new Vector3(delta.x, delta.y, 0);
-
-            transform.position = Vector3.SmoothDamp(transform.position, _lookAt.position + _offsetPosition, ref _velocity, _smoothTime);
-            transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, _smoothTime);
+            //transform.position = Vector3.SmoothDamp(transform.position, _lookAt.position + _lookAt.TransformDirection(_offsetPosition), ref _velocity, _smoothTime);
+            //transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, _smoothTime);
         }
 
         if (_shakeTime > 0)
@@ -112,10 +92,10 @@ public class Controller_Camera : MonoBehaviour
 
             if (_shakeTime > 0)
             {
-                _nextPos = (Mathf.PerlinNoise(_shakeTime * Speed, _shakeTime * Speed * 2) - 0.5f) * Amount.x * transform.right * Curve.Evaluate(1f - _shakeTime / Duration) +
-                              (Mathf.PerlinNoise(_shakeTime * Speed * 2, _shakeTime * Speed) - 0.5f) * Amount.y * transform.up * Curve.Evaluate(1f - _shakeTime / Duration);
+                _nextPos = (Mathf.PerlinNoise(_shakeTime * ShakeSpeed, _shakeTime * ShakeSpeed * 2) - 0.5f) * ShakeAmount.x * transform.right * Curve.Evaluate(1f - _shakeTime / ShakeDuration) +
+                              (Mathf.PerlinNoise(_shakeTime * ShakeSpeed * 2, _shakeTime * ShakeSpeed) - 0.5f) * ShakeAmount.y * transform.up * Curve.Evaluate(1f - _shakeTime / ShakeDuration);
 
-                _nextFoV = (Mathf.PerlinNoise(_shakeTime * Speed * 2, _shakeTime * Speed * 2) - 0.5f) * Amount.z * Curve.Evaluate(1f - _shakeTime / Duration);
+                _nextFoV = (Mathf.PerlinNoise(_shakeTime * ShakeSpeed * 2, _shakeTime * ShakeSpeed * 2) - 0.5f) * ShakeAmount.z * Curve.Evaluate(1f - _shakeTime / ShakeDuration);
 
                 _camera.fieldOfView += (_nextFoV - _lastFoV);
                 transform.Translate(DeltaMovement ? (_nextPos - _lastPos) : _nextPos);
@@ -131,6 +111,26 @@ public class Controller_Camera : MonoBehaviour
         }
     }
 
+    void _handleCameraRotation()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * _xMouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * _yMouseSensitivity * Time.deltaTime;
+
+        _yaw += mouseX;
+        _pitch -= mouseY;
+        _pitch = Mathf.Clamp(_pitch, -35, 60);
+
+        _targetRotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, _smoothTime);
+    }
+
+    Vector3 CalculateCameraPosition()
+    {
+        Vector3 direction = new Vector3(0, 0, -_orbitRadius);
+        Quaternion rotation = Quaternion.Euler(_pitch, _yaw, 0);
+        return _lookAt.position + rotation * direction;
+    }
+
     public void ManualMove(Vector2 direction)
     {
         float moveSpeed = 5.0f;
@@ -141,16 +141,16 @@ public class Controller_Camera : MonoBehaviour
     public void ShakeOnce(float duration = 0.5f, float speed = 5f, Vector3? amount = null, Camera camera = null, bool deltaMovement = true, AnimationCurve curve = null)
     {
         _originalPosition = transform.position;
-        Duration = duration;
-        Speed = speed;
+        ShakeDuration = duration;
+        ShakeSpeed = speed;
         if (amount != null)
-            Amount = (Vector3)amount;
+            ShakeAmount = (Vector3)amount;
         if (curve != null)
             Curve = curve;
         DeltaMovement = deltaMovement;
 
         ResetCameraShake();
-        _shakeTime = Duration;
+        _shakeTime = ShakeDuration;
     }
 
     private void ResetCameraShake()

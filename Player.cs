@@ -7,22 +7,28 @@ using UnityEngine.SceneManagement;
 public class Player : Controller, IDataPersistence
 {
     public float SpeedIncrease;
-    BoxCollider2D _coll;
+    CapsuleCollider _coll_Body;
+    BoxCollider _coll_Head;
     Animator _animator;
+    Animation _animation;
     bool _moved;
     RaycastHit2D _hit;
     public Interactable ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
     List<Interactable> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
-    bool _strafe = false;
+    bool _aim = false;
     Vector2 _move;
-    public BoxCollider2D _fireflyWanderZone; public BoxCollider2D FireflyWanderZone { get { return _fireflyWanderZone; } }
+    public BoxCollider _fireflyWanderZone; public BoxCollider FireflyWanderZone { get { return _fireflyWanderZone; } }
 
     public void Start()
     {
-        _coll = GetComponent<BoxCollider2D>();
+        _coll_Body = GetComponent<CapsuleCollider>();
+        _coll_Head = Manager_Game.FindTransformRecursively(transform, "PlayerHead").GetComponent<BoxCollider>();
         _animator = GetComponent<Animator>();
+        _animation = GameObject.Find("TestBody").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        StartCoroutine(_testCharge());
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -37,18 +43,17 @@ public class Player : Controller, IDataPersistence
 
     public void SaveData(GameData data)
     {
-        data.PlayerPosition = transform.position;
+        data.PlayerPosition = _rigidbody.transform.position;
     }
 
     public void LoadData(GameData data)
     {
-        //transform.position = data.PlayerPosition;
+        //_rigidbody.transform.position = data.PlayerPosition;
     }
 
-    protected override void FixedUpdate()
+    protected void Update()
     {
         _moved = false;
-        base.FixedUpdate();
 
         PlayerMove();
 
@@ -60,6 +65,35 @@ public class Player : Controller, IDataPersistence
         TargetCheck();
     }
 
+    IEnumerator _testCharge()
+    {
+        yield break;
+
+        for (int i = 0; i < 5; i++)
+        {
+            yield return new WaitForSeconds(2);
+
+            var eagleStomp = Manager_Ability.GetAbility("Eagle Stomp");
+
+            eagleStomp.AnimationClip.legacy = true;
+
+            if (eagleStomp != null) yield return StartCoroutine(PlayAnimation(eagleStomp.AnimationClip));
+            else Debug.Log("Charge is null");
+
+            eagleStomp.AnimationClip.legacy = false;
+        }
+    }
+
+    public IEnumerator PlayAnimation(AnimationClip animationClip)
+    {
+        _animation.AddClip(animationClip, animationClip.name);
+        _animation.Play(animationClip.name);
+
+        while (_animation.isPlaying) yield return null;
+
+        _animation.RemoveClip(animationClip);
+    }
+
     public void OnPlayerChange()
     {
         //_playerActor = GameManager.Instance.Player.PlayerActor;
@@ -68,30 +102,57 @@ public class Player : Controller, IDataPersistence
     public virtual void PlayerMove()
     {
         _moved = true;
-        //Vector3 move = new Vector3(x, y, 0).normalized * SpeedIncrease;
-        //transform.localScale = new Vector3(Mathf.Sign(move.x), 1, 1);
-        //_playerActor.ActorScripts.Actor_VFX.transform.localScale = new Vector3(Mathf.Sign(lookDirection.x), 1, 1);
-        //transform.Translate(move.x * Time.deltaTime, move.y * Time.deltaTime, 0);
 
         Vector3 movement = new Vector3(_move.x, 0, _move.y);
 
-        if (movement != Vector3.zero && !_strafe) transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement), 0.15f);
-        else if (_strafe) _playerStrafe();
+        //if (movement != Vector3.zero && !_aim) _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(movement), 0.15f);
+        //else if (_aim) _playerAim();
 
-        //transform.Translate(movement * _speed * Time.deltaTime, Space.World);
+        //_rigidbody.transform.Translate(movement * _speed * Time.deltaTime, Space.World);
+        ////_rigidbody.velocity = new Vector3(_move.x, 0, _move.y) * _speed;
 
-        _rigidbody.velocity = new Vector3(_move.x, 0, _move.y) * _speed;
+        //_animator.SetFloat("Speed", _move.magnitude);
 
-        _animator.SetFloat("Speed", _move.magnitude);
+        //if (thirdPerson)
 
-        void _playerStrafe()
+        if (movement != Vector3.zero)
         {
-            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
-            {
-                Vector3 direction = (hit.point - transform.position).normalized;
-                transform.rotation = Quaternion.LookRotation(direction);
+            Vector3 cameraForward = Camera.main.transform.forward;
+            Vector3 cameraRight = Camera.main.transform.right;
 
-                _animator.SetBool("Block", true);
+            cameraForward.y = 0;
+            cameraRight.y = 0;
+
+            cameraForward.Normalize();
+            cameraRight.Normalize();
+
+            Vector3 desiredMoveDirection = cameraForward * movement.z + cameraRight * movement.x;
+
+            if (_aim)
+            {
+                _playerAim();
+            }
+            else
+            {
+                _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(desiredMoveDirection), 0.15f);
+            }
+
+            _rigidbody.transform.Translate(desiredMoveDirection * _speed * Time.deltaTime, Space.World);
+
+            _animator.SetFloat("Speed", _move.magnitude);
+
+            void _playerAim()
+            {
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                {
+                    //Vector3 direction = (hit.point - _rigidbody.transform.position).normalized;
+
+                    _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(cameraForward), 0.15f);
+
+                    //_rigidbody.transform.rotation = Quaternion.LookRotation(desiredMoveDirection);
+
+                    _animator.SetBool("Block", true);
+                }
             }
         }
     }
@@ -104,61 +165,24 @@ public class Player : Controller, IDataPersistence
     Coroutine _attackChainCoroutine;
     float _attackChainWindow;
     bool _ableToContinueAttackChain = false;
+    bool _continuedAttackChain = false;
 
     public void Attack(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            // Coroutine is null when it shouldn't be.
-
-            Debug.Log($"AbleToChain: {_ableToContinueAttackChain} Coroutine: {_attackChainCoroutine}");
-
-            if (_attackChainCoroutine != null)
-            {
-                if (!_ableToContinueAttackChain) return;
-
-                _animator.SetBool("ContinueAttackChain", true);
-            }
-            else
-            {
-                _animator.SetBool("Attack", true);
-                StartCheckAttackChain();
-            }
-        }
-        if (context.canceled)
-        {
-            _animator.SetBool("Attack", false);
+            if (!_aim) _animator.SetTrigger("Attack");
         }
     }
 
-    public void ToggleAttackChainContinuity()
+    public void EnableRootMotionForBody()
     {
-        _ableToContinueAttackChain = !_ableToContinueAttackChain;
+        _animator.applyRootMotion = true;
     }
 
-    public void StartCheckAttackChain()
+    public void DisableRootMotionForBody()
     {
-        if (_attackChainCoroutine != null) { StopCoroutine(_attackChainCoroutine); }
-
-        _animator.SetBool("ContinueAttackChain", false);
-        _attackChainCoroutine = StartCoroutine(_checkAttackChain());
-    }
-
-    IEnumerator _checkAttackChain()
-    {
-        float elapsed = 0f;
-        float temporaryAttackChainWindow = _animator.GetCurrentAnimatorClipInfo(1)[0].clip.length;
-
-        Debug.Log(temporaryAttackChainWindow);
-
-        while (elapsed < temporaryAttackChainWindow)
-        {
-            elapsed += Time.deltaTime;
-
-            yield return null;
-        }
-
-        _attackChainCoroutine = null;
+        _animator.applyRootMotion = false;
     }
 
     public void SetTime(InputAction.CallbackContext context)
@@ -183,15 +207,15 @@ public class Player : Controller, IDataPersistence
         }
     }
 
-    public void Strafe(InputAction.CallbackContext context)
+    public void Aim(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
-            _strafe = true;
+            _aim = true;
         }
         else if (context.canceled)
         {
-            _strafe = false;
+            _aim = false;
             _animator.SetBool("Block", false);
         }
     }
