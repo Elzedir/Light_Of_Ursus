@@ -84,8 +84,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Cutscene", _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
         _createManager("Manager_Spawner", _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
         _createManager("Manager_Progress", _manager_Parent).AddComponent<Manager_Progress>().OnSceneLoaded();
-
-        Manager_Ability.Initialise();
+        _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
 
         GameObject _createManager(string name, Transform parent)
         {

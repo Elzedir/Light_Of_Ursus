@@ -3,11 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Manager_Ability
+public class Manager_Ability : MonoBehaviour
 {
     public static List<Ability> AllAbilityList = new();
 
-    static Coroutine _eagleStompCoroutine;
+    static Dictionary<int, (Rigidbody RigidBody, bool Trigger)> _entities = new();
+
+    public void OnSceneLoaded()
+    {
+        _initialiseMeleeAbilities();
+    }
 
     public static Ability GetAbility(string name)
     {
@@ -19,18 +24,25 @@ public class Manager_Ability
         return null;
     }
 
-    public static void Initialise()
+    public static void SetCharacter(int ID, (Rigidbody, bool) data)
     {
-        _initialiseMeleeAbilities();
+        if (_entities.ContainsKey(ID))
+        {
+            _entities[ID] = data;
+        }
+        else
+        {
+            _entities.Add(ID, data);
+        }
     }
 
-    static void _initialiseMeleeAbilities()
+    void _initialiseMeleeAbilities()
     {
         AllAbilityList.Add(_charge());
         AllAbilityList.Add(_eagleStomp());
     }
 
-    static Ability _charge()
+    Ability _charge()
     {
         return new Ability(
             name: "Charge",
@@ -43,11 +55,40 @@ public class Manager_Ability
             );
     }
 
-    static Ability _eagleStomp()
+    Ability _eagleStomp()
     {
-        IEnumerator eagleStomp()
+        IEnumerator eagleStomp(int ID)
         {
-            yield return null;
+            _entities[ID].RigidBody.AddForce(new Vector3(0, 15, 10), ForceMode.Impulse);
+
+            float elapsedTime = 0;
+            GameObject reticleGO = new GameObject("Reticle");
+            reticleGO.transform.position = Vector3.zero;
+            reticleGO.transform.parent = GameObject.Find("EagleStompTest").transform;
+            reticleGO.transform.localScale = new Vector3(3, 3, 3);
+            reticleGO.AddComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("Sprites/Mine");
+
+            while (elapsedTime < 3) // Or until landing
+            {
+                elapsedTime += Time.deltaTime;
+
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                {
+                    reticleGO.transform.position = hit.point;
+
+                    if (_entities[ID].Trigger)
+                    {
+                        Vector3 direction = (hit.point - _entities[ID].RigidBody.transform.position).normalized;
+                        _entities[ID].RigidBody.AddForce(direction * 50, ForceMode.Impulse);
+                        _entities[ID] = (_entities[ID].RigidBody, false);
+                        break;
+                    }
+                }
+
+                yield return null;
+            }
+
+            UnityEngine.Object.Destroy(reticleGO);
         }
 
         return new Ability(
@@ -56,8 +97,11 @@ public class Manager_Ability
             currentLevel: 0,
             maxLevel: 10,
             baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
-            Resources.Load<AnimationClip>("Animators/Animations/Abilities/EagleStomp"),
-            eagleStomp()
+            animationClip: null,
+            abilityFunctions: new List<(string Name, Action<int> Function)>()
+            {
+                ("Eagle Stomp", (int ID) => StartCoroutine(eagleStomp(ID)))
+            }
             );
     }
 }
@@ -70,9 +114,9 @@ public class Ability
     public int MaxLevel { get; private set; }
     public List<(float, DamageType)> BaseDamage { get; private set; }
     public AnimationClip AnimationClip { get; private set; }
-    public IEnumerator Executable { get; private set; }
+    public List<(string Name, Action<int> Function)> AbilityFunctions { get; private set; }
 
-    public Ability(string name, string description, int currentLevel, int maxLevel, List<(float, DamageType)> baseDamage, AnimationClip animationClip, IEnumerator executable)
+    public Ability(string name, string description, int currentLevel, int maxLevel, List<(float, DamageType)> baseDamage, AnimationClip animationClip, List<(string, Action<int>)> abilityFunctions)
     {
         Name = name;
         Description = description;
@@ -80,12 +124,25 @@ public class Ability
         MaxLevel = maxLevel;
         BaseDamage = baseDamage;
         AnimationClip = animationClip;
-        Executable = executable;
+        AbilityFunctions = abilityFunctions;
+    }
+
+    public Action<int> GetAction(string functionName)
+    {
+        foreach(var function in AbilityFunctions)
+        {
+            if (function.Name == functionName)
+            {
+                return function.Function;
+            }
+        }
+
+        return null;
     }
 
     public void DealDamage()
     {
-        // character.ReceiveDamager (new Damage(BaseDamage));
+        // character.ReceiveDamage (new Damage(BaseDamage));
     }
 }
 

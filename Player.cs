@@ -18,6 +18,10 @@ public class Player : Controller, IDataPersistence
     [SerializeField] bool _hasStaff;
     bool _aim = false;
     Vector2 _move;
+    Rigidbody _testBody;
+    bool _inAir = false;
+
+    int _playerID = 0;
     public BoxCollider _fireflyWanderZone; public BoxCollider FireflyWanderZone { get { return _fireflyWanderZone; } }
 
     public void Start()
@@ -27,8 +31,9 @@ public class Player : Controller, IDataPersistence
         _animator = GetComponent<Animator>();
         _animation = GameObject.Find("TestBody").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
+        _testBody = GameObject.Find("TestContainer").GetComponent<Rigidbody>();
 
-        StartCoroutine(_testCharge());
+        //StartCoroutine(_testAbility("Eagle Stomp"));
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -43,7 +48,7 @@ public class Player : Controller, IDataPersistence
 
     public void SaveData(GameData data)
     {
-        data.PlayerPosition = _rigidbody.transform.position;
+        data.PlayerPosition = _rigidBody.transform.position;
     }
 
     public void LoadData(GameData data)
@@ -65,22 +70,38 @@ public class Player : Controller, IDataPersistence
         TargetCheck();
     }
 
-    IEnumerator _testCharge()
+    IEnumerator _testAbility(string abilityName)
     {
-        yield break;
+        Manager_Ability.SetCharacter(_playerID, (_testBody, false));
+
+        var ability = Manager_Ability.GetAbility(abilityName);
+
+        if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
 
         for (int i = 0; i < 5; i++)
         {
-            yield return new WaitForSeconds(2);
+            yield return new WaitForSeconds(5);
 
-            var eagleStomp = Manager_Ability.GetAbility("Eagle Stomp");
+            Debug.Log($"{ability} performed.");
 
-            eagleStomp.AnimationClip.legacy = true;
+            ability.GetAction("Eagle Stomp")?.Invoke(_playerID);
 
-            if (eagleStomp != null) yield return StartCoroutine(PlayAnimation(eagleStomp.AnimationClip));
-            else Debug.Log("Charge is null");
+            _inAir = true;
 
-            eagleStomp.AnimationClip.legacy = false;
+            Cursor.lockState = CursorLockMode.None;
+
+            yield return new WaitForSeconds(3);
+
+            _inAir = false;
+
+            Cursor.lockState = CursorLockMode.Locked;
+
+            if (ability.AnimationClip != null)
+            {
+                ability.AnimationClip.legacy = true;
+                yield return StartCoroutine(PlayAnimation(ability.AnimationClip));
+                ability.AnimationClip.legacy = false;
+            }
         }
     }
 
@@ -134,10 +155,10 @@ public class Player : Controller, IDataPersistence
             }
             else
             {
-                _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(desiredMoveDirection), 0.15f);
+                _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(desiredMoveDirection), 0.15f);
             }
 
-            _rigidbody.transform.Translate(desiredMoveDirection * _speed * Time.deltaTime, Space.World);
+            _rigidBody.transform.Translate(desiredMoveDirection * _speed * Time.deltaTime, Space.World);
 
             _animator.SetFloat("Speed", _move.magnitude);
 
@@ -147,7 +168,7 @@ public class Player : Controller, IDataPersistence
                 {
                     //Vector3 direction = (hit.point - _rigidbody.transform.position).normalized;
 
-                    _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(cameraForward), 0.15f);
+                    _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(cameraForward), 0.15f);
 
                     //_rigidbody.transform.rotation = Quaternion.LookRotation(desiredMoveDirection);
 
@@ -172,6 +193,7 @@ public class Player : Controller, IDataPersistence
         if (context.performed)
         {
             if (!_aim) _animator.SetTrigger("Attack");
+            if (_inAir) Manager_Ability.SetCharacter(0, (_testBody, true));
         }
     }
 

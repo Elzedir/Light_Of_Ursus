@@ -5,12 +5,12 @@ using static UnityEditor.Experimental.GraphView.GraphView;
 public abstract class Controller : MonoBehaviour
 {
     protected SpriteRenderer _spriteRenderer;
-    protected Rigidbody _rigidbody;
+    protected Rigidbody _rigidBody;
 
     void Awake()
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
-        _rigidbody = GetComponentInParent<Rigidbody>();
+        _rigidBody = GetComponentInParent<Rigidbody>();
     }
 
     #region Old Movement

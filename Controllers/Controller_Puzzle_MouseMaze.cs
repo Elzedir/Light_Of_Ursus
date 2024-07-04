@@ -29,7 +29,7 @@ public class Controller_Puzzle_MouseMaze : Controller
 
     void _playerMove()
     {
-        _rigidbody.MovePosition(_rigidbody.position + new Vector3(_move.x * _playerSpeed, 0, _move.y * _playerSpeed) * Time.fixedDeltaTime);
+        _rigidBody.MovePosition(_rigidBody.position + new Vector3(_move.x * _playerSpeed, 0, _move.y * _playerSpeed) * Time.fixedDeltaTime);
 
         //transform.position += new Vector3(_move.x * _playerSpeed, 0 ,_move.y * _playerSpeed);
     }
