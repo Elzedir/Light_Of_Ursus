@@ -4,25 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum ItemType { None, Weapon, Armour, Consumable, Misc }
-public enum WeaponType
-{
-    None,
-    OneHandedMelee,
-    TwoHandedMelee,
-    OneHandedRanged,
-    TwoHandedRanged,
-    OneHandedMagic,
-    TwoHandedMagic
-}
-
-public enum WeaponClass
-{
-    None,
-    Axe,
-    ShortBow,
-    ShortSword,
-    Spear
-}
 
 public class Manager_Item : MonoBehaviour
 {
@@ -32,12 +13,12 @@ public class Manager_Item : MonoBehaviour
 
     public static void AddToList(List<Item> list, Item item)
     {
-        if (_usedIDs.Contains(item.ItemStats.CommonStats.ItemID))
+        if (_usedIDs.Contains(item.CommonStats.ItemID))
         {
-            throw new ArgumentException("Item ID " + item.ItemStats.CommonStats.ItemID + " is already used");
+            throw new ArgumentException("Item ID " + item.CommonStats.ItemID + " is already used");
         }
 
-        _usedIDs.Add(item.ItemStats.CommonStats.ItemID);
+        _usedIDs.Add(item.CommonStats.ItemID);
         list.Add(item);
     }
 
@@ -54,8 +35,10 @@ public class Manager_Item : MonoBehaviour
 
         foreach (Item item in ItemList)
         {
-            if (itemID == item.ItemID || itemName == item.ItemName) return item;
+            if (itemID == item.CommonStats.ItemID || itemName == item.CommonStats.ItemName) return item;
         }
+
+        Debug.Log($"Could not find item with ItemID: {itemID} or ItemName: {itemName}");
 
         return null;
     }
@@ -64,13 +47,13 @@ public class Manager_Item : MonoBehaviour
     {
         //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
 
-        foreach (WeaponType weaponType in item.ItemStats.WeaponStats.WeaponTypeArray)
+        foreach (WeaponType weaponType in item.WeaponStats.WeaponTypeArray)
         {
             switch (weaponType)
             {
                 case WeaponType.OneHandedMelee:
                 case WeaponType.TwoHandedMelee:
-                    foreach (WeaponClass weaponClass in item.ItemStats.WeaponStats.WeaponClassArray)
+                    foreach (WeaponClass weaponClass in item.WeaponStats.WeaponClassArray)
                     {
                         switch (weaponClass)
                         {
@@ -90,7 +73,7 @@ public class Manager_Item : MonoBehaviour
                     break;
                 case WeaponType.OneHandedMagic:
                 case WeaponType.TwoHandedMagic:
-                    foreach (WeaponClass weaponClass in item.ItemStats.WeaponStats.WeaponClassArray)
+                    foreach (WeaponClass weaponClass in item.WeaponStats.WeaponClassArray)
                     {
                         //switch (weaponClass)
                         //{
@@ -111,61 +94,21 @@ public class Manager_Item : MonoBehaviour
 
 public class Item
 {
-
-    #region General
-    public int ItemID { get; private set; }
-    public string ItemName { get; private set; }
-    public Sprite ItemIcon { get; private set; }
-    public ItemType ItemType { get; private set; }
-    public List<EquipmentSlot> EquipmentSlots { get; private set; }
-    public int MaxStackSize { get; private set; }
-    public int ItemValue { get; private set; }
-    public Vector3 ItemScale { get; private set; }
-    public Vector3 ItemPosition { get; private set; }
-    public Vector3 ItemRotation { get; private set; }
-    #endregion
-
-    public ItemStats ItemStats { get; private set; }
-
-    public Item(int itemID, string itemName, Sprite itemIcon, ItemType itemType, List<EquipmentSlot> equipmentSlots, int maxStackSize, int itemValue, Vector3 itemScale, Vector3 itemPosition, Vector3 itemRotation, 
-        ItemStats itemStats)
-    {
-        ItemID = itemID;
-        ItemName = itemName;
-        ItemIcon = itemIcon;
-        ItemType = itemType;
-        EquipmentSlots = equipmentSlots;
-        MaxStackSize = maxStackSize;
-        ItemValue = itemValue;
-        ItemScale = itemScale;
-        ItemPosition = itemPosition;
-        ItemRotation = itemRotation;
-        ItemStats = itemStats;
-    }
-}
-
-[Serializable]
-public class ItemStats
-{
     public CommonStats CommonStats { get; private set; }
+    public VisualStats VisualStats { get; private set; }
     public WeaponStats WeaponStats { get; private set; }
     public ArmourStats ArmourStats { get; private set; }
-    public FixedModifiers StatModifiersFixed { get; private set; }
-    public PercentageModifiers StatModifiersPercentage { get; private set; }
+    public FixedModifiers FixedModifiers { get; private set; }
+    public PercentageModifiers PercentageModifiers { get; private set; }
 
-    public ItemStats(
-        CommonStats commonStats = null,
-        WeaponStats weaponStats = null,
-        ArmourStats armourStats = null,
-        FixedModifiers fixedModifiers = null,
-        PercentageModifiers percentageModifiers = null
-        )
+    public Item(CommonStats commonStats = null, VisualStats visualStats = null, WeaponStats weaponStats = null, ArmourStats armourStats = null, FixedModifiers fixedModifiers = null, PercentageModifiers percentageModifiers = null)
     {
         CommonStats = commonStats ?? new CommonStats();
+        VisualStats = visualStats ?? new VisualStats();
         WeaponStats = weaponStats ?? new WeaponStats();
         ArmourStats = armourStats ?? new ArmourStats();
-        StatModifiersFixed = fixedModifiers ?? new FixedModifiers();
-        StatModifiersPercentage = percentageModifiers ?? new PercentageModifiers();
+        FixedModifiers = fixedModifiers ?? new FixedModifiers();
+        PercentageModifiers = percentageModifiers ?? new PercentageModifiers();
     }
 }
 
@@ -173,45 +116,65 @@ public class ItemStats
 public class CommonStats
 {
     public int ItemID;
-    public ItemType ItemType;
     public string ItemName;
-    public Sprite ItemIcon;
+    public ItemType ItemType;
+    public List<EquipmentSlot> EquipmentSlots;
     public int MaxStackSize;
     public int CurrentStackSize;
     public int ItemValue;
     public float ItemWeight;
     public bool ItemEquippable;
-    public Vector3 ItemPosition;
-    public Vector3 ItemRotation;
-    public Vector3 ItemScale;
 
     public CommonStats(
-        int itemID,
-        string itemName,
+        int itemID = -1,
+        string itemName = "",
         ItemType itemType = ItemType.None,
-        Sprite itemIcon = null,
+        List<EquipmentSlot> equipmentSlots = null,
         int maxStackSize = 0,
         int currentStackSize = 0,
         int itemValue = 0,
         float itemWeight = 0,
-        bool itemEquippable = false,
+        bool itemEquippable = false
+        )
+    {
+        ItemID = itemID;
+        ItemName = itemName;
+        ItemType = itemType;
+        EquipmentSlots = equipmentSlots;
+        MaxStackSize = maxStackSize;
+        CurrentStackSize = currentStackSize;
+        ItemValue = itemValue;
+        ItemWeight = itemWeight;
+        ItemEquippable = itemEquippable;
+    }
+}
+
+[Serializable]
+public class VisualStats
+{
+    public Sprite ItemIcon;
+    public Mesh ItemMesh;
+    public Material ItemMaterial;
+    public Vector3 ItemPosition;
+    public Vector3 ItemRotation;
+    public Vector3 ItemScale;
+
+    public VisualStats(
+        Sprite itemIcon = null,
+        Mesh itemMesh = null,
+        Material itemMaterial = null,
         Vector3? itemPosition = null,
         Vector3? itemRotation = null,
         Vector3? itemScale = null
+
         )
     {
-        this.ItemID = itemID;
-        this.ItemName = itemName;
-        this.ItemType = itemType;
-        this.ItemIcon = itemIcon;
-        this.MaxStackSize = maxStackSize;
-        this.CurrentStackSize = currentStackSize;
-        this.ItemValue = itemValue;
-        this.ItemWeight = itemWeight;
-        this.ItemEquippable = itemEquippable;
-        this.ItemPosition = itemPosition ?? Vector3.zero;
-        this.ItemRotation = itemRotation ?? Vector3.zero;
-        this.ItemScale = itemScale ?? new Vector3(1, 1, 1);
+        ItemIcon = itemIcon;
+        ItemMesh = itemMesh;
+        ItemMaterial = itemMaterial;
+        ItemPosition = itemPosition ?? Vector3.zero;
+        ItemRotation = itemRotation ?? Vector3.zero;
+        ItemScale = itemScale ?? new Vector3(1, 1, 1);
     }
 }
 
@@ -259,20 +222,20 @@ public class PercentageModifiers
         float dodgeCooldownReduction = 1
         )
     {
-        this.MaxHealth = maxHealth;
-        this.MaxMana = maxMana;
-        this.MaxStamina = maxStamina;
-        this.PushRecovery = pushRecovery;
-        this.AttackDamage = attackDamage;
-        this.AttackSpeed = attackSpeed;
-        this.AttackSwingTime = attackSwingTime;
-        this.AttackRange = attackRange;
-        this.AttackPushForce = attackPushForce;
-        this.AttackCooldown = attackCooldown;
-        this.PhysicalDefence = physicalDefence;
-        this.MagicalDefence = magicalDefence;
-        this.MoveSpeed = moveSpeed;
-        this.DodgeCooldownReduction = dodgeCooldownReduction;
+        MaxHealth = maxHealth;
+        MaxMana = maxMana;
+        MaxStamina = maxStamina;
+        PushRecovery = pushRecovery;
+        AttackDamage = attackDamage;
+        AttackSpeed = attackSpeed;
+        AttackSwingTime = attackSwingTime;
+        AttackRange = attackRange;
+        AttackPushForce = attackPushForce;
+        AttackCooldown = attackCooldown;
+        PhysicalDefence = physicalDefence;
+        MagicalDefence = magicalDefence;
+        MoveSpeed = moveSpeed;
+        DodgeCooldownReduction = dodgeCooldownReduction;
     }
 }
 
@@ -287,7 +250,9 @@ public class FixedModifiers
     public float MaxStamina;
     public float PushRecovery;
 
-    public List<(float, DamageType)> BaseDamage;
+    public float HealthRecovery;
+
+    public List<(float, DamageType)> AttackDamage;
     public float AttackSpeed;
     public float AttackSwingTime;
     public float AttackRange;
@@ -310,7 +275,9 @@ public class FixedModifiers
         float maxStamina = 0,
         float pushRecovery = 0,
 
-        float attackDamage = 0,
+        float healthRecovery = 0,
+
+        List<(float, DamageType)> attackDamage = null,
         float attackSpeed = 0,
         float attackSwingTime = 0,
         float attackRange = 0,
@@ -324,20 +291,24 @@ public class FixedModifiers
         float dodgeCooldownReduction = 0
         )
     {
-        this.MaxHealth = maxHealth;
-        this.MaxMana = maxMana;
-        this.MaxStamina = maxStamina;
-        this.PushRecovery = pushRecovery;
-        this.AttackDamage = attackDamage;
-        this.AttackSpeed = attackSpeed;
-        this.AttackSwingTime = attackSwingTime;
-        this.AttackRange = attackRange;
-        this.AttackPushForce = attackPushForce;
-        this.AttackCooldown = attackCooldown;
-        this.PhysicalDefence = physicalDefence;
-        this.MagicalDefence = magicalDefence;
-        this.MoveSpeed = moveSpeed;
-        this.DodgeCooldownReduction = dodgeCooldownReduction;
+        MaxHealth = maxHealth;
+        MaxMana = maxMana;
+        MaxStamina = maxStamina;
+        PushRecovery = pushRecovery;
+
+        HealthRecovery = healthRecovery;
+
+        AttackDamage = attackDamage;
+        AttackSpeed = attackSpeed;
+        AttackSwingTime = attackSwingTime;
+        AttackRange = attackRange;
+        AttackPushForce = attackPushForce;
+        AttackCooldown = attackCooldown;
+
+        PhysicalDefence = physicalDefence;
+        MagicalDefence = magicalDefence;
+        MoveSpeed = moveSpeed;
+        DodgeCooldownReduction = dodgeCooldownReduction;
     }
 }
 
@@ -363,9 +334,9 @@ public class WeaponStats
             weaponClass = new WeaponClass[] { WeaponClass.None };
         }
 
-        this.WeaponTypeArray = weaponType;
-        this.WeaponClassArray = weaponClass;
-        this.MaxChargeTime = maxChargeTime;
+        WeaponTypeArray = weaponType;
+        WeaponClassArray = weaponClass;
+        MaxChargeTime = maxChargeTime;
     }
 }
 
@@ -380,7 +351,7 @@ public class ArmourStats
         float itemCoverage = 0
         )
     {
-        this.EquipmentSlot = armourType;
-        this.ItemCoverage = itemCoverage;
+        EquipmentSlot = armourType;
+        ItemCoverage = itemCoverage;
     }
 }

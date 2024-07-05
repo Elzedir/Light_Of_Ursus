@@ -29,9 +29,9 @@ public class Player : Controller, IDataPersistence
         _coll_Body = GetComponent<CapsuleCollider>();
         _coll_Head = Manager_Game.FindTransformRecursively(transform, "PlayerHead").GetComponent<BoxCollider>();
         _animator = GetComponent<Animator>();
-        _animation = GameObject.Find("TestBody").GetComponent<Animation>();
+        _animation = GameObject.Find("TestActor").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
-        _testBody = GameObject.Find("TestContainer").GetComponent<Rigidbody>();
+        _testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
 
         //StartCoroutine(_testAbility("Eagle Stomp"));
     }
