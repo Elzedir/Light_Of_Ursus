@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.HID;
 
 public class Controller_Light : MonoBehaviour
 {
@@ -24,7 +25,7 @@ public class Controller_Light : MonoBehaviour
     {
         if (_aimLight)
         {
-            _moveLightWithMouse();
+            _moveLightWithCamera();
         }
 
         CheckTargetsInLight();
@@ -52,13 +53,9 @@ public class Controller_Light : MonoBehaviour
         }
     }
 
-        void _moveLightWithMouse()
+    void _moveLightWithCamera()
     {
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
-        {
-            Vector3 direction = (hit.point - transform.position).normalized;
-            transform.rotation = Quaternion.LookRotation(direction);
-        }
+        transform.rotation = Camera.main.transform.rotation;
     }
 
     public void AimLight(InputAction.CallbackContext context)

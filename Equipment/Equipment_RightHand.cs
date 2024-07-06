@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Equipment_RightHand : Equipment_Base
 {
-    protected override void Awake()
+    public override void Initialise()
     {
-        base.Awake();
+        base.Initialise();
 
         EquipmentSlot = EquipmentSlot.RightHand;
     }
@@ -21,10 +21,25 @@ public class Equipment_RightHand : Equipment_Base
 
         if (item.CommonStats.EquipmentSlots.Contains(EquipmentSlot))
         {
-            Item = item;
-            return true;
+            if (UnequipItem())
+            {
+                Item = item;
+                MeshFilter.mesh = item.VisualStats.ItemMesh;
+                MeshRenderer.material = item.VisualStats.ItemMaterial;
+                transform.localPosition = item.VisualStats.ItemPosition;
+                transform.localRotation = item.VisualStats.ItemRotation;
+                transform.localScale = item.VisualStats.ItemScale;
+                return true;
+            }
         }
 
         return false;
+    }
+
+    public override bool UnequipItem()
+    {
+        // if (Return item to inventory.)
+        Item = null;
+        return true;
     }
 }

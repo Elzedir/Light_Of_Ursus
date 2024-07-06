@@ -10,13 +10,16 @@ public enum WeaponType
     OneHandedRanged,
     TwoHandedRanged,
     OneHandedMagic,
-    TwoHandedMagic
+    TwoHandedMagic,
+    OneHandedShield,
+    TwoHandedShield
 }
 
 public enum WeaponClass
 {
     None,
     Axe,
+    Shield,
     ShortBow,
     ShortSword,
     Spear
@@ -24,27 +27,27 @@ public enum WeaponClass
 
 public class List_Weapon : Manager_Item
 {
-    public static List<Item> AllWeaponData = new();
-
     public static void InitializeWeaponData()
     {
-        Melee();
-        Ranged();
+        _melee();
+        _ranged();
     }
-    static void Melee()
+    static void _melee()
     {
-        ShortSwords();
+        _shortSwords();
+        _shields();
     }
-    static void Ranged()
+    static void _ranged()
     {
-        ShortBows();
+        _shortBows();
     }
-    static void ShortBows()
+    static void _shortBows()
     {
         CommonStats commonStats = new CommonStats(
-            itemID: 2,
+            itemID: 3,
             itemType: ItemType.Weapon,
             itemName: "Wooden ShortBow",
+            equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.RightHand },
             itemEquippable: true,
             maxStackSize: 1,
             itemValue: 15
@@ -53,7 +56,7 @@ public class List_Weapon : Manager_Item
         VisualStats visualStats = new VisualStats(
             itemIcon: null,
             itemPosition: Vector3.zero,
-            itemRotation: Vector3.zero,
+            itemRotation: Quaternion.identity,
             itemScale: Vector3.one
             );
 
@@ -75,14 +78,15 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AllWeaponData.Add(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
-    static void ShortSwords()
+    static void _shortSwords()
     {
         CommonStats commonStats = new CommonStats(
             itemID: 1,
             itemType: ItemType.Weapon,
             itemName: "Wooden ShortSword",
+            equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.RightHand, EquipmentSlot.LeftHand },
             itemEquippable: true,
             maxStackSize: 1,
             itemValue: 15
@@ -90,10 +94,11 @@ public class List_Weapon : Manager_Item
 
         VisualStats visualStats = new VisualStats(
             itemIcon: null,
-            itemMesh: Resources.GetBuiltinResource<Mesh>("Cylinder.fbx"),
-            itemMaterial: Resources.Load<Material>("Meshes/Material_Red"),
+            itemMesh: Resources.GetBuiltinResource<Mesh>("Meshes/Sword_Of_Mercenary"),
+            itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
+            itemCollider: new CapsuleCollider(),
             itemPosition: new Vector3(0.5f, -0.2f, -0.2f),
-            itemRotation: new Vector3(215, 0, 0),
+            itemRotation: Quaternion.Euler(215, 0, 0),
             itemScale: new Vector3(0.1f, 0.6f, 0.1f)
             );
 
@@ -113,6 +118,47 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AllWeaponData.Add(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+    }
+
+    static void _shields()
+    {
+        CommonStats commonStats = new CommonStats(
+            itemID: 2,
+            itemType: ItemType.Weapon,
+            itemName: "Test Shield",
+            equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.LeftHand },
+            itemEquippable: true,
+            maxStackSize: 1,
+            itemValue: 15
+            );
+
+        VisualStats visualStats = new VisualStats(
+            itemIcon: null,
+            itemMesh: Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
+            itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
+            itemPosition: new Vector3(-0.6f, 0f, 0f),
+            itemRotation: Quaternion.Euler(0, -90, 0),
+            itemScale: new Vector3(1f, 1f, 0.1f)
+            );
+
+        WeaponStats weaponStats = new WeaponStats(
+            weaponType: new WeaponType[] { WeaponType.OneHandedShield },
+            weaponClass: new WeaponClass[] { WeaponClass.Shield },
+            maxChargeTime: 3
+            );
+
+        FixedModifiers fixedModifiers = new FixedModifiers(
+            physicalArmour: 5
+            );
+
+        PercentageModifiers percentageModifiers = new PercentageModifiers(
+            attackDamage: 1.2f,
+            attackSpeed: 1.1f,
+            attackSwingTime: 1.1f,
+            attackPushForce: 1.1f
+            );
+
+        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
 }

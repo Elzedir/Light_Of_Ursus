@@ -7,7 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 #endif
 
-public class Interactable_Puzzle : Interactable
+public class Interactable_Puzzle : Interactable_Base
 {
     public PuzzleSet PuzzleSet;
     public List<IceWallType> IceWallTypes;

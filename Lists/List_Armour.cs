@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class List_Armour : Manager_Item
 {
-    public static List<Item> AllArmourData = new();
-
     public static void InitializeArmourData()
     {
         Heavy();
@@ -18,6 +16,7 @@ public class List_Armour : Manager_Item
             itemID: 100,
             itemType: ItemType.Armour,
             itemName: "Bronze ChestPlate",
+            equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.Chest },
             itemEquippable: true,
             maxStackSize: 1,
             itemValue: 10
@@ -26,7 +25,7 @@ public class List_Armour : Manager_Item
         VisualStats visualStats = new VisualStats(
             itemIcon: null,
             itemPosition: new Vector3(-0.04f, -0.07f, 0f),
-            itemRotation: new Vector3(180, 0, 0),
+            itemRotation: Quaternion.Euler(180, 0, 0),
             itemScale: new Vector3(0.4f, 0.4f, 0.4f)
             );
 
@@ -40,8 +39,8 @@ public class List_Armour : Manager_Item
             maxMana: 5,
             maxStamina: 5,
             pushRecovery: 1,
-            physicalDefence: 2,
-            magicalDefence: 2,
+            physicalArmour: 2,
+            magicArmour: 2,
             dodgeCooldownReduction: -1
             );
 
@@ -49,6 +48,6 @@ public class List_Armour : Manager_Item
             attackSpeed: 0.92f
             );
 
-        AllArmourData.Add(new Item(commonStats: commonStats, armourStats: armourStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats: commonStats, armourStats: armourStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
 }

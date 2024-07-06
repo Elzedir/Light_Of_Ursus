@@ -36,7 +36,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
     public Player Player;
     Vector3 _playerLastPosition;
     public Collider GroundCollider { get; private set; }
-    [SerializeField] public float InteractRange { get; private set; } = 1;
 
     public string LastScene;
     public string SceneName;
@@ -64,6 +63,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Spawner.OnPuzzleStatesRestored += OnPuzzleStatesRestored;
 
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        Manager_Item.Initialise();
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -268,14 +269,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
     public void SetPlayer()
     {
         Player = FindFirstObjectByType<Player>();
-    }
-
-    void OnDrawGizmos()
-    {
-        if (Player == null) return;
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(Player.transform.position, InteractRange);
     }
 
     public void PickUpStaff()

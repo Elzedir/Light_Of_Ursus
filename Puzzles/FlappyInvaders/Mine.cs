@@ -51,7 +51,7 @@ public class Mine : MonoBehaviour
         Bullet bullet = bulletGO.AddComponent<Bullet>();
         bullet.Initialise(
             Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
-            Resources.Load<Material>("Meshes/Material_Green"),
+            Resources.Load<Material>("Materials/Material_Green"),
             Vector3.left, 
             transform.position
             );

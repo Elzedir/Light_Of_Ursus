@@ -108,7 +108,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     void _showPath(List<Vector3> path)
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Green");
+        Material material = Resources.Load<Material>("Materials/Material_Green");
 
         foreach (Vector3 point in path)
         {

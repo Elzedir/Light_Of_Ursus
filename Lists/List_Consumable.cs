@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class List_Consumable : Manager_Item
 {
-    public static List<Item> AllConsumableData = new();
-
     public static void InitializeConsumableData()
     {
         Potions();
@@ -26,6 +24,6 @@ public class List_Consumable : Manager_Item
             healthRecovery: 5
             );
 
-        AllConsumableData.Add(new Item(commonStats: commonStats, fixedModifiers: fixedModifiers));
+        AddToList(new Item(commonStats: commonStats, fixedModifiers: fixedModifiers));
     }
 }

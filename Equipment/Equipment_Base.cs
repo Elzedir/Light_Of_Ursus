@@ -10,14 +10,13 @@ public class Equipment_Base : MonoBehaviour
     public EquipmentSlot EquipmentSlot { get; protected set; }
     public Actor_Base Actor { get; private set; }
     Item _item;
-    [SerializeField] CommonStats _itemStats;
-    public Item Item { get { return _item; } protected set { _item = value; _itemStats = value?.CommonStats; } }
-    public CommonStats ItemStats { get { return _itemStats; } set { _itemStats = value; Actor.Manager_Equipment.EquipItem(SlotID, value.ItemID); } }
+    public Item Item { get { return _item; } protected set { _item = value; ItemStats = value?.CommonStats; } }
+    public CommonStats ItemStats;
     public MeshFilter MeshFilter { get; protected set; }
     public MeshRenderer MeshRenderer { get; protected set; }
     public Collider Collider { get; protected set; }
 
-    protected virtual void Awake()
+    public virtual void Initialise()
     {
         Actor = GetComponentInParent<Actor_Base>();
         MeshFilter = GetComponent<MeshFilter>();
@@ -31,6 +30,11 @@ public class Equipment_Base : MonoBehaviour
     }
 
     public virtual bool EquipItem(Item item)
+    {
+        return false;
+    }
+
+    public virtual bool UnequipItem()
     {
         return false;
     }

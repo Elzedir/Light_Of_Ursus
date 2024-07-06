@@ -3,15 +3,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ItemType { None, Weapon, Armour, Consumable, Misc }
+public enum ItemType { Weapon, Armour, Consumable, Misc }
 
-public class Manager_Item : MonoBehaviour
+public class Manager_Item
 {
     public static List<Item> ItemList = new();
 
     static HashSet<int> _usedIDs = new();
 
-    public static void AddToList(List<Item> list, Item item)
+    public static void Initialise()
+    {
+        List_Weapon.InitializeWeaponData();
+        List_Armour.InitializeArmourData();
+        List_Consumable.InitializeConsumableData();
+    }
+
+    public static void AddToList(Item item)
     {
         if (_usedIDs.Contains(item.CommonStats.ItemID))
         {
@@ -19,12 +26,7 @@ public class Manager_Item : MonoBehaviour
         }
 
         _usedIDs.Add(item.CommonStats.ItemID);
-        list.Add(item);
-    }
-
-    public virtual void Start()
-    {
-
+        ItemList.Add(item);
     }
 
     public static Item GetItem(int itemID = -1, string itemName = "")
@@ -126,9 +128,9 @@ public class CommonStats
     public bool ItemEquippable;
 
     public CommonStats(
-        int itemID = -1,
+        int itemID = 0,
         string itemName = "",
-        ItemType itemType = ItemType.None,
+        ItemType itemType = ItemType.Misc,
         List<EquipmentSlot> equipmentSlots = null,
         int maxStackSize = 0,
         int currentStackSize = 0,
@@ -155,16 +157,18 @@ public class VisualStats
     public Sprite ItemIcon;
     public Mesh ItemMesh;
     public Material ItemMaterial;
+    public Collider ItemCollider;
     public Vector3 ItemPosition;
-    public Vector3 ItemRotation;
+    public Quaternion ItemRotation;
     public Vector3 ItemScale;
 
     public VisualStats(
         Sprite itemIcon = null,
         Mesh itemMesh = null,
         Material itemMaterial = null,
+        Collider itemCollider = null,
         Vector3? itemPosition = null,
-        Vector3? itemRotation = null,
+        Quaternion? itemRotation = null,
         Vector3? itemScale = null
 
         )
@@ -172,8 +176,9 @@ public class VisualStats
         ItemIcon = itemIcon;
         ItemMesh = itemMesh;
         ItemMaterial = itemMaterial;
+        ItemCollider = itemCollider;
         ItemPosition = itemPosition ?? Vector3.zero;
-        ItemRotation = itemRotation ?? Vector3.zero;
+        ItemRotation = itemRotation ?? Quaternion.identity;
         ItemScale = itemScale ?? new Vector3(1, 1, 1);
     }
 }
@@ -259,8 +264,8 @@ public class FixedModifiers
     public float AttackPushForce;
     public float AttackCooldown;
 
-    public float PhysicalDefence;
-    public float MagicalDefence;
+    public float PhysicalArmour;
+    public float MagicArmour;
 
     public float MoveSpeed;
     public float DodgeCooldownReduction;
@@ -284,8 +289,8 @@ public class FixedModifiers
         float attackPushForce = 0,
         float attackCooldown = 0,
 
-        float physicalDefence = 0,
-        float magicalDefence = 0,
+        float physicalArmour = 0,
+        float magicArmour = 0,
 
         float moveSpeed = 0,
         float dodgeCooldownReduction = 0
@@ -305,8 +310,8 @@ public class FixedModifiers
         AttackPushForce = attackPushForce;
         AttackCooldown = attackCooldown;
 
-        PhysicalDefence = physicalDefence;
-        MagicalDefence = magicalDefence;
+        PhysicalArmour = physicalArmour;
+        MagicArmour = magicArmour;
         MoveSpeed = moveSpeed;
         DodgeCooldownReduction = dodgeCooldownReduction;
     }

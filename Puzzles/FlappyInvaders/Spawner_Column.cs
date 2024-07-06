@@ -92,7 +92,7 @@ public class Spawner_Column : MonoBehaviour
             columnHeight, 
             spawner: spawner,
             Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
-            Resources.Load<Material>("Meshes/Material_Yellow"),
+            Resources.Load<Material>("Materials/Material_Yellow"),
             ColumnSpeed
             );
         _columnsSpawned++;
@@ -118,7 +118,7 @@ public class Spawner_Column : MonoBehaviour
         mine.Initialise(
             _bulletParent, 
             Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
-            Resources.Load<Material>("Meshes/Material_Red"), 
+            Resources.Load<Material>("Materials/Material_Red"), 
             ColumnSpeed
             );
         _minesSpawned++;

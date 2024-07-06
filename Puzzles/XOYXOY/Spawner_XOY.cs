@@ -19,9 +19,9 @@ public class Spawner_XOY : MonoBehaviour
 
     void Start()
     {
-        Material X = Resources.Load<Material>("Meshes/Material_Yellow");
-        Material O = Resources.Load<Material>("Meshes/Material_Red");
-        Material Y = Resources.Load<Material>("Meshes/Material_Blue");
+        Material X = Resources.Load<Material>("Materials/Material_Yellow");
+        Material O = Resources.Load<Material>("Materials/Material_Red");
+        Material Y = Resources.Load<Material>("Materials/Material_Blue");
 
         XoyMaterials = new Material[] { X, O, Y };
 

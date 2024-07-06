@@ -422,10 +422,10 @@ public class VoxelGrid
     public static void TestTestShowAllVoxels(bool showOpen = true, bool showObstacles = true, bool showGround = true)
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material green = Resources.Load<Material>("Meshes/Material_Green");
-        Material red = Resources.Load<Material>("Meshes/Material_Red");
-        Material blue = Resources.Load<Material>("Meshes/Material_Blue");
-        Material white = Resources.Load<Material>("Meshes/Material_White");
+        Material green = Resources.Load<Material>("Materials/Material_Green");
+        Material red = Resources.Load<Material>("Materials/Material_Red");
+        Material blue = Resources.Load<Material>("Materials/Material_Blue");
+        Material white = Resources.Load<Material>("Materials/Material_White");
 
         foreach (Voxel_Base voxel in VoxelsTest)
         {
@@ -690,9 +690,9 @@ public class VoxelGrid
     public static void TestShowAllVoxels(bool showVoxels = true, bool showSubvoxels = true)
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material green = Resources.Load<Material>("Meshes/Material_Green");
-        Material red = Resources.Load<Material>("Meshes/Material_Red");
-        Material blue = Resources.Load<Material>("Meshes/Material_Blue");
+        Material green = Resources.Load<Material>("Materials/Material_Green");
+        Material red = Resources.Load<Material>("Materials/Material_Red");
+        Material blue = Resources.Load<Material>("Materials/Material_Blue");
 
         foreach (Voxel_Base voxel in Voxels)
         {

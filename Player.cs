@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using static UnityEditor.Timeline.TimelinePlaybackControls;
 
 public class Player : Controller, IDataPersistence
 {
+    Actor_Base _actor;
     public float SpeedIncrease;
     CapsuleCollider _coll_Body;
     BoxCollider _coll_Head;
@@ -13,8 +15,8 @@ public class Player : Controller, IDataPersistence
     Animation _animation;
     bool _moved;
     RaycastHit2D _hit;
-    public Interactable ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
-    List<Interactable> _interactableObjects = new();
+    public Interactable_Base ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
+    List<Interactable_Base> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
     bool _aim = false;
     Vector2 _move;
@@ -26,6 +28,7 @@ public class Player : Controller, IDataPersistence
 
     public void Start()
     {
+        _actor = GetComponent<Actor_Base>();
         _coll_Body = GetComponent<CapsuleCollider>();
         _coll_Head = Manager_Game.FindTransformRecursively(transform, "PlayerHead").GetComponent<BoxCollider>();
         _animator = GetComponent<Animator>();
@@ -126,14 +129,6 @@ public class Player : Controller, IDataPersistence
 
         Vector3 movement = new Vector3(_move.x, 0, _move.y);
 
-        //if (movement != Vector3.zero && !_aim) _rigidbody.transform.rotation = Quaternion.Slerp(_rigidbody.transform.rotation, Quaternion.LookRotation(movement), 0.15f);
-        //else if (_aim) _playerAim();
-
-        //_rigidbody.transform.Translate(movement * _speed * Time.deltaTime, Space.World);
-        ////_rigidbody.velocity = new Vector3(_move.x, 0, _move.y) * _speed;
-
-        //_animator.SetFloat("Speed", _move.magnitude);
-
         //if (thirdPerson)
 
         if (movement != Vector3.zero)
@@ -151,7 +146,9 @@ public class Player : Controller, IDataPersistence
 
             if (_aim)
             {
-                _playerAim();
+                _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(cameraForward), 0.15f);
+
+                _animator.SetBool("Block", true);
             }
             else
             {
@@ -159,23 +156,9 @@ public class Player : Controller, IDataPersistence
             }
 
             _rigidBody.transform.Translate(desiredMoveDirection * _speed * Time.deltaTime, Space.World);
-
-            _animator.SetFloat("Speed", _move.magnitude);
-
-            void _playerAim()
-            {
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
-                {
-                    //Vector3 direction = (hit.point - _rigidbody.transform.position).normalized;
-
-                    _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(cameraForward), 0.15f);
-
-                    //_rigidbody.transform.rotation = Quaternion.LookRotation(desiredMoveDirection);
-
-                    _animator.SetBool("Block", true);
-                }
-            }
         }
+
+        _animator.SetFloat("Speed", _move.magnitude);
     }
 
     public void Move(InputAction.CallbackContext context)
@@ -242,27 +225,44 @@ public class Player : Controller, IDataPersistence
         }
     }
 
-    public virtual void TargetCheck()
+    public void Interact(InputAction.CallbackContext context)
     {
-        float maxTargetDistance = 1000;
-        Collider2D[] triggerHits = Physics2D.OverlapCircleAll(transform.position, 1000);
+        if (ClosestInteractableObject == null)
+        {
+            Debug.Log("ClosestInteractableObject is null");
+            return;
+        }
 
-        foreach (Collider2D hit in triggerHits)
+        if (context.performed)
+        {
+            ClosestInteractableObject.Interact(gameObject);
+        }
+    }
+
+    public void TargetCheck()
+    {
+        float closestDistance = float.PositiveInfinity;
+        Collider[] triggerHits = Physics.OverlapSphere(transform.position, 100);
+
+        foreach (Collider hit in triggerHits)
         {
             if (hit.gameObject == null) continue;
 
-            if (hit.gameObject.TryGetComponent<Interactable>(out Interactable interactable))_interactableObjects.Add(interactable);
+            if (hit.gameObject.TryGetComponent<Interactable_Base>(out Interactable_Base interactable))
+            {
+                _interactableObjects.Add(interactable);
+            }
         }
 
-        foreach (Interactable interactable in _interactableObjects)
+        foreach (Interactable_Base interactable in _interactableObjects)
         {
             if (interactable != null)
             {
                 float targetDistance = Vector3.Distance(transform.position, interactable.transform.position);
 
-                if (targetDistance < maxTargetDistance)
+                if (targetDistance < closestDistance)
                 {
-                    maxTargetDistance = targetDistance;
+                    closestDistance = targetDistance;
                     ClosestInteractableObject = interactable;
                 }
             }

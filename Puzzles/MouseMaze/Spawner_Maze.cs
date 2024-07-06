@@ -156,9 +156,9 @@ public class Spawner_Maze : MonoBehaviour
                         {
                             walls.Add(ClearWalls(_furthestCell, cell, true).Item2);
                         }
-                        _furthestCell.RecreateWalls(walls, Resources.GetBuiltinResource<Mesh>("Cube.fbx"), Resources.Load<Material>("Meshes/Material_White"));
-                        _furthestCell.MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
-                        Cells[(int)_furthestCell.Position.x, (int)_furthestCell.Position.y - 1, (int)_furthestCell.Position.z].MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
+                        _furthestCell.RecreateWalls(walls, Resources.GetBuiltinResource<Mesh>("Cube.fbx"), Resources.Load<Material>("Materials/Material_White"));
+                        _furthestCell.MarkCell(Resources.Load<Material>("Materials/Material_Red"));
+                        Cells[(int)_furthestCell.Position.x, (int)_furthestCell.Position.y - 1, (int)_furthestCell.Position.z].MarkCell(Resources.Load<Material>("Materials/Material_Red"));
                         break;
                     case MazeType.Chase:
                         StartCoroutine(SpawnChasers());
@@ -335,14 +335,14 @@ public class Spawner_Maze : MonoBehaviour
         Collectable_MouseMaze collectable = collectableGO.AddComponent<Collectable_MouseMaze>();
         _collectables.Add(collectable, false);
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Blue");
+        Material material = Resources.Load<Material>("Materials/Material_Blue");
         collectable.SpawnCollectable(this, mesh, material);
     }
 
     IEnumerator SpawnChasers()
     {
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Capsule.fbx");
-        Material material = Resources.Load<Material>("Meshes/Material_Red");
+        Material material = Resources.Load<Material>("Materials/Material_Red");
 
         yield return new WaitForSeconds(_chaserSpawnDelay);
 

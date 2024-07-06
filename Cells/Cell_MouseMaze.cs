@@ -27,8 +27,8 @@ public class Cell_MouseMaze : Cell_Base
         _spawner = spawner;
 
         Mesh mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        Material materialFloor = Resources.Load<Material>("Meshes/Material_White");
-        Material materialWalls = Resources.Load<Material>("Meshes/Material_Black");
+        Material materialFloor = Resources.Load<Material>("Materials/Material_White");
+        Material materialWalls = Resources.Load<Material>("Materials/Material_Black");
 
         _meshFilter = gameObject.AddComponent<MeshFilter>();
         _meshFilter.mesh = mesh;

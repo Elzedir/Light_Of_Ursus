@@ -29,7 +29,7 @@ public class Spawner_Arrow : MonoBehaviour
     void Start()
     {
         _arrowMesh = Manager_Mesh.GenerateArrow(1, 0.25f, 0.5f, 0.5f);
-        _arrowMaterial = Resources.Load<Material>("Meshes/Material_Red");
+        _arrowMaterial = Resources.Load<Material>("Materials/Material_Red");
 
         _puzzleSet = Manager_Puzzle.Instance.Puzzle.PuzzleSet;
         _puzzleType = Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType;

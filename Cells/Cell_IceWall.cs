@@ -24,7 +24,7 @@ public class Cell_IceWall : Cell_Base
         _meshFilter = gameObject.AddComponent<MeshFilter>();
         _meshFilter.mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         _meshRenderer = gameObject.AddComponent<MeshRenderer>();
-        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_White");
+        _meshRenderer.material = Resources.Load<Material>("Materials/Material_White");
 
         _boxCollider = gameObject.AddComponent<BoxCollider>();
         _boxCollider.size = new Vector3(0.75f, 2f, 0.75f);
@@ -78,11 +78,11 @@ public class Cell_IceWall : Cell_Base
         ChangeColour(1);
         List<Material> cracks = new();
 
-        cracks.Add(Resources.Load<Material>("Meshes/Material_White"));
-        cracks.Add(Resources.Load<Material>("Meshes/Material_Yellow"));
-        cracks.Add(Resources.Load<Material>("Meshes/Material_Green"));
-        cracks.Add(Resources.Load<Material>("Meshes/Material_Blue"));
-        cracks.Add(Resources.Load<Material>("Meshes/Material_Black"));
+        cracks.Add(Resources.Load<Material>("Materials/Material_White"));
+        cracks.Add(Resources.Load<Material>("Materials/Material_Yellow"));
+        cracks.Add(Resources.Load<Material>("Materials/Material_Green"));
+        cracks.Add(Resources.Load<Material>("Materials/Material_Blue"));
+        cracks.Add(Resources.Load<Material>("Materials/Material_Black"));
 
         foreach (Material material in cracks)
         {
@@ -90,14 +90,14 @@ public class Cell_IceWall : Cell_Base
             yield return new WaitForSeconds(1f);
         }
 
-        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_Black");
+        _meshRenderer.material = Resources.Load<Material>("Materials/Material_Black");
 
         Break();
     }
 
     public void ChangeColour(float colourScale)
     {
-        _meshRenderer.material = Resources.Load<Material>("Meshes/Material_Test");
+        _meshRenderer.material = Resources.Load<Material>("Materials/Material_Test");
         _meshRenderer.material.color = new Color(colourScale, colourScale, colourScale);
     }
 
@@ -109,7 +109,7 @@ public class Cell_IceWall : Cell_Base
 
     public void StaminaFinishCell()
     {
-        MarkCell(Resources.Load<Material>("Meshes/Material_Red"));
+        MarkCell(Resources.Load<Material>("Materials/Material_Red"));
         _staminaFinishCell = true;
     }
 }

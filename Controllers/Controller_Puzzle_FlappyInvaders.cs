@@ -72,7 +72,7 @@ public class Controller_Puzzle_FlappyInvaders : Controller
             bulletGO.transform.parent = _bulletParent;
             bullet.Initialise(
                 Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
-                Resources.Load<Material>("Meshes/Material_Green"),
+                Resources.Load<Material>("Materials/Material_Green"),
                 Vector3.right,
                 transform.position
                 );

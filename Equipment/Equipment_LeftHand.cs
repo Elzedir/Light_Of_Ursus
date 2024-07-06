@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Equipment_LeftHand : Equipment_Base
 {
-    protected override void Awake()
+    public override void Initialise()
     {
-        base.Awake();
+        base.Initialise();
 
         EquipmentSlot = EquipmentSlot.LeftHand;
     }

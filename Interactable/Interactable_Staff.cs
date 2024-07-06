@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Staff : Interactable
+public class Interactable_Staff : Interactable_Base
 {
     //bool _pickedUp = false;
 

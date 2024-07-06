@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Dialogue : Interactable
+public class Interactable_Dialogue : Interactable_Base
 {
     public override void Interact(GameObject interactor = null)
     {
