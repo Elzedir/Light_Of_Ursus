@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public class Manager_Equipment
@@ -99,6 +100,7 @@ public class Manager_Equipment
         slotGO.AddComponent(slotScript);
         slotGO.AddComponent<MeshFilter>();
         slotGO.AddComponent<MeshRenderer>();
+        slotGO.AddComponent<Animator>();
 
         // Find a way to see which collider to add. Maybe dependant on item rather than here.
 

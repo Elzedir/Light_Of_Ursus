@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public enum WeaponType
@@ -94,7 +95,7 @@ public class List_Weapon : Manager_Item
 
         VisualStats visualStats = new VisualStats(
             itemIcon: null,
-            itemMesh: Resources.GetBuiltinResource<Mesh>("Meshes/Sword_Of_Mercenary"),
+            itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
             itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
             itemCollider: new CapsuleCollider(),
             itemPosition: new Vector3(0.5f, -0.2f, -0.2f),
