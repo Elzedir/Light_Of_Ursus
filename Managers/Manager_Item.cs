@@ -159,6 +159,7 @@ public class VisualStats
     public Mesh ItemMesh;
     public Material ItemMaterial;
     public Collider ItemCollider;
+    public RuntimeAnimatorController ItemAnimatorController;
     public Vector3 ItemPosition;
     public Quaternion ItemRotation;
     public Vector3 ItemScale;
@@ -168,6 +169,7 @@ public class VisualStats
         Mesh itemMesh = null,
         Material itemMaterial = null,
         Collider itemCollider = null,
+        RuntimeAnimatorController itemAnimatorController = null,
         Vector3? itemPosition = null,
         Quaternion? itemRotation = null,
         Vector3? itemScale = null
@@ -178,9 +180,10 @@ public class VisualStats
         ItemMesh = itemMesh;
         ItemMaterial = itemMaterial;
         ItemCollider = itemCollider;
+        ItemAnimatorController = itemAnimatorController;
         ItemPosition = itemPosition ?? Vector3.zero;
         ItemRotation = itemRotation ?? Quaternion.identity;
-        ItemScale = itemScale ?? new Vector3(1, 1, 1);
+        ItemScale = itemScale ?? Vector3.one;
     }
 }
 

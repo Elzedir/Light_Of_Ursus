@@ -97,6 +97,7 @@ public class List_Weapon : Manager_Item
             itemIcon: null,
             itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
             itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
+            itemAnimatorController: Resources.Load<RuntimeAnimatorController>("Animators/Test_Weapon"),
             itemCollider: new CapsuleCollider(),
             itemPosition: new Vector3(0.5f, -0.2f, -0.2f),
             itemRotation: Quaternion.Euler(215, 0, 0),
@@ -138,6 +139,7 @@ public class List_Weapon : Manager_Item
             itemIcon: null,
             itemMesh: Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
             itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
+            itemAnimatorController: Resources.Load<RuntimeAnimatorController>("Animators/Test_Shield"),
             itemPosition: new Vector3(-0.6f, 0f, 0f),
             itemRotation: Quaternion.Euler(0, -90, 0),
             itemScale: new Vector3(1f, 1f, 0.1f)

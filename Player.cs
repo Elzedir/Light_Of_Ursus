@@ -12,6 +12,7 @@ public class Player : Controller, IDataPersistence
     CapsuleCollider _coll_Body;
     BoxCollider _coll_Head;
     Animator _animator;
+    Animator _weaponAnimator;
     Animation _animation;
     bool _moved;
     RaycastHit2D _hit;
@@ -35,6 +36,7 @@ public class Player : Controller, IDataPersistence
         _animation = GameObject.Find("TestActor").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
         _testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
+        _weaponAnimator = Manager_Game.FindTransformRecursively(transform, "Slot_4").GetComponent<Animator>();
 
         //StartCoroutine(_testAbility("Eagle Stomp"));
     }
@@ -175,7 +177,13 @@ public class Player : Controller, IDataPersistence
     {
         if (context.performed)
         {
-            if (!_aim) _animator.SetTrigger("Attack");
+            if (!_aim)
+            {
+                // Replace with an action eventually, or an event.
+                _animator.SetTrigger("Attack");
+                //_weaponAnimator.SetTrigger("Attack");
+            }
+
             if (_inAir) Manager_Ability.SetCharacter(0, (_testBody, true));
         }
     }

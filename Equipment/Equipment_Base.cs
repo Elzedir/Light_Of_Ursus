@@ -47,10 +47,12 @@ public class Equipment_Base : MonoBehaviour
                 Item = item;
                 MeshFilter.mesh = item.VisualStats.ItemMesh;
                 MeshRenderer.material = item.VisualStats.ItemMaterial;
+                //Animator.runtimeAnimatorController = item.VisualStats.ItemAnimatorController;
 
                 transform.localPosition = item.VisualStats.ItemPosition;
                 transform.localRotation = item.VisualStats.ItemRotation;
                 transform.localScale = item.VisualStats.ItemScale;
+
                 return true;
             }
         }
@@ -64,7 +66,7 @@ public class Equipment_Base : MonoBehaviour
         Item = null;
         MeshFilter.mesh = null;
         MeshRenderer.material = null;
-        Animator.runtimeAnimatorController = null;
+        //Animator.runtimeAnimatorController = null;
 
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
