@@ -38,7 +38,7 @@ public class Player : Controller, IDataPersistence
         _testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
         _weaponAnimator = Manager_Game.FindTransformRecursively(transform, "Slot_4").GetComponent<Animator>();
 
-        //StartCoroutine(_testAbility("Eagle Stomp"));
+        _rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -75,41 +75,6 @@ public class Player : Controller, IDataPersistence
         TargetCheck();
     }
 
-    IEnumerator _testAbility(string abilityName)
-    {
-        Manager_Ability.SetCharacter(_playerID, (_testBody, false));
-
-        var ability = Manager_Ability.GetAbility(abilityName);
-
-        if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
-
-        for (int i = 0; i < 5; i++)
-        {
-            yield return new WaitForSeconds(5);
-
-            Debug.Log($"{ability} performed.");
-
-            ability.GetAction("Eagle Stomp")?.Invoke(_playerID);
-
-            _inAir = true;
-
-            Cursor.lockState = CursorLockMode.None;
-
-            yield return new WaitForSeconds(3);
-
-            _inAir = false;
-
-            Cursor.lockState = CursorLockMode.Locked;
-
-            if (ability.AnimationClip != null)
-            {
-                ability.AnimationClip.legacy = true;
-                yield return StartCoroutine(PlayAnimation(ability.AnimationClip));
-                ability.AnimationClip.legacy = false;
-            }
-        }
-    }
-
     public IEnumerator PlayAnimation(AnimationClip animationClip)
     {
         _animation.AddClip(animationClip, animationClip.name);
@@ -124,6 +89,8 @@ public class Player : Controller, IDataPersistence
     {
         //_playerActor = GameManager.Instance.Player.PlayerActor;
     }
+
+    bool _movementLocked = false;
 
     public virtual void PlayerMove()
     {
@@ -157,7 +124,7 @@ public class Player : Controller, IDataPersistence
                 _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(desiredMoveDirection), 0.15f);
             }
 
-            _rigidBody.transform.Translate(desiredMoveDirection * _speed * Time.deltaTime, Space.World);
+            if (!_movementLocked) _rigidBody.velocity = desiredMoveDirection * _speed;
         }
 
         _animator.SetFloat("Speed", _move.magnitude);
@@ -173,6 +140,8 @@ public class Player : Controller, IDataPersistence
     bool _ableToContinueAttackChain = false;
     bool _continuedAttackChain = false;
 
+    bool _eagleStompActive = false;
+
     public void Attack(InputAction.CallbackContext context)
     {
         if (context.performed)
@@ -184,7 +153,75 @@ public class Player : Controller, IDataPersistence
                 //_weaponAnimator.SetTrigger("Attack");
             }
 
-            if (_inAir) Manager_Ability.SetCharacter(0, (_testBody, true));
+            if (_eagleStompActive) StartCoroutine(_eagleStomp());
+        }
+    }
+
+    IEnumerator _eagleStomp()
+    {
+        if (_actor.IsGrounded())
+        {
+            yield break;
+        }
+
+        Manager_Ability.SetCharacter(0, (_rigidBody, true));
+
+        _movementLocked = true;
+
+        float elapsedTime = 0;
+
+        while(elapsedTime < 1 && !_actor.IsGrounded())
+        {
+            elapsedTime += Time.deltaTime;
+            break;
+        }
+
+        _eagleStompActive = false;
+
+        _rigidBody.velocity = Vector3.zero;
+
+        _movementLocked = false;
+    }
+
+    public void Jump(InputAction.CallbackContext context)
+    {
+        if (context.performed && !_eagleStompActive && _actor.IsGrounded())
+        {
+            StartCoroutine(_testAbility("Eagle Stomp"));
+        }
+    }
+
+    IEnumerator _testAbility(string abilityName)
+    {
+        Manager_Ability.SetCharacter(_playerID, (_rigidBody, false));
+
+        var ability = Manager_Ability.GetAbility(abilityName);
+
+        if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
+
+        Debug.Log($"{ability} performed.");
+
+        _movementLocked = true;
+
+        ability.GetAction("Eagle Stomp")?.Invoke(_playerID);
+
+        _eagleStompActive = true;
+
+        Cursor.lockState = CursorLockMode.None;
+
+        yield return new WaitForSeconds(3f);
+
+        Cursor.lockState = CursorLockMode.Locked;
+
+        _movementLocked = false;
+
+        _eagleStompActive = false;
+
+        if (ability.AnimationClip != null)
+        {
+            ability.AnimationClip.legacy = true;
+            yield return StartCoroutine(PlayAnimation(ability.AnimationClip));
+            ability.AnimationClip.legacy = false;
         }
     }
 

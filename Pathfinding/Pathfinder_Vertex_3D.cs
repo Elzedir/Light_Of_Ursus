@@ -43,7 +43,7 @@ public class Pathfinder_Vertex_3D
 
         if (directHitCheck.transform.name.Contains("Player") || !_bestPath.HasValue || _bestPath == null)
         {
-            Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
+            Manager_Game.Instance.StartCoroutine(_agent.RunPathfinding(MoveFromStart()));
 
             return;
         }
@@ -58,7 +58,7 @@ public class Pathfinder_Vertex_3D
 
                 _updateBestPath(path, true);
 
-                Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
+                Manager_Game.Instance.StartCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
 
                 return;
             }
@@ -98,11 +98,11 @@ public class Pathfinder_Vertex_3D
 
                 _updateBestPath(path);
 
-                Manager_Game.Instance.StartVirtualCoroutine(_startVirtualCoroutinesForBestPath(earlyHit.Value));
+                Manager_Game.Instance.StartCoroutine(_startVirtualCoroutinesForBestPath(earlyHit.Value));
             }
             else
             {
-                Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
+                Manager_Game.Instance.StartCoroutine(_agent.RunPathfinding(MoveFromStart()));
             }
         }
         else
@@ -117,11 +117,11 @@ public class Pathfinder_Vertex_3D
 
                 _updateBestPath(path, true);
 
-                Manager_Game.Instance.StartVirtualCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
+                Manager_Game.Instance.StartCoroutine(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
             }
             else
             {
-                Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(MoveFromStart()));
+                Manager_Game.Instance.StartCoroutine(_agent.RunPathfinding(MoveFromStart()));
             }
         }
     }
@@ -144,10 +144,10 @@ public class Pathfinder_Vertex_3D
 
     IEnumerator _startVirtualCoroutinesForBestPath(RaycastHit earlyHit)
     {
-        yield return Manager_Game.Instance.StartVirtualCoroutine(
+        yield return Manager_Game.Instance.StartCoroutine(
             _findBestPath(_bestPath.Value.value.pointPath[^1], earlyHit, earlyHit: true));
 
-        yield return Manager_Game.Instance.StartVirtualCoroutine(
+        yield return Manager_Game.Instance.StartCoroutine(
             _agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID));
     }
 
@@ -164,15 +164,15 @@ public class Pathfinder_Vertex_3D
 
         if (hit.transform.name.Contains("Player"))
         {
-            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(_agent.MoveToTest(new List<(Vector3 position, Collider)> { (_startPosition, null), (_targetPosition.Value, null) }, Vector3.Distance(_startPosition, _targetPosition.Value))));
+            yield return Manager_Game.Instance.StartCoroutine(_agent.RunPathfinding(_agent.MoveToTest(new List<(Vector3 position, Collider)> { (_startPosition, null), (_targetPosition.Value, null) }, Vector3.Distance(_startPosition, _targetPosition.Value))));
         }
         else if (hit.transform.name.Contains("Wall"))
         {
-            yield return Manager_Game.Instance.StartVirtualCoroutine((_findBestPath((_startPosition, null), hit)));
+            yield return Manager_Game.Instance.StartCoroutine((_findBestPath((_startPosition, null), hit)));
 
             if (_bestPath == null) { Debug.Log($"Best Path is null after running pathfinder."); yield break; }
 
-            yield return Manager_Game.Instance.StartVirtualCoroutine(_agent.RunPathfinding(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID)));
+            yield return Manager_Game.Instance.StartCoroutine(_agent.RunPathfinding(_agent.MoveToTest(_bestPath.Value.value.pointPath, _bestPath.Value.value.distance, _bestPath.Value.key.pathID)));
         }
         else
         {
@@ -202,7 +202,7 @@ public class Pathfinder_Vertex_3D
             _addOrUpdatePaths(pathKey, position_1, position_2, currentPosition);
         }
 
-        yield return Manager_Game.Instance.StartVirtualCoroutine(_evaluatePaths(pathID));
+        yield return Manager_Game.Instance.StartCoroutine(_evaluatePaths(pathID));
     }
 
     IEnumerator _evaluatePaths(int pathID)
@@ -257,7 +257,7 @@ public class Pathfinder_Vertex_3D
         }
         else if (pathHit.transform.name.Contains("Wall"))
         {
-            Manager_Game.Instance.StartVirtualCoroutine(_findBestPath(lastPosition, pathHit, pathID));
+            Manager_Game.Instance.StartCoroutine(_findBestPath(lastPosition, pathHit, pathID));
         }
     }
 

@@ -55,7 +55,7 @@ public class Controller_Camera : MonoBehaviour
         // _targetRotation = rotation;
     }
 
-    private void LateUpdate()
+    void Update()
     {
         if (Manager_Game.Instance.CurrentState == GameState.Cinematic && _lookAt != null) _lookAt = null;
 

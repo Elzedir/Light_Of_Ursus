@@ -50,7 +50,7 @@ public class Manager_Ability : MonoBehaviour
             currentLevel: 0,
             maxLevel: 10,
             baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
-            Resources.Load<AnimationClip>("Animators/Animations/Abilities/Charge"),
+            Resources.Load<AnimationClip>("Animations/Abilities/Charge"),
             null
             );
     }
@@ -59,7 +59,7 @@ public class Manager_Ability : MonoBehaviour
     {
         IEnumerator eagleStomp(int ID)
         {
-            _entities[ID].RigidBody.AddForce(new Vector3(0, 15, 10), ForceMode.Impulse);
+            _entities[ID].RigidBody.AddForce(new Vector3(Camera.main.transform.forward.x, 25, Camera.main.transform.forward.z), ForceMode.Impulse);
 
             float elapsedTime = 0;
             GameObject reticleGO = new GameObject("Reticle");
@@ -68,11 +68,11 @@ public class Manager_Ability : MonoBehaviour
             reticleGO.transform.localScale = new Vector3(3, 3, 3);
             reticleGO.AddComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("Sprites/Mine");
 
-            while (elapsedTime < 3) // Or until landing
+            while (elapsedTime < 3)
             {
                 elapsedTime += Time.deltaTime;
 
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, ~LayerMask.GetMask("Player")))
                 {
                     reticleGO.transform.position = hit.point;
 

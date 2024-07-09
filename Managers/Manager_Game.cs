@@ -281,16 +281,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         }
     }
 
-    public Coroutine StartVirtualCoroutine(IEnumerator coroutine)
-    {
-        return StartCoroutine(coroutine);
-    }
-
-    public void StopVirtualCoroutine(Coroutine coroutine)
-    {
-        StopCoroutine(coroutine);
-    }
-
     public static List<Vector3> GetAllObstacles(Vector3 moverPosition)
     {
         List<Vector3> obstaclePositions = new();
