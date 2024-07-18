@@ -19,7 +19,7 @@ public class Spawner_Maze : MonoBehaviour
     int _width = 10;
     int _height = 2;
     int _depth = 10;
-    int _subVoxelScale = 10;
+    //int _subVoxelScale = 10;
 
     int _visibility = 5;
     int _wallBreaks = 100;

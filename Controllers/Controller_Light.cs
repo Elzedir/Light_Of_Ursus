@@ -7,7 +7,7 @@ public class Controller_Light : MonoBehaviour
 {
     Light _light;
     bool _aimLight = false;
-    float _meshLength = 20.0f;
+    //float _meshLength = 20.0f;
     Collider[] _targetsInRange = new Collider[100];
     List<Discoverable> _discoveredObjects = new List<Discoverable>();
 

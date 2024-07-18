@@ -9,8 +9,6 @@ public class InputFieldController : MonoBehaviour
     InputField _inputField;
     TextMeshProUGUI _parentText;
 
-    bool _isInputFieldInteractable = false;
-
     void OnEnable()
     {
         if (!_inputField) _inputField = GetComponent<InputField>();

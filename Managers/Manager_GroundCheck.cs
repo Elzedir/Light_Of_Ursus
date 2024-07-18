@@ -55,6 +55,6 @@ public class GroundedCheckComponent
 
     public bool IsGrounded()
     {
-        return Physics.CheckSphere(GroundedGO.transform.position, -GroundedCollider.bounds.extents.y * 1.25f, GroundMask);
+        return Physics.CheckSphere(GroundedCollider.gameObject.transform.position, -GroundedCollider.bounds.extents.y * 1.25f, GroundMask);
     }
 }

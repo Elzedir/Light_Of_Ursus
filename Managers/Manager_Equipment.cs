@@ -13,7 +13,7 @@ public class Manager_Equipment
     public void InitialiseEquipment(Actor_Base actor)
     {
         _actor = actor;
-        _equipmentParent = _actor.transform.GetChild(1);
+        _equipmentParent = _actor.transform.parent.GetChild(0);
 
         _initialiseSlots();
         // Load(actor); Load the equipment saved on the actor. 

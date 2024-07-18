@@ -24,7 +24,7 @@ public class Spawner_IceWall : MonoBehaviour
     int _maxDistance = 0;
     Cell_IceWall _furthestCell;
 
-    int _subVoxelScale = 10;
+    //int _subVoxelScale = 10;
 
     Vector3 _startPosition;
 
@@ -34,8 +34,6 @@ public class Spawner_IceWall : MonoBehaviour
     int _maxCellHealth;
 
     int _playerExtraStamina;
-
-    bool _disableRefresh = false;
 
     void Start()
     {

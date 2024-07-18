@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Actor_Base : MonoBehaviour
 {
+    public Actor_Data_SO ActorData {  get; private set; }
     public Rigidbody RigidBody { get; protected set; }
     public Collider Collider { get; protected set; }
     public Animator Animator { get; protected set; }

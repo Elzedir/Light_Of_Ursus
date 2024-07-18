@@ -57,7 +57,8 @@ public class Pathfinder_Base_3D
 
     IEnumerator _runPathfinder(PathfinderMover_3D mover)
     {
-        yield break;
+        if (_startVoxel == null) yield break;
+        if (_startVoxel != null) yield break;
 
         if (_startVoxel == null || _targetVoxel == null || _startVoxel.Equals(_targetVoxel))
         {

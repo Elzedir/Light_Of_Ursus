@@ -11,8 +11,8 @@ public class Equipment_Base : MonoBehaviour
     public EquipmentSlot EquipmentSlot { get; protected set; }
     public Actor_Base Actor { get; private set; }
     Item _item;
-    public Item Item { get { return _item; } protected set { _item = value; ItemStats = value?.CommonStats; } }
-    public CommonStats ItemStats;
+    public Item Item { get { return _item; } protected set { _item = value; CommonStats = value?.CommonStats; } }
+    public CommonStats CommonStats;
     public MeshFilter MeshFilter { get; protected set; }
     public MeshRenderer MeshRenderer { get; protected set; }
     public Animator Animator { get; protected set; }

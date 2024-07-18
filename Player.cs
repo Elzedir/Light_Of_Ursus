@@ -9,8 +9,7 @@ public class Player : Controller, IDataPersistence
 {
     Actor_Base _actor;
     public float SpeedIncrease;
-    CapsuleCollider _coll_Body;
-    BoxCollider _coll_Head;
+    Collider _coll_Body;
     Animator _animator;
     Animator _weaponAnimator;
     Animation _animation;
@@ -22,7 +21,7 @@ public class Player : Controller, IDataPersistence
     bool _aim = false;
     Vector2 _move;
     Rigidbody _testBody;
-    bool _inAir = false;
+    //bool _inAir = false;
 
     int _playerID = 0;
     public BoxCollider _fireflyWanderZone; public BoxCollider FireflyWanderZone { get { return _fireflyWanderZone; } }
@@ -30,13 +29,12 @@ public class Player : Controller, IDataPersistence
     public void Start()
     {
         _actor = GetComponent<Actor_Base>();
-        _coll_Body = GetComponent<CapsuleCollider>();
-        _coll_Head = Manager_Game.FindTransformRecursively(transform, "PlayerHead").GetComponent<BoxCollider>();
+        _coll_Body = GetComponent<Collider>();
         _animator = GetComponent<Animator>();
         _animation = GameObject.Find("TestActor").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
         _testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
-        _weaponAnimator = Manager_Game.FindTransformRecursively(transform, "Slot_4").GetComponent<Animator>();
+        _weaponAnimator = Manager_Game.FindTransformRecursively(transform.parent, "Slot_4").GetComponent<Animator>();
 
         _rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
     }
@@ -64,6 +62,8 @@ public class Player : Controller, IDataPersistence
     protected void Update()
     {
         _moved = false;
+
+        if (_moved == false) _moved = false;
 
         PlayerMove();
 
@@ -135,11 +135,6 @@ public class Player : Controller, IDataPersistence
         _move = context.ReadValue<Vector2>();
     }
 
-    Coroutine _attackChainCoroutine;
-    float _attackChainWindow;
-    bool _ableToContinueAttackChain = false;
-    bool _continuedAttackChain = false;
-
     bool _eagleStompActive = false;
 
     public void Attack(InputAction.CallbackContext context)
@@ -161,6 +156,7 @@ public class Player : Controller, IDataPersistence
     {
         if (_actor.IsGrounded())
         {
+            Debug.Log("Breaking");
             yield break;
         }
 
@@ -173,7 +169,7 @@ public class Player : Controller, IDataPersistence
         while(elapsedTime < 1 && !_actor.IsGrounded())
         {
             elapsedTime += Time.deltaTime;
-            break;
+            yield return null;
         }
 
         _eagleStompActive = false;
@@ -209,7 +205,19 @@ public class Player : Controller, IDataPersistence
 
         Cursor.lockState = CursorLockMode.None;
 
-        yield return new WaitForSeconds(3f);
+        float elapsedTime = 0;
+
+        while (elapsedTime < 3)
+        {
+            elapsedTime += Time.deltaTime;
+
+            if (elapsedTime > 0.25 && _actor.IsGrounded())
+            {
+                break;
+            }
+
+            yield return null;
+        }
 
         Cursor.lockState = CursorLockMode.Locked;
 

@@ -61,6 +61,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _followDistance = followDistance;
         wanderData = _wanderData;
         _canMove = true;
+        if (_canMove) _canMove = true;
         _pathfinderTickRate = pathfinderTickRate;
         MoverTypes = new List<MoverType> (moverTypes);
 
@@ -86,38 +87,38 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
         return;
 
-        if (_pathfinderCooldown > _pathfinderTickRate)
-        {
-            if (_targetPosition.HasValue)
-            {
-                if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
-                {
-                    _stopPathfinder();
+        //if (_pathfinderCooldown > _pathfinderTickRate)
+        //{
+        //    if (_targetPosition.HasValue)
+        //    {
+        //        if (_pathfindingCoroutine == null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
+        //        {
+        //            _stopPathfinder();
 
-                    Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
-                }
-                else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
-                {
-                    Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
-                }
-                else
-                {
-                    //Debug.Log($"Neither since Coroutine: {_pathfindingCoroutine} or Distance is less than _followDistance: {Vector3.Distance(transform.localPosition, _targetPosition.Value)}");
-                }
+        //            Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
+        //        }
+        //        else if (_pathfindingCoroutine != null && Vector3.Distance(transform.localPosition, _targetPosition.Value) > _followDistance)
+        //        {
+        //            Pathfinder.UpdatePathfinder(transform.position, _targetPosition.Value, _collider.bounds.size, this);
+        //        }
+        //        else
+        //        {
+        //            //Debug.Log($"Neither since Coroutine: {_pathfindingCoroutine} or Distance is less than _followDistance: {Vector3.Distance(transform.localPosition, _targetPosition.Value)}");
+        //        }
 
-                //if (!_pathSet)
-                //{
-                //    Pathfinder.SetPath(transform.position, _targetPosition, this, PuzzleSet.None);
-                //    _pathSet = true;
-                //}
-                //else
-                //{
-                //    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
-                //}
-            }
+        //        //if (!_pathSet)
+        //        //{
+        //        //    Pathfinder.SetPath(transform.position, _targetPosition, this, PuzzleSet.None);
+        //        //    _pathSet = true;
+        //        //}
+        //        //else
+        //        //{
+        //        //    Pathfinder.UpdatePath(this, transform.position, _targetPosition);
+        //        //}
+        //    }
 
-            _pathfinderCooldown = 0;
-        }
+        //    _pathfinderCooldown = 0;
+        //}
 
         //if (_wanderData != null) Wander();
         //else Follow();
@@ -238,6 +239,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _moveCoroutine = null;
         _followCoroutine = null;
         _pathSet = false;
+        if (_pathSet == false) _pathSet = false;
         Pathfinder.ResetBestPath();
         CanGetNewPath = true;
     }

@@ -14,7 +14,7 @@ public class Cell_MouseMaze : Cell_Base
     public Node_Base_2D Node { get; private set; }
 
     public bool Visited;
-    bool _initialised = false;
+    //bool _initialised = false;
     public TextMeshPro CellText;
 
     public List<Wall_MouseMaze> Walls { get; private set; } = new();
