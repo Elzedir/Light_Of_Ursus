@@ -23,6 +23,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 {
     public static Manager_Game Instance;
 
+    public static HashSet<int> ActorIDs = new();
+
     Manager_Audio _manager_Audio;
     public Manager_Audio Manager_Audio { get { return _getManager_Audio(); } private set { _manager_Audio = value; } }
     Manager_Audio _getManager_Audio() { if (_manager_Audio) return _manager_Audio; else return GameObject.Find("Main Camera").GetComponentInChildren<Manager_Audio>(); }

@@ -204,9 +204,7 @@ public class Manager_Dialogue : MonoBehaviour
 
     public DialogueConversation GetConversation(string name)
     {
-        return Conversations.FirstOrDefault(conversation =>
-        conversation.Scene == SceneManager.GetActiveScene().name &&
-        conversation.Name == name);
+        return Conversations.FirstOrDefault(convo => convo.Scene == SceneManager.GetActiveScene().name && convo.Name == name);
     }
 }
 

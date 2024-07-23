@@ -69,9 +69,9 @@ public class FactionRelationship
 {
     public FactionName FactionName;
     public Relationship Relationship;
-    [SerializeField] private float _relationshipValue; public float RelationshipValue { get { return _relationshipValue; } set { _relationshipValue = value; CheckRelationship(); } }
+    [SerializeField] private float _relationshipValue; public float RelationshipValue { get { return _relationshipValue; } set { _relationshipValue = value; RefreshRelationship(); } }
 
-    public void CheckRelationship()
+    public void RefreshRelationship()
     {
         if (_relationshipValue > 100)
         {

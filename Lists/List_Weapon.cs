@@ -44,7 +44,7 @@ public class List_Weapon : Manager_Item
     }
     static void _shortBows()
     {
-        CommonStats commonStats = new CommonStats(
+        CommonStats_Item commonStats_Item = new CommonStats_Item(
             itemID: 3,
             itemType: ItemType.Weapon,
             itemName: "Wooden ShortBow",
@@ -79,11 +79,11 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
     static void _shortSwords()
     {
-        CommonStats commonStats = new CommonStats(
+        CommonStats_Item commonStats_Item = new CommonStats_Item(
             itemID: 1,
             itemType: ItemType.Weapon,
             itemName: "Wooden ShortSword",
@@ -120,12 +120,12 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
 
     static void _shields()
     {
-        CommonStats commonStats = new CommonStats(
+        CommonStats_Item commonStats_Item = new CommonStats_Item(
             itemID: 2,
             itemType: ItemType.Weapon,
             itemName: "Test Shield",
@@ -162,6 +162,6 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats: commonStats, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
 }

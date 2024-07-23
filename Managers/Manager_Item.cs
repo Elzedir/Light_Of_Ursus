@@ -21,12 +21,12 @@ public class Manager_Item
 
     public static void AddToList(Item item)
     {
-        if (_usedIDs.Contains(item.CommonStats.ItemID))
+        if (_usedIDs.Contains(item.CommonStats_Item.ItemID))
         {
-            throw new ArgumentException("Item ID " + item.CommonStats.ItemID + " is already used");
+            throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
         }
 
-        _usedIDs.Add(item.CommonStats.ItemID);
+        _usedIDs.Add(item.CommonStats_Item.ItemID);
         ItemList.Add(item);
     }
 
@@ -38,7 +38,7 @@ public class Manager_Item
 
         foreach (Item item in ItemList)
         {
-            if (itemID == item.CommonStats.ItemID || itemName == item.CommonStats.ItemName) return item;
+            if (itemID == item.CommonStats_Item.ItemID || itemName == item.CommonStats_Item.ItemName) return item;
         }
 
         Debug.Log($"Could not find item with ItemID: {itemID} or ItemName: {itemName}");
@@ -97,16 +97,16 @@ public class Manager_Item
 
 public class Item
 {
-    public CommonStats CommonStats { get; private set; }
+    public CommonStats_Item CommonStats_Item { get; private set; }
     public VisualStats VisualStats { get; private set; }
     public WeaponStats WeaponStats { get; private set; }
     public ArmourStats ArmourStats { get; private set; }
     public FixedModifiers FixedModifiers { get; private set; }
     public PercentageModifiers PercentageModifiers { get; private set; }
 
-    public Item(CommonStats commonStats = null, VisualStats visualStats = null, WeaponStats weaponStats = null, ArmourStats armourStats = null, FixedModifiers fixedModifiers = null, PercentageModifiers percentageModifiers = null)
+    public Item(CommonStats_Item commonStats_Item = null, VisualStats visualStats = null, WeaponStats weaponStats = null, ArmourStats armourStats = null, FixedModifiers fixedModifiers = null, PercentageModifiers percentageModifiers = null)
     {
-        CommonStats = commonStats ?? new CommonStats();
+        CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
         VisualStats = visualStats ?? new VisualStats();
         WeaponStats = weaponStats ?? new WeaponStats();
         ArmourStats = armourStats ?? new ArmourStats();
@@ -116,7 +116,7 @@ public class Item
 }
 
 [Serializable]
-public class CommonStats
+public class CommonStats_Item
 {
     public int ItemID;
     public string ItemName;
@@ -128,7 +128,7 @@ public class CommonStats
     public float ItemWeight;
     public bool ItemEquippable;
 
-    public CommonStats(
+    public CommonStats_Item(
         int itemID = 0,
         string itemName = "",
         ItemType itemType = ItemType.Misc,

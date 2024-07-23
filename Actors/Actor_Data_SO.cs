@@ -20,6 +20,11 @@ public enum NonPlayableType
 [CreateAssetMenu(fileName = "New Character", menuName = "Character/Character Data")]
 public class Actor_Data_SO : ScriptableObject
 {
+    [SerializeField] private int _actorID;
+    public int ActorID { get { return _actorID; } private set { _actorID = value; } }
+
+    public ActorName ActorName;
+
     public bool Playable;
     public string CharacterName;
     public FactionName Faction;
@@ -38,7 +43,7 @@ public class Actor_Data_SO : ScriptableObject
         set { _nonPlayableType = value; }
     }
 
-    private Actor_States _actorStates;
+    Actor_States _actorStates;
     public ActorStats ActorStats;
     public Aspects ActorAspects;
     //public Inventory ActorInventory;
@@ -46,9 +51,12 @@ public class Actor_Data_SO : ScriptableObject
     public Abilities ActorAbilities;
     public ActorQuests ActorQuests;
 
-    public IEnumerator Initialise(Actor_Base actor)
+    public void Initialise(Actor_Base actor)
     {
-        yield return new WaitForSeconds(0.1f);
+        if (Manager_Game.ActorIDs.Contains(_actorID))
+        {
+            throw new ArgumentException($"ActorID: {_actorID} has already been used");
+        }
 
         if (Playable)
         {
@@ -57,16 +65,29 @@ public class Actor_Data_SO : ScriptableObject
     }
 }
 
-[System.Serializable]
-public struct ActorStats
+[Serializable]
+public class ActorName
 {
-    public ActorLevelData ActorLevelData;
-    public int Gold;
-    public SPECIAL Special;
-    [SerializeField] private CombatStats _combatStats; public CombatStats CombatStats { get { return _combatStats; } }
+    public string Name;
+    public string Surname;
+}
 
-    public int XpValue;
-    public Dictionary<Vocation, float> VocationExperience;
+[System.Serializable]
+public class ActorStats
+{
+    public Date ActorBirthDate;
+    public float ActorAge;
+
+    public Personality ActorPersonality;
+
+    public ActorLevelData ActorLevelData;
+    public int ActorGold;
+    public SPECIAL ActorSpecial;
+
+    [SerializeField] CombatStats _combatStats; 
+    public CombatStats CombatStats { get { return _combatStats; } set { _combatStats = value; } }
+
+    public Dictionary<Vocation, float> VocationStats;
 }
 
 [System.Serializable]

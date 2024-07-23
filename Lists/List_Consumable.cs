@@ -11,7 +11,7 @@ public class List_Consumable : Manager_Item
 
     static void Potions()
     {
-        CommonStats commonStats = new CommonStats(
+        CommonStats_Item commonStats_Item = new CommonStats_Item(
             itemID: 202,
             itemType: ItemType.Consumable,
             itemName: "Small Health Potion",
@@ -24,6 +24,6 @@ public class List_Consumable : Manager_Item
             healthRecovery: 5
             );
 
-        AddToList(new Item(commonStats: commonStats, fixedModifiers: fixedModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, fixedModifiers: fixedModifiers));
     }
 }

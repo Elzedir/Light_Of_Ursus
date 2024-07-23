@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Manager_Time : MonoBehaviour
+public class Manager_Date_And_Time : MonoBehaviour
 {
+    public static Date CurrentDate {  get; private set; } = new Date(1, 1 , 100);
     static float _currentTimeScale = 1f;
 
     public float GetTimeScale()
@@ -49,4 +51,35 @@ public class Manager_Time : MonoBehaviour
     {
         SetTimeScale(1f);
     }
+
+    public float GetAge(Date birthDate)
+    {
+        return CurrentDate - birthDate;
+    }
 }
+
+
+public enum Day { Daymon, Suedyat, Dawyed, Thraydus, Faydri, Sadtay, Sandun }
+
+public class Date
+{
+    public int Day;
+    public int Month;
+    public int Year;
+
+    public Date(int day, int month, int year)
+    {
+        Day = day;
+        Month = month;
+        Year = year;
+    }
+
+    public static float operator -(Date a, Date b)
+    {
+        DateTime dateA = new DateTime(a.Year, a.Month, a.Day);
+        DateTime dateB = new DateTime(b.Year, b.Month, b.Day);
+        TimeSpan difference = dateA - dateB;
+        return (float)difference.TotalDays;
+    }
+}
+

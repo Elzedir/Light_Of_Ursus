@@ -12,7 +12,7 @@ public class List_Armour : Manager_Item
 
     static void Heavy()
     {
-        CommonStats commonStats = new CommonStats(
+        CommonStats_Item commonStats_Item = new CommonStats_Item(
             itemID: 100,
             itemType: ItemType.Armour,
             itemName: "Bronze ChestPlate",
@@ -48,6 +48,6 @@ public class List_Armour : Manager_Item
             attackSpeed: 0.92f
             );
 
-        AddToList(new Item(commonStats: commonStats, armourStats: armourStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, armourStats: armourStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
     }
 }

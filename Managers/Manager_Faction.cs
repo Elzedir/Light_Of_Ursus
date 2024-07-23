@@ -1,24 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Manager_Faction : MonoBehaviour
 {
-    public static List<Faction_Data_SO> AllFactionsList = new();
+    public static List<Faction_Data_SO> AllFactions = new();
 
     public static void InitialiseFactions()
     {
-        AllFactionsList.Clear();
+        AllFactions.Clear();
 
         Faction_Data_SO[] factions = Resources.LoadAll<Faction_Data_SO>("Resources_Factions");
 
         foreach (Faction_Data_SO faction in factions)
         {
-            AllFactionsList.Add(faction);
+            AllFactions.Add(faction);
 
             foreach (FactionRelationship relationship in faction.FactionData)
             {
-                relationship.CheckRelationship();
+                relationship.RefreshRelationship();
             }
         }
 
@@ -34,18 +35,14 @@ public class Manager_Faction : MonoBehaviour
         return faction;
     }
 
-    public static Faction_Data_SO GetFaction(Faction_Data_SO queriedFaction)
+    public static Faction_Data_SO GetFaction(FactionName factionName)
     {
-        foreach (Faction_Data_SO faction in AllFactionsList)
-        {
-            if (faction.FactionName == queriedFaction.FactionName)
-            {
-                return faction;
-            }
-        }
+        if (!AllFactions.Any(f => f.FactionName == factionName)) return null;
 
-        return null;
+        return AllFactions.FirstOrDefault(f => f.FactionName == factionName);
     }
+
+    public static 
 
     public static void SetFaction(Actor_Data_SO actorData, FactionName faction)
     {

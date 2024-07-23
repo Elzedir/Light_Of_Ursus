@@ -5,6 +5,8 @@ public class Actor_States
 {
     public bool Dead { get; private set; }
 
+    public bool CanGetPregnant { get; private set; }
+
     public bool Alerted { get; private set; }
     public bool Hostile { get; private set; }
     
