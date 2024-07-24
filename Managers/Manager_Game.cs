@@ -71,10 +71,10 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        _createManagers();
+        _initialiseManagers();
     }
 
-    void _createManagers()
+    void _initialiseManagers()
     {
         if (SceneManager.GetActiveScene().name == "Main_Menu") return;
 
@@ -86,10 +86,13 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_FloatingText", _manager_Parent).AddComponent<Manager_FloatingText>().OnSceneLoaded();
         _createManager("Manager_Cutscene", _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
         _createManager("Manager_Spawner", _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
-        _createManager("Manager_Progress", _manager_Parent).AddComponent<Manager_Progress>().OnSceneLoaded();
         _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
         _createManager("Manager_TickRate", _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
         _createManager("Manager_Jobs", _manager_Parent).AddComponent<Manager_Jobs>().OnSceneLoaded();
+        Manager_Career.Initialise();
+
+        CurrentDate.Initialise();
+        TimeOfDay.Initialise();
 
         GameObject _createManager(string name, Transform parent)
         {

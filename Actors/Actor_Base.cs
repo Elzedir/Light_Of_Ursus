@@ -5,12 +5,13 @@ using UnityEngine;
 
 public class Actor_Base : MonoBehaviour
 {
-    public Actor_Data_SO ActorData {  get; private set; }
+    public Actor_Data_SO ActorData;
+    public CharacterJobManager CharacterJobManager;
     public Rigidbody RigidBody { get; protected set; }
     public Collider Collider { get; protected set; }
     public Animator Animator { get; protected set; }
     public Animation Animation { get; protected set; }
-    public Manager_Equipment Manager_Equipment { get; protected set; }
+    public CharacterEquipmentManager Manager_Equipment { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
 
     void Awake()
@@ -19,8 +20,17 @@ public class Actor_Base : MonoBehaviour
         Collider = GetComponent<Collider>();
         Animator = GetComponent<Animator>();
         Animation = GetComponent<Animation>();
-        Manager_Equipment = new Manager_Equipment();
+        Manager_Equipment = new CharacterEquipmentManager();
         Manager_Equipment.InitialiseEquipment(this);
+    }
+
+    void Start()
+    {
+        if (ActorData != null)
+        {
+            ActorData.Initialise(this);
+            CharacterJobManager = new CharacterJobManager(this, ActorData.ActorCareer, Manager_Career.GetCareer(ActorData.ActorCareer).CareerJobs);
+        }
     }
 
     public bool IsGrounded()

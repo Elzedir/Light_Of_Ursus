@@ -7,32 +7,32 @@ public enum LevelUpBonusType { Health, Mana, Stamina, Skillset, Ultimate }
 
 public class Manager_CharacterLevels
 {
-    public static List<LevelData> AllLevelUpData = new();
+    public static List<CharacterLevelData> AllLevelUpData = new();
 
     public static void InitialiseLevels()
     {
         var levelInfos = new[]
         {
-            new LevelData( 1,     0, LevelUpBonusType.Health,  10, 1, 10),
-            new LevelData( 2,   250, LevelUpBonusType.Mana,    10, 1,  2),
-            new LevelData( 3,   750, LevelUpBonusType.Stamina, 10, 1,  2),
-            new LevelData( 4,  1750, LevelUpBonusType.Skillset, 1, 2,  4),
-            new LevelData( 5,  3000, LevelUpBonusType.Health,  20, 1,  3),
-            new LevelData( 6,  4500, LevelUpBonusType.Mana,    20, 1,  3),
-            new LevelData( 7,  6250, LevelUpBonusType.Stamina, 20, 1,  3),
-            new LevelData( 8,  8250, LevelUpBonusType.Skillset, 1, 2,  5),
-            new LevelData( 9, 10500, LevelUpBonusType.Health,  30, 1,  4),
-            new LevelData(10, 13000, LevelUpBonusType.Mana,    30, 1,  4),
-            new LevelData(11, 15750, LevelUpBonusType.Stamina, 30, 1,  4),
-            new LevelData(12, 18750, LevelUpBonusType.Ultimate, 1, 2,  6),
-            new LevelData(13, 22000, LevelUpBonusType.Health,  40, 1,  5),
-            new LevelData(14, 25500, LevelUpBonusType.Mana,    40, 1,  5),
-            new LevelData(15, 29250, LevelUpBonusType.Stamina, 40, 1,  5),
-            new LevelData(16, 33250, LevelUpBonusType.Ultimate, 1, 2,  7),
-            new LevelData(17, 37500, LevelUpBonusType.Health,  50, 1,  6),
-            new LevelData(18, 42000, LevelUpBonusType.Mana,    50, 1,  6),
-            new LevelData(19, 46750, LevelUpBonusType.Stamina, 50, 1,  6),
-            new LevelData(20, 51750, LevelUpBonusType.Ultimate, 1, 2, 10)
+            new CharacterLevelData( 1,     0, LevelUpBonusType.Health,  10, 1, 10),
+            new CharacterLevelData( 2,   250, LevelUpBonusType.Mana,    10, 1,  2),
+            new CharacterLevelData( 3,   750, LevelUpBonusType.Stamina, 10, 1,  2),
+            new CharacterLevelData( 4,  1750, LevelUpBonusType.Skillset, 1, 2,  4),
+            new CharacterLevelData( 5,  3000, LevelUpBonusType.Health,  20, 1,  3),
+            new CharacterLevelData( 6,  4500, LevelUpBonusType.Mana,    20, 1,  3),
+            new CharacterLevelData( 7,  6250, LevelUpBonusType.Stamina, 20, 1,  3),
+            new CharacterLevelData( 8,  8250, LevelUpBonusType.Skillset, 1, 2,  5),
+            new CharacterLevelData( 9, 10500, LevelUpBonusType.Health,  30, 1,  4),
+            new CharacterLevelData(10, 13000, LevelUpBonusType.Mana,    30, 1,  4),
+            new CharacterLevelData(11, 15750, LevelUpBonusType.Stamina, 30, 1,  4),
+            new CharacterLevelData(12, 18750, LevelUpBonusType.Ultimate, 1, 2,  6),
+            new CharacterLevelData(13, 22000, LevelUpBonusType.Health,  40, 1,  5),
+            new CharacterLevelData(14, 25500, LevelUpBonusType.Mana,    40, 1,  5),
+            new CharacterLevelData(15, 29250, LevelUpBonusType.Stamina, 40, 1,  5),
+            new CharacterLevelData(16, 33250, LevelUpBonusType.Ultimate, 1, 2,  7),
+            new CharacterLevelData(17, 37500, LevelUpBonusType.Health,  50, 1,  6),
+            new CharacterLevelData(18, 42000, LevelUpBonusType.Mana,    50, 1,  6),
+            new CharacterLevelData(19, 46750, LevelUpBonusType.Stamina, 50, 1,  6),
+            new CharacterLevelData(20, 51750, LevelUpBonusType.Ultimate, 1, 2, 10)
         };
 
         AllLevelUpData.AddRange(levelInfos);
@@ -48,7 +48,7 @@ public class Manager_CharacterLevels
 }
 
 [Serializable]
-public class LevelData
+public class CharacterLevelData
 {
     public int Level;
     public int TotalExperienceRequired;
@@ -57,7 +57,7 @@ public class LevelData
     public int SkillPoints;
     public int SPECIALPoints;
 
-    public LevelData(
+    public CharacterLevelData(
         int level,
         int totalExperienceRequired,
         LevelUpBonusType bonusType,

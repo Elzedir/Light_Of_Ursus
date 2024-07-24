@@ -38,8 +38,12 @@ public class Manager_TickRate : MonoBehaviour
     {
         float currentTime = Time.time;
 
-        foreach (var tickRate in _nextTickTimes.Keys)
+        var keys = new List<TickRate>(_nextTickTimes.Keys);
+
+        for (int i = 0; i < keys.Count; i++)
         {
+            TickRate tickRate = keys[i];
+
             if (currentTime >= _nextTickTimes[tickRate])
             {
                 _tick(tickRate);

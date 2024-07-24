@@ -1,10 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor.Animations;
 using UnityEngine;
 
 public class Manager_Equipment
+{
+    
+}
+
+public class CharacterEquipmentManager
 {
     Dictionary<int, Equipment_Base> EquipmentSlots = new();
     Actor_Base _actor;
@@ -133,3 +139,77 @@ public class Manager_Equipment
         return false;
     }
 }
+
+public class ActorEquipment
+{
+    public CommonStats_Item Head;
+    public CommonStats_Item Neck;
+    public CommonStats_Item Chest;
+    public CommonStats_Item LeftHand;
+    public CommonStats_Item RightHand;
+    public CommonStats_Item[] Rings;
+    public CommonStats_Item Waist;
+    public CommonStats_Item Legs;
+    public CommonStats_Item Feet;
+
+    public ActorEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
+    {
+        Head = head?.CommonStats_Item;
+        Neck = neck?.CommonStats_Item;
+        Chest = chest?.CommonStats_Item;
+        LeftHand = leftHand?.CommonStats_Item;
+        RightHand = rightHand?.CommonStats_Item;
+        Waist = waist?.CommonStats_Item;
+        Legs = legs?.CommonStats_Item;
+        Feet = feet?.CommonStats_Item;
+
+        if (rings == null) Rings = new CommonStats_Item[10];
+
+        for (int i = 0; i < rings.Length && i < Rings.Length; i++)
+        {
+            Rings[i] = rings[i]?.CommonStats_Item;
+        }
+    }
+
+    public void UpdateEquipment(Item item, int index)
+    {
+        switch (index)
+        {
+            case 0:
+                Head = item?.CommonStats_Item;
+                break;
+            case 1:
+                Neck = item?.CommonStats_Item;
+                break;
+            case 2:
+                Chest = item?.CommonStats_Item;
+                break;
+            case 3:
+                LeftHand = item?.CommonStats_Item;
+                break;
+            case 4:
+                RightHand = item?.CommonStats_Item;
+                break;
+            case 16:
+                Waist = item?.CommonStats_Item;
+                break;
+            case 17:
+                Legs = item?.CommonStats_Item;
+                break;
+            case 18:
+                Feet = item?.CommonStats_Item;
+                break;
+            default:
+                if (index < 16)
+                {
+                    Rings[index - 5] = item?.CommonStats_Item;
+                }
+                else
+                {
+                    Debug.LogWarning("Index out of expected range");
+                }
+                break;
+        }
+    }
+}
+

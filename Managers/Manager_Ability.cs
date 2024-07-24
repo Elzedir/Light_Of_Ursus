@@ -146,3 +146,8 @@ public class Ability
     }
 }
 
+[Serializable]
+public class ActorAbilities
+{
+    public Dictionary<Ability, float> AbilityList = new();
+}

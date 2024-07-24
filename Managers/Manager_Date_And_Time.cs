@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Manager_Date_And_Time : MonoBehaviour
 {
-    public static Date CurrentDate {  get; private set; } = new Date(1, 1 , 100);
     static float _currentTimeScale = 1f;
 
     public float GetTimeScale()
@@ -51,35 +50,130 @@ public class Manager_Date_And_Time : MonoBehaviour
     {
         SetTimeScale(1f);
     }
-
-    public float GetAge(Date birthDate)
-    {
-        return CurrentDate - birthDate;
-    }
 }
 
-
-public enum Day { Daymon, Suedyat, Dawyed, Thraydus, Faydri, Sadtay, Sandun }
+public enum DayName { Mon, Tumon, Tu, Wetu, Wed, Thured, Thur, Frith, Fri, Satri, Satu, Sunsa, Sun, Monsun }
+public enum MonthName { Janbruach, Aprayne, Julaugber, Octevmadec }
 
 public class Date
 {
-    public int Day;
-    public int Month;
-    public int Year;
+    public int TotalDays;
 
-    public Date(int day, int month, int year)
+    public Date(int totalDays)
     {
-        Day = day;
-        Month = month;
-        Year = year;
+        TotalDays = totalDays;
     }
 
-    public static float operator -(Date a, Date b)
+    public static int operator - (Date a, Date b)
     {
-        DateTime dateA = new DateTime(a.Year, a.Month, a.Day);
-        DateTime dateB = new DateTime(b.Year, b.Month, b.Day);
-        TimeSpan difference = dateA - dateB;
-        return (float)difference.TotalDays;
+        return a.TotalDays - b.TotalDays;
+    }
+
+    public float GetAge(Date birthday)
+    {
+        return TotalDays - birthday.TotalDays;
+    }
+
+    public static (int day, int month, int year) ConvertFromTotalDays(int totalDays)
+    {
+        int year = totalDays / 60;
+        int remainingDays = totalDays % 60;
+        int month = remainingDays / 14;
+        int day = remainingDays % 14;
+
+        return (day + 1, month + 1, year + 1000);
+    }
+
+    public static int ConvertToTotalDays(int day, int month, int year)
+    {
+        return ((year - 1000) * 60) + ((month - 1) * 14) + (day - 1);
     }
 }
 
+public class CurrentDate
+{
+    public static int CurrentTotalDays { get; private set; }
+    public static DayName Day;
+    public static Action NewDay;
+
+    public static void Initialise(int totalDays = 6000)
+    {
+        CurrentTotalDays = totalDays;
+    }
+
+    public static void ProgressCurrentDate(int days = 1)
+    {
+        CurrentTotalDays += days;
+
+        if (days != 0) NewDay?.Invoke();
+    }
+
+    public static string GetCurrentDateAsString()
+    {
+        var (day, month, year) = Date.ConvertFromTotalDays(CurrentTotalDays);
+        return $"{day:D2}/{month:D2}/{year}";
+    }
+
+    public static (int day, int month, int year) GetCurrentDateAsInt()
+    {
+        return Date.ConvertFromTotalDays(CurrentTotalDays);
+    }
+}
+
+public class TimeOfDay
+{
+    public int Minute;
+    public int Hour;
+
+    public TimeOfDay(int minute, int hour)
+    {
+        Minute = minute;
+        Hour = hour;
+    }
+
+    public static void Initialise(int minute = 59, int hour = 7)
+    {
+        CurrentTimeOfDay.CurrentMinute = minute;
+        CurrentTimeOfDay.CurrentHour = hour;
+        Manager_TickRate.Instance.RegisterTickable(new CurrentTimeOfDay());
+    }
+}
+
+public class CurrentTimeOfDay : ITickable
+{
+    bool _halfTime = false;
+    public static int CurrentMinute;
+    public static int CurrentHour;
+
+    public void OnTick()
+    {
+        if (_halfTime)
+        {
+            CurrentMinute++;
+
+            if (CurrentMinute >= 60)
+            {
+                CurrentMinute = 0;
+
+                CurrentHour++;
+
+                if (CurrentHour >= 24)
+                {
+                    CurrentHour = 0;
+                    CurrentDate.ProgressCurrentDate();
+                }
+            }
+
+            _halfTime = false;
+        }
+        else
+        {
+            _halfTime = true;
+        }
+    }
+
+    public TickRate GetTickRate()
+    {
+        return TickRate.One;
+    }
+}

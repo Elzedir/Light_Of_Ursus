@@ -40,9 +40,7 @@ public class Manager_Faction : MonoBehaviour
         if (!AllFactions.Any(f => f.FactionName == factionName)) return null;
 
         return AllFactions.FirstOrDefault(f => f.FactionName == factionName);
-    }
-
-    public static 
+    } 
 
     public static void SetFaction(Actor_Data_SO actorData, FactionName faction)
     {

@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class Manager_Jobs : MonoBehaviour
 {
-    public static List<Job> AllJobsList { get; private set; } = new();
+    public static List<Job> AllJobs = new();
     static Dictionary<int, (Actor_Base Actor, bool Trigger)> _entities = new();
 
     public void OnSceneLoaded()
@@ -14,31 +15,122 @@ public class Manager_Jobs : MonoBehaviour
         _initialiseJobs();
     }
 
-    public static Job GetAbility(string name)
+    public static void SetCharacter(int ID, (Actor_Base, bool) data)
     {
-        foreach (var ability in AllJobsList)
+        if (_entities.ContainsKey(ID))
         {
-            if (ability.Name == name) return ability;
+            _entities[ID] = data;
+        }
+        else
+        {
+            _entities.Add(ID, data);
+        }
+    }
+
+    public static Job GetJob(JobName jobName)
+    {
+        if (!AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException($"Job: {jobName} is not in AllJobs list");
+
+        return AllJobs.FirstOrDefault(j => j.JobName == jobName);
+    }
+
+    public static Collider GetTaskArea(Actor_Base actor, string taskObjectName)
+    {
+        float radius = 100; // Change the distance to depend on the area somehow, later.
+        Collider closestCollider = null;
+        float closestDistance = float.MaxValue;
+
+        Collider[] colliders = Physics.OverlapSphere(actor.transform.position, radius);
+
+        foreach (Collider collider in colliders)
+        {
+            if (collider.name.Contains(taskObjectName))
+            {
+                float distance = Vector3.Distance(actor.transform.position, collider.transform.position);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestCollider = collider;
+                }
+            }
         }
 
-        return null;
+        return closestCollider;
     }
+
 
     void _initialiseJobs()
     {
-        AllJobsList.Add(_chopTrees());
-        AllJobsList.Add(_smith());
+        AllJobs.Add(_lumberjack());
+        AllJobs.Add(_smith());
     }
 
-    Job _chopTrees()
+    Job _lumberjack()
     {
+        IEnumerator chopTrees(int ID)
+        {
+            Actor_Base actor = _entities[ID].Actor;
+            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Tree").bounds.center;
+
+            yield return new WaitForSeconds(3);
+        }
+
+        IEnumerator processTrees(int ID)
+        {
+            Actor_Base actor = _entities[ID].Actor;
+            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Sawmill").bounds.center;
+
+            yield return new WaitForSeconds(3);
+        }
+
+        IEnumerator dropOffWood(int ID)
+        {
+            Actor_Base actor = _entities[ID].Actor;
+            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center;
+
+            yield return new WaitForSeconds(3);
+        }
+
+        IEnumerator sellWood(int ID)
+        {
+            yield return null;
+        }
+
         return new Job(
-            name: "Chop Trees",
-            jobType: JobType.ChopTrees,
-            description: "Chop all able trees",
-            Resources.Load<AnimationClip>(""),
-            null
-            );
+            jobName: JobName.Lumberjack,
+            jobDescription: "Lumberjack",
+            new List<Task>
+            {
+                new Task(
+                    taskName: TaskName.Chop_Trees,
+                    taskDescription: "Chop trees",
+                    jobName: JobName.Lumberjack,
+                    taskAnimationClips: null,
+                    taskAction: (int ID) => StartCoroutine(chopTrees(ID))
+                    ),
+                new Task(
+                    taskName: TaskName.Process_Trees,
+                    taskDescription: "Process logs into wood",
+                    jobName: JobName.Lumberjack,
+                    taskAnimationClips: null,
+                    taskAction: (int ID) => StartCoroutine(processTrees(ID))
+                    ),
+                new Task(
+                    taskName: TaskName.Drop_Off_Wood,
+                    taskDescription: "Drop wood in woodpile",
+                    jobName: JobName.Lumberjack,
+                    taskAnimationClips: null,
+                    taskAction: (int ID) => StartCoroutine(dropOffWood(ID))
+                    ),
+                new Task(
+                    taskName: TaskName.Sell_Wood,
+                    taskDescription: "Sell wood",
+                    jobName: JobName.Lumberjack,
+                    taskAnimationClips: null,
+                    taskAction: (int ID) => StartCoroutine(sellWood(ID))
+                    )
+            });
     }
 
     Job _smith()
@@ -65,28 +157,43 @@ public class Manager_Jobs : MonoBehaviour
         }
 
         return new Job(
-            name: "Smith",
-            jobType: JobType.Smith,
-            description: "Smith something",
-            animationClip: null,
-            abilityFunctions: new List<(string Name, Action<int> Function)>()
+            jobName: JobName.Smith,
+            jobDescription: "Smith something",
+            new List<Task>
             {
-                ("Smith", (int ID) => StartCoroutine(smith(ID)))
-            }
-            );
+                new Task(
+                    taskName: TaskName.Beat_Iron,
+                    taskDescription: "Beat iron",
+                    jobName: JobName.Smith,
+                    taskAnimationClips: null,
+                    taskAction: (int ID) => StartCoroutine(smith(ID))
+                    )
+            });
     }
 }
 
 public class CharacterJobManager : ITickable
 {
-    public bool JobsActive { get; private set; }
-    public List<Job> AllCurrentJobs { get; private set; }
+    public Actor_Base Actor;
+    public Career Career;
+    public bool JobsActive;
+    public List<Job> AllCurrentJobs = new();
 
     Coroutine _jobCoroutine;
 
+    public CharacterJobManager(Actor_Base actor, CareerName careerName, List<Job> allCurrentJobs, bool jobsActive = false)
+    {
+        Actor = actor;
+        Career = Manager_Career.GetCareer(careerName);
+        JobsActive = jobsActive;
+        AllCurrentJobs = allCurrentJobs;
+
+        Manager_TickRate.Instance.RegisterTickable(this);
+    }
+
     public void OnTick()
     {
-        PerformJobs();
+        Manager_Game.Instance.StartCoroutine(PerformJobs());
     }
 
     public TickRate GetTickRate()
@@ -94,7 +201,7 @@ public class CharacterJobManager : ITickable
         return TickRate.Ten;
     }
 
-    public void SetJobActivity(bool jobsActive)
+    public void ToggleDoJobs(bool jobsActive)
     {
         JobsActive = jobsActive;
     }
@@ -134,74 +241,111 @@ public class CharacterJobManager : ITickable
 
     public IEnumerator PerformJobs()
     {
-        Manager_TickRate.Instance.RegisterTickable(this);
+        if (_jobCoroutine != null) yield break;
 
         foreach (Job job in AllCurrentJobs)
         {
-            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob());
+            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Actor));
         }
+
+        _jobCoroutine = null;
     }
 }
 
-public enum JobType
+public enum JobName
 {
     Patrol,
 
-    DefendAllies,
-    DefendNeutral,
+    Defend_Ally,
+    Defend_Neutral,
 
-    HealSelf,
-    SplintSelf,
-    HealAllies,
-    SplintAllies,
-    HealNeutral,
-    SplintNeutral,
-    HealEnemies,
-    SplintEnemies,
+    Medic_Self,
+    Medic_Ally,
+    Medic_Neutral,
+    Medic_Enemy,
 
     Research,
 
     Harvest,
 
-    ChopTrees,
-    ProcessTrees,
+    Lumberjack,
 
     Smith,
     
 }
 
+[Serializable]
 public class Job
 {
-    public string Name { get; private set; }
-    public JobType JobType { get; private set; }
-    public string Description { get; private set; }
-    public AnimationClip AnimationClip { get; private set; }
-    public List<(string Name, Action<int> Function)> JobFunctions { get; private set; }
+    public JobName JobName;
+    public string JobDescription;
+    public Collider JobArea;
+    public List<Task> JobTasks = new();
 
-    public Job(string name, JobType jobType, string description, AnimationClip animationClip, List<(string, Action<int>)> abilityFunctions)
+    public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
     {
-        Name = name;
-        JobType = jobType;
-        Description = description;
-        AnimationClip = animationClip;
-        JobFunctions = abilityFunctions;
+        if (Manager_Jobs.AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException("JobName already exists.");
+
+        JobName = jobName;
+        JobDescription = jobDescription;
+        JobTasks = jobTasks;
     }
 
-    public IEnumerator PerformJob()
+    public IEnumerator PerformJob(Actor_Base actor)
     {
-        yield return null;
-    }
-
-    public Action<int> GetAction(string functionName)
-    {
-        foreach (var function in JobFunctions)
+        foreach(Task task in JobTasks)
         {
-            if (function.Name == functionName)
-            {
-                return function.Function;
-            }
+            yield return Manager_Game.Instance.StartCoroutine(task.PerformTask(actor));
         }
+    }
+}
 
-        return null;
+public enum TaskName 
+{
+    Beat_Iron,
+
+    Chop_Trees, Process_Trees, Drop_Off_Wood, Sell_Wood,
+
+    Stand_At_Counter, Restock_Shelves,
+
+    DefendAllies, DefendNeutral,
+
+    HealSelf, SplintSelf,
+    HealAllies, SplintAllies,
+    HealNeutral, SplintNeutral,
+    HealEnemies, SplintEnemies,
+}
+
+public class Task
+{
+    public TaskName TaskName;
+    public string TaskDescription;
+
+    public JobName JobName;
+
+    public Collider TaskArea;
+    public List<AnimationClip> TaskAnimationClips;
+
+    public Action<int> TaskAction;
+
+    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Action<int> taskAction)
+    {
+        TaskName = taskName;
+        TaskDescription = taskDescription;
+
+        JobName = jobName;
+
+        TaskAnimationClips = taskAnimationClips;
+
+        TaskAction = taskAction;
+    }
+
+    public IEnumerator PerformTask(Actor_Base actor)
+    {
+        Manager_Jobs.SetCharacter(actor.ActorData.ActorID, (actor, false));
+
+        TaskAction.Invoke(actor.ActorData.ActorID);
+
+        yield return new WaitForSeconds(4);
     }
 }

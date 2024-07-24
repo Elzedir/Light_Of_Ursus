@@ -1,38 +1,22 @@
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Manager_Progress : MonoBehaviour, IDataPersistence
+public class Manager_Progress : IDataPersistence
 {
-    public static Manager_Progress Instance;
-    public Dictionary<string, Quest> QuestList { get; private set; }
-    bool _initialised = false;
+    public static Dictionary<string, Quest> QuestList { get; private set; }
 
     // Find out what information to save about the quests. Doesn't have to be everything.
 
-    void Awake()
+    public static void Initialise()
     {
-        Instance = this;
-        if (!_initialised) _initialise();
-    }
-
-    public void OnSceneLoaded()
-    {
-
-    }
-
-    void _initialise()
-    {
-        _initialised = true;
         QuestList = new();
 
         _mainQuests();
         _sideQuests();
     }
 
-    void _mainQuests()
+    static void _mainQuests()
     {
         Quest killTestQuest = new Quest(
             0,
@@ -48,7 +32,7 @@ public class Manager_Progress : MonoBehaviour, IDataPersistence
         QuestList.Add("Kill Test Quest", killTestQuest);
     }
 
-    void _sideQuests()
+    static void _sideQuests()
     {
 
     }
@@ -69,6 +53,7 @@ public class Manager_Progress : MonoBehaviour, IDataPersistence
         }
     }
 }
+
 public class Quest
 {
     public int QuestID { get; private set; }
@@ -134,4 +119,11 @@ public class QuestSaveData
             SaveQuestStages[stage.StageID] = stages[stage.StageID].StageCompleted;
         }
     }
+}
+
+[Serializable]
+public class ActorQuests
+{
+    public List<Quest> ActiveQuests;
+    public List<Quest> CompletedQuests;
 }
