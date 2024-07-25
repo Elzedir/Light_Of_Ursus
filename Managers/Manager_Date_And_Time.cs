@@ -64,6 +64,11 @@ public class Date
         TotalDays = totalDays;
     }
 
+    public Date (int day, int month, int year)
+    {
+        TotalDays = ConvertToTotalDays(day, month, year);
+    }
+
     public static int operator - (Date a, Date b)
     {
         return a.TotalDays - b.TotalDays;

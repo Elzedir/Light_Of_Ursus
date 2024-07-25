@@ -8,7 +8,7 @@ using UnityEngine;
 public class Manager_Jobs : MonoBehaviour
 {
     public static List<Job> AllJobs = new();
-    static Dictionary<int, (Actor_Base Actor, bool Trigger)> _entities = new();
+    static Dictionary<int, (Actor_Base Actor, bool Trigger)> _jobbingEntities = new();
 
     public void OnSceneLoaded()
     {
@@ -17,13 +17,13 @@ public class Manager_Jobs : MonoBehaviour
 
     public static void SetCharacter(int ID, (Actor_Base, bool) data)
     {
-        if (_entities.ContainsKey(ID))
+        if (_jobbingEntities.ContainsKey(ID))
         {
-            _entities[ID] = data;
+            _jobbingEntities[ID] = data;
         }
         else
         {
-            _entities.Add(ID, data);
+            _jobbingEntities.Add(ID, data);
         }
     }
 
@@ -70,7 +70,7 @@ public class Manager_Jobs : MonoBehaviour
     {
         IEnumerator chopTrees(int ID)
         {
-            Actor_Base actor = _entities[ID].Actor;
+            Actor_Base actor = _jobbingEntities[ID].Actor;
             actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Tree").bounds.center;
 
             yield return new WaitForSeconds(3);
@@ -78,7 +78,7 @@ public class Manager_Jobs : MonoBehaviour
 
         IEnumerator processTrees(int ID)
         {
-            Actor_Base actor = _entities[ID].Actor;
+            Actor_Base actor = _jobbingEntities[ID].Actor;
             actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Sawmill").bounds.center;
 
             yield return new WaitForSeconds(3);
@@ -86,7 +86,7 @@ public class Manager_Jobs : MonoBehaviour
 
         IEnumerator dropOffWood(int ID)
         {
-            Actor_Base actor = _entities[ID].Actor;
+            Actor_Base actor = _jobbingEntities[ID].Actor;
             actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center;
 
             yield return new WaitForSeconds(3);
@@ -145,7 +145,7 @@ public class Manager_Jobs : MonoBehaviour
 
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, ~LayerMask.GetMask("Player")))
                 {
-                    if (_entities[ID].Trigger)
+                    if (_jobbingEntities[ID].Trigger)
                     {
                         // Do something
                         break;

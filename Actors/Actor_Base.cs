@@ -7,21 +7,21 @@ public class Actor_Base : MonoBehaviour
 {
     public Actor_Data_SO ActorData;
     public CharacterJobManager CharacterJobManager;
-    public Rigidbody RigidBody { get; protected set; }
-    public Collider Collider { get; protected set; }
-    public Animator Animator { get; protected set; }
-    public Animation Animation { get; protected set; }
-    public CharacterEquipmentManager Manager_Equipment { get; protected set; }
+    public Rigidbody ActorBody { get; protected set; }
+    public Collider ActorCollider { get; protected set; }
+    public Animator ActorAnimator { get; protected set; }
+    public Animation ActorAnimation { get; protected set; }
+    public CharacterEquipmentManager ActorEquipmentManager { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
 
     void Awake()
     {
-        RigidBody = GetComponentInParent<Rigidbody>();
-        Collider = GetComponent<Collider>();
-        Animator = GetComponent<Animator>();
-        Animation = GetComponent<Animation>();
-        Manager_Equipment = new CharacterEquipmentManager();
-        Manager_Equipment.InitialiseEquipment(this);
+        ActorBody = GetComponentInParent<Rigidbody>();
+        ActorCollider = GetComponent<Collider>();
+        ActorAnimator = GetComponent<Animator>();
+        ActorAnimation = GetComponent<Animation>();
+        ActorEquipmentManager = new CharacterEquipmentManager();
+        ActorEquipmentManager.InitialiseEquipment(this);
     }
 
     void Start()
@@ -38,5 +38,19 @@ public class Actor_Base : MonoBehaviour
         if (GroundedObject == null) GroundedObject = Manager_GroundCheck.AddGroundedObject(gameObject);
 
         return GroundedObject.IsGrounded();
+    }
+
+    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 1)
+    {
+        while (Vector3.Distance(transform.position, targetPosition) > 1)
+        {
+            Vector3 direction = (targetPosition - transform.position).normalized;
+            ActorBody.velocity = direction * speed;
+
+            yield return null;
+        }
+
+        ActorBody.velocity = Vector3.zero;
+        transform.position = targetPosition;
     }
 }

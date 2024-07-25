@@ -1,49 +1,69 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Animations;
 using UnityEngine;
 
-public enum ItemType { Weapon, Armour, Consumable, Misc }
+public enum ItemType { 
+    Weapon, Armour, Consumable, 
+    Raw_Material, Processed_Material, 
+    Misc 
+}
 
 public class Manager_Item
 {
     public static List<Item> ItemList = new();
 
     static HashSet<int> _usedIDs = new();
+    static int _lastUnusedID = 100000;
 
     public static void Initialise()
     {
         List_Weapon.InitializeWeaponData();
         List_Armour.InitializeArmourData();
         List_Consumable.InitializeConsumableData();
+        List_RawMaterial.InitializeRawMaterialData();
+        List_ProcessedMaterial.InitializeProcessedMaterialData();
     }
 
     public static void AddToList(Item item)
     {
         if (_usedIDs.Contains(item.CommonStats_Item.ItemID))
         {
-            throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
+            // For now, just give them a new one.
+            int alreadyUsedID = item.CommonStats_Item.ItemID;
+
+            while (_usedIDs.Contains(_lastUnusedID))
+            {
+                _lastUnusedID++;
+            }
+
+            item.CommonStats_Item.ItemID = _lastUnusedID;
+            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} ItemID is now: {item.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetItem(alreadyUsedID).CommonStats_Item.ItemName}");
+            //throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
         }
 
         _usedIDs.Add(item.CommonStats_Item.ItemID);
         ItemList.Add(item);
     }
 
-    public static Item GetItem(int itemID = -1, string itemName = "")
+    public static Item GetItem(int itemID = -1, string itemName = "", bool returnItemIDFirst = false)
     {
-        if (itemID == -1 && itemName == "") { Debug.Log($"Both itemID: {itemID} and itemName: {itemName} are invalid."); return null; }
+        if (itemID == -1 && itemName == "") throw new ArgumentException($"Both ItemID: {itemID} and ItemName: {itemName} are invalid.");
 
         //Eventually implement a more efficient search based on ID ranges for weapons, armour, etc.
 
-        foreach (Item item in ItemList)
+        if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
         {
-            if (itemID == item.CommonStats_Item.ItemID || itemName == item.CommonStats_Item.ItemName) return item;
+            return ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID)
+                    ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName);
         }
-
-        Debug.Log($"Could not find item with ItemID: {itemID} or ItemName: {itemName}");
-
-        return null;
+        else
+        {
+            return ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName)
+                    ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID);
+        }
     }
 
     public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)

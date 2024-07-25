@@ -53,11 +53,14 @@ public enum CareerName
     Smith
 }
 
+
+
 [Serializable]
 public class Career
 {
     public CareerName CareerName;
     public string CareerDescription;
+    public ActivityPeriod ActivityPeriod;
 
     public List<Job> CareerJobs = new();
 
@@ -69,4 +72,11 @@ public class Career
         CareerDescription = careerDescription;
         CareerJobs = careerJobs;
     }
+}
+
+public enum ActivityPeriodName { Cathemeral, Nocturnal, Diurnal, Crepuscular }
+
+public class ActivityPeriod
+{
+    public ActivityPeriodName PeriodName;
 }
