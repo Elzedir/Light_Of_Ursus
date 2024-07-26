@@ -8,23 +8,10 @@ using UnityEngine;
 public class Manager_Jobs : MonoBehaviour
 {
     public static List<Job> AllJobs = new();
-    static Dictionary<int, (Actor_Base Actor, bool Trigger)> _jobbingEntities = new();
 
     public void OnSceneLoaded()
     {
         _initialiseJobs();
-    }
-
-    public static void SetCharacter(int ID, (Actor_Base, bool) data)
-    {
-        if (_jobbingEntities.ContainsKey(ID))
-        {
-            _jobbingEntities[ID] = data;
-        }
-        else
-        {
-            _jobbingEntities.Add(ID, data);
-        }
     }
 
     public static Job GetJob(JobName jobName)
@@ -68,31 +55,26 @@ public class Manager_Jobs : MonoBehaviour
 
     Job _lumberjack()
     {
-        IEnumerator chopTrees(int ID)
+        IEnumerator chopTrees(Actor_Base actor)
         {
-            Actor_Base actor = _jobbingEntities[ID].Actor;
             actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Tree").bounds.center;
 
             yield return new WaitForSeconds(3);
         }
 
-        IEnumerator processTrees(int ID)
+        IEnumerator processTrees(Actor_Base actor)
         {
-            Actor_Base actor = _jobbingEntities[ID].Actor;
-            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Sawmill").bounds.center;
-
-            yield return new WaitForSeconds(3);
+            yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position));
         }
 
-        IEnumerator dropOffWood(int ID)
+        IEnumerator dropOffWood(Actor_Base actor)
         {
-            Actor_Base actor = _jobbingEntities[ID].Actor;
             actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center;
 
             yield return new WaitForSeconds(3);
         }
 
-        IEnumerator sellWood(int ID)
+        IEnumerator sellWood(Actor_Base actor)
         {
             yield return null;
         }
@@ -107,53 +89,39 @@ public class Manager_Jobs : MonoBehaviour
                     taskDescription: "Chop trees",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: (int ID) => StartCoroutine(chopTrees(ID))
+                    taskAction: chopTrees
                     ),
                 new Task(
                     taskName: TaskName.Process_Trees,
                     taskDescription: "Process logs into wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: (int ID) => StartCoroutine(processTrees(ID))
+                    taskAction: processTrees
                     ),
                 new Task(
                     taskName: TaskName.Drop_Off_Wood,
                     taskDescription: "Drop wood in woodpile",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: (int ID) => StartCoroutine(dropOffWood(ID))
+                    taskAction: dropOffWood
                     ),
                 new Task(
                     taskName: TaskName.Sell_Wood,
                     taskDescription: "Sell wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: (int ID) => StartCoroutine(sellWood(ID))
+                    taskAction: sellWood
                     )
             });
     }
 
     Job _smith()
     {
-        IEnumerator smith(int ID)
+        IEnumerator smith(Actor_Base actor = null)
         {
-            float elapsedTime = 0;
+            if (actor == null) throw new ArgumentException("Actor is null;");
 
-            while (elapsedTime < 3)
-            {
-                elapsedTime += Time.deltaTime;
-
-                if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, ~LayerMask.GetMask("Player")))
-                {
-                    if (_jobbingEntities[ID].Trigger)
-                    {
-                        // Do something
-                        break;
-                    }
-                }
-
-                yield return null;
-            }
+            yield return null;
         }
 
         return new Job(
@@ -166,7 +134,7 @@ public class Manager_Jobs : MonoBehaviour
                     taskDescription: "Beat iron",
                     jobName: JobName.Smith,
                     taskAnimationClips: null,
-                    taskAction: (int ID) => StartCoroutine(smith(ID))
+                    taskAction: smith
                     )
             });
     }
@@ -295,7 +263,7 @@ public class Job
     {
         foreach(Task task in JobTasks)
         {
-            yield return Manager_Game.Instance.StartCoroutine(task.PerformTask(actor));
+            yield return Manager_Game.Instance.StartCoroutine(task.GetTaskAction(actor));
         }
     }
 }
@@ -326,9 +294,9 @@ public class Task
     public Collider TaskArea;
     public List<AnimationClip> TaskAnimationClips;
 
-    public Action<int> TaskAction;
+    public Func<Actor_Base, IEnumerator> TaskAction;
 
-    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Action<int> taskAction)
+    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, IEnumerator> taskAction)
     {
         TaskName = taskName;
         TaskDescription = taskDescription;
@@ -340,12 +308,8 @@ public class Task
         TaskAction = taskAction;
     }
 
-    public IEnumerator PerformTask(Actor_Base actor)
+    public IEnumerator GetTaskAction(Actor_Base actor)
     {
-        Manager_Jobs.SetCharacter(actor.ActorData.ActorID, (actor, false));
-
-        TaskAction.Invoke(actor.ActorData.ActorID);
-
-        yield return new WaitForSeconds(4);
+        return TaskAction(actor);
     }
 }

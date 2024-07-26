@@ -1,13 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Manager_Ability : MonoBehaviour
 {
     public static List<Ability> AllAbilityList = new();
-
-    static Dictionary<int, (Rigidbody RigidBody, bool Trigger)> _entities = new();
 
     public void OnSceneLoaded()
     {
@@ -22,18 +21,6 @@ public class Manager_Ability : MonoBehaviour
         }
 
         return null;
-    }
-
-    public static void SetCharacter(int ID, (Rigidbody, bool) data)
-    {
-        if (_entities.ContainsKey(ID))
-        {
-            _entities[ID] = data;
-        }
-        else
-        {
-            _entities.Add(ID, data);
-        }
     }
 
     void _initialiseMeleeAbilities()
@@ -57,9 +44,11 @@ public class Manager_Ability : MonoBehaviour
 
     Ability _eagleStomp()
     {
-        IEnumerator eagleStomp(int ID)
+        IEnumerator eagleStomp(Actor_Base actor = null)
         {
-            _entities[ID].RigidBody.AddForce(new Vector3(Camera.main.transform.forward.x, 25, Camera.main.transform.forward.z), ForceMode.Impulse);
+            if (actor == null) throw new ArgumentException("Actor is null.");
+
+            actor.ActorBody.AddForce(new Vector3(Camera.main.transform.forward.x, 25, Camera.main.transform.forward.z), ForceMode.Impulse);
 
             float elapsedTime = 0;
             GameObject reticleGO = new GameObject("Reticle");
@@ -76,19 +65,25 @@ public class Manager_Ability : MonoBehaviour
                 {
                     reticleGO.transform.position = hit.point;
 
-                    if (_entities[ID].Trigger)
+                    if (Input.GetMouseButtonDown(0))
                     {
-                        Vector3 direction = (hit.point - _entities[ID].RigidBody.transform.position).normalized;
-                        _entities[ID].RigidBody.AddForce(direction * 50, ForceMode.Impulse);
-                        _entities[ID] = (_entities[ID].RigidBody, false);
+                        stomp(hit, actor);
                         break;
                     }
                 }
 
                 yield return null;
+
+                
             }
 
             UnityEngine.Object.Destroy(reticleGO);
+        }
+
+        void stomp(RaycastHit hit, Actor_Base actor)
+        {
+            Vector3 direction = (hit.point - actor.ActorBody.transform.position).normalized;
+            actor.ActorBody.AddForce(direction * 50, ForceMode.Impulse);
         }
 
         return new Ability(
@@ -98,9 +93,9 @@ public class Manager_Ability : MonoBehaviour
             maxLevel: 10,
             baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
             animationClip: null,
-            abilityFunctions: new List<(string Name, Action<int> Function)>()
+            abilityActions: new List<(string Name, IEnumerator Action)>()
             {
-                ("Eagle Stomp", (int ID) => StartCoroutine(eagleStomp(ID)))
+                ("Eagle Stomp", eagleStomp())
             }
             );
     }
@@ -114,9 +109,9 @@ public class Ability
     public int MaxLevel { get; private set; }
     public List<(float, DamageType)> BaseDamage { get; private set; }
     public AnimationClip AnimationClip { get; private set; }
-    public List<(string Name, Action<int> Function)> AbilityFunctions { get; private set; }
+    public List<(string Name, IEnumerator Action)> AbilityActions { get; private set; }
 
-    public Ability(string name, string description, int currentLevel, int maxLevel, List<(float, DamageType)> baseDamage, AnimationClip animationClip, List<(string, Action<int>)> abilityFunctions)
+    public Ability(string name, string description, int currentLevel, int maxLevel, List<(float, DamageType)> baseDamage, AnimationClip animationClip, List<(string, IEnumerator)> abilityActions)
     {
         Name = name;
         Description = description;
@@ -124,20 +119,14 @@ public class Ability
         MaxLevel = maxLevel;
         BaseDamage = baseDamage;
         AnimationClip = animationClip;
-        AbilityFunctions = abilityFunctions;
+        AbilityActions = abilityActions;
     }
 
-    public Action<int> GetAction(string functionName)
+    public IEnumerator GetAction(string actionName)
     {
-        foreach(var function in AbilityFunctions)
-        {
-            if (function.Name == functionName)
-            {
-                return function.Function;
-            }
-        }
+        if (!AbilityActions.Any(a => a.Name == actionName)) throw new ArgumentException($"AbilityActions does not contain ActionName: {actionName}");
 
-        return null;
+        return AbilityActions.FirstOrDefault(a => a.Name == actionName).Action;
     }
 
     public void DealDamage()

@@ -11,6 +11,8 @@ public class Actor_Base : MonoBehaviour
     public Collider ActorCollider { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
     public Animation ActorAnimation { get; protected set; }
+    public InventoryComponent InventoryComponent { get; protected set; }
+    public CraftingComponent CraftingComponent { get; protected set; }
     public CharacterEquipmentManager ActorEquipmentManager { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
 

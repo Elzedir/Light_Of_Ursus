@@ -160,8 +160,6 @@ public class Player : Controller, IDataPersistence
             yield break;
         }
 
-        Manager_Ability.SetCharacter(0, (_rigidBody, true));
-
         _movementLocked = true;
 
         float elapsedTime = 0;
@@ -189,8 +187,6 @@ public class Player : Controller, IDataPersistence
 
     IEnumerator _testAbility(string abilityName)
     {
-        Manager_Ability.SetCharacter(_playerID, (_rigidBody, false));
-
         var ability = Manager_Ability.GetAbility(abilityName);
 
         if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
@@ -199,7 +195,7 @@ public class Player : Controller, IDataPersistence
 
         _movementLocked = true;
 
-        ability.GetAction("Eagle Stomp")?.Invoke(_playerID);
+        yield return StartCoroutine(ability.GetAction("Eagle Stomp"));
 
         _eagleStompActive = true;
 

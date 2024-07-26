@@ -16,19 +16,6 @@ public enum CraftingStationName
 public class Manager_Crafting : MonoBehaviour
 {
     public static HashSet<Recipe> AllRecipes = new();
-    static Dictionary<int, (Actor_Base Actor, bool Trigger)> _craftingEntities = new();
-
-    public static void SetCharacter(int ID, (Actor_Base, bool) data)
-    {
-        if (_craftingEntities.ContainsKey(ID))
-        {
-            _craftingEntities[ID] = data;
-        }
-        else
-        {
-            _craftingEntities.Add(ID, data);
-        }
-    }
 
     public static Recipe GetRecipe(RecipeName recipeName)
     {
@@ -62,6 +49,33 @@ public class Manager_Crafting : MonoBehaviour
         return closestCollider;
     }
 
+    public static Interactable_CraftingStation GetNearestCraftingStation(CraftingStationName craftingStationName, Vector3 currentPosition)
+    {
+        float radius = 100; // Change the distance to depend on the area somehow, later.
+        Interactable_CraftingStation closestStation = null;
+        float closestDistance = float.MaxValue;
+
+        Collider[] colliders = Physics.OverlapSphere(currentPosition, radius);
+
+        foreach (Collider collider in colliders)
+        {
+            Interactable_CraftingStation craftingStation = collider.GetComponent<Interactable_CraftingStation>();
+
+            if (craftingStation.CraftingStationName == craftingStationName)
+            {
+                float distance = Vector3.Distance(currentPosition, collider.transform.position);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestStation = craftingStation;
+                }
+            }
+        }
+
+        return closestStation;
+    }
+
     public void OnSceneLoaded()
     {
         _initialiseCrafting();
@@ -86,13 +100,12 @@ public class Manager_Crafting : MonoBehaviour
 
     void _processedMaterialRecipes()
     {
-        IEnumerator craftPlank(int id)
+        IEnumerator craftPlank(Actor_Base actor = null)
         {
-            Actor_Base actor = _craftingEntities[id].Actor;
-            actor.BasicMove(GetTaskArea(actor, "Sawmill").bounds.center);
+            if (actor == null) throw new ArgumentException("Actor is null.");
 
-
-
+            yield return actor.BasicMove(GetTaskArea(actor, "Sawmill").bounds.center);
+            yield return new WaitForSeconds(3);
             // Play some animation.
             yield return null;
         }
@@ -100,23 +113,25 @@ public class Manager_Crafting : MonoBehaviour
         AllRecipes.Add(new Recipe(
             recipeName: RecipeName.Plank,
             recipeDescription: "Craft a plank",
-            recipeIngredients: new List<(Item, int)>
-            {
-                (Manager_Item.GetItem(itemName: "Log"), 2)
-            },
+            recipeIngredients: new List<(Item, int)> { (Manager_Item.GetItem(itemName: "Log"), 2) },
             craftingStation: CraftingStationName.None,
-            recipeOutcomes: new List<(Item, int)>
-            {
-                (Manager_Item.GetItem(itemName: "Plank"), 1)
-            },
-            recipeAction: (int ID) => StartCoroutine(craftPlank(ID))
+            recipeOutcomes: new List<(Item, int)> { (Manager_Item.GetItem(itemName: "Plank"), 1) },
+            recipeActions: new List<(string Name, Func<Actor_Base, IEnumerator>)> { ("Craft plank", craftPlank) }
             ));
     }
 }
 
-public class CharacterCraftingManager
+public class CraftingComponent
 {
+    public Actor_Base Actor;
+    public Interactable_CraftingStation CraftingStation;
     public List<Recipe> KnownRecipes = new();
+
+    public CraftingComponent(Actor_Base actor, List<Recipe> knownRecipes)
+    {
+        Actor = actor;
+        KnownRecipes = knownRecipes;
+    }
 
     public bool AddRecipe(RecipeName recipeName)
     {
@@ -125,6 +140,75 @@ public class CharacterCraftingManager
         KnownRecipes.Add(Manager_Crafting.GetRecipe(recipeName));
 
         return true;
+    }
+
+    public List<Item> ConvertFromRecipeToIngredientItemList(Recipe recipe)
+    {
+        return recipe.RecipeIngredients.Select(ingredient => 
+        { 
+            ingredient.Item1.CommonStats_Item.CurrentStackSize = ingredient.Item2; 
+            return ingredient.Item1; 
+        }
+        ).ToList();
+    }
+
+    public IEnumerator CraftItemAll(RecipeName recipeName, Interactable_CraftingStation craftingStation)
+    {
+        var recipe = Manager_Crafting.GetRecipe(recipeName);
+        var ingredients = ConvertFromRecipeToIngredientItemList(recipe);
+
+        while (inventoryContainsAllItems(ingredients))
+        {
+            yield return Actor.StartCoroutine(CraftItem(recipeName, craftingStation));
+        }
+
+        bool inventoryContainsAllItems(List<Item> items)
+        {
+            foreach(var item in items)
+            {
+                var inventoryItem = Actor.InventoryComponent.ItemInInventory(item.CommonStats_Item.ItemID);
+
+                if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < item.CommonStats_Item.CurrentStackSize)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    public IEnumerator CraftItem(RecipeName recipeName, Interactable_CraftingStation craftingStation)
+    {
+        CraftingStation = craftingStation;
+
+        if (KnownRecipes.Any(r => r.RecipeName == recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); yield break; }
+
+        Recipe recipe = Manager_Crafting.GetRecipe(recipeName);
+
+        if (!_removedIngredientsFromInventory()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
+        if (!_addedIngredientsToCraftingStation()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
+
+        yield return Actor.StartCoroutine(recipe.GetAction("Craft plank", Actor));
+
+        bool _addedIngredientsToCraftingStation()
+        {
+            var sortedIngredients = ConvertFromRecipeToIngredientItemList(recipe);
+
+            if (CraftingStation.InventoryComponent.AddToInventory(sortedIngredients))
+            {
+                return true;
+            }
+
+            Actor.InventoryComponent.AddToInventory(sortedIngredients);
+
+            return false;
+        }
+
+        bool _removedIngredientsFromInventory()
+        {
+            return Actor.InventoryComponent.RemoveFromInventory(ConvertFromRecipeToIngredientItemList(recipe));
+        }
     }
 }
 
@@ -142,9 +226,9 @@ public class Recipe
     public CraftingStationName CraftingStation;
     public List<(Item, int)> RecipeOutcomes = new();
 
-    public Action<int> RecipeAction;
+    public List<(string Name, Func<Actor_Base, IEnumerator> Action)> RecipeActions;
 
-    public Recipe(RecipeName recipeName, string recipeDescription, List<(Item, int)> recipeIngredients, CraftingStationName craftingStation, List<(Item, int)> recipeOutcomes, Action<int> recipeAction)
+    public Recipe(RecipeName recipeName, string recipeDescription, List<(Item, int)> recipeIngredients, CraftingStationName craftingStation, List<(Item, int)> recipeOutcomes, List<(string Name, Func<Actor_Base, IEnumerator>)> recipeActions)
     {
         RecipeName = recipeName;
         RecipeDescription = recipeDescription;
@@ -153,6 +237,13 @@ public class Recipe
         CraftingStation = craftingStation;
         RecipeOutcomes = recipeOutcomes;
 
-        RecipeAction = recipeAction;
+        RecipeActions = recipeActions;
+    }
+
+    public IEnumerator GetAction(string actionName, Actor_Base actor)
+    {
+        if (!RecipeActions.Any(a => a.Name == actionName)) throw new ArgumentException($"RecipeActions does not contain ActionName: {actionName}");
+
+        return RecipeActions.FirstOrDefault(a => a.Name == actionName).Action(actor);
     }
 }
