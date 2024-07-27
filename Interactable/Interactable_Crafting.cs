@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Resource : Interactable_Base
+public class Interactable_Crafting : Interactable_Base
 {
     public InventoryComponent InventoryComponent;
 
-    public virtual ResourceName GetResourceName()
+    public virtual CraftingStationName GetCraftingStationName()
     {
         throw new ArgumentException("Can't use base class.");
     }
@@ -17,7 +17,7 @@ public class Interactable_Resource : Interactable_Base
         throw new ArgumentException("Can't use base class.");
     }
 
-    public virtual List<Item> GetResourceYield(Actor_Base actor)
+    public virtual List<Item> GetCraftingYield(Actor_Base actor)
     {
         throw new ArgumentException("Can't use base class.");
     }

@@ -38,7 +38,7 @@ public class Manager_ResourceGathering : MonoBehaviour
         return closestCollider;
     }
 
-    public static Interactable_Resource GetNearestCraftingStation(ResourceName resourceName, Vector3 currentPosition)
+    public static Interactable_Resource GetNearestResource(ResourceName resourceName, Vector3 currentPosition)
     {
         float radius = 100; // Change the distance to depend on the area somehow, later.
         Interactable_Resource closestResource = null;
@@ -48,20 +48,52 @@ public class Manager_ResourceGathering : MonoBehaviour
 
         foreach (Collider collider in colliders)
         {
-            Interactable_Resource craftingStation = collider.GetComponent<Interactable_Resource>();
+            Interactable_Resource resource = collider.GetComponent<Interactable_Resource>();
 
-            if (craftingStation.ResourceName == resourceName)
+            if (resource == null) continue;
+
+            if (resource.GetResourceName() == resourceName)
             {
-                float distance = Vector3.Distance(currentPosition, collider.transform.position);
+                float distance = Vector3.Distance(currentPosition, resource.transform.position);
 
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
-                    closestResource = craftingStation;
+                    closestResource = resource;
                 }
             }
         }
 
         return closestResource;
+    }
+}
+
+public class GatheringComponent
+{
+    public Actor_Base Actor;
+    public Interactable_Resource Resource;
+
+    Coroutine _gatheringCoroutine;
+
+    public GatheringComponent(Actor_Base actor)
+    {
+        Actor = actor;
+    }
+
+    public IEnumerator GatherResource(Interactable_Resource resource)
+    {
+        Resource = resource;
+
+        yield return _gatheringCoroutine = Actor.StartCoroutine(resource.Interact(Actor));
+
+        if (!addedIngredientsToActor(resource.GetResourceYield(Actor)))
+        {
+            // Drop resources on floor
+        }
+
+        bool addedIngredientsToActor(List<Item> items)
+        {
+            return Actor.InventoryComponent.AddToInventory(items);
+        }
     }
 }

@@ -49,19 +49,21 @@ public class Manager_Crafting : MonoBehaviour
         return closestCollider;
     }
 
-    public static Interactable_CraftingStation GetNearestCraftingStation(CraftingStationName craftingStationName, Vector3 currentPosition)
+    public static Interactable_Crafting GetNearestCraftingStation(CraftingStationName craftingStationName, Vector3 currentPosition)
     {
         float radius = 100; // Change the distance to depend on the area somehow, later.
-        Interactable_CraftingStation closestStation = null;
+        Interactable_Crafting closestStation = null;
         float closestDistance = float.MaxValue;
 
         Collider[] colliders = Physics.OverlapSphere(currentPosition, radius);
 
         foreach (Collider collider in colliders)
         {
-            Interactable_CraftingStation craftingStation = collider.GetComponent<Interactable_CraftingStation>();
+            Interactable_Crafting craftingStation = collider.GetComponent<Interactable_Crafting>();
 
-            if (craftingStation.CraftingStationName == craftingStationName)
+            if (craftingStation == null) continue;
+
+            if (craftingStation.GetCraftingStationName() == craftingStationName)
             {
                 float distance = Vector3.Distance(currentPosition, collider.transform.position);
 
@@ -124,7 +126,7 @@ public class Manager_Crafting : MonoBehaviour
 public class CraftingComponent
 {
     public Actor_Base Actor;
-    public Interactable_CraftingStation CraftingStation;
+    public Interactable_Crafting CraftingStation;
     public List<Recipe> KnownRecipes = new();
 
     public CraftingComponent(Actor_Base actor, List<Recipe> knownRecipes)
@@ -152,7 +154,7 @@ public class CraftingComponent
         ).ToList();
     }
 
-    public IEnumerator CraftItemAll(RecipeName recipeName, Interactable_CraftingStation craftingStation)
+    public IEnumerator CraftItemAll(RecipeName recipeName, Interactable_Crafting craftingStation)
     {
         var recipe = Manager_Crafting.GetRecipe(recipeName);
         var ingredients = ConvertFromRecipeToIngredientItemList(recipe);
@@ -178,7 +180,7 @@ public class CraftingComponent
         }
     }
 
-    public IEnumerator CraftItem(RecipeName recipeName, Interactable_CraftingStation craftingStation)
+    public IEnumerator CraftItem(RecipeName recipeName, Interactable_Crafting craftingStation)
     {
         CraftingStation = craftingStation;
 

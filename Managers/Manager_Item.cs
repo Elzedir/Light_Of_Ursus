@@ -48,7 +48,7 @@ public class Manager_Item
         ItemList.Add(item);
     }
 
-    public static Item GetItem(int itemID = -1, string itemName = "", bool returnItemIDFirst = false)
+    public static Item GetItem(int itemID = -1, string itemName = "", bool returnItemIDFirst = false, int itemQuantity = 1)
     {
         if (itemID == -1 && itemName == "") throw new ArgumentException($"Both ItemID: {itemID} and ItemName: {itemName} are invalid.");
 
@@ -56,13 +56,13 @@ public class Manager_Item
 
         if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
         {
-            return ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID)
-                    ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName);
+            return ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemID == itemID; } )
+                    ?? ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemName == itemName; });
         }
         else
         {
-            return ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName)
-                    ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID);
+            return ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemName == itemName; })
+                    ?? ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemID == itemID; });
         }
     }
 
@@ -115,6 +115,22 @@ public class Manager_Item
     }
 }
 
+[Serializable]
+public class DisplayItem
+{
+    public int ItemID;
+    public string ItemName;
+    public int ItemQuantity;
+
+    public DisplayItem(int itemID, string itemName, int itemQuantity)
+    {
+        ItemID = itemID;
+        ItemName = itemName;
+        ItemQuantity = itemQuantity;
+    }
+}
+
+[Serializable]
 public class Item
 {
     public CommonStats_Item CommonStats_Item { get; private set; }

@@ -57,19 +57,22 @@ public class Manager_Jobs : MonoBehaviour
     {
         IEnumerator chopTrees(Actor_Base actor)
         {
-            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "Tree").bounds.center;
+            var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceName.Tree, actor.transform.position);
 
-            yield return new WaitForSeconds(3);
+            yield return actor.BasicMove(nearestResource.GetComponent<Collider>().bounds.center);
+            yield return actor.GatheringComponent.GatherResource(nearestResource);
         }
 
         IEnumerator processTrees(Actor_Base actor)
         {
-            yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position));
+            var nearestCraftingStation = Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position);
+            yield return actor.BasicMove(nearestCraftingStation.GetComponent<Collider>().bounds.center);
+            yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, nearestCraftingStation);
         }
 
         IEnumerator dropOffWood(Actor_Base actor)
         {
-            actor.transform.parent.transform.position = Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center;
+            yield return actor.BasicMove(Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center);
 
             yield return new WaitForSeconds(3);
         }
@@ -140,7 +143,7 @@ public class Manager_Jobs : MonoBehaviour
     }
 }
 
-public class CharacterJobManager : ITickable
+public class JobComponent : ITickable
 {
     public Actor_Base Actor;
     public Career Career;
@@ -149,7 +152,7 @@ public class CharacterJobManager : ITickable
 
     Coroutine _jobCoroutine;
 
-    public CharacterJobManager(Actor_Base actor, CareerName careerName, List<Job> allCurrentJobs, bool jobsActive = false)
+    public JobComponent(Actor_Base actor, CareerName careerName, List<Job> allCurrentJobs, bool jobsActive = false)
     {
         Actor = actor;
         Career = Manager_Career.GetCareer(careerName);
@@ -166,7 +169,7 @@ public class CharacterJobManager : ITickable
 
     public TickRate GetTickRate()
     {
-        return TickRate.Ten;
+        return TickRate.One;
     }
 
     public void ToggleDoJobs(bool jobsActive)

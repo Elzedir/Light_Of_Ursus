@@ -12,7 +12,9 @@ public class Manager_Inventory : MonoBehaviour
 public class InventoryComponent
 {
     public Actor_Base Actor;
-    public List<Item> Inventory;
+    public int Gold = 50;
+    List<Item> _inventory;
+    public List<Item> Inventory { get { return _inventory; } set { _inventory = value; Actor.ActorData.ActorInventory.UpdateDisplayInventory(Actor); } }
 
     public InventoryComponent(Actor_Base actor, List<Item> inventory)
     {
@@ -168,14 +170,26 @@ public class InventoryComponent
     }
 }
 
-public class ActorInventory
+[Serializable   ]
+public class DisplayInventory
 {
+    public Actor_Base Actor;
     public int Gold = 0;
-    public List<Item> Inventory = new();
+    public List<DisplayItem> Inventory = new();
 
-    public void UpdateInventory(List<Item> inventory, int gold)
+    public void UpdateDisplayInventory(Actor_Base actor)
     {
-        Inventory = inventory;
-        Gold = gold;
+        if (actor.InventoryComponent == null) return;
+
+        Gold = actor.InventoryComponent.Gold;
+        
+        foreach(Item item in actor.InventoryComponent.Inventory)
+        {
+            Inventory.Add(new DisplayItem(
+                itemID: item.CommonStats_Item.ItemID,
+                itemName: item.CommonStats_Item.ItemName,
+                itemQuantity: item.CommonStats_Item.CurrentStackSize
+                ));
+        }
     }
 }

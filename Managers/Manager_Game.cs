@@ -89,6 +89,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
         _createManager("Manager_TickRate", _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
         _createManager("Manager_Jobs", _manager_Parent).AddComponent<Manager_Jobs>().OnSceneLoaded();
+        _createManager("Manager_Crafting", _manager_Parent).AddComponent<Manager_Crafting>().OnSceneLoaded();
         Manager_Career.Initialise();
 
         CurrentDate.Initialise();

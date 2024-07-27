@@ -18,7 +18,7 @@ public class Actor_Data_SO : ScriptableObject
     public Actor_States ActorStates;
     public ActorStats ActorStats;
     public ActorAspects ActorAspects;
-    public ActorInventory ActorInventory;
+    public DisplayInventory ActorInventory;
     public ActorEquipment ActorEquipment;
     public ActorAbilities ActorAbilities;
     public ActorQuests ActorQuests;

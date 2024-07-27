@@ -22,8 +22,6 @@ public class Player : Controller, IDataPersistence
     Vector2 _move;
     Rigidbody _testBody;
     //bool _inAir = false;
-
-    int _playerID = 0;
     public BoxCollider _fireflyWanderZone; public BoxCollider FireflyWanderZone { get { return _fireflyWanderZone; } }
 
     public void Start()
