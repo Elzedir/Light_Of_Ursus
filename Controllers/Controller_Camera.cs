@@ -59,17 +59,17 @@ public class Controller_Camera : MonoBehaviour
     {
         if (Manager_Game.Instance.CurrentState == GameState.Cinematic && _lookAt != null) _lookAt = null;
 
-        if (Manager_Game.Instance.CurrentState == GameState.Playing)
-        {
-            if ((_player == null || _lookAt == null || _player.gameObject != Manager_Game.Instance.Player.gameObject))
-            {
-                if (Manager_Game.Instance.Player == null) Manager_Game.Instance.SetPlayer();
-                _player = Manager_Game.Instance.Player;
-                _lookAt = _player.transform;
-            }
+        //if (Manager_Game.Instance.CurrentState == GameState.Playing)
+        //{
+        //    if ((_player == null || _lookAt == null || _player.gameObject != Manager_Game.Instance.Player.gameObject))
+        //    {
+        //        if (Manager_Game.Instance.Player == null) Manager_Game.Instance.SetPlayer();
+        //        _player = Manager_Game.Instance.Player;
+        //        _lookAt = _player.transform;
+        //    }
 
-            _handleCameraRotation();
-        }
+        //    _handleCameraRotation();
+        //}
         
         if (Manager_Game.Instance.CurrentState == GameState.Puzzle)
         {

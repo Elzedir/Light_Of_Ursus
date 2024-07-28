@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Security.Cryptography;
 using UnityEngine;
 
-public class Actor_Base : MonoBehaviour
+public class Actor_Base : MonoBehaviour, IInventoryActor
 {
-    public Actor_Data_SO ActorData;
-    
+    [SerializeField] Actor_Data_SO _actorData;
+    public Actor_Data_SO ActorData { get { return _actorData; } private set { _actorData = value; } }
+
     public Rigidbody ActorBody { get; protected set; }
     public Collider ActorCollider { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
@@ -26,7 +28,6 @@ public class Actor_Base : MonoBehaviour
         ActorAnimation = GetComponent<Animation>();
         ActorEquipmentManager = new CharacterEquipmentManager();
         ActorEquipmentManager.InitialiseEquipment(this);
-        
     }
 
     void Start()
@@ -35,10 +36,19 @@ public class Actor_Base : MonoBehaviour
         {
             ActorData.Initialise(this);
             JobComponent = new JobComponent(this, ActorData.ActorCareer, Manager_Career.GetCareer(ActorData.ActorCareer).CareerJobs);
-            InventoryComponent = new InventoryComponent(this, new List<Item>());
             CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
             GatheringComponent = new GatheringComponent(this);
         }
+    }
+
+    public void InitialiseInventoryComponent()
+    {
+        InventoryComponent = new InventoryComponent(this, new List<Item>());
+    }
+
+    public void UpdateInventoryDisplay()
+    {
+        ActorData.ActorInventory.UpdateDisplayInventory(this);
     }
 
     public bool IsGrounded()
@@ -48,7 +58,7 @@ public class Actor_Base : MonoBehaviour
         return GroundedObject.IsGrounded();
     }
 
-    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 3)
+    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 10)
     {
         while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
         {

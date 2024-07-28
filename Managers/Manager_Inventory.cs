@@ -3,22 +3,52 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
+using static UnityEngine.UI.GridLayoutGroup;
 
 public class Manager_Inventory : MonoBehaviour
+{
+    List<IInventoryOwner> _inventoryOwners;
+
+    public void OnSceneLoaded()
+    {
+        _inventoryOwners = _findAllInventoryOwners();
+        foreach (IInventoryOwner owner in _inventoryOwners) owner.InitialiseInventoryComponent();
+    }
+
+    List<IInventoryOwner> _findAllInventoryOwners()
+    {
+        return new List<IInventoryOwner>(FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<IInventoryOwner>());
+    }
+}
+
+public interface IInventoryOwner
+{
+    InventoryComponent InventoryComponent { get; }
+    void UpdateInventoryDisplay();
+    void InitialiseInventoryComponent();
+}
+
+public interface IInventoryActor : IInventoryOwner
+{
+    Actor_Data_SO ActorData { get; }
+}
+
+public interface IInventoryCrafting : IInventoryOwner
 {
     
 }
 
 public class InventoryComponent
 {
-    public Actor_Base Actor;
+    public IInventoryOwner InventoryOwner;
     public int Gold = 50;
-    List<Item> _inventory;
-    public List<Item> Inventory { get { return _inventory; } set { _inventory = value; Actor.ActorData.ActorInventory.UpdateDisplayInventory(Actor); } }
+    public List<Item> Inventory;
 
-    public InventoryComponent(Actor_Base actor, List<Item> inventory)
+    public InventoryComponent(IInventoryOwner inventoryOwner, List<Item> inventory)
     {
-        Actor = actor;
+        InventoryOwner = inventoryOwner;
         Inventory = inventory;
     }
 
@@ -30,6 +60,8 @@ public class InventoryComponent
 
         Item itemToReturn = Manager_Item.GetItem(itemID);
         itemToReturn.CommonStats_Item.CurrentStackSize = totalStackSize;
+
+        InventoryOwner.UpdateInventoryDisplay();
 
         return itemToReturn;
     }
@@ -56,8 +88,13 @@ public class InventoryComponent
         {
             RemoveFromInventory(tempAddedItems);
             tempAddedItems.Clear();
+
+            InventoryOwner.UpdateInventoryDisplay();
+
             return false;
         }
+
+        InventoryOwner.UpdateInventoryDisplay();
 
         return true;
 
@@ -114,6 +151,16 @@ public class InventoryComponent
 
     public bool RemoveFromInventory(List<Item> items)
     {
+        foreach (Item item in Inventory)
+        {
+            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
+
+        }
+        foreach (Item item in items)
+        {
+            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
+        }
+
         bool removedAllItems = true;
         List<Item> tempRemovedItems = new();
 
@@ -121,6 +168,7 @@ public class InventoryComponent
         {
             if (removeItem(itemToRemove))
             {
+                Debug.Log($"ItemName: {itemToRemove.CommonStats_Item.ItemName} of quantity: {itemToRemove.CommonStats_Item.CurrentStackSize} removed.");
                 tempRemovedItems.Add(itemToRemove);
             }
             else
@@ -134,8 +182,15 @@ public class InventoryComponent
         {
             AddToInventory(tempRemovedItems);
             tempRemovedItems.Clear();
+
+            InventoryOwner.UpdateInventoryDisplay();
+
+            Debug.Log("Couldn't remove all items.");
+
             return false;
         }
+
+        InventoryOwner.UpdateInventoryDisplay();
 
         return true;
 
@@ -149,17 +204,21 @@ public class InventoryComponent
 
             int amountToRemove = item.CommonStats_Item.CurrentStackSize;
 
+            Debug.Log($"AmountToRemove: {amountToRemove}");
+
             foreach (var stackItem in existingItems.OrderBy(i => i.CommonStats_Item.CurrentStackSize))
             {
                 if (amountToRemove <= 0) break;
 
                 if (stackItem.CommonStats_Item.CurrentStackSize <= amountToRemove)
                 {
+                    Debug.Log($"Removed everything since stackSize: {stackItem.CommonStats_Item.CurrentStackSize} is less than amount to remove: {amountToRemove}");
                     amountToRemove -= stackItem.CommonStats_Item.CurrentStackSize;
                     Inventory.Remove(stackItem);
                 }
                 else
                 {
+                    Debug.Log($"Removing part of stackItem since: {stackItem.CommonStats_Item.CurrentStackSize} is more than amount to remove: {amountToRemove}");
                     stackItem.CommonStats_Item.CurrentStackSize -= amountToRemove;
                     amountToRemove = 0;
                 }
@@ -183,6 +242,8 @@ public class DisplayInventory
 
         Gold = actor.InventoryComponent.Gold;
         
+        Inventory.Clear();
+
         foreach(Item item in actor.InventoryComponent.Inventory)
         {
             Inventory.Add(new DisplayItem(

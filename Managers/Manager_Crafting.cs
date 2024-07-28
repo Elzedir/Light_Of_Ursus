@@ -159,6 +159,11 @@ public class CraftingComponent
         var recipe = Manager_Crafting.GetRecipe(recipeName);
         var ingredients = ConvertFromRecipeToIngredientItemList(recipe);
 
+        foreach (Item item in Actor.InventoryComponent.Inventory)
+        {
+            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
+        }
+
         while (inventoryContainsAllItems(ingredients))
         {
             yield return Actor.StartCoroutine(CraftItem(recipeName, craftingStation));
@@ -172,9 +177,13 @@ public class CraftingComponent
 
                 if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < item.CommonStats_Item.CurrentStackSize)
                 {
+                    Debug.Log("Inventory does not contain items");
+
                     return false;
                 }
             }
+
+            Debug.Log("Inventory contains items");
 
             return true;
         }
@@ -184,16 +193,18 @@ public class CraftingComponent
     {
         CraftingStation = craftingStation;
 
-        if (KnownRecipes.Any(r => r.RecipeName == recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); yield break; }
+        if (!KnownRecipes.Any(r => r.RecipeName == recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); yield break; }
 
         Recipe recipe = Manager_Crafting.GetRecipe(recipeName);
 
-        if (!_removedIngredientsFromInventory()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
-        if (!_addedIngredientsToCraftingStation()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
+        if (!removedIngredientsFromInventory()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
+        if (!addedIngredientsToCraftingStation()) { Debug.Log($"Inventory does not have all required ingredients"); yield break; }
 
         yield return Actor.StartCoroutine(recipe.GetAction("Craft plank", Actor));
 
-        bool _addedIngredientsToCraftingStation()
+        if (!addedProductsToInventory()) { Debug.Log($"Cannot add products back into inventory"); yield break; }
+
+        bool addedIngredientsToCraftingStation()
         {
             var sortedIngredients = ConvertFromRecipeToIngredientItemList(recipe);
 
@@ -207,9 +218,28 @@ public class CraftingComponent
             return false;
         }
 
-        bool _removedIngredientsFromInventory()
+        bool removedIngredientsFromInventory()
         {
+            foreach(Item item in Actor.InventoryComponent.Inventory)
+            {
+                Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
+            }
+
             return Actor.InventoryComponent.RemoveFromInventory(ConvertFromRecipeToIngredientItemList(recipe));
+        }
+
+        bool addedProductsToInventory()
+        {
+            var sortedIngredients = ConvertFromRecipeToIngredientItemList(recipe);
+
+            if (Actor.InventoryComponent.AddToInventory(sortedIngredients))
+            {
+                return true;
+            }
+
+            Actor.InventoryComponent.AddToInventory(sortedIngredients);
+
+            return false;
         }
     }
 }

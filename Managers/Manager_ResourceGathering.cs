@@ -89,6 +89,7 @@ public class GatheringComponent
         if (!addedIngredientsToActor(resource.GetResourceYield(Actor)))
         {
             // Drop resources on floor
+            Debug.Log("Couldn't add to inventory");
         }
 
         bool addedIngredientsToActor(List<Item> items)

@@ -48,22 +48,31 @@ public class Manager_Item
         ItemList.Add(item);
     }
 
-    public static Item GetItem(int itemID = -1, string itemName = "", bool returnItemIDFirst = false, int itemQuantity = 1)
+    public static Item GetItem(int itemID = -1, string itemName = "", int itemQuantity = 1, bool returnItemIDFirst = false)
     {
         if (itemID == -1 && itemName == "") throw new ArgumentException($"Both ItemID: {itemID} and ItemName: {itemName} are invalid.");
 
         //Eventually implement a more efficient search based on ID ranges for weapons, armour, etc.
 
+        Item foundItem = null;
+
         if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
         {
-            return ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemID == itemID; } )
-                    ?? ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemName == itemName; });
+            foundItem = ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID)
+                        ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName);
         }
         else
         {
-            return ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemName == itemName; })
-                    ?? ItemList.FirstOrDefault(i => { i.CommonStats_Item.CurrentStackSize = itemQuantity; return i.CommonStats_Item.ItemID == itemID; });
+            foundItem = ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName)
+                        ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID);
         }
+
+        if (foundItem != null)
+        {
+            foundItem.CommonStats_Item.CurrentStackSize = itemQuantity;
+        }
+
+        return foundItem;
     }
 
     public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)

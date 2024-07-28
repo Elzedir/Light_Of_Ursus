@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Crafting : Interactable_Base
+public class Interactable_Crafting : Interactable_Base, IInventoryCrafting
 {
-    public InventoryComponent InventoryComponent;
+    public InventoryComponent InventoryComponent { get; protected set; }
 
     public virtual CraftingStationName GetCraftingStationName()
     {
@@ -18,6 +18,16 @@ public class Interactable_Crafting : Interactable_Base
     }
 
     public virtual List<Item> GetCraftingYield(Actor_Base actor)
+    {
+        throw new ArgumentException("Can't use base class.");
+    }
+
+    public void UpdateInventoryDisplay()
+    {
+        //InventoryData.ActorInventory.UpdateDisplayInventory(this);
+    }
+
+    public virtual void InitialiseInventoryComponent()
     {
         throw new ArgumentException("Can't use base class.");
     }

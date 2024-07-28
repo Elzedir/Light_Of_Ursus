@@ -58,7 +58,7 @@ public class Manager_Jobs : MonoBehaviour
         IEnumerator chopTrees(Actor_Base actor)
         {
             var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceName.Tree, actor.transform.position);
-
+            if (nearestResource == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
             yield return actor.BasicMove(nearestResource.GetComponent<Collider>().bounds.center);
             yield return actor.GatheringComponent.GatherResource(nearestResource);
         }
@@ -66,7 +66,12 @@ public class Manager_Jobs : MonoBehaviour
         IEnumerator processTrees(Actor_Base actor)
         {
             var nearestCraftingStation = Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position);
+            if (nearestCraftingStation == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
             yield return actor.BasicMove(nearestCraftingStation.GetComponent<Collider>().bounds.center);
+            foreach (Item item in actor.InventoryComponent.Inventory)
+            {
+                Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
+            }
             yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, nearestCraftingStation);
         }
 
