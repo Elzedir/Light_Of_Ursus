@@ -22,19 +22,19 @@ public class List_Armour : Manager_Item
             itemValue: 10
             );
 
-        VisualStats visualStats = new VisualStats(
+        VisualStats_Item visualStats = new VisualStats_Item(
             itemIcon: null,
             itemPosition: new Vector3(-0.04f, -0.07f, 0f),
             itemRotation: Quaternion.Euler(180, 0, 0),
             itemScale: new Vector3(0.4f, 0.4f, 0.4f)
             );
 
-        ArmourStats armourStats = new ArmourStats(
+        ArmourStats_Item armourStats = new ArmourStats_Item(
             armourType: EquipmentSlot.Chest,
             itemCoverage: 75
             );
 
-        FixedModifiers fixedModifiers = new FixedModifiers(
+        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
             maxHealth: 5,
             maxMana: 5,
             maxStamina: 5,
@@ -44,10 +44,10 @@ public class List_Armour : Manager_Item
             dodgeCooldownReduction: -1
             );
 
-        PercentageModifiers percentageModifiers = new PercentageModifiers(
+        PercentageModifiers_Item percentageModifiers = new PercentageModifiers_Item(
             attackSpeed: 0.92f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, armourStats: armourStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, armourStats_Item: armourStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
 }

@@ -25,7 +25,7 @@ public class Mine : MonoBehaviour
 
     void Update()
     {
-        if (_move == Vector3.zero) _move = Vector3.left; transform.position += (_move.normalized * _speed * Time.deltaTime);
+        if (_move == Vector3.zero) _move = Vector3.left; transform.position += (_move.normalized * _speed * UnityEngine.Time.deltaTime);
 
         if (_reloadTime >= _shootInterval)
         {
@@ -34,7 +34,7 @@ public class Mine : MonoBehaviour
             _reloadTime = 0;
         }
 
-        _reloadTime += Time.deltaTime;
+        _reloadTime += UnityEngine.Time.deltaTime;
 
         
     }

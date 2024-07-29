@@ -9,12 +9,12 @@ public class Arrow : MonoBehaviour
     public Transform Target;
     void Update()
     {
-        if (Move != Vector3.zero) transform.position += (Move.normalized * Speed * Time.deltaTime);
+        if (Move != Vector3.zero) transform.position += (Move.normalized * Speed * UnityEngine.Time.deltaTime);
 
         if (Target != null)
         {
             Vector2 direction = (Target.position - transform.position).normalized;
-            transform.position += new Vector3(direction.x, direction.y, 0) * Speed * Time.deltaTime;
+            transform.position += new Vector3(direction.x, direction.y, 0) * Speed * UnityEngine.Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f);
         }
     }

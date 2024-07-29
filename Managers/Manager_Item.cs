@@ -1,9 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 using UnityEditor.Animations;
 using UnityEngine;
+using Unity.VisualScripting;
 
 public enum ItemType { 
     Weapon, Armour, Consumable, 
@@ -48,7 +52,7 @@ public class Manager_Item
         ItemList.Add(item);
     }
 
-    public static Item GetItem(int itemID = -1, string itemName = "", int itemQuantity = 1, bool returnItemIDFirst = false)
+    public static Item GetItem(int itemID = -1, int itemQuantity = 1, string itemName = "",  bool returnItemIDFirst = false)
     {
         if (itemID == -1 && itemName == "") throw new ArgumentException($"Both ItemID: {itemID} and ItemName: {itemName} are invalid.");
 
@@ -67,25 +71,20 @@ public class Manager_Item
                         ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID);
         }
 
-        if (foundItem != null)
-        {
-            foundItem.CommonStats_Item.CurrentStackSize = itemQuantity;
-        }
-
-        return foundItem;
+        return foundItem?.Clone(itemQuantity);
     }
 
     public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)
     {
         //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
 
-        foreach (WeaponType weaponType in item.WeaponStats.WeaponTypeArray)
+        foreach (WeaponType weaponType in item.WeaponStats_Item.WeaponTypeArray)
         {
             switch (weaponType)
             {
                 case WeaponType.OneHandedMelee:
                 case WeaponType.TwoHandedMelee:
-                    foreach (WeaponClass weaponClass in item.WeaponStats.WeaponClassArray)
+                    foreach (WeaponClass weaponClass in item.WeaponStats_Item.WeaponClassArray)
                     {
                         switch (weaponClass)
                         {
@@ -105,7 +104,7 @@ public class Manager_Item
                     break;
                 case WeaponType.OneHandedMagic:
                 case WeaponType.TwoHandedMagic:
-                    foreach (WeaponClass weaponClass in item.WeaponStats.WeaponClassArray)
+                    foreach (WeaponClass weaponClass in item.WeaponStats_Item.WeaponClassArray)
                     {
                         //switch (weaponClass)
                         //{
@@ -143,20 +142,30 @@ public class DisplayItem
 public class Item
 {
     public CommonStats_Item CommonStats_Item { get; private set; }
-    public VisualStats VisualStats { get; private set; }
-    public WeaponStats WeaponStats { get; private set; }
-    public ArmourStats ArmourStats { get; private set; }
-    public FixedModifiers FixedModifiers { get; private set; }
-    public PercentageModifiers PercentageModifiers { get; private set; }
+    public VisualStats_Item VisualStats_Item { get; private set; }
+    public WeaponStats_Item WeaponStats_Item { get; private set; }
+    public ArmourStats_Item ArmourStats_Item { get; private set; }
+    public FixedModifiers_Item FixedModifiers_Item { get; private set; }
+    public PercentageModifiers_Item PercentageModifiers_Item { get; private set; }
 
-    public Item(CommonStats_Item commonStats_Item = null, VisualStats visualStats = null, WeaponStats weaponStats = null, ArmourStats armourStats = null, FixedModifiers fixedModifiers = null, PercentageModifiers percentageModifiers = null)
+    public Item(CommonStats_Item commonStats_Item = null, VisualStats_Item visualStats_Item = null, WeaponStats_Item weaponStats_Item = null, ArmourStats_Item armourStats_Item = null, 
+        FixedModifiers_Item fixedModifiers_Item = null, PercentageModifiers_Item percentageModifiers_Item = null)
     {
         CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
-        VisualStats = visualStats ?? new VisualStats();
-        WeaponStats = weaponStats ?? new WeaponStats();
-        ArmourStats = armourStats ?? new ArmourStats();
-        FixedModifiers = fixedModifiers ?? new FixedModifiers();
-        PercentageModifiers = percentageModifiers ?? new PercentageModifiers();
+        VisualStats_Item = visualStats_Item ?? new VisualStats_Item();
+        WeaponStats_Item = weaponStats_Item ?? new WeaponStats_Item();
+        ArmourStats_Item = armourStats_Item ?? new ArmourStats_Item();
+        FixedModifiers_Item = fixedModifiers_Item ?? new FixedModifiers_Item();
+        PercentageModifiers_Item = percentageModifiers_Item ?? new PercentageModifiers_Item();
+    }
+
+    public Item Clone(int itemQuantity)
+    {
+        return new Item
+        {
+            CommonStats_Item = this.CommonStats_Item.Clone(itemQuantity),
+            VisualStats_Item = this.VisualStats_Item.Clone(),
+        };
     }
 }
 
@@ -195,10 +204,26 @@ public class CommonStats_Item
         ItemWeight = itemWeight;
         ItemEquippable = itemEquippable;
     }
+
+    public CommonStats_Item Clone(int itemQuantity)
+    {
+        return new CommonStats_Item
+        {
+            ItemID = this.ItemID,
+            ItemName = this.ItemName,
+            ItemType = this.ItemType,
+            EquipmentSlots = this.EquipmentSlots != null ? new List<EquipmentSlot>(this.EquipmentSlots) : new List<EquipmentSlot>(),
+            MaxStackSize = this.MaxStackSize,
+            CurrentStackSize = itemQuantity,
+            ItemValue = this.ItemValue,
+            ItemWeight = this.ItemWeight,
+            ItemEquippable = this.ItemEquippable
+        };
+    }
 }
 
 [Serializable]
-public class VisualStats
+public class VisualStats_Item
 {
     public Sprite ItemIcon;
     public Mesh ItemMesh;
@@ -209,7 +234,7 @@ public class VisualStats
     public Quaternion ItemRotation;
     public Vector3 ItemScale;
 
-    public VisualStats(
+    public VisualStats_Item(
         Sprite itemIcon = null,
         Mesh itemMesh = null,
         Material itemMaterial = null,
@@ -230,10 +255,86 @@ public class VisualStats
         ItemRotation = itemRotation ?? Quaternion.identity;
         ItemScale = itemScale ?? Vector3.one;
     }
+
+    public VisualStats_Item Clone()
+    {
+        return new VisualStats_Item
+        {
+            ItemIcon = this.ItemIcon,
+            ItemMesh = this.ItemMesh,
+            ItemMaterial = this.ItemMaterial,
+            ItemCollider = this.ItemCollider,
+            ItemAnimatorController = this.ItemAnimatorController,
+            ItemPosition = this.ItemPosition,
+            ItemRotation = this.ItemRotation,
+            ItemScale = this.ItemScale
+        };
+    }
+
+    public void DisplayVisuals(GameObject go)
+    {
+        _addColliderToGameObject(go);
+        _addMeshToGameObject(go);
+
+        go.transform.localPosition = ItemPosition;
+        go.transform.localRotation = ItemRotation;
+        go.transform.localScale = ItemScale;
+    }
+
+    void _addColliderToGameObject(GameObject itemGO)
+    {
+        if (ItemCollider is BoxCollider)
+        {
+            BoxCollider original = ItemCollider as BoxCollider;
+            BoxCollider copy = itemGO.AddComponent<BoxCollider>();
+            copy.center = original.center;
+            copy.size = original.size;
+        }
+        else if (ItemCollider is SphereCollider)
+        {
+            SphereCollider original = ItemCollider as SphereCollider;
+            SphereCollider copy = itemGO.AddComponent<SphereCollider>();
+            copy.center = original.center;
+            copy.radius = original.radius;
+        }
+        else if (ItemCollider is CapsuleCollider)
+        {
+            CapsuleCollider original = ItemCollider as CapsuleCollider;
+            CapsuleCollider copy = itemGO.AddComponent<CapsuleCollider>();
+            copy.center = original.center;
+            copy.radius = original.radius;
+            copy.height = original.height;
+            copy.direction = original.direction;
+        }
+        else if (ItemCollider is MeshCollider)
+        {
+            MeshCollider original = ItemCollider as MeshCollider;
+            MeshCollider copy = itemGO.AddComponent<MeshCollider>();
+            copy.sharedMesh = original.sharedMesh;
+            copy.convex = original.convex;
+        }
+        else if (ItemCollider == null)
+        {
+            BoxCollider copy = itemGO.AddComponent<BoxCollider>();
+        }
+        else
+        {
+            Debug.LogWarning("Collider type not supported: " + ItemCollider.GetType());
+        }
+    }
+
+    void _addMeshToGameObject(GameObject go)
+    {
+        MeshRenderer itemRenderer = go.AddComponent<MeshRenderer>();
+        MeshFilter itemFilter = go.AddComponent<MeshFilter>();
+
+        itemRenderer.material = ItemMaterial;
+        itemFilter.mesh = ItemMesh;
+    }
 }
 
 [Serializable]
-public class PercentageModifiers
+public class PercentageModifiers_Item
 {
     public float CurrentHealth;
     public float CurrentMana;
@@ -256,7 +357,7 @@ public class PercentageModifiers
     public float MoveSpeed;
     public float DodgeCooldownReduction;
 
-    public PercentageModifiers(
+    public PercentageModifiers_Item(
         float maxHealth = 1,
         float maxMana = 1,
         float maxStamina = 1,
@@ -294,7 +395,7 @@ public class PercentageModifiers
 }
 
 [Serializable]
-public class FixedModifiers
+public class FixedModifiers_Item
 {
     public float CurrentHealth;
     public float CurrentMana;
@@ -323,7 +424,7 @@ public class FixedModifiers
     // public float DamagePerItemLevel;
     // public SPECIAL SPECIAL;
 
-    public FixedModifiers(
+    public FixedModifiers_Item(
         float maxHealth = 0,
         float maxMana = 0,
         float maxStamina = 0,
@@ -367,13 +468,13 @@ public class FixedModifiers
 }
 
 [Serializable]
-public class WeaponStats
+public class WeaponStats_Item
 {
     public WeaponType[] WeaponTypeArray;
     public WeaponClass[] WeaponClassArray;
     public float MaxChargeTime;
 
-    public WeaponStats(
+    public WeaponStats_Item(
         WeaponType[] weaponType = null,
         WeaponClass[] weaponClass = null,
         float maxChargeTime = 0
@@ -395,12 +496,12 @@ public class WeaponStats
 }
 
 [Serializable]
-public class ArmourStats
+public class ArmourStats_Item
 {
     public EquipmentSlot EquipmentSlot;
     public float ItemCoverage;
 
-    public ArmourStats(
+    public ArmourStats_Item(
         EquipmentSlot armourType = EquipmentSlot.None,
         float itemCoverage = 0
         )

@@ -54,24 +54,24 @@ public class List_Weapon : Manager_Item
             itemValue: 15
             );
 
-        VisualStats visualStats = new VisualStats(
+        VisualStats_Item visualStats = new VisualStats_Item(
             itemIcon: null,
             itemPosition: Vector3.zero,
             itemRotation: Quaternion.identity,
             itemScale: Vector3.one
             );
 
-        WeaponStats weaponStats = new WeaponStats(
+        WeaponStats_Item weaponStats = new WeaponStats_Item(
             weaponType: new WeaponType[] { WeaponType.TwoHandedRanged },
             weaponClass: new WeaponClass[] { WeaponClass.ShortBow },
             maxChargeTime: 2
             );
 
-        FixedModifiers fixedModifiers = new FixedModifiers(
+        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
             attackRange: 1
             );
 
-        PercentageModifiers percentageModifiers = new PercentageModifiers(
+        PercentageModifiers_Item percentageModifiers = new PercentageModifiers_Item(
             attackDamage: 1.1f,
             attackSpeed: 1.5f,
             attackSwingTime: 3f,
@@ -79,7 +79,7 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
     static void _shortSwords()
     {
@@ -93,7 +93,7 @@ public class List_Weapon : Manager_Item
             itemValue: 15
             );
 
-        VisualStats visualStats = new VisualStats(
+        VisualStats_Item visualStats = new VisualStats_Item(
             itemIcon: null,
             itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
             itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
@@ -104,23 +104,23 @@ public class List_Weapon : Manager_Item
             itemScale: new Vector3(0.1f, 0.6f, 0.1f)
             );
 
-        WeaponStats weaponStats = new WeaponStats(
+        WeaponStats_Item weaponStats = new WeaponStats_Item(
             weaponType: new WeaponType[] { WeaponType.OneHandedMelee },
             weaponClass: new WeaponClass[] { WeaponClass.ShortSword },
             maxChargeTime: 3
             );
 
-        FixedModifiers fixedModifiers = new FixedModifiers(
+        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
             );
 
-        PercentageModifiers percentageModifiers = new PercentageModifiers(
+        PercentageModifiers_Item percentageModifiers = new PercentageModifiers_Item(
             attackDamage: 1.2f,
             attackSpeed: 1.1f,
             attackSwingTime: 1.1f,
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
 
     static void _shields()
@@ -135,7 +135,7 @@ public class List_Weapon : Manager_Item
             itemValue: 15
             );
 
-        VisualStats visualStats = new VisualStats(
+        VisualStats_Item visualStats = new VisualStats_Item(
             itemIcon: null,
             itemMesh: Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
             itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
@@ -145,23 +145,23 @@ public class List_Weapon : Manager_Item
             itemScale: new Vector3(1f, 1f, 0.1f)
             );
 
-        WeaponStats weaponStats = new WeaponStats(
+        WeaponStats_Item weaponStats = new WeaponStats_Item(
             weaponType: new WeaponType[] { WeaponType.OneHandedShield },
             weaponClass: new WeaponClass[] { WeaponClass.Shield },
             maxChargeTime: 3
             );
 
-        FixedModifiers fixedModifiers = new FixedModifiers(
+        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
             physicalArmour: 5
             );
 
-        PercentageModifiers percentageModifiers = new PercentageModifiers(
+        PercentageModifiers_Item percentageModifiers = new PercentageModifiers_Item(
             attackDamage: 1.2f,
             attackSpeed: 1.1f,
             attackSwingTime: 1.1f,
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats: visualStats, weaponStats: weaponStats, fixedModifiers: fixedModifiers, percentageModifiers: percentageModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
 }

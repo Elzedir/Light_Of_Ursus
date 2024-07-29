@@ -17,6 +17,7 @@ public class Actor_Data_SO : ScriptableObject
     public CareerName ActorCareer;
     public Actor_States ActorStates;
     public ActorStats ActorStats;
+    public ActorPersonality ActorPersonality;
     public ActorAspects ActorAspects;
     public DisplayInventory ActorInventory;
     public ActorEquipment ActorEquipment;
@@ -25,11 +26,6 @@ public class Actor_Data_SO : ScriptableObject
 
     public void Initialise(Actor_Base actor)
     {
-        if (Manager_Game.ActorIDs.Contains(ActorID))
-        {
-            throw new ArgumentException($"ActorID: {ActorID} has already been used");
-        }
-
         //ActorAspects.InitialiseAspects(actor);
     }
 }
@@ -39,6 +35,11 @@ public class ActorName
 {
     public string Name;
     public string Surname;
+
+    public string GetName()
+    {
+        return $"{Name} {Surname}";
+    }
 }
 
 public enum SpeciesName
@@ -54,8 +55,6 @@ public class ActorStats
 {
     public Date ActorBirthDate;
     public float ActorAge;
-
-    public Personality ActorPersonality;
 
     public ActorLevelData ActorLevelData;
     public int ActorGold;

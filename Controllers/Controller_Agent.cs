@@ -79,7 +79,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     {
         //if (!_canMove) return;
 
-        _pathfinderCooldown += Time.deltaTime;
+        _pathfinderCooldown += UnityEngine.Time.deltaTime;
 
         if (_targetGO != null) _targetPosition = _targetGO.transform.position;
 
@@ -325,7 +325,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         {
             if (followingPosition.HasValue && Vector3.Distance(nextPosition, followingPosition.Value) > Vector3.Distance(transform.position, followingPosition.Value)) yield break;
 
-            transform.position = Vector3.MoveTowards(transform.position, nextPosition, _speed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, nextPosition, _speed * UnityEngine.Time.deltaTime);
 
             yield return null;
         }

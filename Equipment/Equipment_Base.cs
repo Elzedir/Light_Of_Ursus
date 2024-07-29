@@ -45,13 +45,13 @@ public class Equipment_Base : MonoBehaviour
             if (UnequipItem())
             {
                 Item = item;
-                MeshFilter.mesh = item.VisualStats.ItemMesh;
-                MeshRenderer.material = item.VisualStats.ItemMaterial;
+                MeshFilter.mesh = item.VisualStats_Item.ItemMesh;
+                MeshRenderer.material = item.VisualStats_Item.ItemMaterial;
                 //Animator.runtimeAnimatorController = item.VisualStats.ItemAnimatorController;
 
-                transform.localPosition = item.VisualStats.ItemPosition;
-                transform.localRotation = item.VisualStats.ItemRotation;
-                transform.localScale = item.VisualStats.ItemScale;
+                transform.localPosition = item.VisualStats_Item.ItemPosition;
+                transform.localRotation = item.VisualStats_Item.ItemRotation;
+                transform.localScale = item.VisualStats_Item.ItemScale;
 
                 return true;
             }

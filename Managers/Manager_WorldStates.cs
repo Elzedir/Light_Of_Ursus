@@ -8,17 +8,17 @@ public class Manager_WorldStates
 {
     public static List<WorldState_Data_SO> AllWorldStates = new();
 
-    public static WorldStateName CheckWorldState(WorldState_Data_SO worldStateCheck = null)
+    public static WorldStateStatus CheckWorldState(WorldState_Data_SO worldStateCheck = null)
     {
         foreach (WorldState_Data_SO worldState in AllWorldStates)
         {
             if (worldStateCheck == worldState || worldStateCheck == null)
             {
-                return worldState.State;
+                return worldState.Status;
             }
         }
 
-        return WorldStateName.Default;
+        return WorldStateStatus.Default;
     }
 
     public static List<Action> AllWorldStateEvents = new();
@@ -39,7 +39,7 @@ public class Manager_WorldStates
     }
 }
 
-public enum WorldStateName 
+public enum WorldStateStatus 
 { 
     Default,
     Alive, Dead,
@@ -54,7 +54,7 @@ public class WorldState_Data_SO : ScriptableObject
 {
     public string WorldStateName;
     public int WorldstateID;
-    public WorldStateName State;
+    public WorldStateStatus Status;
 
     public List<Action> WorldStateEvents = new();
 }

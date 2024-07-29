@@ -88,7 +88,7 @@ public class Controller_Camera : MonoBehaviour
 
         if (_shakeTime > 0)
         {
-            _shakeTime -= Time.deltaTime;
+            _shakeTime -= UnityEngine.Time.deltaTime;
 
             if (_shakeTime > 0)
             {
@@ -113,8 +113,8 @@ public class Controller_Camera : MonoBehaviour
 
     void _handleCameraRotation()
     {
-        float mouseX = Input.GetAxis("Mouse X") * _xMouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * _yMouseSensitivity * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * _xMouseSensitivity * UnityEngine.Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * _yMouseSensitivity * UnityEngine.Time.deltaTime;
 
         _yaw += mouseX;
         _pitch -= mouseY;
@@ -134,7 +134,7 @@ public class Controller_Camera : MonoBehaviour
     public void ManualMove(Vector2 direction)
     {
         float moveSpeed = 5.0f;
-        Vector3 move = new Vector3(direction.x, direction.y, 0) * moveSpeed * Time.unscaledDeltaTime;
+        Vector3 move = new Vector3(direction.x, direction.y, 0) * moveSpeed * UnityEngine.Time.unscaledDeltaTime;
         transform.position += move;
     }
 
@@ -164,13 +164,13 @@ public class Controller_Camera : MonoBehaviour
 
     IEnumerator RotateCamera(Vector3 newPosition, Quaternion newRotation, float duration)
     {
-        float startTime = Time.time;
+        float startTime = UnityEngine.Time.time;
         Vector3 startPosition = _camera.transform.position;
         Quaternion startRotation = _camera.transform.rotation;
 
-        while (Time.time < startTime + duration)
+        while (UnityEngine.Time.time < startTime + duration)
         {
-            float t = (Time.time - startTime) / duration;
+            float t = (UnityEngine.Time.time - startTime) / duration;
             _camera.transform.position = Vector3.Lerp(startPosition, newPosition, t);
             _camera.transform.rotation = Quaternion.Lerp(startRotation, newRotation, t);
             yield return null;

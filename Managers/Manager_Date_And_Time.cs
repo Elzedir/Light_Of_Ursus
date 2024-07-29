@@ -1,11 +1,34 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Manager_Date_And_Time : MonoBehaviour
 {
+    static TextMeshProUGUI _dateText;
+    static TextMeshProUGUI _timeText;
+
     static float _currentTimeScale = 1f;
+
+    public static void Initialise()
+    {
+        _dateText = GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
+        _timeText = GameObject.Find("Time").GetComponent<TextMeshProUGUI>();
+
+        CurrentDate.Initialise();
+        Time.Initialise();
+    }
+
+    public static void SetCurrentDate(string Date)
+    {
+        _dateText.text = Date;
+    }
+
+    public static void SetCurrentTime(string time)
+    {
+        _timeText.text = time;
+    }
 
     public float GetTimeScale()
     {
@@ -17,8 +40,8 @@ public class Manager_Date_And_Time : MonoBehaviour
         if (timeScale < 0) { Debug.LogError($"Timescale: {timeScale} cannot be less than 0.");  return; }
 
         _currentTimeScale = timeScale;
-        Time.timeScale = _currentTimeScale;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+        UnityEngine.Time.timeScale = _currentTimeScale;
+        UnityEngine.Time.fixedDeltaTime = 0.02f * UnityEngine.Time.timeScale;
     }
 
     public static IEnumerator SetTimeScaleGradual(float targetTimeScale, float duration)
@@ -28,7 +51,7 @@ public class Manager_Date_And_Time : MonoBehaviour
 
         while (elapsed < duration)
         {
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += UnityEngine.Time.unscaledDeltaTime;
             SetTimeScale(Mathf.Lerp(start, targetTimeScale, elapsed / duration));
             yield return null;
         }
@@ -110,6 +133,8 @@ public class CurrentDate
     {
         CurrentTotalDays += days;
 
+        Manager_Date_And_Time.SetCurrentDate(GetCurrentDateAsString());
+
         if (days != 0) NewDay?.Invoke();
     }
 
@@ -125,12 +150,12 @@ public class CurrentDate
     }
 }
 
-public class TimeOfDay
+public class Time
 {
     public int Minute;
     public int Hour;
 
-    public TimeOfDay(int minute, int hour)
+    public Time(int minute, int hour)
     {
         Minute = minute;
         Hour = hour;
@@ -138,13 +163,13 @@ public class TimeOfDay
 
     public static void Initialise(int minute = 59, int hour = 7)
     {
-        CurrentTimeOfDay.CurrentMinute = minute;
-        CurrentTimeOfDay.CurrentHour = hour;
-        Manager_TickRate.Instance.RegisterTickable(new CurrentTimeOfDay());
+        CurrentTime.CurrentMinute = minute;
+        CurrentTime.CurrentHour = hour;
+        Manager_TickRate.Instance.RegisterTickable(new CurrentTime());
     }
 }
 
-public class CurrentTimeOfDay : ITickable
+public class CurrentTime : ITickable
 {
     bool _halfTime = false;
     public static int CurrentMinute;
@@ -154,7 +179,9 @@ public class CurrentTimeOfDay : ITickable
     {
         if (_halfTime)
         {
-            CurrentMinute++;
+            //CurrentMinute++;
+
+            CurrentMinute += 10;
 
             if (CurrentMinute >= 60)
             {
@@ -169,6 +196,8 @@ public class CurrentTimeOfDay : ITickable
                 }
             }
 
+            Manager_Date_And_Time.SetCurrentTime($"{CurrentHour:00}:{CurrentMinute:00}");
+
             _halfTime = false;
         }
         else
@@ -179,6 +208,6 @@ public class CurrentTimeOfDay : ITickable
 
     public TickRate GetTickRate()
     {
-        return TickRate.One;
+        return TickRate.OneTenth;
     }
 }

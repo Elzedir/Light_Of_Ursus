@@ -97,7 +97,7 @@ public class Manager_Puzzle : MonoBehaviour
             return;
         }
 
-        _puzzleTime += Time.deltaTime;
+        _puzzleTime += UnityEngine.Time.deltaTime;
     }
 
     public void PuzzleEnd(bool completed)

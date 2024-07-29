@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Crafting : Interactable_Base, IInventoryCrafting
+public class Interactable_Crafting : Interactable_Base, IInventoryOwner
 {
+    public GameObject GameObject {  get; protected set; }
     public InventoryComponent InventoryComponent { get; protected set; }
 
     public virtual CraftingStationName GetCraftingStationName()

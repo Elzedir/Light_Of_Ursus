@@ -23,8 +23,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 {
     public static Manager_Game Instance;
 
-    public static HashSet<int> ActorIDs = new();
-
     Manager_Audio _manager_Audio;
     public Manager_Audio Manager_Audio { get { return _getManager_Audio(); } private set { _manager_Audio = value; } }
     Manager_Audio _getManager_Audio() { if (_manager_Audio) return _manager_Audio; else return GameObject.Find("Main Camera").GetComponentInChildren<Manager_Audio>(); }
@@ -50,7 +48,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     Transform _manager_Parent;
 
-    private void Awake()
+    void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); } else if (Instance != this) Destroy(gameObject);
 
@@ -65,23 +63,24 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Spawner.OnPuzzleStatesRestored += OnPuzzleStatesRestored;
 
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        Manager_Item.Initialise();
     }
 
     public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        _initialiseManagers();
+        StartCoroutine(_initialiseManagers());
     }
 
-    void _initialiseManagers()
+    IEnumerator _initialiseManagers()
     {
-        if (SceneManager.GetActiveScene().name == "Main_Menu") return;
+        if (SceneManager.GetActiveScene().name == "Main_Menu") yield break;
 
-        if (GameObject.Find("Manager_Parent") != null) return;
+        if (GameObject.Find("Manager_Parent") != null) yield break;
+
+        yield return null;
 
         _manager_Parent =  new GameObject("Manager_Parent").transform;
 
+        Manager_Item.Initialise();
         _createManager("Manager_Dialogue", _manager_Parent).AddComponent<Manager_Dialogue>().OnSceneLoaded();
         _createManager("Manager_FloatingText", _manager_Parent).AddComponent<Manager_FloatingText>().OnSceneLoaded();
         _createManager("Manager_Cutscene", _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
@@ -92,9 +91,9 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Crafting", _manager_Parent).AddComponent<Manager_Crafting>().OnSceneLoaded();
         _createManager("Manager_Inventory", _manager_Parent).AddComponent<Manager_Inventory>().OnSceneLoaded();
         Manager_Career.Initialise();
+        Manager_Date_And_Time.Initialise();
 
-        CurrentDate.Initialise();
-        TimeOfDay.Initialise();
+        Manager_Initialisation.InitialiseActors();
 
         GameObject _createManager(string name, Transform parent)
         {
@@ -252,12 +251,12 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         switch (CurrentState)
         {
             case GameState.Playing:
-                Time.timeScale = 1f;
+                UnityEngine.Time.timeScale = 1f;
                 // enbale player controls
                 // resume normal sound and music
                 break;
             case GameState.Paused:
-                Time.timeScale = 0f;
+                UnityEngine.Time.timeScale = 0f;
                 // disable player controls
                 // play pause music and stop game sounds
                 break;

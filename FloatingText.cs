@@ -24,7 +24,7 @@ public class FloatingText : MonoBehaviour
         _moveDirection = moveDirection;
         _duration = duration;
         _fadeDuration = fadeDuration;
-        _lastShown = Time.time;
+        _lastShown = UnityEngine.Time.time;
 
         StartCoroutine(Show());
     }
@@ -41,7 +41,7 @@ public class FloatingText : MonoBehaviour
         while (elapsedTime < _fadeDuration)
         {
             _text.color = new Color(_text.color.r, _text.color.g, _text.color.b, Mathf.Lerp(0, _text.color.a, elapsedTime / _fadeDuration));
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
             yield return null;
         }
 
@@ -54,7 +54,7 @@ public class FloatingText : MonoBehaviour
         while (elapsedTime < _fadeDuration)
         {
             _text.color = new Color(_text.color.r, _text.color.g, _text.color.b, Mathf.Lerp(_text.color.a, 0, elapsedTime / _fadeDuration));
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
             yield return null;
         }
 
@@ -65,12 +65,12 @@ public class FloatingText : MonoBehaviour
 
     void UpdateFloatingText()
     {
-        if (!_isHiding && Time.time - _lastShown >= _duration)
+        if (!_isHiding && UnityEngine.Time.time - _lastShown >= _duration)
         {
             StartCoroutine(Hide());
             _isHiding = true;
         }
 
-        transform.position += _moveDirection * Time.deltaTime;
+        transform.position += _moveDirection * UnityEngine.Time.deltaTime;
     }
 }

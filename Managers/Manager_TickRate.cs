@@ -21,9 +21,9 @@ public class Manager_TickRate : MonoBehaviour
     {
         _nextTickTimes = new Dictionary<TickRate, float>
             {
-                { TickRate.OneTenth, Time.time + 0.1f },
-                { TickRate.One, Time.time + 1f },
-                { TickRate.Ten, Time.time + 10f }
+                { TickRate.OneTenth, UnityEngine.Time.time + 0.1f },
+                { TickRate.One, UnityEngine.Time.time + 1f },
+                { TickRate.Ten, UnityEngine.Time.time + 10f }
             };
 
         _tickableGroups = new Dictionary<TickRate, List<ITickable>>
@@ -36,7 +36,7 @@ public class Manager_TickRate : MonoBehaviour
 
     void Update()
     {
-        float currentTime = Time.time;
+        float currentTime = UnityEngine.Time.time;
 
         var keys = new List<TickRate>(_nextTickTimes.Keys);
 

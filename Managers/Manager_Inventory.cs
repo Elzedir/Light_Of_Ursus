@@ -25,6 +25,7 @@ public class Manager_Inventory : MonoBehaviour
 
 public interface IInventoryOwner
 {
+    GameObject GameObject {  get; }
     InventoryComponent InventoryComponent { get; }
     void UpdateInventoryDisplay();
     void InitialiseInventoryComponent();
@@ -33,11 +34,6 @@ public interface IInventoryOwner
 public interface IInventoryActor : IInventoryOwner
 {
     Actor_Data_SO ActorData { get; }
-}
-
-public interface IInventoryCrafting : IInventoryOwner
-{
-    
 }
 
 public class InventoryComponent
@@ -54,16 +50,7 @@ public class InventoryComponent
 
     public Item ItemInInventory(int itemID)
     {
-        int totalStackSize = Inventory
-        .Where(i => i.CommonStats_Item.ItemID == itemID)
-        .Sum(i => i.CommonStats_Item.CurrentStackSize);
-
-        Item itemToReturn = Manager_Item.GetItem(itemID);
-        itemToReturn.CommonStats_Item.CurrentStackSize = totalStackSize;
-
-        InventoryOwner.UpdateInventoryDisplay();
-
-        return itemToReturn;
+        return Manager_Item.GetItem(itemID, Inventory.Where(i => i.CommonStats_Item.ItemID == itemID).Sum(i => i.CommonStats_Item.CurrentStackSize));
     }
 
     public bool AddToInventory(List<Item> items)
@@ -103,13 +90,13 @@ public class InventoryComponent
             var existingItems = Inventory.Where(i => i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID).ToList();
             int amountToAdd = item.CommonStats_Item.CurrentStackSize;
 
-            if (!existingItems.Any())
+            if (existingItems.Any())
             {
-                addNewItems(amountToAdd, item);
+                addToExistingItems(existingItems, ref amountToAdd);
             }
-            else
+
+            if (amountToAdd > 0)
             {
-                addToExistingItems(existingItems, amountToAdd);
                 addNewItems(amountToAdd, item);
             }
 
@@ -122,8 +109,7 @@ public class InventoryComponent
             {
                 int amountAdded = Math.Min(amountToAdd, item.CommonStats_Item.MaxStackSize);
 
-                var newItem = Manager_Item.GetItem(item.CommonStats_Item.ItemID);
-                newItem.CommonStats_Item.CurrentStackSize = amountAdded;
+                var newItem = Manager_Item.GetItem(item.CommonStats_Item.ItemID, amountAdded);
 
                 Inventory.Add(newItem);
 
@@ -131,7 +117,7 @@ public class InventoryComponent
             }
         }
 
-        void addToExistingItems(List<Item> existingItems, int amountToAdd)
+        void addToExistingItems(List<Item> existingItems, ref int amountToAdd)
         {
             foreach (var stackItem in existingItems.OrderBy(i => i.CommonStats_Item.CurrentStackSize))
             {
@@ -151,16 +137,6 @@ public class InventoryComponent
 
     public bool RemoveFromInventory(List<Item> items)
     {
-        foreach (Item item in Inventory)
-        {
-            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
-
-        }
-        foreach (Item item in items)
-        {
-            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
-        }
-
         bool removedAllItems = true;
         List<Item> tempRemovedItems = new();
 
@@ -168,7 +144,6 @@ public class InventoryComponent
         {
             if (removeItem(itemToRemove))
             {
-                Debug.Log($"ItemName: {itemToRemove.CommonStats_Item.ItemName} of quantity: {itemToRemove.CommonStats_Item.CurrentStackSize} removed.");
                 tempRemovedItems.Add(itemToRemove);
             }
             else
@@ -204,27 +179,131 @@ public class InventoryComponent
 
             int amountToRemove = item.CommonStats_Item.CurrentStackSize;
 
-            Debug.Log($"AmountToRemove: {amountToRemove}");
-
             foreach (var stackItem in existingItems.OrderBy(i => i.CommonStats_Item.CurrentStackSize))
             {
                 if (amountToRemove <= 0) break;
 
                 if (stackItem.CommonStats_Item.CurrentStackSize <= amountToRemove)
                 {
-                    Debug.Log($"Removed everything since stackSize: {stackItem.CommonStats_Item.CurrentStackSize} is less than amount to remove: {amountToRemove}");
                     amountToRemove -= stackItem.CommonStats_Item.CurrentStackSize;
                     Inventory.Remove(stackItem);
                 }
                 else
                 {
-                    Debug.Log($"Removing part of stackItem since: {stackItem.CommonStats_Item.CurrentStackSize} is more than amount to remove: {amountToRemove}");
                     stackItem.CommonStats_Item.CurrentStackSize -= amountToRemove;
                     amountToRemove = 0;
                 }
             }
 
             return true;
+        }
+    }
+
+    public bool TransferItemFromInventory(InventoryComponent target, List<Item> items)
+    {
+        if (!RemoveFromInventory(items))
+        {
+            Debug.Log("Can't remove items from inventory to transfer.");
+
+            return false;
+        }
+
+        if (target.AddToInventory(items))
+        {
+            return true;
+        }
+
+        Debug.Log("Can't add items to target inventory");
+
+        if (!AddToInventory(items))
+        {
+            DropItemsGroup(items, InventoryOwner.GameObject.transform.position, itemsNotInInventory: true);
+            Debug.Log("Took items out of inventory and can't put them back");
+        }
+
+        return false;
+    }
+
+    public bool DropItemsGroup(List<Item> items, Vector3 dropPosition, bool itemsNotInInventory = false)
+    {
+        if (itemsNotInInventory)
+        {
+            if (!dropItemsGroup())
+            {
+                Debug.Log("Can't drop items.");
+                return false;
+            }
+
+            return true;
+        }
+
+        if (!RemoveFromInventory(items))
+        {
+            Debug.Log("Can't remove items from inventory to drop.");
+            return false;
+        }
+
+        if (!dropItemsGroup())
+        {
+            Debug.Log("Can't drop items");
+            return false;
+        }
+
+        return true;
+
+        bool dropItemsGroup()
+        {
+            foreach(Item item in items)
+            {
+                Interactable_Item.CreateNewItem(item, dropPosition);
+            }
+
+            return true;
+
+            //Later will have things like having available space, etc.
+        }
+    }
+
+    public bool DropItemsIndividual(List<Item> items, Vector3 dropPosition, bool itemsNotInInventory = false)
+    {
+        if (itemsNotInInventory)
+        {
+            if (!dropItemsIndividual())
+            {
+                Debug.Log("Can't drop items.");
+                return false;
+            }
+
+            return true;
+        }
+
+        if (!RemoveFromInventory(items))
+        {
+            Debug.Log("Can't remove items from inventory to drop.");
+            return false;
+        }
+
+        if (!dropItemsIndividual())
+        {
+            Debug.Log("Can't drop items");
+            return false;
+        }
+
+        return true;
+
+        bool dropItemsIndividual()
+        {
+            foreach (Item item in items)
+            {
+                for (int i = 0; i < item.CommonStats_Item.CurrentStackSize; i++)
+                {
+                    Interactable_Item.CreateNewItem(Manager_Item.GetItem(item.CommonStats_Item.ItemID), dropPosition);
+                }
+            }
+
+            return true;
+
+            //Later will have things like having available space, etc.
         }
     }
 }

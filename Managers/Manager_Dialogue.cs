@@ -180,9 +180,9 @@ public class Manager_Dialogue : MonoBehaviour
 
     IEnumerator WaitForDisplayTimeOrEnter(float displayTime)
     {
-        float startTime = Time.time;
+        float startTime = UnityEngine.Time.time;
 
-        while (Time.time - startTime < displayTime)
+        while (UnityEngine.Time.time - startTime < displayTime)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {

@@ -65,7 +65,7 @@ public class Manager_Crafting : MonoBehaviour
 
             if (craftingStation.GetCraftingStationName() == craftingStationName)
             {
-                float distance = Vector3.Distance(currentPosition, collider.transform.position);
+                float distance = Vector3.Distance(currentPosition, craftingStation.transform.position);
 
                 if (distance < closestDistance)
                 {
@@ -107,7 +107,7 @@ public class Manager_Crafting : MonoBehaviour
             if (actor == null) throw new ArgumentException("Actor is null.");
 
             yield return actor.BasicMove(GetTaskArea(actor, "Sawmill").bounds.center);
-            yield return new WaitForSeconds(3);
+            yield return new WaitForSeconds(0.5f);
             // Play some animation.
             yield return null;
         }
@@ -117,7 +117,7 @@ public class Manager_Crafting : MonoBehaviour
             recipeDescription: "Craft a plank",
             recipeIngredients: new List<(Item, int)> { (Manager_Item.GetItem(itemName: "Log"), 2) },
             craftingStation: CraftingStationName.None,
-            recipeOutcomes: new List<(Item, int)> { (Manager_Item.GetItem(itemName: "Plank"), 1) },
+            recipeProducts: new List<(Item, int)> { (Manager_Item.GetItem(itemName: "Plank"), 1) },
             recipeActions: new List<(string Name, Func<Actor_Base, IEnumerator>)> { ("Craft plank", craftPlank) }
             ));
     }
@@ -146,12 +146,12 @@ public class CraftingComponent
 
     public List<Item> ConvertFromRecipeToIngredientItemList(Recipe recipe)
     {
-        return recipe.RecipeIngredients.Select(ingredient => 
-        { 
-            ingredient.Item1.CommonStats_Item.CurrentStackSize = ingredient.Item2; 
-            return ingredient.Item1; 
-        }
-        ).ToList();
+        return recipe.RecipeIngredients.Select(ingredient => { return Manager_Item.GetItem(itemID: ingredient.Item1.CommonStats_Item.ItemID, itemQuantity: ingredient.Item2); }).ToList();
+    }
+
+    public List<Item> ConvertFromRecipeToProductItemList(Recipe recipe)
+    {
+        return recipe.RecipeProducts.Select(product => { return Manager_Item.GetItem(itemID: product.Item1.CommonStats_Item.ItemID, itemQuantity: product.Item2); }).ToList();
     }
 
     public IEnumerator CraftItemAll(RecipeName recipeName, Interactable_Crafting craftingStation)
@@ -159,31 +159,22 @@ public class CraftingComponent
         var recipe = Manager_Crafting.GetRecipe(recipeName);
         var ingredients = ConvertFromRecipeToIngredientItemList(recipe);
 
-        foreach (Item item in Actor.InventoryComponent.Inventory)
-        {
-            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
-        }
-
-        while (inventoryContainsAllItems(ingredients))
+        while (inventoryContainsAllIngredients(ingredients))
         {
             yield return Actor.StartCoroutine(CraftItem(recipeName, craftingStation));
         }
 
-        bool inventoryContainsAllItems(List<Item> items)
+        bool inventoryContainsAllIngredients(List<Item> ingredients)
         {
-            foreach(var item in items)
+            foreach(var ingredient in ingredients)
             {
-                var inventoryItem = Actor.InventoryComponent.ItemInInventory(item.CommonStats_Item.ItemID);
+                var inventoryItem = Actor.InventoryComponent.ItemInInventory(ingredient.CommonStats_Item.ItemID);
 
-                if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < item.CommonStats_Item.CurrentStackSize)
+                if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < ingredient.CommonStats_Item.CurrentStackSize)
                 {
-                    Debug.Log("Inventory does not contain items");
-
                     return false;
                 }
             }
-
-            Debug.Log("Inventory contains items");
 
             return true;
         }
@@ -220,17 +211,12 @@ public class CraftingComponent
 
         bool removedIngredientsFromInventory()
         {
-            foreach(Item item in Actor.InventoryComponent.Inventory)
-            {
-                Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
-            }
-
             return Actor.InventoryComponent.RemoveFromInventory(ConvertFromRecipeToIngredientItemList(recipe));
         }
 
         bool addedProductsToInventory()
         {
-            var sortedIngredients = ConvertFromRecipeToIngredientItemList(recipe);
+            var sortedIngredients = ConvertFromRecipeToProductItemList(recipe);
 
             if (Actor.InventoryComponent.AddToInventory(sortedIngredients))
             {
@@ -256,18 +242,18 @@ public class Recipe
 
     public List<(Item, int)> RecipeIngredients;
     public CraftingStationName CraftingStation;
-    public List<(Item, int)> RecipeOutcomes = new();
+    public List<(Item, int)> RecipeProducts = new();
 
     public List<(string Name, Func<Actor_Base, IEnumerator> Action)> RecipeActions;
 
-    public Recipe(RecipeName recipeName, string recipeDescription, List<(Item, int)> recipeIngredients, CraftingStationName craftingStation, List<(Item, int)> recipeOutcomes, List<(string Name, Func<Actor_Base, IEnumerator>)> recipeActions)
+    public Recipe(RecipeName recipeName, string recipeDescription, List<(Item, int)> recipeIngredients, CraftingStationName craftingStation, List<(Item, int)> recipeProducts, List<(string Name, Func<Actor_Base, IEnumerator>)> recipeActions)
     {
         RecipeName = recipeName;
         RecipeDescription = recipeDescription;
 
         RecipeIngredients = recipeIngredients;
         CraftingStation = craftingStation;
-        RecipeOutcomes = recipeOutcomes;
+        RecipeProducts = recipeProducts;
 
         RecipeActions = recipeActions;
     }

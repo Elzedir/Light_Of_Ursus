@@ -57,7 +57,7 @@ public class Spawner_Arrow : MonoBehaviour
             _spawnTime = 0;
         }
 
-        _spawnTime += Time.deltaTime;
+        _spawnTime += UnityEngine.Time.deltaTime;
     }
 
     void SpawnArrowRandom()

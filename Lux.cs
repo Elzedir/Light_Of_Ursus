@@ -48,7 +48,7 @@ public class Lux : MonoBehaviour
 
     void _flicker()
     {
-        timer += Time.deltaTime;
+        timer += UnityEngine.Time.deltaTime;
 
         float lerpRatio = (Mathf.Sin(timer / _duration * Mathf.PI * 2f) + 1f) / 2f;
 

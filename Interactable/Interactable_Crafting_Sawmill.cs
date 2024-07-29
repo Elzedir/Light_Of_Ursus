@@ -15,7 +15,7 @@ public class Interactable_Crafting_Sawmill : Interactable_Crafting
         // Play interacting animation.
         // Check Actor resource stats to calculate time alongside resource requirements
 
-        yield return new WaitForSeconds(2); // Temporary
+        yield return new WaitForSeconds(0.5f); // Temporary
     }
 
     public override List<Item> GetCraftingYield(Actor_Base actor)
@@ -25,6 +25,7 @@ public class Interactable_Crafting_Sawmill : Interactable_Crafting
 
     public override void InitialiseInventoryComponent()
     {
+        GameObject = gameObject;
         InventoryComponent = new InventoryComponent(this, new List<Item>());
     }
 }

@@ -31,7 +31,10 @@ public class List_ProcessedMaterial : Manager_Item
 
     static void _woods()
     {
-        AddToList(new Item(new CommonStats_Item(itemID: 2300, itemType: ItemType.Processed_Material, itemName: "Plank", maxStackSize: 100, itemWeight: 3, itemValue: 5)));
+        AddToList(new Item(
+            new CommonStats_Item(itemID: 2300, itemType: ItemType.Processed_Material, itemName: "Plank", maxStackSize: 100, itemWeight: 3, itemValue: 5),
+            new VisualStats_Item(itemMesh: GameObject.Find("TestPlank").GetComponent<MeshFilter>().mesh, itemMaterial: Resources.Load<Material>("Materials/Material_Yellow"), itemScale: new Vector3(0.1f, 1, 0.2f))
+            ));
         AddToList(new Item(new CommonStats_Item(itemID: 2301, itemType: ItemType.Processed_Material, itemName: "Timber", maxStackSize: 100, itemWeight: 3, itemValue: 4)));
         AddToList(new Item(new CommonStats_Item(itemID: 2302, itemType: ItemType.Processed_Material, itemName: "Board", maxStackSize: 100, itemWeight: 3, itemValue: 6)));
     }

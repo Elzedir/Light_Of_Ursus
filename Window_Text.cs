@@ -31,7 +31,7 @@ public class Window_Text : MonoBehaviour
 
         while (elapsedTime < fadeInTime)
         {
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
             _text.color = Color.Lerp(startColor, endColor, elapsedTime / fadeInTime);
             yield return null;
         }
@@ -51,7 +51,7 @@ public class Window_Text : MonoBehaviour
 
         while (elapsedTime < fadeOutTime)
         {
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
             _text.color = Color.Lerp(startColor, endColor, elapsedTime / fadeOutTime);
             yield return null;
         }

@@ -16,12 +16,24 @@ public class Manager_Personality
 {
     public static Dictionary<PersonalityTraitName, (string Prefix, string Infix, string Suffix)> AllPersonalityTitles = new();
     public static Dictionary<(PersonalityTraitName, PersonalityTraitName), float> PersonalityRelations = new();
+    public static List<PersonalityTrait> AllPersonalityTraits = new();
 
     public static void Initialise()
     {
-        AllPersonalityTitles.Clear();
-        PersonalityRelations.Clear();
+        _initialisePersonalityTraits();
 
+        _initialisePersonalityTitles();
+
+        _initialisePersonalityRelations();
+    }
+
+    static void _initialisePersonalityTraits()
+    {
+        AllPersonalityTraits.Add(_brave());
+    }
+
+    static void _initialisePersonalityTitles()
+    {
         AllPersonalityTitles.Add(
             PersonalityTraitName.Brave,
             (
@@ -30,8 +42,19 @@ public class Manager_Personality
             "bravado"
             )
             );
+    }
 
-        
+    static PersonalityTrait _brave()
+    {
+        return new PersonalityTrait(
+            traitName: PersonalityTraitName.Brave,
+            traitDescription: "Brave",
+            traitDisplayed: false,
+            traitEffects: new List<Effect>
+            {
+
+            }
+            );
     }
 
     static void _initialisePersonalityRelations()
@@ -41,9 +64,14 @@ public class Manager_Personality
         PersonalityRelations.Add((PersonalityTraitName.Honest, PersonalityTraitName.Deceitful), -10);
     }
 
-    public static string GetPersonalityTitle()
+    public static PersonalityTrait GetTrait(PersonalityTraitName traitName)
     {
-        return "";
+        return AllPersonalityTraits.First(t => t.TraitName == traitName);
+    }
+
+    public static (string Title, string Description) GetPersonalityTitleAndDescription(PersonalityComponent personality)
+    {
+        return ("Test personality title", "This is a description of a test personality title");
     }
 
     public static float ComparePersonalityRelations(PersonalityTraitName a, PersonalityTraitName b)
@@ -56,19 +84,27 @@ public class Manager_Personality
 
 public enum PersonalityTraitName { Arrogant, Ambitious, Brave, Craven, Deceitful, Honest, Humble, Just, Sadistic, Savage, Vengeful }
 
-[Serializable]
-public class Personality
+public class PersonalityComponent
 {
+    public Actor_Base Actor;
     public string PersonalityTitle;
     public string PersonalityDescription;
 
     public HashSet<PersonalityTrait> PersonalityTraits = new();
 
-    public Personality(string personalityTitle, string personalityDescription, HashSet<PersonalityTrait> personalityTraits)
+    public PersonalityComponent(Actor_Base actor, HashSet<PersonalityTrait> personalityTraits)
     {
-        PersonalityTitle = personalityTitle;
-        PersonalityDescription = personalityDescription;
+        Actor = actor;
         PersonalityTraits = personalityTraits;
+
+        _setPersonalityTitle();
+    }
+
+    void _setPersonalityTitle()
+    {
+        (PersonalityTitle, PersonalityDescription) = Manager_Personality.GetPersonalityTitleAndDescription(this);
+
+        Actor.ActorData.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
     }
 
     public void AddToPersonalityScore(PersonalityTraitName traitName, float score)
@@ -88,39 +124,35 @@ public class Personality
 
     PersonalityTrait _traitCheck(PersonalityTraitName traitName)
     {
-        if (!PersonalityTraits.Any(t => t.TraitName == traitName)) PersonalityTraits.Add(Manager_PersonalityTrait.GetTrait(traitName));
+        if (!PersonalityTraits.Any(t => t.TraitName == traitName)) PersonalityTraits.Add(Manager_Personality.GetTrait(traitName));
 
         return PersonalityTraits.First(t => t.TraitName == traitName);
     }
 }
 
-public class Manager_PersonalityTrait
+[Serializable]
+public class ActorPersonality
 {
-    public static List<PersonalityTrait> AllPersonalityTraits = new();
+    public string PersonalityTitle;
+    public string PersonalityDescription;
+    public List<PersonalityTraitName> PersonalityTraits = new();
 
-    public static void Initialise()
+    public HashSet<PersonalityTrait> GetPersonality()
     {
-        AllPersonalityTraits.Clear();
+        HashSet<PersonalityTrait> personality = new();
 
-        AllPersonalityTraits.Add(_brave());
+        foreach(PersonalityTraitName traitName in PersonalityTraits)
+        {
+            personality.Add(Manager_Personality.GetTrait(traitName));
+        }
+
+        return personality;
     }
 
-    static PersonalityTrait _brave()
+    public void SetPersonalityTitle(string personalityTitle, string personalityDescription)
     {
-        return new PersonalityTrait(
-            traitName: PersonalityTraitName.Brave,
-            traitDescription: "Brave",
-            traitDisplayed: false,
-            traitEffects: new List<Effect>
-            {
-
-            }
-            );
-    }
-
-    public static PersonalityTrait GetTrait(PersonalityTraitName traitName)
-    {
-        return AllPersonalityTraits.First(t => t.TraitName == traitName);
+        PersonalityTitle = personalityTitle;
+        PersonalityDescription = personalityDescription;
     }
 }
 
@@ -134,6 +166,8 @@ public class PersonalityTrait
     [SerializeField] float _traitScore;
 
     public List<Effect> TraitEffects = new();
+
+    public Sprite PersonalityIcon;
 
     public PersonalityTrait(PersonalityTraitName traitName, string traitDescription, bool traitDisplayed, List<Effect> traitEffects)
     {

@@ -64,7 +64,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
                 _getPathTime = 0;
             }
 
-            _getPathTime += Time.deltaTime;
+            _getPathTime += UnityEngine.Time.deltaTime;
         }
     }
 
@@ -151,7 +151,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
                 yield break;
             }
 
-            transform.position = Vector3.MoveTowards(transform.position, nextPosition, _chaserSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, nextPosition, _chaserSpeed * UnityEngine.Time.deltaTime);
 
             yield return null;
         }

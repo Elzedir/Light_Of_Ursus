@@ -13,7 +13,7 @@ public class Controller_Puzzle_XOY : Controller
     {
         base.FixedUpdate();
 
-        _cooldownTimer += Time.deltaTime;
+        _cooldownTimer += UnityEngine.Time.deltaTime;
 
         if (_cooldownTimer >= _cooldown)
         {

@@ -46,6 +46,35 @@ public class Manager_Jobs : MonoBehaviour
         return closestCollider;
     }
 
+    public static Interactable_Lumberjack_DropOffZone GetNearestDropOffZone(string taskObjectName, Actor_Base actor)
+    {
+        float radius = 100; // Change the distance to depend on the area somehow, later.
+        Interactable_Lumberjack_DropOffZone closestDropOffZone = null;
+        float closestDistance = float.MaxValue;
+
+        Collider[] colliders = Physics.OverlapSphere(actor.transform.position, radius);
+
+        foreach (Collider collider in colliders)
+        {
+            Interactable_Lumberjack_DropOffZone dropOffZone = collider.GetComponent<Interactable_Lumberjack_DropOffZone>();
+
+            if (dropOffZone == null) continue;
+
+            if (dropOffZone.name.Contains(taskObjectName))
+            {
+                float distance = Vector3.Distance(actor.transform.position, dropOffZone.transform.position);
+
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestDropOffZone = dropOffZone;
+                }
+            }
+        }
+
+        return closestDropOffZone;
+    }
+
 
     void _initialiseJobs()
     {
@@ -68,18 +97,18 @@ public class Manager_Jobs : MonoBehaviour
             var nearestCraftingStation = Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position);
             if (nearestCraftingStation == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
             yield return actor.BasicMove(nearestCraftingStation.GetComponent<Collider>().bounds.center);
-            foreach (Item item in actor.InventoryComponent.Inventory)
-            {
-                Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} Quantity: {item.CommonStats_Item.CurrentStackSize}");
-            }
             yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, nearestCraftingStation);
         }
 
         IEnumerator dropOffWood(Actor_Base actor)
         {
-            yield return actor.BasicMove(Manager_Jobs.GetTaskArea(actor, "DropOffZone").bounds.center);
+            var nearestDropOffZone = Manager_Jobs.GetNearestDropOffZone("DropOffZone", actor);
 
-            yield return new WaitForSeconds(3);
+            yield return actor.BasicMove(nearestDropOffZone.transform.position);
+
+            yield return actor.InventoryComponent.TransferItemFromInventory(nearestDropOffZone.InventoryComponent, nearestDropOffZone.GetItemsToDropOff(actor));
+
+            yield return new WaitForSeconds(1);
         }
 
         IEnumerator sellWood(Actor_Base actor)
@@ -255,7 +284,7 @@ public class Job
 {
     public JobName JobName;
     public string JobDescription;
-    public Collider JobArea;
+    public Interactable_Lumberjack_DropOffZone JobArea;
     public List<Task> JobTasks = new();
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
@@ -299,7 +328,7 @@ public class Task
 
     public JobName JobName;
 
-    public Collider TaskArea;
+    public Interactable_Lumberjack_DropOffZone TaskArea;
     public List<AnimationClip> TaskAnimationClips;
 
     public Func<Actor_Base, IEnumerator> TaskAction;

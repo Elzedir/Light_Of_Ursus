@@ -8,7 +8,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 {
     [SerializeField] Actor_Data_SO _actorData;
     public Actor_Data_SO ActorData { get { return _actorData; } private set { _actorData = value; } }
-
+    public GameObject GameObject { get; private set; }
     public Rigidbody ActorBody { get; protected set; }
     public Collider ActorCollider { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
@@ -16,21 +16,25 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public JobComponent JobComponent { get; protected set; }
     public InventoryComponent InventoryComponent { get; protected set; }
     public CraftingComponent CraftingComponent { get; protected set; }
+    public PersonalityComponent PersonalityComponent { get; protected set; }
     public GatheringComponent GatheringComponent { get; protected set; }
     public CharacterEquipmentManager ActorEquipmentManager { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
 
     void Awake()
     {
+        GameObject = gameObject;
         ActorBody = GetComponentInParent<Rigidbody>();
         ActorCollider = GetComponent<Collider>();
         ActorAnimator = GetComponent<Animator>();
         ActorAnimation = GetComponent<Animation>();
         ActorEquipmentManager = new CharacterEquipmentManager();
         ActorEquipmentManager.InitialiseEquipment(this);
+
+        Manager_Initialisation.OnInitialiseActors += _onInitialise;
     }
 
-    void Start()
+    void _onInitialise()
     {
         if (ActorData != null)
         {
@@ -38,6 +42,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
             JobComponent = new JobComponent(this, ActorData.ActorCareer, Manager_Career.GetCareer(ActorData.ActorCareer).CareerJobs);
             CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
             GatheringComponent = new GatheringComponent(this);
+            PersonalityComponent = new PersonalityComponent(this, ActorData.ActorPersonality.GetPersonality());
         }
     }
 

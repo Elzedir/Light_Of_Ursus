@@ -39,7 +39,7 @@ public class Discoverable : MonoBehaviour
 
     void ResetDiscoveryTime()
     {
-        _discoverProgress -= Time.deltaTime;
+        _discoverProgress -= UnityEngine.Time.deltaTime;
 
         if (_discoverProgress <= 0)
         {
@@ -61,7 +61,7 @@ public class Discoverable : MonoBehaviour
 
         if (_discoveredState == DiscoverState.Undiscovered) _discoveredState = DiscoverState.Discovered;
 
-        _discoverProgress += lightPercentage * Time.deltaTime;
+        _discoverProgress += lightPercentage * UnityEngine.Time.deltaTime;
 
         if (_discoverProgress >= 1)
         {

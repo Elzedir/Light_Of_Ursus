@@ -22,7 +22,7 @@ public class Bullet : MonoBehaviour
 
     void Update()
     {
-        if (Move == Vector3.zero) Move = Vector3.right; transform.position += (Move.normalized * Speed * Time.deltaTime);
+        if (Move == Vector3.zero) Move = Vector3.right; transform.position += (Move.normalized * Speed * UnityEngine.Time.deltaTime);
     }
 
     private void OnCollisionEnter(Collision collision)

@@ -20,10 +20,10 @@ public class List_Consumable : Manager_Item
             itemValue: 1
             );
 
-        FixedModifiers fixedModifiers = new FixedModifiers(
+        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
             healthRecovery: 5
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, fixedModifiers: fixedModifiers));
+        AddToList(new Item(commonStats_Item: commonStats_Item, fixedModifiers_Item: fixedModifiers));
     }
 }

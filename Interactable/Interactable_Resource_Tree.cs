@@ -19,6 +19,6 @@ public class Interactable_Resource_Tree : Interactable_Resource
 
     public override List<Item> GetResourceYield(Actor_Base actor)
     {
-        return new List<Item> { Manager_Item.GetItem(itemID: 1100, itemQuantity: 3) };
+        return new List<Item> { Manager_Item.GetItem(itemID: 1100, itemQuantity: 7) };
     }
 }

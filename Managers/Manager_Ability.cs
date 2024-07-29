@@ -59,7 +59,7 @@ public class Manager_Ability : MonoBehaviour
 
             while (elapsedTime < 3)
             {
-                elapsedTime += Time.deltaTime;
+                elapsedTime += UnityEngine.Time.deltaTime;
 
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, ~LayerMask.GetMask("Player")))
                 {

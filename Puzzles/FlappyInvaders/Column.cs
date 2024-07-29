@@ -27,7 +27,7 @@ public class Column : MonoBehaviour
 
     void Update()
     {
-        if (Move == Vector3.zero) Move = Vector3.left; transform.position += (Move.normalized * Speed * Time.deltaTime);
+        if (Move == Vector3.zero) Move = Vector3.left; transform.position += (Move.normalized * Speed * UnityEngine.Time.deltaTime);
     }
 
     public void DestroyColumn()

@@ -67,8 +67,8 @@ public class Spawner_Column : MonoBehaviour
             _mineSpawnTime = 0;
         }
 
-        _mineSpawnTime += Time.deltaTime;
-        _columnSpawnTime += Time.deltaTime;
+        _mineSpawnTime += UnityEngine.Time.deltaTime;
+        _columnSpawnTime += UnityEngine.Time.deltaTime;
     }
 
     void SpawnColumnFixed()

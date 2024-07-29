@@ -164,7 +164,7 @@ public class Player : Controller, IDataPersistence
 
         while(elapsedTime < 1 && !_actor.IsGrounded())
         {
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
             yield return null;
         }
 
@@ -203,7 +203,7 @@ public class Player : Controller, IDataPersistence
 
         while (elapsedTime < 3)
         {
-            elapsedTime += Time.deltaTime;
+            elapsedTime += UnityEngine.Time.deltaTime;
 
             if (elapsedTime > 0.25 && _actor.IsGrounded())
             {

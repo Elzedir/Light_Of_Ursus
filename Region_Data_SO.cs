@@ -3,19 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Serializable]
-public class DisplayCitySOData
-{
-    public string CityName;
-    public City_Data_SO CityData;
-}
 
-[Serializable]
-public class DisplayWorldStateSOData
-{
-    public WorldStateName CurrentWorldState;
-    public WorldState_Data_SO WorldStateData;
-}
 
 [CreateAssetMenu(fileName = "New Region", menuName = "Region/Region Data")]
 public class Region_Data_SO : ScriptableObject
@@ -31,17 +19,17 @@ public class Region_Data_SO : ScriptableObject
     public List<DisplayCitySOData> CityList = new();
 }
 
-[CreateAssetMenu(fileName = "New City", menuName = "Region/City Data")]
-public class City_Data_SO : ScriptableObject
+[Serializable]
+public class DisplayCitySOData
 {
-    public string CityID;
     public string CityName;
-    public string CityDescription;
+    public City_Data_SO CityData;
+}
 
-    public int CurrentPopulation;
-    public int ExpectedPopulation;
-
-    public List<DisplayWorldStateSOData> WorldStates;
-
-    public List<Career> CityCareers = new();
+[Serializable]
+public class DisplayWorldStateSOData
+{
+    public string WorldStateName;
+    public WorldStateStatus WorldStateStatus;
+    public WorldState_Data_SO WorldStateData;
 }

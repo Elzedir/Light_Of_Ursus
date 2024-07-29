@@ -10,7 +10,7 @@ public class Manager_Relation
         float relation = 0;
 
         relation += _compareFaction(a.ActorData.Faction, b.ActorData.Faction);
-        relation += _comparePersonality(a.ActorData.ActorStats.ActorPersonality, b.ActorData.ActorStats.ActorPersonality);
+        relation += _comparePersonality(a.PersonalityComponent, b.PersonalityComponent);
 
         return relation;
     }
@@ -24,7 +24,7 @@ public class Manager_Relation
         return factionDataA.FactionData.FirstOrDefault(f => f.FactionName == b).RelationshipValue;
     }
 
-    static float _comparePersonality(Personality a, Personality b)
+    static float _comparePersonality(PersonalityComponent a, PersonalityComponent b)
     {
         float personalityRelation = 0;
 
