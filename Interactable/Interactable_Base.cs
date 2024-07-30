@@ -9,12 +9,12 @@ public abstract class Interactable_Base : MonoBehaviour
     
     public virtual void Interact(GameObject interactor)
     {
-        throw new ArgumentException("Can't use base class.");
+        if (!WithinInteractRange(interactor)) { Debug.Log("Not within interact range"); return; }
     }
 
     public virtual IEnumerator Interact(Actor_Base actor)
     {
-        throw new ArgumentException("Can't use base class.");
+        if (!WithinInteractRange(actor.gameObject)) { Debug.Log("Not within interact range"); yield break; }
     }
 
     protected bool WithinInteractRange(GameObject interactor)

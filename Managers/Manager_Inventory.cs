@@ -25,7 +25,7 @@ public class Manager_Inventory : MonoBehaviour
 
 public interface IInventoryOwner
 {
-    GameObject GameObject {  get; }
+    GameObject GameObject { get; }
     InventoryComponent InventoryComponent { get; }
     void UpdateInventoryDisplay();
     void InitialiseInventoryComponent();
@@ -34,6 +34,29 @@ public interface IInventoryOwner
 public interface IInventoryActor : IInventoryOwner
 {
     Actor_Data_SO ActorData { get; }
+}
+
+public interface IResourceStation : IInventoryOwner
+{
+    ResourceStationName GetResourceStationName();
+    Vector3 GetGatheringPosition();
+    IEnumerator GatherResource(Actor_Base actor);
+    List<Item> GetResourceYield(Actor_Base actor);
+
+}
+
+public interface ICraftingStation : IInventoryOwner
+{
+    CraftingStationName GetCraftingStationName();
+    Vector3 GetCraftingPosition();
+    IEnumerator CraftItem(Actor_Base actor);
+    List<Item> GetCraftingYield(Actor_Base actor);
+}
+
+public interface ISellingStation : IInventoryOwner
+{
+    bool IsActive { get; }
+    void IsStationActive(bool isSelling);
 }
 
 public class InventoryComponent
@@ -308,10 +331,10 @@ public class InventoryComponent
     }
 }
 
-[Serializable   ]
+[Serializable]
 public class DisplayInventory
 {
-    public Actor_Base Actor;
+    public IInventoryOwner InventoryOwner;
     public int Gold = 0;
     public List<DisplayItem> Inventory = new();
 

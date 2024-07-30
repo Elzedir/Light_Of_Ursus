@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TickRate { OneTenth, One, Ten }
+public enum TickRate { OneTenthSecond, OneSecond, TenSeconds, OneGameDay, OneGameMonth, OneGameYear }
 
 public class Manager_TickRate : MonoBehaviour
 {
     public static Manager_TickRate Instance { get; private set; }
 
-    Dictionary<TickRate, float> _nextTickTimes;
-    Dictionary<TickRate, List<ITickable>> _tickableGroups;
+    static Dictionary<TickRate, float> _nextTickTimes;
+    static Dictionary<TickRate, List<ITickable>> _tickableGroups;
 
     void Awake()
     {
@@ -21,16 +21,16 @@ public class Manager_TickRate : MonoBehaviour
     {
         _nextTickTimes = new Dictionary<TickRate, float>
             {
-                { TickRate.OneTenth, UnityEngine.Time.time + 0.1f },
-                { TickRate.One, UnityEngine.Time.time + 1f },
-                { TickRate.Ten, UnityEngine.Time.time + 10f }
+                { TickRate.OneTenthSecond, UnityEngine.Time.time + 0.1f },
+                { TickRate.OneSecond, UnityEngine.Time.time + 1f },
+                { TickRate.TenSeconds, UnityEngine.Time.time + 10f }
             };
 
         _tickableGroups = new Dictionary<TickRate, List<ITickable>>
             {
-                { TickRate.OneTenth, new List<ITickable>() },
-                { TickRate.One, new List<ITickable>() },
-                { TickRate.Ten, new List<ITickable>() }
+                { TickRate.OneTenthSecond, new List<ITickable>() },
+                { TickRate.OneSecond, new List<ITickable>() },
+                { TickRate.TenSeconds, new List<ITickable>() }
             };
     }
 
@@ -56,18 +56,25 @@ public class Manager_TickRate : MonoBehaviour
     {
         switch (tickRate)
         {
-            case TickRate.OneTenth:
+            case TickRate.OneTenthSecond:
                 return 0.1f;
-            case TickRate.One:
+            case TickRate.OneSecond:
                 return 1f;
-            case TickRate.Ten:
+            case TickRate.TenSeconds:
                 return 10f;
+            case TickRate.OneGameDay:
+                return 2880f;
+            case TickRate.OneGameMonth:
+                return 43200f;
+            case TickRate.OneGameYear:
+                return 172800f;
+
             default:
                 throw new ArgumentOutOfRangeException();
         }
     }
 
-    public void RegisterTickable(ITickable tickable)
+    public static void RegisterTickable(ITickable tickable)
     {
         TickRate tickRate = tickable.GetTickRate();
 
@@ -77,7 +84,7 @@ public class Manager_TickRate : MonoBehaviour
         }
     }
 
-    public void UnregisterTickable(ITickable tickable)
+    public static void UnregisterTickable(ITickable tickable)
     {
         TickRate tickRate = tickable.GetTickRate();
 

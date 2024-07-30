@@ -34,6 +34,8 @@ public class Interactable_Item : Interactable_Base
 
     public override IEnumerator Interact(Actor_Base actor)
     {
+        base.Interact(actor.gameObject);
+
         if (Item == null) throw new ArgumentException("Item has not been initialised");
 
         if (!actor.InventoryComponent.AddToInventory(new List<Item> { Item }))

@@ -9,6 +9,7 @@ public class City_Data_SO : ScriptableObject
     public string CityName;
     public string CityDescription;
 
+    public DisplayProsperity Prosperity;
     public int ExpectedPopulation;
     public List<DisplayCitizen> Citizens = new();
 
@@ -36,5 +37,11 @@ public class DisplayCitizen
         CitizenActorID = actor.ActorData.ActorID;
         CitizenName = actor.ActorData.ActorName.GetName();
     }
+}
+
+[Serializable]
+public class DisplayProsperity
+{
+    public float CurrentProsperity;
 }
 

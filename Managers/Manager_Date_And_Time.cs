@@ -109,12 +109,12 @@ public class Date
         int month = remainingDays / 14;
         int day = remainingDays % 14;
 
-        return (day + 1, month + 1, year + 1000);
+        return (day + 1, month + 1, year);
     }
 
     public static int ConvertToTotalDays(int day, int month, int year)
     {
-        return ((year - 1000) * 60) + ((month - 1) * 14) + (day - 1);
+        return (year * 60) + ((month - 1) * 14) + (day - 1);
     }
 }
 
@@ -165,7 +165,7 @@ public class Time
     {
         CurrentTime.CurrentMinute = minute;
         CurrentTime.CurrentHour = hour;
-        Manager_TickRate.Instance.RegisterTickable(new CurrentTime());
+        Manager_TickRate.RegisterTickable(new CurrentTime());
     }
 }
 
@@ -179,9 +179,7 @@ public class CurrentTime : ITickable
     {
         if (_halfTime)
         {
-            //CurrentMinute++;
-
-            CurrentMinute += 10;
+            CurrentMinute++;
 
             if (CurrentMinute >= 60)
             {
@@ -208,6 +206,6 @@ public class CurrentTime : ITickable
 
     public TickRate GetTickRate()
     {
-        return TickRate.OneTenth;
+        return TickRate.OneSecond;
     }
 }

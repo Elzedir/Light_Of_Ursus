@@ -49,33 +49,13 @@ public class Manager_Crafting : MonoBehaviour
         return closestCollider;
     }
 
-    public static Interactable_Crafting GetNearestCraftingStation(CraftingStationName craftingStationName, Vector3 currentPosition)
+    public static ICraftingStation GetNearestCraftingStation(CraftingStationName craftingStationName, Vector3 currentPosition)
     {
-        float radius = 100; // Change the distance to depend on the area somehow, later.
-        Interactable_Crafting closestStation = null;
-        float closestDistance = float.MaxValue;
-
-        Collider[] colliders = Physics.OverlapSphere(currentPosition, radius);
-
-        foreach (Collider collider in colliders)
-        {
-            Interactable_Crafting craftingStation = collider.GetComponent<Interactable_Crafting>();
-
-            if (craftingStation == null) continue;
-
-            if (craftingStation.GetCraftingStationName() == craftingStationName)
-            {
-                float distance = Vector3.Distance(currentPosition, craftingStation.transform.position);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestStation = craftingStation;
-                }
-            }
-        }
-
-        return closestStation;
+        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .OfType<ICraftingStation>()
+            .Where(station => station.GetCraftingStationName() == craftingStationName)
+            .OrderBy(station => Vector3.Distance(currentPosition, station.GameObject.transform.position))
+            .FirstOrDefault();
     }
 
     public void OnSceneLoaded()
@@ -126,7 +106,7 @@ public class Manager_Crafting : MonoBehaviour
 public class CraftingComponent
 {
     public Actor_Base Actor;
-    public Interactable_Crafting CraftingStation;
+    public ICraftingStation CraftingStation;
     public List<Recipe> KnownRecipes = new();
 
     public CraftingComponent(Actor_Base actor, List<Recipe> knownRecipes)
@@ -154,7 +134,7 @@ public class CraftingComponent
         return recipe.RecipeProducts.Select(product => { return Manager_Item.GetItem(itemID: product.Item1.CommonStats_Item.ItemID, itemQuantity: product.Item2); }).ToList();
     }
 
-    public IEnumerator CraftItemAll(RecipeName recipeName, Interactable_Crafting craftingStation)
+    public IEnumerator CraftItemAll(RecipeName recipeName, ICraftingStation craftingStation)
     {
         var recipe = Manager_Crafting.GetRecipe(recipeName);
         var ingredients = ConvertFromRecipeToIngredientItemList(recipe);
@@ -180,7 +160,7 @@ public class CraftingComponent
         }
     }
 
-    public IEnumerator CraftItem(RecipeName recipeName, Interactable_Crafting craftingStation)
+    public IEnumerator CraftItem(RecipeName recipeName, ICraftingStation craftingStation)
     {
         CraftingStation = craftingStation;
 

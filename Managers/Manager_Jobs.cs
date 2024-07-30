@@ -21,31 +21,6 @@ public class Manager_Jobs : MonoBehaviour
         return AllJobs.FirstOrDefault(j => j.JobName == jobName);
     }
 
-    public static Collider GetTaskArea(Actor_Base actor, string taskObjectName)
-    {
-        float radius = 100; // Change the distance to depend on the area somehow, later.
-        Collider closestCollider = null;
-        float closestDistance = float.MaxValue;
-
-        Collider[] colliders = Physics.OverlapSphere(actor.transform.position, radius);
-
-        foreach (Collider collider in colliders)
-        {
-            if (collider.name.Contains(taskObjectName))
-            {
-                float distance = Vector3.Distance(actor.transform.position, collider.transform.position);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestCollider = collider;
-                }
-            }
-        }
-
-        return closestCollider;
-    }
-
     public static Interactable_Lumberjack_DropOffZone GetNearestDropOffZone(string taskObjectName, Actor_Base actor)
     {
         float radius = 100; // Change the distance to depend on the area somehow, later.
@@ -86,9 +61,9 @@ public class Manager_Jobs : MonoBehaviour
     {
         IEnumerator chopTrees(Actor_Base actor)
         {
-            var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceName.Tree, actor.transform.position);
+            var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
             if (nearestResource == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
-            yield return actor.BasicMove(nearestResource.GetComponent<Collider>().bounds.center);
+            yield return actor.BasicMove(nearestResource.GetGatheringPosition());
             yield return actor.GatheringComponent.GatherResource(nearestResource);
         }
 
@@ -96,7 +71,7 @@ public class Manager_Jobs : MonoBehaviour
         {
             var nearestCraftingStation = Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position);
             if (nearestCraftingStation == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
-            yield return actor.BasicMove(nearestCraftingStation.GetComponent<Collider>().bounds.center);
+            yield return actor.BasicMove(nearestCraftingStation.GetCraftingPosition());
             yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, nearestCraftingStation);
         }
 
@@ -203,7 +178,7 @@ public class JobComponent : ITickable
 
     public TickRate GetTickRate()
     {
-        return TickRate.One;
+        return TickRate.OneSecond;
     }
 
     public void ToggleDoJobs(bool jobsActive)
@@ -284,7 +259,7 @@ public class Job
 {
     public JobName JobName;
     public string JobDescription;
-    public Interactable_Lumberjack_DropOffZone JobArea;
+    public Jobsite_Base JobArea;
     public List<Task> JobTasks = new();
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)

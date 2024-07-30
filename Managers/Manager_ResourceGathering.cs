@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-public enum ResourceName
+public enum ResourceStationName
 {
     None,
     Iron_Node,
@@ -38,40 +39,20 @@ public class Manager_ResourceGathering : MonoBehaviour
         return closestCollider;
     }
 
-    public static Interactable_Resource GetNearestResource(ResourceName resourceName, Vector3 currentPosition)
+    public static IResourceStation GetNearestResource(ResourceStationName resourceStationName, Vector3 currentPosition)
     {
-        float radius = 100; // Change the distance to depend on the area somehow, later.
-        Interactable_Resource closestResource = null;
-        float closestDistance = float.MaxValue;
-
-        Collider[] colliders = Physics.OverlapSphere(currentPosition, radius);
-
-        foreach (Collider collider in colliders)
-        {
-            Interactable_Resource resource = collider.GetComponent<Interactable_Resource>();
-
-            if (resource == null) continue;
-
-            if (resource.GetResourceName() == resourceName)
-            {
-                float distance = Vector3.Distance(currentPosition, resource.transform.position);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestResource = resource;
-                }
-            }
-        }
-
-        return closestResource;
+        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .OfType<IResourceStation>()
+            .Where(station => station.GetResourceStationName() == resourceStationName)
+            .OrderBy(station => Vector3.Distance(currentPosition, station.GameObject.transform.position))
+            .FirstOrDefault();
     }
 }
 
 public class GatheringComponent
 {
     public Actor_Base Actor;
-    public Interactable_Resource Resource;
+    public IResourceStation ResourceStation;
 
     Coroutine _gatheringCoroutine;
 
@@ -80,13 +61,15 @@ public class GatheringComponent
         Actor = actor;
     }
 
-    public IEnumerator GatherResource(Interactable_Resource resource)
+    public IEnumerator GatherResource(IResourceStation resourceStation)
     {
-        Resource = resource;
+        ResourceStation = resourceStation;
 
-        yield return _gatheringCoroutine = Actor.StartCoroutine(resource.Interact(Actor));
+        // Add in a while loop to gather until a certain condition is fulfilled.
 
-        if (!addedIngredientsToActor(resource.GetResourceYield(Actor)))
+        yield return _gatheringCoroutine = Actor.StartCoroutine(resourceStation.GatherResource(Actor));
+
+        if (!addedIngredientsToActor(resourceStation.GetResourceYield(Actor)))
         {
             // Drop resources on floor
             Debug.Log("Couldn't add to inventory");

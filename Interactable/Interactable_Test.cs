@@ -7,7 +7,7 @@ public class Interactable_Test : Interactable_Base
 {
     public override void Interact(GameObject interactor)
     {
-        if (!WithinInteractRange(interactor)) { Debug.Log("Not within interact range."); return; }
+        base.Interact(interactor);
 
         if (transform.name == "Sword")
         {
