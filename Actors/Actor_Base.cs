@@ -16,6 +16,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public JobComponent JobComponent { get; protected set; }
     public InventoryComponent InventoryComponent { get; protected set; }
     public CraftingComponent CraftingComponent { get; protected set; }
+    public VocationComponent VocationComponent { get; protected set; }
     public PersonalityComponent PersonalityComponent { get; protected set; }
     public GatheringComponent GatheringComponent { get; protected set; }
     public CharacterEquipmentManager ActorEquipmentManager { get; protected set; }
@@ -23,24 +24,27 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 
     void Awake()
     {
+        Manager_Initialisation.OnInitialiseActors += Initialise;
+    }
+
+    public void Initialise(Actor_Data_SO actorData)
+    {
         GameObject = gameObject;
-        ActorBody = GetComponentInParent<Rigidbody>();
-        ActorCollider = GetComponent<Collider>();
-        ActorAnimator = GetComponent<Animator>();
-        ActorAnimation = GetComponent<Animation>();
+        ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
+        ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();
+        ActorAnimator = GetComponent<Animator>() ?? gameObject.AddComponent<Animator>();
+        ActorAnimation = GetComponent<Animation>() ?? gameObject.AddComponent<Animation>();
         ActorEquipmentManager = new CharacterEquipmentManager();
         ActorEquipmentManager.InitialiseEquipment(this);
 
-        Manager_Initialisation.OnInitialiseActors += _onInitialise;
-    }
+        ActorData ??= actorData;
 
-    void _onInitialise()
-    {
         if (ActorData != null)
         {
             ActorData.Initialise(this);
             JobComponent = new JobComponent(this, ActorData.ActorCareer, Manager_Career.GetCareer(ActorData.ActorCareer).CareerJobs);
             CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
+            VocationComponent = new VocationComponent(this, new());
             GatheringComponent = new GatheringComponent(this);
             PersonalityComponent = new PersonalityComponent(this, ActorData.ActorPersonality.GetPersonality());
         }

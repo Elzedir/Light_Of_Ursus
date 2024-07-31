@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -66,7 +65,7 @@ public class Manager_Personality
 
     public static PersonalityTrait GetTrait(PersonalityTraitName traitName)
     {
-        return AllPersonalityTraits.First(t => t.TraitName == traitName);
+        return AllPersonalityTraits.FirstOrDefault(t => t.TraitName == traitName);
     }
 
     public static (string Title, string Description) GetPersonalityTitleAndDescription(PersonalityComponent personality)
@@ -79,6 +78,13 @@ public class Manager_Personality
         if (PersonalityRelations.TryGetValue(a < b ? (a, b) : (b, a), out float personalityRelations)) return personalityRelations;
 
         return 0;
+    }
+
+    public static PersonalityTrait GetRandomPersonalityTrait(List<PersonalityTrait> existingPersonalityTraits)
+    {
+        var availablePersonalityTraits = AllPersonalityTraits.Where(p => !existingPersonalityTraits.Contains(p)).ToList();
+
+        return availablePersonalityTraits[UnityEngine.Random.Range(0, availablePersonalityTraits.Count)];
     }
 }
 

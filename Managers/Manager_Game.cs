@@ -94,6 +94,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Date_And_Time.Initialise();
 
         Manager_Initialisation.InitialiseActors();
+        Manager_Initialisation.InitialiseCities();
 
         GameObject _createManager(string name, Transform parent)
         {

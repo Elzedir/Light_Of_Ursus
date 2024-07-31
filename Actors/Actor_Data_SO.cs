@@ -11,7 +11,7 @@ public class Actor_Data_SO : ScriptableObject
     public ActorName ActorName;
 
     public SpeciesName ActorSpecies;
-    public FactionName Faction;
+    public FactionName ActorFaction;
     public WorldState_Data_SO Worldstate;
 
     public CareerName ActorCareer;
@@ -19,15 +19,47 @@ public class Actor_Data_SO : ScriptableObject
     public ActorStats ActorStats;
     public ActorPersonality ActorPersonality;
     public ActorAspects ActorAspects;
-    public DisplayInventory ActorInventory;
+    public ActorInventory ActorInventory;
     public ActorEquipment ActorEquipment;
     public ActorAbilities ActorAbilities;
     public ActorQuests ActorQuests;
+
+    // Split them into the categories from chatgpt
 
     public void Initialise(Actor_Base actor)
     {
         //ActorAspects.InitialiseAspects(actor);
     }
+
+    public void InitialiseNewData(int actorID, Actor_Base actor, ActorName actorName, SpeciesName actorSpecies,
+        FactionName actorFaction = FactionName.Passive, WorldState_Data_SO worldState = null, CareerName actorCareer = CareerName.None, Actor_States actorStates = null, ActorStats actorStats = null,
+        ActorPersonality actorPersonality = null, ActorAspects actorAspects = null, ActorInventory actorInventory = null, ActorEquipment actorEquipment = null,
+        ActorAbilities actorAbilities = null, ActorQuests actorQuests = null)
+    {
+        ActorID = actorID;
+        Actor = actor;
+        ActorName = actorName;
+
+        ActorSpecies = actorSpecies;
+        ActorFaction = actorFaction;
+        Worldstate = worldState;
+
+        ActorCareer = actorCareer;
+        ActorStates = actorStates;
+        ActorStats = actorStats;
+        ActorPersonality = actorPersonality;
+        ActorAspects = actorAspects;
+        ActorInventory = actorInventory;
+        ActorEquipment = actorEquipment;
+        ActorAbilities = actorAbilities;
+        ActorQuests = actorQuests;
+    }
+}
+
+[Serializable]
+public class Actor
+{
+    
 }
 
 [Serializable]
@@ -35,6 +67,12 @@ public class ActorName
 {
     public string Name;
     public string Surname;
+
+    public ActorName(string name, string surname)
+    {
+        Name = name;
+        Surname = surname;
+    }
 
     public string GetName()
     {
@@ -67,7 +105,7 @@ public class ActorStats
 }
 
 [Serializable]
-public struct ActorAspects
+public class ActorAspects
 {
     public ClassTitle ActorTitle;
     public List<Aspect> _actorAspectList;

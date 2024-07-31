@@ -168,13 +168,13 @@ public class JobComponent : ITickable
         JobsActive = jobsActive;
         AllCurrentJobs = allCurrentJobs;
 
-        Manager_TickRate.Instance.RegisterTickable(this);
+        Manager_TickRate.RegisterTickable(this);
     }
 
     public void OnTick()
     {
         Manager_Game.Instance.StartCoroutine(PerformJobs());
-    }
+    } 
 
     public TickRate GetTickRate()
     {

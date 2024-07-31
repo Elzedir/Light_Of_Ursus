@@ -17,8 +17,6 @@ public class CityComponent : MonoBehaviour
 
         Manager_Initialisation.OnInitialiseCities += _onInitialise;
         CurrentDate.NewDay += _refreshCity;
-
-        _onInitialise();
     }
 
     void _onInitialise()

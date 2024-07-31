@@ -332,7 +332,7 @@ public class InventoryComponent
 }
 
 [Serializable]
-public class DisplayInventory
+public class ActorInventory
 {
     public IInventoryOwner InventoryOwner;
     public int Gold = 0;

@@ -9,9 +9,8 @@ public class City_Data_SO : ScriptableObject
     public string CityName;
     public string CityDescription;
 
+    public DisplayPopulation Population;
     public DisplayProsperity Prosperity;
-    public int ExpectedPopulation;
-    public List<DisplayCitizen> Citizens = new();
 
     public List<DisplayWorldStateSOData> WorldStates;
 
@@ -45,3 +44,22 @@ public class DisplayProsperity
     public float CurrentProsperity;
 }
 
+[Serializable]
+public class DisplayPopulation
+{
+    public List<DisplayCitizen> AllCitizens = new();
+
+    public float CurrentPopulation;
+    public float MaxPopulation;
+    public float ExpectedPopulation;
+
+    public void DisplayCurrentPopulation()
+    {
+        CurrentPopulation = AllCitizens.Count;
+    }
+
+    public void CalculateExpectedPopulation()
+    {
+        // Calculate expected population
+    }
+}

@@ -44,6 +44,6 @@ public class Manager_Faction : MonoBehaviour
 
     public static void SetFaction(Actor_Data_SO actorData, FactionName faction)
     {
-        actorData.Faction = faction;
+        actorData.ActorFaction = faction;
     }
 }
