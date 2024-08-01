@@ -15,7 +15,7 @@ public class Manager_Personality
 {
     public static Dictionary<PersonalityTraitName, (string Prefix, string Infix, string Suffix)> AllPersonalityTitles = new();
     public static Dictionary<(PersonalityTraitName, PersonalityTraitName), float> PersonalityRelations = new();
-    public static List<PersonalityTrait> AllPersonalityTraits = new();
+    public static HashSet<PersonalityTrait> AllPersonalityTraits = new();
 
     public static void Initialise()
     {
@@ -80,11 +80,22 @@ public class Manager_Personality
         return 0;
     }
 
-    public static PersonalityTrait GetRandomPersonalityTrait(List<PersonalityTrait> existingPersonalityTraits)
+    public static HashSet<PersonalityTraitName> GetRandomPersonalityTraits(HashSet<PersonalityTraitName> existingPersonalityTraits, int numberOfTraits = 1)
     {
-        var availablePersonalityTraits = AllPersonalityTraits.Where(p => !existingPersonalityTraits.Contains(p)).ToList();
+        existingPersonalityTraits ??= new HashSet<PersonalityTraitName>();
+        HashSet<PersonalityTraitName> selectedPersonalityTraits = new HashSet<PersonalityTraitName>();
 
-        return availablePersonalityTraits[UnityEngine.Random.Range(0, availablePersonalityTraits.Count)];
+        for (int i = 0; i < numberOfTraits; i++)
+        {
+            var availablePersonalityTraits = AllPersonalityTraits.Where(p => !existingPersonalityTraits.Contains(p.TraitName) && !selectedPersonalityTraits.Contains(p.TraitName)).ToList();
+
+            if (availablePersonalityTraits.Count == 0) break; 
+
+            var randomTrait = availablePersonalityTraits[UnityEngine.Random.Range(0, availablePersonalityTraits.Count)];
+            selectedPersonalityTraits.Add(randomTrait.TraitName);
+        }
+
+        return selectedPersonalityTraits;
     }
 }
 
@@ -110,7 +121,7 @@ public class PersonalityComponent
     {
         (PersonalityTitle, PersonalityDescription) = Manager_Personality.GetPersonalityTitleAndDescription(this);
 
-        Actor.ActorData.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
+        Actor.ActorData.AttributesCareerAndPersonality.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
     }
 
     public void AddToPersonalityScore(PersonalityTraitName traitName, float score)
@@ -141,10 +152,17 @@ public class ActorPersonality
 {
     public string PersonalityTitle;
     public string PersonalityDescription;
-    public List<PersonalityTraitName> PersonalityTraits = new();
+    public HashSet<PersonalityTraitName> PersonalityTraits = new();
+
+    public ActorPersonality(HashSet<PersonalityTraitName> personalityTraits)
+    {
+        PersonalityTraits = personalityTraits ?? new HashSet<PersonalityTraitName>();
+    }
 
     public HashSet<PersonalityTrait> GetPersonality()
     {
+        if (PersonalityTraits == null) return null;
+
         HashSet<PersonalityTrait> personality = new();
 
         foreach(PersonalityTraitName traitName in PersonalityTraits)

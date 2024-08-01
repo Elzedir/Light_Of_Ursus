@@ -13,7 +13,7 @@ public enum FactionName
     Orc
 }
 
-public enum Relationship
+public enum FactionRelationshipStatus
 {
     Neutral,
     Ally,
@@ -68,7 +68,7 @@ public class Faction_Data_SO : ScriptableObject
 public class FactionRelationship
 {
     public FactionName FactionName;
-    public Relationship Relationship;
+    public FactionRelationshipStatus Relationship;
     [SerializeField] private float _relationshipValue; public float RelationshipValue { get { return _relationshipValue; } set { _relationshipValue = value; RefreshRelationship(); } }
 
     public void RefreshRelationship()
@@ -83,13 +83,13 @@ public class FactionRelationship
         }
 
         Relationship = _relationshipValue > 75
-            ? Relationship.Ally
+            ? FactionRelationshipStatus.Ally
             : _relationshipValue > 25
-            ? Relationship.Friend
+            ? FactionRelationshipStatus.Friend
             : _relationshipValue > -25
-            ? Relationship.Neutral
+            ? FactionRelationshipStatus.Neutral
             : _relationshipValue > -75
-            ? Relationship.Hostile
-            : Relationship.Enemy;
+            ? FactionRelationshipStatus.Hostile
+            : FactionRelationshipStatus.Enemy;
     }
 }

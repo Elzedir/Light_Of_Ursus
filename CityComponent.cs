@@ -8,15 +8,23 @@ public class CityComponent : MonoBehaviour
     public City_Data_SO CityData;
     public BoxCollider CityArea;
 
+    public GameObject CityEntranceSpawnZone;
+
     public List<Jobsite_Base> AllJobsites = new();
     public ProsperityComponent ProsperityComponent;
 
     void Awake()
     {
         CityArea = GetComponent<BoxCollider>();
+        CityEntranceSpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
 
         Manager_Initialisation.OnInitialiseCities += _onInitialise;
         CurrentDate.NewDay += _refreshCity;
+    }
+
+    void Start()
+    {
+        CityData.Initialise(this);
     }
 
     void _onInitialise()

@@ -8,6 +8,7 @@ public class City_Data_SO : ScriptableObject
     public string CityID;
     public string CityName;
     public string CityDescription;
+    public CityComponent CityComponent;
 
     public DisplayPopulation Population;
     public DisplayProsperity Prosperity;
@@ -15,6 +16,11 @@ public class City_Data_SO : ScriptableObject
     public List<DisplayWorldStateSOData> WorldStates;
 
     public List<DisplayCityCareers> RequiredCityCareers = new();
+
+    public void Initialise(CityComponent city)
+    {
+        CityComponent = city;
+    }
 }
 
 [Serializable]
@@ -33,8 +39,8 @@ public class DisplayCitizen
 
     public void UpdateDisplayCitizen(Actor_Base actor)
     {
-        CitizenActorID = actor.ActorData.ActorID;
-        CitizenName = actor.ActorData.ActorName.GetName();
+        CitizenActorID = actor.ActorData.BasicIdentification.ActorID;
+        CitizenName = actor.ActorData.BasicIdentification.ActorName.GetName();
     }
 }
 

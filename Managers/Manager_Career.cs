@@ -10,8 +10,18 @@ public class Manager_Career
 
     public static void Initialise()
     {
+        _wanderer();
         _smith();
         _lumberJack();
+    }
+
+    static void _wanderer()
+    {
+        AllCareers.Add(new Career(
+            careerName: CareerName.None,
+            careerDescription: "Functionally unemployed",
+            new List<Job>()
+            ));
     }
 
     static void _smith()

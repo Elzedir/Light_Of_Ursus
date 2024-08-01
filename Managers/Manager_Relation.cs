@@ -9,7 +9,7 @@ public class Manager_Relation
     {
         float relation = 0;
 
-        relation += _compareFaction(a.ActorData.ActorFaction, b.ActorData.ActorFaction);
+        relation += _compareFaction(a.ActorData.FullIdentification.ActorFaction, b.ActorData.FullIdentification.ActorFaction);
         relation += _comparePersonality(a.PersonalityComponent, b.PersonalityComponent);
 
         return relation;
@@ -38,4 +38,9 @@ public class Manager_Relation
 
         return personalityRelation;
     }
+}
+
+public class Relation
+{
+
 }

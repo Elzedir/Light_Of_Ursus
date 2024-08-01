@@ -92,6 +92,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Inventory", _manager_Parent).AddComponent<Manager_Inventory>().OnSceneLoaded();
         Manager_Career.Initialise();
         Manager_Date_And_Time.Initialise();
+        Manager_Personality.Initialise();
+        Manager_Region.Initialise();
 
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseCities();

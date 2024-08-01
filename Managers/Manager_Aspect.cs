@@ -426,7 +426,7 @@ public class Manager_Aspect
 
     public static void AddAspect(Actor_Base actor, Aspect aspectToAdd)
     {
-        List<Aspect> actorAspectList = actor.ActorData.ActorAspects.ActorAspectList;
+        List<Aspect> actorAspectList = actor.ActorData.StatsAndAbilities.ActorAspects.ActorAspectList;
 
         for (int i = 0; i < actorAspectList.Count; i++)
         {
@@ -436,7 +436,7 @@ public class Manager_Aspect
             }
         }
 
-        actor.ActorData.ActorAspects.ActorTitle = GetCharacterTitle(actor);
+        actor.ActorData.StatsAndAbilities.ActorAspects.ActorTitle = GetCharacterTitle(actor);
     }
 
     public static ClassTitle GetCharacterTitle(Actor_Base actor = null, List<Aspect> aspectList = null)
@@ -445,12 +445,12 @@ public class Manager_Aspect
 
         if (actor != null)
         {
-            for (int i = 0; i < (3 - actor.ActorData.ActorAspects.ActorAspectList.Count); i++)
+            for (int i = 0; i < (3 - actor.ActorData.StatsAndAbilities.ActorAspects.ActorAspectList.Count); i++)
             {
-                actor.ActorData.ActorAspects.ActorAspectList.Add(Aspect.None);
+                actor.ActorData.StatsAndAbilities.ActorAspects.ActorAspectList.Add(Aspect.None);
             }
 
-            sortedSpecialisations = actor.ActorData.ActorAspects.ActorAspectList.OrderBy(s => s.ToString()).ToList();
+            sortedSpecialisations = actor.ActorData.StatsAndAbilities.ActorAspects.ActorAspectList.OrderBy(s => s.ToString()).ToList();
         }
         else if (aspectList != null)
         {
@@ -471,11 +471,11 @@ public class Manager_Aspect
 
         if (_titleList.Any(kvp => kvp.Value.Equals(aspectTuple)))
         {
-            return actor.ActorData.ActorAspects.ActorTitle = _titleList.First(kvp => kvp.Value.Equals(aspectTuple)).Key;
+            return actor.ActorData.StatsAndAbilities.ActorAspects.ActorTitle = _titleList.First(kvp => kvp.Value.Equals(aspectTuple)).Key;
         }
         else
         {
-            return actor.ActorData.ActorAspects.ActorTitle = ClassTitle.ErrUmmWellFck;
+            return actor.ActorData.StatsAndAbilities.ActorAspects.ActorTitle = ClassTitle.ErrUmmWellFck;
         }
     }
 }

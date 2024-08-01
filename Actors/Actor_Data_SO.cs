@@ -6,22 +6,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Actor", menuName = "Actor/Actor Data")]
 public class Actor_Data_SO : ScriptableObject
 {
-    public int ActorID;
-    public Actor_Base Actor;
-    public ActorName ActorName;
-
-    public SpeciesName ActorSpecies;
-    public FactionName ActorFaction;
+    public BasicIdentification BasicIdentification;
+    public FullIdentification FullIdentification;
     public WorldState_Data_SO Worldstate;
 
-    public CareerName ActorCareer;
-    public Actor_States ActorStates;
-    public ActorStats ActorStats;
-    public ActorPersonality ActorPersonality;
-    public ActorAspects ActorAspects;
-    public ActorInventory ActorInventory;
-    public ActorEquipment ActorEquipment;
-    public ActorAbilities ActorAbilities;
+    public AttributesCareerAndPersonality AttributesCareerAndPersonality;
+    public StatsAndAbilities StatsAndAbilities;
+    public InventoryAndEquipment InventoryAndEquipment;
     public ActorQuests ActorQuests;
 
     // Split them into the categories from chatgpt
@@ -31,35 +22,124 @@ public class Actor_Data_SO : ScriptableObject
         //ActorAspects.InitialiseAspects(actor);
     }
 
-    public void InitialiseNewData(int actorID, Actor_Base actor, ActorName actorName, SpeciesName actorSpecies,
-        FactionName actorFaction = FactionName.Passive, WorldState_Data_SO worldState = null, CareerName actorCareer = CareerName.None, Actor_States actorStates = null, ActorStats actorStats = null,
-        ActorPersonality actorPersonality = null, ActorAspects actorAspects = null, ActorInventory actorInventory = null, ActorEquipment actorEquipment = null,
-        ActorAbilities actorAbilities = null, ActorQuests actorQuests = null)
+    public void InitialiseNewData(FullIdentification fullIdentification, ActorQuests actorQuests, AttributesCareerAndPersonality attributesCareerAndPersonality,
+        InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, WorldState_Data_SO worldState)
     {
-        ActorID = actorID;
-        Actor = actor;
-        ActorName = actorName;
+        FullIdentification = fullIdentification;
+        BasicIdentification = fullIdentification.BasicIdentification;
 
-        ActorSpecies = actorSpecies;
-        ActorFaction = actorFaction;
         Worldstate = worldState;
 
-        ActorCareer = actorCareer;
-        ActorStates = actorStates;
-        ActorStats = actorStats;
-        ActorPersonality = actorPersonality;
-        ActorAspects = actorAspects;
-        ActorInventory = actorInventory;
-        ActorEquipment = actorEquipment;
-        ActorAbilities = actorAbilities;
+        AttributesCareerAndPersonality = attributesCareerAndPersonality;
+        StatsAndAbilities = statsAndAbilities;
+        InventoryAndEquipment = inventoryAndEquipment;
         ActorQuests = actorQuests;
     }
 }
 
 [Serializable]
-public class Actor
+public class BasicIdentification
 {
-    
+    public int ActorID;
+    public Actor_Base Actor;
+    public ActorName ActorName;
+
+    public BasicIdentification(int actorID, Actor_Base actor, ActorName actorName)
+    {
+        ActorID = actorID;
+        Actor = actor;
+        ActorName = actorName;
+    }
+}
+
+[Serializable]
+
+public class FullIdentification
+{
+    public int ActorID;
+    public Actor_Base Actor;
+    public ActorName ActorName;
+    public Family ActorFamily;
+    public FactionName ActorFaction;
+    public Background Background;
+    public BasicIdentification BasicIdentification;
+
+    public FullIdentification(int actorID, Actor_Base actor, ActorName actorName, FactionName actorFaction)
+    {
+        ActorID = actorID;
+        Actor = actor;
+        ActorName = actorName;
+        ActorFaction = actorFaction;
+
+        BasicIdentification = new BasicIdentification(actorID, actor, actorName);
+    }
+}
+
+[Serializable]
+public class Background
+{
+    public string Birthplace;
+    public Date Birthdate;
+    public Family ActorFamily;
+    public Dynasty ActorDynasty;
+    public string Religion;
+
+    public Background()
+    {
+
+    }
+}
+
+[Serializable]
+public class Relationships
+{
+    public List<Relation> AllRelationships;
+
+    public Relationships()
+    {
+
+    }
+}
+
+[Serializable]
+public class AttributesCareerAndPersonality
+{
+    public SpeciesName ActorSpecies;
+    public CareerName ActorCareer;
+    public ActorPersonality ActorPersonality;
+
+    public AttributesCareerAndPersonality(SpeciesName actorSpecies, CareerName actorCareer, ActorPersonality actorPersonality)
+    {
+        ActorSpecies = actorSpecies;
+        ActorCareer = actorCareer;
+        ActorPersonality = actorPersonality;
+    }
+}
+
+[Serializable]
+public class StatsAndAbilities
+{
+    public ActorStats ActorStats;
+    public Actor_States_And_Conditions ActorStates;
+    public ActorAspects ActorAspects;
+    public ActorAbilities ActorAbilities;
+
+    public StatsAndAbilities()
+    {
+
+    }
+}
+
+[Serializable]
+public class InventoryAndEquipment
+{
+    public ActorInventory ActorInventory;
+    public ActorEquipment ActorEquipment;
+
+    public InventoryAndEquipment()
+    {
+
+    }
 }
 
 [Serializable]
@@ -67,6 +147,8 @@ public class ActorName
 {
     public string Name;
     public string Surname;
+    public Title CurrentTitle;
+    public List<Title> AvailableTitles;
 
     public ActorName(string name, string surname)
     {
@@ -76,7 +158,17 @@ public class ActorName
 
     public string GetName()
     {
+        // Somehow integrate the title with the names
+        
         return $"{Name} {Surname}";
+    }
+
+    public void SetTitleAsCurrentTitle(TitleName titleName)
+    {
+        Manager_Title.GetTitle(titleName, out Title title);
+        if (AvailableTitles.Contains(title)) throw new ArgumentException($"Title: {title.TitleName} does not exist in AllTitles.");
+
+        CurrentTitle = title;
     }
 }
 
@@ -173,13 +265,13 @@ public class ActorLevelData
         switch (levelData.BonusType)
         {
             case LevelUpBonusType.Health:
-                _actor.ActorData.ActorStats.CombatStats.MaxHealth += levelData.BonusStatPoints;
+                _actor.ActorData.StatsAndAbilities.ActorStats.CombatStats.MaxHealth += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Mana:
-                _actor.ActorData.ActorStats.CombatStats.MaxMana += levelData.BonusStatPoints;
+                _actor.ActorData.StatsAndAbilities.ActorStats.CombatStats.MaxMana += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Stamina:
-                _actor.ActorData.ActorStats.CombatStats.MaxStamina += levelData.BonusStatPoints;
+                _actor.ActorData.StatsAndAbilities.ActorStats.CombatStats.MaxStamina += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Skillset:
                 CanAddNewSkillSet = true;

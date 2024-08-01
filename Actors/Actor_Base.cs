@@ -42,11 +42,11 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         if (ActorData != null)
         {
             ActorData.Initialise(this);
-            JobComponent = new JobComponent(this, ActorData.ActorCareer, Manager_Career.GetCareer(ActorData.ActorCareer).CareerJobs);
+            JobComponent = new JobComponent(this, ActorData.AttributesCareerAndPersonality.ActorCareer, Manager_Career.GetCareer(ActorData.AttributesCareerAndPersonality.ActorCareer).CareerJobs);
             CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
             VocationComponent = new VocationComponent(this, new());
             GatheringComponent = new GatheringComponent(this);
-            PersonalityComponent = new PersonalityComponent(this, ActorData.ActorPersonality.GetPersonality());
+            PersonalityComponent = new PersonalityComponent(this, ActorData.AttributesCareerAndPersonality.ActorPersonality.GetPersonality());
         }
     }
 
@@ -57,7 +57,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 
     public void UpdateInventoryDisplay()
     {
-        ActorData.ActorInventory.UpdateDisplayInventory(this);
+        ActorData.InventoryAndEquipment.ActorInventory.UpdateDisplayInventory(this);
     }
 
     public bool IsGrounded()

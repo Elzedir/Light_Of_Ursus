@@ -16,7 +16,7 @@ public class Region_Data_SO : ScriptableObject
 
     public List<DisplayWorldStateSOData> WorldStates;
 
-    public List<DisplayCitySOData> CityList = new();
+    public List<DisplayCitySOData> AllCities = new();
 }
 
 [Serializable]

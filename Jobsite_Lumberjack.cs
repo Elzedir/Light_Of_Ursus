@@ -18,6 +18,8 @@ public class Jobsite_Lumberjack : Jobsite_Base
     {
         JobsiteArea = GetComponent<BoxCollider>();
         AllStations = _getStationsInArea();
+
+        Initialise(null, new Dictionary<Actor_Base, EmployeePosition>());
     }
 
     List<Interactable_Lumberjack> _getStationsInArea()
