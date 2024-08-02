@@ -97,6 +97,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseCities();
+        Manager_Initialisation.InitialiseJobsites();
 
         GameObject _createManager(string name, Transform parent)
         {

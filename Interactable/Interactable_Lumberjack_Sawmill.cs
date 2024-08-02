@@ -38,5 +38,6 @@ public class Interactable_Lumberjack_Sawmill : Interactable_Lumberjack, ICraftin
     {
         GameObject = gameObject;
         InventoryComponent = new InventoryComponent(this, new List<Item>());
+        EmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Lumberjack, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
     }
 }

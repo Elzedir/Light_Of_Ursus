@@ -186,8 +186,10 @@ public class JobComponent : ITickable
         JobsActive = jobsActive;
     }
 
-    public void AddJob(Job job)
+    public void AddJob(JobName jobName)
     {
+        Job job = Manager_Jobs.GetJob(jobName);
+
         if (job == null) { Debug.Log("Job is null"); return; }
 
         if (AllCurrentJobs.Contains(job)) { Debug.Log("AllCurrentJobs already contains job."); return; }

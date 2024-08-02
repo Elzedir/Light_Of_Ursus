@@ -37,6 +37,12 @@ public class DisplayCitizen
     public int CitizenActorID;
     public string CitizenName;
 
+    public DisplayCitizen(int citizenActorID, string citizenName)
+    {
+        CitizenActorID = citizenActorID;
+        CitizenName = citizenName;
+    }
+
     public void UpdateDisplayCitizen(Actor_Base actor)
     {
         CitizenActorID = actor.ActorData.BasicIdentification.ActorID;
@@ -67,5 +73,12 @@ public class DisplayPopulation
     public void CalculateExpectedPopulation()
     {
         // Calculate expected population
+    }
+
+    public void AddCitizen(DisplayCitizen citizen)
+    {
+        if (AllCitizens.Contains(citizen)) throw new ArgumentException($"Citizen: {citizen.CitizenName} is already in AllCitizens.");
+
+        AllCitizens.Add(citizen);
     }
 }

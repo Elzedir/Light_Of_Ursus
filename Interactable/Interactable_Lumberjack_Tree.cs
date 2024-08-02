@@ -44,5 +44,6 @@ public class Interactable_Lumberjack_Tree : Interactable_Lumberjack, IResourceSt
     {
         GameObject = gameObject;
         InventoryComponent = new InventoryComponent(this, new List<Item>());
+        EmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Lumberjack, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
     }
 }

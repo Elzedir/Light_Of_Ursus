@@ -29,6 +29,8 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 
     public void Initialise(Actor_Data_SO actorData)
     {
+        Manager_Actor.AddToAllActorList(this);
+
         GameObject = gameObject;
         ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
         ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();

@@ -35,7 +35,7 @@ public class Manager_Actor
 
     public static Actor_Base GetActor(int actorID)
     {
-        return AllActors.FirstOrDefault(a => a.ActorData.BasicIdentification.ActorID == actorID);
+        return AllActors.FirstOrDefault(a => a.ActorData != null && a.ActorData.BasicIdentification.ActorID == actorID);
     }
 
     public static Actor_Base InitialiseNewActorOnGO(Vector3 spawnPoint)

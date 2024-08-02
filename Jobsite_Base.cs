@@ -13,8 +13,11 @@ public enum EmployeePosition
     Shopkeeper,
 
     Chief_Lumberjack,
-    Lumberjack,
-    Assistant_Lumberjack,
+    Logger,
+    Assistant_Logger,
+
+    Sawyer,
+    Assistant_Sawyer,
 
     Assistant_Smith,
 }
@@ -23,25 +26,40 @@ public class Jobsite_Base : MonoBehaviour
 {
     public Actor_Base Owner;
     public CityComponent City;
-
+    
     public bool IsActive = true;
 
-    public Dictionary<Actor_Base, EmployeePosition> EmployeeList = new();
+    public Dictionary<Actor_Base, EmployeePosition> AllEmployees;
+    public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions;
     public BoxCollider JobsiteArea;
 
-    public virtual void Initialise(Actor_Base owner, Dictionary<Actor_Base, EmployeePosition> employeeList)
+    void Awake()
+    {
+        Manager_Initialisation.OnInitialiseJobsites += Initialise;
+    }
+
+    public virtual void Initialise()
     {
         JobsiteArea = GetComponent<BoxCollider>();
-        SetOwner(owner);
-        EmployeeList = employeeList;
+        AllEmployees = new();
+        AllJobPositions = new();
 
         StartCoroutine(TestInitialiseCity());
     }
 
-    IEnumerator TestInitialiseCity()
+    public void UnpackJobsiteData()
+    {
+        //Manager_Jobsites.GetJobsiteData(City);
+    }
+
+    protected virtual IEnumerator TestInitialiseCity()
     {
         yield return new WaitForSeconds(0.5f);
         City = Manager_Region.GetNearestCity(transform.position);
+
+        UnpackJobsiteData();
+
+        SetOwner(Owner);
     }
 
     public void SetOwner(Actor_Base owner)
@@ -50,25 +68,24 @@ public class Jobsite_Base : MonoBehaviour
 
         if (Owner == null)
         {
-            StartCoroutine(GetNewOwnerAfterOneSecond());
+            GetNewOwner();
         }
 
         // And change all affected things, like perks, job settings, etc.
     }
 
-    public IEnumerator GetNewOwnerAfterOneSecond()
-    {
-        yield return new WaitForSeconds(2);
-        GetNewOwner();
-    }
-
     public void GetNewOwner()
     {
         if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.BasicIdentification.ActorID} - {Owner.ActorData.BasicIdentification.ActorName} ");
+        
+        for (int i = 0; i < City.CityData.Population.AllCitizens.Count; i++)
+        {
+            // For now
 
-        var newOwner = _findEmployeeFromCity(City, EmployeePosition.Owner);
+            City.CityData.Population.AllCitizens.Clear();
+        }
 
-        if (newOwner != null)
+        if (_findEmployeeFromCity(EmployeePosition.Owner, out Actor_Base newOwner))
         {
             Owner = newOwner;
         }
@@ -80,19 +97,21 @@ public class Jobsite_Base : MonoBehaviour
                 return;
             }
 
-            Owner = _generateNewEmployee(City, EmployeePosition.Owner);
+            Owner = _generateNewEmployee(EmployeePosition.Owner);
         }
 
         Debug.Log("Couldn't generate new owner.");
 
     }
 
-    Actor_Base _findEmployeeFromCity(CityComponent city, EmployeePosition position)
+    protected bool _findEmployeeFromCity(EmployeePosition position, out Actor_Base actor)
     {
-        var vocationAndExperience = _getVocationAndExperienceFromPosition(position);
+        actor = null;
 
-        var citizen = city.CityData.Population.AllCitizens
-            .FirstOrDefault(c =>
+        var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
+
+        var citizen = City.CityData.Population.AllCitizens
+            .FirstOrDefault(c => Manager_Actor.GetActor(c.CitizenActorID).ActorData != null &&
                 Manager_Actor.GetActor(c.CitizenActorID).ActorData.AttributesCareerAndPersonality.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
                     Manager_Actor.GetActor(c.CitizenActorID),
@@ -101,27 +120,37 @@ public class Jobsite_Base : MonoBehaviour
 
         if (citizen != null)
         {
-            return Manager_Actor.GetActor(citizen.CitizenActorID);
+            actor =  Manager_Actor.GetActor(citizen.CitizenActorID);
+            return true;
         }
 
-        return null;
+        return false;
     }
 
-    Actor_Base _generateNewEmployee(CityComponent city, EmployeePosition position)
+    protected Actor_Base _generateNewEmployee(EmployeePosition position)
     {
-        var vocationAndExperience = _getVocationAndExperienceFromPosition(position);
+        var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        var actor = Manager_Actor.InitialiseNewActorOnGO(city.CityEntranceSpawnZone.transform.position);
+        var actor = Manager_Actor.InitialiseNewActorOnGO(City.CityEntranceSpawnZone.transform.position);
         Manager_Actor.GenerateNewActorData(actor);
 
         actor.transform.parent.name = $"{actor.ActorData.BasicIdentification.ActorName.Name}Body";
         actor.transform.name = $"{actor.ActorData.BasicIdentification.ActorName.Name}";
 
+        City.CityData.Population.AddCitizen(new DisplayCitizen(
+            citizenActorID: actor.ActorData.BasicIdentification.ActorID, 
+            citizenName: actor.ActorData.BasicIdentification.ActorName.GetName()
+            ));
+
         return actor;
     }
 
-    bool _hasMinimumVocationRequired(Actor_Base actor, Vocation vocation, float minimumExperienceRequired)
+    protected bool _hasMinimumVocationRequired(Actor_Base actor, Vocation vocation, float minimumExperienceRequired)
     {
+        // for now
+
+        return true;
+
         if (actor.VocationComponent.Vocations[vocation] < minimumExperienceRequired)
         {
             return false;
@@ -130,7 +159,7 @@ public class Jobsite_Base : MonoBehaviour
         return true;
     }
 
-    (Vocation Vocation, float minimumExperienceRequired) _getVocationAndExperienceFromPosition(EmployeePosition position)
+    protected (Vocation Vocation, float minimumExperienceRequired) _getVocationAndMinimumExperienceRequired(EmployeePosition position)
     {
         return (null, 0);
     }
@@ -139,17 +168,17 @@ public class Jobsite_Base : MonoBehaviour
     {
         if (employee == null) throw new ArgumentException($"Employee: {employee} or employee position {position} is null.");
 
-        if (EmployeeList.ContainsKey(employee))
+        if (AllEmployees.ContainsKey(employee))
         {
-            if (EmployeeList[employee] == position) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} already exists in employee list at same position.");
+            if (AllEmployees[employee] == position) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} already exists in employee list at same position.");
             else
             {
-                EmployeeList[employee] = position;
+                AllEmployees[employee] = position;
                 return;
             }
         }
 
-        EmployeeList.Add(employee, position);
+        AllEmployees.Add(employee, position);
     }
 
     public void HireEmployee(Actor_Base employee, EmployeePosition position)
@@ -163,9 +192,9 @@ public class Jobsite_Base : MonoBehaviour
     {
         if (employee == null) throw new ArgumentException($"Employee is null.");
 
-        if (!EmployeeList.ContainsKey(employee)) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} is not in employee list.");
+        if (!AllEmployees.ContainsKey(employee)) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} is not in employee list.");
 
-        EmployeeList.Remove(employee);
+        AllEmployees.Remove(employee);
 
         // Remove employee job from employee job component.
     }
@@ -175,6 +204,37 @@ public class Jobsite_Base : MonoBehaviour
         RemoveEmployee(employee);
 
         // And then apply relation debuff.
+    }
+
+    public void AddEmployeeToJob(Actor_Base actor, EmployeePosition employeePosition)
+    {
+        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
+        if (AllJobPositions[employeePosition].Contains(actor)) throw new ArgumentException($"Emplyee {actor.name} already has position {employeePosition}");
+
+        AllJobPositions[employeePosition].Add(actor);
+
+    }
+
+    public void RemoveEmployeeFromJob(Actor_Base actor, EmployeePosition employeePosition)
+    {
+        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
+        if (!AllJobPositions[employeePosition].Contains(actor)) throw new ArgumentException($"Emplyee {actor.name} does not have position {employeePosition}");
+
+        AllJobPositions[employeePosition].Remove(actor);
+    }
+
+    public void AddJobToJobsite(EmployeePosition employeePosition, List<Actor_Base> employeeList)
+    {
+        if (AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"Position: {employeePosition} already exists in AllJobPositions");
+
+        AllJobPositions.Add(employeePosition, new List<Actor_Base>(employeeList));
+    }
+
+    public void RemoveJobFromJobsite(EmployeePosition employeePosition)
+    {
+        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"Position: {employeePosition} does not exist in AllJobPositions");
+
+        AllJobPositions.Remove(employeePosition);
     }
 
     public void SetIsActive(bool isActive)
