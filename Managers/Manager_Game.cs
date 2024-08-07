@@ -94,7 +94,9 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Date_And_Time.Initialise();
         Manager_Personality.Initialise();
         Manager_Region.Initialise();
+        Manager_Actor.Initialise();
 
+        Manager_Initialisation.InitialiseAllActorSO();
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseCities();
         Manager_Initialisation.InitialiseJobsites();

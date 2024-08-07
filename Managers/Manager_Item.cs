@@ -58,20 +58,16 @@ public class Manager_Item
 
         //Eventually implement a more efficient search based on ID ranges for weapons, armour, etc.
 
-        Item foundItem = null;
-
         if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
         {
-            foundItem = ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID)
-                        ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName);
+            return new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity)
+                        ?? new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity);
         }
         else
         {
-            foundItem = ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName)
-                        ?? ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID);
+            return new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity)
+                        ?? new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity);
         }
-
-        return foundItem?.Clone(itemQuantity);
     }
 
     public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)
@@ -159,13 +155,15 @@ public class Item
         PercentageModifiers_Item = percentageModifiers_Item ?? new PercentageModifiers_Item();
     }
 
-    public Item Clone(int itemQuantity)
+    public Item(Item item, int itemQuantity)
     {
-        return new Item
-        {
-            CommonStats_Item = this.CommonStats_Item.Clone(itemQuantity),
-            VisualStats_Item = this.VisualStats_Item.Clone(),
-        };
+        CommonStats_Item = item.CommonStats_Item;
+        CommonStats_Item.CurrentStackSize = itemQuantity;
+        VisualStats_Item = item.VisualStats_Item;
+        WeaponStats_Item = item.WeaponStats_Item;
+        ArmourStats_Item = item.ArmourStats_Item;
+        FixedModifiers_Item = item.FixedModifiers_Item;
+        PercentageModifiers_Item = item.PercentageModifiers_Item;
     }
 }
 
@@ -204,22 +202,6 @@ public class CommonStats_Item
         ItemWeight = itemWeight;
         ItemEquippable = itemEquippable;
     }
-
-    public CommonStats_Item Clone(int itemQuantity)
-    {
-        return new CommonStats_Item
-        {
-            ItemID = this.ItemID,
-            ItemName = this.ItemName,
-            ItemType = this.ItemType,
-            EquipmentSlots = this.EquipmentSlots != null ? new List<EquipmentSlot>(this.EquipmentSlots) : new List<EquipmentSlot>(),
-            MaxStackSize = this.MaxStackSize,
-            CurrentStackSize = itemQuantity,
-            ItemValue = this.ItemValue,
-            ItemWeight = this.ItemWeight,
-            ItemEquippable = this.ItemEquippable
-        };
-    }
 }
 
 [Serializable]
@@ -254,21 +236,6 @@ public class VisualStats_Item
         ItemPosition = itemPosition ?? Vector3.zero;
         ItemRotation = itemRotation ?? Quaternion.identity;
         ItemScale = itemScale ?? Vector3.one;
-    }
-
-    public VisualStats_Item Clone()
-    {
-        return new VisualStats_Item
-        {
-            ItemIcon = this.ItemIcon,
-            ItemMesh = this.ItemMesh,
-            ItemMaterial = this.ItemMaterial,
-            ItemCollider = this.ItemCollider,
-            ItemAnimatorController = this.ItemAnimatorController,
-            ItemPosition = this.ItemPosition,
-            ItemRotation = this.ItemRotation,
-            ItemScale = this.ItemScale
-        };
     }
 
     public void DisplayVisuals(GameObject go)

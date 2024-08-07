@@ -47,6 +47,14 @@ public class Jobsite_Base : MonoBehaviour
         StartCoroutine(TestInitialiseCity());
     }
 
+    public virtual Jobsite_Base Clone()
+    {
+        var clone = (Jobsite_Base)MemberwiseClone();
+        clone.AllEmployees = new Dictionary<Actor_Base, EmployeePosition>(AllEmployees);
+        clone.AllJobPositions = new Dictionary<EmployeePosition, List<Actor_Base>>(AllJobPositions);
+        return clone;
+    }
+
     public void UnpackJobsiteData()
     {
         //Manager_Jobsites.GetJobsiteData(City);
@@ -76,7 +84,7 @@ public class Jobsite_Base : MonoBehaviour
 
     public void GetNewOwner()
     {
-        if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.BasicIdentification.ActorID} - {Owner.ActorData.BasicIdentification.ActorName} ");
+        if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.ActorID} - {Owner.ActorData.ActorName} ");
         
         for (int i = 0; i < City.CityData.Population.AllCitizens.Count; i++)
         {
@@ -111,16 +119,16 @@ public class Jobsite_Base : MonoBehaviour
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
         var citizen = City.CityData.Population.AllCitizens
-            .FirstOrDefault(c => Manager_Actor.GetActor(c.CitizenActorID).ActorData != null &&
-                Manager_Actor.GetActor(c.CitizenActorID).ActorData.AttributesCareerAndPersonality.ActorCareer == CareerName.None
+            .FirstOrDefault(c => Manager_Actor.GetActorDataFromID(c.CitizenActorID) != null &&
+                Manager_Actor.GetActorDataFromID(c.CitizenActorID).AttributesCareerAndPersonality.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
-                    Manager_Actor.GetActor(c.CitizenActorID),
+                    Manager_Actor.GetActorDataFromID(c.CitizenActorID).Actor,
                     vocationAndExperience.Vocation,
                     vocationAndExperience.minimumExperienceRequired));
 
         if (citizen != null)
         {
-            actor =  Manager_Actor.GetActor(citizen.CitizenActorID);
+            actor =  Manager_Actor.GetActorDataFromID(citizen.CitizenActorID).Actor;
             return true;
         }
 
@@ -131,15 +139,14 @@ public class Jobsite_Base : MonoBehaviour
     {
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        var actor = Manager_Actor.InitialiseNewActorOnGO(City.CityEntranceSpawnZone.transform.position);
+        var actor = Manager_Actor.SpawnNewActorOnGO(City.CityEntranceSpawnZone.transform.position);
         Manager_Actor.GenerateNewActorData(actor);
 
-        actor.transform.parent.name = $"{actor.ActorData.BasicIdentification.ActorName.Name}Body";
-        actor.transform.name = $"{actor.ActorData.BasicIdentification.ActorName.Name}";
+        actor.Initialise();
 
         City.CityData.Population.AddCitizen(new DisplayCitizen(
-            citizenActorID: actor.ActorData.BasicIdentification.ActorID, 
-            citizenName: actor.ActorData.BasicIdentification.ActorName.GetName()
+            citizenActorID: actor.ActorData.ActorID, 
+            citizenName: actor.ActorData.ActorName.GetName()
             ));
 
         return actor;
@@ -170,7 +177,7 @@ public class Jobsite_Base : MonoBehaviour
 
         if (AllEmployees.ContainsKey(employee))
         {
-            if (AllEmployees[employee] == position) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} already exists in employee list at same position.");
+            if (AllEmployees[employee] == position) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
             else
             {
                 AllEmployees[employee] = position;
@@ -192,7 +199,7 @@ public class Jobsite_Base : MonoBehaviour
     {
         if (employee == null) throw new ArgumentException($"Employee is null.");
 
-        if (!AllEmployees.ContainsKey(employee)) throw new ArgumentException($"Employee: {employee.ActorData.BasicIdentification.ActorName} is not in employee list.");
+        if (!AllEmployees.ContainsKey(employee)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} is not in employee list.");
 
         AllEmployees.Remove(employee);
 

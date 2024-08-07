@@ -33,7 +33,7 @@ public interface IInventoryOwner
 
 public interface IInventoryActor : IInventoryOwner
 {
-    Actor_Data_SO ActorData { get; }
+    ActorData ActorData { get; }
 }
 
 public interface IResourceStation : IInventoryOwner

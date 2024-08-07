@@ -1,17 +1,25 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class Manager_Actor
 {
-    public static HashSet<Actor_Base> AllActors = new();
     public static HashSet<int> AllActorIDs = new();
     static int _lastUnusedID = 100000;
+    public static AllActors_SO AllActors;
 
-    public static void AddToAllActorList(Actor_Base actor)
+    public static void Initialise()
     {
-        AllActors.Add(actor);
+        AllActors = Resources.Load<AllActors_SO>("ScriptableObjects/Actors/AllActors_SO");
+        AllActors.PrepareToInitialise();
+    }
+
+    public static void AddToAllActorList(ActorData actorData)
+    {
+        AllActors.AddToAllActorsList(actorData);
     }
 
     public static int GetRandomActorID()
@@ -26,19 +34,17 @@ public class Manager_Actor
         return _lastUnusedID;
     }
 
-    public static ActorName GetRandomActorName(Actor_Base actor)
+    public static ActorData GetActorDataFromID(int actorID, bool actorExists = true)
     {
-        // Get name based on culture, religion, species, etc.
-
-        return new ActorName($"Test_{UnityEngine.Random.Range(0, _lastUnusedID)}", $"of Tester");
+        return AllActors.GetActorDataFromID(actorID, actorExists);
     }
 
-    public static Actor_Base GetActor(int actorID)
+    public static ActorData GetActorDataFromExistingActor(Actor_Base actor)
     {
-        return AllActors.FirstOrDefault(a => a.ActorData != null && a.ActorData.BasicIdentification.ActorID == actorID);
+        return AllActors.GetActorDataFromExistingActor(actor);
     }
 
-    public static Actor_Base InitialiseNewActorOnGO(Vector3 spawnPoint)
+    public static Actor_Base SpawnNewActorOnGO(Vector3 spawnPoint)
     {
         GameObject actorGO = _createNewActorGO(spawnPoint);
 
@@ -49,6 +55,8 @@ public class Manager_Actor
 
     static GameObject _createNewActorGO(Vector3 spawnPoint)
     {
+        Debug.Log(spawnPoint);
+
         GameObject actorBody = new GameObject();
         actorBody.transform.parent = GameObject.Find("Characters").transform;
         actorBody.transform.position = spawnPoint;
@@ -61,22 +69,27 @@ public class Manager_Actor
         actorGO.AddComponent<BoxCollider>();
         actorGO.AddComponent<Animator>();
         actorGO.AddComponent<Animation>();
-        actorGO.AddComponent<MeshRenderer>().material = Resources.Load<Material>("Materials/Material_Red");
-        actorGO.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        actorGO.AddComponent<MeshRenderer>();
+        actorGO.AddComponent<MeshFilter>();
     
         return actorGO;
     }
 
-    public static Actor_Data_SO GenerateNewActorData(Actor_Base actor) // ActorGenerationParameters parameters)
+    public static ActorData GenerateNewActorData(Actor_Base actor) // ActorGenerationParameters parameters)
     {
-        Actor_Data_SO actorData = ScriptableObject.CreateInstance<Actor_Data_SO>();
-
-        actorData.InitialiseNewData(
+        return new ActorData(
             fullIdentification: new FullIdentification(
                 actorID: GetRandomActorID(),
                 actor: actor,
                 actorName: GetRandomActorName(actor),
                 actorFaction: GetRandomFaction()
+                ),
+            gameObjectProperties: new GameObjectProperties(
+                actor.transform.parent.position,
+                actor.transform.parent.rotation,
+                actor.transform.parent.localScale,
+                actor.ActorMesh.mesh,
+                actor.ActorMaterial.material
                 ),
             actorQuests: null,
             attributesCareerAndPersonality: new AttributesCareerAndPersonality(
@@ -88,10 +101,13 @@ public class Manager_Actor
             statsAndAbilities: new StatsAndAbilities(),
             worldState: null
         );
+    }
 
-        actor.Initialise(actorData);
+    public static ActorName GetRandomActorName(Actor_Base actor)
+    {
+        // Get name based on culture, religion, species, etc.
 
-        return actorData;
+        return new ActorName($"Test_{UnityEngine.Random.Range(0, _lastUnusedID)}", $"of Tester");
     }
 
     private static SpeciesName GetRandomSpecies()

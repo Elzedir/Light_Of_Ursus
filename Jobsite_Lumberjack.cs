@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class Jobsite_Lumberjack : Jobsite_Base
@@ -55,5 +56,62 @@ public class Jobsite_Lumberjack : Jobsite_Base
             AllJobPositions[position.Key].Add(actor);
             actor.JobComponent.AddJob(JobName.Lumberjack);
         }
+
+        StartCoroutine(ShowPositions());
+    }
+
+    private Dictionary<string, GameObject> allPanels = new();
+
+    public IEnumerator ShowPositions()
+    {
+        showPositions();
+
+        yield return new WaitForSeconds(1);
+
+        showPositions();
+
+        yield return new WaitForSeconds(1);
+
+        showPositions();
+    }
+
+    private void showPositions()
+    {
+        var positionPanel = GameObject.Find("PositionPanel");
+
+        if (positionPanel == null)
+        {
+            Debug.LogError("PositionPanel not found!");
+            return;
+        }
+
+        foreach (var position in AllJobPositions)
+        {
+            foreach (var actor in position.Value)
+            {
+                string panelName = $"PositionPanel_{position.Key}_{actor.name}";
+
+                if (allPanels.TryGetValue(panelName, out var existingPanel))
+                {
+                    UpdatePanel(existingPanel, position.Key, actor);
+                }
+                else
+                {
+                    var newPanel = Instantiate(positionPanel, positionPanel.transform.parent);
+                    newPanel.name = panelName;
+
+                    UpdatePanel(newPanel, position.Key, actor);
+
+                    allPanels[panelName] = newPanel;
+                }
+            }
+        }
+    }
+
+    private void UpdatePanel(GameObject panel, EmployeePosition position, Actor_Base actor)
+    {
+        Manager_Game.FindTransformRecursively(panel.transform, "PositionText").GetComponent<TextMeshProUGUI>().text = position.ToString();
+        Manager_Game.FindTransformRecursively(panel.transform, "EmployeeText").GetComponent<TextMeshProUGUI>().text = actor.name;
+        panel.SetActive(true);
     }
 }

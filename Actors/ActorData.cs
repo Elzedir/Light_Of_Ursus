@@ -1,13 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Actor", menuName = "Actor/Actor Data")]
-public class Actor_Data_SO : ScriptableObject
+[Serializable]
+public class ActorData
 {
-    public BasicIdentification BasicIdentification;
+    public int ActorID;
+    public Actor_Base Actor;
+    public ActorName ActorName;
+
     public FullIdentification FullIdentification;
+
+    public GameObjectProperties GameObjectProperties;
+
     public WorldState_Data_SO Worldstate;
 
     public AttributesCareerAndPersonality AttributesCareerAndPersonality;
@@ -15,18 +21,24 @@ public class Actor_Data_SO : ScriptableObject
     public InventoryAndEquipment InventoryAndEquipment;
     public ActorQuests ActorQuests;
 
-    // Split them into the categories from chatgpt
-
     public void Initialise(Actor_Base actor)
     {
         //ActorAspects.InitialiseAspects(actor);
     }
 
-    public void InitialiseNewData(FullIdentification fullIdentification, ActorQuests actorQuests, AttributesCareerAndPersonality attributesCareerAndPersonality,
+    public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties,
+        ActorQuests actorQuests, AttributesCareerAndPersonality attributesCareerAndPersonality,
         InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, WorldState_Data_SO worldState)
     {
         FullIdentification = fullIdentification;
-        BasicIdentification = fullIdentification.BasicIdentification;
+
+        ActorID = FullIdentification.ActorID;
+        Actor = FullIdentification.Actor;
+        ActorName = FullIdentification.ActorName;
+        
+        GameObjectProperties = gameObjectProperties;
+
+        ActorName = FullIdentification.ActorName;
 
         Worldstate = worldState;
 
@@ -34,21 +46,8 @@ public class Actor_Data_SO : ScriptableObject
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
         ActorQuests = actorQuests;
-    }
-}
 
-[Serializable]
-public class BasicIdentification
-{
-    public int ActorID;
-    public Actor_Base Actor;
-    public ActorName ActorName;
-
-    public BasicIdentification(int actorID, Actor_Base actor, ActorName actorName)
-    {
-        ActorID = actorID;
-        Actor = actor;
-        ActorName = actorName;
+        Initialise(FullIdentification.Actor);
     }
 }
 
@@ -62,7 +61,6 @@ public class FullIdentification
     public Family ActorFamily;
     public FactionName ActorFaction;
     public Background Background;
-    public BasicIdentification BasicIdentification;
 
     public FullIdentification(int actorID, Actor_Base actor, ActorName actorName, FactionName actorFaction)
     {
@@ -70,8 +68,6 @@ public class FullIdentification
         Actor = actor;
         ActorName = actorName;
         ActorFaction = actorFaction;
-
-        BasicIdentification = new BasicIdentification(actorID, actor, actorName);
     }
 }
 
@@ -87,6 +83,25 @@ public class Background
     public Background()
     {
 
+    }
+}
+
+[Serializable]
+public class GameObjectProperties
+{
+    public Vector3 ActorPosition;
+    public Quaternion ActorRotation;
+    public Vector3 ActorScale = Vector3.one;
+    public Mesh ActorMesh;
+    public Material ActorMaterial;
+
+    public GameObjectProperties(Vector3 actorPosition, Quaternion actorRotation, Vector3 actorScale, Mesh actorMesh, Material actorMaterial)
+    {
+        ActorPosition = actorPosition;
+        ActorRotation = actorRotation;
+        ActorScale = actorScale;
+        ActorMesh = actorMesh;
+        ActorMaterial = actorMaterial;
     }
 }
 
@@ -280,5 +295,42 @@ public class ActorLevelData
                 Debug.Log("LevelData Bonus Type was none.");
                 break;
         }
+    }
+}
+
+[CustomPropertyDrawer(typeof(ActorData))]
+public class AllActors_SO_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        SerializedProperty actorNameProp = property.FindPropertyRelative("ActorName");
+
+        if (actorNameProp != null)
+        {
+            SerializedProperty nameProp = actorNameProp.FindPropertyRelative("Name");
+            
+            if (nameProp != null)
+            {
+                SerializedProperty surnameProp = actorNameProp.FindPropertyRelative("Surname");
+
+                if (surnameProp != null)
+                {
+                    label.text = $"{nameProp.stringValue} {surnameProp.stringValue}";
+                }
+                else
+                {
+                    label.text = $"{nameProp.stringValue}";
+                }
+            }
+            else label.text = "No Name";
+        }
+        else label.text = "No Name";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
     }
 }

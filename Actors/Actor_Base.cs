@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -6,11 +7,13 @@ using UnityEngine;
 
 public class Actor_Base : MonoBehaviour, IInventoryActor
 {
-    [SerializeField] Actor_Data_SO _actorData;
-    public Actor_Data_SO ActorData { get { return _actorData; } private set { _actorData = value; } }
+    [SerializeField] ActorData _actorData;
+    public ActorData ActorData { get { return _actorData; } private set { _actorData = value; } }
     public GameObject GameObject { get; private set; }
     public Rigidbody ActorBody { get; protected set; }
     public Collider ActorCollider { get; protected set; }
+    public MeshFilter ActorMesh { get; protected set; }
+    public MeshRenderer ActorMaterial { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
     public Animation ActorAnimation { get; protected set; }
     public JobComponent JobComponent { get; protected set; }
@@ -27,29 +30,48 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         Manager_Initialisation.OnInitialiseActors += Initialise;
     }
 
-    public void Initialise(Actor_Data_SO actorData)
+    private void Update()
     {
-        Manager_Actor.AddToAllActorList(this);
+        if (gameObject.name.Contains("Tom"))
+        {
+            if (JobComponent == null) return;
 
+            if (JobComponent.AllCurrentJobs.Count == 0) Debug.Log("Has no jobs");
+            else foreach (Job job in JobComponent.AllCurrentJobs)
+                {
+                    Debug.Log(job.JobName);
+                }
+        }
+    }
+
+    public void Initialise()
+    {
         GameObject = gameObject;
+
+
         ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
         ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();
         ActorAnimator = GetComponent<Animator>() ?? gameObject.AddComponent<Animator>();
         ActorAnimation = GetComponent<Animation>() ?? gameObject.AddComponent<Animation>();
-        ActorEquipmentManager = new CharacterEquipmentManager();
-        ActorEquipmentManager.InitialiseEquipment(this);
+        ActorMesh = GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
+        ActorMaterial = GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
+        ActorEquipmentManager = new CharacterEquipmentManager(this);
 
-        ActorData ??= actorData;
+        Manager_Actor.AddToAllActorList(ActorData);
+        ActorData = Manager_Actor.GetActorDataFromExistingActor(this);
 
-        if (ActorData != null)
-        {
-            ActorData.Initialise(this);
-            JobComponent = new JobComponent(this, ActorData.AttributesCareerAndPersonality.ActorCareer, Manager_Career.GetCareer(ActorData.AttributesCareerAndPersonality.ActorCareer).CareerJobs);
-            CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
-            VocationComponent = new VocationComponent(this, new());
-            GatheringComponent = new GatheringComponent(this);
-            PersonalityComponent = new PersonalityComponent(this, ActorData.AttributesCareerAndPersonality.ActorPersonality.GetPersonality());
-        }
+        if (ActorData == null) throw new ArgumentException("ActorData still doesn't exist");
+
+        transform.parent.name = $"{ActorData.ActorName.Name}Body";
+        transform.name = $"{ActorData.ActorName.Name}";
+
+        JobComponent = new JobComponent(this, ActorData.AttributesCareerAndPersonality.ActorCareer, Manager_Career.GetCareer(ActorData.AttributesCareerAndPersonality.ActorCareer).CareerJobs);
+        CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
+        VocationComponent = new VocationComponent(this, new());
+        GatheringComponent = new GatheringComponent(this);
+        PersonalityComponent = new PersonalityComponent(this, ActorData.AttributesCareerAndPersonality.ActorPersonality.GetPersonality());
+
+        UpdateVisuals();
     }
 
     public void InitialiseInventoryComponent()
@@ -60,6 +82,12 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public void UpdateInventoryDisplay()
     {
         ActorData.InventoryAndEquipment.ActorInventory.UpdateDisplayInventory(this);
+    }
+
+    public void UpdateVisuals()
+    {
+        ActorMesh.mesh = ActorData.GameObjectProperties.ActorMesh ?? Resources.Load<Mesh>("Cube.fbx");
+        ActorMaterial.material = ActorData.GameObjectProperties.ActorMaterial ?? Resources.Load<Material>("Materials/Material_Red");
     }
 
     public bool IsGrounded()

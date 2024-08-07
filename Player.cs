@@ -29,9 +29,9 @@ public class Player : Controller, IDataPersistence
         _actor = GetComponent<Actor_Base>();
         _coll_Body = GetComponent<Collider>();
         _animator = GetComponent<Animator>();
-        _animation = GameObject.Find("TestActor").GetComponent<Animation>();
+        //_animation = GameObject.Find("TestActor").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
-        _testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
+        //_testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
         // _weaponAnimator = Manager_Game.FindTransformRecursively(transform.parent, "Slot_4").GetComponent<Animator>();
 
         _rigidBody.interpolation = RigidbodyInterpolation.Interpolate;

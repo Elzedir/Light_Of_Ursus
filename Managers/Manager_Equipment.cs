@@ -16,7 +16,7 @@ public class CharacterEquipmentManager
     Actor_Base _actor;
     Transform _equipmentParent;
 
-    public void InitialiseEquipment(Actor_Base actor)
+    public CharacterEquipmentManager(Actor_Base actor)
     {
         _actor = actor;
         _equipmentParent = _actor.transform.parent.GetChild(0);

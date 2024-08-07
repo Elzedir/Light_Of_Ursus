@@ -45,8 +45,8 @@ public class DisplayCitizen
 
     public void UpdateDisplayCitizen(Actor_Base actor)
     {
-        CitizenActorID = actor.ActorData.BasicIdentification.ActorID;
-        CitizenName = actor.ActorData.BasicIdentification.ActorName.GetName();
+        CitizenActorID = actor.ActorData.ActorID;
+        CitizenName = actor.ActorData.ActorName.GetName();
     }
 }
 

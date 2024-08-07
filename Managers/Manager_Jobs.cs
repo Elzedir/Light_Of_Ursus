@@ -18,7 +18,7 @@ public class Manager_Jobs : MonoBehaviour
     {
         if (!AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException($"Job: {jobName} is not in AllJobs list");
 
-        return AllJobs.FirstOrDefault(j => j.JobName == jobName);
+        return new Job(AllJobs.FirstOrDefault(j => j.JobName == jobName));
     }
 
     public static Interactable_Lumberjack_DropOffZone GetNearestDropOffZone(string taskObjectName, Actor_Base actor)
@@ -61,6 +61,8 @@ public class Manager_Jobs : MonoBehaviour
     {
         IEnumerator chopTrees(Actor_Base actor)
         {
+            Debug.Log(actor.name);
+            Debug.Log(actor.JobComponent);
             var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
             if (nearestResource == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
             yield return actor.BasicMove(nearestResource.GetGatheringPosition());
@@ -77,7 +79,7 @@ public class Manager_Jobs : MonoBehaviour
 
         IEnumerator dropOffWood(Actor_Base actor)
         {
-            var nearestDropOffZone = Manager_Jobs.GetNearestDropOffZone("DropOffZone", actor);
+            var nearestDropOffZone = GetNearestDropOffZone("DropOffZone", actor);
 
             yield return actor.BasicMove(nearestDropOffZone.transform.position);
 
@@ -157,7 +159,7 @@ public class JobComponent : ITickable
     public Actor_Base Actor;
     public Career Career;
     public bool JobsActive;
-    public List<Job> AllCurrentJobs = new();
+    public List<Job> AllCurrentJobs;
 
     Coroutine _jobCoroutine;
 
@@ -167,6 +169,13 @@ public class JobComponent : ITickable
         Career = Manager_Career.GetCareer(careerName);
         JobsActive = jobsActive;
         AllCurrentJobs = allCurrentJobs;
+
+        Debug.Log(actor.name);
+        Debug.Log(Career.CareerName);
+        foreach (Job job in allCurrentJobs)
+        {
+            Debug.Log($"JobInitialised: Actor: {Actor} Job: {job.JobName}");
+        }
 
         Manager_TickRate.RegisterTickable(this);
     }
@@ -192,9 +201,11 @@ public class JobComponent : ITickable
 
         if (job == null) { Debug.Log("Job is null"); return; }
 
-        if (AllCurrentJobs.Contains(job)) { Debug.Log("AllCurrentJobs already contains job."); return; }
+        if (AllCurrentJobs.Contains(job)) return;
 
         AllCurrentJobs.Add(job);
+
+        Debug.Log($"Added Job: Actor: {Actor.name} Job: {jobName}");
     }
 
     public void RemoveJob(Job job = null)
@@ -261,7 +272,7 @@ public class Job
 {
     public JobName JobName;
     public string JobDescription;
-    public Jobsite_Base JobArea;
+    // public Jobsite_Base JobArea;
     public List<Task> JobTasks = new();
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
@@ -271,6 +282,13 @@ public class Job
         JobName = jobName;
         JobDescription = jobDescription;
         JobTasks = jobTasks;
+    }
+
+    public Job(Job job)
+    {
+        JobName = job.JobName;
+        JobDescription = job.JobDescription;
+        JobTasks = job.JobTasks;
     }
 
     public IEnumerator PerformJob(Actor_Base actor)

@@ -42,7 +42,7 @@ public class Manager_Faction : MonoBehaviour
         return AllFactions.FirstOrDefault(f => f.FactionName == factionName);
     } 
 
-    public static void SetFaction(Actor_Data_SO actorData, FactionName faction)
+    public static void SetFaction(ActorData actorData, FactionName faction)
     {
         actorData.FullIdentification.ActorFaction = faction;
     }
