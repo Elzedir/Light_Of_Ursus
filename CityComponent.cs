@@ -5,7 +5,9 @@ using UnityEngine;
 
 public class CityComponent : MonoBehaviour
 {
-    public City_Data_SO CityData;
+    public int CityID;
+
+    public CityData CityData;
     public BoxCollider CityArea;
 
     public GameObject CityEntranceSpawnZone;
@@ -20,11 +22,6 @@ public class CityComponent : MonoBehaviour
 
         Manager_Initialisation.OnInitialiseCities += _onInitialise;
         CurrentDate.NewDay += _refreshCity;
-    }
-
-    void Start()
-    {
-        CityData.Initialise(this);
     }
 
     void _onInitialise()

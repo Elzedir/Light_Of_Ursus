@@ -18,11 +18,11 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public Animation ActorAnimation { get; protected set; }
     public JobComponent JobComponent { get; protected set; }
     public InventoryComponent InventoryComponent { get; protected set; }
+    public EquipmentComponent EquipmentComponent { get; protected set; }
     public CraftingComponent CraftingComponent { get; protected set; }
     public VocationComponent VocationComponent { get; protected set; }
     public PersonalityComponent PersonalityComponent { get; protected set; }
     public GatheringComponent GatheringComponent { get; protected set; }
-    public CharacterEquipmentManager ActorEquipmentManager { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
 
     void Awake()
@@ -32,22 +32,21 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 
     private void Update()
     {
-        if (gameObject.name.Contains("Tom"))
-        {
-            if (JobComponent == null) return;
+        //if (gameObject.name.Contains("Tom"))
+        //{
+        //    if (JobComponent == null) return;
 
-            if (JobComponent.AllCurrentJobs.Count == 0) Debug.Log("Has no jobs");
-            else foreach (Job job in JobComponent.AllCurrentJobs)
-                {
-                    Debug.Log(job.JobName);
-                }
-        }
+        //    if (JobComponent.AllCurrentJobs.Count == 0) Debug.Log("Has no jobs");
+        //    else foreach (Job job in JobComponent.AllCurrentJobs)
+        //        {
+        //            Debug.Log(job.JobName);
+        //        }
+        //}
     }
 
     public void Initialise()
     {
         GameObject = gameObject;
-
 
         ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
         ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();
@@ -55,7 +54,8 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         ActorAnimation = GetComponent<Animation>() ?? gameObject.AddComponent<Animation>();
         ActorMesh = GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
         ActorMaterial = GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
-        ActorEquipmentManager = new CharacterEquipmentManager(this);
+        EquipmentComponent = new EquipmentComponent(this);
+        InventoryComponent = new InventoryComponent(this, new List<Item>());
 
         Manager_Actor.AddToAllActorList(ActorData);
         ActorData = Manager_Actor.GetActorDataFromExistingActor(this);
@@ -65,18 +65,23 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
 
-        JobComponent = new JobComponent(this, ActorData.AttributesCareerAndPersonality.ActorCareer, Manager_Career.GetCareer(ActorData.AttributesCareerAndPersonality.ActorCareer).CareerJobs);
+        JobComponent = new JobComponent(this, ActorData.CareerAndJobs.ActorCareer, ActorData.CareerAndJobs.ActorJobs);
         CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
         VocationComponent = new VocationComponent(this, new());
         GatheringComponent = new GatheringComponent(this);
-        PersonalityComponent = new PersonalityComponent(this, ActorData.AttributesCareerAndPersonality.ActorPersonality.GetPersonality());
+        PersonalityComponent = new PersonalityComponent(this, ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
         UpdateVisuals();
     }
 
+    public void SetActorData(ActorData actorData)
+    {
+        ActorData = actorData;
+    }
+
     public void InitialiseInventoryComponent()
     {
-        InventoryComponent = new InventoryComponent(this, new List<Item>());
+        
     }
 
     public void UpdateInventoryDisplay()
@@ -86,7 +91,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
 
     public void UpdateVisuals()
     {
-        ActorMesh.mesh = ActorData.GameObjectProperties.ActorMesh ?? Resources.Load<Mesh>("Cube.fbx");
+        ActorMesh.mesh = ActorData.GameObjectProperties.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
         ActorMaterial.material = ActorData.GameObjectProperties.ActorMaterial ?? Resources.Load<Material>("Materials/Material_Red");
     }
 
@@ -102,6 +107,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
         {
             Vector3 direction = (targetPosition - transform.parent.position).normalized;
+
             ActorBody.velocity = direction * speed;
 
             yield return null;

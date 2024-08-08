@@ -14,11 +14,11 @@ public class Manager_Jobs : MonoBehaviour
         _initialiseJobs();
     }
 
-    public static Job GetJob(JobName jobName)
+    public static Job GetJob(JobName jobName, Jobsite_Base jobsite)
     {
         if (!AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException($"Job: {jobName} is not in AllJobs list");
 
-        return new Job(AllJobs.FirstOrDefault(j => j.JobName == jobName));
+        return new Job(AllJobs.FirstOrDefault(j => j.JobName == jobName), jobsite);
     }
 
     public static Interactable_Lumberjack_DropOffZone GetNearestDropOffZone(string taskObjectName, Actor_Base actor)
@@ -61,8 +61,6 @@ public class Manager_Jobs : MonoBehaviour
     {
         IEnumerator chopTrees(Actor_Base actor)
         {
-            Debug.Log(actor.name);
-            Debug.Log(actor.JobComponent);
             var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
             if (nearestResource == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
             yield return actor.BasicMove(nearestResource.GetGatheringPosition());
@@ -170,13 +168,6 @@ public class JobComponent : ITickable
         JobsActive = jobsActive;
         AllCurrentJobs = allCurrentJobs;
 
-        Debug.Log(actor.name);
-        Debug.Log(Career.CareerName);
-        foreach (Job job in allCurrentJobs)
-        {
-            Debug.Log($"JobInitialised: Actor: {Actor} Job: {job.JobName}");
-        }
-
         Manager_TickRate.RegisterTickable(this);
     }
 
@@ -195,17 +186,15 @@ public class JobComponent : ITickable
         JobsActive = jobsActive;
     }
 
-    public void AddJob(JobName jobName)
+    public void AddJob(JobName jobName, Jobsite_Base jobsite)
     {
-        Job job = Manager_Jobs.GetJob(jobName);
+        Job job = Manager_Jobs.GetJob(jobName, jobsite);
 
         if (job == null) { Debug.Log("Job is null"); return; }
 
-        if (AllCurrentJobs.Contains(job)) return;
+        if (AllCurrentJobs.Any(j => j.JobName == jobName && j.Jobsite == jobsite)) return;
 
         AllCurrentJobs.Add(job);
-
-        Debug.Log($"Added Job: Actor: {Actor.name} Job: {jobName}");
     }
 
     public void RemoveJob(Job job = null)
@@ -272,7 +261,7 @@ public class Job
 {
     public JobName JobName;
     public string JobDescription;
-    // public Jobsite_Base JobArea;
+    public Jobsite_Base Jobsite;
     public List<Task> JobTasks = new();
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
@@ -284,10 +273,11 @@ public class Job
         JobTasks = jobTasks;
     }
 
-    public Job(Job job)
+    public Job(Job job, Jobsite_Base jobsite)
     {
         JobName = job.JobName;
         JobDescription = job.JobDescription;
+        Jobsite = jobsite;
         JobTasks = job.JobTasks;
     }
 

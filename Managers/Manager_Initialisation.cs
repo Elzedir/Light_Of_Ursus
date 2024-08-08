@@ -5,19 +5,25 @@ using UnityEngine;
 
 public class Manager_Initialisation
 {
+    public static event Action OnInitialiseAllRegionSO;
+    public static event Action OnInitialiseManagerRegion;
     public static event Action OnInitialiseAllActorSO;
     public static event Action OnInitialiseActors;
+    public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseCities;
     public static event Action OnInitialiseJobsites;
 
-    public static void InitialiseAllActorSO()
+    public static void InitialiseAllRegionSO() 
     {
-        OnInitialiseAllActorSO?.Invoke();
+        OnInitialiseAllRegionSO?.Invoke();
+        OnInitialiseManagerRegion?.Invoke();
     }
 
     public static void InitialiseActors()
     {
+        OnInitialiseAllActorSO?.Invoke();
         OnInitialiseActors?.Invoke();
+        OnInitialiseManagerActor.Invoke();
     }
 
     public static void InitialiseCities()

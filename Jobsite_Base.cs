@@ -44,6 +44,8 @@ public class Jobsite_Base : MonoBehaviour
         AllEmployees = new();
         AllJobPositions = new();
 
+        Manager_Region.GetNearestCity(transform.position, out City);
+
         StartCoroutine(TestInitialiseCity());
     }
 
@@ -62,12 +64,10 @@ public class Jobsite_Base : MonoBehaviour
 
     protected virtual IEnumerator TestInitialiseCity()
     {
-        yield return new WaitForSeconds(0.5f);
-        City = Manager_Region.GetNearestCity(transform.position);
-
         UnpackJobsiteData();
 
         SetOwner(Owner);
+        yield return null;
     }
 
     public void SetOwner(Actor_Base owner)
@@ -86,13 +86,6 @@ public class Jobsite_Base : MonoBehaviour
     {
         if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.ActorID} - {Owner.ActorData.ActorName} ");
         
-        for (int i = 0; i < City.CityData.Population.AllCitizens.Count; i++)
-        {
-            // For now
-
-            City.CityData.Population.AllCitizens.Clear();
-        }
-
         if (_findEmployeeFromCity(EmployeePosition.Owner, out Actor_Base newOwner))
         {
             Owner = newOwner;
@@ -100,8 +93,11 @@ public class Jobsite_Base : MonoBehaviour
 
         for (int i = 0; i < 3; i++)
         {
+            Debug.Log($"{Owner}");
+         
             if (Owner != null)
             {
+                Debug.Log($"Returned");
                 return;
             }
 
@@ -109,7 +105,6 @@ public class Jobsite_Base : MonoBehaviour
         }
 
         Debug.Log("Couldn't generate new owner.");
-
     }
 
     protected bool _findEmployeeFromCity(EmployeePosition position, out Actor_Base actor)
@@ -118,18 +113,27 @@ public class Jobsite_Base : MonoBehaviour
 
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
+        foreach(var cit in City.CityData.Population.AllCitizens)
+        {
+            Debug.Log($"City contains citizen: {cit.CitizenName}");
+        }
+
         var citizen = City.CityData.Population.AllCitizens
-            .FirstOrDefault(c => Manager_Actor.GetActorDataFromID(c.CitizenActorID) != null &&
-                Manager_Actor.GetActorDataFromID(c.CitizenActorID).AttributesCareerAndPersonality.ActorCareer == CareerName.None
+            .FirstOrDefault(c => c.ActorData.CareerAndJobs.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
-                    Manager_Actor.GetActorDataFromID(c.CitizenActorID).Actor,
+                    c.ActorData,
                     vocationAndExperience.Vocation,
                     vocationAndExperience.minimumExperienceRequired));
 
+        // Eventually change from FirstOrDefault to either random selection or highest score, maybe depending on ruler.
+
         if (citizen != null)
         {
-            actor =  Manager_Actor.GetActorDataFromID(citizen.CitizenActorID).Actor;
-            return true;
+            Debug.Log($"Found employee: {citizen.CitizenName} for position ");
+
+            actor =  Manager_Actor.GetActor(citizen.ActorID);
+
+            return actor != null;
         }
 
         return false;
@@ -144,24 +148,21 @@ public class Jobsite_Base : MonoBehaviour
 
         actor.Initialise();
 
-        City.CityData.Population.AddCitizen(new DisplayCitizen(
-            citizenActorID: actor.ActorData.ActorID, 
-            citizenName: actor.ActorData.ActorName.GetName()
-            ));
+        City.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
 
         return actor;
     }
 
-    protected bool _hasMinimumVocationRequired(Actor_Base actor, Vocation vocation, float minimumExperienceRequired)
+    protected bool _hasMinimumVocationRequired(ActorData actorData, Vocation vocation, float minimumExperienceRequired)
     {
         // for now
 
         return true;
 
-        if (actor.VocationComponent.Vocations[vocation] < minimumExperienceRequired)
-        {
-            return false;
-        }
+        //if (actorData.VocationComponent.Vocations[vocation] < minimumExperienceRequired)
+        //{
+        //    return false;
+        //}
 
         return true;
     }

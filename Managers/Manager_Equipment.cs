@@ -10,13 +10,13 @@ public class Manager_Equipment
     
 }
 
-public class CharacterEquipmentManager
+public class EquipmentComponent
 {
     Dictionary<int, Equipment_Base> EquipmentSlots = new();
     Actor_Base _actor;
     Transform _equipmentParent;
 
-    public CharacterEquipmentManager(Actor_Base actor)
+    public EquipmentComponent(Actor_Base actor)
     {
         _actor = actor;
         _equipmentParent = _actor.transform.parent.GetChild(0);
@@ -162,12 +162,14 @@ public class ActorEquipment
         Waist = waist?.CommonStats_Item;
         Legs = legs?.CommonStats_Item;
         Feet = feet?.CommonStats_Item;
+        Rings = new CommonStats_Item[10];
 
-        if (rings == null) Rings = new CommonStats_Item[10];
-
-        for (int i = 0; i < rings.Length && i < Rings.Length; i++)
+        if (rings != null)
         {
-            Rings[i] = rings[i]?.CommonStats_Item;
+            for (int i = 0; i < rings.Length && i < Rings.Length; i++)
+            {
+                Rings[i] = rings[i]?.CommonStats_Item;
+            }
         }
     }
 

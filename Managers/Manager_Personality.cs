@@ -121,7 +121,7 @@ public class PersonalityComponent
     {
         (PersonalityTitle, PersonalityDescription) = Manager_Personality.GetPersonalityTitleAndDescription(this);
 
-        Actor.ActorData.AttributesCareerAndPersonality.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
+        Actor.ActorData.SpeciesAndPersonality.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
     }
 
     public void AddToPersonalityScore(PersonalityTraitName traitName, float score)

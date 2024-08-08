@@ -5,16 +5,34 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-public class Manager_Actor
+public class Manager_Actor : MonoBehaviour
 {
-    public static HashSet<int> AllActorIDs = new();
-    static int _lastUnusedID = 100000;
     public static AllActors_SO AllActors;
+    public static Dictionary<int, Actor_Base> AllActorComponents = new();
 
-    public static void Initialise()
+    public void OnSceneLoaded()
     {
-        AllActors = Resources.Load<AllActors_SO>("ScriptableObjects/Actors/AllActors_SO");
+        AllActors = Resources.Load<AllActors_SO>("ScriptableObjects/AllActors_SO");
         AllActors.PrepareToInitialise();
+
+        Manager_Initialisation.OnInitialiseManagerActor += _initialise;
+    }
+
+    void _initialise()
+    {
+        foreach (var actor in _findAllActorComponents())
+        {
+            if (actor.ActorData == null) continue;
+
+            AllActorComponents.Add(actor.ActorData.ActorID, actor);
+        }
+    }
+
+    static List<Actor_Base> _findAllActorComponents()
+    {
+        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .OfType<Actor_Base>()
+            .ToList();
     }
 
     public static void AddToAllActorList(ActorData actorData)
@@ -22,26 +40,19 @@ public class Manager_Actor
         AllActors.AddToAllActorsList(actorData);
     }
 
-    public static int GetRandomActorID()
+    public static ActorData GetActorDataFromID(int actorID)
     {
-        while (AllActorIDs.Contains(_lastUnusedID))
-        {
-            _lastUnusedID++;
-        }
-
-        AllActorIDs.Add(_lastUnusedID);
-
-        return _lastUnusedID;
-    }
-
-    public static ActorData GetActorDataFromID(int actorID, bool actorExists = true)
-    {
-        return AllActors.GetActorDataFromID(actorID, actorExists);
+        return AllActors.GetActorDataFromID(actorID);
     }
 
     public static ActorData GetActorDataFromExistingActor(Actor_Base actor)
     {
         return AllActors.GetActorDataFromExistingActor(actor);
+    }
+
+    public static Actor_Base GetActor(int actorID)
+    {
+        return AllActorComponents[actorID];
     }
 
     public static Actor_Base SpawnNewActorOnGO(Vector3 spawnPoint)
@@ -55,8 +66,6 @@ public class Manager_Actor
 
     static GameObject _createNewActorGO(Vector3 spawnPoint)
     {
-        Debug.Log(spawnPoint);
-
         GameObject actorBody = new GameObject();
         actorBody.transform.parent = GameObject.Find("Characters").transform;
         actorBody.transform.position = spawnPoint;
@@ -75,9 +84,9 @@ public class Manager_Actor
         return actorGO;
     }
 
-    public static ActorData GenerateNewActorData(Actor_Base actor) // ActorGenerationParameters parameters)
+    public static ActorData GenerateNewActorData(Actor_Base actor) // ActorGenerationParameters parameters, select things like minimum skill range, abilties, etc.)
     {
-        return new ActorData(
+        actor.SetActorData(new ActorData(
             fullIdentification: new FullIdentification(
                 actorID: GetRandomActorID(),
                 actor: actor,
@@ -88,26 +97,39 @@ public class Manager_Actor
                 actor.transform.parent.position,
                 actor.transform.parent.rotation,
                 actor.transform.parent.localScale,
-                actor.ActorMesh.mesh,
-                actor.ActorMaterial.material
+                actor.ActorMesh?.mesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx"), // Later will come from species
+                actor.ActorMaterial?.material ?? Resources.Load<Material>("Materials/Material_Red") // Later will come from species
                 ),
-            actorQuests: null,
-            attributesCareerAndPersonality: new AttributesCareerAndPersonality(
+            worldState: null,
+            careerAndJobs: new CareerAndJobs(
+                actorCareer: CareerName.None, // Later set to none only if you don't have a preset career in parameters
+                actorJobs: new List<Job>()
+                ),
+            speciesAndPersonality: new SpeciesAndPersonality(
                 actorSpecies: GetRandomSpecies(),
-                actorCareer: CareerName.None, // Later set to none only if you don't have a preset career
                 actorPersonality: GetRandomPersonality()
                 ),
-            inventoryAndEquipment: new InventoryAndEquipment(),
+            inventoryAndEquipment: new InventoryAndEquipment(
+                new ActorInventory(),
+                new ActorEquipment(null, null, null, null, null, null, null, null, null)
+                ),
             statsAndAbilities: new StatsAndAbilities(),
-            worldState: null
-        );
+            actorQuests: null
+        ));
+
+        return actor.ActorData;
+    }
+
+    public static int GetRandomActorID()
+    {
+        return AllActors.GetRandomActorID();
     }
 
     public static ActorName GetRandomActorName(Actor_Base actor)
     {
         // Get name based on culture, religion, species, etc.
 
-        return new ActorName($"Test_{UnityEngine.Random.Range(0, _lastUnusedID)}", $"of Tester");
+        return new ActorName($"Test_{UnityEngine.Random.Range(0, 50000)}", $"of Tester");
     }
 
     private static SpeciesName GetRandomSpecies()

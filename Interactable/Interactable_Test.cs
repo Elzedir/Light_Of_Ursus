@@ -26,14 +26,14 @@ public class Interactable_Test : Interactable_Base
     {
         if (!_swordEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().ActorEquipmentManager.EquipItem(4, 1))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(4, 1))
             {
                 _swordEquipped = true;
             }
         }
         else
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().ActorEquipmentManager.UnequipItem(4))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.UnequipItem(4))
             {
                 _swordEquipped = false;
             }
@@ -45,14 +45,14 @@ public class Interactable_Test : Interactable_Base
     {
         if (!_shieldEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().ActorEquipmentManager.EquipItem(3, 2))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(3, 2))
             {
                 _shieldEquipped = true;
             }
         }
         else
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().ActorEquipmentManager.UnequipItem(3))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.UnequipItem(3))
             {
                 _shieldEquipped = false;
             }

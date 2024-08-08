@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "AllActors_SO", menuName = "Actors/AllActors_SO")]
+[CreateAssetMenu(fileName = "AllActors_SO", menuName = "SOList/AllActors_SO")]
 public class AllActors_SO : ScriptableObject
 {
+    public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
+    public int LastUnusedID = 0;
+
     public List<ActorData> AllActorData;
 
     // For now, save all data of every actor to this list, but later find a better way to save the info as thousands
@@ -13,7 +16,7 @@ public class AllActors_SO : ScriptableObject
 
     public void PrepareToInitialise()
     {
-        Manager_Initialisation.OnInitialiseActors += _initialise;
+        Manager_Initialisation.OnInitialiseAllActorSO += _initialise;
     }
 
     void _initialise()
@@ -22,6 +25,8 @@ public class AllActors_SO : ScriptableObject
 
         foreach (ActorData actorData in AllActorData)
         {
+            AllActorIDs.Add(actorData.ActorID);
+
             // Do a test here to see if they already exist as game objects in the world
             //Actor_Base actor = Manager_Actor.SpawnNewActorOnGO(actorData.GameObjectProperties.ActorPosition);
         }
@@ -31,19 +36,23 @@ public class AllActors_SO : ScriptableObject
     {
         var existingActor = AllActorData.FirstOrDefault(a => a.ActorID == actorData.ActorID);
 
-        Debug.Log(existingActor);
+        if (existingActor == null) { AllActorData.Add(actorData); return; }
 
-        if (existingActor == null) AllActorData.Add(actorData);
-        else AllActorData[AllActorData.IndexOf(existingActor)] = actorData;//Debug.Log("Actor already exists in AllActors");//AllActorData[AllActorData.IndexOf(existingActor)] = actorData;
+        var existingActorData = AllActorData[AllActorData.IndexOf(existingActor)];
+
+        if (!existingActorData.OverwriteDataInActor) return;
+
+        existingActorData = actorData;
+        existingActorData.OverwriteDataInActor = false;
     }
 
-    public ActorData GetActorDataFromID(int actorID, bool actorExists)
+    public ActorData GetActorDataFromID(int actorID)
     {
-        var actorData = AllActorData.FirstOrDefault(a => a.ActorID == actorID);
-        if (actorData == null && !actorExists) throw new ArgumentException($"ActorID: {actorID} does not exist in AllActors for nonexistent actor.");
-        else if (actorData == null && actorExists) throw new ArgumentException($"ActorID: {actorID} does not exist in AllActors for nonexistent actor.");
+        List<ActorData> actorDataList = AllActorData.Where(a => a.ActorID == actorID).ToList();
 
-        return actorData;
+        if (actorDataList.Count != 1) throw new ArgumentException($"ActorID: {actorID} has {actorDataList.Count} entries in AllActorData.");
+
+        return actorDataList.FirstOrDefault();
     }
 
     public ActorData GetActorDataFromExistingActor(Actor_Base actor)
@@ -55,5 +64,17 @@ public class AllActors_SO : ScriptableObject
             AddToAllActorsList(actorData); 
             return actorData;
         }
+    }
+
+    public int GetRandomActorID()
+    {
+        while (AllActorIDs.Contains(LastUnusedID))
+        {
+            LastUnusedID++;
+        }
+
+        AllActorIDs.Add(LastUnusedID);
+
+        return LastUnusedID;
     }
 }

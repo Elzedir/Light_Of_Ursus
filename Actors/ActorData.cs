@@ -7,16 +7,17 @@ using UnityEngine;
 public class ActorData
 {
     public int ActorID;
-    public Actor_Base Actor;
     public ActorName ActorName;
+
+    public bool OverwriteDataInActor = false;
 
     public FullIdentification FullIdentification;
 
     public GameObjectProperties GameObjectProperties;
 
     public WorldState_Data_SO Worldstate;
-
-    public AttributesCareerAndPersonality AttributesCareerAndPersonality;
+    public CareerAndJobs CareerAndJobs;
+    public SpeciesAndPersonality SpeciesAndPersonality;
     public StatsAndAbilities StatsAndAbilities;
     public InventoryAndEquipment InventoryAndEquipment;
     public ActorQuests ActorQuests;
@@ -26,28 +27,28 @@ public class ActorData
         //ActorAspects.InitialiseAspects(actor);
     }
 
-    public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties,
-        ActorQuests actorQuests, AttributesCareerAndPersonality attributesCareerAndPersonality,
-        InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, WorldState_Data_SO worldState)
+    public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
+        CareerAndJobs careerAndJobs,  SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, 
+        ActorQuests actorQuests)
     {
         FullIdentification = fullIdentification;
 
         ActorID = FullIdentification.ActorID;
-        Actor = FullIdentification.Actor;
         ActorName = FullIdentification.ActorName;
         
         GameObjectProperties = gameObjectProperties;
 
-        ActorName = FullIdentification.ActorName;
-
         Worldstate = worldState;
 
-        AttributesCareerAndPersonality = attributesCareerAndPersonality;
+        CareerAndJobs = careerAndJobs;
+        SpeciesAndPersonality = speciesAndPersonality;
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
         ActorQuests = actorQuests;
 
         Initialise(FullIdentification.Actor);
+
+        Manager_Actor.AddToAllActorList(this);
     }
 }
 
@@ -117,16 +118,27 @@ public class Relationships
 }
 
 [Serializable]
-public class AttributesCareerAndPersonality
+public class CareerAndJobs
+{
+    public CareerName ActorCareer;
+    public List<Job> ActorJobs;
+
+    public CareerAndJobs(CareerName actorCareer, List<Job> actorJobs)
+    {
+        ActorCareer = actorCareer;
+        ActorJobs = actorJobs;
+    }
+}
+
+[Serializable]
+public class SpeciesAndPersonality
 {
     public SpeciesName ActorSpecies;
-    public CareerName ActorCareer;
     public ActorPersonality ActorPersonality;
 
-    public AttributesCareerAndPersonality(SpeciesName actorSpecies, CareerName actorCareer, ActorPersonality actorPersonality)
+    public SpeciesAndPersonality(SpeciesName actorSpecies, ActorPersonality actorPersonality)
     {
         ActorSpecies = actorSpecies;
-        ActorCareer = actorCareer;
         ActorPersonality = actorPersonality;
     }
 }
@@ -151,9 +163,10 @@ public class InventoryAndEquipment
     public ActorInventory ActorInventory;
     public ActorEquipment ActorEquipment;
 
-    public InventoryAndEquipment()
+    public InventoryAndEquipment(ActorInventory actorInventory, ActorEquipment actorEquipment)
     {
-
+        ActorInventory = actorInventory;
+        ActorEquipment = actorEquipment;
     }
 }
 
@@ -299,7 +312,7 @@ public class ActorLevelData
 }
 
 [CustomPropertyDrawer(typeof(ActorData))]
-public class AllActors_SO_Drawer : PropertyDrawer
+public class ActorData_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {

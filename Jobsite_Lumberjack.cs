@@ -46,7 +46,11 @@ public class Jobsite_Lumberjack : Jobsite_Base
     {
         foreach (var position in AllJobPositions.Where(position => position.Value.Count == 0).ToList())
         {
-            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor)) actor = _generateNewEmployee(position.Key);
+            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor)) 
+            { 
+                Debug.Log($"Actor {actor} is null and therefore new employee generated"); 
+                actor = _generateNewEmployee(position.Key); 
+            }
 
             if (!AllJobPositions.ContainsKey(position.Key))
             {
@@ -54,7 +58,7 @@ public class Jobsite_Lumberjack : Jobsite_Base
             }
 
             AllJobPositions[position.Key].Add(actor);
-            actor.JobComponent.AddJob(JobName.Lumberjack);
+            actor.JobComponent.AddJob(JobName.Lumberjack, this);
         }
 
         StartCoroutine(ShowPositions());

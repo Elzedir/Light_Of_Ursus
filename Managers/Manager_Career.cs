@@ -20,7 +20,8 @@ public class Manager_Career
         AllCareers.Add(new Career(
             careerName: CareerName.None,
             careerDescription: "Functionally unemployed",
-            new List<Job>()
+            new List<JobName>()
+
             ));
     }
 
@@ -29,7 +30,7 @@ public class Manager_Career
         AllCareers.Add(new Career(
             careerName: CareerName.Smith,
             careerDescription: "A smith",
-            new List<Job> 
+            new List<JobName> 
             {
                 
             }
@@ -41,9 +42,9 @@ public class Manager_Career
         AllCareers.Add(new Career(
             careerName: CareerName.Lumberjack,
             careerDescription: "A lumberjack",
-            new List<Job>
+            new List<JobName>
             {
-                Manager_Jobs.GetJob(JobName.Lumberjack)
+                JobName.Lumberjack,
             }
             ));
     }
@@ -72,9 +73,9 @@ public class Career
     public string CareerDescription;
     public ActivityPeriod ActivityPeriod;
 
-    public List<Job> CareerJobs = new();
+    public List<JobName> CareerJobs = new();
 
-    public Career(CareerName careerName, string careerDescription, List<Job> careerJobs)
+    public Career(CareerName careerName, string careerDescription, List<JobName> careerJobs)
     {
         if (Manager_Career.AllCareers.Any(c => c.CareerName == careerName)) throw new ArgumentException("CareerName already exists.");
 

@@ -17,7 +17,7 @@ public enum ItemType {
 
 public class Manager_Item
 {
-    public static List<Item> ItemList = new();
+    public static List<Item> AllItems = new();
 
     static HashSet<int> _usedIDs = new();
     static int _lastUnusedID = 100000;
@@ -49,7 +49,7 @@ public class Manager_Item
         }
 
         _usedIDs.Add(item.CommonStats_Item.ItemID);
-        ItemList.Add(item);
+        AllItems.Add(item);
     }
 
     public static Item GetItem(int itemID = -1, int itemQuantity = 1, string itemName = "",  bool returnItemIDFirst = false)
@@ -60,13 +60,13 @@ public class Manager_Item
 
         if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
         {
-            return new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity)
-                        ?? new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity);
+            return new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity)
+                        ?? new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity);
         }
         else
         {
-            return new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity)
-                        ?? new Item(ItemList.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity);
+            return new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity)
+                        ?? new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity);
         }
     }
 
@@ -157,13 +157,13 @@ public class Item
 
     public Item(Item item, int itemQuantity)
     {
-        CommonStats_Item = item.CommonStats_Item;
+        CommonStats_Item = new CommonStats_Item(item.CommonStats_Item);
         CommonStats_Item.CurrentStackSize = itemQuantity;
-        VisualStats_Item = item.VisualStats_Item;
-        WeaponStats_Item = item.WeaponStats_Item;
-        ArmourStats_Item = item.ArmourStats_Item;
-        FixedModifiers_Item = item.FixedModifiers_Item;
-        PercentageModifiers_Item = item.PercentageModifiers_Item;
+        VisualStats_Item = new VisualStats_Item(item.VisualStats_Item);
+        WeaponStats_Item = new WeaponStats_Item(item.WeaponStats_Item);
+        ArmourStats_Item = new ArmourStats_Item(item.ArmourStats_Item);
+        FixedModifiers_Item = new FixedModifiers_Item(item.FixedModifiers_Item);
+        PercentageModifiers_Item = new PercentageModifiers_Item(item.PercentageModifiers_Item);
     }
 }
 
@@ -202,6 +202,19 @@ public class CommonStats_Item
         ItemWeight = itemWeight;
         ItemEquippable = itemEquippable;
     }
+
+    public CommonStats_Item(CommonStats_Item item)
+    {
+        ItemID = item.ItemID;
+        ItemName = item.ItemName;
+        ItemType = item.ItemType;
+        EquipmentSlots = item.EquipmentSlots != null ? new List<EquipmentSlot>(item.EquipmentSlots) : null;
+        MaxStackSize = item.MaxStackSize;
+        CurrentStackSize = item.CurrentStackSize;
+        ItemValue = item.ItemValue;
+        ItemWeight = item.ItemWeight;
+        ItemEquippable = item.ItemEquippable;
+    }
 }
 
 [Serializable]
@@ -236,6 +249,18 @@ public class VisualStats_Item
         ItemPosition = itemPosition ?? Vector3.zero;
         ItemRotation = itemRotation ?? Quaternion.identity;
         ItemScale = itemScale ?? Vector3.one;
+    }
+
+    public VisualStats_Item(VisualStats_Item other)
+    {
+        ItemIcon = other.ItemIcon;
+        ItemMesh = other.ItemMesh;
+        ItemMaterial = other.ItemMaterial;
+        ItemCollider = other.ItemCollider;
+        ItemAnimatorController = other.ItemAnimatorController;
+        ItemPosition = other.ItemPosition;
+        ItemRotation = other.ItemRotation;
+        ItemScale = other.ItemScale;
     }
 
     public void DisplayVisuals(GameObject go)
@@ -359,6 +384,30 @@ public class PercentageModifiers_Item
         MoveSpeed = moveSpeed;
         DodgeCooldownReduction = dodgeCooldownReduction;
     }
+
+    public PercentageModifiers_Item(PercentageModifiers_Item other)
+    {
+        CurrentHealth = other.CurrentHealth;
+        CurrentMana = other.CurrentMana;
+        CurrentStamina = other.CurrentStamina;
+        MaxHealth = other.MaxHealth;
+        MaxMana = other.MaxMana;
+        MaxStamina = other.MaxStamina;
+        PushRecovery = other.PushRecovery;
+
+        AttackDamage = other.AttackDamage;
+        AttackSpeed = other.AttackSpeed;
+        AttackSwingTime = other.AttackSwingTime;
+        AttackRange = other.AttackRange;
+        AttackPushForce = other.AttackPushForce;
+        AttackCooldown = other.AttackCooldown;
+
+        PhysicalDefence = other.PhysicalDefence;
+        MagicalDefence = other.MagicalDefence;
+
+        MoveSpeed = other.MoveSpeed;
+        DodgeCooldownReduction = other.DodgeCooldownReduction;
+    }
 }
 
 [Serializable]
@@ -432,6 +481,31 @@ public class FixedModifiers_Item
         MoveSpeed = moveSpeed;
         DodgeCooldownReduction = dodgeCooldownReduction;
     }
+
+    public FixedModifiers_Item(FixedModifiers_Item other)
+    {
+        CurrentHealth = other.CurrentHealth;
+        CurrentMana = other.CurrentMana;
+        CurrentStamina = other.CurrentStamina;
+        MaxHealth = other.MaxHealth;
+        MaxMana = other.MaxMana;
+        MaxStamina = other.MaxStamina;
+        PushRecovery = other.PushRecovery;
+
+        HealthRecovery = other.HealthRecovery;
+
+        AttackDamage = other.AttackDamage != null ? new List<(float, DamageType)>(other.AttackDamage) : null;
+        AttackSpeed = other.AttackSpeed;
+        AttackSwingTime = other.AttackSwingTime;
+        AttackRange = other.AttackRange;
+        AttackPushForce = other.AttackPushForce;
+        AttackCooldown = other.AttackCooldown;
+
+        PhysicalArmour = other.PhysicalArmour;
+        MagicArmour = other.MagicArmour;
+        MoveSpeed = other.MoveSpeed;
+        DodgeCooldownReduction = other.DodgeCooldownReduction;
+    }
 }
 
 [Serializable]
@@ -460,6 +534,13 @@ public class WeaponStats_Item
         WeaponClassArray = weaponClass;
         MaxChargeTime = maxChargeTime;
     }
+
+    public WeaponStats_Item(WeaponStats_Item other)
+    {
+        WeaponTypeArray = other.WeaponTypeArray.ToArray();
+        WeaponClassArray = other.WeaponClassArray.ToArray();
+        MaxChargeTime = other.MaxChargeTime;
+    }
 }
 
 [Serializable]
@@ -475,5 +556,11 @@ public class ArmourStats_Item
     {
         EquipmentSlot = armourType;
         ItemCoverage = itemCoverage;
+    }
+
+    public ArmourStats_Item(ArmourStats_Item other)
+    {
+        EquipmentSlot = other.EquipmentSlot;
+        ItemCoverage = other.ItemCoverage;
     }
 }

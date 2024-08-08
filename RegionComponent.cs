@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class RegionComponent : MonoBehaviour
 {
-    public Region_Data_SO Region_Data;
+    public int RegionID;
+
+    public RegionData Region_Data;
     public BoxCollider RegionArea;
 
     void Awake()
