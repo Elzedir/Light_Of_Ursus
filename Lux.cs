@@ -60,7 +60,7 @@ public class Lux : MonoBehaviour
 
     void OnDestroy()
     {
-        Manager_Dialogue.Instance.luxIntroEvent?.RemoveListener(LuxIntro);
+        //Manager_Dialogue.Instance.luxIntroEvent?.RemoveListener(LuxIntro);
     }
 
     void LuxIntro()

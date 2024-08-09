@@ -13,7 +13,8 @@ public class AllRegions_SO : ScriptableObject
     public List<int> AllCityIDs;
     public int LastUnusedCityID = 0;
 
-    public List<RegionData> AllRegionData = new();
+    public List<RegionData> AllRegionData; // Eventually add in a wanderer list, and if an actor in the AllActors_SO is not in a place for sufficient time and
+    //is not important, they disappear and get removed from the game.
 
     public void PrepareToInitialise()
     {
@@ -24,43 +25,64 @@ public class AllRegions_SO : ScriptableObject
     {
         // Clear the List, and load all the region Data from JSON.
 
-        _initialiseIDLists();
+        _initialiseAllRegionData();
+
+        _initialiseEditorIDLists();
     }
 
-    void _initialiseIDLists()
+    void _initialiseAllRegionData()
     {
-        foreach (RegionData regionData in AllRegionData)
+        foreach (var region in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<RegionComponent>().ToList())
+        {
+            if (!AllRegionData.Any(r => r.RegionID == region.RegionData.RegionID))
+            {
+                Debug.Log($"Region: {region.RegionData.RegionName} with ID: {region.RegionData.RegionID} was not in AllRegionData");
+                AllRegionData.Add(region.RegionData);
+            }
+
+            region.SetRegionData(GetRegionDataFromID(region.RegionData.RegionID));
+        }
+
+        for (int i = 0; i < AllRegionData.Count; i++)
+        {
+            AllRegionData[i].InitialiseRegionData();
+        }
+    }
+
+    void _initialiseEditorIDLists()
+    {
+        AllRegionIDs.Clear();
+        AllCityIDs.Clear();
+
+        foreach (var regionData in AllRegionData)
         {
             AllRegionIDs.Add(regionData.RegionID);
 
-            foreach (CityData cityData in regionData.AllCityData)
+            foreach (var cityData in regionData.AllCityData)
             {
                 AllCityIDs.Add(cityData.CityID);
             }
         }
     }
 
-    public void AddToAllRegionsList(RegionData regionData)
+    void _initialiseRuntimeIDLists()
+    {
+
+    }
+
+    public void AddToOrUpdateAllRegionDataList(RegionData regionData)
     {
         var existingRegion = AllRegionData.FirstOrDefault(r => r.RegionID == regionData.RegionID);
 
-        if (existingRegion == null) { AllRegionData.Add(regionData); return; }
-
-        var existingRegionData = AllRegionData[AllRegionData.IndexOf(existingRegion)];
-
-        if (!existingRegionData.OverwriteDataInRegion) return;
-
-        existingRegionData = regionData;
-        existingRegionData.OverwriteDataInRegion = false;
+        if (existingRegion == null) AllRegionData.Add(regionData);
+        else AllRegionData[AllRegionData.IndexOf(existingRegion)] = regionData;
     }
 
     public RegionData GetRegionDataFromID(int regionID)
     {
-        List<RegionData> regionDataList = AllRegionData.Where(r => r.RegionID == regionID).ToList();
+        if (!AllRegionData.Any(r => r.RegionID == regionID)) { Debug.Log($"AllRegionData does not contain RegionID: {regionID}"); return null; }
 
-        if (regionDataList.Count != 1) throw new ArgumentException($"RegionID: {regionID} has {regionDataList.Count} entries in AllRegionData.");
-
-        return regionDataList.FirstOrDefault();
+        return AllRegionData.FirstOrDefault(r => r.RegionID == regionID);
     }
 
     public int GetRandomRegionID()
@@ -75,31 +97,24 @@ public class AllRegions_SO : ScriptableObject
         return LastUnusedRegionID;
     }
 
-    public void AddToAllCityList(int regionID, CityData cityData)
+    public void AddToOrUpdateAllCityDataList(int regionID, CityData cityData)
     {
-        var allCityData = GetRegionDataFromID(regionID).AllCityData;
+        var region = GetRegionDataFromID(regionID);
+        var allCityData = region.AllCityData;
 
         var existingCity = allCityData.FirstOrDefault(c => c.CityID == cityData.CityID);
 
-        if (existingCity == null) { allCityData.Add(cityData); return; }
-
-        var existingCityData = allCityData[allCityData.IndexOf(existingCity)];
-
-        if (!existingCityData.OverwriteDataInCity) return;
-
-        existingCityData = cityData;
-        existingCityData.OverwriteDataInCity = false;
+        if (existingCity == null) allCityData.Add(cityData);
+        else allCityData[allCityData.IndexOf(existingCity)] = cityData;
     }
 
     public CityData GetCityDataFromID(int regionID, int cityID)
     {
         var allCityData = GetRegionDataFromID(regionID).AllCityData;
 
-        List<CityData> cityDataList = allCityData.Where(c => c.CityID == cityID).ToList();
+        if (!allCityData.Any(c => c.CityID == cityID)) { Debug.Log($"AllCityData does not contain CityID: {cityID}"); return null; }
 
-        if (cityDataList.Count != 1) throw new ArgumentException($"CityID: {cityID} of RegionID {regionID} has {cityDataList.Count} entries in AllCityData.");
-
-        return cityDataList.FirstOrDefault();
+        return allCityData.FirstOrDefault(c => c.CityID == cityID);
     }
 
     public int GetRandomCityID()

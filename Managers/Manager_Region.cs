@@ -9,7 +9,6 @@ public class Manager_Region : MonoBehaviour
 {
     public static AllRegions_SO AllRegions;
     public static Dictionary<int, RegionComponent> AllRegionComponents = new();
-    public static Dictionary <int, CityComponent> AllCityComponents = new();
 
     public void OnSceneLoaded()
     {
@@ -23,12 +22,7 @@ public class Manager_Region : MonoBehaviour
     {
         foreach (var region in _findAllRegionComponents())
         {
-            AllRegionComponents.Add(region.RegionID, region);
-        }
-
-        foreach (var city in _findAllCityComponents())
-        {
-            AllCityComponents.Add(city.CityID, city);
+            AllRegionComponents.Add(region.RegionData.RegionID, region);
         }
     }
 
@@ -39,16 +33,9 @@ public class Manager_Region : MonoBehaviour
             .ToList();
     }
 
-    static List<CityComponent> _findAllCityComponents()
+    public static void AddToOrUpdateAllRegionList(RegionData regionData)
     {
-        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-            .OfType<CityComponent>()
-            .ToList();
-    }
-
-    public static void AddToAllRegionList(RegionData regionData)
-    {
-        AllRegions.AddToAllRegionsList(regionData);
+        AllRegions.AddToOrUpdateAllRegionDataList(regionData);
     }
 
     public static RegionData GetRegionDataFromID(int regionID)
@@ -59,37 +46,5 @@ public class Manager_Region : MonoBehaviour
     public static RegionComponent GetRegion(int regionID)
     {
         return AllRegionComponents[regionID];
-    }
-
-    public static void AddToAllCityList(int regionID, CityData cityData)
-    {
-        AllRegions.AddToAllCityList(regionID, cityData);
-    }
-
-    public static CityData GetCityDataFromID(int regionID, int cityID)
-    {
-        return AllRegions.GetCityDataFromID(regionID, cityID);
-    }
-
-    public static CityComponent GetCity(int cityID)
-    {
-        return AllCityComponents[cityID];
-    }
-
-    public static void GetNearestCity(Vector3 position, out CityComponent nearestCity)
-    {
-        nearestCity = null;
-        float nearestDistance = float.MaxValue;
-
-        foreach (var city in AllCityComponents)
-        {
-            float distance = Vector3.Distance(position, city.Value.transform.position);
-
-            if (distance < nearestDistance)
-            {
-                nearestCity = city.Value;
-                nearestDistance = distance;
-            }
-        }
     }
 }

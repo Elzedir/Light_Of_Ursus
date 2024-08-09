@@ -25,49 +25,34 @@ public enum EmployeePosition
 public class Jobsite_Base : MonoBehaviour
 {
     public Actor_Base Owner;
+
     public CityComponent City;
-    
+
     public bool IsActive = true;
 
     public Dictionary<Actor_Base, EmployeePosition> AllEmployees;
     public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions;
     public BoxCollider JobsiteArea;
 
-    void Awake()
+    public virtual void Initialise(CityComponent city)
     {
-        Manager_Initialisation.OnInitialiseJobsites += Initialise;
-    }
+        City = city;
 
-    public virtual void Initialise()
-    {
         JobsiteArea = GetComponent<BoxCollider>();
         AllEmployees = new();
         AllJobPositions = new();
 
-        Manager_Region.GetNearestCity(transform.position, out City);
-
-        StartCoroutine(TestInitialiseCity());
+        Manager_Initialisation.OnInitialiseJobsites += _initialise;
     }
 
-    public virtual Jobsite_Base Clone()
+    protected virtual void _initialise()
     {
-        var clone = (Jobsite_Base)MemberwiseClone();
-        clone.AllEmployees = new Dictionary<Actor_Base, EmployeePosition>(AllEmployees);
-        clone.AllJobPositions = new Dictionary<EmployeePosition, List<Actor_Base>>(AllJobPositions);
-        return clone;
+        UnpackJobsiteData();
     }
 
     public void UnpackJobsiteData()
     {
         //Manager_Jobsites.GetJobsiteData(City);
-    }
-
-    protected virtual IEnumerator TestInitialiseCity()
-    {
-        UnpackJobsiteData();
-
-        SetOwner(Owner);
-        yield return null;
     }
 
     public void SetOwner(Actor_Base owner)
@@ -88,6 +73,7 @@ public class Jobsite_Base : MonoBehaviour
         
         if (_findEmployeeFromCity(EmployeePosition.Owner, out Actor_Base newOwner))
         {
+            Debug.Log("Found owner");
             Owner = newOwner;
         }
 
@@ -113,11 +99,6 @@ public class Jobsite_Base : MonoBehaviour
 
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        foreach(var cit in City.CityData.Population.AllCitizens)
-        {
-            Debug.Log($"City contains citizen: {cit.CitizenName}");
-        }
-
         var citizen = City.CityData.Population.AllCitizens
             .FirstOrDefault(c => c.ActorData.CareerAndJobs.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
@@ -129,11 +110,7 @@ public class Jobsite_Base : MonoBehaviour
 
         if (citizen != null)
         {
-            Debug.Log($"Found employee: {citizen.CitizenName} for position ");
-
-            actor =  Manager_Actor.GetActor(citizen.ActorID);
-
-            return actor != null;
+            return Manager_Actor.GetActor(citizen.ActorID, out actor) != null;
         }
 
         return false;
@@ -143,10 +120,7 @@ public class Jobsite_Base : MonoBehaviour
     {
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        var actor = Manager_Actor.SpawnNewActorOnGO(City.CityEntranceSpawnZone.transform.position);
-        Manager_Actor.GenerateNewActorData(actor);
-
-        actor.Initialise();
+        var actor = Manager_Actor.SpawnActor(City.CityEntranceSpawnZone.transform.position);
 
         City.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
 

@@ -9,7 +9,7 @@ public class ActorData
     public int ActorID;
     public ActorName ActorName;
 
-    public bool OverwriteDataInActor = false;
+    public bool OverwriteDataInActor = true;
 
     public FullIdentification FullIdentification;
 
@@ -22,9 +22,13 @@ public class ActorData
     public InventoryAndEquipment InventoryAndEquipment;
     public ActorQuests ActorQuests;
 
-    public void Initialise(Actor_Base actor)
+    public void InitialiseActorData()
     {
-        //ActorAspects.InitialiseAspects(actor);
+        if (OverwriteDataInActor) Manager_Actor.AddToOrUpdateAllActorList(this);
+        else if (Manager_Actor.GetActor(ActorID, out Actor_Base actor) != null)
+        {
+            actor.SetActorData(Manager_Actor.GetActorDataFromID(ActorID, out ActorData actorData));
+        } 
     }
 
     public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
@@ -45,10 +49,6 @@ public class ActorData
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
         ActorQuests = actorQuests;
-
-        Initialise(FullIdentification.Actor);
-
-        Manager_Actor.AddToAllActorList(this);
     }
 }
 

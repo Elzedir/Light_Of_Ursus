@@ -23,47 +23,57 @@ public class AllActors_SO : ScriptableObject
     {
         // Clear the List, and load all the actor Data from JSON.
 
-        foreach (ActorData actorData in AllActorData)
-        {
-            AllActorIDs.Add(actorData.ActorID);
+        _getAllActorData();
 
-            // Do a test here to see if they already exist as game objects in the world
-            //Actor_Base actor = Manager_Actor.SpawnNewActorOnGO(actorData.GameObjectProperties.ActorPosition);
+        _addAddAllEditorActorIDs();
+    }
+
+    void _getAllActorData()
+    {
+        // This will function as a temporary load function by loading the list before it's cleared since it will persist with the SO.
+        foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<Actor_Base>().ToList())
+        {
+            if (!AllActorData.Any(a => a.ActorID == actor.ActorData.ActorID))
+            {
+                Debug.Log($"Actor: {actor.ActorData.ActorName} with ID: {actor.ActorData.ActorID} was not in AllActorData");
+                AllActorData.Add(actor.ActorData);
+            }
+        }
+
+        for (int i = 0; i < AllActorData.Count; i++)
+        {
+            AllActorData[i].InitialiseActorData();
         }
     }
 
-    public void AddToAllActorsList(ActorData actorData)
+    void _addAddAllEditorActorIDs()
+    {
+        AllActorIDs.Clear();
+
+        foreach (var actorData in AllActorData)
+        {
+            AllActorIDs.Add(actorData.ActorID);
+        }
+    }
+
+    void _addAllRuntimeActorIDs()
+    {
+
+    }
+
+    public void AddToOrUpdateAllActorsDataList(ActorData actorData)
     {
         var existingActor = AllActorData.FirstOrDefault(a => a.ActorID == actorData.ActorID);
 
-        if (existingActor == null) { AllActorData.Add(actorData); return; }
-
-        var existingActorData = AllActorData[AllActorData.IndexOf(existingActor)];
-
-        if (!existingActorData.OverwriteDataInActor) return;
-
-        existingActorData = actorData;
-        existingActorData.OverwriteDataInActor = false;
+        if (existingActor == null) AllActorData.Add(actorData);
+        else AllActorData[AllActorData.IndexOf(existingActor)] = actorData;
     }
 
     public ActorData GetActorDataFromID(int actorID)
     {
-        List<ActorData> actorDataList = AllActorData.Where(a => a.ActorID == actorID).ToList();
+        if (!AllActorData.Any(a => a.ActorID == actorID)) { Debug.Log($"AllActorData does not contain ActorID: {actorID}"); return null; }
 
-        if (actorDataList.Count != 1) throw new ArgumentException($"ActorID: {actorID} has {actorDataList.Count} entries in AllActorData.");
-
-        return actorDataList.FirstOrDefault();
-    }
-
-    public ActorData GetActorDataFromExistingActor(Actor_Base actor)
-    {
-        if (actor.ActorData != null) return AllActorData.FirstOrDefault(a => a.ActorID == actor.ActorData.ActorID);
-        else
-        {
-            var actorData = Manager_Actor.GenerateNewActorData(actor);
-            AddToAllActorsList(actorData); 
-            return actorData;
-        }
+        return AllActorData.FirstOrDefault(a => a.ActorID == actorID);
     }
 
     public int GetRandomActorID()

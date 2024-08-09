@@ -57,10 +57,7 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         EquipmentComponent = new EquipmentComponent(this);
         InventoryComponent = new InventoryComponent(this, new List<Item>());
 
-        Manager_Actor.AddToAllActorList(ActorData);
-        ActorData = Manager_Actor.GetActorDataFromExistingActor(this);
-
-        if (ActorData == null) throw new ArgumentException("ActorData still doesn't exist");
+        if (ActorData == null) throw new ArgumentException("ActorData doesn't exist");
 
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";

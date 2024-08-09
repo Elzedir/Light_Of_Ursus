@@ -59,6 +59,8 @@ public class Manager_Jobs : MonoBehaviour
 
     Job _lumberjack()
     {
+        Debug.Log("Initialised lumberjack");
+
         IEnumerator chopTrees(Actor_Base actor)
         {
             var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
@@ -268,6 +270,8 @@ public class Job
     {
         if (Manager_Jobs.AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException("JobName already exists.");
 
+        Debug.Log(JobTasks);
+
         JobName = jobName;
         JobDescription = jobDescription;
         JobTasks = jobTasks;
@@ -275,6 +279,7 @@ public class Job
 
     public Job(Job job, Jobsite_Base jobsite)
     {
+        Debug.Log(JobTasks);
         JobName = job.JobName;
         JobDescription = job.JobDescription;
         Jobsite = jobsite;
@@ -306,6 +311,7 @@ public enum TaskName
     HealEnemies, SplintEnemies,
 }
 
+[Serializable]
 public class Task
 {
     public TaskName TaskName;
@@ -316,7 +322,7 @@ public class Task
     public Interactable_Lumberjack_DropOffZone TaskArea;
     public List<AnimationClip> TaskAnimationClips;
 
-    public Func<Actor_Base, IEnumerator> TaskAction;
+    [SerializeField] public Func<Actor_Base, IEnumerator> TaskAction;
 
     public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, IEnumerator> taskAction)
     {

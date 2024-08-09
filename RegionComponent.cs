@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class RegionComponent : MonoBehaviour
 {
-    public int RegionID;
-
-    public RegionData Region_Data;
+    public RegionData RegionData;
     public BoxCollider RegionArea;
 
     void Awake()
     {
         RegionArea = GetComponent<BoxCollider>();
+    }
+
+    public void SetRegionData(RegionData regionData)
+    {
+        if (RegionData.OverwriteDataInRegion)
+        {
+            RegionData = regionData;
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,17 +11,51 @@ public class RegionData
     public int RegionID;
     public string RegionName;
 
-    public bool OverwriteDataInRegion = false;
+    public bool OverwriteDataInRegion = true;
 
     public string RegionDescription;
 
     public FactionName Faction;
-
     public List<CityData> AllCityData;
 
-    public RegionData()
+    public void InitialiseRegionData()
     {
-        Manager_Region.AddToAllRegionList(this);
+        foreach (var city in GetAllCitiesWithinBounds())
+        {
+            if (!AllCityData.Any(c => c.CityID == city.CityData.CityID))
+            {
+                Debug.Log($"City: {city.CityData.CityName} with ID: {city.CityData.CityID} was not in AllCityData");
+                AllCityData.Add(city.CityData);
+            }
+
+            city.SetCityData(Manager_City.GetCityDataFromID(RegionID, city.CityData.CityID));
+        }
+
+        for (int i = 0; i < AllCityData.Count; i++)
+        {
+            AllCityData[i].InitialiseCityData(RegionID);
+        }
+    }
+
+    public List<CityComponent> GetAllCitiesWithinBounds()
+    {
+        BoxCollider regionArea = Manager_Region.GetRegion(RegionID).RegionArea;
+        Vector3 center = regionArea.transform.TransformPoint(regionArea.center);
+        Vector3 halfExtents = regionArea.size * 0.5f;
+        Quaternion orientation = regionArea.transform.rotation;
+
+        List<CityComponent> cityComponents = new List<CityComponent>();
+
+        foreach (var collider in Physics.OverlapBox(center, halfExtents, orientation))
+        {
+            CityComponent cityComponent = collider.GetComponent<CityComponent>();
+            if (cityComponent != null)
+            {
+                cityComponents.Add(cityComponent);
+            }
+        }
+
+        return cityComponents;
     }
 }
 

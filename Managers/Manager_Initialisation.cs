@@ -7,31 +7,27 @@ public class Manager_Initialisation
 {
     public static event Action OnInitialiseAllRegionSO;
     public static event Action OnInitialiseManagerRegion;
+    public static event Action OnInitialiseManagerCity;
     public static event Action OnInitialiseAllActorSO;
     public static event Action OnInitialiseActors;
     public static event Action OnInitialiseManagerActor;
-    public static event Action OnInitialiseCities;
     public static event Action OnInitialiseJobsites;
 
     public static void InitialiseAllRegionSO() 
     {
-        OnInitialiseAllRegionSO?.Invoke();
         OnInitialiseManagerRegion?.Invoke();
+        OnInitialiseManagerCity?.Invoke();
+        OnInitialiseAllRegionSO?.Invoke();
     }
 
     public static void InitialiseActors()
     {
+        OnInitialiseManagerActor.Invoke();
         OnInitialiseAllActorSO?.Invoke();
         OnInitialiseActors?.Invoke();
-        OnInitialiseManagerActor.Invoke();
     }
 
-    public static void InitialiseCities()
-    {
-        OnInitialiseCities?.Invoke();
-    }
-
-    public static void InitialiseJobsites()
+    public static void InitialiseJobs()
     {
         OnInitialiseJobsites?.Invoke();
     }

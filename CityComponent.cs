@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class CityComponent : MonoBehaviour
 {
-    public int CityID;
-
     public CityData CityData;
     public BoxCollider CityArea;
 
@@ -20,14 +18,18 @@ public class CityComponent : MonoBehaviour
         CityArea = GetComponent<BoxCollider>();
         CityEntranceSpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
 
-        Manager_Initialisation.OnInitialiseCities += _onInitialise;
         CurrentDate.NewDay += _refreshCity;
     }
 
-    void _onInitialise()
+    public void Initialise()
     {
         ProsperityComponent = new ProsperityComponent(CityData.Prosperity.CurrentProsperity);
         AllJobsites = _getJobsitesInArea();
+
+        foreach(var job in AllJobsites)
+        {
+            job.Initialise(this);
+        }
     }
 
     List<Jobsite_Base> _getJobsitesInArea()
@@ -36,6 +38,14 @@ public class CityComponent : MonoBehaviour
         .Select(collider => collider.GetComponent<Jobsite_Base>())
         .Where(jobsite => jobsite != null)
         .ToList();
+    }
+
+    public void SetCityData(CityData cityData)
+    {
+        if (CityData.OverwriteDataInCity)
+        {
+            CityData = cityData;
+        }
     }
 
     void _refreshCity()

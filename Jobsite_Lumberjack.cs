@@ -8,16 +8,16 @@ public class Jobsite_Lumberjack : Jobsite_Base
 {
     public List<Interactable_Lumberjack> AllStations;
 
-    public override void Initialise()
+    public override void Initialise(CityComponent city)
     {
-        base.Initialise();
-    }
-
-    protected override IEnumerator TestInitialiseCity()
-    {
-        yield return base.TestInitialiseCity();
+        base.Initialise(city);
 
         AllStations = _getStationsInArea();
+    }
+
+    protected override void _initialise()
+    {
+        base._initialise();
 
         _initialiseJobs();
     }

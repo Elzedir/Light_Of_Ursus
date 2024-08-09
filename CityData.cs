@@ -9,8 +9,9 @@ public class CityData
 {
     public int CityID;
     public string CityName;
+    public int RegionID;
 
-    public bool OverwriteDataInCity = false;
+    public bool OverwriteDataInCity = true;
 
     public string CityDescription;
 
@@ -18,6 +19,11 @@ public class CityData
     public DisplayProsperity Prosperity;
 
     public DisplayCareers Careers;
+
+    public void InitialiseCityData(int regionID)
+    {
+        Manager_City.GetCity(CityID).Initialise();
+    }
 }
 
 [Serializable]
@@ -117,9 +123,16 @@ public class DisplayPopulation
 
     public void AddCitizen(DisplayCitizen citizen)
     {
-        if (AllCitizens.Contains(citizen)) throw new ArgumentException($"Citizen: {citizen.CitizenName} is already in AllCitizens.");
+        if (AllCitizens.Contains(citizen)) throw new ArgumentException($"Citizen: {citizen.CitizenName} already exists in AllCitizens.");
 
         AllCitizens.Add(citizen);
+    }
+
+    public void RemoveCitizen(int actorID)
+    {
+        if (!AllCitizens.Any(c => c.ActorID == actorID)) throw new ArgumentException($"CitizenID: {actorID} does not exist in AllCitizens.");
+
+        AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.ActorID == actorID));
     }
 }
 
