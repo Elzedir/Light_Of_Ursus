@@ -115,6 +115,7 @@ public class Manager_Actor : MonoBehaviour
                 ),
             worldState: null,
             careerAndJobs: new CareerAndJobs(
+                actor: actor,
                 actorCareer: CareerName.None, // Later set to none only if you don't have a preset career in parameters
                 actorJobs: new List<Job>()
                 ),

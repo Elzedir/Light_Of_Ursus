@@ -59,8 +59,6 @@ public class Manager_Jobs : MonoBehaviour
 
     Job _lumberjack()
     {
-        Debug.Log("Initialised lumberjack");
-
         IEnumerator chopTrees(Actor_Base actor)
         {
             var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
@@ -154,88 +152,6 @@ public class Manager_Jobs : MonoBehaviour
     }
 }
 
-public class JobComponent : ITickable
-{
-    public Actor_Base Actor;
-    public Career Career;
-    public bool JobsActive;
-    public List<Job> AllCurrentJobs;
-
-    Coroutine _jobCoroutine;
-
-    public JobComponent(Actor_Base actor, CareerName careerName, List<Job> allCurrentJobs, bool jobsActive = false)
-    {
-        Actor = actor;
-        Career = Manager_Career.GetCareer(careerName);
-        JobsActive = jobsActive;
-        AllCurrentJobs = allCurrentJobs;
-
-        Manager_TickRate.RegisterTickable(this);
-    }
-
-    public void OnTick()
-    {
-        Manager_Game.Instance.StartCoroutine(PerformJobs());
-    } 
-
-    public TickRate GetTickRate()
-    {
-        return TickRate.OneSecond;
-    }
-
-    public void ToggleDoJobs(bool jobsActive)
-    {
-        JobsActive = jobsActive;
-    }
-
-    public void AddJob(JobName jobName, Jobsite_Base jobsite)
-    {
-        Job job = Manager_Jobs.GetJob(jobName, jobsite);
-
-        if (job == null) { Debug.Log("Job is null"); return; }
-
-        if (AllCurrentJobs.Any(j => j.JobName == jobName && j.Jobsite == jobsite)) return;
-
-        AllCurrentJobs.Add(job);
-    }
-
-    public void RemoveJob(Job job = null)
-    {
-        for (int i = 0; i < AllCurrentJobs.Count; i++)
-        {
-            if (job == AllCurrentJobs[i] || job == null)
-            {
-                AllCurrentJobs.Remove(job);
-            }
-        }
-    }
-
-    public void ReorganiseJobs(Job job, int index)
-    {
-        if (job == null) { Debug.Log("Job is null"); return; }
-        if (index < 0 || index > AllCurrentJobs.Count) { Debug.Log($"Index: {index} is less than 0 or greater than AllCurrentJobs length: {AllCurrentJobs.Count}."); return; }
-
-        for (int i = AllCurrentJobs.Count - 1; i > index; i--)
-        {
-            AllCurrentJobs[i] = AllCurrentJobs[i - 1];
-        }
-
-        AllCurrentJobs[index] = job;
-    }
-
-    public IEnumerator PerformJobs()
-    {
-        if (_jobCoroutine != null) yield break;
-
-        foreach (Job job in AllCurrentJobs)
-        {
-            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Actor));
-        }
-
-        _jobCoroutine = null;
-    }
-}
-
 public enum JobName
 {
     Patrol,
@@ -270,8 +186,6 @@ public class Job
     {
         if (Manager_Jobs.AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException("JobName already exists.");
 
-        Debug.Log(JobTasks);
-
         JobName = jobName;
         JobDescription = jobDescription;
         JobTasks = jobTasks;
@@ -279,7 +193,6 @@ public class Job
 
     public Job(Job job, Jobsite_Base jobsite)
     {
-        Debug.Log(JobTasks);
         JobName = job.JobName;
         JobDescription = job.JobDescription;
         Jobsite = jobsite;
@@ -322,7 +235,7 @@ public class Task
     public Interactable_Lumberjack_DropOffZone TaskArea;
     public List<AnimationClip> TaskAnimationClips;
 
-    [SerializeField] public Func<Actor_Base, IEnumerator> TaskAction;
+    public Func<Actor_Base, IEnumerator> TaskAction;
 
     public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, IEnumerator> taskAction)
     {

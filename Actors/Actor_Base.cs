@@ -16,7 +16,6 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public MeshRenderer ActorMaterial { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
     public Animation ActorAnimation { get; protected set; }
-    public JobComponent JobComponent { get; protected set; }
     public InventoryComponent InventoryComponent { get; protected set; }
     public EquipmentComponent EquipmentComponent { get; protected set; }
     public CraftingComponent CraftingComponent { get; protected set; }
@@ -62,7 +61,6 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
 
-        JobComponent = new JobComponent(this, ActorData.CareerAndJobs.ActorCareer, ActorData.CareerAndJobs.ActorJobs);
         CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
         VocationComponent = new VocationComponent(this, new());
         GatheringComponent = new GatheringComponent(this);

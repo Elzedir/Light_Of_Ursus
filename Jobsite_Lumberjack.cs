@@ -58,7 +58,7 @@ public class Jobsite_Lumberjack : Jobsite_Base
             }
 
             AllJobPositions[position.Key].Add(actor);
-            actor.JobComponent.AddJob(JobName.Lumberjack, this);
+            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, this);
         }
 
         StartCoroutine(ShowPositions());

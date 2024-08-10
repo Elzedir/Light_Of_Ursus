@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -118,15 +120,103 @@ public class Relationships
 }
 
 [Serializable]
-public class CareerAndJobs
+public class CareerAndJobs : ITickable
 {
+    public Actor_Base Actor;
     public CareerName ActorCareer;
     public List<Job> ActorJobs;
 
-    public CareerAndJobs(CareerName actorCareer, List<Job> actorJobs)
+    public bool JobsActive;
+
+    Coroutine _jobCoroutine;
+
+    public CareerAndJobs(Actor_Base actor, CareerName actorCareer, List<Job> actorJobs, bool jobsActive = false)
     {
+        Actor = actor;
         ActorCareer = actorCareer;
-        ActorJobs = actorJobs;
+        ActorJobs = new();
+        JobsActive = jobsActive;
+
+        Debug.Log(actorJobs);
+
+        foreach(var job in actorJobs)
+        {
+            Debug.Log(job.JobName);
+
+            foreach(var task in Manager_Jobs.GetJob(job.JobName, job.Jobsite).JobTasks)
+            {
+                Debug.Log(task);
+                Debug.Log(task.TaskAction);
+            }
+            
+            ActorJobs.Add(Manager_Jobs.GetJob(job.JobName, job.Jobsite));
+        }
+
+        Manager_TickRate.RegisterTickable(this);
+    }
+
+    public void AddJob(JobName jobName, Jobsite_Base jobsite)
+    {
+        Job job = Manager_Jobs.GetJob(jobName, jobsite);
+
+        if (job == null) { Debug.Log("Job is null"); return; }
+
+        Debug.Log(job.JobName);
+
+        if (ActorJobs.Any(j => j.JobName == jobName)) return;
+
+        ActorJobs.Add(job);
+    }
+
+    public void RemoveJob(Job job = null)
+    {
+        for (int i = 0; i < ActorJobs.Count; i++)
+        {
+            if (job == ActorJobs[i] || job == null)
+            {
+                ActorJobs.Remove(job);
+            }
+        }
+    }
+
+    public void ReorganiseJobs(Job job, int index)
+    {
+        if (job == null) { Debug.Log("Job is null"); return; }
+        if (index < 0 || index > ActorJobs.Count) { Debug.Log($"Index: {index} is less than 0 or greater than ActorJobs length: {ActorJobs.Count}."); return; }
+
+        for (int i = ActorJobs.Count - 1; i > index; i--)
+        {
+            ActorJobs[i] = ActorJobs[i - 1];
+        }
+
+        ActorJobs[index] = job;
+    }
+
+    public void OnTick()
+    {
+        Manager_Game.Instance.StartCoroutine(PerformJobs());
+    }
+
+    public TickRate GetTickRate()
+    {
+        return TickRate.OneSecond;
+    }
+
+    public void ToggleDoJobs(bool jobsActive)
+    {
+        JobsActive = jobsActive;
+    }
+
+    public IEnumerator PerformJobs()
+    {
+        if (_jobCoroutine != null) yield break;
+
+        foreach (Job job in ActorJobs)
+        {
+            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Actor));
+        }
+
+        _jobCoroutine = null;
     }
 }
 
