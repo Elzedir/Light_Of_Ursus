@@ -8,50 +8,42 @@ public class CityComponent : MonoBehaviour
     public CityData CityData;
     public BoxCollider CityArea;
 
-    public GameObject CityEntranceSpawnZone;
-
-    public List<Jobsite_Base> AllJobsites = new();
+    public GameObject CitySpawnZone;
     public ProsperityComponent ProsperityComponent;
 
-    void Awake()
-    {
-        CityArea = GetComponent<BoxCollider>();
-        CityEntranceSpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
-
-        CurrentDate.NewDay += _refreshCity;
-    }
+    public List<JobsiteComponent> AllJobsitesInCity;
 
     public void Initialise()
     {
+        CityArea = GetComponent<BoxCollider>();
+        CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
+
         ProsperityComponent = new ProsperityComponent(CityData.Prosperity.CurrentProsperity);
-        AllJobsites = _getJobsitesInArea();
 
-        foreach(var job in AllJobsites)
-        {
-            job.Initialise(this);
-        }
-    }
-
-    List<Jobsite_Base> _getJobsitesInArea()
-    {
-        return Physics.OverlapBox(CityArea.bounds.center, CityArea.bounds.extents)
-        .Select(collider => collider.GetComponent<Jobsite_Base>())
-        .Where(jobsite => jobsite != null)
-        .ToList();
+        AllJobsitesInCity = GetAllJobsitesInCity();
     }
 
     public void SetCityData(CityData cityData)
     {
-        if (CityData.OverwriteDataInCity)
-        {
-            CityData = cityData;
-        }
+        CityData = cityData;
     }
 
-    void _refreshCity()
+    public void RefreshCity()
     {
-        
+        // Refresh all jobsites in citydata
+    }
 
+    public List<JobsiteComponent> GetAllJobsitesInCity()
+    {
+        return Physics.OverlapBox(CityArea.bounds.center, CityArea.bounds.extents)
+        .Select(collider => collider.GetComponent<JobsiteComponent>()).Where(jc => jc != null).ToList();
+    }
 
+    public JobsiteComponent GetNearestJobsiteInCity(Vector3 position, JobsiteName jobsiteName)
+    {
+        return AllJobsitesInCity
+        .Where(jobsite => jobsite.JobsiteData.JobsiteName == jobsiteName)
+        .OrderBy(jobsite => Vector3.Distance(position, jobsite.transform.position))
+        .FirstOrDefault();
     }
 }

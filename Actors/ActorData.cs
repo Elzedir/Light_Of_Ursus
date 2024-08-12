@@ -26,10 +26,15 @@ public class ActorData
 
     public void InitialiseActorData()
     {
-        if (OverwriteDataInActor) Manager_Actor.AddToOrUpdateAllActorList(this);
+        if (OverwriteDataInActor)
+        {
+            Manager_Actor.AddToOrUpdateAllActorList(this);
+            OverwriteDataInActor = false;
+        }
         else if (Manager_Actor.GetActor(ActorID, out Actor_Base actor) != null)
         {
             actor.SetActorData(Manager_Actor.GetActorDataFromID(ActorID, out ActorData actorData));
+            CareerAndJobs.Initialise();
         } 
     }
 
@@ -47,6 +52,7 @@ public class ActorData
         Worldstate = worldState;
 
         CareerAndJobs = careerAndJobs;
+        CareerAndJobs.SetActorID(ActorID);
         SpeciesAndPersonality = speciesAndPersonality;
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
@@ -122,40 +128,56 @@ public class Relationships
 [Serializable]
 public class CareerAndJobs : ITickable
 {
-    public Actor_Base Actor;
+    public int ActorID;
     public CareerName ActorCareer;
-    public List<Job> ActorJobs;
+    public List<DisplayJobs> ActorJobNames;
+    public CraftingComponent Crafting;
+
+    List<Job> ActorJobs;
 
     public bool JobsActive;
 
     Coroutine _jobCoroutine;
 
-    public CareerAndJobs(Actor_Base actor, CareerName actorCareer, List<Job> actorJobs, bool jobsActive = false)
+    public CareerAndJobs(CareerName actorCareer, List<DisplayJobs> actorJobs, bool jobsActive = false)
     {
-        Actor = actor;
+        Debug.Log($"ActorJobNames: {ActorJobNames} has {ActorJobNames?.Count} jobs");
+
         ActorCareer = actorCareer;
-        ActorJobs = new();
+        ActorJobs ??= new();
         JobsActive = jobsActive;
 
         Debug.Log(actorJobs);
 
         foreach(var job in actorJobs)
         {
-            Debug.Log(job.JobName);
+            Debug.Log(job);
 
-            foreach(var task in Manager_Jobs.GetJob(job.JobName, job.Jobsite).JobTasks)
+            foreach(var task in Manager_Jobs.GetJob(job.JobName, Manager_Jobsites.GetJobsite(job.JobsiteID)).JobTasks)
             {
                 Debug.Log(task);
                 Debug.Log(task.TaskAction);
             }
             
-            ActorJobs.Add(Manager_Jobs.GetJob(job.JobName, job.Jobsite));
+            ActorJobs.Add(Manager_Jobs.GetJob(job.JobName, Manager_Jobsites.GetJobsite(job.JobsiteID)));
         }
 
-        Manager_TickRate.RegisterTickable(this);
+        Initialise();
     }
 
-    public void AddJob(JobName jobName, Jobsite_Base jobsite)
+    public void SetActorID(int actorID)
+    {
+        ActorID = actorID;
+    }
+
+    public void Initialise()
+    {
+        Manager_TickRate.RegisterTickable(this);
+
+        Debug.Log($"ActorJobs: {ActorJobs} has {ActorJobs.Count} jobs");
+    }
+
+    public void AddJob(JobName jobName, JobsiteComponent jobsite)
     {
         Job job = Manager_Jobs.GetJob(jobName, jobsite);
 
@@ -194,6 +216,7 @@ public class CareerAndJobs : ITickable
 
     public void OnTick()
     {
+        Debug.Log($"Registered Tickable: {ActorID}");
         Manager_Game.Instance.StartCoroutine(PerformJobs());
     }
 
@@ -211,12 +234,28 @@ public class CareerAndJobs : ITickable
     {
         if (_jobCoroutine != null) yield break;
 
+        Debug.Log($"{ActorID} Perform jobs");
+        Debug.Log($"There are {ActorJobs.Count} jobs in ActorJobs");
+
         foreach (Job job in ActorJobs)
         {
-            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Actor));
+            Debug.Log($"{job.JobName}");
+            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Manager_Actor.GetActor(ActorID, out Actor_Base actor)));
         }
 
         _jobCoroutine = null;
+    }
+}
+
+[Serializable]
+public class DisplayJobs
+{
+    public JobName JobName;
+    public int JobsiteID;
+
+    public DisplayJobs()
+    {
+
     }
 }
 
@@ -250,13 +289,13 @@ public class StatsAndAbilities
 [Serializable]
 public class InventoryAndEquipment
 {
-    public ActorInventory ActorInventory;
-    public ActorEquipment ActorEquipment;
+    public InventoryData Inventory;
+    public ActorEquipment Equipment;
 
-    public InventoryAndEquipment(ActorInventory actorInventory, ActorEquipment actorEquipment)
+    public InventoryAndEquipment(InventoryData inventory, ActorEquipment equipment)
     {
-        ActorInventory = actorInventory;
-        ActorEquipment = actorEquipment;
+        Inventory = inventory;
+        Equipment = equipment;
     }
 }
 

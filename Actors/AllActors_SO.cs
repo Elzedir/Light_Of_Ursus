@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "AllActors_SO", menuName = "SOList/AllActors_SO")]
 public class AllActors_SO : ScriptableObject
 {
     public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
-    public int LastUnusedID = 0;
+    public int LastUnusedActorID = 0;
 
     public List<ActorData> AllActorData;
 
@@ -21,16 +22,22 @@ public class AllActors_SO : ScriptableObject
 
     void _initialise()
     {
-        // Clear the List, and load all the actor Data from JSON.
+        _addAllActorDataFromJSON();
 
-        _getAllActorData();
+        _addAdditionalActorDataFromScene();
 
         _addAddAllEditorActorIDs();
+
+        _addAllRuntimeActorIDs();
     }
 
-    void _getAllActorData()
+    void _addAllActorDataFromJSON()
     {
-        // This will function as a temporary load function by loading the list before it's cleared since it will persist with the SO.
+        //Load from JSON
+    }
+
+    void _addAdditionalActorDataFromScene()
+    {
         foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<Actor_Base>().ToList())
         {
             if (!AllActorData.Any(a => a.ActorID == actor.ActorData.ActorID))
@@ -78,13 +85,35 @@ public class AllActors_SO : ScriptableObject
 
     public int GetRandomActorID()
     {
-        while (AllActorIDs.Contains(LastUnusedID))
+        while (AllActorIDs.Contains(LastUnusedActorID))
         {
-            LastUnusedID++;
+            LastUnusedActorID++;
         }
 
-        AllActorIDs.Add(LastUnusedID);
+        AllActorIDs.Add(LastUnusedActorID);
 
-        return LastUnusedID;
+        return LastUnusedActorID;
+    }
+
+    public void ClearActorData()
+    {
+        AllActorData.Clear();
+    }
+}
+
+[CustomEditor(typeof(AllActors_SO))]
+public class AllActorsSOEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        AllActors_SO myScript = (AllActors_SO)target;
+
+        if (GUILayout.Button("Clear Actor Data"))
+        {
+            myScript.ClearActorData();
+            EditorUtility.SetDirty(myScript);
+        }
     }
 }

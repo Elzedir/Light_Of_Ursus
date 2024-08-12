@@ -47,4 +47,21 @@ public class Manager_Region : MonoBehaviour
     {
         return AllRegionComponents[regionID];
     }
+
+    public static void GetNearestRegion(Vector3 position, out RegionComponent nearestRegion)
+    {
+        nearestRegion = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (var region in AllRegionComponents)
+        {
+            float distance = Vector3.Distance(position, region.Value.transform.position);
+
+            if (distance < nearestDistance)
+            {
+                nearestRegion = region.Value;
+                nearestDistance = distance;
+            }
+        }
+    }
 }

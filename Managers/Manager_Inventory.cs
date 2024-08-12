@@ -1,70 +1,35 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Playables;
-using UnityEngine.SceneManagement;
 
 public class Manager_Inventory : MonoBehaviour
 {
-    List<IInventoryOwner> _inventoryOwners;
-
-    public void OnSceneLoaded()
-    {
-        _inventoryOwners = _findAllInventoryOwners();
-        foreach (IInventoryOwner owner in _inventoryOwners) owner.InitialiseInventoryComponent();
-    }
-
-    List<IInventoryOwner> _findAllInventoryOwners()
-    {
-        return new List<IInventoryOwner>(FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<IInventoryOwner>());
-    }
+    
 }
 
 public interface IInventoryOwner
 {
     GameObject GameObject { get; }
-    InventoryComponent InventoryComponent { get; }
-    void UpdateInventoryDisplay();
+    InventoryData InventoryData { get; }
     void InitialiseInventoryComponent();
 }
 
-public interface IInventoryActor : IInventoryOwner
+public interface IStationInventory : IInventoryOwner
 {
-    ActorData ActorData { get; }
+    StationName StationName { get; }
+    Vector3 GetOperatingPosition();
+    List<Item> GetStationYield(Actor_Base actor);
 }
 
-public interface IResourceStation : IInventoryOwner
-{
-    ResourceStationName GetResourceStationName();
-    Vector3 GetGatheringPosition();
-    IEnumerator GatherResource(Actor_Base actor);
-    List<Item> GetResourceYield(Actor_Base actor);
-
-}
-
-public interface ICraftingStation : IInventoryOwner
-{
-    CraftingStationName GetCraftingStationName();
-    Vector3 GetCraftingPosition();
-    IEnumerator CraftItem(Actor_Base actor);
-    List<Item> GetCraftingYield(Actor_Base actor);
-}
-
-public interface ISellingStation : IInventoryOwner
-{
-    bool IsActive { get; }
-    void IsStationActive(bool isSelling);
-}
-
-public class InventoryComponent
+[Serializable]
+public class InventoryData
 {
     public IInventoryOwner InventoryOwner;
-    public int Gold = 50;
-    public List<Item> Inventory;
+    public int Gold = 0;
+    public List<Item> Inventory = new();
 
-    public InventoryComponent(IInventoryOwner inventoryOwner, List<Item> inventory)
+    public InventoryData(IInventoryOwner inventoryOwner, List<Item> inventory)
     {
         InventoryOwner = inventoryOwner;
         Inventory = inventory;
@@ -98,12 +63,8 @@ public class InventoryComponent
             RemoveFromInventory(tempAddedItems);
             tempAddedItems.Clear();
 
-            InventoryOwner.UpdateInventoryDisplay();
-
             return false;
         }
-
-        InventoryOwner.UpdateInventoryDisplay();
 
         return true;
 
@@ -124,7 +85,7 @@ public class InventoryComponent
 
             return true;
         }
-        
+
         void addNewItems(int amountToAdd, Item item)
         {
             while (amountToAdd > 0)
@@ -180,14 +141,10 @@ public class InventoryComponent
             AddToInventory(tempRemovedItems);
             tempRemovedItems.Clear();
 
-            InventoryOwner.UpdateInventoryDisplay();
-
             Debug.Log("Couldn't remove all items.");
 
             return false;
         }
-
-        InventoryOwner.UpdateInventoryDisplay();
 
         return true;
 
@@ -221,7 +178,7 @@ public class InventoryComponent
         }
     }
 
-    public bool TransferItemFromInventory(InventoryComponent target, List<Item> items)
+    public bool TransferItemFromInventory(InventoryData target, List<Item> items)
     {
         if (!RemoveFromInventory(items))
         {
@@ -275,7 +232,7 @@ public class InventoryComponent
 
         bool dropItemsGroup()
         {
-            foreach(Item item in items)
+            foreach (Item item in items)
             {
                 Interactable_Item.CreateNewItem(item, dropPosition);
             }
@@ -326,32 +283,6 @@ public class InventoryComponent
             return true;
 
             //Later will have things like having available space, etc.
-        }
-    }
-}
-
-[Serializable]
-public class ActorInventory
-{
-    public IInventoryOwner InventoryOwner;
-    public int Gold = 0;
-    public List<DisplayItem> Inventory = new();
-
-    public void UpdateDisplayInventory(Actor_Base actor)
-    {
-        if (actor.InventoryComponent == null) return;
-
-        Gold = actor.InventoryComponent.Gold;
-        
-        Inventory.Clear();
-
-        foreach(Item item in actor.InventoryComponent.Inventory)
-        {
-            Inventory.Add(new DisplayItem(
-                itemID: item.CommonStats_Item.ItemID,
-                itemName: item.CommonStats_Item.ItemName,
-                itemQuantity: item.CommonStats_Item.CurrentStackSize
-                ));
         }
     }
 }

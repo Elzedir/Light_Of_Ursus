@@ -1,13 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using System.Collections;
+
 
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-public class Interactable_Puzzle : Interactable_Base
+public class Interactable_Puzzle : MonoBehaviour, IInteractable
 {
     public PuzzleSet PuzzleSet;
     public List<IceWallType> IceWallTypes;
@@ -16,20 +18,27 @@ public class Interactable_Puzzle : Interactable_Base
 
     BoxCollider2D _collider;
 
+    public float InteractRange {  get; private set; }
+
     protected virtual void Awake()
     {
         if (PuzzleData.PuzzleID == "") PuzzleData.PuzzleID = gameObject.name;
         _collider = GetComponent<BoxCollider2D>();
     }
 
-    public override void Interact(GameObject interactor)
+    public IEnumerator Interact(Actor_Base actor)
     {
-        base.Interact(interactor);
-
-        if (interactor.gameObject.TryGetComponent<Player>(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
+        if (actor.TryGetComponent(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
         { 
             Manager_Game.Instance.LoadScene("Puzzle", this); 
         }
+
+        yield break;
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
     public void CompletePuzzle()

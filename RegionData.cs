@@ -15,12 +15,18 @@ public class RegionData
 
     public string RegionDescription;
 
+    public DisplayProsperity Prosperity;
+
     public FactionName Faction;
     public List<CityData> AllCityData;
 
     public void InitialiseRegionData()
     {
-        foreach (var city in GetAllCitiesWithinBounds())
+        var region = Manager_Region.GetRegion(RegionID);
+
+        region.Initialise();
+
+        foreach (var city in region.AllCitiesInRegion)
         {
             if (!AllCityData.Any(c => c.CityID == city.CityData.CityID))
             {
@@ -36,27 +42,6 @@ public class RegionData
             AllCityData[i].InitialiseCityData(RegionID);
         }
     }
-
-    public List<CityComponent> GetAllCitiesWithinBounds()
-    {
-        BoxCollider regionArea = Manager_Region.GetRegion(RegionID).RegionArea;
-        Vector3 center = regionArea.transform.TransformPoint(regionArea.center);
-        Vector3 halfExtents = regionArea.size * 0.5f;
-        Quaternion orientation = regionArea.transform.rotation;
-
-        List<CityComponent> cityComponents = new List<CityComponent>();
-
-        foreach (var collider in Physics.OverlapBox(center, halfExtents, orientation))
-        {
-            CityComponent cityComponent = collider.GetComponent<CityComponent>();
-            if (cityComponent != null)
-            {
-                cityComponents.Add(cityComponent);
-            }
-        }
-
-        return cityComponents;
-    }
 }
 
 [CustomPropertyDrawer(typeof(RegionData))]
@@ -64,8 +49,8 @@ public class RegionData_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        var cityNameProp = property.FindPropertyRelative("RegionName");
-        label.text = !string.IsNullOrEmpty(cityNameProp.stringValue) ? cityNameProp.stringValue : "No Name";
+        var regionName = property.FindPropertyRelative("RegionName");
+        label.text = !string.IsNullOrEmpty(regionName.stringValue) ? regionName.stringValue : "Unnamed Region";
 
         EditorGUI.PropertyField(position, property, label, true);
     }

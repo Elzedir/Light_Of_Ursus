@@ -1,14 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Interactable_Test : Interactable_Base
+public class Interactable_Test : MonoBehaviour, IInteractable
 {
-    public override void Interact(GameObject interactor)
-    {
-        base.Interact(interactor);
+    public float InteractRange { get; private set; }
 
+    public IEnumerator Interact(Actor_Base actor)
+    {
         if (transform.name == "Sword")
         {
             TestEquipSword();
@@ -17,6 +18,13 @@ public class Interactable_Test : Interactable_Base
         {
             TestEquipShield();
         }
+
+        yield break;
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
     bool _swordEquipped = false;

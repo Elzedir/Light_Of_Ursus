@@ -7,86 +7,57 @@ using UnityEngine;
 
 public class Manager_Jobs : MonoBehaviour
 {
-    public static List<Job> AllJobs = new();
+    public static Dictionary<JobName, Job> AllJobs = new();
 
     public void OnSceneLoaded()
     {
         _initialiseJobs();
     }
 
-    public static Job GetJob(JobName jobName, Jobsite_Base jobsite)
+    public static Job GetJob(JobName jobName, JobsiteComponent jobsite)
     {
-        if (!AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException($"Job: {jobName} is not in AllJobs list");
+        if (!AllJobs.ContainsKey(jobName)) throw new ArgumentException($"Job: {jobName} is not in AllJobs list");
 
-        return new Job(AllJobs.FirstOrDefault(j => j.JobName == jobName), jobsite);
+        return new Job(AllJobs[jobName], jobsite);
     }
-
-    public static Interactable_Lumberjack_DropOffZone GetNearestDropOffZone(string taskObjectName, Actor_Base actor)
-    {
-        float radius = 100; // Change the distance to depend on the area somehow, later.
-        Interactable_Lumberjack_DropOffZone closestDropOffZone = null;
-        float closestDistance = float.MaxValue;
-
-        Collider[] colliders = Physics.OverlapSphere(actor.transform.position, radius);
-
-        foreach (Collider collider in colliders)
-        {
-            Interactable_Lumberjack_DropOffZone dropOffZone = collider.GetComponent<Interactable_Lumberjack_DropOffZone>();
-
-            if (dropOffZone == null) continue;
-
-            if (dropOffZone.name.Contains(taskObjectName))
-            {
-                float distance = Vector3.Distance(actor.transform.position, dropOffZone.transform.position);
-
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestDropOffZone = dropOffZone;
-                }
-            }
-        }
-
-        return closestDropOffZone;
-    }
-
 
     void _initialiseJobs()
     {
-        AllJobs.Add(_lumberjack());
-        AllJobs.Add(_smith());
+        AllJobs.Add(JobName.Lumberjack, _lumberjack());
+        AllJobs.Add(JobName.Smith, _smith());
     }
 
     Job _lumberjack()
     {
-        IEnumerator chopTrees(Actor_Base actor)
+        IEnumerator chopTrees(Actor_Base actor, JobsiteComponent jobsite)
         {
-            var nearestResource = Manager_ResourceGathering.GetNearestResource(ResourceStationName.Tree, actor.transform.position);
-            if (nearestResource == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
-            yield return actor.BasicMove(nearestResource.GetGatheringPosition());
-            yield return actor.GatheringComponent.GatherResource(nearestResource);
+            // If jobsite is null, then don't do anything unless there's an unowned jobsite
+            StationComponent_Resource nearestStation = jobsite.GetNearestResourceStationInJobsite(actor.transform.position, StationName.Tree);
+            if (nearestStation == null) { Debug.Log("NearestStation is null."); yield break; }
+            yield return actor.BasicMove(nearestStation.GetNearestOperatingAreaInStation(actor.transform.position));
+            yield return nearestStation.GatherResource(actor);
         }
 
-        IEnumerator processTrees(Actor_Base actor)
+        IEnumerator processTrees(Actor_Base actor, JobsiteComponent jobsite)
         {
-            var nearestCraftingStation = Manager_Crafting.GetNearestCraftingStation(craftingStationName: CraftingStationName.Sawmill, actor.transform.position);
-            if (nearestCraftingStation == null) { Debug.Log("NearestCraftingStation is null."); yield break; }
-            yield return actor.BasicMove(nearestCraftingStation.GetCraftingPosition());
-            yield return actor.CraftingComponent.CraftItemAll(RecipeName.Plank, nearestCraftingStation);
+            StationComponent_Crafter nearestStation = jobsite.GetNearestCraftingStationInJobsite(actor.transform.position, StationName.Sawmill);
+            if (nearestStation == null) { Debug.Log("NearestStation is null."); yield break; }
+            yield return actor.BasicMove(nearestStation.GetNearestOperatingAreaInStation(actor.transform.position));
+            yield return nearestStation.CraftItemAll(actor);
         }
 
-        IEnumerator dropOffWood(Actor_Base actor)
+        IEnumerator dropOffWood(Actor_Base actor, JobsiteComponent jobsite)
         {
-            var nearestDropOffZone = GetNearestDropOffZone("DropOffZone", actor);
+            var nearestDropOffZone = jobsite.GetNearestDropOffZone("DropOffZone", actor);
 
             yield return actor.BasicMove(nearestDropOffZone.transform.position);
 
-            yield return actor.InventoryComponent.TransferItemFromInventory(nearestDropOffZone.InventoryComponent, nearestDropOffZone.GetItemsToDropOff(actor));
+            yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestDropOffZone.Inventory, nearestDropOffZone.GetItemsToDropOff(actor));
 
             yield return new WaitForSeconds(1);
         }
 
-        IEnumerator sellWood(Actor_Base actor)
+        IEnumerator sellWood(Actor_Base actor, JobsiteComponent jobsite)
         {
             yield return null;
         }
@@ -129,7 +100,7 @@ public class Manager_Jobs : MonoBehaviour
 
     Job _smith()
     {
-        IEnumerator smith(Actor_Base actor = null)
+        IEnumerator smith(Actor_Base actor, JobsiteComponent jobsite)
         {
             if (actor == null) throw new ArgumentException("Actor is null;");
 
@@ -179,19 +150,20 @@ public class Job
 {
     public JobName JobName;
     public string JobDescription;
-    public Jobsite_Base Jobsite;
+    public JobsiteComponent Jobsite;
     public List<Task> JobTasks = new();
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
     {
-        if (Manager_Jobs.AllJobs.Any(j => j.JobName == jobName)) throw new ArgumentException("JobName already exists.");
+        if (Manager_Jobs.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
 
         JobName = jobName;
         JobDescription = jobDescription;
+        Jobsite = null;
         JobTasks = jobTasks;
     }
 
-    public Job(Job job, Jobsite_Base jobsite)
+    public Job(Job job, JobsiteComponent jobsite)
     {
         JobName = job.JobName;
         JobDescription = job.JobDescription;
@@ -203,7 +175,7 @@ public class Job
     {
         foreach(Task task in JobTasks)
         {
-            yield return Manager_Game.Instance.StartCoroutine(task.GetTaskAction(actor));
+            yield return task.GetTaskAction(actor, Jobsite);
         }
     }
 }
@@ -232,12 +204,11 @@ public class Task
 
     public JobName JobName;
 
-    public Interactable_Lumberjack_DropOffZone TaskArea;
     public List<AnimationClip> TaskAnimationClips;
 
-    public Func<Actor_Base, IEnumerator> TaskAction;
+    public Func<Actor_Base, JobsiteComponent, IEnumerator> TaskAction;
 
-    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, IEnumerator> taskAction)
+    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, JobsiteComponent, IEnumerator> taskAction)
     {
         TaskName = taskName;
         TaskDescription = taskDescription;
@@ -249,8 +220,8 @@ public class Task
         TaskAction = taskAction;
     }
 
-    public IEnumerator GetTaskAction(Actor_Base actor)
+    public IEnumerator GetTaskAction(Actor_Base actor, JobsiteComponent jobsite)
     {
-        return TaskAction(actor);
+        return TaskAction(actor, jobsite);
     }
 }

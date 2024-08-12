@@ -3,9 +3,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Interactable_Item : Interactable_Base
+public class Interactable_Item : MonoBehaviour, IInteractable
 {
     public Item Item;
+
+    public float InteractRange { get; private set; }
+
+    public IEnumerator Interact(Actor_Base actor)
+    {
+        if (Item == null) throw new ArgumentException("Item has not been initialised");
+
+        if (!actor.Inventory.AddToInventory(new List<Item> { Item }))
+        {
+            Debug.Log("Couldn't pick up item.");
+
+            yield break;
+        }
+
+        //Destroy(this);
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
+    }
 
     public static void CreateNewItem(Item item, Vector3 dropPosition)
     {
@@ -30,21 +51,5 @@ public class Interactable_Item : Interactable_Base
         {
             Item.VisualStats_Item.DisplayVisuals(gameObject);
         }
-    }
-
-    public override IEnumerator Interact(Actor_Base actor)
-    {
-        base.Interact(actor.gameObject);
-
-        if (Item == null) throw new ArgumentException("Item has not been initialised");
-
-        if (!actor.InventoryComponent.AddToInventory(new List<Item> { Item }))
-        {
-            Debug.Log("Couldn't pick up item.");
-
-            yield break;
-        }
-
-        //Destroy(this);
     }
 }

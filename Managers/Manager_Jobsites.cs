@@ -1,47 +1,66 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
-public class Manager_Jobsites
+public class Manager_Jobsites : MonoBehaviour
 {
-    public static Dictionary<CityComponent, ExistingJobsiteData> AllExistingJobsites;
+    public static AllRegions_SO AllRegions;
 
-    public static void Initialise()
+    public static Dictionary<int, JobsiteComponent> AllJobsiteComponents;
+
+    public void OnSceneLoaded()
     {
-        // Initialise before Jobsite_Base
+        AllRegions = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
+
+        Manager_Initialisation.OnInitialiseManagerJobsite += _initialise;
     }
 
-    static void _testCity()
+    void _initialise()
     {
-        var testCity = GameObject.Find("Test_City").GetComponent<CityComponent>();
-
-        AllExistingJobsites.Add(testCity, 
-            new ExistingJobsiteData(
-                city: testCity,
-                ownerActorID: -1,
-                allEmployees: new()
-                ));
+        foreach (var jobsite in _findAllJobsiteComponents())
+        {
+            AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
+        }
     }
 
-    public static ExistingJobsiteData GetJobsiteData(CityComponent city)
+    static List<JobsiteComponent> _findAllJobsiteComponents()
     {
-        if (!AllExistingJobsites.ContainsKey(city)) throw new ArgumentException($"City: {city.name} does not exist in AllExistingJobsites.");
-
-        return AllExistingJobsites[city];
+        return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .OfType<JobsiteComponent>()
+            .ToList();
     }
-}
 
-public class ExistingJobsiteData
-{
-    public CityComponent City;
-    public int OwnerActorID;
-    public Dictionary<Actor_Base, EmployeePosition> AllEmployees;
-
-    public ExistingJobsiteData(CityComponent city, int ownerActorID, Dictionary<Actor_Base, EmployeePosition> allEmployees)
+    public static void AddToOrUpdateAllJobsiteList(int cityID, JobsiteData jobsiteData)
     {
-        City = city;
-        OwnerActorID = ownerActorID;
-        AllEmployees = allEmployees;
+        AllRegions.AddToOrUpdateAllJobsiteDataList(cityID, jobsiteData);
+    }
+
+    public static JobsiteData GetJobsiteDataFromID(int cityID, int jobsiteID)
+    {
+        return AllRegions.GetJobsiteDataFromID(cityID, jobsiteID);
+    }
+
+    public static JobsiteComponent GetJobsite(int jobsiteID)
+    {
+        return AllJobsiteComponents[jobsiteID];
+    }
+
+    public static void GetNearestJobsite(Vector3 position, out JobsiteComponent nearestJobsite)
+    {
+        nearestJobsite = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (var jobsite in AllJobsiteComponents)
+        {
+            float distance = Vector3.Distance(position, jobsite.Value.transform.position);
+
+            if (distance < nearestDistance)
+            {
+                nearestJobsite = jobsite.Value;
+                nearestDistance = distance;
+            }
+        }
     }
 }

@@ -120,21 +120,6 @@ public class Manager_Item
 }
 
 [Serializable]
-public class DisplayItem
-{
-    public int ItemID;
-    public string ItemName;
-    public int ItemQuantity;
-
-    public DisplayItem(int itemID, string itemName, int itemQuantity)
-    {
-        ItemID = itemID;
-        ItemName = itemName;
-        ItemQuantity = itemQuantity;
-    }
-}
-
-[Serializable]
 public class Item
 {
     public CommonStats_Item CommonStats_Item { get; private set; }

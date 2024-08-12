@@ -1,58 +1,64 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
-public enum EmployeePosition
+public enum JobsiteName
 {
     None,
 
-    Owner,
-
-    Shopkeeper,
-
-    Chief_Lumberjack,
-    Logger,
-    Assistant_Logger,
-
-    Sawyer,
-    Assistant_Sawyer,
-
-    Assistant_Smith,
+    Logging_Yard,
+    Smithy
 }
 
-public class Jobsite_Base : MonoBehaviour
+[Serializable]
+public class JobsiteData
 {
+    public int JobsiteID;
+    public JobsiteName JobsiteName;
+    public int CityID;
+
+    public bool JobsiteIsActive = true;
+
+    public string JobsiteDescription;
+
     public Actor_Base Owner;
 
-    public CityComponent City;
-
-    public bool IsActive = true;
-
-    public Dictionary<Actor_Base, EmployeePosition> AllEmployees;
+    public Dictionary<Actor_Base, List<EmployeePosition>> AllEmployees;
     public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions;
-    public BoxCollider JobsiteArea;
 
-    public virtual void Initialise(CityComponent city)
+    public DisplayPopulation Population;
+    public DisplayProsperity Prosperity;
+
+    public List<StationData> AllStationData;
+
+    public bool OverwriteDataInJobsiteFromEditor = false;
+
+    public void InitialiseJobsiteData(int cityID)
     {
-        City = city;
+        CityID = cityID;
 
-        JobsiteArea = GetComponent<BoxCollider>();
-        AllEmployees = new();
-        AllJobPositions = new();
+        var jobsite = Manager_Jobsites.GetJobsite(JobsiteID);
 
-        Manager_Initialisation.OnInitialiseJobsites += _initialise;
-    }
+        jobsite.Initialise();
 
-    protected virtual void _initialise()
-    {
-        UnpackJobsiteData();
-    }
+        foreach (var station in jobsite.AllStationsInJobsite)
+        {
+            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
+            {
+                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
+                AllStationData.Add(station.StationData);
+            }
 
-    public void UnpackJobsiteData()
-    {
-        //Manager_Jobsites.GetJobsiteData(City);
+            station.SetStationData(Manager_Station.GetStationDataFromID(JobsiteID, station.StationData.StationID));
+        }
+
+        for (int i = 0; i < AllStationData.Count; i++)
+        {
+            AllStationData[i].InitialiseStationData(JobsiteID);
+        }
     }
 
     public void SetOwner(Actor_Base owner)
@@ -66,11 +72,11 @@ public class Jobsite_Base : MonoBehaviour
 
         // And change all affected things, like perks, job settings, etc.
     }
-
+    
     public void GetNewOwner()
     {
         if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.ActorID} - {Owner.ActorData.ActorName} ");
-        
+
         if (_findEmployeeFromCity(EmployeePosition.Owner, out Actor_Base newOwner))
         {
             Debug.Log("Found owner");
@@ -80,7 +86,7 @@ public class Jobsite_Base : MonoBehaviour
         for (int i = 0; i < 3; i++)
         {
             Debug.Log($"{Owner}");
-         
+
             if (Owner != null)
             {
                 Debug.Log($"Returned");
@@ -99,7 +105,7 @@ public class Jobsite_Base : MonoBehaviour
 
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        var citizen = City.CityData.Population.AllCitizens
+        var citizen = Manager_City.GetCity(CityID).CityData.Population.AllCitizens
             .FirstOrDefault(c => c.ActorData.CareerAndJobs.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
                     c.ActorData,
@@ -118,11 +124,13 @@ public class Jobsite_Base : MonoBehaviour
 
     protected Actor_Base _generateNewEmployee(EmployeePosition position)
     {
+        CityComponent city = Manager_City.GetCity(CityID);
+
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
-        var actor = Manager_Actor.SpawnActor(City.CityEntranceSpawnZone.transform.position);
+        var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
-        City.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
+        city.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
 
         return actor;
     }
@@ -152,15 +160,15 @@ public class Jobsite_Base : MonoBehaviour
 
         if (AllEmployees.ContainsKey(employee))
         {
-            if (AllEmployees[employee] == position) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
+            if (AllEmployees[employee].Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
             else
             {
-                AllEmployees[employee] = position;
+                AllEmployees[employee].Add(position);
                 return;
             }
         }
 
-        AllEmployees.Add(employee, position);
+        AllEmployees.Add(employee, new List<EmployeePosition> { position });
     }
 
     public void HireEmployee(Actor_Base employee, EmployeePosition position)
@@ -219,8 +227,56 @@ public class Jobsite_Base : MonoBehaviour
         AllJobPositions.Remove(employeePosition);
     }
 
-    public void SetIsActive(bool isActive)
+    public void SetJobsiteIsActive(bool jobsiteIsActive)
     {
-        IsActive = isActive;
+        JobsiteIsActive = jobsiteIsActive;
+    }
+
+    public void AllocateJobPositions()
+    {
+        //foreach (var position in AllStationData.SelectMany(station => station.EmployeePositions).Where(position => !AllJobPositions.ContainsKey(position)).Distinct())
+        //{
+        //    AllJobPositions[position] = new();
+        //}
+    }
+
+    public void FillJobPositions()
+    {
+        foreach (var position in AllJobPositions.Where(position => position.Value.Count == 0).ToList())
+        {
+            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor))
+            {
+                Debug.Log($"Actor {actor} is null and therefore new employee generated");
+                actor = _generateNewEmployee(position.Key);
+            }
+
+            if (!AllJobPositions.ContainsKey(position.Key))
+            {
+                AllJobPositions[position.Key] = new List<Actor_Base>();
+            }
+
+            AllJobPositions[position.Key].Add(actor);
+            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, Manager_Jobsites.GetJobsite(JobsiteID));
+        }
+    }
+}
+
+[CustomPropertyDrawer(typeof(JobsiteData))]
+public class JobsiteData_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        var jobsiteNameProp = property.FindPropertyRelative("JobsiteName");
+        string jobsiteName = ((JobsiteName)jobsiteNameProp.enumValueIndex).ToString();
+
+        label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
+
     }
 }

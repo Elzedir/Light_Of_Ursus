@@ -20,9 +20,31 @@ public class CityData
 
     public DisplayCareers Careers;
 
+    public List<JobsiteData> AllJobsiteData;
+
     public void InitialiseCityData(int regionID)
     {
-        Manager_City.GetCity(CityID).Initialise();
+        RegionID = regionID;
+
+        var city = Manager_City.GetCity(CityID);
+            
+        city.Initialise();
+
+        foreach (var jobsite in city.AllJobsitesInCity)
+        {
+            if (!AllJobsiteData.Any(j => j.JobsiteID == jobsite.JobsiteData.JobsiteID))
+            {
+                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID} with ID: {jobsite.JobsiteData.JobsiteID} was not in AllJobsiteData");
+                AllJobsiteData.Add(jobsite.JobsiteData);
+            }
+
+            jobsite.SetJobsiteData(Manager_Jobsites.GetJobsiteDataFromID(CityID, jobsite.JobsiteData.JobsiteID));
+        }
+
+        for (int i = 0; i < AllJobsiteData.Count; i++)
+        {
+            AllJobsiteData[i].InitialiseJobsiteData(CityID);
+        }
     }
 }
 
@@ -62,10 +84,10 @@ public class DisplayCareer
 [Serializable]
 public class DisplayJobsite
 {
-    public Jobsite_Base Jobsite;
+    public JobsiteComponent Jobsite;
     public List<DisplayCitizen> Employees;
 
-    public DisplayJobsite(Jobsite_Base jobsite, List<DisplayCitizen> employees)
+    public DisplayJobsite(JobsiteComponent jobsite, List<DisplayCitizen> employees)
     {
         Jobsite = jobsite;
         Employees = employees;
@@ -141,8 +163,8 @@ public class CityData_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        var cityNameProp = property.FindPropertyRelative("CityName");
-        label.text = !string.IsNullOrEmpty(cityNameProp.stringValue) ? cityNameProp.stringValue : "No Name";
+        var cityName = property.FindPropertyRelative("CityName");
+        label.text = !string.IsNullOrEmpty(cityName.stringValue) ? cityName.stringValue : "Unnamed City";
 
         EditorGUI.PropertyField(position, property, label, true);
     }
@@ -158,8 +180,8 @@ public class DisplayCitizen_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        var cityNameProp = property.FindPropertyRelative("CitizenName");
-        label.text = !string.IsNullOrEmpty(cityNameProp.stringValue) ? cityNameProp.stringValue : "No Name";
+        var citizenName = property.FindPropertyRelative("CitizenName");
+        label.text = !string.IsNullOrEmpty(citizenName.stringValue) ? citizenName.stringValue : "Unnamed Citizen";
 
         EditorGUI.PropertyField(position, property, label, true);
     }

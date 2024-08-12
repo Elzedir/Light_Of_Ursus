@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Security.Cryptography;
 using UnityEngine;
 
-public class Actor_Base : MonoBehaviour, IInventoryActor
+public class Actor_Base : MonoBehaviour
 {
     [SerializeField] ActorData _actorData;
     public ActorData ActorData { get { return _actorData; } private set { _actorData = value; } }
@@ -16,7 +16,6 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public MeshRenderer ActorMaterial { get; protected set; }
     public Animator ActorAnimator { get; protected set; }
     public Animation ActorAnimation { get; protected set; }
-    public InventoryComponent InventoryComponent { get; protected set; }
     public EquipmentComponent EquipmentComponent { get; protected set; }
     public CraftingComponent CraftingComponent { get; protected set; }
     public VocationComponent VocationComponent { get; protected set; }
@@ -54,16 +53,14 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
         ActorMesh = GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
         ActorMaterial = GetComponent<MeshRenderer>() ?? gameObject.AddComponent<MeshRenderer>();
         EquipmentComponent = new EquipmentComponent(this);
-        InventoryComponent = new InventoryComponent(this, new List<Item>());
 
         if (ActorData == null) throw new ArgumentException("ActorData doesn't exist");
 
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
 
-        CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Crafting.GetRecipe(RecipeName.Plank) });
+        CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Recipe.GetRecipe(RecipeName.Plank) });
         VocationComponent = new VocationComponent(this, new());
-        GatheringComponent = new GatheringComponent(this);
         PersonalityComponent = new PersonalityComponent(this, ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
         UpdateVisuals();
@@ -77,11 +74,6 @@ public class Actor_Base : MonoBehaviour, IInventoryActor
     public void InitialiseInventoryComponent()
     {
         
-    }
-
-    public void UpdateInventoryDisplay()
-    {
-        ActorData.InventoryAndEquipment.ActorInventory.UpdateDisplayInventory(this);
     }
 
     public void UpdateVisuals()

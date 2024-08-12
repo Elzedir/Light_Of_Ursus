@@ -5,9 +5,11 @@ using UnityEngine;
 
 public class Manager_Initialisation
 {
-    public static event Action OnInitialiseAllRegionSO;
     public static event Action OnInitialiseManagerRegion;
     public static event Action OnInitialiseManagerCity;
+    public static event Action OnInitialiseManagerJobsite;
+    public static event Action OnInitialiseManagerStation;
+    public static event Action OnInitialiseAllRegionSO;
     public static event Action OnInitialiseAllActorSO;
     public static event Action OnInitialiseActors;
     public static event Action OnInitialiseManagerActor;
@@ -17,6 +19,8 @@ public class Manager_Initialisation
     {
         OnInitialiseManagerRegion?.Invoke();
         OnInitialiseManagerCity?.Invoke();
+        OnInitialiseManagerJobsite?.Invoke();
+        OnInitialiseManagerStation?.Invoke();
         OnInitialiseAllRegionSO?.Invoke();
     }
 
