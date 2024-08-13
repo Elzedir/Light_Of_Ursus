@@ -7,10 +7,10 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "AllActors_SO", menuName = "SOList/AllActors_SO")]
 public class AllActors_SO : ScriptableObject
 {
+    public List<ActorData> AllActorData;
+
     public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
     public int LastUnusedActorID = 0;
-
-    public List<ActorData> AllActorData;
 
     // For now, save all data of every actor to this list, but later find a better way to save the info as thousands
     // or tens of thousands of actors would become too much and inefficient.
@@ -42,7 +42,8 @@ public class AllActors_SO : ScriptableObject
         {
             if (!AllActorData.Any(a => a.ActorID == actor.ActorData.ActorID))
             {
-                Debug.Log($"Actor: {actor.ActorData.ActorName} with ID: {actor.ActorData.ActorID} was not in AllActorData");
+                Debug.Log($"Actor: {actor.ActorData.ActorName.GetName()} with ID: {actor.ActorData.ActorID} was not in AllActorData");
+
                 AllActorData.Add(actor.ActorData);
             }
         }
@@ -56,6 +57,7 @@ public class AllActors_SO : ScriptableObject
     void _addAddAllEditorActorIDs()
     {
         AllActorIDs.Clear();
+        LastUnusedActorID = 0;
 
         foreach (var actorData in AllActorData)
         {
@@ -76,7 +78,7 @@ public class AllActors_SO : ScriptableObject
         else AllActorData[AllActorData.IndexOf(existingActor)] = actorData;
     }
 
-    public ActorData GetActorDataFromID(int actorID)
+    public ActorData GetActorData(int actorID)
     {
         if (!AllActorData.Any(a => a.ActorID == actorID)) { Debug.Log($"AllActorData does not contain ActorID: {actorID}"); return null; }
 
@@ -106,14 +108,19 @@ public class AllActorsSOEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
-
         AllActors_SO myScript = (AllActors_SO)target;
+
+        SerializedProperty allActorDataProp = serializedObject.FindProperty("AllActorData");
+        EditorGUILayout.PropertyField(allActorDataProp, true);
 
         if (GUILayout.Button("Clear Actor Data"))
         {
             myScript.ClearActorData();
             EditorUtility.SetDirty(myScript);
         }
+
+        DrawPropertiesExcluding(serializedObject, "AllActorData");
+
+        serializedObject.ApplyModifiedProperties();
     }
 }

@@ -15,8 +15,8 @@ public class Player : Controller, IDataPersistence
     Animation _animation;
     bool _moved;
     RaycastHit2D _hit;
-    public Interactable_Base ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
-    List<Interactable_Base> _interactableObjects = new();
+    public IInteractable ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
+    List<IInteractable> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
     bool _aim = false;
     Vector2 _move;
@@ -282,38 +282,34 @@ public class Player : Controller, IDataPersistence
 
         if (context.performed)
         {
-            ClosestInteractableObject.Interact(gameObject);
+            ClosestInteractableObject.Interact(_actor);
         }
     }
 
     public void TargetCheck()
     {
         float closestDistance = float.PositiveInfinity;
+        IInteractable closestInteractable = null;
+
         Collider[] triggerHits = Physics.OverlapSphere(transform.position, 100);
 
         foreach (Collider hit in triggerHits)
         {
             if (hit.gameObject == null) continue;
 
-            if (hit.gameObject.TryGetComponent<Interactable_Base>(out Interactable_Base interactable))
+            if (hit.gameObject.TryGetComponent(out IInteractable interactable))
             {
-                _interactableObjects.Add(interactable);
-            }
-        }
-
-        foreach (Interactable_Base interactable in _interactableObjects)
-        {
-            if (interactable != null)
-            {
-                float targetDistance = Vector3.Distance(transform.position, interactable.transform.position);
+                float targetDistance = Vector3.Distance(transform.position, hit.transform.position);
 
                 if (targetDistance < closestDistance)
                 {
                     closestDistance = targetDistance;
-                    ClosestInteractableObject = interactable;
+                    closestInteractable = interactable;
                 }
             }
         }
+
+        ClosestInteractableObject = closestInteractable;
     }
 
     public IEnumerator PickUpStaffAction()

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,13 +25,11 @@ public class StationComponent_Resource : StationComponent
 
     protected virtual IEnumerator _gather()
     {
-        yield return new WaitForSeconds(1);
+        throw new ArgumentException("Cannot use base class.");
     }
 
     protected virtual List<Item> _getResourceYield(Actor_Base actor)
     {
-        return new List<Item> { Manager_Item.GetItem(1100, 3) }; // For now
-
-        // Base resource yield on actor relevant skill
+        throw new ArgumentException("Cannot use base class.");
     }
 }

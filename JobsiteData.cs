@@ -24,10 +24,11 @@ public class JobsiteData
 
     public string JobsiteDescription;
 
-    public Actor_Base Owner;
+    public string OwnerName;
+    Actor_Base _owner;
 
-    public Dictionary<Actor_Base, List<EmployeePosition>> AllEmployees;
-    public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions;
+    public Dictionary<Actor_Base, List<EmployeePosition>> AllEmployees = new();
+    public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions = new();
 
     public DisplayPopulation Population;
     public DisplayProsperity Prosperity;
@@ -40,11 +41,11 @@ public class JobsiteData
     {
         CityID = cityID;
 
-        var jobsite = Manager_Jobsites.GetJobsite(JobsiteID);
+        var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
 
         jobsite.Initialise();
 
-        foreach (var station in jobsite.AllStationsInJobsite)
+        foreach (var station in jobsite.AllResourceStationsInJobsite)
         {
             if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
             {
@@ -52,51 +53,61 @@ public class JobsiteData
                 AllStationData.Add(station.StationData);
             }
 
-            station.SetStationData(Manager_Station.GetStationDataFromID(JobsiteID, station.StationData.StationID));
+            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
+        }
+
+        foreach (var station in jobsite.AllCraftingStationsInJobsite)
+        {
+            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
+            {
+                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
+                AllStationData.Add(station.StationData);
+            }
+
+            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
         }
 
         for (int i = 0; i < AllStationData.Count; i++)
         {
             AllStationData[i].InitialiseStationData(JobsiteID);
         }
+
+        SetOwner(null);
+        GetAllJobsitePositions();
+        FillAllJobsitePositions();
     }
 
     public void SetOwner(Actor_Base owner)
     {
-        Owner = owner;
+        _owner = owner ?? GetNewOwner();
 
-        if (Owner == null)
-        {
-            GetNewOwner();
-        }
+        OwnerName = _owner.ActorData.ActorName.GetName();
 
         // And change all affected things, like perks, job settings, etc.
     }
     
-    public void GetNewOwner()
+    public Actor_Base GetNewOwner()
     {
-        if (Owner != null) throw new ArgumentException($"Already has owner: {Owner.ActorData.ActorID} - {Owner.ActorData.ActorName} ");
+        if (_owner != null) throw new ArgumentException($"Already has owner: {_owner.ActorData.ActorID} - {_owner.ActorData.ActorName} ");
 
         if (_findEmployeeFromCity(EmployeePosition.Owner, out Actor_Base newOwner))
         {
-            Debug.Log("Found owner");
-            Owner = newOwner;
+            _owner = newOwner;
         }
 
         for (int i = 0; i < 3; i++)
         {
-            Debug.Log($"{Owner}");
-
-            if (Owner != null)
+            if (_owner != null)
             {
-                Debug.Log($"Returned");
-                return;
+                break;
             }
 
-            Owner = _generateNewEmployee(EmployeePosition.Owner);
+            _owner = _generateNewEmployee(EmployeePosition.Owner);
         }
 
-        Debug.Log("Couldn't generate new owner.");
+        if (_owner == null) Debug.Log("Couldn't generate new owner.");
+
+        return _owner;
     }
 
     protected bool _findEmployeeFromCity(EmployeePosition position, out Actor_Base actor)
@@ -112,7 +123,7 @@ public class JobsiteData
                     vocationAndExperience.Vocation,
                     vocationAndExperience.minimumExperienceRequired));
 
-        // Eventually change from FirstOrDefault to either random selection or highest score, maybe depending on ruler.
+        // Eventually change from FirstOrDefault to either random selection or highest score, maybe depending on ruler's personality or succession.
 
         if (citizen != null)
         {
@@ -232,31 +243,24 @@ public class JobsiteData
         JobsiteIsActive = jobsiteIsActive;
     }
 
-    public void AllocateJobPositions()
+    public void GetAllJobsitePositions()
     {
-        //foreach (var position in AllStationData.SelectMany(station => station.EmployeePositions).Where(position => !AllJobPositions.ContainsKey(position)).Distinct())
-        //{
-        //    AllJobPositions[position] = new();
-        //}
+        AllStationData
+        .SelectMany(station => Manager_Station.GetStation(station.StationID)?.AllowedEmployeePositions ?? new List<EmployeePosition> { EmployeePosition.None })
+        .Distinct()
+        .Where(position => !AllJobPositions.ContainsKey(position))
+        .ToList()
+        .ForEach(position => AllJobPositions[position] = new List<Actor_Base>());
     }
 
-    public void FillJobPositions()
+    public void FillAllJobsitePositions()
     {
         foreach (var position in AllJobPositions.Where(position => position.Value.Count == 0).ToList())
         {
-            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor))
-            {
-                Debug.Log($"Actor {actor} is null and therefore new employee generated");
-                actor = _generateNewEmployee(position.Key);
-            }
-
-            if (!AllJobPositions.ContainsKey(position.Key))
-            {
-                AllJobPositions[position.Key] = new List<Actor_Base>();
-            }
+            var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
 
             AllJobPositions[position.Key].Add(actor);
-            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, Manager_Jobsites.GetJobsite(JobsiteID));
+            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, Manager_Jobsite.GetJobsite(JobsiteID));
         }
     }
 }

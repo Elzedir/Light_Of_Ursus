@@ -20,6 +20,21 @@ public class Manager_City : MonoBehaviour
         foreach (var city in _findAllCityComponents())
         {
             AllCityComponents.Add(city.CityData.CityID, city);
+
+            // Replace with this soon
+
+            //if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
+
+            //if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
+            //else
+            //{
+            //    if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
+            //    else
+            //    {
+            //        Debug.LogError($"JobsiteID {jobsite.JobsiteData.JobsiteID} and name {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
+            //        jobsite.JobsiteData.JobsiteID = GetRandomJobsiteID();
+            //    }
+            //}
         }
     }
 
@@ -35,9 +50,9 @@ public class Manager_City : MonoBehaviour
         AllRegions.AddToOrUpdateAllCityDataList(regionID, cityData);
     }
 
-    public static CityData GetCityDataFromID(int regionID, int cityID)
+    public static CityData GetCityData(int regionID, int cityID)
     {
-        return AllRegions.GetCityDataFromID(regionID, cityID);
+        return AllRegions.GetCityData(regionID, cityID);
     }
 
     public static CityComponent GetCity(int cityID)
@@ -60,5 +75,10 @@ public class Manager_City : MonoBehaviour
                 nearestDistance = distance;
             }
         }
+    }
+
+    public static int GetRandomCityID()
+    {
+        return AllRegions.GetRandomCityID();
     }
 }

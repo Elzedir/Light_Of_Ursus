@@ -23,6 +23,21 @@ public class Manager_Region : MonoBehaviour
         foreach (var region in _findAllRegionComponents())
         {
             AllRegionComponents.Add(region.RegionData.RegionID, region);
+
+            // Replace with this soon
+
+            //if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
+
+            //if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
+            //else
+            //{
+            //    if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
+            //    else
+            //    {
+            //        Debug.LogError($"JobsiteID {jobsite.JobsiteData.JobsiteID} and name {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
+            //        jobsite.JobsiteData.JobsiteID = GetRandomJobsiteID();
+            //    }
+            //}
         }
     }
 
@@ -38,9 +53,9 @@ public class Manager_Region : MonoBehaviour
         AllRegions.AddToOrUpdateAllRegionDataList(regionData);
     }
 
-    public static RegionData GetRegionDataFromID(int regionID)
+    public static RegionData GetRegionData(int regionID)
     {
-        return AllRegions.GetRegionDataFromID(regionID);
+        return AllRegions.GetRegionData(regionID);
     }
 
     public static RegionComponent GetRegion(int regionID)
@@ -63,5 +78,10 @@ public class Manager_Region : MonoBehaviour
                 nearestDistance = distance;
             }
         }
+    }
+
+    public static int GetRandomRegionID()
+    {
+        return AllRegions.GetRandomRegionID();
     }
 }

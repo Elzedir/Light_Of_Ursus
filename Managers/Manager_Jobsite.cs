@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Manager_Jobsites : MonoBehaviour
+public class Manager_Jobsite : MonoBehaviour
 {
     public static AllRegions_SO AllRegions;
 
-    public static Dictionary<int, JobsiteComponent> AllJobsiteComponents;
+    public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
 
     public void OnSceneLoaded()
     {
@@ -21,7 +21,18 @@ public class Manager_Jobsites : MonoBehaviour
     {
         foreach (var jobsite in _findAllJobsiteComponents())
         {
-            AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
+            if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
+
+            if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
+            else
+            {
+                if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
+                else
+                {
+                    Debug.LogError($"JobsiteID {jobsite.JobsiteData.JobsiteID} and name {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
+                    jobsite.JobsiteData.JobsiteID = GetRandomJobsiteID();
+                }
+            }
         }
     }
 
@@ -37,9 +48,9 @@ public class Manager_Jobsites : MonoBehaviour
         AllRegions.AddToOrUpdateAllJobsiteDataList(cityID, jobsiteData);
     }
 
-    public static JobsiteData GetJobsiteDataFromID(int cityID, int jobsiteID)
+    public static JobsiteData GetJobsiteData(int cityID, int jobsiteID)
     {
-        return AllRegions.GetJobsiteDataFromID(cityID, jobsiteID);
+        return AllRegions.GetJobsiteData(cityID, jobsiteID);
     }
 
     public static JobsiteComponent GetJobsite(int jobsiteID)
@@ -62,5 +73,10 @@ public class Manager_Jobsites : MonoBehaviour
                 nearestDistance = distance;
             }
         }
+    }
+
+    public static int GetRandomJobsiteID()
+    {
+        return AllRegions.GetRandomJobsiteID();
     }
 }

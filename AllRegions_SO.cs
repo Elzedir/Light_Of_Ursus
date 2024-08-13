@@ -47,7 +47,7 @@ public class AllRegions_SO : ScriptableObject
                 AllRegionData.Add(region.RegionData);
             }
 
-            region.SetRegionData(GetRegionDataFromID(region.RegionData.RegionID));
+            region.SetRegionData(GetRegionData(region.RegionData.RegionID));
         }
 
         for (int i = 0; i < AllRegionData.Count; i++)
@@ -97,7 +97,7 @@ public class AllRegions_SO : ScriptableObject
         else AllRegionData[AllRegionData.IndexOf(existingRegion)] = regionData;
     }
 
-    public RegionData GetRegionDataFromID(int regionID)
+    public RegionData GetRegionData(int regionID)
     {
         if (!AllRegionData.Any(r => r.RegionID == regionID)) { Debug.Log($"AllRegionData does not contain RegionID: {regionID}"); return null; }
 
@@ -126,7 +126,7 @@ public class AllRegions_SO : ScriptableObject
         else allCityData[allCityData.IndexOf(existingCity)] = cityData;
     }
 
-    public CityData GetCityDataFromID(int regionID, int cityID)
+    public CityData GetCityData(int regionID, int cityID)
     {
         var allCityData = Manager_Region.GetRegion(regionID).RegionData.AllCityData;
 
@@ -157,7 +157,7 @@ public class AllRegions_SO : ScriptableObject
         else allJobsiteData[allJobsiteData.IndexOf(existingJobsite)] = jobsiteData;
     }
 
-    public JobsiteData GetJobsiteDataFromID(int cityID, int jobsiteID)
+    public JobsiteData GetJobsiteData(int cityID, int jobsiteID)
     {
         var allJobsiteData = Manager_City.GetCity(cityID).CityData.AllJobsiteData;
 
@@ -179,7 +179,7 @@ public class AllRegions_SO : ScriptableObject
     }
     public void AddToOrUpdateAllStationDataList(int jobsiteID, StationData stationData)
     {
-        var allStationData = Manager_Jobsites.GetJobsite(jobsiteID).JobsiteData.AllStationData;
+        var allStationData = Manager_Jobsite.GetJobsite(jobsiteID).JobsiteData.AllStationData;
 
         var existingStation = allStationData.FirstOrDefault(s => s.StationID == stationData.StationID);
 
@@ -187,9 +187,9 @@ public class AllRegions_SO : ScriptableObject
         else allStationData[allStationData.IndexOf(existingStation)] = stationData;
     }
 
-    public StationData GetStationDataFromID(int jobsiteID, int stationID)
+    public StationData GetStationData(int jobsiteID, int stationID)
     {
-        var allStationData = Manager_Jobsites.GetJobsite(jobsiteID).JobsiteData.AllStationData;
+        var allStationData = Manager_Jobsite.GetJobsite(jobsiteID).JobsiteData.AllStationData;
 
         if (!allStationData.Any(s => s.StationID == stationID)) { Debug.Log($"AllStationData does not contain StationID: {stationID}"); return null; }
 
@@ -219,14 +219,19 @@ public class AllRegionsSOEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
-
         AllRegions_SO myScript = (AllRegions_SO)target;
+
+        SerializedProperty allRegionDataProp = serializedObject.FindProperty("AllRegionData");
+        EditorGUILayout.PropertyField(allRegionDataProp, true);
 
         if (GUILayout.Button("Clear Region Data"))
         {
             myScript.ClearRegionData();
             EditorUtility.SetDirty(myScript);
         }
+
+        DrawPropertiesExcluding(serializedObject, "AllRegionData");
+
+        serializedObject.ApplyModifiedProperties();
     }
 }

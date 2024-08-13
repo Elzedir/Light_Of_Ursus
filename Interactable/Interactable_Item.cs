@@ -9,11 +9,21 @@ public class Interactable_Item : MonoBehaviour, IInteractable
 
     public float InteractRange { get; private set; }
 
+    public void SetInteractRange(float interactRange)
+    {
+        InteractRange = interactRange;
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
+    }
+
     public IEnumerator Interact(Actor_Base actor)
     {
         if (Item == null) throw new ArgumentException("Item has not been initialised");
 
-        if (!actor.Inventory.AddToInventory(new List<Item> { Item }))
+        if (!actor.ActorData.InventoryAndEquipment.Inventory.AddToInventory(new List<Item> { Item }))
         {
             Debug.Log("Couldn't pick up item.");
 
@@ -21,11 +31,6 @@ public class Interactable_Item : MonoBehaviour, IInteractable
         }
 
         //Destroy(this);
-    }
-
-    public bool WithinInteractRange(Actor_Base interactor)
-    {
-        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
     public static void CreateNewItem(Item item, Vector3 dropPosition)

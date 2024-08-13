@@ -11,14 +11,12 @@ public class CityData
     public string CityName;
     public int RegionID;
 
-    public bool OverwriteDataInCity = true;
+    public bool OverwriteDataInCity = false;
 
     public string CityDescription;
 
     public DisplayPopulation Population;
     public DisplayProsperity Prosperity;
-
-    public DisplayCareers Careers;
 
     public List<JobsiteData> AllJobsiteData;
 
@@ -38,7 +36,7 @@ public class CityData
                 AllJobsiteData.Add(jobsite.JobsiteData);
             }
 
-            jobsite.SetJobsiteData(Manager_Jobsites.GetJobsiteDataFromID(CityID, jobsite.JobsiteData.JobsiteID));
+            jobsite.SetJobsiteData(Manager_Jobsite.GetJobsiteData(CityID, jobsite.JobsiteData.JobsiteID));
         }
 
         for (int i = 0; i < AllJobsiteData.Count; i++)
@@ -48,73 +46,21 @@ public class CityData
     }
 }
 
-[Serializable]
-public class DisplayCareers
+
+[CustomPropertyDrawer(typeof(CityData))]
+public class CityData_Drawer : PropertyDrawer
 {
-    public List<DisplayCareer> AllCareers;
-
-    public void AddToCareerList(DisplayCareer career)
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        if (AllCareers.Any(c => c.CareerName == career.CareerName)) throw new ArgumentException($"Career: {career.CareerName} already exists in AllCareers.");
+        var cityName = property.FindPropertyRelative("CityName");
+        label.text = !string.IsNullOrEmpty(cityName.stringValue) ? cityName.stringValue : "Unnamed City";
 
-        AllCareers.Add(career);
+        EditorGUI.PropertyField(position, property, label, true);
     }
 
-    public void RemoveFromCareerList(DisplayCareer career)
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        if (!AllCareers.Any(c => c.CareerName == career.CareerName)) throw new ArgumentException($"Career: {career.CareerName} does not exist in AllCareers.");
-
-        AllCareers.Remove(career);
-    }
-}
-
-[Serializable]
-public class DisplayCareer
-{
-    public CareerName CareerName;
-    public List<DisplayJobsite> Jobsites;
-
-    public DisplayCareer(CareerName careerName, List<DisplayJobsite> jobsites)
-    {
-        CareerName = careerName;
-        Jobsites = jobsites;
-    }
-}
-
-[Serializable]
-public class DisplayJobsite
-{
-    public JobsiteComponent Jobsite;
-    public List<DisplayCitizen> Employees;
-
-    public DisplayJobsite(JobsiteComponent jobsite, List<DisplayCitizen> employees)
-    {
-        Jobsite = jobsite;
-        Employees = employees;
-    }
-}
-
-[Serializable]
-public class DisplayCitizen
-{
-    public int ActorID;
-    public string CitizenName;
-    public ActorData ActorData;
-
-    public DisplayCitizen(ActorData actorData)
-    {
-        ActorData = actorData;
-
-        if (ActorData == null) throw new ArgumentException("ActorData is null");
-
-        ActorID = ActorData.ActorID;
-        CitizenName = ActorData.ActorName.GetName();
-    }
-
-    public void UpdateDisplayCitizen(Actor_Base actor)
-    {
-        ActorID = actor.ActorData.ActorID;
-        CitizenName = actor.ActorData.ActorName.GetName();
+        return EditorGUI.GetPropertyHeight(property, label, true);
     }
 }
 
@@ -158,20 +104,27 @@ public class DisplayPopulation
     }
 }
 
-[CustomPropertyDrawer(typeof(CityData))]
-public class CityData_Drawer : PropertyDrawer
+[Serializable]
+public class DisplayCitizen
 {
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        var cityName = property.FindPropertyRelative("CityName");
-        label.text = !string.IsNullOrEmpty(cityName.stringValue) ? cityName.stringValue : "Unnamed City";
+    public int ActorID;
+    public string CitizenName;
+    public ActorData ActorData;
 
-        EditorGUI.PropertyField(position, property, label, true);
+    public DisplayCitizen(ActorData actorData)
+    {
+        ActorData = actorData;
+
+        if (ActorData == null) throw new ArgumentException("ActorData is null");
+
+        ActorID = ActorData.ActorID;
+        CitizenName = ActorData.ActorName.GetName();
     }
 
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    public void UpdateDisplayCitizen(Actor_Base actor)
     {
-        return EditorGUI.GetPropertyHeight(property, label, true);
+        ActorID = actor.ActorData.ActorID;
+        CitizenName = actor.ActorData.ActorName.GetName();
     }
 }
 

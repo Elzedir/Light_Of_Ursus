@@ -11,7 +11,7 @@ public class ActorData
     public int ActorID;
     public ActorName ActorName;
 
-    public bool OverwriteDataInActor = true;
+    public bool OverwriteDataInActor = false;
 
     public FullIdentification FullIdentification;
 
@@ -33,7 +33,7 @@ public class ActorData
         }
         else if (Manager_Actor.GetActor(ActorID, out Actor_Base actor) != null)
         {
-            actor.SetActorData(Manager_Actor.GetActorDataFromID(ActorID, out ActorData actorData));
+            actor.SetActorData(Manager_Actor.GetActorData(ActorID, out ActorData actorData));
             CareerAndJobs.Initialise();
         } 
     }
@@ -130,10 +130,9 @@ public class CareerAndJobs : ITickable
 {
     public int ActorID;
     public CareerName ActorCareer;
-    public List<DisplayJobs> ActorJobNames;
     public CraftingComponent Crafting;
 
-    List<Job> ActorJobs;
+    public List<Job> ActorJobs;
 
     public bool JobsActive;
 
@@ -141,25 +140,21 @@ public class CareerAndJobs : ITickable
 
     public CareerAndJobs(CareerName actorCareer, List<DisplayJobs> actorJobs, bool jobsActive = false)
     {
-        Debug.Log($"ActorJobNames: {ActorJobNames} has {ActorJobNames?.Count} jobs");
-
         ActorCareer = actorCareer;
         ActorJobs ??= new();
         JobsActive = jobsActive;
-
-        Debug.Log(actorJobs);
 
         foreach(var job in actorJobs)
         {
             Debug.Log(job);
 
-            foreach(var task in Manager_Jobs.GetJob(job.JobName, Manager_Jobsites.GetJobsite(job.JobsiteID)).JobTasks)
+            foreach(var task in Manager_Job.GetJob(job.JobName, Manager_Jobsite.GetJobsite(job.JobsiteID)).JobTasks)
             {
                 Debug.Log(task);
                 Debug.Log(task.TaskAction);
             }
             
-            ActorJobs.Add(Manager_Jobs.GetJob(job.JobName, Manager_Jobsites.GetJobsite(job.JobsiteID)));
+            ActorJobs.Add(Manager_Job.GetJob(job.JobName, Manager_Jobsite.GetJobsite(job.JobsiteID)));
         }
 
         Initialise();
@@ -173,17 +168,13 @@ public class CareerAndJobs : ITickable
     public void Initialise()
     {
         Manager_TickRate.RegisterTickable(this);
-
-        Debug.Log($"ActorJobs: {ActorJobs} has {ActorJobs.Count} jobs");
     }
 
     public void AddJob(JobName jobName, JobsiteComponent jobsite)
     {
-        Job job = Manager_Jobs.GetJob(jobName, jobsite);
+        Job job = Manager_Job.GetJob(jobName, jobsite);
 
         if (job == null) { Debug.Log("Job is null"); return; }
-
-        Debug.Log(job.JobName);
 
         if (ActorJobs.Any(j => j.JobName == jobName)) return;
 
@@ -216,7 +207,6 @@ public class CareerAndJobs : ITickable
 
     public void OnTick()
     {
-        Debug.Log($"Registered Tickable: {ActorID}");
         Manager_Game.Instance.StartCoroutine(PerformJobs());
     }
 
@@ -234,12 +224,8 @@ public class CareerAndJobs : ITickable
     {
         if (_jobCoroutine != null) yield break;
 
-        Debug.Log($"{ActorID} Perform jobs");
-        Debug.Log($"There are {ActorJobs.Count} jobs in ActorJobs");
-
         foreach (Job job in ActorJobs)
         {
-            Debug.Log($"{job.JobName}");
             yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Manager_Actor.GetActor(ActorID, out Actor_Base actor)));
         }
 

@@ -10,9 +10,9 @@ public class Manager_Initialisation
     public static event Action OnInitialiseManagerJobsite;
     public static event Action OnInitialiseManagerStation;
     public static event Action OnInitialiseAllRegionSO;
+    public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseAllActorSO;
     public static event Action OnInitialiseActors;
-    public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseJobsites;
 
     public static void InitialiseAllRegionSO() 

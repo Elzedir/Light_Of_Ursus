@@ -5,7 +5,7 @@ using System.Drawing;
 using System.Security.Cryptography;
 using UnityEngine;
 
-public class Actor_Base : MonoBehaviour
+public class Actor_Base : MonoBehaviour, IInventoryOwner
 {
     [SerializeField] ActorData _actorData;
     public ActorData ActorData { get { return _actorData; } private set { _actorData = value; } }
@@ -20,8 +20,8 @@ public class Actor_Base : MonoBehaviour
     public CraftingComponent CraftingComponent { get; protected set; }
     public VocationComponent VocationComponent { get; protected set; }
     public PersonalityComponent PersonalityComponent { get; protected set; }
-    public GatheringComponent GatheringComponent { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
+    public InventoryData InventoryData { get { return ActorData.InventoryAndEquipment.Inventory; } protected set { ActorData.InventoryAndEquipment.Inventory = value; } }
 
     void Awake()
     {

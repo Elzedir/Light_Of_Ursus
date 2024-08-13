@@ -5,7 +5,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Manager_Jobs : MonoBehaviour
+public class Manager_Job : MonoBehaviour
 {
     public static Dictionary<JobName, Job> AllJobs = new();
 
@@ -48,11 +48,11 @@ public class Manager_Jobs : MonoBehaviour
 
         IEnumerator dropOffWood(Actor_Base actor, JobsiteComponent jobsite)
         {
-            var nearestDropOffZone = jobsite.GetNearestDropOffZone("DropOffZone", actor);
+            var nearestDropOffZone = jobsite.GetNearestDropOffStationInJobsite(actor.transform.position, StationName.None);
 
             yield return actor.BasicMove(nearestDropOffZone.transform.position);
 
-            yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestDropOffZone.Inventory, nearestDropOffZone.GetItemsToDropOff(actor));
+            // yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestDropOffZone.InventoryData, nearestDropOffZone.GetItemsToDropOff(actor));
 
             yield return new WaitForSeconds(1);
         }
@@ -155,7 +155,7 @@ public class Job
 
     public Job(JobName jobName, string jobDescription, List<Task> jobTasks)
     {
-        if (Manager_Jobs.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
+        if (Manager_Job.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
 
         JobName = jobName;
         JobDescription = jobDescription;

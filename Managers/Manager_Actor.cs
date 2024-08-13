@@ -21,7 +21,16 @@ public class Manager_Actor : MonoBehaviour
         {
             if (actor.ActorData == null) { Debug.Log($"Actor: {actor.name} does not have ActorData."); continue; }
 
-            AllActorComponents.Add(actor.ActorData.ActorID, actor);
+            if (!AllActorComponents.ContainsKey(actor.ActorData.ActorID)) AllActorComponents.Add(actor.ActorData.ActorID, actor);
+            else
+            {
+                if (AllActorComponents[actor.ActorData.ActorID].gameObject == actor.gameObject) continue;
+                else
+                {
+                    Debug.LogError($"ActorID {actor.ActorData.ActorID} and name {actor.name} already exists for actor {AllActorComponents[actor.ActorData.ActorID].name}");
+                    actor.ActorData.ActorID = GetRandomActorID();
+                }
+            }
         }
     }
 
@@ -39,9 +48,9 @@ public class Manager_Actor : MonoBehaviour
         AllActors.AddToOrUpdateAllActorsDataList(actorData);
     }
 
-    public static ActorData GetActorDataFromID(int actorID, out ActorData actorData)
+    public static ActorData GetActorData(int actorID, out ActorData actorData)
     {
-        return actorData = AllActors.GetActorDataFromID(actorID);
+        return actorData = AllActors.GetActorData(actorID);
     }
 
     public static Actor_Base GetActor(int actorID, out Actor_Base actor)
@@ -51,11 +60,11 @@ public class Manager_Actor : MonoBehaviour
             if (AllActorComponents[actorID] != null) return actor = AllActorComponents[actorID];
             else
             {
-                GetActorDataFromID(actorID, out var actorData);
+                GetActorData(actorID, out var actorData);
                 return AllActorComponents[actorID] = actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorID);
             }
         }
-        else if (AllActors.AllActorData.Any(a => a.ActorID == actorID) && GetActorDataFromID(actorID, out ActorData actorData) != null)
+        else if (AllActors.AllActorData.Any(a => a.ActorID == actorID) && GetActorData(actorID, out ActorData actorData) != null)
         {
             return actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorData.ActorID);
         }
@@ -67,7 +76,7 @@ public class Manager_Actor : MonoBehaviour
     {
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
-        if (actorID != -1 && GetActorDataFromID(actorID, out ActorData actorData) != null)
+        if (actorID != -1 && GetActorData(actorID, out ActorData actorData) != null)
         {
             actor.SetActorData(actorData);
             actor.Initialise();
@@ -123,26 +132,21 @@ public class Manager_Actor : MonoBehaviour
                 actorPersonality: GetRandomPersonality()
                 ),
             inventoryAndEquipment: new InventoryAndEquipment(
-                new ActorInventory(),
+                new InventoryData(
+                    inventoryOwner: actor,
+                    inventory: new List<Item>()
+                    ),
                 new ActorEquipment(null, null, null, null, null, null, null, null, null)
                 ),
             statsAndAbilities: new StatsAndAbilities(),
             actorQuests: null
         ));
 
-        Debug.Log(actor);
-
         actor.Initialise();
-
-        Debug.Log(actor);
 
         AddToOrUpdateAllActorList(actor.ActorData, actor);
 
-        Debug.Log(actor);
-
         AllActorComponents[actor.ActorData.ActorID] = actor;
-
-        Debug.Log(actor);
 
         return actor.ActorData;
     }

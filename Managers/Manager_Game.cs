@@ -87,15 +87,16 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Spawner", _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
         _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
         _createManager("Manager_TickRate", _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
-        _createManager("Manager_Jobs", _manager_Parent).AddComponent<Manager_Jobs>().OnSceneLoaded();
-        _createManager("Manager_Crafting", _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
-        _createManager("Manager_Inventory", _manager_Parent).AddComponent<Manager_Inventory>().OnSceneLoaded();
+        _createManager("Manager_Job", _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
+        _createManager("Manager_Recipe", _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
         Manager_Career.Initialise();
         Manager_Date_And_Time.Initialise();
         Manager_Personality.Initialise();
 
         _createManager("Manager_Region", _manager_Parent).AddComponent<Manager_Region>().OnSceneLoaded();
         _createManager("Manager_City", _manager_Parent).AddComponent<Manager_City>().OnSceneLoaded();
+        _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
+        _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
 
         Manager_Initialisation.InitialiseAllRegionSO();

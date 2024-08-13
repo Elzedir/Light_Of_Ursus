@@ -21,7 +21,18 @@ public class Manager_Station : MonoBehaviour
     {
         foreach (var station in _findAllStationComponents())
         {
-            AllStationComponents.Add(station.StationData.StationID, station);
+            if (station.StationData == null) { Debug.Log($"Station: {station.name} does not have StationData."); continue; }
+
+            if (!AllStationComponents.ContainsKey(station.StationData.StationID)) AllStationComponents.Add(station.StationData.StationID, station);
+            else
+            {
+                if (AllStationComponents[station.StationData.StationID].gameObject == station.gameObject) continue;
+                else
+                {
+                    Debug.LogError($"StationID {station.StationData.StationID} and name {station.name} already exists for station {AllStationComponents[station.StationData.StationID].name}");
+                    station.StationData.StationID = GetRandomStationID();
+                }   
+            }
         }
     }
 
@@ -37,9 +48,9 @@ public class Manager_Station : MonoBehaviour
         AllRegions.AddToOrUpdateAllStationDataList(jobsiteID, stationData);
     }
 
-    public static StationData GetStationDataFromID(int jobsiteID, int stationID)
+    public static StationData GetStationData(int jobsiteID, int stationID)
     {
-        return AllRegions.GetStationDataFromID(jobsiteID, stationID);
+        return AllRegions.GetStationData(jobsiteID, stationID);
     }
 
     public static StationComponent GetStation(int stationID)
@@ -62,5 +73,10 @@ public class Manager_Station : MonoBehaviour
                 nearestDistance = distance;
             }
         }
+    }
+
+    public static int GetRandomStationID()
+    {
+        return AllRegions.GetRandomStationID();
     }
 }

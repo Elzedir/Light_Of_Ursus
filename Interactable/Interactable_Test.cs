@@ -8,6 +8,16 @@ public class Interactable_Test : MonoBehaviour, IInteractable
 {
     public float InteractRange { get; private set; }
 
+    public void SetInteractRange(float interactRange)
+    {
+        InteractRange = interactRange;
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
+    }
+
     public IEnumerator Interact(Actor_Base actor)
     {
         if (transform.name == "Sword")
@@ -20,11 +30,6 @@ public class Interactable_Test : MonoBehaviour, IInteractable
         }
 
         yield break;
-    }
-
-    public bool WithinInteractRange(Actor_Base interactor)
-    {
-        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
     bool _swordEquipped = false;

@@ -26,6 +26,16 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
         _collider = GetComponent<BoxCollider2D>();
     }
 
+    public void SetInteractRange(float interactRange)
+    {
+        InteractRange = interactRange;
+    }
+
+    public bool WithinInteractRange(Actor_Base interactor)
+    {
+        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
+    }
+
     public IEnumerator Interact(Actor_Base actor)
     {
         if (actor.TryGetComponent(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
@@ -34,11 +44,6 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
         }
 
         yield break;
-    }
-
-    public bool WithinInteractRange(Actor_Base interactor)
-    {
-        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
     public void CompletePuzzle()

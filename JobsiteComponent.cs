@@ -77,4 +77,13 @@ public class JobsiteComponent : MonoBehaviour
         .OrderBy(station => Vector3.Distance(position, station.transform.position))
         .FirstOrDefault();
     }
+
+    public StationComponent GetNearestDropOffStationInJobsite(Vector3 position, StationName stationName)
+    {
+        // Change for dropoff
+        return AllResourceStationsInJobsite
+        .Where(station => station.StationData.StationName == stationName)
+        .OrderBy(station => Vector3.Distance(position, station.transform.position))
+        .FirstOrDefault();
+    }
 }

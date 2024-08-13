@@ -5,6 +5,16 @@ using UnityEngine;
 
 public class StationComponent_Sawmill : StationComponent_Crafter
 {
+    public override void InitialiseStationName()
+    {
+        StationData._stationName = StationName.Sawmill;
+    }
+
+    public override void InitialiseAllowedEmployeePositions()
+    {
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Lumberjack, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
+    }
+
     public override IEnumerator Interact(Actor_Base actor)
     {
         yield break;
@@ -22,11 +32,11 @@ public class StationComponent_Sawmill : StationComponent_Crafter
 
     public override IEnumerator CraftItem(Actor_Base actor)
     {
-
+        yield break;
     }
 
     public override IEnumerator CraftItemAll(Actor_Base actor)
     {
-        
+        yield break;
     }
 }
