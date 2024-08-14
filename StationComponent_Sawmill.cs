@@ -7,7 +7,7 @@ public class StationComponent_Sawmill : StationComponent_Crafter
 {
     public override void InitialiseStationName()
     {
-        StationData._stationName = StationName.Sawmill;
+        StationData.SetStationName(StationName.Sawmill);
     }
 
     public override void InitialiseAllowedEmployeePositions()

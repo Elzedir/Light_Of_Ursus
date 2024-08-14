@@ -106,21 +106,151 @@ public class AllActors_SO : ScriptableObject
 [CustomEditor(typeof(AllActors_SO))]
 public class AllActorsSOEditor : Editor
 {
+    private int selectedActorIndex = -1;
+
+    private Vector2 actorScrollPos;
+
     public override void OnInspectorGUI()
     {
-        AllActors_SO myScript = (AllActors_SO)target;
-
-        SerializedProperty allActorDataProp = serializedObject.FindProperty("AllActorData");
-        EditorGUILayout.PropertyField(allActorDataProp, true);
+        AllActors_SO allActorsSO = (AllActors_SO)target;
 
         if (GUILayout.Button("Clear Actor Data"))
         {
-            myScript.ClearActorData();
-            EditorUtility.SetDirty(myScript);
+            allActorsSO.ClearActorData();
+            EditorUtility.SetDirty(allActorsSO);
         }
 
-        DrawPropertiesExcluding(serializedObject, "AllActorData");
+        EditorGUILayout.LabelField("Actors", EditorStyles.boldLabel);
+        actorScrollPos = EditorGUILayout.BeginScrollView(actorScrollPos, GUILayout.Height(GetListHeight(allActorsSO.AllActorData.Count)));
+        selectedActorIndex = GUILayout.SelectionGrid(selectedActorIndex, GetActorNames(allActorsSO), 1);
+        EditorGUILayout.EndScrollView();
 
-        serializedObject.ApplyModifiedProperties();
+        //if (selectedRegionIndex >= 0 && selectedRegionIndex < allActorsSO.AllRegionData.Count)
+        //{
+        //    RegionData selectedRegion = allActorsSO.AllRegionData[selectedRegionIndex];
+        //    EditorGUILayout.LabelField($"Cities in {selectedRegion.RegionName}", EditorStyles.boldLabel);
+        //    cityScrollPos = EditorGUILayout.BeginScrollView(cityScrollPos, GUILayout.Height(GetListHeight(selectedRegion.AllCityData.Count)));
+        //    selectedCityIndex = GUILayout.SelectionGrid(selectedCityIndex, GetCityNames(selectedRegion), 1);
+        //    EditorGUILayout.EndScrollView();
+        //}
+
+        DrawAdditionalFields(allActorsSO);
+    }
+
+    private string[] GetActorNames(AllActors_SO allActorsSO)
+    {
+        return allActorsSO.AllActorData.Select(r => r.ActorName.GetName()).ToArray();
+    }
+
+    private float GetListHeight(int itemCount)
+    {
+        return Mathf.Min(200, itemCount * 20);
+    }
+
+    private void DrawAdditionalFields(AllActors_SO allActorsSO)
+    {
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Additional Data", EditorStyles.boldLabel);
+
+        //else if (selectedCityIndex >= 0)
+        //{
+        //    DrawCityAdditionalData(allActorsSO.AllRegionData[selectedRegionIndex]
+        //        .AllCityData[selectedCityIndex]);
+        //}
+        if (selectedActorIndex >= 0)
+        {
+            DrawActorAdditionalData(allActorsSO.AllActorData[selectedActorIndex]);
+        }
+        else
+        {
+            DrawGlobalAdditionalData(allActorsSO);
+        }
+    }
+
+    private void DrawGlobalAdditionalData(AllActors_SO allActorsSO)
+    {
+        EditorGUILayout.LabelField("Global Data", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Actor IDs", string.Join(", ", allActorsSO.AllActorIDs));
+
+        allActorsSO.LastUnusedActorID = EditorGUILayout.IntField("Last Unused Region ID", allActorsSO.LastUnusedActorID);
+    }
+
+    private void DrawActorAdditionalData(ActorData actorData)
+    {
+        EditorGUILayout.LabelField("Actor Data", EditorStyles.boldLabel);
+
+        EditorGUILayout.LabelField("Actor ID", actorData.ActorID.ToString());
+
+        EditorGUILayout.LabelField("Actor Name", $"{actorData.ActorName.Name} {actorData.ActorName.Surname}");
+
+        actorData.OverwriteDataInActor = EditorGUILayout.Toggle("Overwrite Data In Actor", actorData.OverwriteDataInActor);
+
+        if (actorData.FullIdentification != null)
+        {
+            EditorGUILayout.LabelField("Full Identification", EditorStyles.boldLabel);
+
+            EditorGUILayout.LabelField("Actor ID", actorData.FullIdentification.ActorID.ToString());
+
+            if (actorData.FullIdentification.ActorName != null)
+            {
+                EditorGUILayout.LabelField("Actor Name", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Name", actorData.FullIdentification.ActorName.Name);
+                EditorGUILayout.LabelField("Surname", actorData.FullIdentification.ActorName.Surname);
+                // Title
+                // Available Titles
+            }
+
+            // ActorFamily
+
+            EditorGUILayout.LabelField("Faction", actorData.FullIdentification.ActorFaction.ToString());
+
+            if (actorData.FullIdentification.Background != null)
+            {
+                //EditorGUILayout.LabelField("Background", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField("Birthplace", actorData.FullIdentification.Background.Birthplace);
+                //EditorGUILayout.LabelField("Birthdate", actorData.FullIdentification.Background.Birthdate.ToString());
+                //EditorGUILayout.LabelField("Religion", actorData.FullIdentification.Background.Religion);
+            }
+        }
+
+        if (actorData.GameObjectProperties != null)
+        {
+            //EditorGUILayout.LabelField("Game Object Properties", EditorStyles.boldLabel);
+            //EditorGUILayout.Vector3Field("Position", actorData.GameObjectProperties.ActorPosition);
+            //EditorGUILayout.Vector3Field("Scale", actorData.GameObjectProperties.ActorScale);
+            //EditorGUILayout.Vector3Field("Rotation", actorData.GameObjectProperties.ActorRotation.eulerAngles);
+            //EditorGUILayout.ObjectField("Mesh", actorData.GameObjectProperties.ActorMesh, typeof(Mesh), allowSceneObjects: true);
+            //EditorGUILayout.ObjectField("Material", actorData.GameObjectProperties.ActorMaterial, typeof(Material), allowSceneObjects: true);
+        }
+
+        if (actorData.CareerAndJobs != null)
+        {
+            //EditorGUILayout.LabelField("Career And Jobs", EditorStyles.boldLabel);
+            //EditorGUILayout.LabelField("Career", actorData.CareerAndJobs.ActorCareer.ToString());
+            //EditorGUILayout.Toggle("Jobs Active", actorData.CareerAndJobs.JobsActive);
+        }
+
+        if (actorData.SpeciesAndPersonality != null)
+        {
+            //EditorGUILayout.LabelField("Species And Personality", EditorStyles.boldLabel);
+            //EditorGUILayout.LabelField("Species", actorData.SpeciesAndPersonality.ActorSpecies.ToString());
+            //EditorGUILayout.LabelField("Personality", actorData.SpeciesAndPersonality.ActorPersonality.ToString());
+        }
+
+        if (actorData.StatsAndAbilities != null)
+        {
+            //EditorGUILayout.LabelField("Stats And Abilities", EditorStyles.boldLabel);
+        }
+
+        if (actorData.InventoryAndEquipment != null)
+        {
+            //EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
+        }
+
+        if (actorData.ActorQuests != null)
+        {
+            //EditorGUILayout.LabelField("Actor Quests", EditorStyles.boldLabel);
+            //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);
+        }
     }
 }

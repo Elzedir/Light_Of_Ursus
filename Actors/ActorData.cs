@@ -65,16 +65,14 @@ public class ActorData
 public class FullIdentification
 {
     public int ActorID;
-    public Actor_Base Actor;
     public ActorName ActorName;
     public Family ActorFamily;
     public FactionName ActorFaction;
     public Background Background;
 
-    public FullIdentification(int actorID, Actor_Base actor, ActorName actorName, FactionName actorFaction)
+    public FullIdentification(int actorID, ActorName actorName, FactionName actorFaction)
     {
         ActorID = actorID;
-        Actor = actor;
         ActorName = actorName;
         ActorFaction = actorFaction;
     }
@@ -138,7 +136,7 @@ public class CareerAndJobs : ITickable
 
     Coroutine _jobCoroutine;
 
-    public CareerAndJobs(CareerName actorCareer, List<DisplayJobs> actorJobs, bool jobsActive = false)
+    public CareerAndJobs(CareerName actorCareer, List<JobData> actorJobs, bool jobsActive = false)
     {
         ActorCareer = actorCareer;
         ActorJobs ??= new();
@@ -148,13 +146,13 @@ public class CareerAndJobs : ITickable
         {
             Debug.Log(job);
 
-            foreach(var task in Manager_Job.GetJob(job.JobName, Manager_Jobsite.GetJobsite(job.JobsiteID)).JobTasks)
+            foreach(var task in Manager_Job.GetJob(job.JobName, job.JobsiteID).JobTasks)
             {
                 Debug.Log(task);
                 Debug.Log(task.TaskAction);
             }
             
-            ActorJobs.Add(Manager_Job.GetJob(job.JobName, Manager_Jobsite.GetJobsite(job.JobsiteID)));
+            ActorJobs.Add(Manager_Job.GetJob(job.JobName, job.JobsiteID));
         }
 
         Initialise();
@@ -170,9 +168,9 @@ public class CareerAndJobs : ITickable
         Manager_TickRate.RegisterTickable(this);
     }
 
-    public void AddJob(JobName jobName, JobsiteComponent jobsite)
+    public void AddJob(JobName jobName, int jobsiteID)
     {
-        Job job = Manager_Job.GetJob(jobName, jobsite);
+        Job job = Manager_Job.GetJob(jobName, jobsiteID);
 
         if (job == null) { Debug.Log("Job is null"); return; }
 
@@ -234,14 +232,15 @@ public class CareerAndJobs : ITickable
 }
 
 [Serializable]
-public class DisplayJobs
+public class JobData
 {
     public JobName JobName;
     public int JobsiteID;
 
-    public DisplayJobs()
+    public JobData(JobName jobName, int jobsiteID)
     {
-
+        JobName = jobName;
+        JobsiteID = jobsiteID;
     }
 }
 

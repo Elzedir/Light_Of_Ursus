@@ -6,7 +6,7 @@ public class StationComponent_Tree : StationComponent_Resource
 {
     public override void InitialiseStationName()
     {
-        StationData._stationName = StationName.Tree;
+        StationData.SetStationName(StationName.Tree);
     }
 
     public override void InitialiseAllowedEmployeePositions()

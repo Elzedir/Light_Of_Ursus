@@ -77,6 +77,11 @@ public class StationData : IStationInventory
         return inventoryOwner.InventoryData.Inventory.Where(i => i.CommonStats_Item.ItemID == 2300)
         .Select(i => Manager_Item.GetItem(i.CommonStats_Item.ItemID, i.CommonStats_Item.CurrentStackSize)).ToList();
     }
+
+    public void SetStationName(StationName stationName)
+    {
+        StationName = stationName;
+    }
 }
 
 [CustomPropertyDrawer(typeof(StationData))]

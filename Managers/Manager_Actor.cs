@@ -74,6 +74,8 @@ public class Manager_Actor : MonoBehaviour
 
     public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID = -1)
     {
+        Debug.Log($"Spawning new actor with ID: {actorID} at point: {spawnPoint}.");
+
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
         if (actorID != -1 && GetActorData(actorID, out ActorData actorData) != null)
@@ -82,6 +84,8 @@ public class Manager_Actor : MonoBehaviour
             actor.Initialise();
         }
         else GenerateNewActorData(actor);
+
+        AllActorComponents[actor.ActorData.ActorID] = actor;
 
         return actor;
     }
@@ -111,7 +115,6 @@ public class Manager_Actor : MonoBehaviour
         actor.SetActorData(new ActorData(
             fullIdentification: new FullIdentification(
                 actorID: GetRandomActorID(),
-                actor: actor,
                 actorName: GetRandomActorName(actor),
                 actorFaction: GetRandomFaction()
                 ),
@@ -125,7 +128,7 @@ public class Manager_Actor : MonoBehaviour
             worldState: null,
             careerAndJobs: new CareerAndJobs(
                 actorCareer: CareerName.None, // Later set to none only if you don't have a preset career in parameters
-                actorJobs: new List<DisplayJobs>()
+                actorJobs: new List<JobData>()
                 ),
             speciesAndPersonality: new SpeciesAndPersonality(
                 actorSpecies: GetRandomSpecies(),
@@ -145,8 +148,6 @@ public class Manager_Actor : MonoBehaviour
         actor.Initialise();
 
         AddToOrUpdateAllActorList(actor.ActorData, actor);
-
-        AllActorComponents[actor.ActorData.ActorID] = actor;
 
         return actor.ActorData;
     }

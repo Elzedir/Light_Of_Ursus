@@ -94,6 +94,7 @@ public class DisplayPopulation
         if (AllCitizens.Contains(citizen)) throw new ArgumentException($"Citizen: {citizen.CitizenName} already exists in AllCitizens.");
 
         AllCitizens.Add(citizen);
+        DisplayCurrentPopulation();
     }
 
     public void RemoveCitizen(int actorID)
@@ -101,6 +102,7 @@ public class DisplayPopulation
         if (!AllCitizens.Any(c => c.ActorID == actorID)) throw new ArgumentException($"CitizenID: {actorID} does not exist in AllCitizens.");
 
         AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.ActorID == actorID));
+        DisplayCurrentPopulation();
     }
 }
 

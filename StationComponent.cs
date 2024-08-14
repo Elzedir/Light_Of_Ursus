@@ -23,11 +23,12 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     public List<EmployeePosition> AllowedEmployeePositions;
 
-    public Dictionary<BoxCollider, bool> AllOperatingAreasInStation;
+    public Dictionary<BoxCollider, bool> AllOperatingAreasInStation = new();
 
     protected void Awake()
     {
-        StationArea = GetComponent<BoxCollider>();
+        StationArea = gameObject.AddComponent<BoxCollider>();
+        StationArea.isTrigger = true;
     }
 
     protected void Update()
@@ -87,7 +88,7 @@ public class StationComponent : MonoBehaviour, IInteractable
         {
             if (!child.name.Contains("OperatingArea")) continue;
 
-            AllOperatingAreasInStation.Add(child.GetComponent<BoxCollider>(), false);
+            if (!AllOperatingAreasInStation.ContainsKey(child.GetComponent<BoxCollider>()))AllOperatingAreasInStation.Add(child.GetComponent<BoxCollider>(), false);
         }
     }
 
@@ -119,12 +120,5 @@ public class StationComponent : MonoBehaviour, IInteractable
     public virtual bool EmployeeCanUse(EmployeePosition employeePosition)
     {
         throw new ArgumentException("Cannot use base class.");
-    }
-
-    public Vector3 GetNearestOperatingAreaInStation(Vector3 position)
-    {
-        return AllOperatingAreasInStation
-        .OrderBy(area => Vector3.Distance(position, area.Key.bounds.center))
-        .FirstOrDefault().Key.bounds.center;
     }
 }

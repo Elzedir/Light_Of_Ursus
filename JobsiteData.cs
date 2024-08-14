@@ -27,10 +27,9 @@ public class JobsiteData
     public string OwnerName;
     Actor_Base _owner;
 
-    public Dictionary<Actor_Base, List<EmployeePosition>> AllEmployees = new();
+    public List<EmployeeData> AllEmployees;
     public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions = new();
 
-    public DisplayPopulation Population;
     public DisplayProsperity Prosperity;
 
     public List<StationData> AllStationData;
@@ -45,7 +44,9 @@ public class JobsiteData
 
         jobsite.Initialise();
 
-        foreach (var station in jobsite.AllResourceStationsInJobsite)
+        // For some reason we are not getting any StationComponents returning
+
+        foreach (var station in jobsite.AllCraftingStationsInJobsite)
         {
             if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
             {
@@ -56,7 +57,7 @@ public class JobsiteData
             station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
         }
 
-        foreach (var station in jobsite.AllCraftingStationsInJobsite)
+        foreach (var station in jobsite.AllResourceStationsInJobsite)
         {
             if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
             {
@@ -127,6 +128,8 @@ public class JobsiteData
 
         if (citizen != null)
         {
+            Debug.Log($"Found citizen: {citizen.CitizenName} for position: {position}");
+
             return Manager_Actor.GetActor(citizen.ActorID, out actor) != null;
         }
 
@@ -142,6 +145,7 @@ public class JobsiteData
         var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
         city.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
+        AddEmployee(actor, position);
 
         return actor;
     }
@@ -169,17 +173,17 @@ public class JobsiteData
     {
         if (employee == null) throw new ArgumentException($"Employee: {employee} or employee position {position} is null.");
 
-        if (AllEmployees.ContainsKey(employee))
+        if (AllEmployees.Any(e => e.ActorID == employee.ActorData.ActorID))
         {
-            if (AllEmployees[employee].Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
+            if (AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
             else
             {
-                AllEmployees[employee].Add(position);
+                AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Add(position);
                 return;
             }
         }
 
-        AllEmployees.Add(employee, new List<EmployeePosition> { position });
+        AllEmployees.Add(new EmployeeData(employee.ActorData.ActorID, employee.ActorData.ActorName.GetName(), new List<EmployeePosition> { position }));
     }
 
     public void HireEmployee(Actor_Base employee, EmployeePosition position)
@@ -193,9 +197,9 @@ public class JobsiteData
     {
         if (employee == null) throw new ArgumentException($"Employee is null.");
 
-        if (!AllEmployees.ContainsKey(employee)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} is not in employee list.");
+        if (!AllEmployees.Any(e => e.ActorID == employee.ActorData.ActorID)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} is not in employee list.");
 
-        AllEmployees.Remove(employee);
+        AllEmployees.Remove(AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID));
 
         // Remove employee job from employee job component.
     }
@@ -260,7 +264,7 @@ public class JobsiteData
             var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
 
             AllJobPositions[position.Key].Add(actor);
-            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, Manager_Jobsite.GetJobsite(JobsiteID));
+            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, JobsiteID);
         }
     }
 }
@@ -274,6 +278,39 @@ public class JobsiteData_Drawer : PropertyDrawer
         string jobsiteName = ((JobsiteName)jobsiteNameProp.enumValueIndex).ToString();
 
         label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
+
+    }
+}
+
+[Serializable]
+public class EmployeeData
+{
+    public int ActorID;
+    public string EmployeeName;
+    public List<EmployeePosition> EmployeePositions;
+
+    public EmployeeData(int actorID, string employeeName, List<EmployeePosition> employeePositions)
+    {
+        ActorID = actorID;
+        EmployeeName = employeeName;
+        EmployeePositions = employeePositions;
+    }
+}
+
+[CustomPropertyDrawer(typeof(EmployeeData))]
+public class EmployeeData_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        var citizenName = property.FindPropertyRelative("EmployeeName");
+        label.text = !string.IsNullOrEmpty(citizenName.stringValue) ? citizenName.stringValue : "Unnamed Employee";
 
         EditorGUI.PropertyField(position, property, label, true);
     }
