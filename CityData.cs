@@ -9,9 +9,8 @@ public class CityData
 {
     public int CityID;
     public string CityName;
+    public int CityFactionID;
     public int RegionID;
-
-    public bool OverwriteDataInCity = false;
 
     public string CityDescription;
 
@@ -36,7 +35,7 @@ public class CityData
                 AllJobsiteData.Add(jobsite.JobsiteData);
             }
 
-            jobsite.SetJobsiteData(Manager_Jobsite.GetJobsiteData(CityID, jobsite.JobsiteData.JobsiteID));
+            jobsite.SetJobsiteData(Manager_Jobsite.GetJobsiteData(jobsiteID: jobsite.JobsiteData.JobsiteID, cityID: CityID));
         }
 
         for (int i = 0; i < AllJobsiteData.Count; i++)
@@ -99,9 +98,9 @@ public class DisplayPopulation
 
     public void RemoveCitizen(int actorID)
     {
-        if (!AllCitizens.Any(c => c.ActorID == actorID)) throw new ArgumentException($"CitizenID: {actorID} does not exist in AllCitizens.");
+        if (!AllCitizens.Any(c => c.CitizenID == actorID)) throw new ArgumentException($"CitizenID: {actorID} does not exist in AllCitizens.");
 
-        AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.ActorID == actorID));
+        AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.CitizenID == actorID));
         DisplayCurrentPopulation();
     }
 }
@@ -109,23 +108,23 @@ public class DisplayPopulation
 [Serializable]
 public class DisplayCitizen
 {
-    public int ActorID;
+    public int CitizenID;
     public string CitizenName;
-    public ActorData ActorData;
+    public ActorData CitizenData;
 
-    public DisplayCitizen(ActorData actorData)
+    public DisplayCitizen(ActorData citizenData)
     {
-        ActorData = actorData;
+        CitizenData = citizenData;
 
-        if (ActorData == null) throw new ArgumentException("ActorData is null");
+        if (CitizenData == null) throw new ArgumentException("ActorData is null");
 
-        ActorID = ActorData.ActorID;
-        CitizenName = ActorData.ActorName.GetName();
+        CitizenID = CitizenData.ActorID;
+        CitizenName = CitizenData.ActorName.GetName();
     }
 
     public void UpdateDisplayCitizen(Actor_Base actor)
     {
-        ActorID = actor.ActorData.ActorID;
+        CitizenID = actor.ActorData.ActorID;
         CitizenName = actor.ActorData.ActorName.GetName();
     }
 }

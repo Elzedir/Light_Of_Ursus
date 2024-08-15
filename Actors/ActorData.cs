@@ -9,9 +9,8 @@ using UnityEngine;
 public class ActorData
 {
     public int ActorID;
+    public int ActorFactionID;
     public ActorName ActorName;
-
-    public bool OverwriteDataInActor = false;
 
     public FullIdentification FullIdentification;
 
@@ -24,18 +23,23 @@ public class ActorData
     public InventoryAndEquipment InventoryAndEquipment;
     public ActorQuests ActorQuests;
 
+    public void PrepareForInitialisation()
+    {
+        Manager_Initialisation.OnInitialiseActorData += InitialiseActorData;
+    }
+
     public void InitialiseActorData()
     {
-        if (OverwriteDataInActor)
+        if (Manager_Actor.GetActor(ActorFactionID, ActorID, out Actor_Base actor) != null)
         {
-            Manager_Actor.AddToOrUpdateAllActorList(this);
-            OverwriteDataInActor = false;
-        }
-        else if (Manager_Actor.GetActor(ActorID, out Actor_Base actor) != null)
-        {
-            actor.SetActorData(Manager_Actor.GetActorData(ActorID, out ActorData actorData));
+            actor.SetActorData(Manager_Actor.GetActorData(ActorFactionID, ActorID, out ActorData actorData));
+            FullIdentification.Initialise();
             CareerAndJobs.Initialise();
         } 
+        else
+        {
+            Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
+        }
     }
 
     public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
@@ -45,6 +49,7 @@ public class ActorData
         FullIdentification = fullIdentification;
 
         ActorID = FullIdentification.ActorID;
+        ActorFactionID = FullIdentification.ActorFactionID;
         ActorName = FullIdentification.ActorName;
         
         GameObjectProperties = gameObjectProperties;
@@ -52,7 +57,7 @@ public class ActorData
         Worldstate = worldState;
 
         CareerAndJobs = careerAndJobs;
-        CareerAndJobs.SetActorID(ActorID);
+        CareerAndJobs.SetActorAndFactionID(ActorID, ActorFactionID);
         SpeciesAndPersonality = speciesAndPersonality;
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
@@ -66,15 +71,22 @@ public class FullIdentification
 {
     public int ActorID;
     public ActorName ActorName;
+    public int ActorFactionID;
+    public int ActorCityID;
     public Family ActorFamily;
-    public FactionName ActorFaction;
     public Background Background;
 
-    public FullIdentification(int actorID, ActorName actorName, FactionName actorFaction)
+    public FullIdentification(int actorID, ActorName actorName, int actorFactionID, int actorCityID)
     {
         ActorID = actorID;
         ActorName = actorName;
-        ActorFaction = actorFaction;
+        ActorFactionID = actorFactionID;
+        ActorCityID = actorCityID;
+    }
+
+    public void Initialise()
+    {
+        Manager_City.GetCityData(cityID: ActorCityID);
     }
 }
 
@@ -127,10 +139,11 @@ public class Relationships
 public class CareerAndJobs : ITickable
 {
     public int ActorID;
+    public int FactionID;
     public CareerName ActorCareer;
     public CraftingComponent Crafting;
 
-    public List<Job> ActorJobs;
+    public List<JobData> ActorJobs;
 
     public bool JobsActive;
 
@@ -139,28 +152,16 @@ public class CareerAndJobs : ITickable
     public CareerAndJobs(CareerName actorCareer, List<JobData> actorJobs, bool jobsActive = false)
     {
         ActorCareer = actorCareer;
-        ActorJobs ??= new();
         JobsActive = jobsActive;
-
-        foreach(var job in actorJobs)
-        {
-            Debug.Log(job);
-
-            foreach(var task in Manager_Job.GetJob(job.JobName, job.JobsiteID).JobTasks)
-            {
-                Debug.Log(task);
-                Debug.Log(task.TaskAction);
-            }
-            
-            ActorJobs.Add(Manager_Job.GetJob(job.JobName, job.JobsiteID));
-        }
+        ActorJobs = actorJobs;
 
         Initialise();
     }
 
-    public void SetActorID(int actorID)
+    public void SetActorAndFactionID(int actorID, int factionID)
     {
         ActorID = actorID;
+        FactionID = factionID;
     }
 
     public void Initialise()
@@ -170,29 +171,20 @@ public class CareerAndJobs : ITickable
 
     public void AddJob(JobName jobName, int jobsiteID)
     {
-        Job job = Manager_Job.GetJob(jobName, jobsiteID);
+        if (ActorJobs.Any(j => j.JobName == jobName && j.JobsiteID == jobsiteID)) return;
 
-        if (job == null) { Debug.Log("Job is null"); return; }
-
-        if (ActorJobs.Any(j => j.JobName == jobName)) return;
-
-        ActorJobs.Add(job);
+        ActorJobs.Add(new JobData(jobName, jobsiteID));
     }
 
-    public void RemoveJob(Job job = null)
+    public void RemoveJob(JobName jobName, int jobsiteID)
     {
-        for (int i = 0; i < ActorJobs.Count; i++)
-        {
-            if (job == ActorJobs[i] || job == null)
-            {
-                ActorJobs.Remove(job);
-            }
-        }
+        if (!ActorJobs.Any(j => j.JobName == jobName && j.JobsiteID == jobsiteID)) return;
+
+        ActorJobs.Remove(ActorJobs.FirstOrDefault(j => j.JobName == jobName && j.JobsiteID == jobsiteID));
     }
 
-    public void ReorganiseJobs(Job job, int index)
+    public void ReorganiseJobs(JobName jobName, int jobsiteID, int index)
     {
-        if (job == null) { Debug.Log("Job is null"); return; }
         if (index < 0 || index > ActorJobs.Count) { Debug.Log($"Index: {index} is less than 0 or greater than ActorJobs length: {ActorJobs.Count}."); return; }
 
         for (int i = ActorJobs.Count - 1; i > index; i--)
@@ -200,7 +192,7 @@ public class CareerAndJobs : ITickable
             ActorJobs[i] = ActorJobs[i - 1];
         }
 
-        ActorJobs[index] = job;
+        ActorJobs[index] = new JobData(jobName, jobsiteID);
     }
 
     public void OnTick()
@@ -222,9 +214,11 @@ public class CareerAndJobs : ITickable
     {
         if (_jobCoroutine != null) yield break;
 
-        foreach (Job job in ActorJobs)
+        foreach (var jobData in ActorJobs)
         {
-            yield return _jobCoroutine = Manager_Game.Instance.StartCoroutine(job.PerformJob(Manager_Actor.GetActor(ActorID, out Actor_Base actor)));
+            yield return _jobCoroutine = 
+                Manager_Game.Instance.StartCoroutine(Manager_Job.GetJob(jobData.JobName, jobData.JobsiteID)
+                .PerformJob(Manager_Actor.GetActor(FactionID, ActorID, out Actor_Base actor)));
         }
 
         _jobCoroutine = null;

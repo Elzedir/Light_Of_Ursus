@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public enum JobsiteName
 {
@@ -18,6 +17,7 @@ public class JobsiteData
 {
     public int JobsiteID;
     public JobsiteName JobsiteName;
+    public int JobsiteFactionID;
     public int CityID;
 
     public bool JobsiteIsActive = true;
@@ -33,8 +33,6 @@ public class JobsiteData
     public DisplayProsperity Prosperity;
 
     public List<StationData> AllStationData;
-
-    public bool OverwriteDataInJobsiteFromEditor = false;
 
     public void InitialiseJobsiteData(int cityID)
     {
@@ -58,6 +56,17 @@ public class JobsiteData
         }
 
         foreach (var station in jobsite.AllResourceStationsInJobsite)
+        {
+            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
+            {
+                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
+                AllStationData.Add(station.StationData);
+            }
+
+            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
+        }
+
+        foreach (var station in jobsite.AllStorageStationsInJobsite)
         {
             if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
             {
@@ -118,9 +127,9 @@ public class JobsiteData
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
         var citizen = Manager_City.GetCity(CityID).CityData.Population.AllCitizens
-            .FirstOrDefault(c => c.ActorData.CareerAndJobs.ActorCareer == CareerName.None
+            .FirstOrDefault(c => c.CitizenData.CareerAndJobs.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
-                    c.ActorData,
+                    c.CitizenData,
                     vocationAndExperience.Vocation,
                     vocationAndExperience.minimumExperienceRequired));
 
@@ -130,7 +139,7 @@ public class JobsiteData
         {
             Debug.Log($"Found citizen: {citizen.CitizenName} for position: {position}");
 
-            return Manager_Actor.GetActor(citizen.ActorID, out actor) != null;
+            return Manager_Actor.GetActor(JobsiteFactionID, citizen.CitizenID, out actor) != null;
         }
 
         return false;
@@ -144,7 +153,7 @@ public class JobsiteData
 
         var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
-        city.CityData.Population.AddCitizen(new DisplayCitizen(actorData: actor.ActorData));
+        city.CityData.Population.AddCitizen(new DisplayCitizen(citizenData: actor.ActorData));
         AddEmployee(actor, position);
 
         return actor;
@@ -261,7 +270,13 @@ public class JobsiteData
     {
         foreach (var position in AllJobPositions.Where(position => position.Value.Count == 0).ToList())
         {
-            var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
+            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor))
+            {
+                Debug.Log($"Couldnt find employee {actor}");
+                actor = _generateNewEmployee(position.Key);
+            }
+
+            //var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
 
             AllJobPositions[position.Key].Add(actor);
             actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, JobsiteID);

@@ -34,7 +34,7 @@ public class Manager_Job : MonoBehaviour
         {
             // If jobsite is null, then don't do anything unless there's an unowned jobsite
             StationComponent_Resource nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestResourceStationInJobsite(actor.transform.position, StationName.Tree);
-            if (nearestStation == null) { Debug.Log("NearestStation is null."); yield break; }
+            if (nearestStation == null) { Debug.Log("Nearest Sawmill is null."); yield break; }
             yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
             yield return nearestStation.GatherResource(actor);
         }
@@ -42,18 +42,20 @@ public class Manager_Job : MonoBehaviour
         IEnumerator processTrees(Actor_Base actor, int jobsiteID)
         {
             StationComponent_Crafter nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestCraftingStationInJobsite(actor.transform.position, StationName.Sawmill);
-            if (nearestStation == null) { Debug.Log("NearestStation is null."); yield break; }
+            if (nearestStation == null) { Debug.Log("Nearest Tree is null."); yield break; }
             yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
             yield return nearestStation.CraftItemAll(actor);
         }
 
         IEnumerator dropOffWood(Actor_Base actor, int jobsiteID)
         {
-            var nearestDropOffZone = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestDropOffStationInJobsite(actor.transform.position, StationName.None);
+            var nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStorageStationInJobsite(actor.transform.position, StationName.Log_Pile);
 
-            yield return actor.BasicMove(nearestDropOffZone.transform.position);
+            if (nearestStation == null) { Debug.Log("Nearest LogPile is null."); yield break; }
 
-            // yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestDropOffZone.InventoryData, nearestDropOffZone.GetItemsToDropOff(actor));
+            yield return actor.BasicMove(nearestStation.transform.position);
+
+            yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestStation.StationData.InventoryData, nearestStation.GetItemsToDropOff(actor));
 
             yield return new WaitForSeconds(1);
         }

@@ -16,6 +16,7 @@ public enum StationName
 
     Tree,
     Sawmill,
+    Log_Pile,
 
     Fishing_Spot,
     Farming_Plot,
@@ -34,8 +35,6 @@ public class StationData : IStationInventory
     public int JobsiteID;
 
     public bool StationIsActive = true;
-
-    public bool OverwriteDataInStationFromEditor = false;
 
     public string StationDescription;
     public GameObject GameObject {  get; private set; }
@@ -70,12 +69,6 @@ public class StationData : IStationInventory
     public void SetStationIsActive(bool stationIsActive)
     {
         StationIsActive = stationIsActive;
-    }
-
-    public virtual List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
-    {
-        return inventoryOwner.InventoryData.Inventory.Where(i => i.CommonStats_Item.ItemID == 2300)
-        .Select(i => Manager_Item.GetItem(i.CommonStats_Item.ItemID, i.CommonStats_Item.CurrentStackSize)).ToList();
     }
 
     public void SetStationName(StationName stationName)

@@ -34,6 +34,7 @@ public class JobsiteComponent : MonoBehaviour
 
     public List<StationComponent_Crafter> AllCraftingStationsInJobsite;
     public List<StationComponent_Resource> AllResourceStationsInJobsite;
+    public List<StationComponent_Storage> AllStorageStationsInJobsite;
 
     public void Initialise()
     {
@@ -60,6 +61,9 @@ public class JobsiteComponent : MonoBehaviour
 
         AllResourceStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
         .Select(collider => collider.GetComponent<StationComponent_Resource>()).Where(sc => sc != null).ToList();
+
+        AllStorageStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
+        .Select(collider => collider.GetComponent<StationComponent_Storage>()).Where(sc => sc != null).ToList();
     }
 
     public StationComponent_Crafter GetNearestCraftingStationInJobsite(Vector3 position, StationName stationName)
@@ -78,10 +82,9 @@ public class JobsiteComponent : MonoBehaviour
         .FirstOrDefault();
     }
 
-    public StationComponent GetNearestDropOffStationInJobsite(Vector3 position, StationName stationName)
+    public StationComponent_Storage GetNearestStorageStationInJobsite(Vector3 position, StationName stationName)
     {
-        // Change for dropoff
-        return AllResourceStationsInJobsite
+        return AllStorageStationsInJobsite
         .Where(station => station.StationData.StationName == stationName)
         .OrderBy(station => Vector3.Distance(position, station.transform.position))
         .FirstOrDefault();

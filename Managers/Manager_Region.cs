@@ -24,7 +24,7 @@ public class Manager_Region : MonoBehaviour
         {
             AllRegionComponents.Add(region.RegionData.RegionID, region);
 
-            // Replace with this soon
+            // Replace with this soon, excpet modify for region
 
             //if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
 

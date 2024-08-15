@@ -54,6 +54,7 @@ public class Manager_Progress : IDataPersistence
     }
 }
 
+[Serializable]
 public class Quest
 {
     public int QuestID { get; private set; }

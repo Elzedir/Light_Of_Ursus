@@ -1,0 +1,432 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
+public class AllFactions_SO : ScriptableObject
+{
+    public List<FactionData> AllFactionData;
+
+    public List<int> AllFactionIDs;
+    public int LastUnusedFactionID = 0;
+
+    public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
+    public int LastUnusedActorID = 0;
+
+    // For now, save all data of every actor to this list, but later find a better way to save the info as thousands
+    // or tens of thousands of actors would become too much and inefficient.
+
+    public void PrepareToInitialise()
+    {
+        Manager_Initialisation.OnInitialiseAllFactionSO += _initialise;
+    }
+
+    void _initialise()
+    {
+        _addAllActorDataFromJSON();
+
+        _initialiseDefaultFactions();
+
+        _addAdditionalActorDataFromScene();
+
+        _addAddAllEditorIDs();
+
+        _addAllRuntimeIDs();
+    }
+
+    void _addAllActorDataFromJSON()
+    {
+        //Load all faction and actor data from JSON
+    }
+
+    void _initialiseDefaultFactions()
+    {
+        if (!AllFactionData.Any(f => f.FactionID == -1))
+        {
+            AllFactionData.Add(new FactionData(
+            factionID: -1,
+            factionName: "Wanderers",
+            new List<ActorData>(),
+            new List<FactionRelationData>()
+            ));
+        }
+
+        if (!AllFactionData.Any(f => f.FactionID == 0))
+        {
+            AllFactionData.Add(new FactionData(
+            factionID: 0,
+            factionName: "Player Faction",
+            new List<ActorData>(),
+            new List<FactionRelationData>()
+            ));
+        }
+    }
+
+    void _addAdditionalActorDataFromScene()
+    {
+        foreach (var actor in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<Actor_Base>().ToList())
+        {
+            if (!AllFactionData.Any(f => f.AllFactionActors.Any(a => a.ActorID == actor.ActorData.ActorID)))
+            {
+                Debug.Log($"Actor: {actor.ActorData.ActorID}: {actor.ActorData.ActorName.GetName()} was not in any FactionActorData");
+
+                GetFaction(actor.ActorData.ActorFactionID).AllFactionActors.Add(actor.ActorData);
+            }
+        }
+    }
+
+    void _addAddAllEditorIDs()
+    {
+        AllFactionIDs.Clear();
+        AllActorIDs.Clear();
+        LastUnusedFactionID = 0;
+        LastUnusedActorID = 0;
+
+        for(int i = 0; i < AllFactionData.Count; i++)
+        {
+            var factionData = AllFactionData[i];
+            int tempFactionID = -1;
+
+            while (AllFactionIDs.Contains(factionData.FactionID))
+            {
+                tempFactionID = factionData.FactionID;
+                factionData.FactionID = GetRandomFactionID();
+            }
+
+            if (tempFactionID != -1) Debug.Log($"Overwrote factionID from {tempFactionID} to {factionData.FactionID}: {factionData.FactionName}");
+
+            AllFactionIDs.Add(factionData.FactionID);
+
+            var factionActorData = AllFactionData[i].AllFactionActors;
+
+            for (int j = 0; j < factionActorData.Count; j++)
+            {
+                var actorData = factionActorData[j];
+                int tempActorID = -1;
+
+                while (AllActorIDs.Contains(actorData.ActorID))
+                {
+                    tempActorID = actorData.ActorID;
+                    actorData.ActorID = GetRandomActorID();
+                }
+
+                if (tempActorID != -1) Debug.Log($"Overwrote actor ID from {tempActorID} to {actorData.ActorID}: {actorData.ActorName.GetName()}");
+
+                AllActorIDs.Add(actorData.ActorID);
+            }
+        }
+    }
+
+    void _addAllRuntimeIDs()
+    {
+
+    }
+
+    public void AddToOrUpdateFactionActorsDataList(int factionID, ActorData actorData)
+    {
+        AllFactionData.FirstOrDefault(f => f.FactionID == factionID).AddToOrUpdateFactionActorsDataList(actorData);
+    }
+
+    public void RemoveFromFactionActorsDataList(int factionID, ActorData actorData)
+    {
+        //AllFactionData.FirstOrDefault(f => f.FactionID == factionID).RemoveFromFactionActorsDataList(actorData);
+    }
+
+    public ActorData GetActorData(int factionID, int actorID)
+    {
+        if (factionID != -1)
+        {
+            return AllFactionData.FirstOrDefault(f => f.FactionID == factionID).GetActorData(actorID);
+        }
+
+        return AllFactionData
+            .SelectMany(f => f.AllFactionActors)
+            .FirstOrDefault(a => a.ActorID == actorID);
+    }
+
+    public int GetRandomFactionID()
+    {
+        while (AllFactionIDs.Contains(LastUnusedFactionID))
+        {
+            LastUnusedFactionID++;
+        }
+
+        AllFactionIDs.Add(LastUnusedFactionID);
+
+        return LastUnusedFactionID;
+    }
+
+    public int GetRandomActorID()
+    {
+        while (AllActorIDs.Contains(LastUnusedActorID))
+        {
+            LastUnusedActorID++;
+        }
+
+        AllActorIDs.Add(LastUnusedActorID);
+
+        return LastUnusedActorID;
+    }
+
+    public void ClearFactionData()
+    {
+        AllFactionData.Clear();
+    }
+
+    public FactionData GetFaction(int factionID)
+    {
+        if (!AllFactionData.Any(f => f.FactionID == factionID)) { Debug.Log($"AllFactionData does not contain FactionID: {factionID}"); return null; }
+
+        return AllFactionData.FirstOrDefault(f => f.FactionID == factionID);
+    }
+}
+
+[CustomEditor(typeof(AllFactions_SO))]
+public class AllFactionsSOEditor : Editor
+{
+    int _selectedFactionIndex = -1;
+    int selectedFactionIndex { get { return _selectedFactionIndex; } set { if (_selectedFactionIndex == value) return; _selectedFactionIndex = value; _resetIndexes(0); } }
+    int _selectedActorIndex = -1;
+    int selectedActorIndex { get { return _selectedActorIndex; } set { if (_selectedActorIndex == value) return; _selectedActorIndex = value; _resetIndexes(1); } }
+    int selectedCareerIndex = -1;
+    int selectedGameObjectPropertiesIndex = -1;
+    int selectedSpeciesAndPersonalityIndex = -1;
+    int selectedFactionRelationIndex = -1;
+
+    void _resetIndexes(int i = -1)
+    {
+        selectedCareerIndex = -1;
+        selectedGameObjectPropertiesIndex = -1;
+        selectedSpeciesAndPersonalityIndex = -1;
+        selectedFactionRelationIndex = -1;
+        if (i == 1) return;
+        _selectedActorIndex = -1;
+        if (i == 0) return;
+        _selectedFactionIndex = 0;
+    }
+
+    Vector2 factionScrollPos;
+    Vector2 actorScrollPos;
+    Vector2 careerScrollPos;
+    Vector2 gameObjectPropertiesScrollPos;
+    Vector2 speciesAndPersonalityScrollPos;
+    Vector2 factionRelationScrollPos;
+
+    public override void OnInspectorGUI()
+    {
+        AllFactions_SO allFactionSO = (AllFactions_SO)target;
+
+        EditorGUILayout.LabelField("Global Data", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Faction IDs", string.Join(", ", allFactionSO.AllFactionIDs));
+        allFactionSO.LastUnusedFactionID = EditorGUILayout.IntField("Last Unused Faction ID", allFactionSO.LastUnusedFactionID);
+        EditorGUILayout.LabelField("Actor IDs", string.Join(", ", allFactionSO.AllActorIDs));
+        allFactionSO.LastUnusedActorID = EditorGUILayout.IntField("Last Unused Actor ID", allFactionSO.LastUnusedActorID);
+
+        if (GUILayout.Button("Clear Faction Data"))
+        {
+            _resetIndexes();
+            allFactionSO.ClearFactionData();
+            EditorUtility.SetDirty(allFactionSO);
+        }
+
+        if (GUILayout.Button("Unselect All")) _resetIndexes();
+
+        EditorGUILayout.LabelField("All Factions", EditorStyles.boldLabel);
+        factionScrollPos = EditorGUILayout.BeginScrollView(factionScrollPos, GUILayout.Height(Math.Min(200, allFactionSO.AllFactionData.Count * 20)));
+        selectedFactionIndex = GUILayout.SelectionGrid(selectedFactionIndex, GetFactionNames(allFactionSO), 1);
+        EditorGUILayout.EndScrollView();
+
+        if (selectedFactionIndex >= 0 && selectedFactionIndex < allFactionSO.AllFactionData.Count)
+        {
+            DrawFactionData(allFactionSO.AllFactionData[selectedFactionIndex]);
+        }
+    }
+
+    private string[] GetFactionNames(AllFactions_SO allFactionsSO)
+    {
+        return allFactionsSO.AllFactionData.Select(f => $"{f.FactionID}: {f.FactionName}").ToArray();
+    }
+
+    private float GetPropertyHeight(object data, bool isExpanded)
+    {
+        var fieldCount = data.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).Length;
+        return isExpanded ? fieldCount * 20 : 20;
+    }
+
+    void DrawFactionData(FactionData factionData)
+    {
+        EditorGUILayout.LabelField("Faction Data", EditorStyles.boldLabel);
+
+        EditorGUILayout.LabelField("Faction ID", factionData.FactionID.ToString());
+        EditorGUILayout.LabelField("Faction Name", factionData.FactionName);
+
+        EditorGUILayout.LabelField("All Faction Actors", EditorStyles.boldLabel);
+
+        if (factionData.AllFactionActors != null)
+        {
+            actorScrollPos = EditorGUILayout.BeginScrollView(actorScrollPos, GUILayout.Height(Math.Min(200, factionData.AllFactionActors.Count * 20)));
+            selectedActorIndex = GUILayout.SelectionGrid(selectedActorIndex, GetFactionActorData(), 1);
+            EditorGUILayout.EndScrollView();
+
+            if (selectedActorIndex >= 0 && selectedActorIndex < factionData.AllFactionActors.Count)
+            {
+                DrawActorAdditionalData(factionData.AllFactionActors[selectedActorIndex]);
+            }
+        }
+
+        string[] GetFactionActorData()
+        {
+            return factionData.AllFactionActors.Select(a => $"{a.ActorID}: {a.ActorName.GetName()}").ToArray();
+        }
+
+        EditorGUILayout.LabelField("All Faction Relations", EditorStyles.boldLabel);
+
+        if (factionData.AllFactionRelations != null)
+        {
+            factionRelationScrollPos = EditorGUILayout.BeginScrollView(factionRelationScrollPos, GUILayout.Height(Math.Min(200, factionData.AllFactionRelations.Count * 20)));
+            selectedFactionRelationIndex = GUILayout.SelectionGrid(selectedFactionRelationIndex, GetFactionRelationData(), 1);
+            EditorGUILayout.EndScrollView();
+            
+            if (selectedFactionRelationIndex >= 0 && selectedFactionRelationIndex < factionData.AllFactionRelations.Count)
+            {
+                DrawFactionRelationDetails(factionData.AllFactionRelations[selectedFactionRelationIndex]);
+            }
+        }
+
+        string[] GetFactionRelationData()
+        {
+            return factionData.AllFactionRelations.Select(f => $"{f.FactionID}: {f.FactionName}").ToArray();
+        }
+    }
+
+    private void DrawActorAdditionalData(ActorData actorData)
+    {
+        EditorGUILayout.LabelField("Actor Data", EditorStyles.boldLabel);
+
+        EditorGUILayout.LabelField("Actor ID", actorData.ActorID.ToString());
+
+        EditorGUILayout.LabelField("Actor Name", $"{actorData.ActorName.Name} {actorData.ActorName.Surname}");
+
+        if (actorData.FullIdentification != null)
+        {
+            EditorGUILayout.LabelField("Full Identification", EditorStyles.boldLabel);
+
+            EditorGUILayout.LabelField("Actor ID", actorData.FullIdentification.ActorID.ToString());
+
+            if (actorData.FullIdentification.ActorName != null)
+            {
+                EditorGUILayout.LabelField("Actor Name", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Name", actorData.FullIdentification.ActorName.Name);
+                EditorGUILayout.LabelField("Surname", actorData.FullIdentification.ActorName.Surname);
+                // Title
+                // Available Titles
+            }
+
+            // ActorFamily
+
+            EditorGUILayout.LabelField("Faction", actorData.FullIdentification.ActorFactionID.ToString());
+
+            if (actorData.FullIdentification.Background != null)
+            {
+                //EditorGUILayout.LabelField("Background", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField("Birthplace", actorData.FullIdentification.Background.Birthplace);
+                //EditorGUILayout.LabelField("Birthdate", actorData.FullIdentification.Background.Birthdate.ToString());
+                //EditorGUILayout.LabelField("Religion", actorData.FullIdentification.Background.Religion);
+            }
+        }
+
+        if (actorData.GameObjectProperties != null)
+        {
+            selectedGameObjectPropertiesIndex = GUILayout.SelectionGrid(selectedGameObjectPropertiesIndex, new string[] { "GameObject Properties" }, 1);
+
+            if (selectedGameObjectPropertiesIndex == 0)
+            {
+                DrawGameObjectProperties(actorData.GameObjectProperties);
+            }
+        }
+
+        if (actorData.CareerAndJobs != null)
+        {
+            actorData.CareerAndJobs.JobsActive = EditorGUILayout.Toggle("Jobs Active", actorData.CareerAndJobs.JobsActive);
+
+            selectedCareerIndex = GUILayout.SelectionGrid(selectedCareerIndex, GetJobNames(actorData), 1);
+
+            if (selectedCareerIndex >= 0 && selectedCareerIndex < actorData.CareerAndJobs.ActorJobs.Count)
+            {
+                DrawCareerDetails(actorData.CareerAndJobs.ActorJobs[selectedCareerIndex]);
+            }
+        }
+
+        string[] GetJobNames(ActorData actorData)
+        {
+            return actorData.CareerAndJobs.ActorJobs.Select(j => j.JobName.ToString()).ToArray();
+        }
+
+        if (actorData.SpeciesAndPersonality != null)
+        {
+            selectedSpeciesAndPersonalityIndex = GUILayout.SelectionGrid(selectedSpeciesAndPersonalityIndex, new string[] { "Species And Personality" }, 1);
+
+            if (selectedSpeciesAndPersonalityIndex == 0)
+            {
+                DrawSpeciesAndPersonality(actorData.SpeciesAndPersonality);
+            }
+        }
+
+        if (actorData.StatsAndAbilities != null)
+        {
+            EditorGUILayout.LabelField("Stats And Abilities", EditorStyles.boldLabel);
+        }
+
+        if (actorData.InventoryAndEquipment != null)
+        {
+            EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
+
+            // Inventory
+            // Equipment
+        }
+
+        if (actorData.ActorQuests != null)
+        {
+            //EditorGUILayout.LabelField("Actor Quests", EditorStyles.boldLabel);
+            //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);
+        }
+    }
+
+    private string[] GetCareerNames(ActorData actorData)
+    {
+        return actorData.CareerAndJobs.ActorJobs.Select(j => j.JobName.ToString()).ToArray();
+    }
+
+    private void DrawCareerDetails(JobData jobData)
+    {
+        EditorGUILayout.LabelField("Job Name", jobData.JobName.ToString());
+        EditorGUILayout.LabelField("Jobsite ID", jobData.JobsiteID.ToString());
+    }
+
+    private void DrawGameObjectProperties(GameObjectProperties gameObjectProperties)
+    {
+        EditorGUILayout.Vector3Field("Position", gameObjectProperties.ActorPosition);
+        EditorGUILayout.Vector3Field("Scale", gameObjectProperties.ActorScale);
+        EditorGUILayout.Vector3Field("Rotation", gameObjectProperties.ActorRotation.eulerAngles);
+        EditorGUILayout.ObjectField("Mesh", gameObjectProperties.ActorMesh, typeof(Mesh), allowSceneObjects: true);
+        EditorGUILayout.ObjectField("Material", gameObjectProperties.ActorMaterial, typeof(Material), allowSceneObjects: true);
+    }
+
+    private void DrawSpeciesAndPersonality(SpeciesAndPersonality speciesAndPersonality)
+    {
+        EditorGUILayout.LabelField("Species", speciesAndPersonality.ActorSpecies.ToString());
+        EditorGUILayout.LabelField("Personality", speciesAndPersonality.ActorPersonality.ToString());
+        // Add more details as needed
+    }
+
+    void DrawFactionRelationDetails(FactionRelationData data)
+    {
+        
+        EditorGUILayout.LabelField("Faction ID", data.FactionID.ToString());
+        EditorGUILayout.LabelField("Faction Name", data.FactionName);
+        EditorGUILayout.LabelField("Faction Relation", data.FactionRelation.ToString());
+    }
+}

@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 public class Manager_Relation
 {
@@ -9,19 +6,19 @@ public class Manager_Relation
     {
         float relation = 0;
 
-        relation += _compareFaction(a.ActorData.FullIdentification.ActorFaction, b.ActorData.FullIdentification.ActorFaction);
+        relation += _compareFaction(a.ActorData.ActorFactionID, b.ActorData.ActorFactionID);
         relation += _comparePersonality(a.PersonalityComponent, b.PersonalityComponent);
 
         return relation;
     }
 
-    static float _compareFaction(FactionName a, FactionName b)
+    static float _compareFaction(int a, int b)
     {
-        Faction_Data_SO factionDataA = Manager_Faction.GetFaction(a);
+        FactionData factionDataA = Manager_Faction.GetFaction(a);
 
-        if (!factionDataA.FactionData.Any(f => f.FactionName == b)) return 0;
+        if (!factionDataA.AllFactionRelations.Any(r => r.FactionID == b)) return 0;
 
-        return factionDataA.FactionData.FirstOrDefault(f => f.FactionName == b).RelationshipValue;
+        return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID == b).FactionRelation;
     }
 
     static float _comparePersonality(PersonalityComponent a, PersonalityComponent b)
@@ -37,6 +34,20 @@ public class Manager_Relation
         }
 
         return personalityRelation;
+    }
+}
+
+public class FactionRelationData
+{
+    public int FactionID;
+    public string FactionName;
+    public int FactionRelation;
+
+    public FactionRelationData(int factionID, string factionName, int factionRelations)
+    {
+        FactionID = factionID;
+        FactionName = factionName;
+        FactionRelation = factionRelations;
     }
 }
 

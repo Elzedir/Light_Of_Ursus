@@ -4,13 +4,12 @@ using UnityEngine;
 
 public class Manager_Actor : MonoBehaviour
 {
-    public static AllActors_SO AllActors;
+    public static AllFactions_SO AllFactions;
     public static Dictionary<int, Actor_Base> AllActorComponents = new();
 
     public void OnSceneLoaded()
     {
-        AllActors = Resources.Load<AllActors_SO>("ScriptableObjects/AllActors_SO");
-        AllActors.PrepareToInitialise();
+        AllFactions = Resources.Load<AllFactions_SO>("ScriptableObjects/AllFactions_SO");
 
         Manager_Initialisation.OnInitialiseManagerActor += _initialise;
     }
@@ -45,26 +44,28 @@ public class Manager_Actor : MonoBehaviour
     {
         if (!AllActorComponents.ContainsKey(actorData.ActorID)) AllActorComponents.Add(actorData.ActorID, actor);
 
-        AllActors.AddToOrUpdateAllActorsDataList(actorData);
+        AllFactions.AddToOrUpdateFactionActorsDataList(actorData.FullIdentification.ActorFactionID, actorData);
     }
 
-    public static ActorData GetActorData(int actorID, out ActorData actorData)
+    public static ActorData GetActorData(int factionID, int actorID, out ActorData actorData)
     {
-        return actorData = AllActors.GetActorData(actorID);
+        return actorData = AllFactions.GetActorData(factionID, actorID);
     }
 
-    public static Actor_Base GetActor(int actorID, out Actor_Base actor)
+    public static Actor_Base GetActor(int factionID, int actorID, out Actor_Base actor)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
             if (AllActorComponents[actorID] != null) return actor = AllActorComponents[actorID];
             else
             {
-                GetActorData(actorID, out var actorData);
+                GetActorData(factionID, actorID, out var actorData);
                 return AllActorComponents[actorID] = actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorID);
             }
         }
-        else if (AllActors.AllActorData.Any(a => a.ActorID == actorID) && GetActorData(actorID, out ActorData actorData) != null)
+        else if (AllFactions.AllFactionData.FirstOrDefault(f => f.FactionID == factionID)
+            .AllFactionActors.Any(a => a.ActorID == actorID) && 
+            GetActorData(factionID, actorID, out ActorData actorData) != null)
         {
             return actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorData.ActorID);
         }
@@ -72,13 +73,13 @@ public class Manager_Actor : MonoBehaviour
         return actor = null;
     }
 
-    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID = -1)
+    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID = -1, int factionID = -1)
     {
         Debug.Log($"Spawning new actor with ID: {actorID} at point: {spawnPoint}.");
 
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
-        if (actorID != -1 && GetActorData(actorID, out ActorData actorData) != null)
+        if (actorID != -1 && GetActorData(factionID, actorID, out ActorData actorData) != null)
         {
             actor.SetActorData(actorData);
             actor.Initialise();
@@ -116,7 +117,8 @@ public class Manager_Actor : MonoBehaviour
             fullIdentification: new FullIdentification(
                 actorID: GetRandomActorID(),
                 actorName: GetRandomActorName(actor),
-                actorFaction: GetRandomFaction()
+                actorFactionID: GetRandomFaction(),
+                actorCityID: 5 // Placeholder, usually will pass through city in parameters, or -1 for not a citizen
                 ),
             gameObjectProperties: new GameObjectProperties(
                 actor.transform.parent.position,
@@ -154,7 +156,7 @@ public class Manager_Actor : MonoBehaviour
 
     public static int GetRandomActorID()
     {
-        return AllActors.GetRandomActorID();
+        return AllFactions.GetRandomActorID();
     }
 
     public static ActorName GetRandomActorName(Actor_Base actor)
@@ -169,11 +171,11 @@ public class Manager_Actor : MonoBehaviour
         return SpeciesName.Human;
     }
 
-    private static FactionName GetRandomFaction()
+    private static int GetRandomFaction()
     {
         // Take race and things into account for faction
 
-        return FactionName.Passive;
+        return -1;
     }
 
     private static WorldState_Data_SO GetRandomWorldState()

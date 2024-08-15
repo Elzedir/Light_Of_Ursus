@@ -10,8 +10,7 @@ public class RegionData
 {
     public int RegionID;
     public string RegionName;
-
-    public bool OverwriteDataInRegion = false;
+    public int RegionFactionID;
 
     public string RegionDescription;
 
@@ -34,7 +33,7 @@ public class RegionData
                 AllCityData.Add(city.CityData);
             }
 
-            city.SetCityData(Manager_City.GetCityData(RegionID, city.CityData.CityID));
+            city.SetCityData(Manager_City.GetCityData(cityID: city.CityData.CityID, regionID: RegionID));
         }
 
         for (int i = 0; i < AllCityData.Count; i++)

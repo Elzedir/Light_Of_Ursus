@@ -50,7 +50,7 @@ public class Manager_City : MonoBehaviour
         AllRegions.AddToOrUpdateAllCityDataList(regionID, cityData);
     }
 
-    public static CityData GetCityData(int regionID, int cityID)
+    public static CityData GetCityData(int cityID, int regionID = -1)
     {
         return AllRegions.GetCityData(regionID, cityID);
     }

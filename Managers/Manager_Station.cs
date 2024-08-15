@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -29,9 +31,8 @@ public class Manager_Station : MonoBehaviour
                 if (AllStationComponents[station.StationData.StationID].gameObject == station.gameObject) continue;
                 else
                 {
-                    Debug.LogError($"StationID {station.StationData.StationID} and name {station.name} already exists for station {AllStationComponents[station.StationData.StationID].name}");
-                    station.StationData.StationID = GetRandomStationID();
-                }   
+                    throw new ArgumentException($"StationID {station.StationData.StationID} and name {station.name} already exists for station {AllStationComponents[station.StationData.StationID].name}");
+                }
             }
         }
     }

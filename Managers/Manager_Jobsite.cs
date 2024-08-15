@@ -48,7 +48,7 @@ public class Manager_Jobsite : MonoBehaviour
         AllRegions.AddToOrUpdateAllJobsiteDataList(cityID, jobsiteData);
     }
 
-    public static JobsiteData GetJobsiteData(int cityID, int jobsiteID)
+    public static JobsiteData GetJobsiteData(int jobsiteID, int cityID = -1)
     {
         return AllRegions.GetJobsiteData(cityID, jobsiteID);
     }
