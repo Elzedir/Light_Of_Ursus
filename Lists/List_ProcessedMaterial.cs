@@ -1,6 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+
+public enum ProcessedMaterialName
+{
+    None,
+    Plank
+}
 
 public class List_ProcessedMaterial : Manager_Item
 {

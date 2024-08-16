@@ -8,7 +8,7 @@ public enum JobsiteName
 {
     None,
 
-    Logging_Yard,
+    Lumber_Yard,
     Smithy
 }
 
@@ -44,33 +44,11 @@ public class JobsiteData
 
         // For some reason we are not getting any StationComponents returning
 
-        foreach (var station in jobsite.AllCraftingStationsInJobsite)
+        foreach (var station in jobsite.AllStationsInJobsite)
         {
             if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
             {
-                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
-                AllStationData.Add(station.StationData);
-            }
-
-            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
-        }
-
-        foreach (var station in jobsite.AllResourceStationsInJobsite)
-        {
-            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
-            {
-                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
-                AllStationData.Add(station.StationData);
-            }
-
-            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
-        }
-
-        foreach (var station in jobsite.AllStorageStationsInJobsite)
-        {
-            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
-            {
-                Debug.Log($"Station: {station.StationData.StationID} with ID: {station.StationData.StationID} was not in AllStationData");
+                Debug.Log($"Station: {station.StationData.StationName} with ID: {station.StationData.StationID} was not in AllStationData");
                 AllStationData.Add(station.StationData);
             }
 
@@ -82,6 +60,11 @@ public class JobsiteData
             AllStationData[i].InitialiseStationData(JobsiteID);
         }
 
+        Manager_Initialisation.OnInitialiseJobsites += _initialiseJobs;
+    }
+
+    void _initialiseJobs()
+    {
         SetOwner(null);
         GetAllJobsitePositions();
         FillAllJobsitePositions();
@@ -124,12 +107,16 @@ public class JobsiteData
     {
         actor = null;
 
+        // Instead of using a career.none, use an appropriate career, and then use careerNone.
+
+        Debug.Log(string.Join(", ", Manager_City.GetCity(CityID).CityData.Population.AllCitizens.Select(c => $"{c.CitizenID}: {c.CitizenName}")));
+
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
         var citizen = Manager_City.GetCity(CityID).CityData.Population.AllCitizens
-            .FirstOrDefault(c => c.CitizenData.CareerAndJobs.ActorCareer == CareerName.None
+            .FirstOrDefault(c => Manager_Actor.GetActorData(JobsiteFactionID, c.CitizenID, out ActorData actorData)?.CareerAndJobs.ActorCareer == CareerName.None
                 && _hasMinimumVocationRequired(
-                    c.CitizenData,
+                    c,
                     vocationAndExperience.Vocation,
                     vocationAndExperience.minimumExperienceRequired));
 
@@ -153,13 +140,13 @@ public class JobsiteData
 
         var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
-        city.CityData.Population.AddCitizen(new DisplayCitizen(citizenData: actor.ActorData));
+        city.CityData.Population.AddCitizen(new Citizen(actor.ActorData.ActorID, actor.ActorData.ActorName.GetName(), actor.ActorData.ActorFactionID));
         AddEmployee(actor, position);
 
         return actor;
     }
 
-    protected bool _hasMinimumVocationRequired(ActorData actorData, Vocation vocation, float minimumExperienceRequired)
+    protected bool _hasMinimumVocationRequired(Citizen citizen, Vocation vocation, float minimumExperienceRequired)
     {
         // for now
 
@@ -184,7 +171,7 @@ public class JobsiteData
 
         if (AllEmployees.Any(e => e.ActorID == employee.ActorData.ActorID))
         {
-            if (AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} already exists in employee list at same position.");
+            if (AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName.GetName()} already exists in employee list at same position.");
             else
             {
                 AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Add(position);

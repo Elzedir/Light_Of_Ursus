@@ -42,7 +42,7 @@ public class Manager_Initialisation
         OnInitialiseActors?.Invoke();
     }
 
-    public static void InitialiseJobs()
+    public static void InitialiseJobsites()
     {
         OnInitialiseJobsites?.Invoke();
     }

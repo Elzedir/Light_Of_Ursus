@@ -17,9 +17,8 @@ public enum ItemType {
 
 public class Manager_Item
 {
-    public static List<Item> AllItems = new();
+    public static Dictionary<int, Item> AllItems = new();
 
-    static HashSet<int> _usedIDs = new();
     static int _lastUnusedID = 100000;
 
     public static void Initialise()
@@ -33,12 +32,11 @@ public class Manager_Item
 
     public static void AddToList(Item item)
     {
-        if (_usedIDs.Contains(item.CommonStats_Item.ItemID))
+        if (AllItems.ContainsKey(item.CommonStats_Item.ItemID))
         {
-            // For now, just give them a new one.
             int alreadyUsedID = item.CommonStats_Item.ItemID;
 
-            while (_usedIDs.Contains(_lastUnusedID))
+            while (AllItems.ContainsKey(_lastUnusedID))
             {
                 _lastUnusedID++;
             }
@@ -48,26 +46,14 @@ public class Manager_Item
             //throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
         }
 
-        _usedIDs.Add(item.CommonStats_Item.ItemID);
-        AllItems.Add(item);
+        AllItems.Add(item.CommonStats_Item.ItemID, item);
     }
 
-    public static Item GetItem(int itemID = -1, int itemQuantity = 1, string itemName = "",  bool returnItemIDFirst = false)
+    public static Item GetItem(int itemID = -1, int itemQuantity = 1, bool returnItemIDFirst = false)
     {
-        if (itemID == -1 && itemName == "") throw new ArgumentException($"Both ItemID: {itemID} and ItemName: {itemName} are invalid.");
+        if (itemID == -1) throw new ArgumentException($"ItemID: {itemID} is invalid.");
 
-        //Eventually implement a more efficient search based on ID ranges for weapons, armour, etc.
-
-        if (returnItemIDFirst || string.IsNullOrEmpty(itemName))
-        {
-            return new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity)
-                        ?? new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity);
-        }
-        else
-        {
-            return new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemName == itemName), itemQuantity)
-                        ?? new Item(AllItems.FirstOrDefault(i => i.CommonStats_Item.ItemID == itemID), itemQuantity);
-        }
+        return new Item(AllItems[itemID], itemQuantity);
     }
 
     public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)

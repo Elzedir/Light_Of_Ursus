@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,7 +141,8 @@ public class EquipmentComponent
     }
 }
 
-public class ActorEquipment
+[Serializable]
+public class EquipmentData
 {
     public CommonStats_Item Head;
     public CommonStats_Item Neck;
@@ -152,7 +154,7 @@ public class ActorEquipment
     public CommonStats_Item Legs;
     public CommonStats_Item Feet;
 
-    public ActorEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
+    public EquipmentData(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
     {
         Head = head?.CommonStats_Item;
         Neck = neck?.CommonStats_Item;

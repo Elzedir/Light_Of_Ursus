@@ -25,16 +25,16 @@ public enum EmployeePosition
 }
 
 [Serializable]
-public class JobsiteComponent : MonoBehaviour
+public class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;
     public BoxCollider JobsiteArea;
 
     public ProsperityComponent ProsperityComponent;
 
-    public List<StationComponent_Crafter> AllCraftingStationsInJobsite;
-    public List<StationComponent_Resource> AllResourceStationsInJobsite;
-    public List<StationComponent_Storage> AllStorageStationsInJobsite;
+    public List<StationComponent> AllStationsInJobsite;
+
+    public bool JobsiteOpen = true;
 
     public void Initialise()
     {
@@ -42,6 +42,28 @@ public class JobsiteComponent : MonoBehaviour
 
         ProsperityComponent = new ProsperityComponent(JobsiteData.Prosperity.CurrentProsperity);
         GetAllStationsInJobsite();
+
+        Manager_TickRate.RegisterTickable(this);
+    }
+
+    public virtual void OnTick()
+    {
+        throw new ArgumentException("Cannot use base class");
+    }
+
+    public virtual TickRate GetTickRate()
+    {
+        throw new ArgumentException("Cannot use base class");
+    }
+
+    protected virtual bool _compareProductionOutput()
+    {
+        throw new ArgumentException("Cannot use base class");
+    }
+
+    protected virtual void _redistributeEmployees()
+    {
+        throw new ArgumentException("Cannot use base class");
     }
 
     public void SetJobsiteData(JobsiteData jobsiteData)
@@ -56,35 +78,13 @@ public class JobsiteComponent : MonoBehaviour
 
     public void GetAllStationsInJobsite()
     {
-        AllCraftingStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
-        .Select(collider => collider.GetComponent<StationComponent_Crafter>()).Where(sc => sc != null).ToList();
-
-        AllResourceStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
-        .Select(collider => collider.GetComponent<StationComponent_Resource>()).Where(sc => sc != null).ToList();
-
-        AllStorageStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
-        .Select(collider => collider.GetComponent<StationComponent_Storage>()).Where(sc => sc != null).ToList();
+        AllStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
+        .Select(collider => collider.GetComponent<StationComponent>()).Where(sc => sc != null).ToList();
     }
 
-    public StationComponent_Crafter GetNearestCraftingStationInJobsite(Vector3 position, StationName stationName)
+    public StationComponent GetNearestStationInJobsite(Vector3 position, StationName stationName)
     {
-        return AllCraftingStationsInJobsite
-        .Where(station => station.StationData.StationName == stationName)
-        .OrderBy(station => Vector3.Distance(position, station.transform.position))
-        .FirstOrDefault();
-    }
-
-    public StationComponent_Resource GetNearestResourceStationInJobsite(Vector3 position, StationName stationName)
-    {
-        return AllResourceStationsInJobsite
-        .Where(station => station.StationData.StationName == stationName)
-        .OrderBy(station => Vector3.Distance(position, station.transform.position))
-        .FirstOrDefault();
-    }
-
-    public StationComponent_Storage GetNearestStorageStationInJobsite(Vector3 position, StationName stationName)
-    {
-        return AllStorageStationsInJobsite
+        return AllStationsInJobsite
         .Where(station => station.StationData.StationName == stationName)
         .OrderBy(station => Vector3.Distance(position, station.transform.position))
         .FirstOrDefault();

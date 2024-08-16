@@ -118,7 +118,7 @@ public class Manager_Actor : MonoBehaviour
                 actorID: GetRandomActorID(),
                 actorName: GetRandomActorName(actor),
                 actorFactionID: GetRandomFaction(),
-                actorCityID: 5 // Placeholder, usually will pass through city in parameters, or -1 for not a citizen
+                actorCityID: 0 // Placeholder, usually will pass through city in parameters, or -1 for not a citizen
                 ),
             gameObjectProperties: new GameObjectProperties(
                 actor.transform.parent.position,
@@ -132,6 +132,9 @@ public class Manager_Actor : MonoBehaviour
                 actorCareer: CareerName.None, // Later set to none only if you don't have a preset career in parameters
                 actorJobs: new List<JobData>()
                 ),
+            craftingData: new CraftingData(
+                knownRecipes: new List<RecipeName> { RecipeName.Plank }
+                ),
             speciesAndPersonality: new SpeciesAndPersonality(
                 actorSpecies: GetRandomSpecies(),
                 actorPersonality: GetRandomPersonality()
@@ -141,7 +144,7 @@ public class Manager_Actor : MonoBehaviour
                     inventoryOwner: actor,
                     inventory: new List<Item>()
                     ),
-                new ActorEquipment(null, null, null, null, null, null, null, null, null)
+                new EquipmentData(null, null, null, null, null, null, null, null, null)
                 ),
             statsAndAbilities: new StatsAndAbilities(),
             actorQuests: null
@@ -175,7 +178,7 @@ public class Manager_Actor : MonoBehaviour
     {
         // Take race and things into account for faction
 
-        return -1;
+        return 0;
     }
 
     private static WorldState_Data_SO GetRandomWorldState()

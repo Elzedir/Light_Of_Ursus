@@ -26,42 +26,49 @@ public class AllFactions_SO : ScriptableObject
 
     void _initialise()
     {
-        _addAllActorDataFromJSON();
+        //_addAllFactionsFromJSON();
 
         _initialiseDefaultFactions();
+
+        _initialiseAllFactions();
 
         _addAdditionalActorDataFromScene();
 
         _addAddAllEditorIDs();
 
         _addAllRuntimeIDs();
-    }
 
-    void _addAllActorDataFromJSON()
-    {
-        //Load all faction and actor data from JSON
+        
     }
 
     void _initialiseDefaultFactions()
     {
-        if (!AllFactionData.Any(f => f.FactionID == -1))
+        if (!AllFactionData.Any(f => f.FactionID == 0))
         {
             AllFactionData.Add(new FactionData(
-            factionID: -1,
+            factionID: 0,
             factionName: "Wanderers",
             new List<ActorData>(),
             new List<FactionRelationData>()
             ));
         }
 
-        if (!AllFactionData.Any(f => f.FactionID == 0))
+        if (!AllFactionData.Any(f => f.FactionID == 1))
         {
             AllFactionData.Add(new FactionData(
-            factionID: 0,
+            factionID: 1,
             factionName: "Player Faction",
             new List<ActorData>(),
             new List<FactionRelationData>()
             ));
+        }
+    }
+
+    void _initialiseAllFactions()
+    {
+        foreach(var faction in AllFactionData)
+        {
+            faction.InitialiseFaction();
         }
     }
 
@@ -137,12 +144,8 @@ public class AllFactions_SO : ScriptableObject
 
     public ActorData GetActorData(int factionID, int actorID)
     {
-        if (factionID != -1)
-        {
-            return AllFactionData.FirstOrDefault(f => f.FactionID == factionID).GetActorData(actorID);
-        }
-
-        return AllFactionData
+        return AllFactionData.FirstOrDefault(f => f.FactionID == factionID)?.GetActorData(actorID)
+            ?? AllFactionData
             .SelectMany(f => f.AllFactionActors)
             .FirstOrDefault(a => a.ActorID == actorID);
     }
@@ -289,7 +292,7 @@ public class AllFactionsSOEditor : Editor
             factionRelationScrollPos = EditorGUILayout.BeginScrollView(factionRelationScrollPos, GUILayout.Height(Math.Min(200, factionData.AllFactionRelations.Count * 20)));
             selectedFactionRelationIndex = GUILayout.SelectionGrid(selectedFactionRelationIndex, GetFactionRelationData(), 1);
             EditorGUILayout.EndScrollView();
-            
+
             if (selectedFactionRelationIndex >= 0 && selectedFactionRelationIndex < factionData.AllFactionRelations.Count)
             {
                 DrawFactionRelationDetails(factionData.AllFactionRelations[selectedFactionRelationIndex]);
@@ -301,6 +304,16 @@ public class AllFactionsSOEditor : Editor
             return factionData.AllFactionRelations.Select(f => $"{f.FactionID}: {f.FactionName}").ToArray();
         }
     }
+
+    int selectedInventoryIndex = -1;
+    int selectedInventoryItemIndex = -1;
+
+    Vector2 inventoryItemScrollPos;
+
+    int selectedEquipmentIndex = -1;
+    int selectedEquipmentItemIndex = -1;
+
+    Vector2 equipmentItemScrollPos;
 
     private void DrawActorAdditionalData(ActorData actorData)
     {
@@ -384,8 +397,22 @@ public class AllFactionsSOEditor : Editor
         {
             EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
 
-            // Inventory
-            // Equipment
+            var inventoryData = actorData.InventoryAndEquipment.InventoryData;
+            var equipmentData = actorData.InventoryAndEquipment.EquipmentData;
+
+            selectedInventoryIndex = GUILayout.SelectionGrid(selectedInventoryIndex, new string[] { "Inventory" }, 1);
+
+            if (selectedInventoryIndex == 0)
+            {
+                DrawInventory(inventoryData);
+            }
+
+            selectedEquipmentIndex = GUILayout.SelectionGrid(selectedEquipmentIndex, new string[] { "Equipment" }, 1);
+
+            if (selectedEquipmentIndex == 0)
+            {
+                DrawEquipment(equipmentData);
+            }
         }
 
         if (actorData.ActorQuests != null)
@@ -424,9 +451,34 @@ public class AllFactionsSOEditor : Editor
 
     void DrawFactionRelationDetails(FactionRelationData data)
     {
-        
         EditorGUILayout.LabelField("Faction ID", data.FactionID.ToString());
         EditorGUILayout.LabelField("Faction Name", data.FactionName);
         EditorGUILayout.LabelField("Faction Relation", data.FactionRelation.ToString());
+    }
+
+    void DrawInventory(InventoryData data)
+    {
+        EditorGUILayout.LabelField("Gold", $"{data.Gold}");
+
+        if (data.InventoryItems.Count == 1)
+        {
+            EditorGUILayout.LabelField($"{data.InventoryItems[0].CommonStats_Item.ItemName}: {data.InventoryItems[0].CommonStats_Item.CurrentStackSize}");
+        }
+        else
+        {
+            inventoryItemScrollPos = EditorGUILayout.BeginScrollView(inventoryItemScrollPos, GUILayout.Height(Math.Min(200, data.InventoryItems.Count * 20)));
+
+            for (int i = 0; i < data.InventoryItems.Count; i++)
+            {
+                EditorGUILayout.LabelField($"{data.InventoryItems[i].CommonStats_Item.ItemName}: {data.InventoryItems[i].CommonStats_Item.CurrentStackSize}");
+            }
+
+            EditorGUILayout.EndScrollView();
+        }
+    }
+
+    void DrawEquipment(EquipmentData data)
+    {
+
     }
 }

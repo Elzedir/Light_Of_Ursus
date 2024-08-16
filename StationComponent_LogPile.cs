@@ -1,9 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
-public class StationComponent_LogPile : StationComponent_Storage
+public class StationComponent_LogPile : StationComponent
 {
     public bool SalesEnabled = false;
 
@@ -17,9 +15,14 @@ public class StationComponent_LogPile : StationComponent_Storage
         AllowedEmployeePositions = new() { EmployeePosition.None };
     }
 
+    public override void InitialiseAllowedRecipes()
+    {
+        
+    }
+
     public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
     {
-        return inventoryOwner.InventoryData.Inventory.Where(i => i.CommonStats_Item.ItemID == 2300)
+        return inventoryOwner.InventoryData.InventoryItems.Where(i => i.CommonStats_Item.ItemID == 2300)
         .Select(i => Manager_Item.GetItem(i.CommonStats_Item.ItemID, i.CommonStats_Item.CurrentStackSize)).ToList();
     }
 }

@@ -20,6 +20,14 @@ public class FactionData
         AllFactionRelations = allFactionRelations;
     }
 
+    public void InitialiseFaction()
+    {
+        foreach (var actorData in AllFactionActors)
+        {
+            actorData.PrepareForInitialisation();
+        }
+    }
+
     public void AddToOrUpdateFactionActorsDataList(ActorData actorData)
     {
         var existingActor = AllFactionActors.FirstOrDefault(a => a.ActorID == actorData.ActorID);

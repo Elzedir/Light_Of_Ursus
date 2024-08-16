@@ -30,6 +30,7 @@ public enum StationName
 public class StationData : IStationInventory
 {
     public int StationID;
+    public StationType StationType;
     public StationName _stationName;
     public StationName StationName { get { return _stationName; } private set { _stationName = value; } }
     public int JobsiteID;
@@ -38,8 +39,15 @@ public class StationData : IStationInventory
 
     public string StationDescription;
     public GameObject GameObject {  get; private set; }
-
+    public Recipe CurrentRecipe;
     public InventoryData InventoryData { get; private set; }
+
+    public void InitialiseStationData(int jobsiteID)
+    {
+        Manager_Station.GetStation(StationID).Initialise();
+
+        InitialiseInventoryComponent();
+    }
 
     public void InitialiseInventoryComponent()
     {
@@ -47,23 +55,14 @@ public class StationData : IStationInventory
         InventoryData = new InventoryData(this, new List<Item>());
     }
 
-    public void InitialiseStationData(int jobsiteID)
-    {
-        Manager_Station.GetStation(StationID).Initialise();
-    }
-
     public List<Item> GetStationYield(Actor_Base actor)
     {
         throw new ArgumentException("Base class cannot be used.");
-
-        //return new List<Item> { Manager_Item.GetItem(itemID: 1100, itemQuantity: 7) }; For tree
     }
 
     public Vector3 GetOperatingPosition()
     {
         throw new ArgumentException("Base class cannot be used.");
-
-        // return Manager_Station.GetStation(StationID).StationArea.bounds.center; Use a list of vector3 from possible operating positions
     }
 
     public void SetStationIsActive(bool stationIsActive)

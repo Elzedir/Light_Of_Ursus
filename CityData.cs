@@ -76,7 +76,7 @@ public class DisplayPopulation
     public float MaxPopulation;
     public float ExpectedPopulation;
 
-    public List<DisplayCitizen> AllCitizens;
+    public List<Citizen> AllCitizens;
 
     public void DisplayCurrentPopulation()
     {
@@ -88,9 +88,9 @@ public class DisplayPopulation
         // Calculate expected population
     }
 
-    public void AddCitizen(DisplayCitizen citizen)
+    public void AddCitizen(Citizen citizen)
     {
-        if (AllCitizens.Contains(citizen)) throw new ArgumentException($"Citizen: {citizen.CitizenName} already exists in AllCitizens.");
+        if (AllCitizens.Contains(citizen)) { Debug.Log($"Citizen: {citizen.CitizenName} already exists in AllCitizens."); return; }
 
         AllCitizens.Add(citizen);
         DisplayCurrentPopulation();
@@ -98,7 +98,7 @@ public class DisplayPopulation
 
     public void RemoveCitizen(int actorID)
     {
-        if (!AllCitizens.Any(c => c.CitizenID == actorID)) throw new ArgumentException($"CitizenID: {actorID} does not exist in AllCitizens.");
+        if (!AllCitizens.Any(c => c.CitizenID == actorID)) { Debug.Log($"CitizenID: {actorID} does not exist in AllCitizens."); return; }
 
         AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.CitizenID == actorID));
         DisplayCurrentPopulation();
@@ -106,20 +106,17 @@ public class DisplayPopulation
 }
 
 [Serializable]
-public class DisplayCitizen
+public class Citizen
 {
     public int CitizenID;
     public string CitizenName;
-    public ActorData CitizenData;
+    public int CitizenFactionID;
 
-    public DisplayCitizen(ActorData citizenData)
+    public Citizen(int citizenID, string citizenName, int citizenFactionID)
     {
-        CitizenData = citizenData;
-
-        if (CitizenData == null) throw new ArgumentException("ActorData is null");
-
-        CitizenID = CitizenData.ActorID;
-        CitizenName = CitizenData.ActorName.GetName();
+        CitizenID = citizenID;
+        CitizenName = citizenName;
+        CitizenFactionID = citizenFactionID;
     }
 
     public void UpdateDisplayCitizen(Actor_Base actor)
@@ -129,7 +126,7 @@ public class DisplayCitizen
     }
 }
 
-[CustomPropertyDrawer(typeof(DisplayCitizen))]
+[CustomPropertyDrawer(typeof(Citizen))]
 public class DisplayCitizen_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

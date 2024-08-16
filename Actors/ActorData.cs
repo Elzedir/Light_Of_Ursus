@@ -18,6 +18,7 @@ public class ActorData
 
     public WorldState_Data_SO Worldstate;
     public CareerAndJobs CareerAndJobs;
+    public CraftingData CraftingData;
     public SpeciesAndPersonality SpeciesAndPersonality;
     public StatsAndAbilities StatsAndAbilities;
     public InventoryAndEquipment InventoryAndEquipment;
@@ -32,6 +33,8 @@ public class ActorData
     {
         if (Manager_Actor.GetActor(ActorFactionID, ActorID, out Actor_Base actor) != null)
         {
+            Debug.Log("InitialisingActorData");
+
             actor.SetActorData(Manager_Actor.GetActorData(ActorFactionID, ActorID, out ActorData actorData));
             FullIdentification.Initialise();
             CareerAndJobs.Initialise();
@@ -43,7 +46,7 @@ public class ActorData
     }
 
     public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
-        CareerAndJobs careerAndJobs,  SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, 
+        CareerAndJobs careerAndJobs, CraftingData craftingData, SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, 
         ActorQuests actorQuests)
     {
         FullIdentification = fullIdentification;
@@ -58,10 +61,51 @@ public class ActorData
 
         CareerAndJobs = careerAndJobs;
         CareerAndJobs.SetActorAndFactionID(ActorID, ActorFactionID);
+
+        CraftingData = craftingData;
+        CraftingData.SetActorAndFactionID(ActorID, ActorFactionID);
+
         SpeciesAndPersonality = speciesAndPersonality;
         StatsAndAbilities = statsAndAbilities;
         InventoryAndEquipment = inventoryAndEquipment;
         ActorQuests = actorQuests;
+    }
+}
+
+[CustomPropertyDrawer(typeof(ActorData))]
+public class ActorData_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        SerializedProperty actorNameProp = property.FindPropertyRelative("ActorName");
+
+        if (actorNameProp != null)
+        {
+            SerializedProperty nameProp = actorNameProp.FindPropertyRelative("Name");
+
+            if (nameProp != null)
+            {
+                SerializedProperty surnameProp = actorNameProp.FindPropertyRelative("Surname");
+
+                if (surnameProp != null)
+                {
+                    label.text = $"{nameProp.stringValue} {surnameProp.stringValue}";
+                }
+                else
+                {
+                    label.text = $"{nameProp.stringValue}";
+                }
+            }
+            else label.text = "No Name";
+        }
+        else label.text = "No Name";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
     }
 }
 
@@ -86,7 +130,7 @@ public class FullIdentification
 
     public void Initialise()
     {
-        Manager_City.GetCityData(cityID: ActorCityID);
+        Manager_City.GetCityData(cityID: ActorCityID).Population.AddCitizen(new Citizen(ActorID, ActorName.GetName(), ActorFactionID));
     }
 }
 
@@ -141,15 +185,13 @@ public class CareerAndJobs : ITickable
     public int ActorID;
     public int FactionID;
     public CareerName ActorCareer;
-    public CraftingComponent Crafting;
-
     public List<JobData> ActorJobs;
 
     public bool JobsActive;
 
     Coroutine _jobCoroutine;
 
-    public CareerAndJobs(CareerName actorCareer, List<JobData> actorJobs, bool jobsActive = false)
+    public CareerAndJobs(CareerName actorCareer, List<JobData> actorJobs, bool jobsActive = true)
     {
         ActorCareer = actorCareer;
         JobsActive = jobsActive;
@@ -268,13 +310,13 @@ public class StatsAndAbilities
 [Serializable]
 public class InventoryAndEquipment
 {
-    public InventoryData Inventory;
-    public ActorEquipment Equipment;
+    public InventoryData InventoryData;
+    public EquipmentData EquipmentData;
 
-    public InventoryAndEquipment(InventoryData inventory, ActorEquipment equipment)
+    public InventoryAndEquipment(InventoryData inventoryData, EquipmentData equipmentData)
     {
-        Inventory = inventory;
-        Equipment = equipment;
+        InventoryData = inventoryData;
+        EquipmentData = equipmentData;
     }
 }
 
@@ -419,39 +461,83 @@ public class ActorLevelData
     }
 }
 
-[CustomPropertyDrawer(typeof(ActorData))]
-public class ActorData_Drawer : PropertyDrawer
+[Serializable]
+public class CraftingData
 {
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    public int ActorID;
+    public int FactionID;
+    public List<RecipeName> KnownRecipes;
+
+    public CraftingData(List<RecipeName> knownRecipes)
     {
-        SerializedProperty actorNameProp = property.FindPropertyRelative("ActorName");
-
-        if (actorNameProp != null)
-        {
-            SerializedProperty nameProp = actorNameProp.FindPropertyRelative("Name");
-            
-            if (nameProp != null)
-            {
-                SerializedProperty surnameProp = actorNameProp.FindPropertyRelative("Surname");
-
-                if (surnameProp != null)
-                {
-                    label.text = $"{nameProp.stringValue} {surnameProp.stringValue}";
-                }
-                else
-                {
-                    label.text = $"{nameProp.stringValue}";
-                }
-            }
-            else label.text = "No Name";
-        }
-        else label.text = "No Name";
-
-        EditorGUI.PropertyField(position, property, label, true);
+        KnownRecipes = knownRecipes;
     }
 
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    public void SetActorAndFactionID(int actorID, int factionID)
     {
-        return EditorGUI.GetPropertyHeight(property, label, true);
+        ActorID = actorID;
+        FactionID = factionID;
+    }
+
+    public bool AddRecipe(RecipeName recipeName)
+    {
+        if (!KnownRecipes.Contains(recipeName)) return false;
+
+        KnownRecipes.Add(recipeName);
+
+        return true;
+    }
+
+    public IEnumerator CraftItemAll(RecipeName recipeName)
+    {
+        var recipe = Manager_Recipe.GetRecipe(recipeName);
+
+        Manager_Actor.GetActorData(FactionID, ActorID, out ActorData actorData);
+
+        while (inventoryContainsAllIngredients(recipe.RecipeIngredients))
+        {
+            yield return CraftItem(recipeName);
+        }
+
+        bool inventoryContainsAllIngredients(List<Item> ingredients)
+        {
+            foreach (var ingredient in ingredients)
+            {
+                var inventoryItem = actorData.InventoryAndEquipment.InventoryData.ItemInInventory(ingredient.CommonStats_Item.ItemID);
+
+                if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < ingredient.CommonStats_Item.CurrentStackSize)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    public IEnumerator CraftItem(RecipeName recipeName)
+    {
+        if (!KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); yield break; }
+
+        Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
+
+        Manager_Actor.GetActorData(FactionID, ActorID, out ActorData actorData);
+
+        if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RecipeIngredients))
+        {
+            if (actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RecipeIngredients))
+            {
+                yield break;
+            }
+
+            actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RecipeIngredients);
+            Debug.Log($"Cannot add products into inventory"); 
+            yield break;
+        }
+        else
+        {
+            Debug.Log($"Inventory does not have all required ingredients");
+            yield break;
+        }
     }
 }

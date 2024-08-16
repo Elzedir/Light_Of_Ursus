@@ -1,7 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+public enum RawMaterialName
+{
+    None,
+    Log
+}
 public class List_RawMaterial : Manager_Item
 {
     public static void InitializeRawMaterialData()
@@ -32,7 +36,7 @@ public class List_RawMaterial : Manager_Item
 
     static void _woods()
     {
-        AddToList(new Item(new CommonStats_Item(itemID: 1100, itemType: ItemType.Raw_Material, itemName: "Log", maxStackSize: 100, itemWeight: 3, itemValue: 5)));
+        AddToList(new Item(new CommonStats_Item(itemID: 1100, itemType: ItemType.Raw_Material, itemName: $"{RawMaterialName.Log}", maxStackSize: 100, itemWeight: 3, itemValue: 5)));
         AddToList(new Item(new CommonStats_Item(itemID: 1101, itemType: ItemType.Raw_Material, itemName: "Pine Wood", maxStackSize: 100, itemWeight: 3, itemValue: 4)));
         AddToList(new Item(new CommonStats_Item(itemID: 1102, itemType: ItemType.Raw_Material, itemName: "Birch Wood", maxStackSize: 100, itemWeight: 3, itemValue: 6)));
         AddToList(new Item(new CommonStats_Item(itemID: 1103, itemType: ItemType.Raw_Material, itemName: "Maple Wood", maxStackSize: 100, itemWeight: 3, itemValue: 7)));

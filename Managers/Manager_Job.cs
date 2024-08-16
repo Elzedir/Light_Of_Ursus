@@ -33,31 +33,30 @@ public class Manager_Job : MonoBehaviour
         IEnumerator chopTrees(Actor_Base actor, int jobsiteID)
         {
             // If jobsite is null, then don't do anything unless there's an unowned jobsite
-            StationComponent_Resource nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestResourceStationInJobsite(actor.transform.position, StationName.Tree);
+            StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Tree);
             if (nearestStation == null) { Debug.Log("Nearest Sawmill is null."); yield break; }
             yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
-            yield return nearestStation.GatherResource(actor);
+            nearestStation.SetOperator(actor);
         }
+
+        // Find a way to manage the jobs so that it doesn't use a fixed list but rather inventory requirements. Or can use a fixed list like Kenshi, but have
+        // limits for time.
 
         IEnumerator processTrees(Actor_Base actor, int jobsiteID)
         {
-            StationComponent_Crafter nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestCraftingStationInJobsite(actor.transform.position, StationName.Sawmill);
+            StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Sawmill);
             if (nearestStation == null) { Debug.Log("Nearest Tree is null."); yield break; }
             yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
-            yield return nearestStation.CraftItemAll(actor);
+            nearestStation.SetOperator(actor);
         }
 
         IEnumerator dropOffWood(Actor_Base actor, int jobsiteID)
         {
-            var nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStorageStationInJobsite(actor.transform.position, StationName.Log_Pile);
-
+            var nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Log_Pile);
             if (nearestStation == null) { Debug.Log("Nearest LogPile is null."); yield break; }
-
-            yield return actor.BasicMove(nearestStation.transform.position);
-
-            yield return actor.ActorData.InventoryAndEquipment.Inventory.TransferItemFromInventory(nearestStation.StationData.InventoryData, nearestStation.GetItemsToDropOff(actor));
-
-            yield return new WaitForSeconds(1);
+            yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
+            yield return actor.ActorData.InventoryAndEquipment.InventoryData.TransferItemFromInventory(nearestStation.StationData.InventoryData, nearestStation.GetItemsToDropOff(actor));
+            nearestStation.SetOperator(actor);
         }
 
         IEnumerator sellWood(Actor_Base actor, int jobsiteID)

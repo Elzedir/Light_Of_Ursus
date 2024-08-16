@@ -17,11 +17,10 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
     public Animator ActorAnimator { get; protected set; }
     public Animation ActorAnimation { get; protected set; }
     public EquipmentComponent EquipmentComponent { get; protected set; }
-    public CraftingComponent CraftingComponent { get; protected set; }
     public VocationComponent VocationComponent { get; protected set; }
     public PersonalityComponent PersonalityComponent { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
-    public InventoryData InventoryData { get { return ActorData.InventoryAndEquipment.Inventory; } protected set { ActorData.InventoryAndEquipment.Inventory = value; } }
+    public InventoryData InventoryData { get { return ActorData.InventoryAndEquipment.InventoryData; } protected set { ActorData.InventoryAndEquipment.InventoryData = value; } }
 
     void Awake()
     {
@@ -58,8 +57,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
-
-        CraftingComponent = new CraftingComponent(this, new List<Recipe> { Manager_Recipe.GetRecipe(RecipeName.Plank) });
         VocationComponent = new VocationComponent(this, new());
         PersonalityComponent = new PersonalityComponent(this, ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
@@ -73,7 +70,7 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 
     public void InitialiseInventoryComponent()
     {
-        
+        InventoryData = new InventoryData(this, new List<Item>());
     }
 
     public void UpdateVisuals()
