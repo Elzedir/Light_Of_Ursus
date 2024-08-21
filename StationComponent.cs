@@ -12,6 +12,7 @@ public enum StationType
     Storage
 }
 
+[RequireComponent(typeof(BoxCollider))]
 public class StationComponent : MonoBehaviour, IInteractable
 {
     public StationData StationData;
@@ -139,7 +140,7 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     public virtual void InitialiseStartingInventory()
     {
-        throw new ArgumentException("Cannot use base class.");
+        
     }
 
     public void SetStationData(StationData stationData)

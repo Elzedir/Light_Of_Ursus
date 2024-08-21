@@ -27,8 +27,9 @@ public class JobsiteData
     public string OwnerName;
     Actor_Base _owner;
 
-    public List<EmployeeData> AllEmployees;
-    public Dictionary<EmployeePosition, List<Actor_Base>> AllJobPositions = new();
+    public List<int> AllEmployees;
+    public Dictionary<EmployeePosition, HashSet<int>> AllJobPositions = new();
+    public Dictionary<int, int> EmployeeStationAllocation = new();
 
     public DisplayProsperity Prosperity;
 
@@ -141,7 +142,7 @@ public class JobsiteData
         var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
         city.CityData.Population.AddCitizen(new Citizen(actor.ActorData.ActorID, actor.ActorData.ActorName.GetName(), actor.ActorData.ActorFactionID));
-        AddEmployee(actor, position);
+        AddEmployee(actor.ActorData.ActorID);
 
         return actor;
     }
@@ -165,70 +166,66 @@ public class JobsiteData
         return (null, 0);
     }
 
-    public void AddEmployee(Actor_Base employee, EmployeePosition position)
+    public void AddEmployee(int employeeID)
     {
-        if (employee == null) throw new ArgumentException($"Employee: {employee} or employee position {position} is null.");
-
-        if (AllEmployees.Any(e => e.ActorID == employee.ActorData.ActorID))
+        if (AllEmployees.Contains(employeeID))
         {
-            if (AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Contains(position)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName.GetName()} already exists in employee list at same position.");
-            else
-            {
-                AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID).EmployeePositions.Add(position);
-                return;
-            }
+            Debug.Log($"EmployeeID: {employeeID} already exists in employee list.");
+            return;
         }
 
-        AllEmployees.Add(new EmployeeData(employee.ActorData.ActorID, employee.ActorData.ActorName.GetName(), new List<EmployeePosition> { position }));
+        AllEmployees.Add(employeeID);
     }
 
-    public void HireEmployee(Actor_Base employee, EmployeePosition position)
+    public void HireEmployee(int employeeID)
     {
-        AddEmployee(employee, position);
+        AddEmployee(employeeID);
 
         // And then apply relevant relation buff
     }
 
-    public void RemoveEmployee(Actor_Base employee)
+    public void RemoveEmployee(int employeeID)
     {
-        if (employee == null) throw new ArgumentException($"Employee is null.");
+        if (!AllEmployees.Contains(employeeID))
+        {
+            Debug.Log($"EmployeeID: {employeeID} is not in employee list.");
+            return;
+        }
 
-        if (!AllEmployees.Any(e => e.ActorID == employee.ActorData.ActorID)) throw new ArgumentException($"Employee: {employee.ActorData.ActorName} is not in employee list.");
-
-        AllEmployees.Remove(AllEmployees.FirstOrDefault(e => e.ActorID == employee.ActorData.ActorID));
+        AllEmployees.Remove(employeeID);
 
         // Remove employee job from employee job component.
     }
 
-    public void FireEmployee(Actor_Base employee)
+    public void FireEmployee(int employeeID)
     {
-        RemoveEmployee(employee);
+        RemoveEmployee(employeeID);
 
         // And then apply relation debuff.
     }
 
-    public void AddEmployeeToJob(Actor_Base actor, EmployeePosition employeePosition)
+    public void AddEmployeeToJob(int employeeID, EmployeePosition employeePosition)
     {
         if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
-        if (AllJobPositions[employeePosition].Contains(actor)) throw new ArgumentException($"Emplyee {actor.name} already has position {employeePosition}");
+        if (AllJobPositions[employeePosition].Contains(employeeID)) throw new ArgumentException($"EmployeeID: {employeeID} already has position {employeePosition}");
 
-        AllJobPositions[employeePosition].Add(actor);
+        AllJobPositions[employeePosition].Add(employeeID);
 
     }
 
-    public void RemoveEmployeeFromJob(Actor_Base actor, EmployeePosition employeePosition)
+    public void RemoveEmployeeFromJob(int employeeID, EmployeePosition employeePosition)
     {
         if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
-        if (!AllJobPositions[employeePosition].Contains(actor)) throw new ArgumentException($"Emplyee {actor.name} does not have position {employeePosition}");
+        if (!AllJobPositions[employeePosition].Contains(employeeID)) throw new ArgumentException($"EmployeeID: {employeeID} does not have position {employeePosition}");
 
-        AllJobPositions[employeePosition].Remove(actor);
+        AllJobPositions[employeePosition].Remove(employeeID);
     }
 
-    public void AddJobToJobsite(EmployeePosition employeePosition, List<Actor_Base> employeeList)
+    public void AddJobToJobsite(EmployeePosition employeePosition, HashSet<int> employeeList)
     {
         if (AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"Position: {employeePosition} already exists in AllJobPositions");
 
-        AllJobPositions.Add(employeePosition, new List<Actor_Base>(employeeList));
+        AllJobPositions.Add(employeePosition, new HashSet<int>(employeeList));
     }
 
     public void RemoveJobFromJobsite(EmployeePosition employeePosition)
@@ -250,7 +247,7 @@ public class JobsiteData
         .Distinct()
         .Where(position => !AllJobPositions.ContainsKey(position))
         .ToList()
-        .ForEach(position => AllJobPositions[position] = new List<Actor_Base>());
+        .ForEach(position => AllJobPositions[position] = new HashSet<int>());
     }
 
     public void FillAllJobsitePositions()
@@ -265,7 +262,7 @@ public class JobsiteData
 
             //var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
 
-            AllJobPositions[position.Key].Add(actor);
+            AllJobPositions[position.Key].Add(actor.ActorData.ActorID);
             actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, JobsiteID);
         }
     }
@@ -280,39 +277,6 @@ public class JobsiteData_Drawer : PropertyDrawer
         string jobsiteName = ((JobsiteName)jobsiteNameProp.enumValueIndex).ToString();
 
         label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
-
-        EditorGUI.PropertyField(position, property, label, true);
-    }
-
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-    {
-        return EditorGUI.GetPropertyHeight(property, label, true);
-
-    }
-}
-
-[Serializable]
-public class EmployeeData
-{
-    public int ActorID;
-    public string EmployeeName;
-    public List<EmployeePosition> EmployeePositions;
-
-    public EmployeeData(int actorID, string employeeName, List<EmployeePosition> employeePositions)
-    {
-        ActorID = actorID;
-        EmployeeName = employeeName;
-        EmployeePositions = employeePositions;
-    }
-}
-
-[CustomPropertyDrawer(typeof(EmployeeData))]
-public class EmployeeData_Drawer : PropertyDrawer
-{
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        var citizenName = property.FindPropertyRelative("EmployeeName");
-        label.text = !string.IsNullOrEmpty(citizenName.stringValue) ? citizenName.stringValue : "Unnamed Employee";
 
         EditorGUI.PropertyField(position, property, label, true);
     }

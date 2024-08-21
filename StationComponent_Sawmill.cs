@@ -6,6 +6,9 @@ using UnityEngine;
 
 public class StationComponent_Sawmill : StationComponent
 {
+    public float PercentageStorageFilled = 0;
+    public float PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
+
     public override void InitialiseStationName()
     {
         StationData.SetStationName(StationName.Sawmill);

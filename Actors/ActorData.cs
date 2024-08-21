@@ -19,6 +19,7 @@ public class ActorData
     public WorldState_Data_SO Worldstate;
     public CareerAndJobs CareerAndJobs;
     public CraftingData CraftingData;
+    public VocationData VocationData;
     public SpeciesAndPersonality SpeciesAndPersonality;
     public StatsAndAbilities StatsAndAbilities;
     public InventoryAndEquipment InventoryAndEquipment;
@@ -46,8 +47,8 @@ public class ActorData
     }
 
     public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
-        CareerAndJobs careerAndJobs, CraftingData craftingData, SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, 
-        ActorQuests actorQuests)
+        CareerAndJobs careerAndJobs, CraftingData craftingData, VocationData vocationData,
+        SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, ActorQuests actorQuests)
     {
         FullIdentification = fullIdentification;
 
@@ -64,6 +65,9 @@ public class ActorData
 
         CraftingData = craftingData;
         CraftingData.SetActorAndFactionID(ActorID, ActorFactionID);
+
+        VocationData = vocationData;
+        VocationData.SetActorAndFactionID(ActorID, ActorFactionID);
 
         SpeciesAndPersonality = speciesAndPersonality;
         StatsAndAbilities = statsAndAbilities;
@@ -370,8 +374,6 @@ public class ActorStats
 
     [SerializeField] CombatStats _combatStats; 
     public CombatStats CombatStats { get { return _combatStats; } set { _combatStats = value; } }
-
-    public Dictionary<Vocation, float> VocationStats;
 }
 
 [Serializable]

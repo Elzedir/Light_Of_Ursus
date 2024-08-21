@@ -33,10 +33,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
             PlankOutputSum -= PlankOutputs.Dequeue();
         }
 
-        if (_compareProductionOutput())
-        {
-            _redistributeEmployees();
-        }
+        _compareProductionOutput();
     }
 
     public override TickRate GetTickRate()
@@ -68,23 +65,31 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
         return isBalanced;
     }
 
-    protected override void _redistributeEmployees()
-    {
-        // For each station, rank each employee (weighting) based on position and its relevance vs seniority, then select one and move onto another station type
-        // and find another employee, and then go until all employees are used. If you run out of stations with single employees, then start allocating multiple employees
-        // to the same stations.
-    }
-
     private void AdjustProduction(float actualRatio, float idealRatio)
     {
         if (actualRatio > idealRatio)
         {
+            _redistributeEmployees();
             Debug.Log("Increase sawmill efficiency or assign more workers to balance production.");
         }
         else
         {
+            _redistributeEmployees();
             Debug.Log("Increase logging efficiency or assign more workers to balance production.");
         }
+    }
+
+    protected override void _redistributeEmployees()
+    {
+        foreach (var station in AllStationsInJobsite)
+        {
+            station.RemoveOperator();
+        }
+
+
+        // For each station, rank each employee (weighting) based on position and its relevance vs seniority, then select one and move onto another station type
+        // and find another employee, and then go until all employees are used. If you run out of stations with single employees, then start allocating multiple employees
+        // to the same stations.
     }
 
     void _getStationProduction(out int logsProduced, out int planksProduced)

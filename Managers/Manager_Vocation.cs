@@ -16,59 +16,27 @@ public class Manager_Vocation
 
     private void InitialiseVocations()
     {
-        // Add vocations
+        _lumberjack();
+    }
+
+    void _lumberjack()
+    {
+        AllVocations.Add(new Vocation(
+            vocationName: VocationName.LumberJack,
+            vocationDescription: "A lumberjack",
+            allVocationTitles: new Dictionary<int, VocationTitle> 
+            {
+                { 1, VocationTitle.Novice },
+                { 100, VocationTitle.Apprentice },
+                { 1000, VocationTitle.Journeyman },
+                { 10000, VocationTitle.Master },
+            }
+            ));
     }
 
     public static Vocation GetVocation(VocationName vocationName)
     {
         return AllVocations.FirstOrDefault(v => v.VocationName == vocationName);
-    }
-}
-
-public class VocationComponent
-{
-    public Actor_Base Actor;
-
-    public VocationTitle VocationTitle;
-    public Dictionary<Vocation, float> Vocations;
-
-    public VocationComponent(Actor_Base actor, Dictionary<Vocation, float> vocations)
-    {
-        Actor = actor;
-        Vocations = vocations;
-    }
-
-    public void AddVocation(VocationName vocationName, float vocationExperience)
-    {
-        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
-
-        if (Vocations.ContainsKey(vocation)) throw new ArgumentException($"Vocation: {vocation} already exists in Vocations.");
-
-        Vocations.Add(vocation, 0);
-    }
-
-    public void RemoveVocation(VocationName vocationName)
-    {
-        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
-
-        if (!Vocations.ContainsKey(vocation)) throw new ArgumentException($"Vocation: {vocation} does not exist in Vocations.");
-
-        Vocations.Remove(vocation);
-    }
-
-    public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
-    {
-        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
-
-        if (!Vocations.ContainsKey(vocation)) throw new ArgumentException($"Vocation: {vocation} does not exist in Vocations.");
-
-        Vocations[vocation] += experienceChange;
-    }
-
-    public float GetSuccessChance(VocationName vocationName, float experienceRequired)
-    {
-        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
-        return vocation.GetSuccessChance(Vocations[vocation], experienceRequired);
     }
 }
 
@@ -107,5 +75,52 @@ public class Vocation
     public float GetSuccessChance(float currentExperience, float experienceRequired)
     {
         return ((currentExperience - experienceRequired) / currentExperience) * 100;
+    }
+}
+
+public class VocationData
+{
+    public int ActorID;
+    public int FactionID;
+
+    public VocationTitle VocationTitle;
+    public Dictionary<VocationName, float> Vocations;
+
+    public VocationData(Dictionary<VocationName, float> vocations)
+    {
+        Vocations = vocations;
+    }
+
+    public void SetActorAndFactionID(int actorID, int factionID)
+    {
+        ActorID = actorID;
+        FactionID = factionID;
+    }
+
+    public void AddVocation(VocationName vocationName, float vocationExperience)
+    {
+        if (Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} already exists in Vocations.");
+
+        Vocations.Add(vocationName, 0);
+    }
+
+    public void RemoveVocation(VocationName vocationName)
+    {
+        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
+
+        Vocations.Remove(vocationName);
+    }
+
+    public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
+    {
+        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
+
+        Vocations[vocationName] += experienceChange;
+    }
+
+    public float GetSuccessChance(VocationName vocationName, float experienceRequired)
+    {
+        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
+        return vocation.GetSuccessChance(Vocations[vocationName], experienceRequired);
     }
 }

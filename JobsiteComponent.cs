@@ -25,6 +25,7 @@ public enum EmployeePosition
 }
 
 [Serializable]
+[RequireComponent(typeof(BoxCollider))]
 public class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;

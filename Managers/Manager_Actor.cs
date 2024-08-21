@@ -135,6 +135,10 @@ public class Manager_Actor : MonoBehaviour
             craftingData: new CraftingData(
                 knownRecipes: new List<RecipeName> { RecipeName.Plank }
                 ),
+            vocationData: new VocationData(
+                vocations: new Dictionary<VocationName, float>
+                    { } // Later will come from additional parameters
+                ),
             speciesAndPersonality: new SpeciesAndPersonality(
                 actorSpecies: GetRandomSpecies(),
                 actorPersonality: GetRandomPersonality()
