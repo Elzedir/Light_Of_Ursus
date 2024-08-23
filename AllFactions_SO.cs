@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
 public class AllFactions_SO : ScriptableObject
@@ -365,17 +366,7 @@ public class AllFactionsSOEditor : Editor
         {
             actorData.CareerAndJobs.JobsActive = EditorGUILayout.Toggle("Jobs Active", actorData.CareerAndJobs.JobsActive);
 
-            selectedCareerIndex = GUILayout.SelectionGrid(selectedCareerIndex, GetJobNames(actorData), 1);
-
-            if (selectedCareerIndex >= 0 && selectedCareerIndex < actorData.CareerAndJobs.ActorJobs.Count)
-            {
-                DrawCareerDetails(actorData.CareerAndJobs.ActorJobs[selectedCareerIndex]);
-            }
-        }
-
-        string[] GetJobNames(ActorData actorData)
-        {
-            return actorData.CareerAndJobs.ActorJobs.Select(j => j.JobName.ToString()).ToArray();
+            EditorGUILayout.LabelField("Employee Position", actorData.CareerAndJobs.EmployeePosition.ToString());
         }
 
         if (actorData.SpeciesAndPersonality != null)
@@ -420,17 +411,6 @@ public class AllFactionsSOEditor : Editor
             //EditorGUILayout.LabelField("Actor Quests", EditorStyles.boldLabel);
             //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);
         }
-    }
-
-    private string[] GetCareerNames(ActorData actorData)
-    {
-        return actorData.CareerAndJobs.ActorJobs.Select(j => j.JobName.ToString()).ToArray();
-    }
-
-    private void DrawCareerDetails(JobData jobData)
-    {
-        EditorGUILayout.LabelField("Job Name", jobData.JobName.ToString());
-        EditorGUILayout.LabelField("Jobsite ID", jobData.JobsiteID.ToString());
     }
 
     private void DrawGameObjectProperties(GameObjectProperties gameObjectProperties)

@@ -9,7 +9,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 {
     [SerializeField] ActorData _actorData;
     public ActorData ActorData { get { return _actorData; } private set { _actorData = value; } }
-    public GameObject GameObject { get; private set; }
     public Rigidbody ActorBody { get; protected set; }
     public Collider ActorCollider { get; protected set; }
     public MeshFilter ActorMesh { get; protected set; }
@@ -19,7 +18,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
     public EquipmentComponent EquipmentComponent { get; protected set; }
     public PersonalityComponent PersonalityComponent { get; protected set; }
     public GroundedCheckComponent GroundedObject { get; protected set; }
-    public InventoryData InventoryData { get { return ActorData.InventoryAndEquipment.InventoryData; } protected set { ActorData.InventoryAndEquipment.InventoryData = value; } }
 
     void Awake()
     {
@@ -42,8 +40,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 
     public void Initialise()
     {
-        GameObject = gameObject;
-
         ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
         ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();
         ActorAnimator = GetComponent<Animator>() ?? gameObject.AddComponent<Animator>();
@@ -64,11 +60,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
     public void SetActorData(ActorData actorData)
     {
         ActorData = actorData;
-    }
-
-    public void InitialiseInventoryComponent()
-    {
-        InventoryData = new InventoryData(this, new List<Item>());
     }
 
     public void UpdateVisuals()
@@ -97,5 +88,15 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 
         ActorBody.velocity = Vector3.zero;
         transform.parent.position = targetPosition;
+    }
+
+    public GameObject GetGameObject()
+    {
+        return gameObject;
+    }
+
+    public InventoryData GetInventoryData()
+    {
+        return ActorData.InventoryAndEquipment.InventoryData;
     }
 }

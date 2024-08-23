@@ -81,15 +81,44 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
     protected override void _redistributeEmployees()
     {
-        foreach (var station in AllStationsInJobsite)
+        var allEmployees = JobsiteData.AllEmployees.Select(id => Manager_Actor.GetActorData(-1, id, out ActorData actorData)).ToList();
+        var allStations = AllStationsInJobsite;
+
+        foreach (var station in allStations)
         {
-            station.RemoveOperator();
+            station.RemoveOperator(-1);
         }
 
+        foreach (var station in allStations)
+        {
+            var allowedPositions = station.AllowedEmployeePositions;
+            var employeesForStation = allEmployees
+                .Where(e => allowedPositions.Contains(e.CareerAndJobs.EmployeePosition))
+                .OrderByDescending(e => e.CareerAndJobs.EmployeePosition)
+                .ThenByDescending(e => e.VocationData.GetVocationExperience(GetRelevantVocation(e.CareerAndJobs.EmployeePosition)))
+                .ToList();
 
-        // For each station, rank each employee (weighting) based on position and its relevance vs seniority, then select one and move onto another station type
-        // and find another employee, and then go until all employees are used. If you run out of stations with single employees, then start allocating multiple employees
-        // to the same stations.
+            foreach (var employee in employeesForStation)
+            {
+                station.SetOperator(employee.ActorID);
+                allEmployees.Remove(employee);
+            }
+        }
+
+        VocationName GetRelevantVocation(EmployeePosition position)
+        {
+            switch (position)
+            {
+                case EmployeePosition.Logger:
+                case EmployeePosition.Assistant_Logger:
+                    return VocationName.Logger;
+                case EmployeePosition.Sawyer:
+                case EmployeePosition.Assistant_Sawyer:
+                    return VocationName.Sawyer;
+                default:
+                    return VocationName.None;
+            }
+        }
     }
 
     void _getStationProduction(out int logsProduced, out int planksProduced)

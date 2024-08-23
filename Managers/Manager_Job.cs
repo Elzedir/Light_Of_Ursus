@@ -35,8 +35,7 @@ public class Manager_Job : MonoBehaviour
             // If jobsite is null, then don't do anything unless there's an unowned jobsite
             StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Tree);
             if (nearestStation == null) { Debug.Log("Nearest Sawmill is null."); yield break; }
-            yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
-            nearestStation.SetOperator(actor);
+            nearestStation.SetOperator(actor.ActorData.ActorID);
         }
 
         // Find a way to manage the jobs so that it doesn't use a fixed list but rather inventory requirements. Or can use a fixed list like Kenshi, but have
@@ -46,17 +45,15 @@ public class Manager_Job : MonoBehaviour
         {
             StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Sawmill);
             if (nearestStation == null) { Debug.Log("Nearest Tree is null."); yield break; }
-            yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
-            nearestStation.SetOperator(actor);
+            nearestStation.SetOperator(actor.ActorData.ActorID);
         }
 
         IEnumerator dropOffWood(Actor_Base actor, int jobsiteID)
         {
             var nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Log_Pile);
             if (nearestStation == null) { Debug.Log("Nearest LogPile is null."); yield break; }
-            yield return actor.BasicMove(nearestStation.AllOperatingAreasInStation.FirstOrDefault(kv => !kv.Value).Key.bounds.center);
             yield return actor.ActorData.InventoryAndEquipment.InventoryData.TransferItemFromInventory(nearestStation.StationData.InventoryData, nearestStation.GetItemsToDropOff(actor));
-            nearestStation.SetOperator(actor);
+            nearestStation.SetOperator(actor.ActorData.ActorID);
         }
 
         IEnumerator sellWood(Actor_Base actor, int jobsiteID)

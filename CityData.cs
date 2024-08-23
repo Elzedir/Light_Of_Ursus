@@ -31,7 +31,7 @@ public class CityData
         {
             if (!AllJobsiteData.Any(j => j.JobsiteID == jobsite.JobsiteData.JobsiteID))
             {
-                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID} with ID: {jobsite.JobsiteData.JobsiteID} was not in AllJobsiteData");
+                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteName} with ID: {jobsite.JobsiteData.JobsiteID} was not in AllJobsiteData");
                 AllJobsiteData.Add(jobsite.JobsiteData);
             }
 

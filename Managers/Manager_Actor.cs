@@ -129,8 +129,8 @@ public class Manager_Actor : MonoBehaviour
                 ),
             worldState: null,
             careerAndJobs: new CareerAndJobs(
-                actorCareer: CareerName.None, // Later set to none only if you don't have a preset career in parameters
-                actorJobs: new List<JobData>()
+                jobsiteID: -1,
+                employeePosition: EmployeePosition.None
                 ),
             craftingData: new CraftingData(
                 knownRecipes: new List<RecipeName> { RecipeName.Plank }

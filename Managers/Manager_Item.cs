@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using UnityEditor.Animations;
 using UnityEngine;
 using Unity.VisualScripting;
+using UnityEditor;
 
 public enum ItemType { 
     Weapon, Armour, Consumable, 
@@ -108,12 +109,12 @@ public class Manager_Item
 [Serializable]
 public class Item
 {
-    public CommonStats_Item CommonStats_Item { get; private set; }
-    public VisualStats_Item VisualStats_Item { get; private set; }
-    public WeaponStats_Item WeaponStats_Item { get; private set; }
-    public ArmourStats_Item ArmourStats_Item { get; private set; }
-    public FixedModifiers_Item FixedModifiers_Item { get; private set; }
-    public PercentageModifiers_Item PercentageModifiers_Item { get; private set; }
+    public CommonStats_Item CommonStats_Item;
+    public VisualStats_Item VisualStats_Item;
+    public WeaponStats_Item WeaponStats_Item;
+    public ArmourStats_Item ArmourStats_Item;
+    public FixedModifiers_Item FixedModifiers_Item;
+    public PercentageModifiers_Item PercentageModifiers_Item;
 
     public Item(CommonStats_Item commonStats_Item = null, VisualStats_Item visualStats_Item = null, WeaponStats_Item weaponStats_Item = null, ArmourStats_Item armourStats_Item = null, 
         FixedModifiers_Item fixedModifiers_Item = null, PercentageModifiers_Item percentageModifiers_Item = null)
@@ -135,6 +136,28 @@ public class Item
         ArmourStats_Item = new ArmourStats_Item(item.ArmourStats_Item);
         FixedModifiers_Item = new FixedModifiers_Item(item.FixedModifiers_Item);
         PercentageModifiers_Item = new PercentageModifiers_Item(item.PercentageModifiers_Item);
+    }
+}
+
+[CustomPropertyDrawer(typeof(Item))]
+public class Item_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        var commonStatsNameProp = property.FindPropertyRelative("CommonStats_Item");
+        var itemIDProp = commonStatsNameProp.FindPropertyRelative("ItemID");
+        var itemNameProp = commonStatsNameProp.FindPropertyRelative("ItemName");
+        var itemQuantityProp = commonStatsNameProp.FindPropertyRelative("CurrentStackSize");
+
+        label.text = !string.IsNullOrEmpty(itemNameProp.ToString()) ? $"{itemIDProp.intValue}: {itemNameProp.stringValue} (Qty: {itemQuantityProp.intValue})" : "Unnamed Jobsite";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
+
     }
 }
 

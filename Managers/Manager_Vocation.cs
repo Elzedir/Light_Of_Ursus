@@ -5,8 +5,10 @@ using UnityEngine;
 
 public enum VocationName
 {
+    None,
     Farmer,
-    LumberJack,
+    Logger,
+    Sawyer,
     Miner
 }
 
@@ -16,14 +18,30 @@ public class Manager_Vocation
 
     private void InitialiseVocations()
     {
+        _logger();
         _lumberjack();
+    }
+
+    void _logger()
+    {
+        AllVocations.Add(new Vocation(
+            vocationName: VocationName.Logger,
+            vocationDescription: "A logger",
+            allVocationTitles: new Dictionary<int, VocationTitle>
+            {
+                { 1, VocationTitle.Novice },
+                { 100, VocationTitle.Apprentice },
+                { 1000, VocationTitle.Journeyman },
+                { 10000, VocationTitle.Master },
+            }
+            ));
     }
 
     void _lumberjack()
     {
         AllVocations.Add(new Vocation(
-            vocationName: VocationName.LumberJack,
-            vocationDescription: "A lumberjack",
+            vocationName: VocationName.Sawyer,
+            vocationDescription: "A sawyer",
             allVocationTitles: new Dictionary<int, VocationTitle> 
             {
                 { 1, VocationTitle.Novice },
@@ -116,6 +134,13 @@ public class VocationData
         if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
 
         Vocations[vocationName] += experienceChange;
+    }
+
+    public float GetVocationExperience(VocationName vocationName)
+    {
+        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
+
+        return Vocations[vocationName];
     }
 
     public float GetSuccessChance(VocationName vocationName, float experienceRequired)

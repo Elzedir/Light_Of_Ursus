@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public enum EmployeePosition
 {
@@ -14,10 +11,11 @@ public enum EmployeePosition
 
     Shopkeeper,
 
-    Chief_Lumberjack,
+    Chief_Logger,
     Logger,
     Assistant_Logger,
 
+    Chief_Sawyer,
     Sawyer,
     Assistant_Sawyer,
 

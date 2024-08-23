@@ -11,7 +11,7 @@ public class StationComponent_Tree : StationComponent
 
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Lumberjack, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
     }
 
     public override void InitialiseAllowedRecipes()
@@ -21,10 +21,13 @@ public class StationComponent_Tree : StationComponent
 
     public override void InitialiseStartingInventory()
     {
-        StationData.InventoryData.AddToInventory(new List<Item>
+        if (StationData.InventoryData.InventoryItems.Count == 0)
+        {
+            StationData.InventoryData.AddToInventory(new List<Item>
         {
             (Manager_Item.GetItem(1100, 100))
         });
+        }
     }
 
     public override void CraftItem(RecipeName recipeName, Actor_Base actor)

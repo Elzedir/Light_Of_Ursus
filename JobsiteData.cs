@@ -28,8 +28,6 @@ public class JobsiteData
     Actor_Base _owner;
 
     public List<int> AllEmployees;
-    public Dictionary<EmployeePosition, HashSet<int>> AllJobPositions = new();
-    public Dictionary<int, int> EmployeeStationAllocation = new();
 
     public DisplayProsperity Prosperity;
 
@@ -47,13 +45,13 @@ public class JobsiteData
 
         foreach (var station in jobsite.AllStationsInJobsite)
         {
-            if (!AllStationData.Any(s => s.JobsiteID == station.StationData.StationID))
+            if (!AllStationData.Any(s => s.StationID == station.StationData.StationID))
             {
                 Debug.Log($"Station: {station.StationData.StationName} with ID: {station.StationData.StationID} was not in AllStationData");
                 AllStationData.Add(station.StationData);
             }
 
-            station.SetStationData(Manager_Station.GetStationData(JobsiteID, station.StationData.StationID));
+            station.SetStationData(Manager_Station.GetStationData(jobsiteID: JobsiteID, stationID: station.StationData.StationID));
         }
 
         for (int i = 0; i < AllStationData.Count; i++)
@@ -67,8 +65,7 @@ public class JobsiteData
     void _initialiseJobs()
     {
         SetOwner(null);
-        GetAllJobsitePositions();
-        FillAllJobsitePositions();
+        FillEmptyJobsitePositions();
     }
 
     public void SetOwner(Actor_Base owner)
@@ -115,7 +112,7 @@ public class JobsiteData
         var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
 
         var citizen = Manager_City.GetCity(CityID).CityData.Population.AllCitizens
-            .FirstOrDefault(c => Manager_Actor.GetActorData(JobsiteFactionID, c.CitizenID, out ActorData actorData)?.CareerAndJobs.ActorCareer == CareerName.None
+            .FirstOrDefault(c => Manager_Actor.GetActorData(JobsiteFactionID, c.CitizenID, out ActorData actorData)?.CareerAndJobs.JobsiteID == -1
                 && _hasMinimumVocationRequired(
                     c,
                     vocationAndExperience.Vocation,
@@ -204,35 +201,52 @@ public class JobsiteData
         // And then apply relation debuff.
     }
 
-    public void AddEmployeeToJob(int employeeID, EmployeePosition employeePosition)
+    public void AddEmployeeToStation(int employeeID, int stationID)
     {
-        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
-        if (AllJobPositions[employeePosition].Contains(employeeID)) throw new ArgumentException($"EmployeeID: {employeeID} already has position {employeePosition}");
+        var station = AllStationData.FirstOrDefault(s => s.StationID == stationID);
+        if (station == null)
+        {
+            Debug.Log($"StationID: {stationID} does not exist in AllStationData");
+            return;
+        }
 
-        AllJobPositions[employeePosition].Add(employeeID);
+        if (station.CurrentOperators.Contains(employeeID))
+        {
+            Debug.Log($"EmployeeID: {employeeID} is already an operator at StationID: {stationID}");
+            return;
+        }
 
+        station.CurrentOperators.Add(employeeID);
     }
 
-    public void RemoveEmployeeFromJob(int employeeID, EmployeePosition employeePosition)
+    public void RemoveEmployeeFromStation(int employeeID, int stationID)
     {
-        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"New position: {employeePosition} does not exist in AllJobPositions");
-        if (!AllJobPositions[employeePosition].Contains(employeeID)) throw new ArgumentException($"EmployeeID: {employeeID} does not have position {employeePosition}");
+        var station = AllStationData.FirstOrDefault(s => s.StationID == stationID);
+        if (station == null)
+        {
+            Debug.Log($"StationID: {stationID} does not exist in AllStationData");
+            return;
+        }
 
-        AllJobPositions[employeePosition].Remove(employeeID);
+        if (!station.CurrentOperators.Contains(employeeID))
+        {
+            Debug.Log($"EmployeeID: {employeeID} is not an operator at StationID: {stationID}");
+            return;
+        }
+
+        station.CurrentOperators.Remove(employeeID);
     }
 
-    public void AddJobToJobsite(EmployeePosition employeePosition, HashSet<int> employeeList)
+    public Dictionary<int, List<int>> GetAllOperators()
     {
-        if (AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"Position: {employeePosition} already exists in AllJobPositions");
+        var allOperators = new Dictionary<int, List<int>>();
 
-        AllJobPositions.Add(employeePosition, new HashSet<int>(employeeList));
-    }
+        foreach (var station in AllStationData)
+        {
+            allOperators[station.StationID] = new List<int>(station.CurrentOperators);
+        }
 
-    public void RemoveJobFromJobsite(EmployeePosition employeePosition)
-    {
-        if (!AllJobPositions.ContainsKey(employeePosition)) throw new ArgumentException($"Position: {employeePosition} does not exist in AllJobPositions");
-
-        AllJobPositions.Remove(employeePosition);
+        return allOperators;
     }
 
     public void SetJobsiteIsActive(bool jobsiteIsActive)
@@ -240,31 +254,25 @@ public class JobsiteData
         JobsiteIsActive = jobsiteIsActive;
     }
 
-    public void GetAllJobsitePositions()
+    public void FillEmptyJobsitePositions()
     {
         AllStationData
-        .SelectMany(station => Manager_Station.GetStation(station.StationID)?.AllowedEmployeePositions ?? new List<EmployeePosition> { EmployeePosition.None })
-        .Distinct()
-        .Where(position => !AllJobPositions.ContainsKey(position))
-        .ToList()
-        .ForEach(position => AllJobPositions[position] = new HashSet<int>());
-    }
-
-    public void FillAllJobsitePositions()
-    {
-        foreach (var position in AllJobPositions.Where(position => position.Value.Count == 0).ToList())
-        {
-            if (!_findEmployeeFromCity(position.Key, out Actor_Base actor))
+            .SelectMany(station => Manager_Station.GetStation(station.StationID)?.AllowedEmployeePositions.Select(position => new { station, position }))
+            .Where(sp => !sp.station.CurrentOperators.Any(employeeID =>
+                Manager_Actor.GetActor(JobsiteFactionID, employeeID, out Actor_Base actor) &&
+                actor.ActorData.CareerAndJobs.EmployeePosition == sp.position))
+            .ToList()
+            .ForEach(sp =>
             {
-                Debug.Log($"Couldnt find employee {actor}");
-                actor = _generateNewEmployee(position.Key);
-            }
+                if (!_findEmployeeFromCity(sp.position, out Actor_Base actor))
+                {
+                    Debug.Log($"Couldn't find employee for position: {sp.position}");
+                    actor = _generateNewEmployee(sp.position);
+                }
 
-            //var actor = !_findEmployeeFromCity(position.Key, out Actor_Base foundActor) ? _generateNewEmployee(position.Key) : foundActor;
-
-            AllJobPositions[position.Key].Add(actor.ActorData.ActorID);
-            actor.ActorData.CareerAndJobs.AddJob(JobName.Lumberjack, JobsiteID);
-        }
+                actor.ActorData.CareerAndJobs.EmployeePosition = sp.position;
+                AddEmployeeToStation(actor.ActorData.ActorID, sp.station.StationID);
+            });
     }
 }
 

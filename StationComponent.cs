@@ -15,10 +15,11 @@ public enum StationType
 [RequireComponent(typeof(BoxCollider))]
 public class StationComponent : MonoBehaviour, IInteractable
 {
+    bool _initialised = false;
+
     public StationData StationData;
     public BoxCollider StationArea;
 
-    public Actor_Base CurrentOperator;
     public bool IsBeingOperated = false;
     public float CurrentProgress = 0;
     public float ProgressRequired = 100;
@@ -28,12 +29,10 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     public float InteractRange {  get; protected set; }
 
-    public GameObject GameObject { get; protected set; }
-
     public List<EmployeePosition> AllowedEmployeePositions;
     public List<RecipeName> AllowedRecipes;
 
-    public Dictionary<BoxCollider, bool> AllOperatingAreasInStation = new();
+    public Dictionary<BoxCollider, int> AllCurrentOperators = new();
 
     bool _hasMaterials = false;
 
@@ -41,8 +40,13 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     protected void Awake()
     {
-        StationArea = gameObject.AddComponent<BoxCollider>();
-        StationArea.isTrigger = true;
+        StationArea = gameObject.GetComponent<BoxCollider>();
+
+        if (!StationArea.isTrigger)
+        {
+            Debug.Log($"Set IsTrigger to true for {name}");
+            StationArea.isTrigger = true;
+        }
     }
 
     public void SetRecipe(RecipeName recipeName)
@@ -51,17 +55,42 @@ public class StationComponent : MonoBehaviour, IInteractable
         CheckMaterials();
     }
 
-    public void SetOperator(Actor_Base actor)
+    public void SetOperator(int actorID)
     {
-        CurrentOperator = actor;
-        IsBeingOperated = true;
-        CheckMaterials();
+        var firstOpenOperatingArea = AllCurrentOperators.FirstOrDefault(area => area.Value == -1).Key;
+
+        if (firstOpenOperatingArea != null)
+        {
+            AllCurrentOperators[firstOpenOperatingArea] = actorID;
+        }
+
+        StartCoroutine(MoveOperatorToOperatingArea(Manager_Actor.GetActor(-1, actorID, out Actor_Base actor), firstOpenOperatingArea.transform.position));
     }
 
-    public void RemoveOperator()
+    public void RemoveOperator(int actorID)
     {
-        CurrentOperator = null;
-        IsBeingOperated = false;
+        if (actorID == -1)
+        {
+            foreach (var key in AllCurrentOperators.Keys.ToList())
+            {
+                AllCurrentOperators[key] = -1;
+            }
+        }
+        else
+        {
+            var currentOperatingArea = AllCurrentOperators.FirstOrDefault(area => area.Value == actorID).Key;
+
+            if (currentOperatingArea != null)
+            {
+                AllCurrentOperators[currentOperatingArea] = -1;
+            }
+        }
+
+        if (!AllCurrentOperators.Any(area => area.Value != -1))
+        {
+            IsBeingOperated = false;
+        }
+
         CheckMaterials();
     }
 
@@ -72,6 +101,8 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     protected void Update()
     {
+        if (!_initialised) return;
+        
         if (StationData.StationIsActive && IsBeingOperated && _hasMaterials)
         {
             _operateStation();
@@ -80,6 +111,7 @@ public class StationComponent : MonoBehaviour, IInteractable
 
     protected void _operateStation()
     {
+        Debug.Log($"Operating {name}");
         // Use actor data to check how fast the process will be completed and the outcome of the process.
         // Use an accumulation to determine outcome. If one actor with 80 skill used it, then 80 * 100 = 800. 
         // If you have someone who did 40% of the work at 40 skill, then 40 * 40 + 80 * 60 = 160 + 480 = 640.
@@ -111,6 +143,8 @@ public class StationComponent : MonoBehaviour, IInteractable
         InitialiseAllowedEmployeePositions();
         InitialiseAllowedRecipes();
         InitialiseStartingInventory();
+
+        _initialised = true;
     }
 
     public virtual void InitialiseStationName()
@@ -118,13 +152,13 @@ public class StationComponent : MonoBehaviour, IInteractable
         throw new ArgumentException("Cannot use base class.");
     }
 
-    void _initialiseOperatingAreas()
+    protected void _initialiseOperatingAreas()
     {
         foreach(Transform child in transform)
         {
             if (!child.name.Contains("OperatingArea")) continue;
 
-            if (!AllOperatingAreasInStation.ContainsKey(child.GetComponent<BoxCollider>()))AllOperatingAreasInStation.Add(child.GetComponent<BoxCollider>(), false);
+            if (!AllCurrentOperators.ContainsKey(child.GetComponent<BoxCollider>())) AllCurrentOperators.Add(child.GetComponent<BoxCollider>(), -1);
         }
     }
 
@@ -212,5 +246,12 @@ public class StationComponent : MonoBehaviour, IInteractable
         var tempList = ProducedItems;
         ProducedItems.Clear();
         return tempList;
+    }
+
+    protected IEnumerator MoveOperatorToOperatingArea(Actor_Base actor, Vector3 position)
+    {
+        yield return actor.StartCoroutine(actor.BasicMove(position));
+
+        IsBeingOperated = true;
     }
 }

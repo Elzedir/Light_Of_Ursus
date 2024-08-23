@@ -31,28 +31,20 @@ public class StationData : IStationInventory
 {
     public int StationID;
     public StationType StationType;
-    public StationName _stationName;
-    public StationName StationName { get { return _stationName; } private set { _stationName = value; } }
+    public StationName StationName;
     public int JobsiteID;
 
     public bool StationIsActive = true;
 
     public string StationDescription;
-    public GameObject GameObject {  get; private set; }
     public Recipe CurrentRecipe;
-    public InventoryData InventoryData { get; private set; }
+    public InventoryData InventoryData;
+
+    public List<int> CurrentOperators;
 
     public void InitialiseStationData(int jobsiteID)
     {
         Manager_Station.GetStation(StationID).Initialise();
-
-        InitialiseInventoryComponent();
-    }
-
-    public void InitialiseInventoryComponent()
-    {
-        GameObject = Manager_Station.GetStation(StationID).gameObject;
-        InventoryData = new InventoryData(this, new List<Item>());
     }
 
     public List<Item> GetStationYield(Actor_Base actor)
@@ -74,6 +66,21 @@ public class StationData : IStationInventory
     {
         StationName = stationName;
     }
+
+    public GameObject GetGameObject()
+    {
+        return Manager_Station.GetStation(StationID).gameObject;
+    }
+
+    public StationName GetStationName()
+    {
+        return StationName;
+    }
+
+    public InventoryData GetInventoryData()
+    {
+        return InventoryData;
+    }
 }
 
 [CustomPropertyDrawer(typeof(StationData))]
@@ -81,7 +88,7 @@ public class StationData_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        var stationNameProp = property.FindPropertyRelative("_stationName");
+        var stationNameProp = property.FindPropertyRelative("StationName");
         string stationName = ((StationName)stationNameProp.enumValueIndex).ToString();
 
         label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";

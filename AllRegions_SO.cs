@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -425,19 +426,40 @@ public class AllRegionsSOEditor : Editor
         }
     }
 
-    private void DrawStationAdditionalData(List<StationData> allStationData)
+    int _selectedInventoryItemIndex = -1;
+    Vector2 _inventoryItemScrollPos;
+
+    private void DrawStationAdditionalData(List<StationData> data)
     {
-        stationScrollPos = EditorGUILayout.BeginScrollView(stationScrollPos, GUILayout.Height(GetListHeight(allStationData.Count)));
-        selectedStationIndex = GUILayout.SelectionGrid(selectedStationIndex, allStationData.Select(s => s.StationName.ToString()).ToArray(), 1);
+        stationScrollPos = EditorGUILayout.BeginScrollView(stationScrollPos, GUILayout.Height(GetListHeight(data.Count)));
+        selectedStationIndex = GUILayout.SelectionGrid(selectedStationIndex, data.Select(s => s.StationName.ToString()).ToArray(), 1);
         EditorGUILayout.EndScrollView();
 
-        if (selectedStationIndex >= 0 && selectedStationIndex < allStationData.Count)
+        if (selectedStationIndex >= 0 && selectedStationIndex < data.Count)
         {
-            var selectedStationData = allStationData[selectedStationIndex];
+            var selectedStationData = data[selectedStationIndex];
 
             EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
             EditorGUILayout.LabelField("Station ID", selectedStationData.StationID.ToString());
+
+            EditorGUILayout.LabelField("Inventory", EditorStyles.boldLabel);
+
+            if (selectedStationData.InventoryData.InventoryItems.Count == 1)
+            {
+                EditorGUILayout.LabelField($"{selectedStationData.InventoryData.InventoryItems[0].CommonStats_Item.ItemName}: {selectedStationData.InventoryData.InventoryItems[0].CommonStats_Item.CurrentStackSize}");
+            }
+            else
+            {
+                _inventoryItemScrollPos = EditorGUILayout.BeginScrollView(_inventoryItemScrollPos, GUILayout.Height(Math.Min(200, selectedStationData.InventoryData.InventoryItems.Count * 20)));
+
+                for (int i = 0; i < selectedStationData.InventoryData.InventoryItems.Count; i++)
+                {
+                    EditorGUILayout.LabelField($"{selectedStationData.InventoryData.InventoryItems[i].CommonStats_Item.ItemName}: {selectedStationData.InventoryData.InventoryItems[i].CommonStats_Item.CurrentStackSize}");
+                }
+
+                EditorGUILayout.EndScrollView();
+            }
         }
     }
 

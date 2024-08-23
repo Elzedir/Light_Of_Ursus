@@ -34,11 +34,8 @@ public class ActorData
     {
         if (Manager_Actor.GetActor(ActorFactionID, ActorID, out Actor_Base actor) != null)
         {
-            Debug.Log("InitialisingActorData");
-
             actor.SetActorData(Manager_Actor.GetActorData(ActorFactionID, ActorID, out ActorData actorData));
             FullIdentification.Initialise();
-            CareerAndJobs.Initialise();
         } 
         else
         {
@@ -184,66 +181,29 @@ public class Relationships
 }
 
 [Serializable]
-public class CareerAndJobs : ITickable
+public class CareerAndJobs
 {
     public int ActorID;
     public int FactionID;
-    public CareerName ActorCareer;
-    public List<JobData> ActorJobs;
+
+    public int JobsiteID;
+    public EmployeePosition EmployeePosition;
 
     public bool JobsActive;
 
     Coroutine _jobCoroutine;
 
-    public CareerAndJobs(CareerName actorCareer, List<JobData> actorJobs, bool jobsActive = true)
+    public CareerAndJobs(int jobsiteID, EmployeePosition employeePosition, bool jobsActive = true)
     {
-        ActorCareer = actorCareer;
+        JobsiteID = jobsiteID;
+        EmployeePosition = employeePosition;
         JobsActive = jobsActive;
-        ActorJobs = actorJobs;
-
-        Initialise();
     }
 
     public void SetActorAndFactionID(int actorID, int factionID)
     {
         ActorID = actorID;
         FactionID = factionID;
-    }
-
-    public void Initialise()
-    {
-        Manager_TickRate.RegisterTickable(this);
-    }
-
-    public void AddJob(JobName jobName, int jobsiteID)
-    {
-        if (ActorJobs.Any(j => j.JobName == jobName && j.JobsiteID == jobsiteID)) return;
-
-        ActorJobs.Add(new JobData(jobName, jobsiteID));
-    }
-
-    public void RemoveJob(JobName jobName, int jobsiteID)
-    {
-        if (!ActorJobs.Any(j => j.JobName == jobName && j.JobsiteID == jobsiteID)) return;
-
-        ActorJobs.Remove(ActorJobs.FirstOrDefault(j => j.JobName == jobName && j.JobsiteID == jobsiteID));
-    }
-
-    public void ReorganiseJobs(JobName jobName, int jobsiteID, int index)
-    {
-        if (index < 0 || index > ActorJobs.Count) { Debug.Log($"Index: {index} is less than 0 or greater than ActorJobs length: {ActorJobs.Count}."); return; }
-
-        for (int i = ActorJobs.Count - 1; i > index; i--)
-        {
-            ActorJobs[i] = ActorJobs[i - 1];
-        }
-
-        ActorJobs[index] = new JobData(jobName, jobsiteID);
-    }
-
-    public void OnTick()
-    {
-        Manager_Game.Instance.StartCoroutine(PerformJobs());
     }
 
     public TickRate GetTickRate()
@@ -254,33 +214,6 @@ public class CareerAndJobs : ITickable
     public void ToggleDoJobs(bool jobsActive)
     {
         JobsActive = jobsActive;
-    }
-
-    public IEnumerator PerformJobs()
-    {
-        if (_jobCoroutine != null) yield break;
-
-        foreach (var jobData in ActorJobs)
-        {
-            yield return _jobCoroutine = 
-                Manager_Game.Instance.StartCoroutine(Manager_Job.GetJob(jobData.JobName, jobData.JobsiteID)
-                .PerformJob(Manager_Actor.GetActor(FactionID, ActorID, out Actor_Base actor)));
-        }
-
-        _jobCoroutine = null;
-    }
-}
-
-[Serializable]
-public class JobData
-{
-    public JobName JobName;
-    public int JobsiteID;
-
-    public JobData(JobName jobName, int jobsiteID)
-    {
-        JobName = jobName;
-        JobsiteID = jobsiteID;
     }
 }
 

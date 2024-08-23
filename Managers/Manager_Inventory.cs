@@ -10,14 +10,13 @@ public class Manager_Inventory : MonoBehaviour
 
 public interface IInventoryOwner
 {
-    GameObject GameObject { get; }
-    InventoryData InventoryData { get; }
-    void InitialiseInventoryComponent();
+    GameObject GetGameObject();
+    InventoryData GetInventoryData();
 }
 
 public interface IStationInventory : IInventoryOwner
 {
-    StationName StationName { get; }
+    StationName GetStationName();
     Vector3 GetOperatingPosition();
     List<Item> GetStationYield(Actor_Base actor);
 }
@@ -199,7 +198,7 @@ public class InventoryData
 
         if (!AddToInventory(items))
         {
-            DropItems(items, InventoryOwner.GameObject.transform.position, itemsNotInInventory: true);
+            DropItems(items, InventoryOwner.GetGameObject().transform.position, itemsNotInInventory: true);
             Debug.Log("Took items out of inventory and can't put them back");
         }
 
