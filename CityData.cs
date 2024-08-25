@@ -76,7 +76,7 @@ public class DisplayPopulation
     public float MaxPopulation;
     public float ExpectedPopulation;
 
-    public List<Citizen> AllCitizens;
+    public List<ActorData> AllCitizens;
 
     public void DisplayCurrentPopulation()
     {
@@ -88,57 +88,19 @@ public class DisplayPopulation
         // Calculate expected population
     }
 
-    public void AddCitizen(Citizen citizen)
+    public void AddCitizen(ActorData citizenData)
     {
-        if (AllCitizens.Contains(citizen)) { Debug.Log($"Citizen: {citizen.CitizenName} already exists in AllCitizens."); return; }
+        if (AllCitizens.Any(c => c.ActorID == citizenData.ActorID)) { Debug.Log($"Citizen: {citizenData.ActorID}: {citizenData.ActorName.GetName()} already exists in AllCitizens."); return; }
 
-        AllCitizens.Add(citizen);
+        AllCitizens.Add(citizenData);
         DisplayCurrentPopulation();
     }
 
     public void RemoveCitizen(int actorID)
     {
-        if (!AllCitizens.Any(c => c.CitizenID == actorID)) { Debug.Log($"CitizenID: {actorID} does not exist in AllCitizens."); return; }
+        if (!AllCitizens.Any(c => c.ActorID == actorID)) { Debug.Log($"CitizenID: {actorID} does not exist in AllCitizens."); return; }
 
-        AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.CitizenID == actorID));
+        AllCitizens.Remove(AllCitizens.FirstOrDefault(c => c.ActorID == actorID));
         DisplayCurrentPopulation();
-    }
-}
-
-[Serializable]
-public class Citizen
-{
-    public int CitizenID;
-    public string CitizenName;
-    public int CitizenFactionID;
-
-    public Citizen(int citizenID, string citizenName, int citizenFactionID)
-    {
-        CitizenID = citizenID;
-        CitizenName = citizenName;
-        CitizenFactionID = citizenFactionID;
-    }
-
-    public void UpdateDisplayCitizen(Actor_Base actor)
-    {
-        CitizenID = actor.ActorData.ActorID;
-        CitizenName = actor.ActorData.ActorName.GetName();
-    }
-}
-
-[CustomPropertyDrawer(typeof(Citizen))]
-public class DisplayCitizen_Drawer : PropertyDrawer
-{
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        var citizenName = property.FindPropertyRelative("CitizenName");
-        label.text = !string.IsNullOrEmpty(citizenName.stringValue) ? citizenName.stringValue : "Unnamed Citizen";
-
-        EditorGUI.PropertyField(position, property, label, true);
-    }
-
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-    {
-        return EditorGUI.GetPropertyHeight(property, label, true);
     }
 }

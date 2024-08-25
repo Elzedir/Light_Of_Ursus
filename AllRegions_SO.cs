@@ -350,11 +350,6 @@ public class AllRegionsSOEditor : Editor
         return regionData.AllCityData.Select(c => c.CityName).ToArray();
     }
 
-    private string[] GetStationNames(JobsiteData jobsiteData)
-    {
-        return jobsiteData.AllStationData.Select(s => s.StationName.ToString()).ToArray();
-    }
-
     private void DrawRegionAdditionalData(RegionData selectedRegionData)
     {
         EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
@@ -426,7 +421,6 @@ public class AllRegionsSOEditor : Editor
         }
     }
 
-    int _selectedInventoryItemIndex = -1;
     Vector2 _inventoryItemScrollPos;
 
     private void DrawStationAdditionalData(List<StationData> data)
@@ -475,7 +469,7 @@ public class AllRegionsSOEditor : Editor
         
         foreach (var citizen in populationData.AllCitizens)
         {
-            EditorGUILayout.LabelField($"- {citizen.CitizenID}: {citizen.CitizenName}");
+            EditorGUILayout.LabelField($"- {citizen.ActorID}: {citizen.ActorName.GetName()}");
         }
     }
 }

@@ -47,25 +47,23 @@ public class Manager_Actor : MonoBehaviour
         AllFactions.AddToOrUpdateFactionActorsDataList(actorData.FullIdentification.ActorFactionID, actorData);
     }
 
-    public static ActorData GetActorData(int factionID, int actorID, out ActorData actorData)
+    public static ActorData GetActorData(int actorID, out ActorData actorData, int factionID = -1)
     {
-        return actorData = AllFactions.GetActorData(factionID, actorID);
+        return actorData = AllFactions.GetActorData(actorID, factionID);
     }
 
-    public static Actor_Base GetActor(int factionID, int actorID, out Actor_Base actor)
+    public static Actor_Base GetActor(int actorID, out Actor_Base actor, int factionID = -1)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
             if (AllActorComponents[actorID] != null) return actor = AllActorComponents[actorID];
             else
             {
-                GetActorData(factionID, actorID, out var actorData);
+                GetActorData(actorID, out var actorData, factionID);
                 return AllActorComponents[actorID] = actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorID);
             }
         }
-        else if (AllFactions.AllFactionData.FirstOrDefault(f => f.FactionID == factionID)
-            .AllFactionActors.Any(a => a.ActorID == actorID) && 
-            GetActorData(factionID, actorID, out ActorData actorData) != null)
+        else if (GetActorData(actorID, out ActorData actorData, factionID) != null)
         {
             return actor = SpawnActor(actorData.GameObjectProperties.ActorPosition, actorData.ActorID);
         }
@@ -75,11 +73,12 @@ public class Manager_Actor : MonoBehaviour
 
     public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID = -1, int factionID = -1)
     {
-        Debug.Log($"Spawning new actor with ID: {actorID} at point: {spawnPoint}.");
+        if (actorID == -1) Debug.Log($"Spawning new actor at point: {spawnPoint}.");
+        else Debug.Log($"Spawning actor with ID: {actorID} at point: {spawnPoint}.");
 
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
-        if (actorID != -1 && GetActorData(factionID, actorID, out ActorData actorData) != null)
+        if (actorID != -1 && GetActorData(actorID, out ActorData actorData, factionID) != null)
         {
             actor.SetActorData(actorData);
             actor.Initialise();

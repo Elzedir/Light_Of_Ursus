@@ -36,9 +36,12 @@ public class Manager_Recipe : MonoBehaviour
         AllRecipes.Add(RecipeName.Log, new Recipe(
             recipeName: RecipeName.Log,
             recipeDescription: "Chop a log",
-            recipeIngredients: new List<Item>(),
-            stationName: StationName.Tree,
-            recipeProducts: new List<Item> { (Manager_Item.GetItem(1100, 1)) }
+            requiredProgress: 10,
+            requiredIngredients: new List<Item>(),
+            requiredStation: StationName.Tree,
+            requiredVocations: new List<VocationRequirement> { new VocationRequirement(VocationName.Logger, 0) },
+            recipeProducts: new List<Item> { (Manager_Item.GetItem(1100, 1)) },
+            possibleQualities: new List<CraftingQuality> { new CraftingQuality(1, ItemQualityName.Common) }
             ));
     }
 
@@ -47,9 +50,12 @@ public class Manager_Recipe : MonoBehaviour
         AllRecipes.Add(RecipeName.Plank, new Recipe(
             recipeName: RecipeName.Plank,
             recipeDescription: "Craft a plank",
-            recipeIngredients: new List<Item> { (Manager_Item.GetItem(1100, 2)) },
-            stationName: StationName.Sawmill,
-            recipeProducts: new List<Item> { (Manager_Item.GetItem(2300, 1)) }
+            requiredProgress: 10,
+            requiredIngredients: new List<Item> { (Manager_Item.GetItem(1100, 2)) },
+            requiredStation: StationName.Sawmill,
+            requiredVocations: new List<VocationRequirement> { new VocationRequirement(VocationName.Sawyer, 0) },
+            recipeProducts: new List<Item> { (Manager_Item.GetItem(2300, 1)) },
+            possibleQualities: new List<CraftingQuality> { new CraftingQuality(1, ItemQualityName.Common) }
             ));
     }
 
@@ -67,23 +73,67 @@ public enum RecipeName
     Log
 }
 
+[Serializable]
 public class Recipe
 {
     public RecipeName RecipeName;
     public string RecipeDescription;
 
-    public StationName StationName;
-    public List<Item> RecipeIngredients;
-    public List<Item> RecipeProducts;
+    public int RequiredProgress;
+    public List<Item> RequiredIngredients;
+    public StationName RequiredStation;
+    public List<VocationRequirement> RequiredVocations;
 
-    public Recipe(RecipeName recipeName, string recipeDescription, 
-        List<Item> recipeIngredients, StationName stationName, List<Item> recipeProducts)
+    public List<Item> RecipeProducts;
+    public List<CraftingQuality> PossibleQualities;
+
+    public Recipe(RecipeName recipeName, string recipeDescription,
+        int requiredProgress, List<Item> requiredIngredients, StationName requiredStation, List<VocationRequirement> requiredVocations, 
+        List<Item> recipeProducts, List<CraftingQuality> possibleQualities)
     {
         RecipeName = recipeName;
         RecipeDescription = recipeDescription;
 
-        StationName = stationName;
-        RecipeIngredients = recipeIngredients;
+        RequiredProgress = requiredProgress;
+        RequiredIngredients = requiredIngredients;
+        RequiredStation = requiredStation;
+        RequiredVocations = requiredVocations;
+
         RecipeProducts = recipeProducts;
+        PossibleQualities = possibleQualities;
+    }
+}
+
+[Serializable]
+public class CraftingQuality
+{
+    public int QualityLevel;
+    public ItemQualityName QualityName;
+
+    public CraftingQuality(int qualityLevel, ItemQualityName qualityName)
+    {
+        QualityLevel = qualityLevel;
+        QualityName = qualityName;
+    }
+
+    public CraftingQuality(CraftingQuality other)
+    {
+        QualityLevel = other.QualityLevel;
+        QualityName = other.QualityName;
+    }
+}
+
+[Serializable]
+public class VocationRequirement
+{
+    public VocationName VocationName;
+    public int MinimumVocationExperience;
+    public int ExpectedVocationExperience;
+
+    public VocationRequirement(VocationName vocationName, int expectedVocationExperience, int minimumVocationExperience = 0)
+    {
+        VocationName = vocationName;
+        MinimumVocationExperience = minimumVocationExperience;
+        ExpectedVocationExperience = expectedVocationExperience;
     }
 }

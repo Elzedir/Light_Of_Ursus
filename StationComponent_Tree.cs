@@ -37,7 +37,7 @@ public class StationComponent_Tree : StationComponent
 
         Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        var cost = _getCost(recipe.RecipeIngredients, actor);
+        var cost = _getCost(recipe.RequiredIngredients, actor);
         var yield = _getYield(recipe.RecipeProducts, actor);
 
         if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }

@@ -1,13 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Runtime.Serialization;
-using UnityEditor.Animations;
 using UnityEngine;
-using Unity.VisualScripting;
 using UnityEditor;
 
 public enum ItemType { 
@@ -106,6 +100,25 @@ public class Manager_Item
     }
 }
 
+public enum ItemQualityName
+{
+    Junk,
+    Rusted,
+    Poor,
+    Common,
+    Uncommon,
+    Rare,
+    Epic,
+    Divine,
+    Legendary,
+    Mythic,
+    Celestial,
+    Primordial,
+
+    Unique,
+    Named,
+}
+
 [Serializable]
 public class Item
 {
@@ -116,8 +129,8 @@ public class Item
     public FixedModifiers_Item FixedModifiers_Item;
     public PercentageModifiers_Item PercentageModifiers_Item;
 
-    public Item(CommonStats_Item commonStats_Item = null, VisualStats_Item visualStats_Item = null, WeaponStats_Item weaponStats_Item = null, ArmourStats_Item armourStats_Item = null, 
-        FixedModifiers_Item fixedModifiers_Item = null, PercentageModifiers_Item percentageModifiers_Item = null)
+    public Item(CommonStats_Item commonStats_Item, VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
+        FixedModifiers_Item fixedModifiers_Item, PercentageModifiers_Item percentageModifiers_Item)
     {
         CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
         VisualStats_Item = visualStats_Item ?? new VisualStats_Item();
@@ -170,6 +183,8 @@ public class CommonStats_Item
     public List<EquipmentSlot> EquipmentSlots;
     public int MaxStackSize;
     public int CurrentStackSize;
+    public int ItemLevel;
+    public ItemQualityName ItemQuality;
     public int ItemValue;
     public float ItemWeight;
     public bool ItemEquippable;
@@ -181,6 +196,8 @@ public class CommonStats_Item
         List<EquipmentSlot> equipmentSlots = null,
         int maxStackSize = 0,
         int currentStackSize = 0,
+        int itemLevel = 0,
+        ItemQualityName itemQuality = ItemQualityName.Junk,
         int itemValue = 0,
         float itemWeight = 0,
         bool itemEquippable = false
@@ -192,6 +209,8 @@ public class CommonStats_Item
         EquipmentSlots = equipmentSlots;
         MaxStackSize = maxStackSize;
         CurrentStackSize = currentStackSize;
+        ItemLevel = itemLevel;
+        ItemQuality = itemQuality;
         ItemValue = itemValue;
         ItemWeight = itemWeight;
         ItemEquippable = itemEquippable;
@@ -205,6 +224,8 @@ public class CommonStats_Item
         EquipmentSlots = item.EquipmentSlots != null ? new List<EquipmentSlot>(item.EquipmentSlots) : null;
         MaxStackSize = item.MaxStackSize;
         CurrentStackSize = item.CurrentStackSize;
+        ItemLevel = item.ItemLevel;
+        ItemQuality = item.ItemQuality;
         ItemValue = item.ItemValue;
         ItemWeight = item.ItemWeight;
         ItemEquippable = item.ItemEquippable;

@@ -30,37 +30,6 @@ public class Manager_Job : MonoBehaviour
 
     Job _lumberjack()
     {
-        IEnumerator chopTrees(Actor_Base actor, int jobsiteID)
-        {
-            // If jobsite is null, then don't do anything unless there's an unowned jobsite
-            StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Tree);
-            if (nearestStation == null) { Debug.Log("Nearest Sawmill is null."); yield break; }
-            nearestStation.SetOperator(actor.ActorData.ActorID);
-        }
-
-        // Find a way to manage the jobs so that it doesn't use a fixed list but rather inventory requirements. Or can use a fixed list like Kenshi, but have
-        // limits for time.
-
-        IEnumerator processTrees(Actor_Base actor, int jobsiteID)
-        {
-            StationComponent nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Sawmill);
-            if (nearestStation == null) { Debug.Log("Nearest Tree is null."); yield break; }
-            nearestStation.SetOperator(actor.ActorData.ActorID);
-        }
-
-        IEnumerator dropOffWood(Actor_Base actor, int jobsiteID)
-        {
-            var nearestStation = Manager_Jobsite.GetJobsite(jobsiteID).GetNearestStationInJobsite(actor.transform.position, StationName.Log_Pile);
-            if (nearestStation == null) { Debug.Log("Nearest LogPile is null."); yield break; }
-            yield return actor.ActorData.InventoryAndEquipment.InventoryData.TransferItemFromInventory(nearestStation.StationData.InventoryData, nearestStation.GetItemsToDropOff(actor));
-            nearestStation.SetOperator(actor.ActorData.ActorID);
-        }
-
-        IEnumerator sellWood(Actor_Base actor, int jobsiteID)
-        {
-            yield return null;
-        }
-
         return new Job(
             jobName: JobName.Lumberjack,
             jobDescription: "Lumberjack",
@@ -71,28 +40,28 @@ public class Manager_Job : MonoBehaviour
                     taskDescription: "Chop trees",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: chopTrees
+                    taskAction: null
                     ),
                 new Task(
                     taskName: TaskName.Process_Trees,
                     taskDescription: "Process logs into wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: processTrees
+                    taskAction: null
                     ),
                 new Task(
                     taskName: TaskName.Drop_Off_Wood,
                     taskDescription: "Drop wood in woodpile",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: dropOffWood
+                    taskAction: null
                     ),
                 new Task(
                     taskName: TaskName.Sell_Wood,
                     taskDescription: "Sell wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
-                    taskAction: sellWood
+                    taskAction: null
                     )
             });
     }

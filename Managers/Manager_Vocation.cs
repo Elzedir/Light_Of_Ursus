@@ -89,11 +89,6 @@ public class Vocation
             .Select(kv => kv.Value)
             .FirstOrDefault();
     }
-
-    public float GetSuccessChance(float currentExperience, float experienceRequired)
-    {
-        return ((currentExperience - experienceRequired) / currentExperience) * 100;
-    }
 }
 
 public class VocationData
@@ -143,9 +138,19 @@ public class VocationData
         return Vocations[vocationName];
     }
 
-    public float GetSuccessChance(VocationName vocationName, float experienceRequired)
+    public float GetProgress(VocationRequirement vocationRequirement)
     {
-        Vocation vocation = Manager_Vocation.GetVocation(vocationName);
-        return vocation.GetSuccessChance(Vocations[vocationName], experienceRequired);
+        var currentExperience = Vocations[vocationRequirement.VocationName];
+
+        if (currentExperience < vocationRequirement.MinimumVocationExperience)
+        {
+            return 0;
+        }
+
+        var progress = ((currentExperience - vocationRequirement.ExpectedVocationExperience) / Math.Max(currentExperience, 1));
+
+        if (progress < 0) return 1 / Math.Abs(progress);
+
+        return progress;
     }
 }

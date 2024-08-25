@@ -143,7 +143,7 @@ public class AllFactions_SO : ScriptableObject
         //AllFactionData.FirstOrDefault(f => f.FactionID == factionID).RemoveFromFactionActorsDataList(actorData);
     }
 
-    public ActorData GetActorData(int factionID, int actorID)
+    public ActorData GetActorData(int actorID, int factionID)
     {
         return AllFactionData.FirstOrDefault(f => f.FactionID == factionID)?.GetActorData(actorID)
             ?? AllFactionData
@@ -189,22 +189,20 @@ public class AllFactions_SO : ScriptableObject
 }
 
 [CustomEditor(typeof(AllFactions_SO))]
-public class AllFactionsSOEditor : Editor
+public class AllFactions_SOEditor : Editor
 {
     int _selectedFactionIndex = -1;
     int selectedFactionIndex { get { return _selectedFactionIndex; } set { if (_selectedFactionIndex == value) return; _selectedFactionIndex = value; _resetIndexes(0); } }
     int _selectedActorIndex = -1;
     int selectedActorIndex { get { return _selectedActorIndex; } set { if (_selectedActorIndex == value) return; _selectedActorIndex = value; _resetIndexes(1); } }
-    int selectedCareerIndex = -1;
-    int selectedGameObjectPropertiesIndex = -1;
-    int selectedSpeciesAndPersonalityIndex = -1;
+    bool _showGameObjectProperties = false;
+    bool _showSpeciesAndPersonality = false;
     int selectedFactionRelationIndex = -1;
 
     void _resetIndexes(int i = -1)
     {
-        selectedCareerIndex = -1;
-        selectedGameObjectPropertiesIndex = -1;
-        selectedSpeciesAndPersonalityIndex = -1;
+        _showGameObjectProperties = false;
+        _showSpeciesAndPersonality = false;
         selectedFactionRelationIndex = -1;
         if (i == 1) return;
         _selectedActorIndex = -1;
@@ -214,9 +212,6 @@ public class AllFactionsSOEditor : Editor
 
     Vector2 factionScrollPos;
     Vector2 actorScrollPos;
-    Vector2 careerScrollPos;
-    Vector2 gameObjectPropertiesScrollPos;
-    Vector2 speciesAndPersonalityScrollPos;
     Vector2 factionRelationScrollPos;
 
     public override void OnInspectorGUI()
@@ -252,12 +247,6 @@ public class AllFactionsSOEditor : Editor
     private string[] GetFactionNames(AllFactions_SO allFactionsSO)
     {
         return allFactionsSO.AllFactionData.Select(f => $"{f.FactionID}: {f.FactionName}").ToArray();
-    }
-
-    private float GetPropertyHeight(object data, bool isExpanded)
-    {
-        var fieldCount = data.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).Length;
-        return isExpanded ? fieldCount * 20 : 20;
     }
 
     void DrawFactionData(FactionData factionData)
@@ -307,12 +296,10 @@ public class AllFactionsSOEditor : Editor
     }
 
     int selectedInventoryIndex = -1;
-    int selectedInventoryItemIndex = -1;
 
     Vector2 inventoryItemScrollPos;
 
     int selectedEquipmentIndex = -1;
-    int selectedEquipmentItemIndex = -1;
 
     Vector2 equipmentItemScrollPos;
 
@@ -354,9 +341,9 @@ public class AllFactionsSOEditor : Editor
 
         if (actorData.GameObjectProperties != null)
         {
-            selectedGameObjectPropertiesIndex = GUILayout.SelectionGrid(selectedGameObjectPropertiesIndex, new string[] { "GameObject Properties" }, 1);
+            _showGameObjectProperties = EditorGUILayout.Toggle("GameObjectProperties", _showGameObjectProperties);
 
-            if (selectedGameObjectPropertiesIndex == 0)
+            if (_showGameObjectProperties)
             {
                 DrawGameObjectProperties(actorData.GameObjectProperties);
             }
@@ -371,9 +358,9 @@ public class AllFactionsSOEditor : Editor
 
         if (actorData.SpeciesAndPersonality != null)
         {
-            selectedSpeciesAndPersonalityIndex = GUILayout.SelectionGrid(selectedSpeciesAndPersonalityIndex, new string[] { "Species And Personality" }, 1);
+            _showSpeciesAndPersonality = EditorGUILayout.Toggle("Species and Personality", _showSpeciesAndPersonality);
 
-            if (selectedSpeciesAndPersonalityIndex == 0)
+            if (_showSpeciesAndPersonality)
             {
                 DrawSpeciesAndPersonality(actorData.SpeciesAndPersonality);
             }

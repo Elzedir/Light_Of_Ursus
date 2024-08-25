@@ -27,7 +27,7 @@ public class JobsiteData
     public string OwnerName;
     Actor_Base _owner;
 
-    public List<int> AllEmployees;
+    public List<EmployeeData> AllEmployees;
 
     public DisplayProsperity Prosperity;
 
@@ -40,8 +40,6 @@ public class JobsiteData
         var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
 
         jobsite.Initialise();
-
-        // For some reason we are not getting any StationComponents returning
 
         foreach (var station in jobsite.AllStationsInJobsite)
         {
@@ -107,24 +105,22 @@ public class JobsiteData
 
         // Instead of using a career.none, use an appropriate career, and then use careerNone.
 
-        Debug.Log(string.Join(", ", Manager_City.GetCity(CityID).CityData.Population.AllCitizens.Select(c => $"{c.CitizenID}: {c.CitizenName}")));
-
-        var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position);
+        foreach(var cit in Manager_City.GetCity(CityID).CityData.Population.AllCitizens)
+        {
+            Debug.Log($"City Citizens: {cit.ActorID}: {cit.ActorName.GetName()}");
+        }
 
         var citizen = Manager_City.GetCity(CityID).CityData.Population.AllCitizens
-            .FirstOrDefault(c => Manager_Actor.GetActorData(JobsiteFactionID, c.CitizenID, out ActorData actorData)?.CareerAndJobs.JobsiteID == -1
-                && _hasMinimumVocationRequired(
-                    c,
-                    vocationAndExperience.Vocation,
-                    vocationAndExperience.minimumExperienceRequired));
+            .FirstOrDefault(c => c.CareerAndJobs.JobsiteID == -1
+                && _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(position)));
 
         // Eventually change from FirstOrDefault to either random selection or highest score, maybe depending on ruler's personality or succession.
 
         if (citizen != null)
         {
-            Debug.Log($"Found citizen: {citizen.CitizenName} for position: {position}");
+            Debug.Log($"Found citizen: {citizen.ActorID}: {citizen.ActorName.GetName()} for position: {position}");
 
-            return Manager_Actor.GetActor(JobsiteFactionID, citizen.CitizenID, out actor) != null;
+            return Manager_Actor.GetActor(actorID: citizen.ActorID, out actor, factionID: JobsiteFactionID) != null;
         }
 
         return false;
@@ -138,70 +134,71 @@ public class JobsiteData
 
         var actor = Manager_Actor.SpawnActor(city.CitySpawnZone.transform.position);
 
-        city.CityData.Population.AddCitizen(new Citizen(actor.ActorData.ActorID, actor.ActorData.ActorName.GetName(), actor.ActorData.ActorFactionID));
-        AddEmployee(actor.ActorData.ActorID);
+        city.CityData.Population.AddCitizen(actor.ActorData);
+        AddEmployee(actor.ActorData);
 
         return actor;
     }
 
-    protected bool _hasMinimumVocationRequired(Citizen citizen, Vocation vocation, float minimumExperienceRequired)
+    protected bool _hasMinimumVocationRequired(ActorData citizen, List<VocationRequirement> vocationRequirements)
     {
-        // for now
-
-        return true;
-
-        //if (actorData.VocationComponent.Vocations[vocation] < minimumExperienceRequired)
-        //{
-        //    return false;
-        //}
-
-        return true;
-    }
-
-    protected (Vocation Vocation, float minimumExperienceRequired) _getVocationAndMinimumExperienceRequired(EmployeePosition position)
-    {
-        return (null, 0);
-    }
-
-    public void AddEmployee(int employeeID)
-    {
-        if (AllEmployees.Contains(employeeID))
+        foreach(var vocation in vocationRequirements)
         {
-            Debug.Log($"EmployeeID: {employeeID} already exists in employee list.");
+            if (vocation.VocationName == VocationName.None) continue;
+
+            if (citizen.VocationData.GetVocationExperience(vocation.VocationName) < vocation.MinimumVocationExperience)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(EmployeePosition position)
+    {
+        return new List<VocationRequirement> { new VocationRequirement(VocationName.None, 0) };
+    }
+
+    public void AddEmployee(ActorData employeeData)
+    {
+        if (AllEmployees.Any(e => e.ActorData.ActorID == employeeData.ActorID))
+        {
+            Debug.Log($"EmployeeID: {employeeData} already exists in employee list.");
             return;
         }
 
-        AllEmployees.Add(employeeID);
+        AllEmployees.Add(new EmployeeData(employeeData, null));
     }
 
-    public void HireEmployee(int employeeID)
+    public void HireEmployee(ActorData employeeData)
     {
-        AddEmployee(employeeID);
+        AddEmployee(employeeData);
 
         // And then apply relevant relation buff
     }
 
-    public void RemoveEmployee(int employeeID)
+    public void RemoveEmployee(ActorData employeeData)
     {
-        if (!AllEmployees.Contains(employeeID))
+        if (!AllEmployees.Any(e => e.ActorData.ActorID == employeeData.ActorID))
         {
-            Debug.Log($"EmployeeID: {employeeID} is not in employee list.");
+            Debug.Log($"EmployeeID: {employeeData} is not in employee list.");
             return;
         }
 
-        AllEmployees.Remove(employeeID);
+        AllEmployees.Remove(AllEmployees.FirstOrDefault(e => e.ActorData.ActorID == employeeData.ActorID));
 
         // Remove employee job from employee job component.
     }
 
-    public void FireEmployee(int employeeID)
+    public void FireEmployee(ActorData employeeData)
     {
-        RemoveEmployee(employeeID);
+        RemoveEmployee(employeeData);
 
         // And then apply relation debuff.
     }
 
-    public void AddEmployeeToStation(int employeeID, int stationID)
+    public void AddEmployeeToStation(ActorData employeeData, int stationID)
     {
         var station = AllStationData.FirstOrDefault(s => s.StationID == stationID);
         if (station == null)
@@ -210,16 +207,16 @@ public class JobsiteData
             return;
         }
 
-        if (station.CurrentOperators.Contains(employeeID))
+        if (station.CurrentOperators.Any(e => e.ActorData.ActorID == employeeData.ActorID))
         {
-            Debug.Log($"EmployeeID: {employeeID} is already an operator at StationID: {stationID}");
+            Debug.Log($"EmployeeID: {employeeData} is already an operator at StationID: {stationID}");
             return;
         }
 
-        station.CurrentOperators.Add(employeeID);
+        station.AddOperatorToStation(employeeData);
     }
 
-    public void RemoveEmployeeFromStation(int employeeID, int stationID)
+    public void RemoveEmployeeFromStation(ActorData employeeData, int stationID)
     {
         var station = AllStationData.FirstOrDefault(s => s.StationID == stationID);
         if (station == null)
@@ -228,22 +225,22 @@ public class JobsiteData
             return;
         }
 
-        if (!station.CurrentOperators.Contains(employeeID))
+        if (!station.CurrentOperators.Any(e => e.ActorData.ActorID == employeeData.ActorID))
         {
-            Debug.Log($"EmployeeID: {employeeID} is not an operator at StationID: {stationID}");
+            Debug.Log($"EmployeeID: {employeeData} is not an operator at StationID: {stationID}");
             return;
         }
 
-        station.CurrentOperators.Remove(employeeID);
+        station.RemoveOperatorFromStation(employeeData);
     }
 
-    public Dictionary<int, List<int>> GetAllOperators()
+    public List<OperatorData> GetAllOperators()
     {
-        var allOperators = new Dictionary<int, List<int>>();
+        var allOperators = new List<OperatorData>();
 
         foreach (var station in AllStationData)
         {
-            allOperators[station.StationID] = new List<int>(station.CurrentOperators);
+            allOperators.AddRange(station.CurrentOperators);
         }
 
         return allOperators;
@@ -258,9 +255,7 @@ public class JobsiteData
     {
         AllStationData
             .SelectMany(station => Manager_Station.GetStation(station.StationID)?.AllowedEmployeePositions.Select(position => new { station, position }))
-            .Where(sp => !sp.station.CurrentOperators.Any(employeeID =>
-                Manager_Actor.GetActor(JobsiteFactionID, employeeID, out Actor_Base actor) &&
-                actor.ActorData.CareerAndJobs.EmployeePosition == sp.position))
+            .Where(sp => !sp.station.CurrentOperators.Any(e =>e.ActorData.CareerAndJobs.EmployeePosition == sp.position))
             .ToList()
             .ForEach(sp =>
             {
@@ -271,7 +266,7 @@ public class JobsiteData
                 }
 
                 actor.ActorData.CareerAndJobs.EmployeePosition = sp.position;
-                AddEmployeeToStation(actor.ActorData.ActorID, sp.station.StationID);
+                AddEmployeeToStation(actor.ActorData, sp.station.StationID);
             });
     }
 }
@@ -285,6 +280,67 @@ public class JobsiteData_Drawer : PropertyDrawer
         string jobsiteName = ((JobsiteName)jobsiteNameProp.enumValueIndex).ToString();
 
         label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
+
+        EditorGUI.PropertyField(position, property, label, true);
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        return EditorGUI.GetPropertyHeight(property, label, true);
+
+    }
+}
+
+[Serializable]
+public class EmployeeData
+{
+    public ActorData ActorData;
+    public StationComponent CurrentStation;
+
+    public EmployeeData(ActorData actorData, StationComponent currentStation)
+    {
+        ActorData = actorData;
+        CurrentStation = currentStation;
+    }
+
+    public void SetStation(StationComponent currentStation)
+    {
+        CurrentStation = currentStation;
+    }
+
+    public void RemoveStation()
+    {
+        CurrentStation = null;
+    }
+}
+
+[CustomPropertyDrawer(typeof(EmployeeData))]
+public class EmployeeData_Drawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        var actorDataProp = property.FindPropertyRelative("ActorData");
+        var actorIDProp = actorDataProp.FindPropertyRelative("ActorID");
+        var actorNameProp = actorDataProp.FindPropertyRelative("ActorName");
+
+        var nameProp = actorNameProp.FindPropertyRelative("Name");
+        var name = "Nameless";
+
+        if (nameProp != null)
+        {
+            var surnameProp = actorNameProp.FindPropertyRelative("Surname");
+
+            if (surnameProp != null)
+            {
+                name = $"{nameProp.stringValue} {surnameProp.stringValue}";
+            }
+            else
+            {
+                name = $"{nameProp.stringValue}";
+            }
+        }
+
+        label.text = $"{actorIDProp.intValue}: {name}";
 
         EditorGUI.PropertyField(position, property, label, true);
     }

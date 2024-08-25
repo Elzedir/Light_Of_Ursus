@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public enum EmployeePosition
@@ -10,6 +11,7 @@ public enum EmployeePosition
     Owner,
 
     Shopkeeper,
+    Assistant_Shopkeeper,
 
     Chief_Logger,
     Logger,
@@ -19,6 +21,8 @@ public enum EmployeePosition
     Sawyer,
     Assistant_Sawyer,
 
+    Chief_Smith,
+    Smith,
     Assistant_Smith,
 }
 
@@ -32,8 +36,12 @@ public class JobsiteComponent : MonoBehaviour, ITickable
     public ProsperityComponent ProsperityComponent;
 
     public List<StationComponent> AllStationsInJobsite;
+    public List<EmployeePosition> AllNecessaryEmployeePositions;
 
     public bool JobsiteOpen = true;
+
+    public int PermittedProductionInequality = 10;
+    public bool CustomerPresent = false;
 
     public void Initialise()
     {
@@ -47,15 +55,26 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
     public virtual void OnTick()
     {
-        throw new ArgumentException("Cannot use base class");
+        foreach (var product in AllStationsInJobsite.Select(s => s.StationData.ProductionData))
+        {
+            product.GetEstimatedProductionRatePerHour();
+            product.GetActualProductionRatePerHour();
+        }
+
+        _compareProductionOutput();
     }
 
-    public virtual TickRate GetTickRate()
+    public TickRate GetTickRate()
+    {
+        return TickRate.OneGameHour;
+    }
+
+    protected virtual bool _compareProductionOutput()
     {
         throw new ArgumentException("Cannot use base class");
     }
 
-    protected virtual bool _compareProductionOutput()
+    protected virtual void _adjustProduction()
     {
         throw new ArgumentException("Cannot use base class");
     }
@@ -87,5 +106,62 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         .Where(station => station.StationData.StationName == stationName)
         .OrderBy(station => Vector3.Distance(position, station.transform.position))
         .FirstOrDefault();
+    }
+
+    public List<EmployeePosition> GetMinimumEmployeePositions()
+    {
+        HashSet<EmployeePosition> employeePositions = new();
+
+        foreach (var station in AllStationsInJobsite)
+        {
+            foreach (var position in station.AllowedEmployeePositions)
+            {
+                employeePositions.Add(position);
+            }
+        }
+
+        return employeePositions.ToList();
+    }
+}
+
+[Serializable]
+public class ProductionData
+{
+    public List<Item> AllProducedItems;
+    public List<Item> EstimatedProductionRatePerHour;
+    public List<Item> ActualProductionRatePerHour;
+    public int StationID;
+    private StationComponent _station;
+
+    public StationComponent Station
+    {
+        get
+        {
+            if (_station == null)
+            {
+                _station = Manager_Station.GetStation(StationID);
+            }
+            return _station;
+        }
+        set
+        {
+            _station = value;
+        }
+    }
+
+    public ProductionData(List<Item> allProducedItems, int stationID)
+    {
+        AllProducedItems = allProducedItems;
+        StationID = stationID;
+    }
+
+    public List<Item> GetActualProductionRatePerHour()
+    {
+        return ActualProductionRatePerHour = Station.GetActualProductionRatePerHour();
+    }
+
+    public List<Item> GetEstimatedProductionRatePerHour()
+    {
+        return EstimatedProductionRatePerHour = Station.GetEstimatedProductionRatePerHour();
     }
 }

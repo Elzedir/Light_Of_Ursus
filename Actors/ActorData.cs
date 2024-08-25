@@ -32,10 +32,9 @@ public class ActorData
 
     public void InitialiseActorData()
     {
-        if (Manager_Actor.GetActor(ActorFactionID, ActorID, out Actor_Base actor) != null)
+        if (Manager_Actor.GetActor(ActorID, out Actor_Base actor, ActorFactionID) != null)
         {
-            actor.SetActorData(Manager_Actor.GetActorData(ActorFactionID, ActorID, out ActorData actorData));
-            FullIdentification.Initialise();
+            Manager_City.GetCityData(cityID: FullIdentification.ActorCityID).Population.AddCitizen(this);
         } 
         else
         {
@@ -78,28 +77,22 @@ public class ActorData_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        SerializedProperty actorNameProp = property.FindPropertyRelative("ActorName");
+        var actorIDProp = property.FindPropertyRelative("ActorID");
+        var actorNameProp = property.FindPropertyRelative("ActorName");
+        var nameProp = actorNameProp.FindPropertyRelative("Name");
+        var surnameProp = actorNameProp.FindPropertyRelative("Surname");
+        var name = "Nameless";
 
-        if (actorNameProp != null)
+        if (surnameProp != null)
         {
-            SerializedProperty nameProp = actorNameProp.FindPropertyRelative("Name");
-
-            if (nameProp != null)
-            {
-                SerializedProperty surnameProp = actorNameProp.FindPropertyRelative("Surname");
-
-                if (surnameProp != null)
-                {
-                    label.text = $"{nameProp.stringValue} {surnameProp.stringValue}";
-                }
-                else
-                {
-                    label.text = $"{nameProp.stringValue}";
-                }
-            }
-            else label.text = "No Name";
+            name = $"{nameProp.stringValue} {surnameProp.stringValue}";
         }
-        else label.text = "No Name";
+        else
+        {
+            name = $"{nameProp.stringValue}";
+        }
+
+        label.text = $"{actorIDProp.intValue}: {name}";
 
         EditorGUI.PropertyField(position, property, label, true);
     }
@@ -127,11 +120,6 @@ public class FullIdentification
         ActorName = actorName;
         ActorFactionID = actorFactionID;
         ActorCityID = actorCityID;
-    }
-
-    public void Initialise()
-    {
-        Manager_City.GetCityData(cityID: ActorCityID).Population.AddCitizen(new Citizen(ActorID, ActorName.GetName(), ActorFactionID));
     }
 }
 
@@ -427,9 +415,9 @@ public class CraftingData
     {
         var recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(FactionID, ActorID, out ActorData actorData);
+        Manager_Actor.GetActorData(ActorID, out ActorData actorData, FactionID);
 
-        while (inventoryContainsAllIngredients(recipe.RecipeIngredients))
+        while (inventoryContainsAllIngredients(recipe.RequiredIngredients))
         {
             yield return CraftItem(recipeName);
         }
@@ -456,16 +444,16 @@ public class CraftingData
 
         Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(FactionID, ActorID, out ActorData actorData);
+        Manager_Actor.GetActorData(ActorID, out ActorData actorData, FactionID);
 
-        if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RecipeIngredients))
+        if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
         {
-            if (actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RecipeIngredients))
+            if (actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RequiredIngredients))
             {
                 yield break;
             }
 
-            actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RecipeIngredients);
+            actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RequiredIngredients);
             Debug.Log($"Cannot add products into inventory"); 
             yield break;
         }

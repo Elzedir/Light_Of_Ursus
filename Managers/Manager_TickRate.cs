@@ -6,7 +6,7 @@ using UnityEngine;
 public enum TickRate 
 { 
     OneTenthSecond, OneSecond, TenSeconds, OneHundredSeconds,
-    OneGameDay, OneGameMonth, OneGameYear 
+    OneGameHour, OneGameDay, OneGameMonth, OneGameYear 
 }
 
 public class Manager_TickRate : MonoBehaviour
@@ -29,6 +29,7 @@ public class Manager_TickRate : MonoBehaviour
                 { TickRate.OneSecond, UnityEngine.Time.time + 1f },
                 { TickRate.TenSeconds, UnityEngine.Time.time + 10f },
                 { TickRate.OneHundredSeconds, UnityEngine.Time.time + 100f },
+                { TickRate.OneGameHour, UnityEngine.Time.time + 120f },
                 { TickRate.OneGameDay, UnityEngine.Time.time + 2880f },
                 { TickRate.OneGameMonth, UnityEngine.Time.time + 43200f },
                 { TickRate.OneGameYear, UnityEngine.Time.time + 172800f }
@@ -40,6 +41,7 @@ public class Manager_TickRate : MonoBehaviour
                 { TickRate.OneSecond, new List<ITickable>() },
                 { TickRate.TenSeconds, new List<ITickable>() },
                 { TickRate.OneHundredSeconds, new List<ITickable>() },
+                { TickRate.OneGameHour, new List<ITickable>() },
                 { TickRate.OneGameDay, new List<ITickable>() },
                 { TickRate.OneGameMonth, new List<ITickable>() },
                 { TickRate.OneGameYear, new List<ITickable>() }
@@ -76,6 +78,8 @@ public class Manager_TickRate : MonoBehaviour
                 return 10f;
             case TickRate.OneHundredSeconds:
                 return 100f;
+            case TickRate.OneGameHour:
+                return 120f;
             case TickRate.OneGameDay:
                 return 2880f;
             case TickRate.OneGameMonth:

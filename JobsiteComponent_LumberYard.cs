@@ -5,156 +5,151 @@ using UnityEngine;
 
 public class JobsiteComponent_LumberYard : JobsiteComponent
 {
-    public int PermittedProductionInequality = 10;
-    public Queue<int> LogInputs = new();
-    public Queue<int> PlankOutputs = new();
-    public int LogInputSum = 0;
-    public int PlankOutputSum = 0;
-    public int OutputBatchCount = 5;
-    public bool CustomerPresent = false;
-
-    public override void OnTick()
-    {
-        _getStationProduction(out int logsProduced, out int planksProduced);
-
-        LogInputs.Enqueue(logsProduced);
-        PlankOutputs.Enqueue(planksProduced);
-
-        LogInputSum += logsProduced;
-        PlankOutputSum += planksProduced;
-
-        if (LogInputs.Count > OutputBatchCount)
-        {
-            LogInputSum -= LogInputs.Dequeue();
-        }
-
-        if (PlankOutputs.Count > OutputBatchCount)
-        {
-            PlankOutputSum -= PlankOutputs.Dequeue();
-        }
-
-        _compareProductionOutput();
-    }
-
-    public override TickRate GetTickRate()
-    {
-        return TickRate.OneHundredSeconds;
-    }
-
     protected override bool _compareProductionOutput()
     {
-        if (PlankOutputSum == 0) return false;
+        var producedItems = AllStationsInJobsite
+        .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
+        .ToList();
 
-        float logAverage = LogInputSum / (float)OutputBatchCount;
-        float plankAverage = PlankOutputSum / (float)OutputBatchCount;
+        var mergedItems = producedItems
+        .GroupBy(item => item.CommonStats_Item.ItemID)
+        .Select(group => Manager_Item.GetItem(group.Key, group.Sum(item => item.CommonStats_Item.CurrentStackSize)))
+        .ToList();
 
-        float expectedRatio = logAverage / plankAverage;
+        var duplicateItems = producedItems
+        .GroupBy(item => item.CommonStats_Item.ItemID)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToList();
+
+        foreach (var itemId in duplicateItems)
+        {
+            Debug.Log($"Item {itemId} were not merged correctly.");
+        }
+
+        float logProduction = mergedItems.FirstOrDefault(item => item.CommonStats_Item.ItemID == 1100)?.CommonStats_Item.CurrentStackSize ?? 0;
+        float plankProduction = mergedItems.FirstOrDefault(item => item.CommonStats_Item.ItemID == 2300)?.CommonStats_Item.CurrentStackSize ?? 0;
+
+        float currentRatio = logProduction / plankProduction;
         float idealRatio = 3f;
 
-        float percentageDifference = Mathf.Abs(((expectedRatio / idealRatio) * 100) - 100);
+        float percentageDifference = Mathf.Abs(((currentRatio / idealRatio) * 100) - 100);
 
-        Debug.Log($"Log Average: {logAverage}, Plank Average: {plankAverage}, Percentage Difference: {percentageDifference}%");
+        Debug.Log($"Log Average: {logProduction}, Plank Average: {plankProduction}, Percentage Difference: {percentageDifference}%");
 
         bool isBalanced = percentageDifference <= PermittedProductionInequality;
 
         if (!isBalanced)
         {
-            AdjustProduction(expectedRatio, idealRatio);
+            _adjustProduction(logProduction, plankProduction, idealRatio);
         }
 
         return isBalanced;
     }
 
-    private void AdjustProduction(float actualRatio, float idealRatio)
+    protected void _adjustProduction(float logProduction, float plankProduction, float idealRatio)
     {
-        if (actualRatio > idealRatio)
+        var allEmployees = new List<EmployeeData>(JobsiteData.AllEmployees);
+        var bestCombination = new List<EmployeeData>();
+        float bestRatioDifference = float.MaxValue;
+
+        var allCombinations = GetAllCombinations(allEmployees);
+        int i = 0;
+
+        foreach (var combination in allCombinations)
         {
-            _redistributeEmployees();
-            Debug.Log("Increase sawmill efficiency or assign more workers to balance production.");
+            AssignEmployeesToStations(combination);
+
+            var estimatedProduction = AllStationsInJobsite
+                .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
+                .ToList();
+
+            var mergedEstimatedProduction = estimatedProduction
+            .GroupBy(item => item.CommonStats_Item.ItemID)
+            .Select(group => Manager_Item.GetItem(group.Key, group.Sum(item => item.CommonStats_Item.CurrentStackSize)))
+            .ToList();
+
+            float estimatedLogProduction = mergedEstimatedProduction.FirstOrDefault(item => item.CommonStats_Item.ItemID == 1100)?.CommonStats_Item.CurrentStackSize ?? 0;
+            float estimatedPlankProduction = mergedEstimatedProduction.FirstOrDefault(item => item.CommonStats_Item.ItemID == 2300)?.CommonStats_Item.CurrentStackSize ?? 0;
+
+            float estimatedRatio = estimatedLogProduction / estimatedPlankProduction;
+            float ratioDifference = Mathf.Abs(estimatedRatio - idealRatio);
+
+            i++;
+
+            Debug.Log($"Combination {i} has eL: {estimatedLogProduction} eP: {estimatedPlankProduction} eR: {estimatedRatio} and rDif: {ratioDifference}");
+
+            if (ratioDifference < bestRatioDifference)
+            {
+                Debug.Log($"Combination {i} the is best ratio");
+
+                bestRatioDifference = ratioDifference;
+                bestCombination = new List<EmployeeData>(combination);
+            }
         }
-        else
-        {
-            _redistributeEmployees();
-            Debug.Log("Increase logging efficiency or assign more workers to balance production.");
-        }
+
+        AssignEmployeesToStations(bestCombination);
+
+        Debug.Log("Adjusted production to balance the ratio.");
     }
 
-    protected override void _redistributeEmployees()
+    private void AssignEmployeesToStations(List<EmployeeData> employees)
     {
-        var allEmployees = JobsiteData.AllEmployees.Select(id => Manager_Actor.GetActorData(-1, id, out ActorData actorData)).ToList();
-        var allStations = AllStationsInJobsite;
-
-        foreach (var station in allStations)
+        foreach (var station in AllStationsInJobsite)
         {
-            station.RemoveOperator(-1);
+            station.RemoveAllOperators();
         }
 
-        foreach (var station in allStations)
+        foreach (var station in AllStationsInJobsite)
         {
             var allowedPositions = station.AllowedEmployeePositions;
-            var employeesForStation = allEmployees
-                .Where(e => allowedPositions.Contains(e.CareerAndJobs.EmployeePosition))
-                .OrderByDescending(e => e.CareerAndJobs.EmployeePosition)
-                .ThenByDescending(e => e.VocationData.GetVocationExperience(GetRelevantVocation(e.CareerAndJobs.EmployeePosition)))
+            var employeesForStation = employees
+                .Where(e => allowedPositions.Contains(e.ActorData.CareerAndJobs.EmployeePosition))
+                .OrderByDescending(e => e.ActorData.CareerAndJobs.EmployeePosition)
+                .ThenByDescending(e => e.ActorData.VocationData.GetVocationExperience(GetRelevantVocation(e.ActorData.CareerAndJobs.EmployeePosition)))
                 .ToList();
 
             foreach (var employee in employeesForStation)
             {
-                station.SetOperator(employee.ActorID);
-                allEmployees.Remove(employee);
-            }
-        }
-
-        VocationName GetRelevantVocation(EmployeePosition position)
-        {
-            switch (position)
-            {
-                case EmployeePosition.Logger:
-                case EmployeePosition.Assistant_Logger:
-                    return VocationName.Logger;
-                case EmployeePosition.Sawyer:
-                case EmployeePosition.Assistant_Sawyer:
-                    return VocationName.Sawyer;
-                default:
-                    return VocationName.None;
+                station.StationData.AddOperatorToStation(employee.ActorData);
+                employees.Remove(employee);
             }
         }
     }
 
-    void _getStationProduction(out int logsProduced, out int planksProduced)
+    private List<List<EmployeeData>> GetAllCombinations(List<EmployeeData> employees)
     {
-        List<Item> producedItems = new();
+        var result = new List<List<EmployeeData>>();
+        int combinationCount = (int)Mathf.Pow(2, employees.Count);
 
-        foreach(var station in AllStationsInJobsite)
+        for (int i = 1; i < combinationCount; i++)
         {
-            foreach(var item in station.GetProductedItems())
+            var combination = new List<EmployeeData>();
+            for (int j = 0; j < employees.Count; j++)
             {
-                if (!producedItems.Any(i => i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID)) producedItems.Add(item);
-                else
+                if ((i & (1 << j)) != 0)
                 {
-                    producedItems.FirstOrDefault(i => 
-                    i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID).CommonStats_Item.CurrentStackSize += item.CommonStats_Item.CurrentStackSize;
+                    combination.Add(employees[j]);
                 }
             }
+            result.Add(combination);
         }
 
-        logsProduced = 0;
-        planksProduced = 0;
+        return result;
+    }
 
-        foreach(var item in producedItems)
+    private VocationName GetRelevantVocation(EmployeePosition position)
+    {
+        switch (position)
         {
-            if (item.CommonStats_Item.ItemID == 1100)
-            {
-                logsProduced = item.CommonStats_Item.CurrentStackSize;
-            }
-            else if (item.CommonStats_Item.ItemID == 2300)
-            {
-                planksProduced = item.CommonStats_Item.CurrentStackSize;
-            }
-            else
-            {
-                Debug.Log($"Somehow collected item: {item.CommonStats_Item.ItemID}: {item.CommonStats_Item.ItemName} from stations");
-            }
+            case EmployeePosition.Logger:
+            case EmployeePosition.Assistant_Logger:
+                return VocationName.Logger;
+            case EmployeePosition.Sawyer:
+            case EmployeePosition.Assistant_Sawyer:
+                return VocationName.Sawyer;
+            default:
+                return VocationName.None;
         }
     }
 }
