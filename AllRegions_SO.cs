@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "AllRegions_SO", menuName = "SOList/AllRegions_SO")]
+[Serializable]
 public class AllRegions_SO : ScriptableObject
 {
     // Use this class as the save class to keep all info, and then distribute to the AllActor's SO. Add a player region and a wanderer region to hold all
@@ -18,13 +18,16 @@ public class AllRegions_SO : ScriptableObject
     public int LastUnusedRegionID = 0;
 
     public List<int> AllCityIDs;
-    public int LastUnusedCityID = 0;
+    public int LastUnusedCityID = 1;
 
     public List<int> AllJobsiteIDs;
-    public int LastUnusedJobsiteID = 0;
+    public int LastUnusedJobsiteID = 1;
 
     public List<int> AllStationIDs;
-    public int LastUnusedStationID = 0;
+    public int LastUnusedStationID = 1;
+
+    public List<int> AllOperatingAreaIDs;
+    public int LastUnusedOperatingAreaID = 1;
 
     public void PrepareToInitialise()
     {
@@ -65,6 +68,7 @@ public class AllRegions_SO : ScriptableObject
         AllCityIDs.Clear();
         AllJobsiteIDs.Clear();
         AllStationIDs.Clear();
+        AllOperatingAreaIDs.Clear();
 
         _initialiseRuntimeIDLists();
 
@@ -80,10 +84,14 @@ public class AllRegions_SO : ScriptableObject
         AllStationIDs.Sort();
         AllStationIDs.Reverse();
 
+        AllOperatingAreaIDs.Sort();
+        AllOperatingAreaIDs.Reverse();
+
         LastUnusedRegionID = AllRegionIDs.First() + 1;
         LastUnusedCityID = AllCityIDs.First() + 1;
         LastUnusedJobsiteID = AllJobsiteIDs.First() + 1;
         LastUnusedStationID = AllStationIDs.First() + 1;
+        LastUnusedOperatingAreaID = AllOperatingAreaIDs.First() + 1;
     }
 
     void _initialiseRuntimeIDLists()
@@ -103,6 +111,11 @@ public class AllRegions_SO : ScriptableObject
                     foreach (var stationData in jobsiteData.AllStationData)
                     {
                         if (!AllStationIDs.Contains(stationData.StationID)) AllStationIDs.Add(stationData.StationID);
+
+                        foreach (var operatingAreaData in stationData.AllOperatingAreaData)
+                        {
+                            if (!AllOperatingAreaIDs.Contains(operatingAreaData.OperatingAreaID)) AllOperatingAreaIDs.Add(operatingAreaData.OperatingAreaID);
+                        }
                     }
                 }
             }
@@ -243,6 +256,37 @@ public class AllRegions_SO : ScriptableObject
         return LastUnusedStationID;
     }
 
+    public void AddToOrUpdateAllOperatingAreaDataList(int stationID, OperatingAreaData OperatingAreaData)
+    {
+        var allOperatingAreaData = Manager_Station.GetStation(stationID).StationData.AllOperatingAreaData;
+
+        var existingOperatingArea = allOperatingAreaData.FirstOrDefault(s => s.OperatingAreaID == OperatingAreaData.OperatingAreaID);
+
+        if (existingOperatingArea == null) allOperatingAreaData.Add(OperatingAreaData);
+        else allOperatingAreaData[allOperatingAreaData.IndexOf(existingOperatingArea)] = OperatingAreaData;
+    }
+
+    public OperatingAreaData GetOperatingAreaData(int stationID, int operatingAreaID)
+    {
+        var allOperatingAreaData = Manager_Station.GetStation(stationID).StationData.AllOperatingAreaData;
+
+        if (!allOperatingAreaData.Any(oa => oa.OperatingAreaID == operatingAreaID)) { Debug.Log($"AllOperatingAreaData does not contain OperatingAreaID: {operatingAreaID}"); return null; }
+
+        return allOperatingAreaData.FirstOrDefault(oa => oa.OperatingAreaID == operatingAreaID);
+    }
+
+    public int GetRandomOperatingAreaID()
+    {
+        while (AllOperatingAreaIDs.Contains(LastUnusedOperatingAreaID))
+        {
+            LastUnusedOperatingAreaID++;
+        }
+
+        AllOperatingAreaIDs.Add(LastUnusedOperatingAreaID);
+
+        return LastUnusedOperatingAreaID;
+    }
+
     public void ClearRegionData()
     {
         AllRegionData.Clear();
@@ -253,32 +297,32 @@ public class AllRegions_SO : ScriptableObject
 public class AllRegionsSOEditor : Editor
 {
     int _selectedRegionIndex = -1;
-    int selectedRegionIndex { get { return _selectedRegionIndex; } set { if (_selectedRegionIndex == value) return; _selectedRegionIndex = value; _resetIndexes(0); } }
+    int SelectedRegionIndex { get { return _selectedRegionIndex; } set { if (_selectedRegionIndex == value) return; _selectedRegionIndex = value; _resetIndexes(0); } }
     int _selectedCityIndex = -1;
-    int selectedCityIndex { get { return _selectedCityIndex; } set { if (_selectedCityIndex == value) return; _selectedCityIndex = value; _resetIndexes(1); } }
-    int selectedJobsiteIndex = -1;
-    int selectedStationIndex = -1;
+    int SelectedCityIndex { get { return _selectedCityIndex; } set { if (_selectedCityIndex == value) return; _selectedCityIndex = value; _resetIndexes(1); } }
+    int _selectedJobsiteIndex = -1;
+    int _selectedStationIndex = -1;
 
-    int selectedPopulationIndex = -1;
+    bool _showPopulation = false;
 
     void _resetIndexes(int i)
     {
-        selectedPopulationIndex = -1;
-        selectedStationIndex = -1;
+        _showPopulation = false;
+        _selectedStationIndex = -1;
 
         switch (i)
         {
             case 0:
                 _selectedCityIndex = -1;
-                selectedJobsiteIndex = -1;
+                _selectedJobsiteIndex = -1;
                 break;
             case 1:
-                selectedJobsiteIndex = -1;
+                _selectedJobsiteIndex = -1;
                 break;
             case 3:
                 _selectedRegionIndex = -1;
                 _selectedCityIndex = -1;
-                selectedJobsiteIndex = -1;
+                _selectedJobsiteIndex = -1;
                 break;
             default:
                 Debug.Log($"Int: {i} does nothing.");
@@ -286,11 +330,11 @@ public class AllRegionsSOEditor : Editor
         }
     }
 
-    Vector2 regionScrollPos;
-    Vector2 cityScrollPos;
-    Vector2 jobsiteScrollPos;
-    Vector2 stationScrollPos;
-    Vector2 populationScrollPos;
+    Vector2 _regionScrollPos;
+    Vector2 _cityScrollPos;
+    Vector2 _jobsiteScrollPos;
+    Vector2 _stationScrollPos;
+    Vector2 _populationScrollPos;
 
     public override void OnInspectorGUI()
     {
@@ -300,11 +344,13 @@ public class AllRegionsSOEditor : Editor
         EditorGUILayout.LabelField("City IDs", string.Join(", ", allRegionsSO.AllCityIDs));
         EditorGUILayout.LabelField("Jobsite IDs", string.Join(", ", allRegionsSO.AllJobsiteIDs));
         EditorGUILayout.LabelField("Station IDs", string.Join(", ", allRegionsSO.AllStationIDs));
+        EditorGUILayout.LabelField("Operating Area IDs", string.Join(", ", allRegionsSO.AllOperatingAreaIDs));
 
         allRegionsSO.LastUnusedRegionID = EditorGUILayout.IntField("Last Unused Region ID", allRegionsSO.LastUnusedRegionID);
         allRegionsSO.LastUnusedCityID = EditorGUILayout.IntField("Last Unused City ID", allRegionsSO.LastUnusedCityID);
         allRegionsSO.LastUnusedJobsiteID = EditorGUILayout.IntField("Last Unused Jobsite ID", allRegionsSO.LastUnusedJobsiteID);
         allRegionsSO.LastUnusedStationID = EditorGUILayout.IntField("Last Unused Station ID", allRegionsSO.LastUnusedStationID);
+        allRegionsSO.LastUnusedOperatingAreaID = EditorGUILayout.IntField("Last Unused Operating Area ID", allRegionsSO.LastUnusedOperatingAreaID);
 
         if (GUILayout.Button("Clear Region Data"))
         {
@@ -316,13 +362,13 @@ public class AllRegionsSOEditor : Editor
         if (GUILayout.Button("Unselect All")) _resetIndexes(3);
 
         EditorGUILayout.LabelField("All Regions", EditorStyles.boldLabel);
-        regionScrollPos = EditorGUILayout.BeginScrollView(regionScrollPos, GUILayout.Height(GetListHeight(allRegionsSO.AllRegionData.Count)));
-        selectedRegionIndex = GUILayout.SelectionGrid(selectedRegionIndex, GetRegionNames(allRegionsSO), 1);
+        _regionScrollPos = EditorGUILayout.BeginScrollView(_regionScrollPos, GUILayout.Height(GetListHeight(allRegionsSO.AllRegionData.Count)));
+        SelectedRegionIndex = GUILayout.SelectionGrid(SelectedRegionIndex, GetRegionNames(allRegionsSO), 1);
         EditorGUILayout.EndScrollView();
 
-        if (selectedRegionIndex >= 0 && selectedRegionIndex < allRegionsSO.AllRegionData.Count)
+        if (SelectedRegionIndex >= 0 && SelectedRegionIndex < allRegionsSO.AllRegionData.Count)
         {
-            var selectedRegionData = allRegionsSO.AllRegionData[selectedRegionIndex];
+            var selectedRegionData = allRegionsSO.AllRegionData[SelectedRegionIndex];
             DrawRegionAdditionalData(selectedRegionData);
         }
     }
@@ -339,12 +385,6 @@ public class AllRegionsSOEditor : Editor
         return Mathf.Min(200, itemCount * 20);
     }
 
-    private float GetPropertyHeight(object data, bool isExpanded)
-    {
-        var fieldCount = data.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance).Length;
-        return isExpanded ? fieldCount * 20 : 20;
-    }
-
     private string[] GetCityNames(RegionData regionData)
     {
         return regionData.AllCityData.Select(c => c.CityName).ToArray();
@@ -357,13 +397,13 @@ public class AllRegionsSOEditor : Editor
         EditorGUILayout.LabelField("Region ID", selectedRegionData.RegionID.ToString());
 
         EditorGUILayout.LabelField($"All cities in {selectedRegionData.RegionName}", EditorStyles.boldLabel);
-        cityScrollPos = EditorGUILayout.BeginScrollView(cityScrollPos, GUILayout.Height(GetListHeight(selectedRegionData.AllCityData.Count)));
-        selectedCityIndex = GUILayout.SelectionGrid(selectedCityIndex, GetCityNames(selectedRegionData), 1);
+        _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(selectedRegionData.AllCityData.Count)));
+        SelectedCityIndex = GUILayout.SelectionGrid(SelectedCityIndex, GetCityNames(selectedRegionData), 1);
         EditorGUILayout.EndScrollView();
 
-        if (selectedCityIndex >= 0 && selectedCityIndex < selectedRegionData.AllCityData.Count)
+        if (SelectedCityIndex >= 0 && SelectedCityIndex < selectedRegionData.AllCityData.Count)
         {
-            var selectedCityData = selectedRegionData.AllCityData[selectedCityIndex];
+            var selectedCityData = selectedRegionData.AllCityData[SelectedCityIndex];
             DrawCityAdditionalData(selectedCityData);
         }
     }
@@ -375,10 +415,10 @@ public class AllRegionsSOEditor : Editor
         EditorGUILayout.LabelField("City ID", selectedCityData.CityID.ToString());
 
         if (selectedCityData.Population != null)
-        {
-            selectedPopulationIndex = GUILayout.SelectionGrid(selectedPopulationIndex, new string[] { "Population" }, 1);
+        {   
+            _showPopulation = EditorGUILayout.Toggle("Population", _showPopulation);
 
-            if (selectedPopulationIndex >= 0 && selectedPopulationIndex < selectedCityData.Population.AllCitizens.Count)
+            if (_showPopulation)
             {
                 DrawPopulationDetails(selectedCityData.Population);
             }
@@ -386,9 +426,9 @@ public class AllRegionsSOEditor : Editor
 
         if (selectedCityData.AllJobsiteData != null)
         {
-            selectedJobsiteIndex = GUILayout.SelectionGrid(selectedJobsiteIndex, new string[] { "Jobsites" }, 1);
+            _selectedJobsiteIndex = GUILayout.SelectionGrid(_selectedJobsiteIndex, new string[] { "Jobsites" }, 1);
 
-            if (selectedJobsiteIndex >= 0 && selectedJobsiteIndex < selectedCityData.AllJobsiteData.Count)
+            if (_selectedJobsiteIndex >= 0 && _selectedJobsiteIndex < selectedCityData.AllJobsiteData.Count)
             {
                 DrawJobsiteAdditionalData(selectedCityData.AllJobsiteData);
             }
@@ -397,13 +437,13 @@ public class AllRegionsSOEditor : Editor
 
     private void DrawJobsiteAdditionalData(List<JobsiteData> allJobsiteData)
     {
-        jobsiteScrollPos = EditorGUILayout.BeginScrollView(jobsiteScrollPos, GUILayout.Height(GetListHeight(allJobsiteData.Count)));
-        selectedJobsiteIndex = GUILayout.SelectionGrid(selectedJobsiteIndex, allJobsiteData.Select(j => j.JobsiteName.ToString()).ToArray(), 1);
+        _jobsiteScrollPos = EditorGUILayout.BeginScrollView(_jobsiteScrollPos, GUILayout.Height(GetListHeight(allJobsiteData.Count)));
+        _selectedJobsiteIndex = GUILayout.SelectionGrid(_selectedJobsiteIndex, allJobsiteData.Select(j => j.JobsiteName.ToString()).ToArray(), 1);
         EditorGUILayout.EndScrollView();
 
-        if (selectedJobsiteIndex >= 0 && selectedJobsiteIndex < allJobsiteData.Count)
+        if (_selectedJobsiteIndex >= 0 && _selectedJobsiteIndex < allJobsiteData.Count)
         {
-            JobsiteData selectedJobsiteData = allJobsiteData[selectedJobsiteIndex];
+            JobsiteData selectedJobsiteData = allJobsiteData[_selectedJobsiteIndex];
 
             EditorGUILayout.LabelField("Jobsite Data", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Jobsite Name", selectedJobsiteData.JobsiteName.ToString());
@@ -411,9 +451,9 @@ public class AllRegionsSOEditor : Editor
 
             if (selectedJobsiteData.AllStationData != null)
             {
-                selectedStationIndex = GUILayout.SelectionGrid(selectedStationIndex, new string[] { "Stations" }, 1);
+                _selectedStationIndex = GUILayout.SelectionGrid(_selectedStationIndex, new string[] { "Stations" }, 1);
 
-                if (selectedStationIndex >= 0 && selectedStationIndex < selectedJobsiteData.AllStationData.Count)
+                if (_selectedStationIndex >= 0 && _selectedStationIndex < selectedJobsiteData.AllStationData.Count)
                 {
                     DrawStationAdditionalData(selectedJobsiteData.AllStationData);
                 }
@@ -422,16 +462,17 @@ public class AllRegionsSOEditor : Editor
     }
 
     Vector2 _inventoryItemScrollPos;
+    int _selectedOperatingAreaIndex = -1;
 
     private void DrawStationAdditionalData(List<StationData> data)
     {
-        stationScrollPos = EditorGUILayout.BeginScrollView(stationScrollPos, GUILayout.Height(GetListHeight(data.Count)));
-        selectedStationIndex = GUILayout.SelectionGrid(selectedStationIndex, data.Select(s => s.StationName.ToString()).ToArray(), 1);
+        _stationScrollPos = EditorGUILayout.BeginScrollView(_stationScrollPos, GUILayout.Height(GetListHeight(data.Count)));
+        _selectedStationIndex = GUILayout.SelectionGrid(_selectedStationIndex, data.Select(s => s.StationName.ToString()).ToArray(), 1);
         EditorGUILayout.EndScrollView();
 
-        if (selectedStationIndex >= 0 && selectedStationIndex < data.Count)
+        if (_selectedStationIndex >= 0 && _selectedStationIndex < data.Count)
         {
-            var selectedStationData = data[selectedStationIndex];
+            var selectedStationData = data[_selectedStationIndex];
 
             EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
@@ -454,7 +495,25 @@ public class AllRegionsSOEditor : Editor
 
                 EditorGUILayout.EndScrollView();
             }
+
+            if (selectedStationData.AllOperatingAreaData != null)
+            {
+                _selectedOperatingAreaIndex = GUILayout.SelectionGrid(_selectedOperatingAreaIndex, new string[] { "Operating Areas" }, 1);
+
+                if (_selectedOperatingAreaIndex >= 0 && _selectedOperatingAreaIndex < selectedStationData.AllOperatingAreaData.Count)
+                {
+                    DrawOperatingAreaAdditionalData(selectedStationData.AllOperatingAreaData[_selectedOperatingAreaIndex]);
+                }
+            }
         }
+    }
+
+    void DrawOperatingAreaAdditionalData(OperatingAreaData selectedOperatingAreaData)
+    {
+        EditorGUILayout.LabelField("Operating Area Data", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Operating Area ID", selectedOperatingAreaData.OperatingAreaID.ToString());
+        EditorGUILayout.LabelField("Station ID", selectedOperatingAreaData.StationID.ToString());
+        EditorGUILayout.LabelField("Current Operator", $"{selectedOperatingAreaData.CurrentOperator.ActorID}: {selectedOperatingAreaData.CurrentOperator.ActorName.GetName()}");
     }
 
     private void DrawPopulationDetails(DisplayPopulation populationData)
@@ -467,9 +526,11 @@ public class AllRegionsSOEditor : Editor
 
         EditorGUILayout.LabelField("All Citizens", EditorStyles.boldLabel);
         
+        _populationScrollPos = EditorGUILayout.BeginScrollView(_populationScrollPos, GUILayout.Height(GetListHeight(populationData.AllCitizens.Count)));
         foreach (var citizen in populationData.AllCitizens)
         {
             EditorGUILayout.LabelField($"- {citizen.ActorID}: {citizen.ActorName.GetName()}");
         }
+        EditorGUILayout.EndScrollView();
     }
 }

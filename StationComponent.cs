@@ -21,14 +21,16 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
     public StationData StationData;
     public BoxCollider StationArea;
 
-    public bool IsStationBeingOperated { get { return AllOperatingAreas.Any(oa => oa.CurrentOperator != null); } }
+    public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperator.ActorID != 0); } }
 
     public float InteractRange { get; protected set; }
 
-    public List<EmployeePosition> AllowedEmployeePositions;
+    public List<EmployeePosition> AllAllowedEmployeePositions;
+    public EmployeePosition NecessaryEmployeePosition;
+
     public List<RecipeName> AllowedRecipes;
 
-    public List<OperatingAreaComponent> AllOperatingAreas = new();
+    public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
     public float BaseProgressRatePerHour = 60;
     List<Item> _currentProductsCrafted = new();
@@ -44,13 +46,13 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
     }
 
-    public void AddOperatorToArea(OperatorData operatorData)
+    public void AddOperatorToArea(ActorData operatorData)
     {
-        var openOperatingArea = AllOperatingAreas.FirstOrDefault(area => area.CurrentOperator == null);
+        var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
         
         if (openOperatingArea != null)
         {
-            openOperatingArea.SetOperator(operatorData);
+            openOperatingArea.OperatingAreaData.AddOperatorToOperatingArea(operatorData);
         }
         else
         {
@@ -58,23 +60,23 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
     }
 
-    public void RemoveOperatorFromArea(OperatorData operatorData)
+    public void RemoveOperatorFromArea(ActorData operatorData)
     {
-        if (AllOperatingAreas.Any(area => area.CurrentOperator.ActorData.ActorID == operatorData.ActorData.ActorID))
+        if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperator.ActorID == operatorData.ActorID))
         {
-            AllOperatingAreas.FirstOrDefault(area => area.CurrentOperator.ActorData.ActorID == operatorData.ActorData.ActorID).RemoveOperator();
+            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperator.ActorID == operatorData.ActorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
         else
         {
-            Debug.Log($"Operator {operatorData.ActorData.ActorID}: {operatorData.ActorData.ActorName.GetName()} not found in operating areas.");
+            Debug.Log($"Operator {operatorData.ActorID}: {operatorData.ActorName.GetName()} not found in operating areas.");
         }
     }
 
     public void RemoveAllOperators()
     {
-        foreach(var operatingArea in AllOperatingAreas)
+        foreach(var operatingArea in AllOperatingAreasInStation)
         {
-            operatingArea.RemoveOperator();
+            operatingArea.OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
     }
 
@@ -90,6 +92,8 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
         // Change material check to only happen when operator is set or leaves, or when material is used.
 
+        Debug.Log($"Tick {name}");
+
         if (
             StationData.StationIsActive && 
             IsStationBeingOperated && 
@@ -101,7 +105,7 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     protected void _operateStation()
     {
-        foreach(var operatingArea in AllOperatingAreas)
+        foreach(var operatingArea in AllOperatingAreasInStation)
         {
             StationData.StationProgressData.Progress(operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct));
         }
@@ -110,7 +114,7 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
     public void Initialise()
     {
         InitialiseStationName();
-        _initialiseOperatingAreas();
+        GetAllOperatingAreasInStation();
         SetInteractRange();
         InitialiseAllowedEmployeePositions();
         InitialiseAllowedRecipes();
@@ -124,14 +128,14 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         throw new ArgumentException("Cannot use base class.");
     }
 
-    protected void _initialiseOperatingAreas()
+    public void GetAllOperatingAreasInStation()
     {
         foreach (Transform child in transform)
         {
             if (child.TryGetComponent(out OperatingAreaComponent operatingArea))
             {
                 operatingArea.Initialise(StationData.StationID);
-                AllOperatingAreas.Add(operatingArea);
+                AllOperatingAreasInStation.Add(operatingArea);
             }
         }
     }
@@ -167,11 +171,6 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
     }
 
     public virtual IEnumerator Interact(Actor_Base actor)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
-
-    public virtual bool EmployeeCanUse(EmployeePosition employeePosition)
     {
         throw new ArgumentException("Cannot use base class.");
     }
@@ -230,7 +229,7 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
 
             foreach(var vocation in StationData.StationProgressData.CurrentProduct.RequiredVocations)
             {
-                individualProductionRate *= currentOperator.ActorData.VocationData.GetProgress(vocation);
+                individualProductionRate *= currentOperator.VocationData.GetProgress(vocation);
             }
 
             totalProductionRate += individualProductionRate;
@@ -263,7 +262,6 @@ public class StationComponent_Editor : Editor
     bool _showOperators = false;
     bool _showProgress = false;
     bool _showRecipe = false;
-    int _selectedInventoryItemsIndex = -1;
     Vector2 _productionItemScrollPos;
     Vector2 _inventoryItemScrollPos;
 
@@ -280,12 +278,14 @@ public class StationComponent_Editor : Editor
 
         if (_showBasicInfo)
         {
-            EditorGUILayout.LabelField("StationID", stationData.StationID.ToString());
-            EditorGUILayout.LabelField("StationType", stationData.StationType.ToString());
-            EditorGUILayout.LabelField("StationName", stationData.StationName.ToString());
-            EditorGUILayout.LabelField("JobsiteID", stationData.JobsiteID.ToString());
-            EditorGUILayout.LabelField("StationIsActive", stationData.StationIsActive.ToString());
-            EditorGUILayout.LabelField("StationDescription", stationData.StationDescription);
+            stationData.StationID = EditorGUILayout.IntField("StationID", stationData.StationID);
+            stationData.StationType = (StationType)EditorGUILayout.EnumPopup("StationType", stationData.StationType);
+            stationData.StationName = (StationName)EditorGUILayout.EnumPopup("StationName", stationData.StationName);
+            stationData.JobsiteID = EditorGUILayout.IntField("JobsiteID", stationData.JobsiteID);
+            stationData.StationIsActive = EditorGUILayout.Toggle("StationIsActive", stationData.StationIsActive);
+            stationData.StationDescription = EditorGUILayout.TextField("StationDescription", stationData.StationDescription);
+
+            EditorUtility.SetDirty(stationComponent);
         }
 
         if (stationData.ProductionData != null)
@@ -315,7 +315,7 @@ public class StationComponent_Editor : Editor
 
                 foreach (var item in stationData.InventoryData.InventoryItems)
                 {
-                    EditorGUILayout.LabelField(item.CommonStats_Item.ItemName.ToString());
+                    EditorGUILayout.LabelField($"{item.CommonStats_Item.ItemID}: {item.CommonStats_Item.ItemName} Qty: {item.CommonStats_Item.CurrentStackSize}");
                 }
 
                 EditorGUILayout.EndScrollView();
@@ -329,9 +329,7 @@ public class StationComponent_Editor : Editor
             {
                 foreach (var operatorData in stationData.CurrentOperators)
                 {
-                    EditorGUILayout.LabelField("OperatorID", operatorData.ActorData.ActorID.ToString());
-                    EditorGUILayout.LabelField("OperatorName", operatorData.ActorData.ActorName.GetName());
-                    EditorGUILayout.LabelField("OperatorPosition", operatorData.OperatingArea.name);
+                    EditorGUILayout.LabelField($"Operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()} Pos: {operatorData.CareerAndJobs.EmployeePosition}");
                 }
             }
 

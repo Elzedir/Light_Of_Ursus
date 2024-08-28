@@ -22,7 +22,7 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
 
     protected virtual void Awake()
     {
-        if (PuzzleData.PuzzleID == "") PuzzleData.PuzzleID = gameObject.name;
+        // Load from data, don't assign on awake. if (PuzzleData.PuzzleID == 0) PuzzleData.PuzzleID = load;
         _collider = GetComponent<BoxCollider2D>();
     }
 

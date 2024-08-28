@@ -15,15 +15,14 @@ public class ActorData
     public FullIdentification FullIdentification;
 
     public GameObjectProperties GameObjectProperties;
-
-    public WorldState_Data_SO Worldstate;
+    public WorldStateData WorldstateData;
     public CareerAndJobs CareerAndJobs;
     public CraftingData CraftingData;
     public VocationData VocationData;
     public SpeciesAndPersonality SpeciesAndPersonality;
     public StatsAndAbilities StatsAndAbilities;
     public InventoryAndEquipment InventoryAndEquipment;
-    public ActorQuests ActorQuests;
+    public QuestData ActorQuests;
 
     public void PrepareForInitialisation()
     {
@@ -32,7 +31,7 @@ public class ActorData
 
     public void InitialiseActorData()
     {
-        if (Manager_Actor.GetActor(ActorID, out Actor_Base actor, ActorFactionID) != null)
+        if (Manager_Actor.GetActor(ActorID, out _, ActorFactionID, true) != null)
         {
             Manager_City.GetCityData(cityID: FullIdentification.ActorCityID).Population.AddCitizen(this);
         } 
@@ -42,33 +41,26 @@ public class ActorData
         }
     }
 
-    public ActorData(FullIdentification fullIdentification, GameObjectProperties gameObjectProperties, WorldState_Data_SO worldState, 
-        CareerAndJobs careerAndJobs, CraftingData craftingData, VocationData vocationData,
-        SpeciesAndPersonality speciesAndPersonality,InventoryAndEquipment inventoryAndEquipment, StatsAndAbilities statsAndAbilities, ActorQuests actorQuests)
+    // Make an ability to make a deep copy of every class here and every class that needs to be saved.
+
+    public ActorData(FullIdentification fullIdentification)
     {
         FullIdentification = fullIdentification;
+        FullIdentification.SetData(this);
+
+        GameObjectProperties = new GameObjectProperties(this);
+        WorldstateData = new WorldStateData(this);
+        CareerAndJobs = new CareerAndJobs(this);
+        CraftingData = new CraftingData(this);
+        VocationData = new VocationData(this);
+        SpeciesAndPersonality = new SpeciesAndPersonality(this);
+        StatsAndAbilities = new StatsAndAbilities(this);
+        InventoryAndEquipment = new InventoryAndEquipment(this);
+        ActorQuests = new QuestData(this);
 
         ActorID = FullIdentification.ActorID;
         ActorFactionID = FullIdentification.ActorFactionID;
         ActorName = FullIdentification.ActorName;
-        
-        GameObjectProperties = gameObjectProperties;
-
-        Worldstate = worldState;
-
-        CareerAndJobs = careerAndJobs;
-        CareerAndJobs.SetActorAndFactionID(ActorID, ActorFactionID);
-
-        CraftingData = craftingData;
-        CraftingData.SetActorAndFactionID(ActorID, ActorFactionID);
-
-        VocationData = vocationData;
-        VocationData.SetActorAndFactionID(ActorID, ActorFactionID);
-
-        SpeciesAndPersonality = speciesAndPersonality;
-        StatsAndAbilities = statsAndAbilities;
-        InventoryAndEquipment = inventoryAndEquipment;
-        ActorQuests = actorQuests;
     }
 }
 
@@ -107,6 +99,9 @@ public class ActorData_Drawer : PropertyDrawer
 
 public class FullIdentification
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public int ActorID;
     public ActorName ActorName;
     public int ActorFactionID;
@@ -126,122 +121,136 @@ public class FullIdentification
 [Serializable]
 public class Background
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public string Birthplace;
     public Date Birthdate;
     public Family ActorFamily;
     public Dynasty ActorDynasty;
     public string Religion;
-
-    public Background()
-    {
-
-    }
 }
 
 [Serializable]
 public class GameObjectProperties
 {
-    public Vector3 ActorPosition;
-    public Quaternion ActorRotation;
-    public Vector3 ActorScale = Vector3.one;
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+    [NonSerialized] private Transform _actorTransform;
+    public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(_actorData.ActorID, out _)?.transform; } }
+    public Vector3 LastSavedActorPosition;
+    public void SetActorPosition(Vector3 actorPosition) => LastSavedActorPosition = actorPosition;
+    public Quaternion LastSavedActorRotation;
+    public void SetActorRotation(Quaternion actorRotation) => LastSavedActorRotation = actorRotation;
+    public Vector3 LastSavedActorScale;
+    public void SetActorScale(Vector3 actorScale) => LastSavedActorScale = actorScale;
     public Mesh ActorMesh;
+    public void SetActorMesh(Mesh actorMesh) => ActorMesh = actorMesh;
     public Material ActorMaterial;
+    public void SetActorMaterial(Material actorMaterial) => ActorMaterial = actorMaterial;
 
-    public GameObjectProperties(Vector3 actorPosition, Quaternion actorRotation, Vector3 actorScale, Mesh actorMesh, Material actorMaterial)
+    public GameObjectProperties(ActorData actorData)
     {
-        ActorPosition = actorPosition;
-        ActorRotation = actorRotation;
-        ActorScale = actorScale;
-        ActorMesh = actorMesh;
-        ActorMaterial = actorMaterial;
+        SetData(actorData);
+
+        ActorMesh = ActorTransform.GetComponent<MeshFilter>().sharedMesh;
+        ActorMaterial = ActorTransform.GetComponent<MeshRenderer>().sharedMaterial;
+
+        // Temporary
+
+        ActorMesh ??= Resources.GetBuiltinResource<Mesh>("Cube.fbx"); // Later will come from species
+        ActorMaterial ??= Resources.Load<Material>("Materials/Material_Red"); // Later will come from species
     }
 }
 
 [Serializable]
 public class Relationships
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public List<Relation> AllRelationships;
-
-    public Relationships()
-    {
-
-    }
 }
 
 [Serializable]
 public class CareerAndJobs
 {
-    public int ActorID;
-    public int FactionID;
-
-    public int JobsiteID;
-    public EmployeePosition EmployeePosition;
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
 
     public bool JobsActive;
+    public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
 
-    Coroutine _jobCoroutine;
+    public int JobsiteID;
+    public void SetJobsiteID(int jobsiteID) => JobsiteID = jobsiteID;
 
-    public CareerAndJobs(int jobsiteID, EmployeePosition employeePosition, bool jobsActive = true)
+    public int StationID;
+    public void SetStationID(int stationID) => StationID = stationID;
+    
+    public int OperatingAreaID;
+    public void SetOperatingAreaID(int operatingAreaID) => OperatingAreaID = operatingAreaID;
+
+    public EmployeePosition EmployeePosition;
+    public void SetEmployeePosition(EmployeePosition employeePosition) => EmployeePosition = employeePosition;
+
+    public CareerAndJobs(ActorData actorData)
     {
-        JobsiteID = jobsiteID;
-        EmployeePosition = employeePosition;
-        JobsActive = jobsActive;
-    }
-
-    public void SetActorAndFactionID(int actorID, int factionID)
-    {
-        ActorID = actorID;
-        FactionID = factionID;
-    }
-
-    public TickRate GetTickRate()
-    {
-        return TickRate.OneSecond;
-    }
-
-    public void ToggleDoJobs(bool jobsActive)
-    {
-        JobsActive = jobsActive;
+        SetData(actorData);
     }
 }
 
 [Serializable]
 public class SpeciesAndPersonality
 {
-    public SpeciesName ActorSpecies;
-    public ActorPersonality ActorPersonality;
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
 
-    public SpeciesAndPersonality(SpeciesName actorSpecies, ActorPersonality actorPersonality)
+    public SpeciesName ActorSpecies;
+    public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
+    public ActorPersonality ActorPersonality;
+    public void SetPersonality(ActorPersonality actorPersonality) => ActorPersonality = actorPersonality;
+
+    public SpeciesAndPersonality(ActorData actorData)
     {
-        ActorSpecies = actorSpecies;
-        ActorPersonality = actorPersonality;
+        SetData(actorData);
     }
 }
 
 [Serializable]
 public class StatsAndAbilities
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public ActorStats ActorStats;
+    public void SetActorStats(ActorStats actorStats) => ActorStats = actorStats;
     public Actor_States_And_Conditions ActorStates;
+    public void SetActorStates(Actor_States_And_Conditions actorStates) => ActorStates = actorStates;
     public ActorAspects ActorAspects;
+    public void SetActorAspects(ActorAspects actorAspects) => ActorAspects = actorAspects;
     public ActorAbilities ActorAbilities;
+    public void SetActorAbilities(ActorAbilities actorAbilities) => ActorAbilities = actorAbilities;
 
-    public StatsAndAbilities()
+    public StatsAndAbilities(ActorData actorData)
     {
-
+        _actorData = actorData;
     }
 }
 
 [Serializable]
 public class InventoryAndEquipment
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+    
     public InventoryData InventoryData;
+    public void SetInventoryData(InventoryData inventoryData) => InventoryData = inventoryData;
     public EquipmentData EquipmentData;
+    public void SetEquipmentData(EquipmentData equipmentData) => EquipmentData = equipmentData;
 
-    public InventoryAndEquipment(InventoryData inventoryData, EquipmentData equipmentData)
+    public InventoryAndEquipment(ActorData actorData)
     {
-        InventoryData = inventoryData;
-        EquipmentData = equipmentData;
+        SetData(actorData);
     }
 }
 
@@ -250,28 +259,15 @@ public class ActorName
 {
     public string Name;
     public string Surname;
-    public Title CurrentTitle;
-    public List<Title> AvailableTitles;
+    public string GetName() => $"{Name} {Surname}";
+    public TitleName CurrentTitle;
+    public List<TitleName> AvailableTitles;
+    public void SetTitleAsCurrentTitle(TitleName titleName) { if (AvailableTitles.Contains(titleName)) CurrentTitle = titleName; }
 
     public ActorName(string name, string surname)
     {
         Name = name;
         Surname = surname;
-    }
-
-    public string GetName()
-    {
-        // Somehow integrate the title with the names
-        
-        return $"{Name} {Surname}";
-    }
-
-    public void SetTitleAsCurrentTitle(TitleName titleName)
-    {
-        Manager_Title.GetTitle(titleName, out Title title);
-        if (AvailableTitles.Contains(title)) throw new ArgumentException($"Title: {title.TitleName} does not exist in AllTitles.");
-
-        CurrentTitle = title;
     }
 }
 
@@ -283,9 +279,12 @@ public enum SpeciesName
     Orc
 }
 
-[System.Serializable]
+[Serializable]
 public class ActorStats
 {
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public Date ActorBirthDate;
     public float ActorAge;
 
@@ -293,28 +292,41 @@ public class ActorStats
     public int ActorGold;
     public SPECIAL ActorSpecial;
 
-    [SerializeField] CombatStats _combatStats; 
-    public CombatStats CombatStats { get { return _combatStats; } set { _combatStats = value; } }
+    public CombatStats CombatStats;
 }
 
 [Serializable]
 public class ActorAspects
 {
-    public ClassTitle ActorTitle;
-    public List<Aspect> _actorAspectList;
-    public List<Aspect> ActorAspectList
-    {
-        get { return _actorAspectList; }
-        set
-        {
-            _actorAspectList = value;
-            InitialiseAspects(aspectList: _actorAspectList);
-        }
-    }
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
 
-    public void InitialiseAspects(Actor_Base actor = null, List<Aspect> aspectList = null)
+    public ClassName ActorTitle;
+    public void SetActorTitle(ClassName actorTitle) => ActorTitle = actorTitle;
+    public List<AspectName> ActorAspectList;
+    public void SetActorAspectList(List<AspectName> actorAspectList) => ActorAspectList = actorAspectList;
+    public void AddAspect(AspectName aspect)
     {
-        ActorTitle = Manager_Aspect.GetCharacterTitle(actor: actor, aspectList: aspectList);
+        var index = ActorAspectList.FindIndex(a => a == AspectName.None);
+
+        if (index == -1)
+        {
+            Debug.Log("No empty aspect slots available.");
+        }
+
+        ActorAspectList[index] = aspect;
+        SetActorTitle(Manager_Aspect.GetCharacterTitle(ActorAspectList));
+    }
+    public void ChangeAspect(AspectName aspect, int index)
+    {
+        if (index < 0 || index >= ActorAspectList.Count)
+        {
+            Debug.Log("Index out of range.");
+            return;
+        }
+
+        ActorAspectList[index] = aspect;
+        SetActorTitle(Manager_Aspect.GetCharacterTitle(ActorAspectList));
     }
 }
 
@@ -322,13 +334,13 @@ public class ActorAspects
 public class ActorLevelData
 {
     Actor_Base _actor;
-    public int Level { get; private set; }
-    public int TotalExperience { get; private set; }
-    public int TotalSkillPoints { get; private set; }
-    public int UsedSkillPoints { get; private set; }
-    public int TotalSPECIALPoints { get; private set; }
-    public int UsedSPECIALPoints { get; private set; }
-    public bool CanAddNewSkillSet { get; private set; }
+    public int Level;
+    public int TotalExperience;
+    public int TotalSkillPoints;
+    public int UsedSkillPoints;
+    public int TotalSPECIALPoints;
+    public int UsedSPECIALPoints;
+    public bool CanAddNewSkillSet;
 
     public ActorLevelData(Actor_Base actor, int level = 1, int totalExperience = 0, int totalSkillPoints = 0, int totalSPECIALPoints = 0, bool canAddNewSkillSet = false)
     {
@@ -387,19 +399,15 @@ public class ActorLevelData
 [Serializable]
 public class CraftingData
 {
-    public int ActorID;
-    public int FactionID;
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
     public List<RecipeName> KnownRecipes;
 
-    public CraftingData(List<RecipeName> knownRecipes)
+    public CraftingData(ActorData actorData)
     {
-        KnownRecipes = knownRecipes;
-    }
-
-    public void SetActorAndFactionID(int actorID, int factionID)
-    {
-        ActorID = actorID;
-        FactionID = factionID;
+        SetData(actorData);
+        KnownRecipes = new();
     }
 
     public bool AddRecipe(RecipeName recipeName)
@@ -415,7 +423,7 @@ public class CraftingData
     {
         var recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(ActorID, out ActorData actorData, FactionID);
+        Manager_Actor.GetActorData(_actorData.ActorID, out ActorData actorData, _actorData.ActorFactionID);
 
         while (inventoryContainsAllIngredients(recipe.RequiredIngredients))
         {
@@ -444,7 +452,7 @@ public class CraftingData
 
         Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(ActorID, out ActorData actorData, FactionID);
+        Manager_Actor.GetActorData(_actorData.ActorID, out ActorData actorData, _actorData.ActorFactionID);
 
         if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
         {
@@ -462,5 +470,26 @@ public class CraftingData
             Debug.Log($"Inventory does not have all required ingredients");
             yield break;
         }
+    }
+}
+
+
+
+[Serializable]
+public class QuestData
+{
+    [NonSerialized] ActorData _actorData;
+    public void SetData(ActorData actorData) => _actorData = actorData;
+
+    public List<Quest> ActorQuests;
+    public void SetStage(int QuestID, int stageID, int stageProgress)
+    {
+        ActorQuests.FirstOrDefault(q => q.QuestID == QuestID).SetQuestStage(stageID, stageProgress);
+    }
+
+    public QuestData(ActorData actorData)
+    {
+        SetData(actorData);
+        ActorQuests = new();
     }
 }

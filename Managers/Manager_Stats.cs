@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Manager_Stats : MonoBehaviour
@@ -8,7 +6,7 @@ public class Manager_Stats : MonoBehaviour
     
 }
 
-[System.Serializable]
+[Serializable]
 public class CombatStats
 {
     #region Basic

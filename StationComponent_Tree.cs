@@ -11,7 +11,8 @@ public class StationComponent_Tree : StationComponent
 
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
+        NecessaryEmployeePosition = EmployeePosition.Logger;
+        AllAllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
     }
 
     public override void InitialiseAllowedRecipes()

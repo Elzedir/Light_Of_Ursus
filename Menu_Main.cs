@@ -13,20 +13,20 @@ public class Menu_Main : MonoBehaviour
 
     void Start()
     {
-        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = Manager_Data.Instance.GetActiveProfile().Name;
+        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = Manager_Data.Instance.CurrentProfile.ProfileName;
     }
 
     public void Continue()
     {
         if (!Manager_Data.Instance.HasGameData()) { Debug.LogWarning("Manager_Data has no game data."); return; }
 
-        Manager_Data.Instance.ChangeSelectedProfileId(Manager_Data.Instance.GetActiveProfile().Name);
+        Manager_Data.Instance.ChangeProfile(Manager_Data.Instance.CurrentProfile.ProfileID, Manager_Data.Instance.CurrentProfile.ProfileName);
         Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
     }
 
     public void NewGame()
     {
-        Manager_Data.Instance.NewGame(Manager_Data.Instance.GetActiveProfile().Name);
+        Manager_Data.Instance.NewSaveData(Manager_Data.Instance.CurrentProfile.ProfileID, Manager_Data.Instance.CurrentProfile.ProfileName);
         Manager_Game.Instance.StartNewGame();
     }
 
@@ -56,14 +56,14 @@ public class Menu_Main : MonoBehaviour
         GameObject switchProfilePanel= Manager_Game.FindTransformRecursively(transform.parent, "SwitchProfilePanel").gameObject;
         switchProfilePanel.SetActive(true);
 
-        foreach (Profile profile in Manager_Data.Instance.GetAllProfiles())
+        foreach (ProfileData profile in Manager_Data.Instance.AllProfiles)
         {
-            if(profile.Name == "Unity") continue;
-            GameObject profileGO = new GameObject(profile.Name);
+            if(profile.ProfileName == "Unity") continue;
+            GameObject profileGO = new GameObject(profile.ProfileName);
             RectTransform rectTransform = profileGO.AddComponent<RectTransform>();
             profileGO.transform.SetParent(_profileContainer);
             ProfileUI profileUI = profileGO.AddComponent<ProfileUI>();
-            profileUI.Initialise(this, profile.Name);
+            profileUI.Initialise(this, profile.ProfileName);
         }
     }
 
@@ -77,11 +77,11 @@ public class Menu_Main : MonoBehaviour
         Manager_Game.FindTransformRecursively(transform.parent, "SwitchProfilePanel").gameObject.SetActive(false);
     }
 
-    public void SwitchProfile(string profile)
+    public void SwitchProfile(int profileID, string profileName)
     {
-        Manager_Data.Instance.ChangeSelectedProfileId(profile);
+        Manager_Data.Instance.ChangeProfile(profileID, profileName);
         CloseSwitchProfile();
-        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = Manager_Data.Instance.GetActiveProfile().Name;
+        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = Manager_Data.Instance.CurrentProfile.ProfileName;
     }
 
     public void CreateNewProfile()
@@ -91,22 +91,24 @@ public class Menu_Main : MonoBehaviour
 
     public void Create()
     {
+        int returnCheck = 0;
+        if (returnCheck == 0) return; // Just return here so we can't use this function.
+        // Save data is saving to TheExister, which we need to see if we still need it and how we can remove it from the system.
+
         string profileName = Manager_Game.FindTransformRecursively(transform.parent, "InputField").gameObject.GetComponent<InputField>().text;
 
         if (profileName == "") { OpenWarningPopup("Profile name is empty."); return; }
 
-        IEnumerable<DirectoryInfo> directoryInfoList = new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories();
-
-        foreach (DirectoryInfo directoryInfo in directoryInfoList)
+        foreach (DirectoryInfo directoryInfo in new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories())
         {
             if (directoryInfo.Name == profileName) { OpenWarningPopup("Profile already exists."); return; }
         }
 
         Manager_Game.FindTransformRecursively(transform.parent, "CreateNewProfilePanel").gameObject.SetActive(false);
 
-        Profile newProfile = new Profile(profileName, 0, null, Manager_Data.Instance._useEncryption);
+        ProfileData newProfile = new ProfileData(profileName, 0, null, Manager_Data.Instance._useEncryption);
 
-        newProfile.Save("TheExister", new GameData(profileName), profileName, true);
+        //newProfile.SaveData("TheExister", new SaveData(profileID, profileName), profileName, true);
 
         CloseSwitchProfile();
         OpenSwitchProfilePanel();

@@ -10,7 +10,6 @@ public class CityComponent : MonoBehaviour
     public BoxCollider CityArea;
 
     public GameObject CitySpawnZone;
-    public ProsperityComponent ProsperityComponent;
 
     public List<JobsiteComponent> AllJobsitesInCity;
 
@@ -18,8 +17,6 @@ public class CityComponent : MonoBehaviour
     {
         CityArea = GetComponent<BoxCollider>();
         CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
-
-        ProsperityComponent = new ProsperityComponent(CityData.Prosperity.CurrentProsperity);
 
         AllJobsitesInCity = GetAllJobsitesInCity();
     }

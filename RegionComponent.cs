@@ -9,8 +9,6 @@ public class RegionComponent : MonoBehaviour
     public RegionData RegionData;
     public BoxCollider RegionArea;
 
-    public ProsperityComponent ProsperityComponent;
-
     public List<CityComponent> AllCitiesInRegion;
 
     public void Initialise()
@@ -18,8 +16,6 @@ public class RegionComponent : MonoBehaviour
         RegionArea = GetComponent<BoxCollider>();
 
         CurrentDate.NewDay += _refreshRegion;
-
-        ProsperityComponent = new ProsperityComponent(RegionData.Prosperity.CurrentProsperity);
 
         AllCitiesInRegion = GetAllCitiesInRegion();
     }

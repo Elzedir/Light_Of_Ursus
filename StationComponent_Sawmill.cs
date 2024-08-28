@@ -14,7 +14,8 @@ public class StationComponent_Sawmill : StationComponent
 
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
+        NecessaryEmployeePosition = EmployeePosition.Sawyer;
+        AllAllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
     }
 
     public override void InitialiseAllowedRecipes()
@@ -26,15 +27,6 @@ public class StationComponent_Sawmill : StationComponent
     {
         yield break;
         // Open inventory
-    }
-
-    public override bool EmployeeCanUse(EmployeePosition employeePosition)
-    {
-        return new List<EmployeePosition> 
-        { 
-            EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer 
-        }
-        .Contains(employeePosition);
     }
 
     public override void CraftItem(RecipeName recipeName, Actor_Base actor)

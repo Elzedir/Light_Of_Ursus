@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class ProfileUI : MonoBehaviour
 {
     Menu_Main _menu;
+    int _profileID;
     string _profileName;
     Button _button;
 
@@ -26,6 +27,6 @@ public class ProfileUI : MonoBehaviour
 
     public void ProfileClicked()
     {
-        _menu.SwitchProfile(_profileName);
+        _menu.SwitchProfile(_profileID, _profileName);
     }
 }

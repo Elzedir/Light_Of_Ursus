@@ -2,6 +2,7 @@ using FMODUnity;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
@@ -22,7 +23,6 @@ public enum GameState
 public class Manager_Game : MonoBehaviour, IDataPersistence
 {
     public static Manager_Game Instance;
-
     Manager_Audio _manager_Audio;
     public Manager_Audio Manager_Audio { get { return _getManager_Audio(); } private set { _manager_Audio = value; } }
     Manager_Audio _getManager_Audio() { if (_manager_Audio) return _manager_Audio; else return GameObject.Find("Main Camera").GetComponentInChildren<Manager_Audio>(); }
@@ -30,7 +30,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
     Window_Text _window_Text;
     public Window_Text Window_Text { get { return _getWindow_Text(); } private set { _window_Text = value; } }
     Window_Text _getWindow_Text() { if (_window_Text) return _window_Text; else return FindTransformRecursively(GameObject.Find("UI").transform, "Window_Text").GetComponentInChildren<Window_Text>(); }
-    
+
     [SerializeField] public GameState CurrentState;
 
     public Player Player;
@@ -72,21 +72,23 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     IEnumerator _initialiseManagers()
     {
+        _createManager("Manager_Data", _manager_Parent).AddComponent<Manager_Data>().OnSceneLoaded();
+
         if (SceneManager.GetActiveScene().name == "Main_Menu") yield break;
 
         if (GameObject.Find("Manager_Parent") != null) yield break;
 
         yield return null;
 
-        _manager_Parent =  new GameObject("Manager_Parent").transform;
+        _manager_Parent = new GameObject("Manager_Parent").transform;
 
         Manager_Item.Initialise();
+        _createManager("Manager_TickRate", _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
         _createManager("Manager_Dialogue", _manager_Parent).AddComponent<Manager_Dialogue>().OnSceneLoaded();
         _createManager("Manager_FloatingText", _manager_Parent).AddComponent<Manager_FloatingText>().OnSceneLoaded();
         _createManager("Manager_Cutscene", _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
         _createManager("Manager_Spawner", _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
         _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
-        _createManager("Manager_TickRate", _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
         _createManager("Manager_Job", _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
         _createManager("Manager_Recipe", _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
         Manager_Career.Initialise();
@@ -98,6 +100,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_City", _manager_Parent).AddComponent<Manager_City>().OnSceneLoaded();
         _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
+        _createManager("Manager_OperatingArea", _manager_Parent).AddComponent<Manager_OperatingArea>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
 
         Manager_Initialisation.InitialiseFactions();
@@ -118,15 +121,15 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Spawner.OnPuzzleStatesRestored -= OnPuzzleStatesRestored;
     }
 
-    public void SaveData(GameData data)
+    public void SaveData(SaveData data)
     {
-        data.CurrentProfileName = Manager_Data.Instance.GetActiveProfile().Name;
-        data.SceneName = SceneManager.GetActiveScene().name;
-        data.StaffPickedUp = PlayerHasStaff;
-        data.LastScene = LastScene;
+        // data.CurrentProfileName = Manager_Data.Instance.GetActiveProfile().Name;
+        // data.SceneName = SceneManager.GetActiveScene().name;
+        // data.StaffPickedUp = PlayerHasStaff;
+        // data.LastScene = LastScene;
     }
 
-    public void LoadData(GameData data)
+    public void LoadData(SaveData data)
     {
         PlayerHasStaff = data.StaffPickedUp;
         LastScene = data.LastScene;

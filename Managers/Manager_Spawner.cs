@@ -29,27 +29,27 @@ public class Manager_Spawner : MonoBehaviour, IDataPersistence
         _refreshSongParts();
     }
 
-    public void SaveData(GameData data)
+    public void SaveData(SaveData data)
     {
-        AssignSpawners();
+        // AssignSpawners();
 
-        if (!PuzzleSpawner) return;
+        // if (!PuzzleSpawner) return;
 
-        foreach (Transform child in PuzzleSpawner.transform)
-        {
-            if (child.TryGetComponent<Interactable_Puzzle>(out Interactable_Puzzle puzzle))
-            {
-                data.PuzzleSaveData[puzzle.PuzzleData.PuzzleID] = JsonConvert.SerializeObject(puzzle.PuzzleData.PuzzleState, Formatting.None);
-            }
-        }
+        // foreach (Transform child in PuzzleSpawner.transform)
+        // {
+        //     if (child.TryGetComponent<Interactable_Puzzle>(out Interactable_Puzzle puzzle))
+        //     {
+        //         data.PuzzleSaveData[puzzle.PuzzleData.PuzzleID] = JsonConvert.SerializeObject(puzzle.PuzzleData.PuzzleState, Formatting.None);
+        //     }
+        // }
     }
 
-    public void LoadData(GameData data)
+    public void LoadData(SaveData data)
     {
         StartCoroutine(OnLoadNumerator(data));
     }
 
-    IEnumerator OnLoadNumerator(GameData data)
+    IEnumerator OnLoadNumerator(SaveData data)
     {
         yield return new WaitForSeconds(0.1f);
 
@@ -72,25 +72,27 @@ public class Manager_Spawner : MonoBehaviour, IDataPersistence
         }
     }
 
-    public void RestorePuzzleStates(GameData data)
+    public void RestorePuzzleStates(SaveData data)
     {
         if (PuzzleSpawner == null) { Debug.Log("Puzzle Spawner not present in scene."); return; }
 
         foreach (Transform child in PuzzleSpawner.transform)
         {
-            if (child.TryGetComponent<Interactable_Puzzle>(out Interactable_Puzzle puzzle))
+            if (child.TryGetComponent(out Interactable_Puzzle puzzle))
             {
-                puzzle.PuzzleData.PuzzleState = JsonConvert.DeserializeObject<PuzzleState>(data.PuzzleSaveData[puzzle.PuzzleData.PuzzleID]);
+                puzzle.PuzzleData = new PuzzleData(data.PuzzleData[puzzle.PuzzleData.PuzzleID]);
 
                 if (puzzle.PuzzleData.PuzzleState.PuzzleCompleted) puzzle.CompletePuzzle();
+
             }
         }
 
         OnPuzzleStatesRestored?.Invoke();
     }
-    public void CompletePuzzle(string puzzleID)
+    public void CompletePuzzle(int puzzleID)
     {
-        GameObject.Find(puzzleID).GetComponent<Interactable_Puzzle>().CompletePuzzle();
+        //Manager_Puzzle.GetPuzzle(puzzleID).PuzzleData.PuzzleState.PuzzleCompleted = true;
+        //GameObject.Find(puzzleID).GetComponent<Interactable_Puzzle>().CompletePuzzle();
     }
 
     void _refreshSongParts()

@@ -5,15 +5,14 @@ using UnityEngine;
 public class PuzzleData
 {
     public PuzzleSet PuzzleSet;
-    public string PuzzleID;
+    public int PuzzleID;
     public PuzzleState PuzzleState;
     public PuzzleObjectives PuzzleObjectives;
     public IceWallData IceWallData;
-    public PuzzleSaveData PuzzleSaveData;
 
     public PuzzleData
         (
-        string puzzleID,
+        int puzzleID,
         PuzzleSet puzzleSet,
         PuzzleState puzzleState,
         PuzzleObjectives puzzleObjectives,
@@ -25,28 +24,15 @@ public class PuzzleData
         PuzzleState = puzzleState;
         PuzzleObjectives = puzzleObjectives;
         IceWallData = iceWallData;
-
-        PuzzleSaveData = new PuzzleSaveData(PuzzleID, PuzzleState.PuzzleCompleted);
     }
 
-    public void LoadData(PuzzleSaveData data)
+    public PuzzleData(PuzzleData puzzleData)
     {
-        PuzzleSaveData = data;
-
-        PuzzleState.PuzzleCompleted = data.PuzzleCompleted;
-    }
-}
-
-[Serializable]
-public class PuzzleSaveData
-{
-    public string PuzzleID { get; private set; }
-    public bool PuzzleCompleted { get; private set; }
-
-    public PuzzleSaveData(string puzzleID, bool puzzleCompleted)
-    {
-        PuzzleID = puzzleID;
-        PuzzleCompleted = puzzleCompleted;
+        PuzzleID = puzzleData.PuzzleID;
+        PuzzleSet = puzzleData.PuzzleSet;
+        PuzzleState = new PuzzleState(puzzleData.PuzzleState);
+        PuzzleObjectives = new PuzzleObjectives(puzzleData.PuzzleObjectives);
+        IceWallData = new IceWallData(puzzleData.IceWallData);
     }
 }
 
@@ -67,6 +53,13 @@ public class PuzzleState
         PuzzleType = puzzleType;
         PuzzleRepeatable = puzzleRepeatable;
         PuzzleCompleted = puzzleCompleted;
+    }
+
+    public PuzzleState(PuzzleState puzzleState)
+    {
+        PuzzleType = puzzleState.PuzzleType;
+        PuzzleRepeatable = puzzleState.PuzzleRepeatable;
+        PuzzleCompleted = puzzleState.PuzzleCompleted;
     }
 }
 
@@ -89,6 +82,13 @@ public class PuzzleObjectives
         PuzzleDuration = puzzleDuration;
         PuzzleScore = puzzleScore;
     }
+
+    public PuzzleObjectives(PuzzleObjectives puzzleObjectives)
+    {
+        PuzzleObjective = puzzleObjectives.PuzzleObjective;
+        PuzzleDuration = puzzleObjectives.PuzzleDuration;
+        PuzzleScore = puzzleObjectives.PuzzleScore;
+    }
 }
 
 [Serializable]
@@ -97,7 +97,7 @@ public class IceWallData
     [Range(0, 50)] public int Width = 10;
     [Range(0, 50)] public int Height = 2;
     [Range(0, 50)] public int Depth = 10;
-    public Vector3Int StartPosition = new Vector3Int(0,1,0);
+    public Vector3Int StartPosition = new Vector3Int(0, 1, 0);
     public int CellHealthMin = 5;
     public int CellHealthMax = 20;
     public int PlayerExtraStaminaPercentage = 10;
@@ -113,7 +113,7 @@ public class IceWallData
         int playerExtraStaminaPercentage
         )
     {
-        Width = width; 
+        Width = width;
         Height = height;
         Depth = depth;
         StartPosition = startPosition;
@@ -121,5 +121,17 @@ public class IceWallData
         CellHealthMax = cellHealthMax;
         PlayerExtraStaminaPercentage = playerExtraStaminaPercentage;
     }
+
+    public IceWallData(IceWallData iceWallData)
+    {
+        Width = iceWallData.Width;
+        Height = iceWallData.Height;
+        Depth = iceWallData.Depth;
+        StartPosition = iceWallData.StartPosition;
+        CellHealthMin = iceWallData.CellHealthMin;
+        CellHealthMax = iceWallData.CellHealthMax;
+        PlayerExtraStaminaPercentage = iceWallData.PlayerExtraStaminaPercentage;
+    }
+
 }
 

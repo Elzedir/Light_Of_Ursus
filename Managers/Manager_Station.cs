@@ -10,6 +10,7 @@ public class Manager_Station : MonoBehaviour
 {
     public static AllRegions_SO AllRegions;
     public static Dictionary<int, StationComponent> AllStationComponents = new();
+    public static StationComponent GetStation(int stationID) => AllStationComponents[stationID];
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
 
     public void OnSceneLoaded()
@@ -52,11 +53,6 @@ public class Manager_Station : MonoBehaviour
     public static StationData GetStationData(int jobsiteID, int stationID)
     {
         return AllRegions.GetStationData(jobsiteID, stationID);
-    }
-
-    public static StationComponent GetStation(int stationID)
-    {
-        return AllStationComponents[stationID];
     }
 
     public static void GetNearestStationToPosition(Vector3 position, StationName stationName, out StationComponent nearestStation)

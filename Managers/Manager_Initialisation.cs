@@ -12,13 +12,15 @@ public class Manager_Initialisation
     public static event Action OnInitialiseManagerCity;
     public static event Action OnInitialiseManagerJobsite;
     public static event Action OnInitialiseManagerStation;
+    public static event Action OnInitialiseManagerOperatingArea;
     public static event Action OnInitialiseAllRegionSO;
 
     public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseActorData;
     public static event Action OnInitialiseActors;
 
-    public static event Action OnInitialiseJobsites;
+    public static event Action OnInitialiseJobsiteDatas;
+    public static event Action OnInitialiseStationDatas;
 
     public static void InitialiseFactions()
     {
@@ -32,6 +34,7 @@ public class Manager_Initialisation
         OnInitialiseManagerCity?.Invoke();
         OnInitialiseManagerJobsite?.Invoke();
         OnInitialiseManagerStation?.Invoke();
+        OnInitialiseManagerOperatingArea?.Invoke();
         OnInitialiseAllRegionSO?.Invoke();
     }
 
@@ -44,6 +47,7 @@ public class Manager_Initialisation
 
     public static void InitialiseJobsites()
     {
-        OnInitialiseJobsites?.Invoke();
+        OnInitialiseJobsiteDatas?.Invoke();
+        OnInitialiseStationDatas?.Invoke();
     }
 }

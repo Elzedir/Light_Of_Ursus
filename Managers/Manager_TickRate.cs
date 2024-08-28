@@ -11,15 +11,8 @@ public enum TickRate
 
 public class Manager_TickRate : MonoBehaviour
 {
-    public static Manager_TickRate Instance { get; private set; }
-
     static Dictionary<TickRate, float> _nextTickTimes;
     static Dictionary<TickRate, List<ITickable>> _tickableGroups;
-
-    void Awake()
-    {
-        Instance = this;
-    }
 
     public void OnSceneLoaded()
     {

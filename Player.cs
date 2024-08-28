@@ -47,12 +47,12 @@ public class Player : Controller, IDataPersistence
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    public void SaveData(GameData data)
+    public void SaveData(SaveData data)
     {
-        data.PlayerPosition = _rigidBody.transform.position;
+        //data.PlayerPosition = _rigidBody.transform.position;
     }
 
-    public void LoadData(GameData data)
+    public void LoadData(SaveData data)
     {
         //_rigidbody.transform.position = data.PlayerPosition;
     }

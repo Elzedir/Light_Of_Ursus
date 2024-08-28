@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 public class Manager_Relation
@@ -37,6 +38,7 @@ public class Manager_Relation
     }
 }
 
+[Serializable]
 public class FactionRelationData
 {
     public int FactionID;
@@ -51,6 +53,7 @@ public class FactionRelationData
     }
 }
 
+[Serializable]
 public class Relation
 {
 

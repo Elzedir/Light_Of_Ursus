@@ -2,20 +2,53 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Manager_Region : MonoBehaviour
+public class Manager_Region : MonoBehaviour, IDataPersistence
 {
+    const string _allRegionSOPath = "ScriptableObjects/AllRegions_SO";
+
     public static AllRegions_SO AllRegions;
     public static Dictionary<int, RegionComponent> AllRegionComponents = new();
+    public static RegionComponent GetRegion(int regionID) => AllRegionComponents[regionID];
 
     public void OnSceneLoaded()
     {
-        AllRegions = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
+        AllRegions = _getOrCreateAllRegionsSO();
         AllRegions.PrepareToInitialise();
 
         Manager_Initialisation.OnInitialiseManagerRegion += _initialise;
+    }
+
+    public void SaveData(SaveData data)
+    {
+        data.AllRegions_SO = AllRegions;
+    }
+
+    public void LoadData(SaveData data)
+    {
+        AllRegions = data.AllRegions_SO;
+    }
+
+    AllRegions_SO _getOrCreateAllRegionsSO()
+    {
+        AllRegions_SO allRegionsSO = Resources.Load<AllRegions_SO>(_allRegionSOPath);
+        
+        if (allRegionsSO == null)
+        {
+            allRegionsSO = ScriptableObject.CreateInstance<AllRegions_SO>();
+            AssetDatabase.CreateAsset(allRegionsSO, _allRegionSOPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("Created new AllRegions_SO asset.");
+        }
+        else
+        {
+            Debug.Log("Loaded existing AllRegions_SO asset.");
+        }
+
+        return allRegionsSO;
     }
 
     void _initialise()
@@ -56,11 +89,6 @@ public class Manager_Region : MonoBehaviour
     public static RegionData GetRegionData(int regionID)
     {
         return AllRegions.GetRegionData(regionID);
-    }
-
-    public static RegionComponent GetRegion(int regionID)
-    {
-        return AllRegionComponents[regionID];
     }
 
     public static void GetNearestRegion(Vector3 position, out RegionComponent nearestRegion)

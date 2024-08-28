@@ -49,16 +49,16 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
     protected void _adjustProduction(float logProduction, float plankProduction, float idealRatio)
     {
-        var allEmployees = new List<EmployeeData>(JobsiteData.AllEmployees);
-        var bestCombination = new List<EmployeeData>();
+        var allEmployees = new List<ActorData>(JobsiteData.AllEmployees);
+        var bestCombination = new List<ActorData>();
         float bestRatioDifference = float.MaxValue;
 
-        var allCombinations = GetAllCombinations(allEmployees);
+        var allCombinations = _getAllCombinations(allEmployees);
         int i = 0;
 
         foreach (var combination in allCombinations)
         {
-            AssignEmployeesToStations(combination);
+            _assignEmployeesToStations(combination);
 
             var estimatedProduction = AllStationsInJobsite
                 .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
@@ -84,61 +84,16 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
                 Debug.Log($"Combination {i} the is best ratio");
 
                 bestRatioDifference = ratioDifference;
-                bestCombination = new List<EmployeeData>(combination);
+                bestCombination = new List<ActorData>(combination);
             }
         }
 
-        AssignEmployeesToStations(bestCombination);
+        _assignEmployeesToStations(bestCombination);
 
         Debug.Log("Adjusted production to balance the ratio.");
     }
 
-    private void AssignEmployeesToStations(List<EmployeeData> employees)
-    {
-        foreach (var station in AllStationsInJobsite)
-        {
-            station.RemoveAllOperators();
-        }
-
-        foreach (var station in AllStationsInJobsite)
-        {
-            var allowedPositions = station.AllowedEmployeePositions;
-            var employeesForStation = employees
-                .Where(e => allowedPositions.Contains(e.ActorData.CareerAndJobs.EmployeePosition))
-                .OrderByDescending(e => e.ActorData.CareerAndJobs.EmployeePosition)
-                .ThenByDescending(e => e.ActorData.VocationData.GetVocationExperience(GetRelevantVocation(e.ActorData.CareerAndJobs.EmployeePosition)))
-                .ToList();
-
-            foreach (var employee in employeesForStation)
-            {
-                station.StationData.AddOperatorToStation(employee.ActorData);
-                employees.Remove(employee);
-            }
-        }
-    }
-
-    private List<List<EmployeeData>> GetAllCombinations(List<EmployeeData> employees)
-    {
-        var result = new List<List<EmployeeData>>();
-        int combinationCount = (int)Mathf.Pow(2, employees.Count);
-
-        for (int i = 1; i < combinationCount; i++)
-        {
-            var combination = new List<EmployeeData>();
-            for (int j = 0; j < employees.Count; j++)
-            {
-                if ((i & (1 << j)) != 0)
-                {
-                    combination.Add(employees[j]);
-                }
-            }
-            result.Add(combination);
-        }
-
-        return result;
-    }
-
-    private VocationName GetRelevantVocation(EmployeePosition position)
+    protected override VocationName _getRelevantVocation(EmployeePosition position)
     {
         switch (position)
         {

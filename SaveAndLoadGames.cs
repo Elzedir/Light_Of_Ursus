@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SaveAndLoadGames : MonoBehaviour
@@ -38,7 +36,7 @@ public class SaveAndLoadGames : MonoBehaviour
         Manager_Game.FindTransformRecursively(transform.parent, "ConfirmationPanel").GetComponent<SaveSlot_Confirmation>().ActivateMenu(
                 "Are you sure you want to clear this data?",
                 () => {
-                    Manager_Data.Instance.GetActiveProfile().DeleteSave(saveSlot.GetSaveGameName());
+                    Manager_Data.Instance.CurrentProfile.DeleteSave(saveSlot.GetSaveGameName());
                     ActivateMenu(saveOrLoad);
                 },
                 () => { ActivateMenu(saveOrLoad); }
@@ -54,20 +52,20 @@ public class SaveAndLoadGames : MonoBehaviour
 
         gameObject.SetActive(true);
         
-        foreach (var saveGame in Manager_Data.Instance.GetAllSavedGames(Manager_Data.Instance.GetActiveProfile()))
+        foreach (var saveData in Manager_Data.Instance.GetAllSavedGames(Manager_Data.Instance.CurrentProfile))
         {
-            if (saveGame.Key == "TheExister") continue;
+            if (saveData.SaveDataName == "TheExister") continue;
 
-            _createSaveSlot(saveGame.Key, saveGame.Value, saveOrLoad);
+            _createSaveSlot(saveData, saveOrLoad);
         }
     }
 
-    SaveSlot _createSaveSlot(string profileID, GameData gameData, string saveOrLoad)
+    SaveSlot _createSaveSlot(SaveData saveData, string saveOrLoad)
     {
         GameObject saveSlotGO = Instantiate(_saveSlot.gameObject, _saveSlotParent.transform);
-        saveSlotGO.name = profileID;
+        saveSlotGO.name = saveData.ProfileName;
         SaveSlot saveSlot = saveSlotGO.GetComponent<SaveSlot>();
-        saveSlot.InitialiseSaveSlot(profileID, gameData,
+        saveSlot.InitialiseSaveSlot(saveData,
             saveOrLoad,
             () => { OnSaveGameSaveSlotClicked(saveSlot, saveOrLoad); },
             () => { OnLoadGameSaveSlotClicked(saveSlot, saveOrLoad); }, 

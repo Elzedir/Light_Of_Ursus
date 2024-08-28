@@ -31,9 +31,8 @@ public enum EmployeePosition
 public class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;
+    public void SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
     public BoxCollider JobsiteArea;
-
-    public ProsperityComponent ProsperityComponent;
 
     public List<StationComponent> AllStationsInJobsite;
     public List<EmployeePosition> AllNecessaryEmployeePositions;
@@ -43,11 +42,19 @@ public class JobsiteComponent : MonoBehaviour, ITickable
     public int PermittedProductionInequality = 10;
     public bool CustomerPresent = false;
 
-    public void Initialise()
+    public void Awake()
     {
         JobsiteArea = GetComponent<BoxCollider>();
+        
+        if (!JobsiteArea.isTrigger)
+        {
+            Debug.Log($"Set IsTrigger to true for {name}");
+            JobsiteArea.isTrigger = true;
+        }
+    }
 
-        ProsperityComponent = new ProsperityComponent(JobsiteData.Prosperity.CurrentProsperity);
+    public void Initialise()
+    {
         GetAllStationsInJobsite();
 
         Manager_TickRate.RegisterTickable(this);
@@ -69,44 +76,31 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         return TickRate.OneGameHour;
     }
 
-    protected virtual bool _compareProductionOutput()
-    {
-        throw new ArgumentException("Cannot use base class");
-    }
+    protected virtual bool _compareProductionOutput() { throw new ArgumentException("Cannot use base class"); }
 
-    protected virtual void _adjustProduction()
-    {
-        throw new ArgumentException("Cannot use base class");
-    }
+    protected virtual void _adjustProduction() { throw new ArgumentException("Cannot use base class"); }
 
-    protected virtual void _redistributeEmployees()
-    {
-        throw new ArgumentException("Cannot use base class");
-    }
-
-    public void SetJobsiteData(JobsiteData jobsiteData)
-    {
-        JobsiteData = jobsiteData;
-    }
+    protected virtual void _redistributeEmployees() { throw new ArgumentException("Cannot use base class"); }
+    protected virtual VocationName _getRelevantVocation(EmployeePosition position) { throw new ArgumentException("Cannot use base class"); }
 
     public void RefreshJobsite()
     {
         // Refresh all stations in jobsitedata
     }
 
-    public void GetAllStationsInJobsite()
-    {
-        AllStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
-        .Select(collider => collider.GetComponent<StationComponent>()).Where(sc => sc != null).ToList();
-    }
+    public void GetAllStationsInJobsite() =>
+    AllStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
+    .Select(collider => collider
+    .GetComponent<StationComponent>())
+    .Where(sc => sc != null)
+    .ToList();
 
     public StationComponent GetNearestStationInJobsite(Vector3 position, StationName stationName)
-    {
-        return AllStationsInJobsite
-        .Where(station => station.StationData.StationName == stationName)
-        .OrderBy(station => Vector3.Distance(position, station.transform.position))
-        .FirstOrDefault();
-    }
+    => AllStationsInJobsite
+    .Where(station => station.StationData.StationName == stationName)
+    .OrderBy(station => Vector3.Distance(position, station.transform.position))
+    .FirstOrDefault();
+
 
     public List<EmployeePosition> GetMinimumEmployeePositions()
     {
@@ -114,13 +108,58 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
         foreach (var station in AllStationsInJobsite)
         {
-            foreach (var position in station.AllowedEmployeePositions)
+            foreach (var position in station.AllAllowedEmployeePositions)
             {
                 employeePositions.Add(position);
             }
         }
 
         return employeePositions.ToList();
+    }
+
+    protected virtual void _assignEmployeesToStations(List<ActorData> employees)
+    {
+        foreach (var station in AllStationsInJobsite)
+        {
+            station.RemoveAllOperators();
+        }
+
+        foreach (var station in AllStationsInJobsite)
+        {
+            var allowedPositions = station.AllAllowedEmployeePositions;
+            var employeesForStation = employees
+                .Where(e => allowedPositions.Contains(e.CareerAndJobs.EmployeePosition))
+                .OrderByDescending(e => e.CareerAndJobs.EmployeePosition)
+                .ThenByDescending(e => e.VocationData.GetVocationExperience(_getRelevantVocation(e.CareerAndJobs.EmployeePosition)))
+                .ToList();
+
+            foreach (var employee in employeesForStation)
+            {
+                JobsiteData.AddEmployeeToStation(employee, station.StationData.StationID);
+                employees.Remove(employee);
+            }
+        }
+    }
+
+    protected virtual List<List<ActorData>> _getAllCombinations(List<ActorData> employees)
+    {
+        var result = new List<List<ActorData>>();
+        int combinationCount = (int)Mathf.Pow(2, employees.Count);
+
+        for (int i = 1; i < combinationCount; i++)
+        {
+            var combination = new List<ActorData>();
+            for (int j = 0; j < employees.Count; j++)
+            {
+                if ((i & (1 << j)) != 0)
+                {
+                    combination.Add(employees[j]);
+                }
+            }
+            result.Add(combination);
+        }
+
+        return result;
     }
 }
 

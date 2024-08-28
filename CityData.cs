@@ -15,7 +15,7 @@ public class CityData
     public string CityDescription;
 
     public DisplayPopulation Population;
-    public DisplayProsperity Prosperity;
+    public ProsperityData ProsperityData;
 
     public List<JobsiteData> AllJobsiteData;
 
@@ -26,6 +26,8 @@ public class CityData
         var city = Manager_City.GetCity(CityID);
             
         city.Initialise();
+
+        ProsperityData = new ProsperityData(city.gameObject);
 
         foreach (var jobsite in city.AllJobsitesInCity)
         {
@@ -61,12 +63,6 @@ public class CityData_Drawer : PropertyDrawer
     {
         return EditorGUI.GetPropertyHeight(property, label, true);
     }
-}
-
-[Serializable]
-public class DisplayProsperity
-{
-    public float CurrentProsperity;
 }
 
 [Serializable]

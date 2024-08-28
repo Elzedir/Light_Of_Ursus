@@ -40,42 +40,72 @@ public class StationData : IStationInventory
     public string StationDescription;
     public InventoryData InventoryData;
 
-    public List<OperatorData> CurrentOperators;
+    public List<ActorData> CurrentOperators;
 
     public StationProgressData StationProgressData;
     public ProductionData ProductionData;
 
+    public List<OperatingAreaData> AllOperatingAreaData;
+
     public void InitialiseStationData(int jobsiteID)
     {
-        Manager_Station.GetStation(StationID).Initialise();
-    }
+        JobsiteID = jobsiteID;
 
-    public void AddOperatorToStation(ActorData operatorData)
-    {
-        if (CurrentOperators.Any(o => o.ActorData.ActorID == operatorData.ActorID)) 
-        { 
-            Debug.Log($"CurrentOperators already contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}"); 
-            return; 
+        var station = Manager_Station.GetStation(StationID);
+
+        station.Initialise();
+
+        foreach (var operatingArea in station.AllOperatingAreasInStation)
+        {
+            if (!AllOperatingAreaData.Any(oa => oa.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID))
+            {
+                Debug.Log($"OperatingArea: {operatingArea.name} with ID: {operatingArea.OperatingAreaData.OperatingAreaID} was not in AllOperatingAreaData");
+                AllOperatingAreaData.Add(operatingArea.OperatingAreaData);
+            }
+
+            operatingArea.SetOperatingAreaData(Manager_OperatingArea.GetOperatingAreaData(operatingAreaID: operatingArea.OperatingAreaData.OperatingAreaID, stationID: StationID));
         }
 
-        var newOperator = new OperatorData(operatorData, null);
+        for (int i = 0; i < AllOperatingAreaData.Count; i++)
+        {
+            AllOperatingAreaData[i].InitialiseOperatingAreaData(StationID);
+        }
 
-        CurrentOperators.Add(newOperator);
-        Manager_Station.GetStation(StationID).AddOperatorToArea(newOperator);
+        Manager_Initialisation.OnInitialiseStationDatas += _initialiseStationData;
     }
 
-    public void RemoveOperatorFromStation(ActorData operatorData)
+    void _initialiseStationData()
     {
-        var operatorToRemove = CurrentOperators.FirstOrDefault(o => o.ActorData.ActorID == operatorData.ActorID);
+        // Start working
+    }
+
+    public bool AddOperatorToStation(ActorData operatorData)
+    {
+        if (CurrentOperators.Any(o => o.ActorID == operatorData.ActorID)) 
+        { 
+            Debug.Log($"CurrentOperators already contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}"); 
+            return false; 
+        }
+
+        CurrentOperators.Add(operatorData);
+        Manager_Station.GetStation(StationID).AddOperatorToArea(operatorData);
+
+        return true;
+    }
+
+    public bool RemoveOperatorFromStation(ActorData operatorData)
+    {
+        var operatorToRemove = CurrentOperators.FirstOrDefault(o => o.ActorID == operatorData.ActorID);
 
         if (operatorToRemove != null)
         {
             CurrentOperators.Remove(operatorToRemove);
+
+            return true;
         }
-        else
-        {
-            Debug.Log($"CurrentOperators does not contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}");
-        }
+
+        Debug.Log($"CurrentOperators does not contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}");
+        return false;
     }
 
     public List<Item> GetStationYield(Actor_Base actor)
@@ -123,83 +153,6 @@ public class StationData_Drawer : PropertyDrawer
         string stationName = ((StationName)stationNameProp.enumValueIndex).ToString();
 
         label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";
-
-        EditorGUI.PropertyField(position, property, label, true);
-    }
-
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-    {
-        return EditorGUI.GetPropertyHeight(property, label, true);
-
-    }
-}
-
-[Serializable]
-public class OperatorData
-{
-    public Transform ActorTransform;
-    public ActorData ActorData;
-    public OperatingAreaComponent OperatingArea;
-
-    public OperatorData(ActorData actorData, OperatingAreaComponent operatingArea)
-    {
-        ActorData = actorData;
-        OperatingArea = operatingArea;
-    }
-
-    public Vector3 GetOperatorPosition()
-    {
-        if (ActorTransform == null)
-        {
-            ActorTransform = Manager_Actor.GetActor(ActorData.ActorID, out Actor_Base actor, ActorData.ActorFactionID).transform;
-
-            if (ActorTransform == null)
-            {
-                throw new ArgumentException($"Operator {ActorData.ActorID}: {ActorData.ActorName.GetName()} does not have a transform.");
-            }
-        }
-
-        return ActorTransform.position;
-    }
-
-    public void SetOperatingArea(OperatingAreaComponent operatingArea)
-    {
-        OperatingArea = operatingArea;
-    }
-
-    public void RemoveOperatingArea()
-    {
-        OperatingArea = null;
-    }
-}
-
-[CustomPropertyDrawer(typeof(OperatorData))]
-public class OperatorData_Drawer : PropertyDrawer
-{
-    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-    {
-        var actorDataProp = property.FindPropertyRelative("ActorData");
-        var actorIDProp = actorDataProp.FindPropertyRelative("ActorID");
-        var actorNameProp = actorDataProp.FindPropertyRelative("ActorName");
-
-        var nameProp = actorNameProp.FindPropertyRelative("Name");
-        var name = "Nameless";
-
-        if (nameProp != null)
-        {
-            var surnameProp = actorNameProp.FindPropertyRelative("Surname");
-
-            if (surnameProp != null)
-            {
-                name = $"{nameProp.stringValue} {surnameProp.stringValue}";
-            }
-            else
-            {
-                name = $"{nameProp.stringValue}";
-            }
-        }
-
-        label.text = $"{actorIDProp.intValue}: {name}";
 
         EditorGUI.PropertyField(position, property, label, true);
     }

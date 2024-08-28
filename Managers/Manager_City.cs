@@ -7,6 +7,7 @@ public class Manager_City : MonoBehaviour
 {
     public static AllRegions_SO AllRegions;
     public static Dictionary<int, CityComponent> AllCityComponents = new();
+    public static CityComponent GetCity(int cityID) => AllCityComponents[cityID];
 
     public void OnSceneLoaded()
     {
@@ -53,11 +54,6 @@ public class Manager_City : MonoBehaviour
     public static CityData GetCityData(int cityID, int regionID = -1)
     {
         return AllRegions.GetCityData(regionID, cityID);
-    }
-
-    public static CityComponent GetCity(int cityID)
-    {
-        return AllCityComponents[cityID];
     }
 
     public static void GetNearestCity(Vector3 position, out CityComponent nearestCity)

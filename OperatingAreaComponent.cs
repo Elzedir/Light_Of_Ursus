@@ -2,14 +2,16 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-[Serializable]
 public class OperatingAreaComponent : MonoBehaviour
 {
-    public int StationID;
-    public OperatorData CurrentOperator;
+    public OperatingAreaData OperatingAreaData;
+    public void SetOperatingAreaData(OperatingAreaData operatingAreaData) => OperatingAreaData = operatingAreaData;
     public BoxCollider OperatingArea;
 
-    public bool IsOperatorMovingToOperatingArea = false;
+    public string GetName()
+    {
+        return name;
+    }
 
     public void Awake()
     {
@@ -24,41 +26,28 @@ public class OperatingAreaComponent : MonoBehaviour
 
     public void Initialise(int stationID)
     {
-        StationID = stationID;
-    }
-
-    public void SetOperator(OperatorData currentOperator)
-    {
-        CurrentOperator = currentOperator;
-        CurrentOperator.SetOperatingArea(this);
-    }
-
-    public void RemoveOperator()
-    {
-        CurrentOperator.RemoveOperatingArea();
-        CurrentOperator = null;
-        IsOperatorMovingToOperatingArea = false;
+        
     }
 
     public float Operate(float baseProgressRate, Recipe recipe)
     {
-        if (CurrentOperator == null)
+        if (OperatingAreaData.CurrentOperator == null)
         {
             Debug.Log("No operator assigned.");
             return 0;
         }
 
-        if (IsOperatorMovingToOperatingArea) return 0;
+        if (OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
-        if (!OperatingArea.bounds.Contains(CurrentOperator.GetOperatorPosition()))
+        if (!OperatingArea.bounds.Contains(OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position))
         {
             StartCoroutine(MoveOperatorToOperatingArea(
-                Manager_Actor.GetActor(actorID: CurrentOperator.ActorData.ActorID, out Actor_Base actor, factionID: CurrentOperator.ActorData.ActorFactionID), transform.position));
+                Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperator.ActorID, out Actor_Base actor, factionID: OperatingAreaData.CurrentOperator.ActorFactionID), transform.position));
         }
 
-        if (CurrentOperator.GetOperatorPosition() != transform.position && CurrentOperator.ActorTransform != null)
+        if (OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position != transform.position)
         {
-            CurrentOperator.ActorTransform.position = transform.position;
+            OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position = transform.position;
         }
 
         Debug.Log($"Operating {name}");
@@ -68,19 +57,18 @@ public class OperatingAreaComponent : MonoBehaviour
 
         foreach (var vocation in recipe.RequiredVocations)
         {
-            productionRate *= CurrentOperator.ActorData.VocationData.GetProgress(vocation);
+            productionRate *= OperatingAreaData.CurrentOperator.VocationData.GetProgress(vocation);
         }
 
         return productionRate;
     }
 
-
     protected IEnumerator MoveOperatorToOperatingArea(Actor_Base actor, Vector3 position)
     {
-        IsOperatorMovingToOperatingArea = true;
+        OperatingAreaData.IsOperatorMovingToOperatingArea = true;
 
         yield return actor.StartCoroutine(actor.BasicMove(position));
 
-        IsOperatorMovingToOperatingArea = false;
+        OperatingAreaData.IsOperatorMovingToOperatingArea = false;
     }
 }

@@ -93,21 +93,17 @@ public class Vocation
 
 public class VocationData
 {
-    public int ActorID;
-    public int FactionID;
+    [NonSerialized] ActorData _actorData;
+
+    public void SetData(ActorData actorData) => _actorData = actorData;
 
     public VocationTitle VocationTitle;
     public Dictionary<VocationName, float> Vocations;
+    public void SetVocations(Dictionary<VocationName, float> vocations) => Vocations = vocations;
 
-    public VocationData(Dictionary<VocationName, float> vocations)
+    public VocationData(ActorData actorData)
     {
-        Vocations = vocations;
-    }
-
-    public void SetActorAndFactionID(int actorID, int factionID)
-    {
-        ActorID = actorID;
-        FactionID = factionID;
+        SetData(actorData);
     }
 
     public void AddVocation(VocationName vocationName, float vocationExperience)

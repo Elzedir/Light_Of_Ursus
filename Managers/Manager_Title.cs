@@ -7,7 +7,7 @@ using UnityEngine;
 public class Manager_Title
 {
     public static Dictionary<TitleName, Title> AllTitles = new();
-
+    public static Title GetTitle(TitleName titleName) => AllTitles[titleName];
     public static void InitialiseTitles()
     {
         _vocationTitles();
@@ -18,11 +18,6 @@ public class Manager_Title
         _addTitle(new Title(
             TitleName.None
             ));
-    }
-
-    public static void GetTitle(TitleName titleName, out Title title)
-    {
-        AllTitles.TryGetValue(titleName, out title);
     }
 
     static void _addTitle(Title title)
@@ -36,7 +31,7 @@ public class Manager_Title
 public enum TitleName
 {
     None,
-
+    The_Noob
 }
 
 public class Title

@@ -14,7 +14,7 @@ public class RegionData
 
     public string RegionDescription;
 
-    public DisplayProsperity Prosperity;
+    public ProsperityData ProsperityData;
 
     public FactionName Faction;
     public List<CityData> AllCityData;
@@ -24,6 +24,8 @@ public class RegionData
         var region = Manager_Region.GetRegion(RegionID);
 
         region.Initialise();
+
+        ProsperityData = new ProsperityData(region.gameObject);
 
         foreach (var city in region.AllCitiesInRegion)
         {

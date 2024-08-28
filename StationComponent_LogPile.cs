@@ -13,7 +13,8 @@ public class StationComponent_LogPile : StationComponent
 
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.None };
+        NecessaryEmployeePosition = EmployeePosition.None;
+        AllAllowedEmployeePositions = new() { EmployeePosition.None };
     }
 
     public override void InitialiseAllowedRecipes()

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
+
 
 [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
+[Serializable]
 public class AllFactions_SO : ScriptableObject
 {
     public List<FactionData> AllFactionData;
@@ -15,7 +15,7 @@ public class AllFactions_SO : ScriptableObject
     public int LastUnusedFactionID = 0;
 
     public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
-    public int LastUnusedActorID = 0;
+    public int LastUnusedActorID = 1;
 
     // For now, save all data of every actor to this list, but later find a better way to save the info as thousands
     // or tens of thousands of actors would become too much and inefficient.
@@ -91,7 +91,7 @@ public class AllFactions_SO : ScriptableObject
         AllFactionIDs.Clear();
         AllActorIDs.Clear();
         LastUnusedFactionID = 0;
-        LastUnusedActorID = 0;
+        LastUnusedActorID = 1;
 
         for(int i = 0; i < AllFactionData.Count; i++)
         {
@@ -175,10 +175,10 @@ public class AllFactions_SO : ScriptableObject
         return LastUnusedActorID;
     }
 
-    public void ClearFactionData()
-    {
-        AllFactionData.Clear();
-    }
+    public void ClearFactionData() => AllFactionData.Clear();
+
+    public void CallSaveData() => Manager_Data.Instance.SaveGame();
+    public void CallLoadData() => Manager_Data.Instance.LoadGame();
 
     public FactionData GetFaction(int factionID)
     {
@@ -217,6 +217,9 @@ public class AllFactions_SOEditor : Editor
     public override void OnInspectorGUI()
     {
         AllFactions_SO allFactionSO = (AllFactions_SO)target;
+
+        if (GUILayout.Button("Save Data")) allFactionSO.CallSaveData();
+        if (GUILayout.Button("Load Data")) allFactionSO.CallLoadData();
 
         EditorGUILayout.LabelField("Global Data", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Faction IDs", string.Join(", ", allFactionSO.AllFactionIDs));
@@ -402,9 +405,14 @@ public class AllFactions_SOEditor : Editor
 
     private void DrawGameObjectProperties(GameObjectProperties gameObjectProperties)
     {
-        EditorGUILayout.Vector3Field("Position", gameObjectProperties.ActorPosition);
-        EditorGUILayout.Vector3Field("Scale", gameObjectProperties.ActorScale);
-        EditorGUILayout.Vector3Field("Rotation", gameObjectProperties.ActorRotation.eulerAngles);
+        // Not sure if these are a good idea yet, since they'd just be for the SO.
+        // EditorGUILayout.Vector3Field("Current Position", gameObjectProperties.ActorTransform.position);
+        // EditorGUILayout.Vector3Field("Current Rotation", gameObjectProperties.ActorTransform.rotation.eulerAngles);
+        // EditorGUILayout.Vector3Field("Current Scale", gameObjectProperties.ActorTransform.localScale);
+
+        EditorGUILayout.Vector3Field("Last Saved Position", gameObjectProperties.LastSavedActorPosition);
+        EditorGUILayout.Vector3Field("Last Saved Scale", gameObjectProperties.LastSavedActorScale);
+        EditorGUILayout.Vector3Field("Last Saved Rotation", gameObjectProperties.LastSavedActorRotation.eulerAngles);
         EditorGUILayout.ObjectField("Mesh", gameObjectProperties.ActorMesh, typeof(Mesh), allowSceneObjects: true);
         EditorGUILayout.ObjectField("Material", gameObjectProperties.ActorMaterial, typeof(Material), allowSceneObjects: true);
     }

@@ -7,17 +7,17 @@ using UnityEngine;
 
 public class Actor_Base : MonoBehaviour, IInventoryOwner
 {
-    [SerializeField] ActorData _actorData;
-    public ActorData ActorData { get { return _actorData; } private set { _actorData = value; } }
-    public Rigidbody ActorBody { get; protected set; }
-    public Collider ActorCollider { get; protected set; }
-    public MeshFilter ActorMesh { get; protected set; }
-    public MeshRenderer ActorMaterial { get; protected set; }
-    public Animator ActorAnimator { get; protected set; }
-    public Animation ActorAnimation { get; protected set; }
-    public EquipmentComponent EquipmentComponent { get; protected set; }
-    public PersonalityComponent PersonalityComponent { get; protected set; }
-    public GroundedCheckComponent GroundedObject { get; protected set; }
+    public ActorData ActorData;
+    public void SetActorData(ActorData actorData) => ActorData = actorData;
+    public Rigidbody ActorBody;
+    public Collider ActorCollider;
+    public MeshFilter ActorMesh;
+    public MeshRenderer ActorMaterial;
+    public Animator ActorAnimator;
+    public Animation ActorAnimation;
+    public EquipmentComponent EquipmentComponent;
+    public PersonalityComponent PersonalityComponent;
+    public GroundedCheckComponent GroundedObject;
 
     void Awake()
     {
@@ -57,10 +57,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
         UpdateVisuals();
     }
 
-    public void SetActorData(ActorData actorData)
-    {
-        ActorData = actorData;
-    }
 
     public void UpdateVisuals()
     {

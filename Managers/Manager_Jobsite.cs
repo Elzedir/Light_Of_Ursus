@@ -9,6 +9,7 @@ public class Manager_Jobsite : MonoBehaviour
     public static AllRegions_SO AllRegions;
 
     public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
+    public static JobsiteComponent GetJobsite(int jobsiteID) => AllJobsiteComponents[jobsiteID];
 
     public void OnSceneLoaded()
     {
@@ -50,11 +51,6 @@ public class Manager_Jobsite : MonoBehaviour
     public static JobsiteData GetJobsiteData(int jobsiteID, int cityID = -1)
     {
         return AllRegions.GetJobsiteData(cityID, jobsiteID);
-    }
-
-    public static JobsiteComponent GetJobsite(int jobsiteID)
-    {
-        return AllJobsiteComponents[jobsiteID];
     }
 
     public static void GetNearestJobsite(Vector3 position, out JobsiteComponent nearestJobsite)
