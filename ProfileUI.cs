@@ -27,6 +27,6 @@ public class ProfileUI : MonoBehaviour
 
     public void ProfileClicked()
     {
-        _menu.SwitchProfile(_profileID, _profileName);
+        _menu.SwitchProfile(_profileID);
     }
 }

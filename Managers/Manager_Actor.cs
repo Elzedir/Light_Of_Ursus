@@ -9,12 +9,12 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
     public void SaveData(SaveData data)
     {
-        data.AllFactions_SO = AllFactions;
+        data.SavedFactionData = AllFactions.GetSavedFactionData();
     }
 
     public void LoadData(SaveData data)
     {
-        AllFactions = data.AllFactions_SO;
+        AllFactions.SetSavedFactionData(data.SavedFactionData);
     }
 
     public void OnSceneLoaded()

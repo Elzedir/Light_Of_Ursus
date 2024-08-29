@@ -52,11 +52,11 @@ public class SaveAndLoadGames : MonoBehaviour
 
         gameObject.SetActive(true);
         
-        foreach (var saveData in Manager_Data.Instance.GetAllSavedGames(Manager_Data.Instance.CurrentProfile))
+        foreach (var saveData in Manager_Data.Instance.CurrentProfile.AllSavedDatas)
         {
-            if (saveData.SaveDataName == "TheExister") continue;
+            if (saveData.Key == "TheExister") continue;
 
-            _createSaveSlot(saveData, saveOrLoad);
+            _createSaveSlot(saveData.Value, saveOrLoad);
         }
     }
 

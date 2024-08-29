@@ -9,6 +9,10 @@ using UnityEngine;
 [Serializable]
 public class AllFactions_SO : ScriptableObject
 {
+    SavedFactionData _savedFactionData;
+    public SavedFactionData GetSavedFactionData() => new SavedFactionData(AllFactionData, AllFactionIDs, LastUnusedActorID, AllActorIDs, LastUnusedActorID);
+    public SavedFactionData SetSavedFactionData(SavedFactionData savedFactionData) => _savedFactionData = savedFactionData;
+
     public List<FactionData> AllFactionData;
 
     public List<int> AllFactionIDs;
@@ -39,7 +43,7 @@ public class AllFactions_SO : ScriptableObject
 
         _addAllRuntimeIDs();
 
-        
+
     }
 
     void _initialiseDefaultFactions()
@@ -67,7 +71,7 @@ public class AllFactions_SO : ScriptableObject
 
     void _initialiseAllFactions()
     {
-        foreach(var faction in AllFactionData)
+        foreach (var faction in AllFactionData)
         {
             faction.InitialiseFaction();
         }
@@ -93,7 +97,7 @@ public class AllFactions_SO : ScriptableObject
         LastUnusedFactionID = 0;
         LastUnusedActorID = 1;
 
-        for(int i = 0; i < AllFactionData.Count; i++)
+        for (int i = 0; i < AllFactionData.Count; i++)
         {
             var factionData = AllFactionData[i];
             int tempFactionID = -1;
@@ -177,8 +181,8 @@ public class AllFactions_SO : ScriptableObject
 
     public void ClearFactionData() => AllFactionData.Clear();
 
-    public void CallSaveData() => Manager_Data.Instance.SaveGame();
-    public void CallLoadData() => Manager_Data.Instance.LoadGame();
+    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
+    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 
     public FactionData GetFaction(int factionID)
     {

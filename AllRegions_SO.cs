@@ -8,7 +8,9 @@ using UnityEngine;
 [Serializable]
 public class AllRegions_SO : ScriptableObject
 {
-    // Use this class as the save class to keep all info, and then distribute to the AllActor's SO. Add a player region and a wanderer region to hold all
+    SavedRegionData _savedRegionData;
+    public SavedRegionData GetSavedRegionData() => new SavedRegionData(AllRegionData, AllRegionIDs, LastUnusedRegionID, AllCityIDs, LastUnusedCityID, AllJobsiteIDs, LastUnusedJobsiteID, AllStationIDs, LastUnusedStationID, AllOperatingAreaIDs, LastUnusedOperatingAreaID);
+    public SavedRegionData SetSavedRegionData(SavedRegionData savedRegionData) => _savedRegionData = savedRegionData;
     // citizens that aren't in other cities, like the Drifter Faction.
 
     public List<RegionData> AllRegionData; // Eventually add in a wanderer list, and if an actor in the AllActors_SO is not in a place for sufficient time and

@@ -153,7 +153,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     public void LoadScene(string nextScene = null, Interactable_Puzzle puzzle = null)
     {
-        Manager_Data.Instance.SaveGame();
+        Manager_Data.Instance.SaveGame("");
 
         string currentScene = SceneManager.GetActiveScene().name;
 

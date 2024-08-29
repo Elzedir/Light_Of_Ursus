@@ -24,12 +24,12 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
 
     public void SaveData(SaveData data)
     {
-        data.AllRegions_SO = AllRegions;
+        data.SavedRegionData = AllRegions.GetSavedRegionData();
     }
 
     public void LoadData(SaveData data)
     {
-        AllRegions = data.AllRegions_SO;
+        AllRegions.SetSavedRegionData(data.SavedRegionData);
     }
 
     AllRegions_SO _getOrCreateAllRegionsSO()
