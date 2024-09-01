@@ -39,7 +39,7 @@ public class Interactable_Test : MonoBehaviour, IInteractable
     {
         if (!_swordEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(4, 1))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
             {
                 _swordEquipped = true;
             }
@@ -58,7 +58,7 @@ public class Interactable_Test : MonoBehaviour, IInteractable
     {
         if (!_shieldEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(3, 2))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
             {
                 _shieldEquipped = true;
             }

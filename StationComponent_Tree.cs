@@ -22,11 +22,11 @@ public class StationComponent_Tree : StationComponent
 
     public override void InitialiseStartingInventory()
     {
-        if (StationData.InventoryData.InventoryItems.Count == 0)
+        if (StationData.InventoryData.AllInventoryItems.Count == 0)
         {
             StationData.InventoryData.AddToInventory(new List<Item>
         {
-            (Manager_Item.GetItem(1100, 100))
+            new Item(1100, 100)
         });
         }
     }
@@ -57,7 +57,7 @@ public class StationComponent_Tree : StationComponent
 
     protected override List<Item> _getYield(List<Item> products, Actor_Base actor)
     {
-        return new List<Item> { Manager_Item.GetItem(1100, 3) }; // For now
+        return new List<Item> { new Item(1100, 3) }; // For now
 
         // Base resource yield on actor relevant skill
     }

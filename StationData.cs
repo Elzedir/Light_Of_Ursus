@@ -40,35 +40,26 @@ public class StationData : IStationInventory
     public string StationDescription;
     public InventoryData InventoryData;
 
-    public List<ActorData> CurrentOperators;
+    public List<int> CurrentOperatorIDs;
 
     public StationProgressData StationProgressData;
     public ProductionData ProductionData;
 
-    public List<OperatingAreaData> AllOperatingAreaData;
+    public List<int> AllOperatingAreaIDs;
 
-    public void InitialiseStationData(int jobsiteID)
+    public void InitialiseStationData()
     {
-        JobsiteID = jobsiteID;
-
         var station = Manager_Station.GetStation(StationID);
 
         station.Initialise();
 
         foreach (var operatingArea in station.AllOperatingAreasInStation)
         {
-            if (!AllOperatingAreaData.Any(oa => oa.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID))
+            if (!AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID))
             {
-                Debug.Log($"OperatingArea: {operatingArea.name} with ID: {operatingArea.OperatingAreaData.OperatingAreaID} was not in AllOperatingAreaData");
-                AllOperatingAreaData.Add(operatingArea.OperatingAreaData);
+                Debug.Log($"OperatingArea: {operatingArea.OperatingAreaData.OperatingAreaID}: {operatingArea.name}  was not in AllOperatingAreaIDs");
+                AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
             }
-
-            operatingArea.SetOperatingAreaData(Manager_OperatingArea.GetOperatingAreaData(operatingAreaID: operatingArea.OperatingAreaData.OperatingAreaID, stationID: StationID));
-        }
-
-        for (int i = 0; i < AllOperatingAreaData.Count; i++)
-        {
-            AllOperatingAreaData[i].InitialiseOperatingAreaData(StationID);
         }
 
         Manager_Initialisation.OnInitialiseStationDatas += _initialiseStationData;
@@ -79,32 +70,30 @@ public class StationData : IStationInventory
         // Start working
     }
 
-    public bool AddOperatorToStation(ActorData operatorData)
+    public bool AddOperatorToStation(int operatorID)
     {
-        if (CurrentOperators.Any(o => o.ActorID == operatorData.ActorID)) 
+        if (CurrentOperatorIDs.Contains(operatorID)) 
         { 
-            Debug.Log($"CurrentOperators already contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}"); 
+            Debug.Log($"CurrentOperators already contain operator: {operatorID}"); 
             return false; 
         }
 
-        CurrentOperators.Add(operatorData);
-        Manager_Station.GetStation(StationID).AddOperatorToArea(operatorData);
+        CurrentOperatorIDs.Add(operatorID);
+        Manager_Station.GetStation(StationID).AddOperatorToArea(operatorID);
 
         return true;
     }
 
-    public bool RemoveOperatorFromStation(ActorData operatorData)
+    public bool RemoveOperatorFromStation(int operatorID)
     {
-        var operatorToRemove = CurrentOperators.FirstOrDefault(o => o.ActorID == operatorData.ActorID);
-
-        if (operatorToRemove != null)
+        if (CurrentOperatorIDs.Contains(operatorID))
         {
-            CurrentOperators.Remove(operatorToRemove);
+            CurrentOperatorIDs.Remove(operatorID);
 
             return true;
         }
 
-        Debug.Log($"CurrentOperators does not contain operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()}");
+        Debug.Log($"CurrentOperators does not contain operator: {operatorID}");
         return false;
     }
 

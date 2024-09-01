@@ -6,16 +6,19 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Manager_Station : MonoBehaviour
+public class Manager_Station : MonoBehaviour, IDataPersistence
 {
-    public static AllRegions_SO AllRegions;
+    public static AllStations_SO AllStations;
+    public static Dictionary<int, StationData> AllStationData = new();
     public static Dictionary<int, StationComponent> AllStationComponents = new();
-    public static StationComponent GetStation(int stationID) => AllStationComponents[stationID];
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
+
+    public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
+    public void LoadData(SaveData saveData) => AllStationData = saveData.SavedStationData.AllStationData.ToDictionary(x => x.StationID);
 
     public void OnSceneLoaded()
     {
-        AllRegions = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
+        AllStations = Resources.Load<AllStations_SO>("ScriptableObjects/AllStations_SO");
 
         Manager_Initialisation.OnInitialiseManagerStation += _initialise;
     }
@@ -35,7 +38,22 @@ public class Manager_Station : MonoBehaviour
                     throw new ArgumentException($"StationID {station.StationData.StationID} and name {station.name} already exists for station {AllStationComponents[station.StationData.StationID].name}");
                 }
             }
+
+            if (!AllStationData.ContainsKey(station.StationData.StationID))
+            {
+                Debug.Log($"Station: {station.StationData.StationID}: {station.StationData.StationName} was not in AllStationData");
+                AddToAllStationData(station.StationData);
+            }
+
+            station.SetStationData(GetStationData(station.StationData.StationID));
         }
+
+        foreach (var stationData in AllStationData.Values)
+        {
+            stationData.InitialiseStationData();
+        }
+
+        AllStations.AllStationData = AllStationData.Values.ToList();
     }
 
     static List<StationComponent> _findAllStationComponents()
@@ -45,14 +63,59 @@ public class Manager_Station : MonoBehaviour
             .ToList();
     }
 
-    public static void AddToOrUpdateAllStationList(int jobsiteID, StationData stationData)
+    public void AddToAllStationData(StationData stationData)
     {
-        AllRegions.AddToOrUpdateAllStationDataList(jobsiteID, stationData);
+        if (AllStationData.ContainsKey(stationData.StationID))
+        {
+            Debug.Log($"AllStationData already contains StationID: {stationData.StationID}");
+            return;
+        }
+
+        AllStationData.Add(stationData.StationID, stationData);
     }
 
-    public static StationData GetStationData(int jobsiteID, int stationID)
+    public void UpdateAllStationData(StationData stationData)
     {
-        return AllRegions.GetStationData(jobsiteID, stationID);
+        if (!AllStationData.ContainsKey(stationData.StationID))
+        {
+            Debug.Log($"AllStationData does not contain StationID: {stationData.StationID}");
+            return;
+        }
+
+        AllStationData[stationData.StationID] = stationData;
+    }
+
+    
+    public static StationData GetStationData(int stationID)
+    {
+        if (!AllStationData.ContainsKey(stationID))
+        {
+            Debug.Log($"Station: {stationID} is not in AllStationData list");
+            return null;
+        }
+
+        return AllStationData[stationID];
+    }
+    public static StationComponent GetStation(int stationID)
+    {
+        if (!AllStationComponents.ContainsKey(stationID))
+        {
+            Debug.Log($"Station: {stationID} is not in AllStationComponents list");
+            return null;
+        }
+
+        return AllStationComponents[stationID];
+    }
+
+
+    public int GetRandomStationID()
+    {
+        int stationID = 1;
+        while (AllStationData.ContainsKey(stationID))
+        {
+            stationID++;
+        }
+        return stationID;
     }
 
     public static void GetNearestStationToPosition(Vector3 position, StationName stationName, out StationComponent nearestStation)
@@ -70,10 +133,5 @@ public class Manager_Station : MonoBehaviour
                 nearestDistance = distance;
             }
         }
-    }
-
-    public static int GetRandomStationID()
-    {
-        return AllRegions.GetRandomStationID();
     }
 }

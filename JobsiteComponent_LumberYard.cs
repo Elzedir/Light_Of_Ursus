@@ -12,12 +12,12 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
         .ToList();
 
         var mergedItems = producedItems
-        .GroupBy(item => item.CommonStats_Item.ItemID)
-        .Select(group => Manager_Item.GetItem(group.Key, group.Sum(item => item.CommonStats_Item.CurrentStackSize)))
+        .GroupBy(item => item.ItemID)
+        .Select(group => new Item(group.Key, group.Sum(item => item.ItemAmount)))
         .ToList();
 
         var duplicateItems = producedItems
-        .GroupBy(item => item.CommonStats_Item.ItemID)
+        .GroupBy(item => item.ItemID)
         .Where(group => group.Count() > 1)
         .Select(group => group.Key)
         .ToList();
@@ -27,8 +27,8 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
             Debug.Log($"Item {itemId} were not merged correctly.");
         }
 
-        float logProduction = mergedItems.FirstOrDefault(item => item.CommonStats_Item.ItemID == 1100)?.CommonStats_Item.CurrentStackSize ?? 0;
-        float plankProduction = mergedItems.FirstOrDefault(item => item.CommonStats_Item.ItemID == 2300)?.CommonStats_Item.CurrentStackSize ?? 0;
+        float logProduction = mergedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
+        float plankProduction = mergedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
         float currentRatio = logProduction / plankProduction;
         float idealRatio = 3f;
@@ -49,8 +49,8 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
     protected void _adjustProduction(float logProduction, float plankProduction, float idealRatio)
     {
-        var allEmployees = new List<ActorData>(JobsiteData.AllEmployees);
-        var bestCombination = new List<ActorData>();
+        var allEmployees = new List<int>(JobsiteData.AllEmployeeIDs);
+        var bestCombination = new List<int>();
         float bestRatioDifference = float.MaxValue;
 
         var allCombinations = _getAllCombinations(allEmployees);
@@ -65,12 +65,12 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
                 .ToList();
 
             var mergedEstimatedProduction = estimatedProduction
-            .GroupBy(item => item.CommonStats_Item.ItemID)
-            .Select(group => Manager_Item.GetItem(group.Key, group.Sum(item => item.CommonStats_Item.CurrentStackSize)))
+            .GroupBy(item => item.ItemID)
+            .Select(group => new Item(group.Key, group.Sum(item => item.ItemAmount)))
             .ToList();
 
-            float estimatedLogProduction = mergedEstimatedProduction.FirstOrDefault(item => item.CommonStats_Item.ItemID == 1100)?.CommonStats_Item.CurrentStackSize ?? 0;
-            float estimatedPlankProduction = mergedEstimatedProduction.FirstOrDefault(item => item.CommonStats_Item.ItemID == 2300)?.CommonStats_Item.CurrentStackSize ?? 0;
+            float estimatedLogProduction = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
+            float estimatedPlankProduction = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
             float estimatedRatio = estimatedLogProduction / estimatedPlankProduction;
             float ratioDifference = Mathf.Abs(estimatedRatio - idealRatio);
@@ -84,7 +84,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
                 Debug.Log($"Combination {i} the is best ratio");
 
                 bestRatioDifference = ratioDifference;
-                bestCombination = new List<ActorData>(combination);
+                bestCombination = new List<int>(combination);
             }
         }
 

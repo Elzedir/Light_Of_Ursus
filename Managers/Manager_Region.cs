@@ -11,25 +11,55 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
     const string _allRegionSOPath = "ScriptableObjects/AllRegions_SO";
 
     public static AllRegions_SO AllRegions;
+    public static Dictionary<int, RegionData> AllRegionData = new();
     public static Dictionary<int, RegionComponent> AllRegionComponents = new();
-    public static RegionComponent GetRegion(int regionID) => AllRegionComponents[regionID];
+
+    public void SaveData(SaveData saveData) => saveData.SavedRegionData = new SavedRegionData(AllRegionData.Values.ToList());
+    public void LoadData(SaveData saveData) => AllRegionData = saveData.SavedRegionData.AllRegionData.ToDictionary(x => x.RegionID);
 
     public void OnSceneLoaded()
     {
         AllRegions = _getOrCreateAllRegionsSO();
-        AllRegions.PrepareToInitialise();
 
         Manager_Initialisation.OnInitialiseManagerRegion += _initialise;
     }
 
-    public void SaveData(SaveData data)
+    void _initialise()
     {
-        data.SavedRegionData = AllRegions.GetSavedRegionData();
+        _initialiseAllRegionData();
     }
 
-    public void LoadData(SaveData data)
+    void _initialiseAllRegionData()
     {
-        AllRegions.SetSavedRegionData(data.SavedRegionData);
+        foreach (var region in _findAllRegionComponents())
+        {
+            if (region.RegionData == null) { Debug.Log($"Region: {region.name} does not have RegionData."); continue; }
+
+            if (!AllRegionComponents.ContainsKey(region.RegionData.RegionID)) AllRegionComponents.Add(region.RegionData.RegionID, region);
+            else
+            {
+               if (AllRegionComponents[region.RegionData.RegionID].gameObject == region.gameObject) continue;
+               else
+               {
+                   throw new ArgumentException($"RegionID {region.RegionData.RegionID} and name {region.name} already exists for region {AllRegionComponents[region.RegionData.RegionID].name}");
+               }
+            }
+
+            if (!AllRegionData.ContainsKey(region.RegionData.RegionID))
+            {
+                Debug.Log($"Region: {region.RegionData.RegionID}: {region.RegionData.RegionName} was not in AllRegionData");
+                AddToAllRegionData(region.RegionData);
+            }
+
+            region.SetRegionData(GetRegionData(region.RegionData.RegionID));
+        }
+
+        foreach(var region in AllRegionData)
+        {
+            region.Value.InitialiseRegionData();
+        }
+
+        AllRegions.AllRegionData = AllRegionData.Values.ToList();
     }
 
     AllRegions_SO _getOrCreateAllRegionsSO()
@@ -51,44 +81,11 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
         return allRegionsSO;
     }
 
-    void _initialise()
-    {
-        foreach (var region in _findAllRegionComponents())
-        {
-            AllRegionComponents.Add(region.RegionData.RegionID, region);
-
-            // Replace with this soon, excpet modify for region
-
-            //if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
-
-            //if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
-            //else
-            //{
-            //    if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
-            //    else
-            //    {
-            //        Debug.LogError($"JobsiteID {jobsite.JobsiteData.JobsiteID} and name {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
-            //        jobsite.JobsiteData.JobsiteID = GetRandomJobsiteID();
-            //    }
-            //}
-        }
-    }
-
     static List<RegionComponent> _findAllRegionComponents()
     {
         return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .OfType<RegionComponent>()
             .ToList();
-    }
-
-    public static void AddToOrUpdateAllRegionList(RegionData regionData)
-    {
-        AllRegions.AddToOrUpdateAllRegionDataList(regionData);
-    }
-
-    public static RegionData GetRegionData(int regionID)
-    {
-        return AllRegions.GetRegionData(regionID);
     }
 
     public static void GetNearestRegion(Vector3 position, out RegionComponent nearestRegion)
@@ -108,8 +105,57 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
         }
     }
 
-    public static int GetRandomRegionID()
+    public void AddToAllRegionData(RegionData regionData)
     {
-        return AllRegions.GetRandomRegionID();
+        if (AllRegionData.ContainsKey(regionData.RegionID))
+        {
+            Debug.Log($"AllRegionData already contains RegionID: {regionData.RegionID}");
+            return;
+        }
+
+        AllRegionData.Add(regionData.RegionID, regionData);
+    }
+
+    public void UpdateAllRegionData(RegionData regionData)
+    {
+        if (!AllRegionData.ContainsKey(regionData.RegionID))
+        {
+            Debug.LogError($"RegionData: {regionData.RegionID} does not exist in AllRegionData.");
+            return;
+        }
+
+        AllRegionData[regionData.RegionID] = regionData;
+    }
+
+    public static RegionData GetRegionData(int regionID)
+    {
+        if (!AllRegionData.ContainsKey(regionID))
+        {
+            Debug.LogError($"RegionData: {regionID} does not exist in AllRegionData.");
+            return null;
+        }
+
+        return AllRegionData[regionID];
+    }
+
+    public static RegionComponent GetRegion(int regionID)
+    {
+        if (!AllRegionComponents.ContainsKey(regionID))
+        {
+            Debug.LogError($"RegionComponent: {regionID} does not exist in AllRegionComponents.");
+            return null;
+        }
+
+        return AllRegionComponents[regionID];
+    }
+
+    public int GetRandomRegionID()
+    {
+        int regionID = 1;
+        while (AllRegionData.ContainsKey(regionID))
+        {
+            regionID++;
+        }
+        return regionID;
     }
 }

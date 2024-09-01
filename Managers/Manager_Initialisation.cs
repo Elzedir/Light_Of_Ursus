@@ -6,14 +6,12 @@ using UnityEngine;
 public class Manager_Initialisation
 {
     public static event Action OnInitialiseManagerFaction;
-    public static event Action OnInitialiseAllFactionSO;
 
     public static event Action OnInitialiseManagerRegion;
     public static event Action OnInitialiseManagerCity;
     public static event Action OnInitialiseManagerJobsite;
     public static event Action OnInitialiseManagerStation;
     public static event Action OnInitialiseManagerOperatingArea;
-    public static event Action OnInitialiseAllRegionSO;
 
     public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseActorData;
@@ -25,7 +23,6 @@ public class Manager_Initialisation
     public static void InitialiseFactions()
     {
         OnInitialiseManagerFaction?.Invoke();
-        OnInitialiseAllFactionSO?.Invoke();
     }
 
     public static void InitialiseRegions() 
@@ -35,7 +32,6 @@ public class Manager_Initialisation
         OnInitialiseManagerJobsite?.Invoke();
         OnInitialiseManagerStation?.Invoke();
         OnInitialiseManagerOperatingArea?.Invoke();
-        OnInitialiseAllRegionSO?.Invoke();
     }
 
     public static void InitialiseActors()

@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider))]
 public class RegionComponent : MonoBehaviour
 {
     public RegionData RegionData;
-    public BoxCollider RegionArea;
 
     public List<CityComponent> AllCitiesInRegion;
 
     public void Initialise()
     {
-        RegionArea = GetComponent<BoxCollider>();
-
-        CurrentDate.NewDay += _refreshRegion;
-
         AllCitiesInRegion = GetAllCitiesInRegion();
+
+        AllCitiesInRegion.ForEach(city => city.SetRegionID(RegionData.RegionID));
     }
 
     public void SetRegionData(RegionData regionData)
@@ -25,16 +21,7 @@ public class RegionComponent : MonoBehaviour
         RegionData = regionData;
     }
 
-    void _refreshRegion()
-    {
-        // Refresh all cities in regiondata
-    }
-
-    public List<CityComponent> GetAllCitiesInRegion()
-    {
-        return Physics.OverlapBox(RegionArea.bounds.center, RegionArea.bounds.extents)
-        .Select(collider => collider.GetComponent<CityComponent>()).Where(rc => rc != null).ToList();
-    }
+    public List<CityComponent> GetAllCitiesInRegion() => GetComponentsInChildren<CityComponent>().ToList();
 
     public CityComponent GetNearestCityInRegion(Vector3 position)
     {

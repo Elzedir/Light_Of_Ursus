@@ -10,9 +10,7 @@ public class Equipment_Base : MonoBehaviour
     public int SlotID { get; protected set; }
     public EquipmentSlot EquipmentSlot { get; protected set; }
     public Actor_Base Actor { get; private set; }
-    Item _item;
-    public Item Item { get { return _item; } protected set { _item = value; CommonStats_Item = value?.CommonStats_Item; } }
-    public CommonStats_Item CommonStats_Item;
+    public Item Item;
     public MeshFilter MeshFilter { get; protected set; }
     public MeshRenderer MeshRenderer { get; protected set; }
     public Animator Animator { get; protected set; }
@@ -40,18 +38,20 @@ public class Equipment_Base : MonoBehaviour
             return false;
         }
 
-        if (item.CommonStats_Item.EquipmentSlots.Contains(EquipmentSlot))
+        var masterItem = Manager_Item.GetItemData(item.ItemID);
+
+        if (masterItem.CommonStats_Item.EquipmentSlots.Contains(EquipmentSlot))
         {
             if (UnequipItem())
             {
                 Item = item;
-                MeshFilter.mesh = item.VisualStats_Item.ItemMesh;
-                MeshRenderer.material = item.VisualStats_Item.ItemMaterial;
+                MeshFilter.mesh = masterItem.VisualStats_Item.ItemMesh;
+                MeshRenderer.material = masterItem.VisualStats_Item.ItemMaterial;
                 //Animator.runtimeAnimatorController = item.VisualStats.ItemAnimatorController;
 
-                transform.localPosition = item.VisualStats_Item.ItemPosition;
-                transform.localRotation = item.VisualStats_Item.ItemRotation;
-                transform.localScale = item.VisualStats_Item.ItemScale;
+                transform.localPosition = masterItem.VisualStats_Item.ItemPosition;
+                transform.localRotation = masterItem.VisualStats_Item.ItemRotation;
+                transform.localScale = masterItem.VisualStats_Item.ItemScale;
 
                 return true;
             }

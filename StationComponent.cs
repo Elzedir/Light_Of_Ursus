@@ -13,15 +13,13 @@ public enum StationType
     Storage
 }
 
-[RequireComponent(typeof(BoxCollider))]
 public class StationComponent : MonoBehaviour, IInteractable, ITickable
 {
     bool _initialised = false;
 
     public StationData StationData;
-    public BoxCollider StationArea;
 
-    public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperator.ActorID != 0); } }
+    public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0); } }
 
     public float InteractRange { get; protected set; }
 
@@ -37,16 +35,10 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     protected void Awake()
     {
-        StationArea = gameObject.GetComponent<BoxCollider>();
-
-        if (!StationArea.isTrigger)
-        {
-            Debug.Log($"Set IsTrigger to true for {name}");
-            StationArea.isTrigger = true;
-        }
+        
     }
 
-    public void AddOperatorToArea(ActorData operatorData)
+    public void AddOperatorToArea(int operatorData)
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
         
@@ -62,9 +54,9 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     public void RemoveOperatorFromArea(ActorData operatorData)
     {
-        if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperator.ActorID == operatorData.ActorID))
+        if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorData.ActorID))
         {
-            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperator.ActorID == operatorData.ActorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
+            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorData.ActorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
         else
         {
@@ -114,7 +106,10 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
     public void Initialise()
     {
         InitialiseStationName();
-        GetAllOperatingAreasInStation();
+        AllOperatingAreasInStation = GetAllOperatingAreasInStation();
+
+
+
         SetInteractRange();
         InitialiseAllowedEmployeePositions();
         InitialiseAllowedRecipes();
@@ -128,17 +123,7 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         throw new ArgumentException("Cannot use base class.");
     }
 
-    public void GetAllOperatingAreasInStation()
-    {
-        foreach (Transform child in transform)
-        {
-            if (child.TryGetComponent(out OperatingAreaComponent operatingArea))
-            {
-                operatingArea.Initialise(StationData.StationID);
-                AllOperatingAreasInStation.Add(operatingArea);
-            }
-        }
-    }
+    public List<OperatingAreaComponent> GetAllOperatingAreasInStation() => GetComponentsInChildren<OperatingAreaComponent>().ToList();
 
     public virtual void InitialiseAllowedEmployeePositions()
     {
@@ -155,10 +140,8 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         
     }
 
-    public void SetStationData(StationData stationData)
-    {
-        StationData = stationData;
-    }
+    public void SetStationData(StationData stationData) => StationData = stationData;
+    public void SetJobsiteID(int jobsiteID) => StationData.JobsiteID = jobsiteID;
 
     public void SetInteractRange(float interactRange = 2)
     {
@@ -223,13 +206,13 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         float totalProductionRate = 0;
         // Then modify production rate by any area modifiers (Land type, events, etc.)
 
-        foreach (var currentOperator in StationData.CurrentOperators)
+        foreach (var currentOperatorID in StationData.CurrentOperatorIDs)
         {
             var individualProductionRate = BaseProgressRatePerHour;
 
             foreach(var vocation in StationData.StationProgressData.CurrentProduct.RequiredVocations)
             {
-                individualProductionRate *= currentOperator.VocationData.GetProgress(vocation);
+                individualProductionRate *= Manager_Actor.GetActorData(currentOperatorID).VocationData.GetProgress(vocation);
             }
 
             totalProductionRate += individualProductionRate;
@@ -245,11 +228,34 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         {
             foreach(var item in StationData.StationProgressData.CurrentProduct.RecipeProducts)
             {
-                estimatedProductionItems.Add(Manager_Item.GetItem(item.CommonStats_Item.ItemID, item.CommonStats_Item.CurrentStackSize));
+                estimatedProductionItems.Add(new Item(item));
             }
         }
 
         return estimatedProductionItems;
+    }
+}
+
+[Serializable]
+public class Operator
+{
+    public int OperatorID;
+    public string OperatorName;
+    public EmployeePosition OperatorPosition;
+    public int OperatingAreaID;
+
+    public Operator(int actorID, EmployeePosition careerAndJobs, int operatingAreaID)
+    {
+        OperatorID = actorID;
+        OperatorPosition = careerAndJobs;
+        OperatingAreaID = operatingAreaID;
+    }
+
+    public Operator(Operator other)
+    {
+        OperatorID = other.OperatorID;
+        OperatorPosition = other.OperatorPosition;
+        OperatingAreaID = other.OperatingAreaID;
     }
 }
 
@@ -298,7 +304,7 @@ public class StationComponent_Editor : Editor
 
                 foreach (var item in stationData.ProductionData.AllProducedItems)
                 {
-                    EditorGUILayout.LabelField(item.CommonStats_Item.ItemName.ToString());
+                    EditorGUILayout.LabelField(item.ItemName.ToString());
                 }
 
                 EditorGUILayout.EndScrollView();
@@ -313,23 +319,24 @@ public class StationComponent_Editor : Editor
             {
                 _inventoryItemScrollPos = EditorGUILayout.BeginScrollView(_inventoryItemScrollPos);
 
-                foreach (var item in stationData.InventoryData.InventoryItems)
+                foreach (var item in stationData.InventoryData.AllInventoryItems)
                 {
-                    EditorGUILayout.LabelField($"{item.CommonStats_Item.ItemID}: {item.CommonStats_Item.ItemName} Qty: {item.CommonStats_Item.CurrentStackSize}");
+                    EditorGUILayout.LabelField($"{item.ItemID}: {item.ItemName} Qty: {item.ItemAmount}");
                 }
 
                 EditorGUILayout.EndScrollView();
             }
         }
 
-        if (stationData.CurrentOperators != null)
+        if (stationData.CurrentOperatorIDs != null)
         {
             _showOperators = EditorGUILayout.Toggle("Current Operators", _showOperators);
             if (_showOperators)
             {
-                foreach (var operatorData in stationData.CurrentOperators)
+                foreach (var operatorID in stationData.CurrentOperatorIDs)
                 {
-                    EditorGUILayout.LabelField($"Operator: {operatorData.ActorID}: {operatorData.ActorName.GetName()} Pos: {operatorData.CareerAndJobs.EmployeePosition}");
+                    EditorGUILayout.LabelField($"Operator: {operatorID}");
+                    //EditorGUILayout.LabelField($"Operator: {operatorID.ActorID}: {operatorID.ActorName.GetName()} Pos: {operatorID.CareerAndJobs.EmployeePosition}");
                 }
             }
 

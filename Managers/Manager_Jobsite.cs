@@ -4,16 +4,22 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Manager_Jobsite : MonoBehaviour
+public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 {
-    public static AllRegions_SO AllRegions;
+    public static AllJobsites_SO AllJobsites;
 
+    public static Dictionary<int, JobsiteData> AllJobsiteData = new();
     public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
-    public static JobsiteComponent GetJobsite(int jobsiteID) => AllJobsiteComponents[jobsiteID];
+    
+    public HashSet<int> AllJobsiteIDs = new();
+    public int LastUnusedJobsiteID = 1;
+
+    public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
+    public void LoadData(SaveData data) => AllJobsiteData = data.SavedJobsiteData.AllJobsiteData.ToDictionary(x => x.JobsiteID);
 
     public void OnSceneLoaded()
     {
-        AllRegions = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
+        AllJobsites = Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO");
 
         Manager_Initialisation.OnInitialiseManagerJobsite += _initialise;
     }
@@ -33,7 +39,22 @@ public class Manager_Jobsite : MonoBehaviour
                     throw new ArgumentException($"JobsiteID {jobsite.JobsiteData.JobsiteID}: {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
                 }
             }
+
+            if (!AllJobsiteData.ContainsKey(jobsite.JobsiteData.JobsiteID))
+            {
+                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteData");
+                AddToAllJobsiteData(jobsite.JobsiteData);
+            }
+
+            jobsite.SetJobsiteData(GetJobsiteData(jobsite.JobsiteData.JobsiteID));
         }
+
+        foreach (var jobsiteData in AllJobsiteData.Values)
+        {
+            jobsiteData.InitialiseJobsiteData();
+        }
+
+        AllJobsites.AllJobsiteData = AllJobsiteData.Values.ToList();
     }
 
     static List<JobsiteComponent> _findAllJobsiteComponents()
@@ -41,16 +62,6 @@ public class Manager_Jobsite : MonoBehaviour
         return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .OfType<JobsiteComponent>()
             .ToList();
-    }
-
-    public static void AddToOrUpdateAllJobsiteList(int cityID, JobsiteData jobsiteData)
-    {
-        AllRegions.AddToOrUpdateAllJobsiteDataList(cityID, jobsiteData);
-    }
-
-    public static JobsiteData GetJobsiteData(int jobsiteID, int cityID = -1)
-    {
-        return AllRegions.GetJobsiteData(cityID, jobsiteID);
     }
 
     public static void GetNearestJobsite(Vector3 position, out JobsiteComponent nearestJobsite)
@@ -70,8 +81,58 @@ public class Manager_Jobsite : MonoBehaviour
         }
     }
 
-    public static int GetRandomJobsiteID()
+    public void AddToAllJobsiteData(JobsiteData jobsiteData)
     {
-        return AllRegions.GetRandomJobsiteID();
+        if (AllJobsiteData.ContainsKey(jobsiteData.JobsiteID))
+        {
+            Debug.Log($"AllJobsiteData already contains JobsiteID: {jobsiteData.JobsiteID}");
+            return;
+        }
+
+        AllJobsiteData.Add(jobsiteData.JobsiteID, jobsiteData);
+    }
+
+    public void UpdateAllJobsiteData(JobsiteData jobsiteData)
+    {
+        if (!AllJobsiteData.ContainsKey(jobsiteData.JobsiteID))
+        {
+            Debug.LogError($"JobsiteData: {jobsiteData.JobsiteID} does not exist in AllJobsiteData.");
+            return;
+        }
+
+        AllJobsiteData[jobsiteData.JobsiteID] = jobsiteData;
+    }
+
+    public static JobsiteData GetJobsiteData(int jobsiteID)
+    {
+        if (!AllJobsiteData.ContainsKey(jobsiteID))
+        {
+            Debug.LogError($"JobsiteData: {jobsiteID} does not exist in AllJobsiteData.");
+            return null;
+        }
+
+        return AllJobsiteData[jobsiteID];
+    }
+
+    
+    public static JobsiteComponent GetJobsite(int jobsiteID)
+    {
+        if (!AllJobsiteComponents.ContainsKey(jobsiteID))
+        {
+            Debug.LogError($"JobsiteComponent: {jobsiteID} does not exist in AllJobsiteComponents.");
+            return null;
+        }
+
+        return AllJobsiteComponents[jobsiteID];
+    }
+
+    public int GetRandomJobsiteID()
+    {
+        int jobsiteID = 1;
+        while (AllJobsiteData.ContainsKey(jobsiteID))
+        {
+            jobsiteID++;
+        }
+        return jobsiteID;
     }
 }

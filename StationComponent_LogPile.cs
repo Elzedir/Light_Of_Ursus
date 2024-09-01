@@ -24,7 +24,7 @@ public class StationComponent_LogPile : StationComponent
 
     public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
     {
-        return inventoryOwner.GetInventoryData().InventoryItems.Where(i => i.CommonStats_Item.ItemID == 2300)
-        .Select(i => Manager_Item.GetItem(i.CommonStats_Item.ItemID, i.CommonStats_Item.CurrentStackSize)).ToList();
+        return inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300)
+        .Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
     }
 }

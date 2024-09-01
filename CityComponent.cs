@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider))]
 public class CityComponent : MonoBehaviour
 {
     public CityData CityData;
-    public BoxCollider CityArea;
 
     public GameObject CitySpawnZone;
 
@@ -15,27 +13,21 @@ public class CityComponent : MonoBehaviour
 
     public void Initialise()
     {
-        CityArea = GetComponent<BoxCollider>();
         CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
 
         AllJobsitesInCity = GetAllJobsitesInCity();
+        AllJobsitesInCity.ForEach(jobsite => jobsite.SetCityID(CityData.CityID));
     }
 
-    public void SetCityData(CityData cityData)
-    {
-        CityData = cityData;
-    }
+    public void SetCityData(CityData cityData) => CityData = cityData;
+    public void SetRegionID(int regionID) => CityData.RegionID = regionID;
 
     public void RefreshCity()
     {
         // Refresh all jobsites in citydata
     }
 
-    public List<JobsiteComponent> GetAllJobsitesInCity()
-    {
-        return Physics.OverlapBox(CityArea.bounds.center, CityArea.bounds.extents)
-        .Select(collider => collider.GetComponent<JobsiteComponent>()).Where(jc => jc != null).ToList();
-    }
+    public List<JobsiteComponent> GetAllJobsitesInCity() => GetComponentsInChildren<JobsiteComponent>().ToList();
 
     public JobsiteComponent GetNearestJobsiteInCity(Vector3 position, JobsiteName jobsiteName)
     {

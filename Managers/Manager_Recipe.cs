@@ -40,7 +40,7 @@ public class Manager_Recipe : MonoBehaviour
             requiredIngredients: new List<Item>(),
             requiredStation: StationName.Tree,
             requiredVocations: new List<VocationRequirement> { new VocationRequirement(VocationName.Logger, 0) },
-            recipeProducts: new List<Item> { (Manager_Item.GetItem(1100, 1)) },
+            recipeProducts: new List<Item> { new Item(1100, 1) },
             possibleQualities: new List<CraftingQuality> { new CraftingQuality(1, ItemQualityName.Common) }
             ));
     }
@@ -51,10 +51,10 @@ public class Manager_Recipe : MonoBehaviour
             recipeName: RecipeName.Plank,
             recipeDescription: "Craft a plank",
             requiredProgress: 10,
-            requiredIngredients: new List<Item> { (Manager_Item.GetItem(1100, 2)) },
+            requiredIngredients: new List<Item> { new Item(1100, 2) },
             requiredStation: StationName.Sawmill,
             requiredVocations: new List<VocationRequirement> { new VocationRequirement(VocationName.Sawyer, 0) },
-            recipeProducts: new List<Item> { (Manager_Item.GetItem(2300, 1)) },
+            recipeProducts: new List<Item> { new Item(2300, 1) },
             possibleQualities: new List<CraftingQuality> { new CraftingQuality(1, ItemQualityName.Common) }
             ));
     }

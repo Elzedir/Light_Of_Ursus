@@ -54,7 +54,7 @@ public class StationComponent_Sawmill : StationComponent
 
     protected override List<Item> _getYield(List<Item> products, Actor_Base actor)
     {
-        return new List<Item> { Manager_Item.GetItem(1100, 3) }; // For now
+        return new List<Item> { new Item(1100, 3) }; // For now
 
         // Base resource yield on actor relevant skill
     }

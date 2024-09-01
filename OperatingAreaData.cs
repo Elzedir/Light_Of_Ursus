@@ -11,40 +11,35 @@ public class OperatingAreaData
 
     public bool StationIsActive = true;
 
-    public ActorData CurrentOperator;
+    public int CurrentOperatorID;
+    public bool HasOperator() => CurrentOperatorID != -1;
     public bool IsOperatorMovingToOperatingArea = false;
 
-    public void InitialiseOperatingAreaData(int stationID)
+    public void InitialiseOperatingAreaData()
     {
-        Manager_OperatingArea.GetOperatingArea(OperatingAreaID).Initialise(stationID);
+        Manager_OperatingArea.GetOperatingArea(OperatingAreaID).Initialise();
     }
 
-    public bool AddOperatorToOperatingArea(ActorData operatorData)
+    public bool AddOperatorToOperatingArea(int operatorData)
     {
-        if (CurrentOperator.ActorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperator.ActorID}: {CurrentOperator.ActorName.GetName()}with new Operator {operatorData.ActorID}: {operatorData.ActorName.GetName()}");
+        if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorData}");
 
-        CurrentOperator = operatorData;
-        CurrentOperator.CareerAndJobs.OperatingAreaID = OperatingAreaID;
+        CurrentOperatorID = operatorData;
+        Manager_Actor.GetActorData(CurrentOperatorID).CareerAndJobs.OperatingAreaID = OperatingAreaID;
         return true;
     }
 
     public bool RemoveOperatorFromOperatingArea()
     {
-        if (CurrentOperator == null)
+        if (CurrentOperatorID == -1)
         {
             Debug.Log($"OperatingArea does not have current operator.");
             return false;
         }
 
-
-        CurrentOperator.CareerAndJobs.OperatingAreaID = 0;
-        CurrentOperator = null;
+        Manager_Actor.GetActorData(CurrentOperatorID).CareerAndJobs.OperatingAreaID = 0;
+        CurrentOperatorID = -1;
         IsOperatorMovingToOperatingArea = false;
         return true;
-    }
-
-    public bool HasOperator()
-    {
-        return CurrentOperator.ActorID != 0;
     }
 }

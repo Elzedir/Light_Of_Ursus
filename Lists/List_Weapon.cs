@@ -79,7 +79,7 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
+        AddToList(new Item_Master(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
     static void _shortSwords()
     {
@@ -120,7 +120,7 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
+        AddToList(new Item_Master(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
 
     static void _shields()
@@ -162,6 +162,6 @@ public class List_Weapon : Manager_Item
             attackPushForce: 1.1f
             );
 
-        AddToList(new Item(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
+        AddToList(new Item_Master(commonStats_Item: commonStats_Item, visualStats_Item: visualStats, weaponStats_Item: weaponStats, null, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
     }
 }

@@ -230,13 +230,19 @@ public class Manager_Data : MonoBehaviour
     {
         if (_disableDataPersistence || CurrentProfile.ProfileName == "Create New Profile") return;
 
+        Debug.Log("SaveGameName" + saveDataName);
+
         saveDataName = saveDataName == "" ? GetLatestSave(CurrentProfile.ProfileName) : saveDataName;
 
         CurrentSaveData = CurrentProfile.LoadData(saveDataName, CurrentProfile.ProfileName);
 
+        Debug.Log($"CurrentSave file is {CurrentSaveData}");
+
         if (CurrentSaveData == null && _createNewSaveFileIfNull) CurrentSaveData = new SaveData(GetRandomProfileID(), CurrentProfile.ProfileName);
 
         if (CurrentSaveData == null) { Debug.Log("No data was found. A New Game needs to be started before data can be loaded."); return; }
+
+        Debug.Log($"Loaded save Data: {CurrentSaveData}");
 
         foreach (IDataPersistence data in _dataPersistenceObjects) data.LoadData(CurrentSaveData);
     }
@@ -301,58 +307,205 @@ public class ProfileData
     {
         if (string.IsNullOrEmpty(profileName) || string.IsNullOrEmpty(saveDataName)) return null;
 
-        string fullPath = Path.Combine(Application.persistentDataPath, profileName, saveDataName, Manager_Data.SaveFileName);
+        string savePath = Path.Combine(Application.persistentDataPath, profileName, saveDataName, Manager_Data.SaveFileName);
 
-        if (!File.Exists(fullPath)) return null;
+        if (!File.Exists(savePath)) return null;
 
         try
         {
-            string dataToLoad = File.ReadAllText(fullPath);
+            string dataToLoad = File.ReadAllText(savePath);
 
             if (_useEncryption) dataToLoad = _encryptDecrypt(dataToLoad);
 
-            return JsonUtility.FromJson<SaveData>(dataToLoad);
+            var saveData = JsonUtility.FromJson<SaveData>(dataToLoad);
+
+            LoadNestedRegionData(savePath, saveData);
+            LoadNestedFactionData(savePath, saveData);
+
+            return saveData;
         }
         catch (Exception e)
         {
-            if (allowRestoreFromBackup && _attemptRollback(fullPath))
+            if (allowRestoreFromBackup && _attemptRollback(savePath))
             {
                 Debug.LogWarning($"Failed to load data file. Attempting to roll back.\n{e}");
                 return LoadData(saveDataName, profileName, false);
             }
 
-            Debug.LogError($"Error occurred when trying to load file: {fullPath}. Backup did not work.\n{e}");
+            Debug.LogError($"Error occurred when trying to load file: {savePath}. Backup did not work.\n{e}");
             return null;
         }
     }
 
-    public void SaveData(string saveDataName, SaveData SaveData, string profileName, bool newProfile = false)
+    private void LoadNestedRegionData(string path, SaveData saveData)
+    {
+        string regionPath = Path.Combine(path, "Regions");
+        var regionDataJSON = JsonUtility.FromJson<SavedRegionData>(_fromJSON(regionPath, "RegionSaveData.json"));
+        saveData.SavedRegionData = new SavedRegionData(regionDataJSON?.AllRegionData);
+
+        string cityPath = Path.Combine(regionPath, "Cities");
+        var cityDataJSON = JsonUtility.FromJson<SavedCityData>(_fromJSON(cityPath, "CitySaveData.json"));
+        saveData.SavedCityData = new SavedCityData(cityDataJSON?.AllCityData);
+
+        string jobsitePath = Path.Combine(cityPath, "Jobsites");
+        var jobsiteDataJSON = JsonUtility.FromJson<SavedJobsiteData>(_fromJSON(jobsitePath, "JobsiteSaveData.json"));
+        saveData.SavedJobsiteData = new SavedJobsiteData(jobsiteDataJSON?.AllJobsiteData);
+
+        string stationPath = Path.Combine(jobsitePath, "Stations");
+        var stationDataJSON = JsonUtility.FromJson<SavedStationData>(_fromJSON(stationPath, "StationSaveData.json"));
+        saveData.SavedStationData = new SavedStationData(stationDataJSON?.AllStationData);
+
+        string operatingAreaPath = Path.Combine(stationPath, "OperatingAreas");
+        var operatingAreaDataJSON = JsonUtility.FromJson<SavedOperatingAreaData>(_fromJSON(operatingAreaPath, "OperatingAreaSaveData.json"));
+        saveData.SavedOperatingAreaData = new SavedOperatingAreaData(operatingAreaDataJSON?.AllOperatingAreaData);
+    }
+
+    private void LoadNestedFactionData(string path, SaveData saveData)
+    {
+        string factionDataPath = Path.Combine(path, "Factions");
+        var factionDataJSON = JsonUtility.FromJson<SavedFactionData>(_fromJSON(factionDataPath, "FactionSaveData.json"));
+        saveData.SavedFactionData = new SavedFactionData(factionDataJSON?.AllFactionData);
+
+        foreach (var factionDir in Directory.GetDirectories(factionDataPath))
+        {
+            string factionPath = Path.Combine(factionDir, "FactionSaveData.json");
+
+            if (File.Exists(path))
+            {
+                var factionData = JsonUtility.FromJson<FactionData>(_fromJSON(factionDir, "FactionSaveData.json"));
+                saveData.SavedFactionData.AllFactionData.Add(factionData);
+
+                string actorsPath = Path.Combine(factionDir, "Actors");
+                if (Directory.Exists(actorsPath))
+                {
+                    foreach (var actorFile in Directory.GetFiles(actorsPath, "Actor_*_SaveData.json"))
+                    {
+                        string actorDataJson = File.ReadAllText(actorFile);
+                        if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
+                        var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
+                        saveData.SavedActorData.AllActorData.Add(actorData);
+                    }
+                }
+            }
+        }
+
+        string factionlessPath = Path.Combine(factionDataPath, "Factionless", "Actors");
+        if (Directory.Exists(factionlessPath))
+        {
+            foreach (var actorFile in Directory.GetFiles(factionlessPath, "Actor_*_SaveData.json"))
+            {
+                string actorDataJson = File.ReadAllText(actorFile);
+                if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
+                var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
+                saveData.SavedActorData.AllActorData.Add(actorData);
+            }
+        }
+    }
+
+    string _fromJSON(string path, string extension)
+    {
+        string pathToLoad = Path.Combine(path, extension);
+        if (!File.Exists(pathToLoad)) { Debug.Log($"File does not exist for path: {pathToLoad}"); return null; }
+        string jsonData = File.ReadAllText(pathToLoad);
+        if (_useEncryption) jsonData = _encryptDecrypt(jsonData);
+        return jsonData;
+    }
+
+    public void SaveData(string saveDataName, SaveData saveData, string profileName, bool newProfile = false)
     {
         if (profileName == null || SceneManager.GetActiveScene().name == "Main_Menu" && !newProfile) return;
 
         if (string.IsNullOrEmpty(saveDataName)) saveDataName = $"NewSave_{AllSavedDatas.Count}";
 
-        string fullPath = Path.Combine(Application.persistentDataPath, profileName, saveDataName, Manager_Data.SaveFileName);
-        string backupFilePath = fullPath + _backupExtension;
+        string profilePath = Path.Combine(Application.persistentDataPath, profileName);
+        string saveGamePath = Path.Combine(profilePath, saveDataName);
+        string saveDataFilePath = Path.Combine(saveGamePath, Manager_Data.SaveFileName);
+        string regionPath = Path.Combine(saveGamePath, "Regions");
+        string factionPath = Path.Combine(saveGamePath, "Factions");
 
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+            Directory.CreateDirectory(profilePath);
+            Directory.CreateDirectory(saveGamePath);
+            Directory.CreateDirectory(regionPath);
+            Directory.CreateDirectory(factionPath);
 
-            string dataToStore = JsonUtility.ToJson(SaveData, true);
+            string saveDataJson = JsonUtility.ToJson(saveData, true);
+            if (_useEncryption) saveDataJson = _encryptDecrypt(saveDataJson);
+            File.WriteAllText(saveDataFilePath, saveDataJson);
 
-            if (_useEncryption) dataToStore = _encryptDecrypt(dataToStore);
+            string regionDataJson = JsonUtility.ToJson(saveData.SavedRegionData, true);
+            if (_useEncryption) regionDataJson = _encryptDecrypt(regionDataJson);
+            File.WriteAllText(Path.Combine(regionPath, "RegionSaveData.json"), regionDataJson);
 
-            File.WriteAllText(fullPath, dataToStore);
+            string factionDataJson = JsonUtility.ToJson(saveData.SavedFactionData, true);
+            if (_useEncryption) factionDataJson = _encryptDecrypt(factionDataJson);
+            File.WriteAllText(Path.Combine(factionPath, "FactionSaveData.json"), factionDataJson);
 
-            if (LoadData(saveDataName, profileName) != null) File.Copy(fullPath, backupFilePath, true);
+            _saveNestedRegionData(regionPath, saveData);
 
-            else throw new Exception("Save file could not be verified and backup could not be created.");
+            _saveNestedFactionData(factionPath, saveData);
+
+            if (LoadData(saveDataName, profileName) != null)
+        {
+            string backupFilePath = saveDataFilePath + _backupExtension;
+            File.Copy(saveDataFilePath, backupFilePath, true);
+        }
+        else
+        {
+            throw new Exception("Save file could not be verified and backup could not be created.");
+        }
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error occured when trying to save data to file: {fullPath} \n {e}.");
+            Debug.LogError($"Error occurred when trying to save data to file: {saveDataFilePath} \n {e}.");
         }
+    }
+
+    void _saveNestedRegionData(string regionPath, SaveData saveData)
+    {
+        string cityPath = _toJSON(regionPath, "Cities", "CitySaveData.json", saveData.SavedCityData);
+        string jobsitePath = _toJSON(cityPath, "Jobsites", "JobsiteSaveData.json", saveData.SavedJobsiteData);
+        string stationPath = _toJSON(jobsitePath, "Stations", "StationSaveData.json", saveData.SavedStationData);
+        _toJSON(stationPath, "OperatingAreas", "OperatingAreaSaveData.json", saveData.SavedOperatingAreaData);
+    }
+
+    void _saveNestedFactionData(string factionDataPath, SaveData saveData)
+    {
+        HashSet<int> factionActorIDs = new HashSet<int>();
+
+        foreach (var factionData in saveData.SavedFactionData.AllFactionData)
+        {
+            var factionPath = _toJSON(factionDataPath, factionData.FactionName, "FactionSaveData.json", factionData);
+
+            var actorsInFaction = saveData.SavedActorData.AllActorData.Where(actor => actor.ActorFactionID == factionData.FactionID).ToList();
+
+            foreach (var actorData in actorsInFaction)
+            {
+                _toJSON(factionPath, "Actors", $"Actor_{actorData.ActorID}_SaveData.json", actorData);
+                factionActorIDs.Add(actorData.ActorID);
+            }
+        }
+
+        var factionlessActors = saveData.SavedActorData.AllActorData.Where(actor => !factionActorIDs.Contains(actor.ActorID)).ToList();
+        var factionlessPath = Path.Combine(factionDataPath, "Factionless");
+        Directory.CreateDirectory(factionlessPath);
+
+        foreach (var actorData in factionlessActors)
+        {
+            _toJSON(factionlessPath, "Actors", $"Actor_{actorData.ActorID}_SaveData.json", actorData);
+        }
+    }
+
+    string _toJSON(string currentPath, string pathToAdd, string pathExtension, object data)
+    {
+        string path = Path.Combine(currentPath, pathToAdd);
+        Directory.CreateDirectory(path);
+        string jsonData = JsonUtility.ToJson(data, true);
+        if (_useEncryption) jsonData = _encryptDecrypt(jsonData);
+        File.WriteAllText(Path.Combine(path, pathExtension), jsonData);
+
+        return path;
     }
 
     public void DeleteProfile()
@@ -456,7 +609,12 @@ public class SaveData
 
     // All Game Info
     public SavedRegionData SavedRegionData;
+    public SavedCityData SavedCityData;
+    public SavedJobsiteData SavedJobsiteData;
+    public SavedStationData SavedStationData;
+    public SavedOperatingAreaData SavedOperatingAreaData;
     public SavedFactionData SavedFactionData;
+    public SavedActorData SavedActorData;
 
     // Player info
     public Vector3 PlayerPosition;
@@ -483,55 +641,53 @@ public class SaveData
 [Serializable]
 public class SavedRegionData
 {
-    public List<RegionData> AllRegionData;
+    public List<RegionData> AllRegionData = new();
 
-    public List<int> AllRegionIDs;
-    public int LastUnusedRegionID = 0;
-
-    public List<int> AllCityIDs;
-    public int LastUnusedCityID = 1;
-
-    public List<int> AllJobsiteIDs;
-    public int LastUnusedJobsiteID = 1;
-
-    public List<int> AllStationIDs;
-    public int LastUnusedStationID = 1;
-
-    public List<int> AllOperatingAreaIDs;
-    public int LastUnusedOperatingAreaID = 1;
-
-    public SavedRegionData(List<RegionData> allRegionData, List<int> allRegionIDs, int lastUnusedRegionID, List<int> allCityIDs, int lastUnusedCityID, List<int> allJobsiteIDs, int lastUnusedJobsiteID, List<int> allStationIDs, int lastUnusedStationID, List<int> allOperatingAreaIDs, int lastUnusedOperatingAreaID)
-    {
-        AllRegionData = allRegionData;
-        AllRegionIDs = allRegionIDs;
-        LastUnusedRegionID = lastUnusedRegionID;
-        AllCityIDs = allCityIDs;
-        LastUnusedCityID = lastUnusedCityID;
-        AllJobsiteIDs = allJobsiteIDs;
-        LastUnusedJobsiteID = lastUnusedJobsiteID;
-        AllStationIDs = allStationIDs;
-        LastUnusedStationID = lastUnusedStationID;
-        AllOperatingAreaIDs = allOperatingAreaIDs;
-        LastUnusedOperatingAreaID = lastUnusedOperatingAreaID;
-    }
+    public SavedRegionData(List<RegionData> allRegionData) => AllRegionData = allRegionData;
 }
 
+[Serializable]
+public class SavedCityData
+{
+    public List<CityData> AllCityData = new();
+
+    public SavedCityData(List<CityData> allCityData) => AllCityData = allCityData;
+}
+
+[Serializable]
+public class SavedJobsiteData
+{
+    public List<JobsiteData> AllJobsiteData = new();
+
+    public SavedJobsiteData(List<JobsiteData> allJobsiteData) => AllJobsiteData = allJobsiteData;
+}
+
+[Serializable]
+public class SavedStationData
+{
+    public List<StationData> AllStationData = new();
+
+    public SavedStationData(List<StationData> allStationData) => AllStationData = allStationData;
+}
+
+[Serializable]
+public class SavedOperatingAreaData
+{
+    public List<OperatingAreaData> AllOperatingAreaData = new();
+
+    public SavedOperatingAreaData(List<OperatingAreaData> allOperatingAreaData) => AllOperatingAreaData = allOperatingAreaData;
+}
+
+[Serializable]
 public class SavedFactionData
 {
-    public List<FactionData> AllFactionData;
+    public List<FactionData> AllFactionData = new();
+    public SavedFactionData(List<FactionData> allFactionData) => AllFactionData = allFactionData;
+}
 
-    public List<int> AllFactionIDs;
-    public int LastUnusedFactionID = 0;
+public class SavedActorData
+{
+    public List<ActorData> AllActorData = new();
 
-    public List<int> AllActorIDs; //Can change later to a hashset for efficiency but for now need display
-    public int LastUnusedActorID = 1;
-
-    public SavedFactionData(List<FactionData> allFactionData, List<int> allFactionIDs, int lastUnusedFactionID, List<int> allActorIDs, int lastUnusedActorID)
-    {
-        AllFactionData = allFactionData;
-        AllFactionIDs = allFactionIDs;
-        LastUnusedFactionID = lastUnusedFactionID;
-        AllActorIDs = allActorIDs;
-        LastUnusedActorID = lastUnusedActorID;
-    }
+    public SavedActorData(List<ActorData> allActorData) => AllActorData = allActorData;
 }

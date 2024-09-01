@@ -17,31 +17,31 @@ public class RegionData
     public ProsperityData ProsperityData;
 
     public FactionName Faction;
-    public List<CityData> AllCityData;
+    public List<int> AllCityIDs;
 
     public void InitialiseRegionData()
     {
+        CurrentDate.NewDay += _refreshRegion;
+
         var region = Manager_Region.GetRegion(RegionID);
 
         region.Initialise();
 
-        ProsperityData = new ProsperityData(region.gameObject);
-
         foreach (var city in region.AllCitiesInRegion)
         {
-            if (!AllCityData.Any(c => c.CityID == city.CityData.CityID))
+            if (!AllCityIDs.Contains(city.CityData.CityID))
             {
-                Debug.Log($"City: {city.CityData.CityName} with ID: {city.CityData.CityID} was not in AllCityData");
-                AllCityData.Add(city.CityData);
+                Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
+                AllCityIDs.Add(city.CityData.CityID);
             }
-
-            city.SetCityData(Manager_City.GetCityData(cityID: city.CityData.CityID, regionID: RegionID));
         }
+    }
 
-        for (int i = 0; i < AllCityData.Count; i++)
-        {
-            AllCityData[i].InitialiseCityData(RegionID);
-        }
+    
+
+    void _refreshRegion()
+    {
+        // Refresh all cities in regiondata
     }
 }
 

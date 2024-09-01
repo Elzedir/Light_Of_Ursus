@@ -31,9 +31,9 @@ public class ActorData
 
     public void InitialiseActorData()
     {
-        if (Manager_Actor.GetActor(ActorID, out _, ActorFactionID, true) != null)
+        if (Manager_Actor.GetActor(ActorID, true) != null)
         {
-            Manager_City.GetCityData(cityID: FullIdentification.ActorCityID).Population.AddCitizen(this);
+            Manager_City.GetCityData(FullIdentification.ActorCityID).Population.AddCitizen(ActorID);
         } 
         else
         {
@@ -137,7 +137,7 @@ public class GameObjectProperties
     [NonSerialized] ActorData _actorData;
     public void SetData(ActorData actorData) => _actorData = actorData;
     [NonSerialized] private Transform _actorTransform;
-    public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(_actorData.ActorID, out _)?.transform; } }
+    public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(_actorData.ActorID)?.transform; } }
     public Vector3 LastSavedActorPosition;
     public void SetActorPosition(Vector3 actorPosition) => LastSavedActorPosition = actorPosition;
     public Quaternion LastSavedActorRotation;
@@ -423,7 +423,7 @@ public class CraftingData
     {
         var recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(_actorData.ActorID, out ActorData actorData, _actorData.ActorFactionID);
+        var actorData = Manager_Actor.GetActorData(_actorData.ActorID);
 
         while (inventoryContainsAllIngredients(recipe.RequiredIngredients))
         {
@@ -434,9 +434,9 @@ public class CraftingData
         {
             foreach (var ingredient in ingredients)
             {
-                var inventoryItem = actorData.InventoryAndEquipment.InventoryData.ItemInInventory(ingredient.CommonStats_Item.ItemID);
+                var inventoryItem = actorData.InventoryAndEquipment.InventoryData.GetItemFromInventory(ingredient.ItemID);
 
-                if (inventoryItem == null || inventoryItem.CommonStats_Item.CurrentStackSize < ingredient.CommonStats_Item.CurrentStackSize)
+                if (inventoryItem == null || inventoryItem.ItemAmount < ingredient.ItemAmount)
                 {
                     return false;
                 }
@@ -452,7 +452,7 @@ public class CraftingData
 
         Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        Manager_Actor.GetActorData(_actorData.ActorID, out ActorData actorData, _actorData.ActorFactionID);
+        var actorData = Manager_Actor.GetActorData(_actorData.ActorID);
 
         if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
         {

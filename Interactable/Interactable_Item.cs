@@ -35,13 +35,13 @@ public class Interactable_Item : MonoBehaviour, IInteractable
 
     public static void CreateNewItem(Item item, Vector3 dropPosition)
     {
-        GameObject itemContainer = new GameObject($"{item.CommonStats_Item.ItemName}Container");
+        GameObject itemContainer = new GameObject($"{item.ItemName}Container");
         itemContainer.transform.parent = GameObject.Find("InteractableItems").transform;
         itemContainer.transform.position = dropPosition;
 
         Rigidbody itemBody = itemContainer.AddComponent<Rigidbody>();
 
-        GameObject itemGO = new GameObject(item.CommonStats_Item.ItemName);
+        GameObject itemGO = new GameObject(item.ItemName);
         itemGO.transform.localPosition = Vector3.zero;
         itemGO.transform.parent = itemContainer.transform;
 
@@ -50,11 +50,11 @@ public class Interactable_Item : MonoBehaviour, IInteractable
 
     public void InitialiseInteractableItem(Item item)
     {
-        Item = Manager_Item.GetItem(item.CommonStats_Item.ItemID, item.CommonStats_Item.CurrentStackSize);
+        var masterItem = Manager_Item.GetItemData(item.ItemID);
 
-        if (Item.VisualStats_Item != null)
+        if (masterItem.VisualStats_Item != null)
         {
-            Item.VisualStats_Item.DisplayVisuals(gameObject);
+            masterItem.VisualStats_Item.DisplayVisuals(gameObject);
         }
     }
 }

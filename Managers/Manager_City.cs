@@ -1,42 +1,64 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Manager_City : MonoBehaviour
+public class Manager_City : MonoBehaviour, IDataPersistence
 {
-    public static AllRegions_SO AllRegions;
+    public static AllCities_SO AllCities;
+    public static Dictionary<int, CityData> AllCityData = new();
     public static Dictionary<int, CityComponent> AllCityComponents = new();
-    public static CityComponent GetCity(int cityID) => AllCityComponents[cityID];
+
+    public HashSet<int> AllCityIDs = new();
+    public int LastUnusedCityID = 1;
+
+    public void SaveData(SaveData data) => data.SavedCityData = new SavedCityData(AllCityData.Values.ToList());
+    public void LoadData(SaveData data) => AllCityData = data.SavedCityData.AllCityData.ToDictionary(x => x.CityID);
 
     public void OnSceneLoaded()
     {
-        AllRegions = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
+        AllCities = Resources.Load<AllCities_SO>("ScriptableObjects/AllCities_SO");
 
         Manager_Initialisation.OnInitialiseManagerCity += _initialise;
     }
 
     void _initialise()
     {
+        _initialiseAllCityData();
+    }
+
+    void _initialiseAllCityData()
+    {
         foreach (var city in _findAllCityComponents())
         {
-            AllCityComponents.Add(city.CityData.CityID, city);
+            if (city.CityData == null) { Debug.Log($"City: {city.name} does not have CityData."); continue; }
 
-            // Replace with this soon
+            if (!AllCityComponents.ContainsKey(city.CityData.CityID)) AllCityComponents.Add(city.CityData.CityID, city);
+            else
+            {
+               if (AllCityComponents[city.CityData.CityID].gameObject == city.gameObject) continue;
+               else
+               {
+                   throw new ArgumentException($"CityID {city.CityData.CityID} and name {city.name} already exists for city {AllCityComponents[city.CityData.CityID].name}");
+               }
+            }
 
-            //if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
+            if (!AllCityData.ContainsKey(city.CityData.CityID))
+            {
+                Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
+                AddToAllCityData(city.CityData);
+            }
 
-            //if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
-            //else
-            //{
-            //    if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
-            //    else
-            //    {
-            //        Debug.LogError($"JobsiteID {jobsite.JobsiteData.JobsiteID} and name {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
-            //        jobsite.JobsiteData.JobsiteID = GetRandomJobsiteID();
-            //    }
-            //}
+            city.SetCityData(GetCityData(city.CityData.CityID));
         }
+
+        foreach (var cityData in AllCityData.Values)
+        {
+            cityData.InitialiseCityData();
+        }
+
+        AllCities.AllCityData = AllCityData.Values.ToList();
     }
 
     static List<CityComponent> _findAllCityComponents()
@@ -44,16 +66,6 @@ public class Manager_City : MonoBehaviour
         return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
             .OfType<CityComponent>()
             .ToList();
-    }
-
-    public static void AddToOrUpdateAllCityList(int regionID, CityData cityData)
-    {
-        AllRegions.AddToOrUpdateAllCityDataList(regionID, cityData);
-    }
-
-    public static CityData GetCityData(int cityID, int regionID = -1)
-    {
-        return AllRegions.GetCityData(regionID, cityID);
     }
 
     public static void GetNearestCity(Vector3 position, out CityComponent nearestCity)
@@ -73,8 +85,57 @@ public class Manager_City : MonoBehaviour
         }
     }
 
-    public static int GetRandomCityID()
+    public void AddToAllCityData(CityData cityData)
     {
-        return AllRegions.GetRandomCityID();
+        if (AllCityData.ContainsKey(cityData.CityID))
+        {
+            Debug.Log($"AllCityData already contains CityID: {cityData.CityID}");
+            return;
+        }
+
+        AllCityData.Add(cityData.CityID, cityData);
+    }
+
+    public void UpdateAllCityData(CityData cityData)
+    {
+        if (!AllCityData.ContainsKey(cityData.CityID))
+        {
+            Debug.LogError($"CityData: {cityData.CityID} does not exist in AllCityData.");
+            return;
+        }
+
+        AllCityData[cityData.CityID] = cityData;
+    }
+
+    public static CityData GetCityData(int cityID)
+    {
+        if (!AllCityData.ContainsKey(cityID))
+        {
+            Debug.Log($"CityData: {cityID} does not exist in AllCityData.");
+            return null;
+        }
+
+        return AllCityData[cityID];
+    }
+
+    public static CityComponent GetCity(int cityID)
+    {
+        if (!AllCityComponents.ContainsKey(cityID))
+        {
+            Debug.Log($"CityComponent: {cityID} does not exist in AllCityComponents.");
+            return null;
+        }
+
+        return AllCityComponents[cityID];
+    }
+
+    public int GetRandomCityID()
+    {
+        int cityID = 1;
+        while (AllCityData.ContainsKey(cityID))
+        {
+            cityID++;
+        }
+        return cityID;
     }
 }

@@ -26,13 +26,11 @@ public enum EmployeePosition
     Assistant_Smith,
 }
 
-[Serializable]
-[RequireComponent(typeof(BoxCollider))]
 public class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;
     public void SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
-    public BoxCollider JobsiteArea;
+    public void SetCityID(int cityID) => JobsiteData.CityID = cityID;
 
     public List<StationComponent> AllStationsInJobsite;
     public List<EmployeePosition> AllNecessaryEmployeePositions;
@@ -44,18 +42,14 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
     public void Awake()
     {
-        JobsiteArea = GetComponent<BoxCollider>();
         
-        if (!JobsiteArea.isTrigger)
-        {
-            Debug.Log($"Set IsTrigger to true for {name}");
-            JobsiteArea.isTrigger = true;
-        }
     }
 
     public void Initialise()
     {
-        GetAllStationsInJobsite();
+        AllStationsInJobsite = GetAllStationsInJobsite();
+
+        AllStationsInJobsite.ForEach(station => station.SetJobsiteID(JobsiteData.JobsiteID));
 
         Manager_TickRate.RegisterTickable(this);
     }
@@ -88,12 +82,7 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         // Refresh all stations in jobsitedata
     }
 
-    public void GetAllStationsInJobsite() =>
-    AllStationsInJobsite = Physics.OverlapBox(JobsiteArea.bounds.center, JobsiteArea.bounds.extents)
-    .Select(collider => collider
-    .GetComponent<StationComponent>())
-    .Where(sc => sc != null)
-    .ToList();
+    public List<StationComponent> GetAllStationsInJobsite() => GetComponentsInChildren<StationComponent>().ToList();
 
     public StationComponent GetNearestStationInJobsite(Vector3 position, StationName stationName)
     => AllStationsInJobsite
@@ -117,12 +106,14 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         return employeePositions.ToList();
     }
 
-    protected virtual void _assignEmployeesToStations(List<ActorData> employees)
+    protected virtual void _assignEmployeesToStations(List<int> employeeIDs)
     {
         foreach (var station in AllStationsInJobsite)
         {
             station.RemoveAllOperators();
         }
+
+        var employees = employeeIDs.Select(employeeID => Manager_Actor.GetActorData(employeeID)).ToList();
 
         foreach (var station in AllStationsInJobsite)
         {
@@ -135,20 +126,20 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
             foreach (var employee in employeesForStation)
             {
-                JobsiteData.AddEmployeeToStation(employee, station.StationData.StationID);
+                JobsiteData.AddEmployeeToStation(employee.ActorID, station.StationData.StationID);
                 employees.Remove(employee);
             }
         }
     }
 
-    protected virtual List<List<ActorData>> _getAllCombinations(List<ActorData> employees)
+    protected virtual List<List<int>> _getAllCombinations(List<int> employees)
     {
-        var result = new List<List<ActorData>>();
+        var result = new List<List<int>>();
         int combinationCount = (int)Mathf.Pow(2, employees.Count);
 
         for (int i = 1; i < combinationCount; i++)
         {
-            var combination = new List<ActorData>();
+            var combination = new List<int>();
             for (int j = 0; j < employees.Count; j++)
             {
                 if ((i & (1 << j)) != 0)

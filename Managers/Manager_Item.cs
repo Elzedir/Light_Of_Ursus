@@ -12,7 +12,8 @@ public enum ItemType {
 
 public class Manager_Item
 {
-    public static Dictionary<int, Item> AllItems = new();
+    public static Dictionary<int, Item_Master> AllItems = new();
+    public static Item_Master GetItemData(int itemID) => new Item_Master(AllItems[itemID]);
 
     static int _lastUnusedID = 100000;
 
@@ -25,33 +26,26 @@ public class Manager_Item
         List_ProcessedMaterial.InitializeProcessedMaterialData();
     }
 
-    public static void AddToList(Item item)
+    public static void AddToList(Item_Master itemData)
     {
-        if (AllItems.ContainsKey(item.CommonStats_Item.ItemID))
+        if (AllItems.ContainsKey(itemData.CommonStats_Item.ItemID))
         {
-            int alreadyUsedID = item.CommonStats_Item.ItemID;
+            int alreadyUsedID = itemData.CommonStats_Item.ItemID;
 
             while (AllItems.ContainsKey(_lastUnusedID))
             {
                 _lastUnusedID++;
             }
 
-            item.CommonStats_Item.ItemID = _lastUnusedID;
-            Debug.Log($"ItemName: {item.CommonStats_Item.ItemName} ItemID is now: {item.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetItem(alreadyUsedID).CommonStats_Item.ItemName}");
+            itemData.CommonStats_Item.ItemID = _lastUnusedID;
+            Debug.Log($"ItemName: {itemData.CommonStats_Item.ItemName} ItemID is now: {itemData.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetItemData(alreadyUsedID).CommonStats_Item.ItemName}");
             //throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
         }
 
-        AllItems.Add(item.CommonStats_Item.ItemID, item);
+        AllItems.Add(itemData.CommonStats_Item.ItemID, itemData);
     }
 
-    public static Item GetItem(int itemID = -1, int itemQuantity = 1, bool returnItemIDFirst = false)
-    {
-        if (itemID == -1) throw new ArgumentException($"ItemID: {itemID} is invalid.");
-
-        return new Item(AllItems[itemID], itemQuantity);
-    }
-
-    public void AttachWeaponScript(Item item, Equipment_Base equipmentSlot)
+    public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
     {
         //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
 
@@ -122,6 +116,32 @@ public enum ItemQualityName
 [Serializable]
 public class Item
 {
+    public int ItemID;
+    public string ItemName;
+    public int ItemAmount;
+    public int MaxStackSize;
+
+    public Item(int itemID, int itemAmount)
+    {
+        var masterItem = Manager_Item.GetItemData(itemID);
+
+        ItemID = itemID;
+        ItemName = masterItem.CommonStats_Item.ItemName;
+        ItemAmount = itemAmount;
+        MaxStackSize = masterItem.CommonStats_Item.MaxStackSize;
+    }
+
+    public Item (Item item)
+    {
+        ItemID = item.ItemID;
+        ItemName = item.ItemName;
+        ItemAmount = item.ItemAmount;
+        MaxStackSize = item.MaxStackSize;
+    }
+}
+
+public class Item_Master
+{
     public CommonStats_Item CommonStats_Item;
     public VisualStats_Item VisualStats_Item;
     public WeaponStats_Item WeaponStats_Item;
@@ -129,7 +149,7 @@ public class Item
     public FixedModifiers_Item FixedModifiers_Item;
     public PercentageModifiers_Item PercentageModifiers_Item;
 
-    public Item(CommonStats_Item commonStats_Item, VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
+    public Item_Master(CommonStats_Item commonStats_Item, VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
         FixedModifiers_Item fixedModifiers_Item, PercentageModifiers_Item percentageModifiers_Item)
     {
         CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
@@ -140,10 +160,9 @@ public class Item
         PercentageModifiers_Item = percentageModifiers_Item ?? new PercentageModifiers_Item();
     }
 
-    public Item(Item item, int itemQuantity)
+    public Item_Master(Item_Master item)
     {
         CommonStats_Item = new CommonStats_Item(item.CommonStats_Item);
-        CommonStats_Item.CurrentStackSize = itemQuantity;
         VisualStats_Item = new VisualStats_Item(item.VisualStats_Item);
         WeaponStats_Item = new WeaponStats_Item(item.WeaponStats_Item);
         ArmourStats_Item = new ArmourStats_Item(item.ArmourStats_Item);
@@ -152,7 +171,7 @@ public class Item
     }
 }
 
-[CustomPropertyDrawer(typeof(Item))]
+[CustomPropertyDrawer(typeof(Item_Master))]
 public class Item_Drawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -182,7 +201,6 @@ public class CommonStats_Item
     public ItemType ItemType;
     public List<EquipmentSlot> EquipmentSlots;
     public int MaxStackSize;
-    public int CurrentStackSize;
     public int ItemLevel;
     public ItemQualityName ItemQuality;
     public int ItemValue;
@@ -195,7 +213,6 @@ public class CommonStats_Item
         ItemType itemType = ItemType.Misc,
         List<EquipmentSlot> equipmentSlots = null,
         int maxStackSize = 0,
-        int currentStackSize = 0,
         int itemLevel = 0,
         ItemQualityName itemQuality = ItemQualityName.Junk,
         int itemValue = 0,
@@ -208,7 +225,6 @@ public class CommonStats_Item
         ItemType = itemType;
         EquipmentSlots = equipmentSlots;
         MaxStackSize = maxStackSize;
-        CurrentStackSize = currentStackSize;
         ItemLevel = itemLevel;
         ItemQuality = itemQuality;
         ItemValue = itemValue;
@@ -223,7 +239,6 @@ public class CommonStats_Item
         ItemType = item.ItemType;
         EquipmentSlots = item.EquipmentSlots != null ? new List<EquipmentSlot>(item.EquipmentSlots) : null;
         MaxStackSize = item.MaxStackSize;
-        CurrentStackSize = item.CurrentStackSize;
         ItemLevel = item.ItemLevel;
         ItemQuality = item.ItemQuality;
         ItemValue = item.ItemValue;

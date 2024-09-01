@@ -72,8 +72,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     IEnumerator _initialiseManagers()
     {
-        _createManager("Manager_Data", _manager_Parent).AddComponent<Manager_Data>().OnSceneLoaded();
-
         if (SceneManager.GetActiveScene().name == "Main_Menu") yield break;
 
         if (GameObject.Find("Manager_Parent") != null) yield break;
@@ -91,6 +89,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Ability", _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
         _createManager("Manager_Job", _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
         _createManager("Manager_Recipe", _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
+        
         Manager_Career.Initialise();
         Manager_Date_And_Time.Initialise();
         Manager_Personality.Initialise();
@@ -102,6 +101,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
         _createManager("Manager_OperatingArea", _manager_Parent).AddComponent<Manager_OperatingArea>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
+
+        _createManager("Manager_Data", _manager_Parent).AddComponent<Manager_Data>().OnSceneLoaded();
 
         Manager_Initialisation.InitialiseFactions();
         Manager_Initialisation.InitialiseRegions();

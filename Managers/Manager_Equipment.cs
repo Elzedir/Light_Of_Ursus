@@ -114,10 +114,8 @@ public class EquipmentComponent
         return slotGO.transform;
     }
 
-    public bool EquipItem(int slotID, int itemID)
+    public bool EquipItem(int slotID, Item item)
     {
-        Item item = Manager_Item.GetItem(itemID);
-
         if (item != null && EquipmentSlots.TryGetValue(slotID, out var equipment))
         {
             return equipment.EquipItem(item);
@@ -144,35 +142,27 @@ public class EquipmentComponent
 [Serializable]
 public class EquipmentData
 {
-    public CommonStats_Item Head;
-    public CommonStats_Item Neck;
-    public CommonStats_Item Chest;
-    public CommonStats_Item LeftHand;
-    public CommonStats_Item RightHand;
-    public CommonStats_Item[] Rings;
-    public CommonStats_Item Waist;
-    public CommonStats_Item Legs;
-    public CommonStats_Item Feet;
+    public Item Head;
+    public Item Neck;
+    public Item Chest;
+    public Item LeftHand;
+    public Item RightHand;
+    public Item[] Rings;
+    public Item Waist;
+    public Item Legs;
+    public Item Feet;
 
     public EquipmentData(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
     {
-        Head = head?.CommonStats_Item;
-        Neck = neck?.CommonStats_Item;
-        Chest = chest?.CommonStats_Item;
-        LeftHand = leftHand?.CommonStats_Item;
-        RightHand = rightHand?.CommonStats_Item;
-        Waist = waist?.CommonStats_Item;
-        Legs = legs?.CommonStats_Item;
-        Feet = feet?.CommonStats_Item;
-        Rings = new CommonStats_Item[10];
-
-        if (rings != null)
-        {
-            for (int i = 0; i < rings.Length && i < Rings.Length; i++)
-            {
-                Rings[i] = rings[i]?.CommonStats_Item;
-            }
-        }
+        Head = head;
+        Neck = neck;
+        Chest = chest;
+        LeftHand = leftHand;
+        RightHand = rightHand;
+        Waist = waist;
+        Legs = legs;
+        Feet = feet;
+        Rings = rings;
     }
 
     public void UpdateEquipment(Item item, int index)
@@ -180,33 +170,33 @@ public class EquipmentData
         switch (index)
         {
             case 0:
-                Head = item?.CommonStats_Item;
+                Head = item;
                 break;
             case 1:
-                Neck = item?.CommonStats_Item;
+                Neck = item;
                 break;
             case 2:
-                Chest = item?.CommonStats_Item;
+                Chest = item;
                 break;
             case 3:
-                LeftHand = item?.CommonStats_Item;
+                LeftHand = item;
                 break;
             case 4:
-                RightHand = item?.CommonStats_Item;
+                RightHand = item;
                 break;
             case 16:
-                Waist = item?.CommonStats_Item;
+                Waist = item;
                 break;
             case 17:
-                Legs = item?.CommonStats_Item;
+                Legs = item;
                 break;
             case 18:
-                Feet = item?.CommonStats_Item;
+                Feet = item;
                 break;
             default:
                 if (index < 16)
                 {
-                    Rings[index - 5] = item?.CommonStats_Item;
+                    Rings[index - 5] = item;
                 }
                 else
                 {

@@ -5,16 +5,16 @@ using UnityEngine;
 public class Manager_Actor : MonoBehaviour, IDataPersistence
 {
     public static AllFactions_SO AllFactions;
+    public static Dictionary<int, ActorData> AllActorData = new();
     public static Dictionary<int, Actor_Base> AllActorComponents = new();
 
-    public void SaveData(SaveData data)
-    {
-        data.SavedFactionData = AllFactions.GetSavedFactionData();
-    }
-
+    public void SaveData(SaveData data) => data.SavedActorData = new SavedActorData(AllActorData.Values.ToList());
     public void LoadData(SaveData data)
     {
-        AllFactions.SetSavedFactionData(data.SavedFactionData);
+        Debug.LogError(data);
+        Debug.LogError(data.SavedActorData);
+        Debug.LogError("Loaded actor data" + data.SavedActorData.AllActorData.Count);
+        AllActorData = data.SavedActorData.AllActorData.ToDictionary(x => x.ActorID);
     }
 
     public void OnSceneLoaded()
@@ -40,6 +40,10 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
                     actor.ActorData.ActorID = GetRandomActorID();
                 }
             }
+
+            if (!AllActorData.ContainsKey(actor.ActorData.ActorID)) Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
+
+            
         }
     }
 
@@ -50,51 +54,55 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
             .ToList();
     }
 
-    public static void AddToOrUpdateAllActorList(ActorData actorData, Actor_Base actor = null)
+    public static void AddToAllActorData(ActorData actorData)
     {
-        if (!AllActorComponents.ContainsKey(actorData.ActorID)) AllActorComponents.Add(actorData.ActorID, actor);
+        if (AllActorData.ContainsKey(actorData.ActorID))
+        {
+            Debug.Log($"ActorData: {actorData.ActorID} already exists in AllActorData.");
+            return;
+        }
 
-        AllFactions.AddToOrUpdateFactionActorsDataList(actorData.FullIdentification.ActorFactionID, actorData);
+        AllActorData.Add(actorData.ActorID, actorData);
     }
 
-    public static ActorData GetActorData(int actorID, out ActorData actorData, int factionID = -1)
-    {
-        return actorData = AllFactions.GetActorData(actorID, factionID);
-    }
+    public static void UpdateAllActorData(ActorData actorData) => AllActorData[actorData.ActorID] = actorData;
+    public static void RemoveFromAllActorData(int actorID) => AllActorData.Remove(actorID);
 
-    public static Actor_Base GetActor(int actorID, out Actor_Base actor, int factionID = -1, bool generateActorIfNotFound = false)
+    public static ActorData GetActorData(int actorID) => AllActorData[actorID];
+
+    public static Actor_Base GetActor(int actorID, bool generateActorIfNotFound = false)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
-            if (AllActorComponents[actorID] != null) return actor = AllActorComponents[actorID];
-            else
-            {
-                GetActorData(actorID, out var actorData, factionID);
-                return AllActorComponents[actorID] = actor = SpawnActor(actorData.GameObjectProperties.LastSavedActorPosition, actorID);
-            }
+            return AllActorComponents[actorID];
         }
-        else if (GetActorData(actorID, out ActorData actorData, factionID) != null && generateActorIfNotFound)
+        else if (generateActorIfNotFound)
         {
-            return actor = SpawnActor(actorData.GameObjectProperties.LastSavedActorPosition, actorData.ActorID);
+            return AllActorComponents[actorID] = SpawnActor(GetActorData(actorID).GameObjectProperties.LastSavedActorPosition, actorID);
         }
 
-        return actor = null;
+        return null;
+    }
+
+    public static Actor_Base SpawnNewActor(Vector3 spawnPoint)
+    {
+        Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
+
+        actor.SetActorData(GenerateNewActorData(actor));
+        actor.Initialise();
+
+        AllActorComponents[actor.ActorData.ActorID] = actor;
+
+        return actor;
     }
 
     // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID = -1, int factionID = -1)
+    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID)
     {
-        if (actorID == -1) Debug.Log($"Spawning new actor at point: {spawnPoint}.");
-        else Debug.Log($"Spawning actor with ID: {actorID} at point: {spawnPoint}.");
-
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
-        if (actorID != -1 && GetActorData(actorID, out ActorData actorData, factionID) != null)
-        {
-            actor.SetActorData(actorData);
-            actor.Initialise();
-        }
-        else GenerateNewActorData(actor);
+        actor.SetActorData(GetActorData(actorID));
+        actor.Initialise();
 
         AllActorComponents[actor.ActorData.ActorID] = actor;
 
@@ -137,16 +145,19 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         actor.ActorData.SpeciesAndPersonality.SetSpecies(GetRandomSpecies());
         actor.ActorData.SpeciesAndPersonality.SetPersonality(GetRandomPersonality());
 
-        actor.Initialise();
-
-        AddToOrUpdateAllActorList(actor.ActorData, actor);
+        AddToAllActorData(actor.ActorData);
 
         return actor.ActorData;
     }
 
     public static int GetRandomActorID()
     {
-        return AllFactions.GetRandomActorID();
+        int actorID = 1;
+        while (AllActorData.ContainsKey(actorID))
+        {
+            actorID++;
+        }
+        return actorID;
     }
 
     public static ActorName GetRandomActorName(Actor_Base actor)

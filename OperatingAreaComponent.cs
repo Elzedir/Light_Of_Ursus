@@ -6,12 +6,10 @@ public class OperatingAreaComponent : MonoBehaviour
 {
     public OperatingAreaData OperatingAreaData;
     public void SetOperatingAreaData(OperatingAreaData operatingAreaData) => OperatingAreaData = operatingAreaData;
+    public void SetStationID(int stationID) => OperatingAreaData.StationID = stationID;
     public BoxCollider OperatingArea;
 
-    public string GetName()
-    {
-        return name;
-    }
+    public string GetName() => name;
 
     public void Awake()
     {
@@ -24,14 +22,14 @@ public class OperatingAreaComponent : MonoBehaviour
         }
     }
 
-    public void Initialise(int stationID)
+    public void Initialise()
     {
         
     }
 
     public float Operate(float baseProgressRate, Recipe recipe)
     {
-        if (OperatingAreaData.CurrentOperator == null)
+        if (OperatingAreaData.CurrentOperatorID == -1)
         {
             Debug.Log("No operator assigned.");
             return 0;
@@ -39,15 +37,16 @@ public class OperatingAreaComponent : MonoBehaviour
 
         if (OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
-        if (!OperatingArea.bounds.Contains(OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position))
+        var actorData = Manager_Actor.GetActorData(OperatingAreaData.CurrentOperatorID);
+
+        if (!OperatingArea.bounds.Contains(actorData.GameObjectProperties.ActorTransform.position))
         {
-            StartCoroutine(MoveOperatorToOperatingArea(
-                Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperator.ActorID, out Actor_Base actor, factionID: OperatingAreaData.CurrentOperator.ActorFactionID), transform.position));
+            StartCoroutine(MoveOperatorToOperatingArea(Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
         }
 
-        if (OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position != transform.position)
+        if (actorData.GameObjectProperties.ActorTransform.position != transform.position)
         {
-            OperatingAreaData.CurrentOperator.GameObjectProperties.ActorTransform.position = transform.position;
+            actorData.GameObjectProperties.ActorTransform.position = transform.position;
         }
 
         Debug.Log($"Operating {name}");
@@ -57,7 +56,7 @@ public class OperatingAreaComponent : MonoBehaviour
 
         foreach (var vocation in recipe.RequiredVocations)
         {
-            productionRate *= OperatingAreaData.CurrentOperator.VocationData.GetProgress(vocation);
+            productionRate *= actorData.VocationData.GetProgress(vocation);
         }
 
         return productionRate;

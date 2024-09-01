@@ -26,17 +26,17 @@ public class InventoryData
 {
     public IInventoryOwner InventoryOwner;
     public int Gold = 0;
-    public List<Item> InventoryItems;
+    public List<Item> AllInventoryItems;
 
-    public InventoryData(IInventoryOwner inventoryOwner, List<Item> inventory)
+    public InventoryData(IInventoryOwner inventoryOwner, List<Item> allInventoryItems)
     {
         InventoryOwner = inventoryOwner;
-        InventoryItems = inventory;
+        AllInventoryItems = allInventoryItems;
     }
 
-    public Item ItemInInventory(int itemID)
+    public Item GetItemFromInventory(int itemID)
     {
-        return Manager_Item.GetItem(itemID, InventoryItems.Where(i => i.CommonStats_Item.ItemID == itemID).Sum(i => i.CommonStats_Item.CurrentStackSize));
+        return AllInventoryItems.FirstOrDefault(i => i.ItemID == itemID);
     }
 
     public bool AddToInventory(List<Item> items)
@@ -69,8 +69,8 @@ public class InventoryData
 
         bool addItem(Item item)
         {
-            var existingItems = InventoryItems.Where(i => i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID).ToList();
-            int amountToAdd = item.CommonStats_Item.CurrentStackSize;
+            var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
+            int amountToAdd = item.ItemAmount;
 
             if (existingItems.Any())
             {
@@ -89,11 +89,11 @@ public class InventoryData
         {
             while (amountToAdd > 0)
             {
-                int amountAdded = Math.Min(amountToAdd, item.CommonStats_Item.MaxStackSize);
+                int amountAdded = Math.Min(amountToAdd, item.MaxStackSize);
 
-                var newItem = Manager_Item.GetItem(item.CommonStats_Item.ItemID, amountAdded);
+                var newItem = new Item(item.ItemID, amountAdded);
 
-                InventoryItems.Add(newItem);
+                AllInventoryItems.Add(newItem);
 
                 amountToAdd -= amountAdded;
             }
@@ -101,16 +101,16 @@ public class InventoryData
 
         void addToExistingItems(List<Item> existingItems, ref int amountToAdd)
         {
-            foreach (var stackItem in existingItems.OrderBy(i => i.CommonStats_Item.CurrentStackSize))
+            foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
                 if (amountToAdd <= 0) break;
 
-                int availableSpace = stackItem.CommonStats_Item.MaxStackSize - stackItem.CommonStats_Item.CurrentStackSize;
+                int availableSpace = stackItem.MaxStackSize - stackItem.ItemAmount;
 
                 if (availableSpace > 0)
                 {
                     int amountAdded = Math.Min(amountToAdd, availableSpace);
-                    stackItem.CommonStats_Item.CurrentStackSize += amountAdded;
+                    stackItem.ItemAmount += amountAdded;
                     amountToAdd -= amountAdded;
                 }
             }
@@ -149,26 +149,26 @@ public class InventoryData
 
         bool removeItem(Item item)
         {
-            var existingItems = InventoryItems.Where(i => i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID).ToList();
+            var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
             if (!existingItems.Any()) return false;
 
-            if (existingItems.Sum(i => i.CommonStats_Item.CurrentStackSize) < item.CommonStats_Item.CurrentStackSize) return false;
+            if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount) return false;
 
-            int amountToRemove = item.CommonStats_Item.CurrentStackSize;
+            int amountToRemove = item.ItemAmount;
 
-            foreach (var stackItem in existingItems.OrderBy(i => i.CommonStats_Item.CurrentStackSize))
+            foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
                 if (amountToRemove <= 0) break;
 
-                if (stackItem.CommonStats_Item.CurrentStackSize <= amountToRemove)
+                if (stackItem.ItemAmount <= amountToRemove)
                 {
-                    amountToRemove -= stackItem.CommonStats_Item.CurrentStackSize;
-                    InventoryItems.Remove(stackItem);
+                    amountToRemove -= stackItem.ItemAmount;
+                    AllInventoryItems.Remove(stackItem);
                 }
                 else
                 {
-                    stackItem.CommonStats_Item.CurrentStackSize -= amountToRemove;
+                    stackItem.ItemAmount -= amountToRemove;
                     amountToRemove = 0;
                 }
             }
@@ -179,7 +179,7 @@ public class InventoryData
 
     public bool TransferItemFromInventory(InventoryData target, List<Item> items)
     {
-        Debug.Log(string.Join(", ", items.Select(i => $"{i.CommonStats_Item.ItemName}: {i.CommonStats_Item.CurrentStackSize}")));
+        Debug.Log(string.Join(", ", items.Select(i => $"{i.ItemName}: {i.ItemAmount}")));
         Debug.Log(target);
 
         if (!RemoveFromInventory(items))
@@ -242,9 +242,9 @@ public class InventoryData
                 }
                 else
                 {
-                    for (int i = 0; i < item.CommonStats_Item.CurrentStackSize; i++)
+                    for (int i = 0; i < item.ItemAmount; i++)
                     {
-                        Interactable_Item.CreateNewItem(Manager_Item.GetItem(item.CommonStats_Item.ItemID), dropPosition);
+                        Interactable_Item.CreateNewItem(new Item(item.ItemID, 1), dropPosition);
                     }
                 }
             }
@@ -259,11 +259,11 @@ public class InventoryData
     {
         foreach(var item in items)
         {
-            var existingItems = InventoryItems.Where(i => i.CommonStats_Item.ItemID == item.CommonStats_Item.ItemID).ToList();
+            var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
             if (!existingItems.Any()) return false;
 
-            if (existingItems.Sum(i => i.CommonStats_Item.CurrentStackSize) < item.CommonStats_Item.CurrentStackSize) return false;
+            if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount) return false;
         }
 
         return true;
