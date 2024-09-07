@@ -26,11 +26,11 @@ public class SaveSlot : MonoBehaviour
         if (!_profileIDText) _profileIDText = Manager_Game.FindTransformRecursively(transform, "ProfileID").gameObject.GetComponent<TextMeshProUGUI>();
         if (!_clearSaveButton) _clearSaveButton = Manager_Game.FindTransformRecursively(transform, "ClearSaveButton").gameObject.GetComponent<Button>();
 
-        _saveSlotID = saveData.SaveDataID;
-        _saveSlotName = saveData.SaveDataName;
-        _profileIDText.text = saveData.ProfileName;
+        _saveSlotID = saveData.SavedProfileData.SaveDataID;
+        _saveSlotName = saveData.SavedProfileData.SaveDataName;
+        _profileIDText.text = saveData.SavedProfileData.ProfileName;
         
-        if (saveData == null) _saveSlotData = new SaveData(_saveSlotData.ProfileID, _saveSlotData.ProfileName);
+        if (saveData == null) _saveSlotData = new SaveData(_saveSlotData.SavedProfileData.ProfileID, _saveSlotData.SavedProfileData.ProfileName);
         
         _saveSlotData = saveData; 
         HasData = true;

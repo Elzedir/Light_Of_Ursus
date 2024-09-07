@@ -63,7 +63,7 @@ public class SaveAndLoadGames : MonoBehaviour
     SaveSlot _createSaveSlot(SaveData saveData, string saveOrLoad)
     {
         GameObject saveSlotGO = Instantiate(_saveSlot.gameObject, _saveSlotParent.transform);
-        saveSlotGO.name = saveData.ProfileName;
+        saveSlotGO.name = saveData.SavedProfileData.ProfileName;
         SaveSlot saveSlot = saveSlotGO.GetComponent<SaveSlot>();
         saveSlot.InitialiseSaveSlot(saveData,
             saveOrLoad,

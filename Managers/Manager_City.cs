@@ -7,14 +7,14 @@ using UnityEngine;
 public class Manager_City : MonoBehaviour, IDataPersistence
 {
     public static AllCities_SO AllCities;
-    public static Dictionary<int, CityData> AllCityData = new();
+    public static Dictionary<int, CityData> AllCityData;
     public static Dictionary<int, CityComponent> AllCityComponents = new();
 
     public HashSet<int> AllCityIDs = new();
     public int LastUnusedCityID = 1;
 
     public void SaveData(SaveData data) => data.SavedCityData = new SavedCityData(AllCityData.Values.ToList());
-    public void LoadData(SaveData data) => AllCityData = data.SavedCityData.AllCityData.ToDictionary(x => x.CityID);
+    public void LoadData(SaveData data) => AllCityData = data.SavedCityData?.AllCityData.ToDictionary(x => x.CityID);
 
     public void OnSceneLoaded()
     {
@@ -30,6 +30,8 @@ public class Manager_City : MonoBehaviour, IDataPersistence
 
     void _initialiseAllCityData()
     {
+        if (AllCityData == null) AllCityData = new();
+
         foreach (var city in _findAllCityComponents())
         {
             if (city.CityData == null) { Debug.Log($"City: {city.name} does not have CityData."); continue; }

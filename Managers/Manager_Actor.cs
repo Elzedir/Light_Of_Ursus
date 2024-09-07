@@ -5,17 +5,11 @@ using UnityEngine;
 public class Manager_Actor : MonoBehaviour, IDataPersistence
 {
     public static AllFactions_SO AllFactions;
-    public static Dictionary<int, ActorData> AllActorData = new();
+    public static Dictionary<int, ActorData> AllActorData;
     public static Dictionary<int, Actor_Base> AllActorComponents = new();
 
     public void SaveData(SaveData data) => data.SavedActorData = new SavedActorData(AllActorData.Values.ToList());
-    public void LoadData(SaveData data)
-    {
-        Debug.LogError(data);
-        Debug.LogError(data.SavedActorData);
-        Debug.LogError("Loaded actor data" + data.SavedActorData.AllActorData.Count);
-        AllActorData = data.SavedActorData.AllActorData.ToDictionary(x => x.ActorID);
-    }
+    public void LoadData(SaveData data) => AllActorData = data.SavedActorData?.AllActorData.ToDictionary(x => x.ActorID);
 
     public void OnSceneLoaded()
     {
@@ -26,6 +20,8 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
+        if(AllActorData == null) AllActorData = new();
+
         foreach (var actor in _findAllActorComponents())
         {
             if (actor.ActorData == null) { Debug.Log($"Actor: {actor.name} does not have ActorData."); continue; }

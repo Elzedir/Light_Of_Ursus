@@ -9,12 +9,12 @@ using UnityEngine.UIElements;
 public class Manager_Station : MonoBehaviour, IDataPersistence
 {
     public static AllStations_SO AllStations;
-    public static Dictionary<int, StationData> AllStationData = new();
+    public static Dictionary<int, StationData> AllStationData;
     public static Dictionary<int, StationComponent> AllStationComponents = new();
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllStationData = saveData.SavedStationData.AllStationData.ToDictionary(x => x.StationID);
+    public void LoadData(SaveData saveData) => AllStationData = saveData.SavedStationData?.AllStationData.ToDictionary(x => x.StationID);
 
     public void OnSceneLoaded()
     {
@@ -25,6 +25,8 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
+        if (AllStationData == null) AllStationData = new();
+
         foreach (var station in _findAllStationComponents())
         {
             if (station.StationData == null) { Debug.Log($"Station: {station.name} does not have StationData."); continue; }

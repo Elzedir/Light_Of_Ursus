@@ -101,7 +101,7 @@ public class Manager_Data : MonoBehaviour
     {
         var mostRecentProfile = LoadAllProfilesLatestSave()
             .Where(p => p.Value != null)
-            .OrderByDescending(p => DateTime.FromBinary(p.Value.LastUpdated))
+            .OrderByDescending(p => DateTime.FromBinary(p.Value.SavedProfileData.LastUpdated))
             .Select(p => p.Key)
             .FirstOrDefault();
 
@@ -141,7 +141,7 @@ public class Manager_Data : MonoBehaviour
 
         foreach (var directoryInfo in new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories().Where(d => d.Name != "Unity"))
         {
-            string profileDataFilePath = Path.Combine(directoryInfo.FullName, "profileData.json");
+            string profileDataFilePath = Path.Combine(directoryInfo.FullName, "ProfileData.json");
 
             if (File.Exists(profileDataFilePath))
             {
@@ -172,7 +172,7 @@ public class Manager_Data : MonoBehaviour
 
         if (!Directory.Exists(profilePath)) Directory.CreateDirectory(profilePath);
 
-        string profileDataFilePath = Path.Combine(profilePath, "profileData.json");
+        string profileDataFilePath = Path.Combine(profilePath, "ProfileData.json");
 
         if (File.Exists(profileDataFilePath)) File.Delete(profileDataFilePath);
 
@@ -183,7 +183,7 @@ public class Manager_Data : MonoBehaviour
 
     public ProfileData LoadProfileData(string profileName)
     {
-        string profileDataFilePath = Path.Combine(Application.persistentDataPath, profileName, "profileData.json");
+        string profileDataFilePath = Path.Combine(Application.persistentDataPath, profileName, "ProfileData.json");
 
         if (!File.Exists(profileDataFilePath)) return null;
 
@@ -219,7 +219,7 @@ public class Manager_Data : MonoBehaviour
 
         foreach (IDataPersistence data in _dataPersistenceObjects) data.SaveData(CurrentSaveData);
 
-        CurrentSaveData.LastUpdated = DateTime.Now.ToBinary();
+        CurrentSaveData.SavedProfileData.LastUpdated = DateTime.Now.ToBinary();
 
         SaveProfileData(CurrentProfile);
 
@@ -307,20 +307,38 @@ public class ProfileData
     {
         if (string.IsNullOrEmpty(profileName) || string.IsNullOrEmpty(saveDataName)) return null;
 
-        string savePath = Path.Combine(Application.persistentDataPath, profileName, saveDataName, Manager_Data.SaveFileName);
+        string profilePath = Path.Combine(Application.persistentDataPath, profileName);
+        string profileDataPath = Path.Combine(profilePath, "ProfileData.json");
 
-        if (!File.Exists(savePath)) return null;
+        string profileData = File.ReadAllText(profileDataPath);
+
+        Debug.Log($"Has data to load.");
+
+        if (_useEncryption) profileData = _encryptDecrypt(profileData);
+
+        var savedProfileData = JsonUtility.FromJson<ProfileData>(profileData);
+
+        SaveData saveData = new SaveData(savedProfileData.ProfileID, savedProfileData.ProfileName);
+
+        string savePath = Path.Combine(profilePath, saveDataName);
+
+        Debug.Log($"Loading data from file: {savePath}");
+
+        if (!Directory.Exists(savePath)) return null;
+
+        Debug.Log($"Directory exists: {savePath}");
 
         try
         {
-            string dataToLoad = File.ReadAllText(savePath);
-
-            if (_useEncryption) dataToLoad = _encryptDecrypt(dataToLoad);
-
-            var saveData = JsonUtility.FromJson<SaveData>(dataToLoad);
+            Debug.Log($"Loading data from directory: {savePath}");
 
             LoadNestedRegionData(savePath, saveData);
+
+            Debug.Log($"Loaded region data from directory: {savePath}");
+
             LoadNestedFactionData(savePath, saveData);
+
+            Debug.Log($"Loaded faction data from directory: {savePath}");
 
             return saveData;
         }
@@ -419,59 +437,52 @@ public class ProfileData
 
         string profilePath = Path.Combine(Application.persistentDataPath, profileName);
         string saveGamePath = Path.Combine(profilePath, saveDataName);
-        string saveDataFilePath = Path.Combine(saveGamePath, Manager_Data.SaveFileName);
-        string regionPath = Path.Combine(saveGamePath, "Regions");
-        string factionPath = Path.Combine(saveGamePath, "Factions");
 
         try
         {
             Directory.CreateDirectory(profilePath);
             Directory.CreateDirectory(saveGamePath);
-            Directory.CreateDirectory(regionPath);
-            Directory.CreateDirectory(factionPath);
 
-            string saveDataJson = JsonUtility.ToJson(saveData, true);
-            if (_useEncryption) saveDataJson = _encryptDecrypt(saveDataJson);
-            File.WriteAllText(saveDataFilePath, saveDataJson);
+            _saveNestedRegionData(saveGamePath, saveData);
 
-            string regionDataJson = JsonUtility.ToJson(saveData.SavedRegionData, true);
-            if (_useEncryption) regionDataJson = _encryptDecrypt(regionDataJson);
-            File.WriteAllText(Path.Combine(regionPath, "RegionSaveData.json"), regionDataJson);
+            Debug.Log($"Saved region data to file: {saveGamePath}");
 
-            string factionDataJson = JsonUtility.ToJson(saveData.SavedFactionData, true);
-            if (_useEncryption) factionDataJson = _encryptDecrypt(factionDataJson);
-            File.WriteAllText(Path.Combine(factionPath, "FactionSaveData.json"), factionDataJson);
+            _saveNestedFactionData(saveGamePath, saveData);
 
-            _saveNestedRegionData(regionPath, saveData);
-
-            _saveNestedFactionData(factionPath, saveData);
+            Debug.Log($"Saved faction data to file: {saveGamePath}");
 
             if (LoadData(saveDataName, profileName) != null)
-        {
-            string backupFilePath = saveDataFilePath + _backupExtension;
-            File.Copy(saveDataFilePath, backupFilePath, true);
-        }
-        else
-        {
-            throw new Exception("Save file could not be verified and backup could not be created.");
-        }
+            {
+                Debug.Log($"Verified save file at: {saveGamePath}");
+                
+                string backupDirectoryPath = saveGamePath + _backupExtension;
+                _copyDirectory(saveGamePath, backupDirectoryPath);
+                Debug.Log($"Created backup directory at: {backupDirectoryPath}");
+            }
+            else
+            {
+                throw new Exception("Save file could not be verified and backup could not be created.");
+            }
         }
         catch (Exception e)
         {
-            Debug.LogError($"Error occurred when trying to save data to file: {saveDataFilePath} \n {e}.");
+            Debug.LogError($"Error occurred when trying to save data to file: {saveGamePath} \n {e}.");
         }
     }
 
-    void _saveNestedRegionData(string regionPath, SaveData saveData)
+    void _saveNestedRegionData(string savePath, SaveData saveData)
     {
+        string regionPath = _toJSON(savePath, "Regions", "RegionSaveData.json", saveData.SavedRegionData);
         string cityPath = _toJSON(regionPath, "Cities", "CitySaveData.json", saveData.SavedCityData);
         string jobsitePath = _toJSON(cityPath, "Jobsites", "JobsiteSaveData.json", saveData.SavedJobsiteData);
         string stationPath = _toJSON(jobsitePath, "Stations", "StationSaveData.json", saveData.SavedStationData);
         _toJSON(stationPath, "OperatingAreas", "OperatingAreaSaveData.json", saveData.SavedOperatingAreaData);
     }
 
-    void _saveNestedFactionData(string factionDataPath, SaveData saveData)
+    void _saveNestedFactionData(string savePath, SaveData saveData)
     {
+        string factionDataPath = _toJSON(savePath, "Factions", "FactionSaveData.json", saveData.SavedFactionData);
+
         HashSet<int> factionActorIDs = new HashSet<int>();
 
         foreach (var factionData in saveData.SavedFactionData.AllFactionData)
@@ -506,6 +517,23 @@ public class ProfileData
         File.WriteAllText(Path.Combine(path, pathExtension), jsonData);
 
         return path;
+    }
+
+    void _copyDirectory(string sourceDir, string destDir)
+    {
+        Directory.CreateDirectory(destDir);
+
+        foreach (string file in Directory.GetFiles(sourceDir))
+        {
+            string destFile = Path.Combine(destDir, Path.GetFileName(file));
+            File.Copy(file, destFile, true);
+        }
+
+        foreach (string subdir in Directory.GetDirectories(sourceDir))
+        {
+            string destSubdir = Path.Combine(destDir, Path.GetFileName(subdir));
+            _copyDirectory(subdir, destSubdir);
+        }
     }
 
     public void DeleteProfile()
@@ -601,11 +629,7 @@ public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IS
 public class SaveData
 {
     // Profile Info
-    public long LastUpdated;
-    public int SaveDataID;
-    public string SaveDataName;
-    public int ProfileID;
-    public string ProfileName;
+    public SavedProfileData SavedProfileData;    
 
     // All Game Info
     public SavedRegionData SavedRegionData;
@@ -633,8 +657,32 @@ public class SaveData
 
     public SaveData(int currentProfileID, string currentProfileName)
     {
-        ProfileID = currentProfileID;
-        ProfileName = currentProfileName;
+        SavedProfileData = new SavedProfileData(currentProfileID, currentProfileName);
+    }
+}
+
+[Serializable]
+public class SavedProfileData
+{
+    public long LastUpdated;
+    public int SaveDataID;
+    public string SaveDataName;
+    public int ProfileID;
+    public string ProfileName;
+
+    public SavedProfileData(int profileID, string profileName)
+    {
+        ProfileID = profileID;
+        ProfileName = profileName;
+    }
+
+    public SavedProfileData(SavedProfileData profileData)
+    {
+        LastUpdated = profileData.LastUpdated;
+        SaveDataID = profileData.SaveDataID;
+        SaveDataName = profileData.SaveDataName;
+        ProfileID = profileData.ProfileID;
+        ProfileName = profileData.ProfileName;
     }
 }
 

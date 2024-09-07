@@ -1,21 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Manager_Region : MonoBehaviour, IDataPersistence
 {
     const string _allRegionSOPath = "ScriptableObjects/AllRegions_SO";
 
     public static AllRegions_SO AllRegions;
-    public static Dictionary<int, RegionData> AllRegionData = new();
+    public static Dictionary<int, RegionData> AllRegionData;
     public static Dictionary<int, RegionComponent> AllRegionComponents = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedRegionData = new SavedRegionData(AllRegionData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllRegionData = saveData.SavedRegionData.AllRegionData.ToDictionary(x => x.RegionID);
+    public void LoadData(SaveData saveData) => AllRegionData = saveData.SavedRegionData?.AllRegionData.ToDictionary(x => x.RegionID);
 
     public void OnSceneLoaded()
     {
@@ -31,6 +29,8 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
 
     void _initialiseAllRegionData()
     {
+        if (AllRegionData == null) AllRegionData = new();
+
         foreach (var region in _findAllRegionComponents())
         {
             if (region.RegionData == null) { Debug.Log($"Region: {region.name} does not have RegionData."); continue; }

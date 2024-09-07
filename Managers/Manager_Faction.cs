@@ -7,10 +7,10 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
 {
     public static AllFactions_SO AllFactions_SO;
 
-    public static Dictionary<int, FactionData> AllFactionData = new();
+    public static Dictionary<int, FactionData> AllFactionData;
 
     public void SaveData(SaveData saveData) => saveData.SavedFactionData = new SavedFactionData(AllFactionData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllFactionData = saveData.SavedFactionData.AllFactionData.ToDictionary(x => x.FactionID);
+    public void LoadData(SaveData saveData) => AllFactionData = saveData.SavedFactionData?.AllFactionData.ToDictionary(x => x.FactionID);
 
     public void OnSceneLoaded()
     {
@@ -28,6 +28,8 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
 
     void _initialiseDefaultFactions()
     {
+        if (AllFactionData == null) AllFactionData = new();
+
         if (!AllFactionData.ContainsKey(0))
         {
             AllFactionData.Add(0, new FactionData(

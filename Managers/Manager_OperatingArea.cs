@@ -8,14 +8,14 @@ public class Manager_OperatingArea : MonoBehaviour, IDataPersistence
 {
     public static AllOperatingAreas_SO AllOperatingAreas;
 
-    public static Dictionary<int, OperatingAreaData> AllOperatingAreaData = new();
+    public static Dictionary<int, OperatingAreaData> AllOperatingAreaData;
     public static Dictionary<int, OperatingAreaComponent> AllOperatingAreaComponents = new();
 
     public HashSet<int> AllOperatingAreaIDs = new();
     public int LastUnusedOperatingAreaID = 1;
 
     public void SaveData(SaveData data) => data.SavedOperatingAreaData = new SavedOperatingAreaData(AllOperatingAreaData.Values.ToList());
-    public void LoadData(SaveData data) => AllOperatingAreaData = data.SavedOperatingAreaData.AllOperatingAreaData.ToDictionary(x => x.OperatingAreaID);
+    public void LoadData(SaveData data) => AllOperatingAreaData = data.SavedOperatingAreaData?.AllOperatingAreaData.ToDictionary(x => x.OperatingAreaID);
 
     public void OnSceneLoaded()
     {
@@ -26,6 +26,8 @@ public class Manager_OperatingArea : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
+        if (AllOperatingAreaData == null) AllOperatingAreaData = new();
+
         foreach (var operatingArea in _findAllOperatingAreaComponents())
         {
             if (operatingArea.OperatingAreaData == null) { Debug.Log($"OperatingArea: {operatingArea.name} does not have OperatingAreaData."); continue; }

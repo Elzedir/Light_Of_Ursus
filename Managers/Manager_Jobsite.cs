@@ -8,14 +8,14 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 {
     public static AllJobsites_SO AllJobsites;
 
-    public static Dictionary<int, JobsiteData> AllJobsiteData = new();
+    public static Dictionary<int, JobsiteData> AllJobsiteData;
     public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
     
     public HashSet<int> AllJobsiteIDs = new();
     public int LastUnusedJobsiteID = 1;
 
     public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
-    public void LoadData(SaveData data) => AllJobsiteData = data.SavedJobsiteData.AllJobsiteData.ToDictionary(x => x.JobsiteID);
+    public void LoadData(SaveData data) => AllJobsiteData = data.SavedJobsiteData?.AllJobsiteData.ToDictionary(x => x.JobsiteID);
 
     public void OnSceneLoaded()
     {
@@ -26,6 +26,8 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
+        if (AllJobsiteData == null) AllJobsiteData = new();
+
         foreach (var jobsite in _findAllJobsiteComponents())
         {
             if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
