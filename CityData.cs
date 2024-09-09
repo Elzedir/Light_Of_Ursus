@@ -7,6 +7,16 @@ using UnityEngine;
 [Serializable]
 public class CityData
 {
+    public void SaveData()
+    {
+        Population.SaveData();
+    }
+
+    public void LoadData()
+    {
+        Population.LoadData();
+    }
+
     public int CityID;
     public string CityName;
     public int CityFactionID;
@@ -16,7 +26,6 @@ public class CityData
 
     public PopulationData Population;
     public ProsperityData ProsperityData;
-
     public List<int> AllJobsiteIDs;
 
     public void InitialiseCityData()
@@ -57,9 +66,20 @@ public class CityData_Drawer : PropertyDrawer
 [Serializable]
 public class PopulationData
 {
+    public void SaveData()
+    {
+        AllCitizenIDList = AllCitizenIDs.ToList();
+    }
+
+    public void LoadData()
+    {
+        AllCitizenIDs = new HashSet<int>(AllCitizenIDList);
+    }
+
     public float CurrentPopulation;
     public float MaxPopulation;
     public float ExpectedPopulation;
+    public List<int> AllCitizenIDList;
 
     public HashSet<int> AllCitizenIDs = new();
 

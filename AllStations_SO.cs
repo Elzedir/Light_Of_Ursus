@@ -87,11 +87,22 @@ public class AllStationsSOEditor : Editor
     {
         _operatingAreaScrollPos = EditorGUILayout.BeginScrollView(_operatingAreaScrollPos, GUILayout.Height(GetListHeight(allOperatingAreaData.Count)));
 
-        foreach (var operatingAreaID in allOperatingAreaData)
+        try
         {
-            EditorGUILayout.LabelField("Operating Area Data", EditorStyles.boldLabel);
-            //EditorGUILayout.LabelField("Operating Area Name", operatingArea.OperatingAreaName.ToString());
-            EditorGUILayout.LabelField("Operating Area ID", operatingAreaID.ToString());
+            foreach (var operatingAreaID in allOperatingAreaData)
+            {
+                EditorGUILayout.LabelField("Operating Area Data", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField("Operating Area Name", operatingArea.OperatingAreaName.ToString());
+                EditorGUILayout.LabelField("Operating Area ID", operatingAreaID.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error: {e.Message}");
+        }
+        finally
+        {
+            EditorGUILayout.EndScrollView();
         }
     }
 }

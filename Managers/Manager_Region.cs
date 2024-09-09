@@ -71,12 +71,11 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
             allRegionsSO = ScriptableObject.CreateInstance<AllRegions_SO>();
             AssetDatabase.CreateAsset(allRegionsSO, _allRegionSOPath);
             AssetDatabase.SaveAssets();
-            Debug.Log("Created new AllRegions_SO asset.");
         }
-        else
-        {
-            Debug.Log("Loaded existing AllRegions_SO asset.");
-        }
+        // else
+        // {
+        //     Debug.Log("Loaded existing AllRegions_SO asset.");
+        // }
 
         return allRegionsSO;
     }

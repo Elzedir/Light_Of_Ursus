@@ -107,11 +107,21 @@ public class AllFactions_SOEditor : Editor
     {
         _actorScrollPos = EditorGUILayout.BeginScrollView(_actorScrollPos, GUILayout.Height(Math.Min(200, actorIDs.Count * 20)));
 
-        foreach (var actorID in actorIDs)
+        try
         {
-            EditorGUILayout.LabelField($"- Actor ID: {actorID}");
+            foreach (var actorID in actorIDs)
+            {
+                EditorGUILayout.LabelField("Actor Data", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Actor ID", actorID.ToString());
+            }
         }
-
-        EditorGUILayout.EndScrollView();
+        catch (Exception e)
+        {
+            Debug.LogError($"Error: {e.Message}");
+        }
+        finally
+        {
+            EditorGUILayout.EndScrollView();
+        }
     }
 }

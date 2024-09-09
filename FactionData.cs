@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 
 [Serializable]
 public class FactionData
@@ -9,7 +7,7 @@ public class FactionData
     public int FactionID;
     public string FactionName;
 
-    public HashSet<int> AllFactionActorIDs;
+    public HashSet<int> AllFactionActorIDs = new();
     public List<FactionRelationData> AllFactionRelations;
 
     public FactionData(int factionID, string factionName, HashSet<int> allFactionActorIDs, List<FactionRelationData> allFactionRelations)

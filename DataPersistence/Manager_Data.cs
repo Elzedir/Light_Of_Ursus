@@ -51,8 +51,6 @@ public class Manager_Data : MonoBehaviour
     {
         _initialise();
 
-        Debug.Log("Loaded game data for profile: " + CurrentProfile.ProfileName);
-
         LoadGame("");
 
         if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
@@ -136,8 +134,6 @@ public class Manager_Data : MonoBehaviour
     public Dictionary<int, ProfileData> LoadAllProfiles()
     {
         Dictionary<int, ProfileData> allProfiles = new();
-
-        Debug.Log("Loaded all profiles.");
 
         foreach (var directoryInfo in new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories().Where(d => d.Name != "Unity"))
         {
@@ -230,19 +226,13 @@ public class Manager_Data : MonoBehaviour
     {
         if (_disableDataPersistence || CurrentProfile.ProfileName == "Create New Profile") return;
 
-        Debug.Log("SaveGameName" + saveDataName);
-
         saveDataName = saveDataName == "" ? GetLatestSave(CurrentProfile.ProfileName) : saveDataName;
 
         CurrentSaveData = CurrentProfile.LoadData(saveDataName, CurrentProfile.ProfileName);
 
-        Debug.Log($"CurrentSave file is {CurrentSaveData}");
-
         if (CurrentSaveData == null && _createNewSaveFileIfNull) CurrentSaveData = new SaveData(GetRandomProfileID(), CurrentProfile.ProfileName);
 
         if (CurrentSaveData == null) { Debug.Log("No data was found. A New Game needs to be started before data can be loaded."); return; }
-
-        Debug.Log($"Loaded save Data: {CurrentSaveData}");
 
         foreach (IDataPersistence data in _dataPersistenceObjects) data.LoadData(CurrentSaveData);
     }
@@ -312,8 +302,6 @@ public class ProfileData
 
         string profileData = File.ReadAllText(profileDataPath);
 
-        Debug.Log($"Has data to load.");
-
         if (_useEncryption) profileData = _encryptDecrypt(profileData);
 
         var savedProfileData = JsonUtility.FromJson<ProfileData>(profileData);
@@ -322,23 +310,12 @@ public class ProfileData
 
         string savePath = Path.Combine(profilePath, saveDataName);
 
-        Debug.Log($"Loading data from file: {savePath}");
-
         if (!Directory.Exists(savePath)) return null;
-
-        Debug.Log($"Directory exists: {savePath}");
 
         try
         {
-            Debug.Log($"Loading data from directory: {savePath}");
-
             LoadNestedRegionData(savePath, saveData);
-
-            Debug.Log($"Loaded region data from directory: {savePath}");
-
             LoadNestedFactionData(savePath, saveData);
-
-            Debug.Log($"Loaded faction data from directory: {savePath}");
 
             return saveData;
         }
@@ -355,9 +332,9 @@ public class ProfileData
         }
     }
 
-    private void LoadNestedRegionData(string path, SaveData saveData)
+    private void LoadNestedRegionData(string savePath, SaveData saveData)
     {
-        string regionPath = Path.Combine(path, "Regions");
+        string regionPath = Path.Combine(savePath, "Regions");
         var regionDataJSON = JsonUtility.FromJson<SavedRegionData>(_fromJSON(regionPath, "RegionSaveData.json"));
         saveData.SavedRegionData = new SavedRegionData(regionDataJSON?.AllRegionData);
 
@@ -378,44 +355,56 @@ public class ProfileData
         saveData.SavedOperatingAreaData = new SavedOperatingAreaData(operatingAreaDataJSON?.AllOperatingAreaData);
     }
 
-    private void LoadNestedFactionData(string path, SaveData saveData)
+    private void LoadNestedFactionData(string savePath, SaveData saveData)
     {
-        string factionDataPath = Path.Combine(path, "Factions");
-        var factionDataJSON = JsonUtility.FromJson<SavedFactionData>(_fromJSON(factionDataPath, "FactionSaveData.json"));
-        saveData.SavedFactionData = new SavedFactionData(factionDataJSON?.AllFactionData);
+        string allFactionsDirectoryPath = Path.Combine(savePath, "Factions");
 
-        foreach (var factionDir in Directory.GetDirectories(factionDataPath))
+        var factionSaveDataJSON = JsonUtility.FromJson<SavedFactionData>(_fromJSON(allFactionsDirectoryPath, "AllFactionsSaveData.json"));
+
+        try
         {
-            string factionPath = Path.Combine(factionDir, "FactionSaveData.json");
-
-            if (File.Exists(path))
-            {
-                var factionData = JsonUtility.FromJson<FactionData>(_fromJSON(factionDir, "FactionSaveData.json"));
-                saveData.SavedFactionData.AllFactionData.Add(factionData);
-
-                string actorsPath = Path.Combine(factionDir, "Actors");
-                if (Directory.Exists(actorsPath))
-                {
-                    foreach (var actorFile in Directory.GetFiles(actorsPath, "Actor_*_SaveData.json"))
-                    {
-                        string actorDataJson = File.ReadAllText(actorFile);
-                        if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
-                        var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
-                        saveData.SavedActorData.AllActorData.Add(actorData);
-                    }
-                }
-            }
+            saveData.SavedFactionData = new SavedFactionData(factionSaveDataJSON.AllFactionData);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error occurred when trying to load faction data: {e}");
+            return;
         }
 
-        string factionlessPath = Path.Combine(factionDataPath, "Factionless", "Actors");
-        if (Directory.Exists(factionlessPath))
+        foreach (var factionDirectoryPath in Directory.GetDirectories(allFactionsDirectoryPath))
         {
-            foreach (var actorFile in Directory.GetFiles(factionlessPath, "Actor_*_SaveData.json"))
+            var factionData = JsonUtility.FromJson<FactionData>(_fromJSON(factionDirectoryPath, "FactionSaveData.json"));
+
+            try
             {
-                string actorDataJson = File.ReadAllText(actorFile);
-                if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
-                var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
-                saveData.SavedActorData.AllActorData.Add(actorData);
+                saveData.SavedFactionData.AllFactionData.Add(factionData);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error occurred when trying to load faction data: {e}");
+                return;
+            }
+
+            string actorsPath = Path.Combine(factionDirectoryPath, "Actors");
+
+            if (Directory.Exists(actorsPath))
+            {
+                saveData.SavedActorData = new SavedActorData(new List<ActorData>());
+
+                foreach (var actorFile in Directory.GetFiles(actorsPath, "Actor_*_SaveData.json"))
+                {
+                    string actorDataJson = File.ReadAllText(actorFile);
+                    if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
+                    var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
+
+                    try { saveData.SavedActorData.AllActorData.Add(actorData); }
+                    catch (Exception e) { Debug.LogError($"Error occurred when trying to load actor data: {e}"); }
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(actorsPath);
+                Debug.LogWarning($"No actors found for faction: {factionData.FactionName}");
             }
         }
     }
@@ -444,20 +433,12 @@ public class ProfileData
             Directory.CreateDirectory(saveGamePath);
 
             _saveNestedRegionData(saveGamePath, saveData);
-
-            Debug.Log($"Saved region data to file: {saveGamePath}");
-
             _saveNestedFactionData(saveGamePath, saveData);
-
-            Debug.Log($"Saved faction data to file: {saveGamePath}");
 
             if (LoadData(saveDataName, profileName) != null)
             {
-                Debug.Log($"Verified save file at: {saveGamePath}");
-                
                 string backupDirectoryPath = saveGamePath + _backupExtension;
                 _copyDirectory(saveGamePath, backupDirectoryPath);
-                Debug.Log($"Created backup directory at: {backupDirectoryPath}");
             }
             else
             {
@@ -481,7 +462,7 @@ public class ProfileData
 
     void _saveNestedFactionData(string savePath, SaveData saveData)
     {
-        string factionDataPath = _toJSON(savePath, "Factions", "FactionSaveData.json", saveData.SavedFactionData);
+        string factionDataPath = _toJSON(savePath, "Factions", "AllFactionsSaveData.json", saveData.SavedFactionData);
 
         HashSet<int> factionActorIDs = new HashSet<int>();
 
@@ -490,6 +471,7 @@ public class ProfileData
             var factionPath = _toJSON(factionDataPath, factionData.FactionName, "FactionSaveData.json", factionData);
 
             var actorsInFaction = saveData.SavedActorData.AllActorData.Where(actor => actor.ActorFactionID == factionData.FactionID).ToList();
+            Directory.CreateDirectory(Path.Combine(factionPath, "Actors"));
 
             foreach (var actorData in actorsInFaction)
             {
@@ -499,12 +481,11 @@ public class ProfileData
         }
 
         var factionlessActors = saveData.SavedActorData.AllActorData.Where(actor => !factionActorIDs.Contains(actor.ActorID)).ToList();
-        var factionlessPath = Path.Combine(factionDataPath, "Factionless");
-        Directory.CreateDirectory(factionlessPath);
 
         foreach (var actorData in factionlessActors)
         {
-            _toJSON(factionlessPath, "Actors", $"Actor_{actorData.ActorID}_SaveData.json", actorData);
+            Debug.LogWarning($"Actor: {actorData.ActorID}: {actorData.ActorName} is factionless.");
+            _toJSON(Path.Combine(factionDataPath, "Wanderers"), "Actors", $"Actor_{actorData.ActorID}_SaveData.json", actorData);
         }
     }
 

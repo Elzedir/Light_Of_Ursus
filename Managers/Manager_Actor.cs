@@ -4,16 +4,36 @@ using UnityEngine;
 
 public class Manager_Actor : MonoBehaviour, IDataPersistence
 {
-    public static AllFactions_SO AllFactions;
+    public static AllActors_SO AllActors;
     public static Dictionary<int, ActorData> AllActorData;
     public static Dictionary<int, Actor_Base> AllActorComponents = new();
 
-    public void SaveData(SaveData data) => data.SavedActorData = new SavedActorData(AllActorData.Values.ToList());
-    public void LoadData(SaveData data) => AllActorData = data.SavedActorData?.AllActorData.ToDictionary(x => x.ActorID);
+    public void SaveData(SaveData data)
+    {
+        AllActorData.Values.ToList().ForEach(actorData => actorData.UpdateActorData());
+
+        data.SavedActorData = new SavedActorData(AllActorData.Values.ToList());
+        AllActors.AllActorData = AllActorData.Values.ToList();
+    }
+
+    public void LoadData(SaveData data) 
+    {
+        try
+        {
+            AllActorData = data.SavedActorData.AllActorData.ToDictionary(x => x.ActorID);
+        }
+        catch
+        {
+            AllActorData = new();
+            Debug.Log("No Actor Data found in SaveData.");
+        }
+
+        AllActors.AllActorData = AllActorData.Values.ToList();
+    } 
 
     public void OnSceneLoaded()
     {
-        AllFactions = Resources.Load<AllFactions_SO>("ScriptableObjects/AllFactions_SO");
+        AllActors = Resources.Load<AllActors_SO>("ScriptableObjects/AllActors_SO");
 
         Manager_Initialisation.OnInitialiseManagerActor += _initialise;
     }
@@ -38,8 +58,11 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
             }
 
             if (!AllActorData.ContainsKey(actor.ActorData.ActorID)) Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
+        }
 
-            
+        foreach(var actor in AllActorData)
+        {
+            actor.Value.PrepareForInitialisation();
         }
     }
 
@@ -93,8 +116,11 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     }
 
     // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID)
+    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID, bool despawnActorIfExists = false)
     {
+        if (despawnActorIfExists) DespawnActor(actorID);
+        else if (AllActorComponents.ContainsKey(actorID)) return AllActorComponents[actorID];
+
         Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
 
         actor.SetActorData(GetActorData(actorID));
@@ -103,6 +129,35 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         AllActorComponents[actor.ActorData.ActorID] = actor;
 
         return actor;
+    }
+
+    static void _spawnAllActors(bool despawnAllActors = false)
+    {
+        if (despawnAllActors) _despawnAllActors();
+
+        foreach (var actorData in AllActorData.Values)
+        {
+            SpawnActor(actorData.GameObjectProperties.LastSavedActorPosition, actorData.ActorID, true);
+        }
+    }
+
+    public static void DespawnActor(int actorID)
+    {
+        if (AllActorComponents.ContainsKey(actorID))
+        {
+            Destroy(AllActorComponents[actorID].gameObject);
+            AllActorComponents.Remove(actorID);
+        }
+    }
+
+    static void _despawnAllActors()
+    {
+        foreach (var actor in AllActorComponents.Values)
+        {
+            Destroy(actor.gameObject);
+        }
+
+        AllActorComponents.Clear();
     }
 
     static GameObject _createNewActorGO(Vector3 spawnPoint)
@@ -135,11 +190,15 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
                 )
         ));
 
+        // Temporary
+        //actor.ActorData.ActorName = new ActorName($"Test_{actor.ActorData.ActorID}", "of Tester");
+
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Log);
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
 
         actor.ActorData.SpeciesAndPersonality.SetSpecies(GetRandomSpecies());
         actor.ActorData.SpeciesAndPersonality.SetPersonality(GetRandomPersonality());
+        actor.ActorData.GameObjectProperties.SetGameObjectProperties(actor.transform);
 
         AddToAllActorData(actor.ActorData);
 

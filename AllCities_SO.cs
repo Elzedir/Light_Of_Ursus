@@ -30,6 +30,7 @@ public class AllCitiesSOEditor : Editor
     int _selectedCityIndex = -1;
     bool _showJobsites = false;
     bool _showPopulation = false;
+    bool _showProsperity = false;
 
     Vector2 _cityScrollPos;
     Vector2 _jobsiteScrollPos;
@@ -92,6 +93,16 @@ public class AllCitiesSOEditor : Editor
                 DrawJobsiteAdditionalData(selectedCityData.AllJobsiteIDs);
             }
         }
+
+        if (selectedCityData.ProsperityData != null)
+        {
+            _showProsperity = EditorGUILayout.Toggle("Prosperity", _showProsperity);
+
+            if (_showProsperity)
+            {
+                DrawProsperityDetails(selectedCityData.ProsperityData);
+            }
+        }
     }
 
     private void DrawPopulationDetails(PopulationData populationData)
@@ -116,13 +127,29 @@ public class AllCitiesSOEditor : Editor
     {
         _jobsiteScrollPos = EditorGUILayout.BeginScrollView(_jobsiteScrollPos, GUILayout.Height(GetListHeight(allJobsiteIDs.Count)));
 
-        foreach (var jobsiteID in allJobsiteIDs)
+        try
         {
-            EditorGUILayout.LabelField("Jobsite Data", EditorStyles.boldLabel);
-            //EditorGUILayout.LabelField("Jobsite Name", jobsiteID.JobsiteName.ToString());
-            EditorGUILayout.LabelField("Jobsite ID", jobsiteID.ToString());
+            foreach (var jobsiteID in allJobsiteIDs)
+            {
+                EditorGUILayout.LabelField("Jobsite Data", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField("Jobsite Name", jobsite.JobsiteName.ToString());
+                EditorGUILayout.LabelField("Jobsite ID", jobsiteID.ToString());
+            }
         }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error: {e.Message}");
+        }
+        finally
+        {
+            EditorGUILayout.EndScrollView();
+        }
+    }
 
-        EditorGUILayout.EndScrollView();
+    private void DrawProsperityDetails(ProsperityData prosperityData)
+    {
+        EditorGUILayout.LabelField("Current Prosperity", prosperityData.CurrentProsperity.ToString());
+        EditorGUILayout.LabelField("Max Prosperity", prosperityData.MaxProsperity.ToString());
+        EditorGUILayout.LabelField("Base Prosperity Growth Per Day", prosperityData.BaseProsperityGrowthPerDay.ToString());
     }
 }

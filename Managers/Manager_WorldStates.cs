@@ -58,14 +58,3 @@ public class WorldState_Data_SO : ScriptableObject
 
     public List<Action> WorldStateEvents = new();
 }
-
-[Serializable]
-public class WorldStateData
-{
-    [NonSerialized] ActorData _actorData;
-    public void SetData(ActorData actorData) => _actorData = actorData;
-    public WorldStateData(ActorData actorData)
-    {
-        SetData(actorData);
-    }
-}

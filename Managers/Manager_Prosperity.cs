@@ -39,7 +39,6 @@ public class ProsperityData : ITickable
 
     public float GetProsperityPercentage()
     {
-        Debug.Log($"Current Prosperity: {CurrentProsperity}, Max Prosperity: {MaxProsperity}");
         // Eventually prosperity percent will take into account all levels, region, city, jobsite, etc.
         return Math.Min((CurrentProsperity / Math.Max(MaxProsperity, 1)) + 0.1f, 1);
     }

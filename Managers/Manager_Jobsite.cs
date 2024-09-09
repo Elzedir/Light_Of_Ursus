@@ -10,9 +10,6 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 
     public static Dictionary<int, JobsiteData> AllJobsiteData;
     public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
-    
-    public HashSet<int> AllJobsiteIDs = new();
-    public int LastUnusedJobsiteID = 1;
 
     public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
     public void LoadData(SaveData data) => AllJobsiteData = data.SavedJobsiteData?.AllJobsiteData.ToDictionary(x => x.JobsiteID);
@@ -57,6 +54,12 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
         }
 
         AllJobsites.AllJobsiteData = AllJobsiteData.Values.ToList();
+
+        foreach (var jobsite in AllJobsiteData)
+        {
+            jobsite.Value.ProsperityData.SetProsperity(50);
+            jobsite.Value.ProsperityData.MaxProsperity = 100;
+        }
     }
 
     static List<JobsiteComponent> _findAllJobsiteComponents()

@@ -91,6 +91,7 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
             IsStationBeingOperated && 
             StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
         {
+            Debug.Log($"Operating {name}");
             _operateStation();
         }
     }
@@ -108,12 +109,12 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         InitialiseStationName();
         AllOperatingAreasInStation = GetAllOperatingAreasInStation();
 
-
-
         SetInteractRange();
         InitialiseAllowedEmployeePositions();
         InitialiseAllowedRecipes();
         InitialiseStartingInventory();
+
+        Manager_TickRate.RegisterTickable(this);
 
         _initialised = true;
     }

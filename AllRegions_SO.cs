@@ -72,7 +72,7 @@ public class AllRegionsSOEditor : Editor
         {
             _showCities = EditorGUILayout.Toggle("Cities", _showCities);
 
-           if (_showCities)
+            if (_showCities)
             {
                 DrawCityAdditionalData(selectedRegionData.AllCityIDs);
             }
@@ -83,13 +83,22 @@ public class AllRegionsSOEditor : Editor
     {
         _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(allCityIDs.Count)));
 
-        foreach (var cityID in allCityIDs)
+        try
         {
-            EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-            //EditorGUILayout.LabelField("City Name", city.CityName);
-            EditorGUILayout.LabelField("City ID", cityID.ToString());
+            foreach (var cityID in allCityIDs)
+            {
+                EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
+                //EditorGUILayout.LabelField("City Name", city.CityName);
+                EditorGUILayout.LabelField("City ID", cityID.ToString());
+            }
         }
-
-        EditorGUILayout.EndScrollView();
+        catch (Exception e)
+        {
+            Debug.LogError($"Error: {e.Message}");
+        }
+        finally
+        {
+            EditorGUILayout.EndScrollView();
+        }
     }
 }

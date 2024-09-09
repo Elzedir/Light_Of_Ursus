@@ -67,13 +67,9 @@ public class AllActors_SOEditor : Editor
         return allActorsSO.AllActorData.Select(a => $"{a.ActorID}: {a.ActorName.GetName()}").ToArray();
     }
 
-    int selectedInventoryIndex = -1;
-
+    bool _showInventory = false;
+    bool _showEquipment = false;
     Vector2 inventoryItemScrollPos;
-
-    int selectedEquipmentIndex = -1;
-
-    Vector2 equipmentItemScrollPos;
 
     private void DrawActorData(ActorData actorData)
     {
@@ -148,18 +144,19 @@ public class AllActors_SOEditor : Editor
             EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
 
             var inventoryData = actorData.InventoryAndEquipment.InventoryData;
-            var equipmentData = actorData.InventoryAndEquipment.EquipmentData;
 
-            selectedInventoryIndex = GUILayout.SelectionGrid(selectedInventoryIndex, new string[] { "Inventory" }, 1);
+            _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
 
-            if (selectedInventoryIndex == 0)
+            if (_showInventory)
             {
                 DrawInventory(inventoryData);
             }
 
-            selectedEquipmentIndex = GUILayout.SelectionGrid(selectedEquipmentIndex, new string[] { "Equipment" }, 1);
+            var equipmentData = actorData.InventoryAndEquipment.EquipmentData;
 
-            if (selectedEquipmentIndex == 0)
+            _showEquipment = EditorGUILayout.Toggle("Equipment", _showEquipment);
+
+            if (_showEquipment)
             {
                 DrawEquipment(equipmentData);
             }
@@ -205,12 +202,21 @@ public class AllActors_SOEditor : Editor
         {
             inventoryItemScrollPos = EditorGUILayout.BeginScrollView(inventoryItemScrollPos, GUILayout.Height(Math.Min(200, data.AllInventoryItems.Count * 20)));
 
-            for (int i = 0; i < data.AllInventoryItems.Count; i++)
+            try
             {
-                EditorGUILayout.LabelField($"{data.AllInventoryItems[i].ItemName}: {data.AllInventoryItems[i].ItemAmount}");
+                for (int i = 0; i < data.AllInventoryItems.Count; i++)
+                {
+                    EditorGUILayout.LabelField($"{data.AllInventoryItems[i].ItemName}: {data.AllInventoryItems[i].ItemAmount}");
+                }
             }
-
-            EditorGUILayout.EndScrollView();
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
         }
     }
 

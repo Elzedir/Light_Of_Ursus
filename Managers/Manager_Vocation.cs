@@ -93,18 +93,13 @@ public class Vocation
 
 public class VocationData
 {
-    [NonSerialized] ActorData _actorData;
-
-    public void SetData(ActorData actorData) => _actorData = actorData;
+    public int ActorID;
 
     public VocationTitle VocationTitle;
     public Dictionary<VocationName, float> Vocations;
     public void SetVocations(Dictionary<VocationName, float> vocations) => Vocations = vocations;
 
-    public VocationData(ActorData actorData)
-    {
-        SetData(actorData);
-    }
+    public VocationData(int actorID) => ActorID = actorID;
 
     public void AddVocation(VocationName vocationName, float vocationExperience)
     {

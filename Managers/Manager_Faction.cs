@@ -9,8 +9,25 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
 
     public static Dictionary<int, FactionData> AllFactionData;
 
-    public void SaveData(SaveData saveData) => saveData.SavedFactionData = new SavedFactionData(AllFactionData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllFactionData = saveData.SavedFactionData?.AllFactionData.ToDictionary(x => x.FactionID);
+    public void SaveData(SaveData saveData)
+    {
+        saveData.SavedFactionData = new SavedFactionData(AllFactionData.Values.ToList());
+        AllFactions_SO.AllFactionData = AllFactionData.Values.ToList();
+    }
+    public void LoadData(SaveData saveData) 
+    {
+        try
+        {
+            AllFactionData = saveData.SavedFactionData.AllFactionData.ToDictionary(x => x.FactionID);
+        }
+        catch
+        {
+            AllFactionData = new();
+            Debug.Log("No Faction Data found in SaveData.");
+        }
+        
+        AllFactions_SO.AllFactionData = AllFactionData.Values.ToList();
+    } 
 
     public void OnSceneLoaded()
     {
@@ -57,8 +74,6 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         {
             faction.Value.InitialiseFaction();
         }
-
-        AllFactions_SO.AllFactionData = AllFactionData.Values.ToList();
     }
 
     public static void AddToAllFactionData(FactionData factionData)

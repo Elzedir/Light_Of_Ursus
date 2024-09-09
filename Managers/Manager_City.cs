@@ -9,12 +9,18 @@ public class Manager_City : MonoBehaviour, IDataPersistence
     public static AllCities_SO AllCities;
     public static Dictionary<int, CityData> AllCityData;
     public static Dictionary<int, CityComponent> AllCityComponents = new();
-
-    public HashSet<int> AllCityIDs = new();
     public int LastUnusedCityID = 1;
 
-    public void SaveData(SaveData data) => data.SavedCityData = new SavedCityData(AllCityData.Values.ToList());
-    public void LoadData(SaveData data) => AllCityData = data.SavedCityData?.AllCityData.ToDictionary(x => x.CityID);
+    public void SaveData(SaveData data)
+    {
+        AllCityData.Values.ToList().ForEach(cityData => cityData.SaveData());
+        data.SavedCityData = new SavedCityData(AllCityData.Values.ToList());
+    }
+    public void LoadData(SaveData data)
+    {
+        AllCityData = data.SavedCityData?.AllCityData.ToDictionary(x => x.CityID);
+        AllCityData?.Values.ToList().ForEach(cityData => cityData.LoadData());
+    }
 
     public void OnSceneLoaded()
     {
@@ -26,6 +32,13 @@ public class Manager_City : MonoBehaviour, IDataPersistence
     void _initialise()
     {
         _initialiseAllCityData();
+
+        // Temporary
+        foreach (var city in AllCityData)
+        {
+            city.Value.ProsperityData.SetProsperity(50);
+            city.Value.ProsperityData.MaxProsperity = 100;
+        }
     }
 
     void _initialiseAllCityData()
