@@ -24,6 +24,8 @@ public enum EmployeePosition
     Chief_Smith,
     Smith,
     Assistant_Smith,
+
+    Hauler,
 }
 
 public class JobsiteComponent : MonoBehaviour, ITickable
@@ -33,7 +35,7 @@ public class JobsiteComponent : MonoBehaviour, ITickable
     public void SetCityID(int cityID) => JobsiteData.CityID = cityID;
 
     public List<StationComponent> AllStationsInJobsite;
-    public List<EmployeePosition> AllNecessaryEmployeePositions;
+    public List<EmployeePosition> AllCoreEmployeePositions;
 
     public bool JobsiteOpen = true;
 
@@ -97,7 +99,7 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
         foreach (var station in AllStationsInJobsite)
         {
-            foreach (var position in station.AllAllowedEmployeePositions)
+            foreach (var position in station.AllRequiredEmployeePositions)
             {
                 employeePositions.Add(position);
             }
@@ -117,7 +119,7 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
         foreach (var station in AllStationsInJobsite)
         {
-            var allowedPositions = station.AllAllowedEmployeePositions;
+            var allowedPositions = station.AllRequiredEmployeePositions;
             var employeesForStation = employees
                 .Where(e => allowedPositions.Contains(e.CareerAndJobs.EmployeePosition))
                 .OrderByDescending(e => e.CareerAndJobs.EmployeePosition)

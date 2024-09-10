@@ -73,6 +73,7 @@ public class AllCitiesSOEditor : Editor
         EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("City Name", selectedCityData.CityName);
         EditorGUILayout.LabelField("City ID", selectedCityData.CityID.ToString());
+        EditorGUILayout.LabelField("Region ID", selectedCityData.RegionID.ToString());
 
         if (selectedCityData.Population != null)
         {

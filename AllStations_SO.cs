@@ -71,6 +71,7 @@ public class AllStationsSOEditor : Editor
         EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
         EditorGUILayout.LabelField("Station ID", selectedStationData.StationID.ToString());
+        EditorGUILayout.LabelField("Jobsite ID", selectedStationData.JobsiteID.ToString());
 
         if (selectedStationData.AllOperatingAreaIDs != null)
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ public enum StationType
     Storage
 }
 
-public class StationComponent : MonoBehaviour, IInteractable, ITickable
+public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 {
     bool _initialised = false;
 
@@ -23,20 +24,15 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     public float InteractRange { get; protected set; }
 
-    public List<EmployeePosition> AllAllowedEmployeePositions;
-    public EmployeePosition NecessaryEmployeePosition;
-
+    public List<EmployeePosition> AllRequiredEmployeePositions;
+    public abstract EmployeePosition CoreEmployeePosition { get; }
     public List<RecipeName> AllowedRecipes;
 
+    public abstract int OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
     public float BaseProgressRatePerHour = 60;
     List<Item> _currentProductsCrafted = new();
-
-    protected void Awake()
-    {
-        
-    }
 
     public void AddOperatorToArea(int operatorData)
     {
@@ -84,14 +80,15 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
         // Change material check to only happen when operator is set or leaves, or when material is used.
 
-        Debug.Log($"Tick {name}");
+        if (!StationData.StationIsActive) Debug.Log($"StationIsActive: {StationData.StationIsActive}");
+        if(!IsStationBeingOperated) Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
+        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)) Debug.Log($"InventoryContainsAllItems: {StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)}");
 
         if (
             StationData.StationIsActive && 
             IsStationBeingOperated && 
             StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
         {
-            Debug.Log($"Operating {name}");
             _operateStation();
         }
     }
@@ -109,8 +106,19 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         InitialiseStationName();
         AllOperatingAreasInStation = GetAllOperatingAreasInStation();
 
+        var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
+                                         from employeeID in StationData.CurrentOperatorIDs
+                                         let actorData = Manager_Actor.GetActorData(employeeID)
+                                         where actorData.CareerAndJobs.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
+                                         select new { operatingArea, employeeID };
+
+        foreach (var pair in employeeOperatingAreaPairs)
+        {
+            pair.operatingArea.OperatingAreaData.AddOperatorToOperatingArea(pair.employeeID);
+        }
+
         SetInteractRange();
-        InitialiseAllowedEmployeePositions();
+        InitialiseRequiredEmployeePositions();
         InitialiseAllowedRecipes();
         InitialiseStartingInventory();
 
@@ -124,9 +132,21 @@ public class StationComponent : MonoBehaviour, IInteractable, ITickable
         throw new ArgumentException("Cannot use base class.");
     }
 
-    public List<OperatingAreaComponent> GetAllOperatingAreasInStation() => GetComponentsInChildren<OperatingAreaComponent>().ToList();
+    public List<OperatingAreaComponent> GetAllOperatingAreasInStation()
+    {
+        var operatingAreas = new List<OperatingAreaComponent>();
 
-    public virtual void InitialiseAllowedEmployeePositions()
+        for (int i = 1; i <= OperatingAreaCount; i++)
+        {
+            operatingAreas.Add(_createOperatingArea(i));
+        }
+
+        return operatingAreas;
+    }
+
+    protected abstract OperatingAreaComponent _createOperatingArea(int operatingAreaID);
+
+    public virtual void InitialiseRequiredEmployeePositions()
     {
         throw new ArgumentException("Cannot use base class.");
     }
@@ -274,7 +294,7 @@ public class StationComponent_Editor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspectorExcept("StationData", "AllowedEmployeePositions", "AllowedRecipes");
+        DrawDefaultInspectorExcept(nameof(StationComponent.StationData), nameof(StationComponent.AllRequiredEmployeePositions), nameof(StationComponent.AllowedRecipes));
 
         StationComponent stationComponent = (StationComponent)target;
         StationData stationData = stationComponent.StationData;
@@ -366,19 +386,16 @@ public class StationComponent_Editor : Editor
 
     private void DrawDefaultInspectorExcept(params string[] propertyNames)
     {
-        SerializedObject obj = serializedObject;
-        SerializedProperty prop = obj.GetIterator();
+        SerializedProperty property = serializedObject.GetIterator();
         bool enterChildren = true;
-
-        while (prop.NextVisible(enterChildren))
+        while (property.NextVisible(enterChildren))
         {
-            enterChildren = false;
-            if (Array.IndexOf(propertyNames, prop.name) == -1)
+            if (!propertyNames.Contains(property.name))
             {
-                EditorGUILayout.PropertyField(prop, true);
+                EditorGUILayout.PropertyField(property, true);
             }
+            enterChildren = false;
         }
-        obj.ApplyModifiedProperties();
     }
 }
 
@@ -399,11 +416,18 @@ public class StationProgressData
 
     public void Progress(float progress)
     {
+        //if (progress == 0) return;
+
         CurrentProgress += progress;
         CurrentQuality += progress;
 
+        // Max progress is 0 for some reason.
+
+        Debug.LogError($"CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
+
         if (CurrentProgress >= CurrentProduct.RequiredProgress)
         {
+            Debug.Log($"CurrentProduct: {CurrentProduct.RecipeName} has been crafted.");
             // Create the item using total quality.
             return;
         }

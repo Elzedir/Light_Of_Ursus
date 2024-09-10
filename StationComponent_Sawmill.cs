@@ -1,21 +1,59 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class StationComponent_Sawmill : StationComponent
 {
+    public override EmployeePosition CoreEmployeePosition => EmployeePosition.Sawyer;
     public float PercentageStorageFilled = 0;
     public float PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
+
+    public override int OperatingAreaCount => 4;
+
+    protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
+    {
+        var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
+        operatingAreaComponent.transform.SetParent(transform);
+        
+        switch(operatingAreaID)
+        {
+            case 1:
+                operatingAreaComponent.transform.localPosition = new Vector3(0.75f, 0f, 0);
+                operatingAreaComponent.transform.localScale = new Vector3(0.333f, 1f, 1);
+                break;
+            case 2:
+                operatingAreaComponent.transform.localPosition = new Vector3(0, 0f, 1f);
+                operatingAreaComponent.transform.localScale = new Vector3(0.333f, 1f, 1);
+                break;
+            case 3:
+                operatingAreaComponent.transform.localPosition = new Vector3(-0.75f, 0f, 0);
+                operatingAreaComponent.transform.localScale = new Vector3(0.333f, 1f, 1);
+                break;
+            case 4:
+                operatingAreaComponent.transform.localPosition = new Vector3(0, 0f, -1f);
+                operatingAreaComponent.transform.localScale = new Vector3(0.333f, 1f, 1);
+                break;
+            default:
+                Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {OperatingAreaCount}.");
+                break;
+        }
+
+        var operatingArea = operatingAreaComponent.AddComponent<BoxCollider>();
+        operatingArea.isTrigger = true;
+        operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
+
+        return operatingAreaComponent;
+    }
 
     public override void InitialiseStationName()
     {
         StationData.SetStationName(StationName.Sawmill);
     }
 
-    public override void InitialiseAllowedEmployeePositions()
+    public override void InitialiseRequiredEmployeePositions()
     {
-        NecessaryEmployeePosition = EmployeePosition.Sawyer;
-        AllAllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
+        AllRequiredEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
     }
 
     public override void InitialiseAllowedRecipes()

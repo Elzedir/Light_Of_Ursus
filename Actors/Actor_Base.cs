@@ -68,7 +68,7 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
         return GroundedObject.IsGrounded();
     }
 
-    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 10)
+    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 1)
     {
         while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
         {

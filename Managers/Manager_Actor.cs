@@ -84,10 +84,37 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         AllActorData.Add(actorData.ActorID, actorData);
     }
 
-    public static void UpdateAllActorData(ActorData actorData) => AllActorData[actorData.ActorID] = actorData;
-    public static void RemoveFromAllActorData(int actorID) => AllActorData.Remove(actorID);
+    public static void UpdateAllActorData(ActorData actorData)
+    {
+        if (!AllActorData.ContainsKey(actorData.ActorID))
+        {
+            Debug.Log($"ActorData: {actorData.ActorID} does not exist in AllActorData.");
+            return;
+        }
 
-    public static ActorData GetActorData(int actorID) => AllActorData[actorID];
+        AllActorData[actorData.ActorID] = actorData;
+    }
+    public static void RemoveFromAllActorData(int actorID)
+    {
+        if (!AllActorData.ContainsKey(actorID))
+        {
+            Debug.Log($"ActorData: {actorID} does not exist in AllActorData.");
+            return;
+        }
+
+        AllActorData.Remove(actorID);
+    }
+
+    public static ActorData GetActorData(int actorID)
+    {
+        if (!AllActorData.ContainsKey(actorID))
+        {
+            Debug.Log($"ActorData: {actorID} does not exist in AllActorData.");
+            return null;
+        }
+
+        return AllActorData[actorID];
+    }
 
     public static Actor_Base GetActor(int actorID, bool generateActorIfNotFound = false)
     {

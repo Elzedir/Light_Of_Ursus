@@ -24,6 +24,7 @@ public class AllActors_SOEditor : Editor
     int SelectedActorIndex { get { return _selectedActorIndex; } set { if (_selectedActorIndex == value) return; _selectedActorIndex = value; _resetIndexes(1); } }
     bool _showGameObjectProperties = false;
     bool _showSpeciesAndPersonality = false;
+    bool _showCareerAndJobs = false;
 
     Vector2 _actorScrollPos;
     
@@ -119,9 +120,12 @@ public class AllActors_SOEditor : Editor
 
         if (actorData.CareerAndJobs != null)
         {
-            actorData.CareerAndJobs.JobsActive = EditorGUILayout.Toggle("Jobs Active", actorData.CareerAndJobs.JobsActive);
+            _showCareerAndJobs = EditorGUILayout.Toggle("Career and Jobs", _showCareerAndJobs);
 
-            EditorGUILayout.LabelField("Employee Position", actorData.CareerAndJobs.EmployeePosition.ToString());
+            if (_showCareerAndJobs)
+            {
+                DrawCareerAndJobs(actorData.CareerAndJobs);
+            }
         }
 
         if (actorData.SpeciesAndPersonality != null)
@@ -188,6 +192,15 @@ public class AllActors_SOEditor : Editor
         EditorGUILayout.LabelField("Species", speciesAndPersonality.ActorSpecies.ToString());
         EditorGUILayout.LabelField("Personality", speciesAndPersonality.ActorPersonality.ToString());
         // Add more details as needed
+    }
+
+    void DrawCareerAndJobs(CareerAndJobs careerAndJobs)
+    {
+        EditorGUILayout.LabelField("JobsActive", careerAndJobs.JobsActive.ToString());
+        EditorGUILayout.LabelField("JobsiteID", careerAndJobs.JobsiteID.ToString());
+        EditorGUILayout.LabelField("StationID", careerAndJobs.StationID.ToString());
+        EditorGUILayout.LabelField("OperatingAreaID", careerAndJobs.OperatingAreaID.ToString());
+        EditorGUILayout.LabelField("Employee Position", careerAndJobs.EmployeePosition.ToString());
     }
 
     void DrawInventory(InventoryData data)

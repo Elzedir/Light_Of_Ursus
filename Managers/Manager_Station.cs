@@ -14,7 +14,10 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllStationData = saveData.SavedStationData?.AllStationData.ToDictionary(x => x.StationID);
+    public void LoadData(SaveData saveData)
+    {
+        AllStationData = saveData.SavedStationData?.AllStationData.ToDictionary(x => x.StationID);
+    }
 
     public void OnSceneLoaded()
     {

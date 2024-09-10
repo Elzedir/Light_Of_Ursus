@@ -99,7 +99,6 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_City", _manager_Parent).AddComponent<Manager_City>().OnSceneLoaded();
         _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
-        _createManager("Manager_OperatingArea", _manager_Parent).AddComponent<Manager_OperatingArea>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
 
         _createManager("Manager_Data", _manager_Parent).AddComponent<Manager_Data>().OnSceneLoaded();

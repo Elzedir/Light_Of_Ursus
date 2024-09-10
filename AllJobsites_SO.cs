@@ -72,6 +72,7 @@ public class AllJobsitesSOEditor : Editor
         EditorGUILayout.LabelField("Jobsite Data", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Jobsite Name", selectedJobsiteData.JobsiteName.ToString());
         EditorGUILayout.LabelField("Jobsite ID", selectedJobsiteData.JobsiteID.ToString());
+        EditorGUILayout.LabelField("City ID", selectedJobsiteData.CityID.ToString());
 
         if (selectedJobsiteData.AllStationIDs != null)
         {

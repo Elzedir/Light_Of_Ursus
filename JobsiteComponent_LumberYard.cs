@@ -41,13 +41,18 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
         if (!isBalanced)
         {
-            _adjustProduction(logProduction, plankProduction, idealRatio);
+            _adjustProduction(idealRatio);
         }
 
         return isBalanced;
     }
 
-    protected void _adjustProduction(float logProduction, float plankProduction, float idealRatio)
+    // To make more efficient search for best combinations:
+    // Implement a heuristic algorithm to guide the search towards the best combination.
+    // Implement a percentage threshold to the ideal ratio to end the search early if a combination within the threshold is found.
+    // Implement a minimum skill cap either determined by the crafted item skill requirement or a mean average of all employee skills to ensure that the employees assigned to the stations are skilled enough to operate them.
+
+    protected void _adjustProduction(float idealRatio)
     {
         var allEmployees = new List<int>(JobsiteData.AllEmployeeIDs);
         var bestCombination = new List<int>();

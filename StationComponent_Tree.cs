@@ -1,18 +1,57 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class StationComponent_Tree : StationComponent
 {
+    public override EmployeePosition CoreEmployeePosition => EmployeePosition.Logger;
+
+    public override int OperatingAreaCount => 4;
+
+    protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
+    {
+        var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
+        operatingAreaComponent.transform.SetParent(transform);
+        
+        switch(operatingAreaID)
+        {
+            case 1:
+                operatingAreaComponent.transform.localPosition = new Vector3(1.5f, -0.8f, 0);
+                operatingAreaComponent.transform.localScale = new Vector3(1, 0.333f, 1);
+                break;
+            case 2:
+                operatingAreaComponent.transform.localPosition = new Vector3(0, -0.8f, 1.5f);
+                operatingAreaComponent.transform.localScale = new Vector3(1, 0.333f, 1);
+                break;
+            case 3:
+                operatingAreaComponent.transform.localPosition = new Vector3(-1.5f, -0.8f, 0);
+                operatingAreaComponent.transform.localScale = new Vector3(1, 0.333f, 1);
+                break;
+            case 4:
+                operatingAreaComponent.transform.localPosition = new Vector3(0, -0.8f, -1.5f);
+                operatingAreaComponent.transform.localScale = new Vector3(1, 0.333f, 1);
+                break;
+            default:
+                Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {OperatingAreaCount}.");
+                break;
+        }
+
+        var operatingArea = operatingAreaComponent.AddComponent<BoxCollider>();
+        operatingArea.isTrigger = true;
+        operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
+
+        return operatingAreaComponent;
+    }
+
     public override void InitialiseStationName()
     {
         StationData.SetStationName(StationName.Tree);
     }
 
-    public override void InitialiseAllowedEmployeePositions()
+    public override void InitialiseRequiredEmployeePositions()
     {
-        NecessaryEmployeePosition = EmployeePosition.Logger;
-        AllAllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
+        AllRequiredEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
     }
 
     public override void InitialiseAllowedRecipes()
@@ -41,9 +80,13 @@ public class StationComponent_Tree : StationComponent
         var cost = _getCost(recipe.RequiredIngredients, actor);
         var yield = _getYield(recipe.RecipeProducts, actor);
 
+        Debug.Log($"Cost: {cost.Count} Yield: {yield.Count}");
+
         if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }
         // Later allow it to partially remove logs to chop the tree down completely.
         if (!StationData.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
+
+        Debug.Log("Crafted item");
 
         _onCraftItem(yield);
     }

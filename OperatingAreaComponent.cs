@@ -6,14 +6,15 @@ public class OperatingAreaComponent : MonoBehaviour
 {
     public OperatingAreaData OperatingAreaData;
     public void SetOperatingAreaData(OperatingAreaData operatingAreaData) => OperatingAreaData = operatingAreaData;
-    public void SetStationID(int stationID) => OperatingAreaData.StationID = stationID;
     public BoxCollider OperatingArea;
 
     public string GetName() => name;
 
-    public void Awake()
+    public void Initialise(OperatingAreaData operatingAreaData, BoxCollider operatingArea)
     {
-        OperatingArea = GetComponent<BoxCollider>();
+        OperatingAreaData = operatingAreaData;
+
+        OperatingArea = operatingArea;
 
         if (!OperatingArea.isTrigger)
         {
@@ -22,51 +23,49 @@ public class OperatingAreaComponent : MonoBehaviour
         }
     }
 
-    public void Initialise()
-    {
-        
-    }
-
     public float Operate(float baseProgressRate, Recipe recipe)
     {
-        if (OperatingAreaData.CurrentOperatorID == -1)
-        {
-            Debug.Log("No operator assigned.");
-            return 0;
-        }
-
-        if (OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
+        if (OperatingAreaData.CurrentOperatorID == 0 || OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
         var actorData = Manager_Actor.GetActorData(OperatingAreaData.CurrentOperatorID);
 
-        if (!OperatingArea.bounds.Contains(actorData.GameObjectProperties.ActorTransform.position))
+        var actorTransform = actorData.GameObjectProperties.ActorTransform;
+
+        if (actorTransform.position != null && !OperatingArea.bounds.Contains(actorTransform.position))
         {
             StartCoroutine(MoveOperatorToOperatingArea(Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
+
+            return 0;
         }
 
-        if (actorData.GameObjectProperties.ActorTransform.position != transform.position)
+        return produce();
+
+        float produce()
         {
-            actorData.GameObjectProperties.ActorTransform.position = transform.position;
+            float productionRate = baseProgressRate;
+            // Then modify production rate by any area modifiers (Land type, events, etc.)
+
+            foreach (var vocation in recipe.RequiredVocations)
+            {
+                productionRate *= actorData.VocationData.GetProgress(vocation);
+            }
+
+            return productionRate;
         }
-
-        Debug.Log($"Operating {name}");
-
-        float productionRate = baseProgressRate;
-        // Then modify production rate by any area modifiers (Land type, events, etc.)
-
-        foreach (var vocation in recipe.RequiredVocations)
-        {
-            productionRate *= actorData.VocationData.GetProgress(vocation);
-        }
-
-        return productionRate;
     }
 
     protected IEnumerator MoveOperatorToOperatingArea(Actor_Base actor, Vector3 position)
     {
+        if (OperatingAreaData.IsOperatorMovingToOperatingArea) yield break;
+
         OperatingAreaData.IsOperatorMovingToOperatingArea = true;
 
         yield return actor.StartCoroutine(actor.BasicMove(position));
+
+        if (actor.ActorData.GameObjectProperties.ActorTransform.position != position)
+        {
+            actor.ActorData.GameObjectProperties.ActorTransform.position = position;
+        }
 
         OperatingAreaData.IsOperatorMovingToOperatingArea = false;
     }

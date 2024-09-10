@@ -9,23 +9,25 @@ public class OperatingAreaData
     public int OperatingAreaID;
     public int StationID;
 
-    public bool StationIsActive = true;
+    public bool OperatingAreaIsActive = true;
 
     public int CurrentOperatorID;
-    public bool HasOperator() => CurrentOperatorID != -1;
+    public bool HasOperator() => CurrentOperatorID != 0;
     public bool IsOperatorMovingToOperatingArea = false;
 
-    public void InitialiseOperatingAreaData()
+    public OperatingAreaData(int operatingAreaID, int stationID)
     {
-        Manager_OperatingArea.GetOperatingArea(OperatingAreaID).Initialise();
+        OperatingAreaID = operatingAreaID;
+        StationID = stationID;
+        CurrentOperatorID = 0;
     }
 
-    public bool AddOperatorToOperatingArea(int operatorData)
+    public bool AddOperatorToOperatingArea(int operatorID)
     {
-        if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorData}");
+        if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
 
-        CurrentOperatorID = operatorData;
-        Manager_Actor.GetActorData(CurrentOperatorID).CareerAndJobs.OperatingAreaID = OperatingAreaID;
+        CurrentOperatorID = operatorID;
+        Manager_Actor.GetActorData(CurrentOperatorID).CareerAndJobs.SetOperatingAreaID(OperatingAreaID);
         return true;
     }
 

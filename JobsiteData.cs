@@ -60,6 +60,14 @@ public class JobsiteData
     {
         if (OwnerID == 0) GetNewOwner();
 
+        if (OwnerID != 0) 
+        {
+            var ownerData = Manager_Actor.GetActorData(OwnerID);
+            var owner = Manager_Actor.GetActor(OwnerID);
+            
+            owner.ActorMaterial.material = Resources.Load<Material>("Materials/Material_Yellow");
+        }
+
         // And change all affected things, like perks, job settings, etc.
     }
 
@@ -366,7 +374,7 @@ public class JobsiteData
 
         if (currentOperatorCount >= maxOperatorCount)
         {
-            Debug.Log("All jobsite positions are already filled.");
+            Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than MaxOperatorCount: {maxOperatorCount}.");
             return;
         }
 
@@ -408,19 +416,19 @@ public class JobsiteData
                 {
                     allPositionsFilled = false;
 
-                    var newEmployeeID = _findEmployeeFromJobsite(station.NecessaryEmployeePosition);
+                    var newEmployeeID = _findEmployeeFromJobsite(station.CoreEmployeePosition);
 
                     if (newEmployeeID == -1)
                     {
-                        Debug.Log($"Couldn't find employee from Jobsite for position: {station.NecessaryEmployeePosition}");
+                        Debug.Log($"Couldn't find employee from Jobsite for position: {station.CoreEmployeePosition}");
                     }
 
-                    newEmployeeID = _findEmployeeFromCity(station.NecessaryEmployeePosition);
+                    newEmployeeID = _findEmployeeFromCity(station.CoreEmployeePosition);
 
                     if (newEmployeeID == -1)
                     {
-                        Debug.Log($"Couldn't find employee from City for position: {station.NecessaryEmployeePosition}");
-                        newEmployeeID = _generateNewEmployee(station.NecessaryEmployeePosition);
+                        Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
+                        newEmployeeID = _generateNewEmployee(station.CoreEmployeePosition);
                     }
 
                     var actorData = Manager_Actor.GetActorData(newEmployeeID);
@@ -431,7 +439,7 @@ public class JobsiteData
                         continue;
                     }
 
-                    actorData.CareerAndJobs.EmployeePosition = station.NecessaryEmployeePosition;
+                    actorData.CareerAndJobs.SetEmployeePosition(station.CoreEmployeePosition);
 
                     iteration++;
                 }
