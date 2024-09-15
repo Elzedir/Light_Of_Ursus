@@ -7,6 +7,9 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 {
     protected override bool _compareProductionOutput()
     {
+        // Temporary
+        SetIdealRatio(3f);
+
         var producedItems = AllStationsInJobsite
         .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
         .ToList();
@@ -31,9 +34,8 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
         float plankProduction = mergedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
         float currentRatio = logProduction / plankProduction;
-        float idealRatio = 3f;
 
-        float percentageDifference = Mathf.Abs(((currentRatio / idealRatio) * 100) - 100);
+        float percentageDifference = Mathf.Abs(((currentRatio / IdealRatio) * 100) - 100);
 
         Debug.Log($"Log Average: {logProduction}, Plank Average: {plankProduction}, Percentage Difference: {percentageDifference}%");
 
@@ -41,7 +43,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
         if (!isBalanced)
         {
-            _adjustProduction(idealRatio);
+            _adjustProduction(IdealRatio);
         }
 
         return isBalanced;
@@ -52,7 +54,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
     // Implement a percentage threshold to the ideal ratio to end the search early if a combination within the threshold is found.
     // Implement a minimum skill cap either determined by the crafted item skill requirement or a mean average of all employee skills to ensure that the employees assigned to the stations are skilled enough to operate them.
 
-    protected void _adjustProduction(float idealRatio)
+    protected override void _adjustProduction(float idealRatio)
     {
         var allEmployees = new List<int>(JobsiteData.AllEmployeeIDs);
         var bestCombination = new List<int>();

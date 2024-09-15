@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class OperatingAreaComponent : MonoBehaviour
@@ -27,11 +28,7 @@ public class OperatingAreaComponent : MonoBehaviour
     {
         if (OperatingAreaData.CurrentOperatorID == 0 || OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
-        var actorData = Manager_Actor.GetActorData(OperatingAreaData.CurrentOperatorID);
-
-        var actorTransform = actorData.GameObjectProperties.ActorTransform;
-
-        if (actorTransform.position != null && !OperatingArea.bounds.Contains(actorTransform.position))
+        if (OperatingAreaData.CurrentOperator.transform.position != null && !OperatingArea.bounds.Contains(OperatingAreaData.CurrentOperator.transform.position))
         {
             StartCoroutine(MoveOperatorToOperatingArea(Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
 
@@ -47,11 +44,21 @@ public class OperatingAreaComponent : MonoBehaviour
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= actorData.VocationData.GetProgress(vocation);
+                productionRate *= OperatingAreaData.CurrentOperator.ActorData.VocationData.GetProgress(vocation);
             }
 
             return productionRate;
         }
+    }
+
+    public bool CanHaul()
+    {
+        if (OperatingAreaData.CurrentOperatorID == 0 ) return false;
+
+        // Other things that could prevent the operator from hauling like full inventory weight, or other conditions.
+        // Not if HasOrder() since I want to be able to queue orders.
+
+        return true;
     }
 
     protected IEnumerator MoveOperatorToOperatingArea(Actor_Base actor, Vector3 position)

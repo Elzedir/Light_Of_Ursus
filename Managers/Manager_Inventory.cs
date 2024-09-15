@@ -16,7 +16,6 @@ public interface IInventoryOwner
 
 public interface IStationInventory : IInventoryOwner
 {
-    StationName GetStationName();
     Vector3 GetOperatingPosition();
     List<Item> GetStationYield(Actor_Base actor);
 }
@@ -255,15 +254,33 @@ public class InventoryData
         }
     }
 
-    public bool InventoryContainsAllItems(List<Item> items)
+    public List<Item> InventoryMissingAnyItems(List<Item> items)
     {
-        foreach(var item in items)
+        List<Item> missingItems = new();
+
+        foreach (var item in items)
         {
             var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
-            if (!existingItems.Any()) return false;
+            if (!existingItems.Any() || existingItems.Sum(i => i.ItemAmount) < item.ItemAmount)
+            {
+                missingItems.Add(item);
+            }
+        }
 
-            if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount) return false;
+        return missingItems;
+    }
+
+    public List<Item> InventoryContainsAnyItems(List<int> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
+
+    public bool InventoryContainsAllItems(List<Item> items)
+    {
+        foreach (var item in items)
+        {
+            if (!AllInventoryItems.Any(i => i.ItemID == item.ItemID && i.ItemAmount >= item.ItemAmount))
+            {
+                return false;
+            }
         }
 
         return true;

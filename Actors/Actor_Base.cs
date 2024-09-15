@@ -2,12 +2,16 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(BoxCollider))]
 public class Actor_Base : MonoBehaviour, IInventoryOwner
 {
     public ActorData ActorData;
     public void SetActorData(ActorData actorData) => ActorData = actorData;
-    public Rigidbody ActorBody;
-    public Collider ActorCollider;
+    Rigidbody _rigidBody;
+    public Rigidbody RigidBody { get { return _rigidBody ??= gameObject.GetComponent<Rigidbody>(); } }
+    Collider _collider;
+    public Collider Collider { get { return _collider ??= gameObject.GetComponent<BoxCollider>(); } }
     public MeshFilter ActorMesh;
     public MeshRenderer ActorMaterial;
     public Animator ActorAnimator;
@@ -37,8 +41,6 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
 
     public void Initialise()
     {
-        ActorBody = GetComponentInParent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
-        ActorCollider = GetComponent<Collider>() ?? gameObject.AddComponent<BoxCollider>();
         ActorAnimator = GetComponent<Animator>() ?? gameObject.AddComponent<Animator>();
         ActorAnimation = GetComponent<Animation>() ?? gameObject.AddComponent<Animation>();
         ActorMesh = GetComponent<MeshFilter>() ?? gameObject.AddComponent<MeshFilter>();
@@ -74,12 +76,12 @@ public class Actor_Base : MonoBehaviour, IInventoryOwner
         {
             Vector3 direction = (targetPosition - transform.parent.position).normalized;
 
-            ActorBody.velocity = direction * speed;
+            RigidBody.velocity = direction * speed;
 
             yield return null;
         }
 
-        ActorBody.velocity = Vector3.zero;
+        RigidBody.velocity = Vector3.zero;
         transform.parent.position = targetPosition;
     }
 

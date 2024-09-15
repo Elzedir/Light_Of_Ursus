@@ -5,10 +5,15 @@ using UnityEngine;
 
 public class StationComponent_Sawmill : StationComponent
 {
+    public override StationName StationName => StationName.Sawmill;
+    public override StationType StationType => StationType.Crafter;
     public override EmployeePosition CoreEmployeePosition => EmployeePosition.Sawyer;
     public float PercentageStorageFilled = 0;
     public float PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
 
+    public override RecipeName DefaultProduct => RecipeName.Plank;
+    public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Plank };
+    public override List<int> AllowedStoredItemIDs => new List<int> { 1100, 2300 };
     public override int OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
@@ -46,19 +51,14 @@ public class StationComponent_Sawmill : StationComponent
         return operatingAreaComponent;
     }
 
-    public override void InitialiseStationName()
+    public override void InitialiseStationNameAndType()
     {
         StationData.SetStationName(StationName.Sawmill);
     }
 
-    public override void InitialiseRequiredEmployeePositions()
+    public override void InitialiseAllowedEmployeePositions()
     {
-        AllRequiredEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
-    }
-
-    public override void InitialiseAllowedRecipes()
-    {
-        AllowedRecipes.Add(RecipeName.Plank);
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
     }
 
     public override IEnumerator Interact(Actor_Base actor)

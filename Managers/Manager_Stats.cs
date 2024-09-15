@@ -10,44 +10,44 @@ public class Manager_Stats : MonoBehaviour
 public class CombatStats
 {
     #region Basic
-    public float CurrentHealth;
-    public float MaxHealth;
-    public float CurrentMana;
-    public float MaxMana;
-    public float CurrentStamina;
-    public float MaxStamina;
+    public float CurrentHealth = 1;
+    public float MaxHealth = 1;
+    public float CurrentMana = 1;
+    public float MaxMana = 1;
+    public float CurrentStamina = 1;
+    public float MaxStamina = 1;
     #endregion
 
     #region Attack
-    public float AttackDamage;
-    public float AttackSpeed;
-    public float AttackSwingTime;
-    public float AttackRange;
-    public float AttackPushForce;
-    public float AttackCooldown;
+    public float AttackDamage = 1;
+    public float AttackSpeed = 1;
+    public float AttackSwingTime = 1;
+    public float AttackRange = 1;
+    public float AttackPushForce = 1;
+    public float AttackCooldown = 1;
     #endregion
 
     #region Defence
-    public float PhysicalDefence;
-    public float MagicalDefence;
+    public float PhysicalDefence = 0;
+    public float MagicalDefence = 0;
     #endregion
 
     #region Movement
-    public float MoveSpeed;
-    public float DodgeCooldownReduction;
+    public float MoveSpeed = 1;
+    public float DodgeCooldownReduction = 0;
     #endregion
 
-    public CombatStats( bool initialised = true,
-        float currentHealth = 0, float maxHealth = 1, 
-        float currentMana = 0, float maxMana = 1,
-        float currentStamina = 0, float maxStamina = 1,
+    public CombatStats(
+        float currentHealth = 1, float maxHealth = 1, 
+        float currentMana = 1, float maxMana = 1,
+        float currentStamina = 1, float maxStamina = 1,
 
         float attackDamage = 1, float attackSpeed = 1, float attackSwingTime = 1, float attackRange = 1, float attackPushForce = 1, float attackCooldown = 1,
 
         float physicalDefence = 0, float magicalDefence = 0,
 
         float moveSpeed = 1,
-        float dodgeCooldown = 1)
+        float dodgeCooldownReduction = 0)
     {
         CurrentHealth = currentHealth;
         MaxHealth = maxHealth;
@@ -67,7 +67,7 @@ public class CombatStats
         MagicalDefence = magicalDefence;
 
         MoveSpeed = moveSpeed;
-        DodgeCooldownReduction = dodgeCooldown;
+        DodgeCooldownReduction = dodgeCooldownReduction;
     }
 }
 

@@ -14,25 +14,31 @@ public enum StationType
     Storage
 }
 
+[RequireComponent(typeof(BoxCollider))]
 public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 {
     bool _initialised = false;
 
     public StationData StationData;
-
+    public abstract StationName StationName { get; }
+    public abstract StationType StationType { get; }
     public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0); } }
 
     public float InteractRange { get; protected set; }
 
-    public List<EmployeePosition> AllRequiredEmployeePositions;
+    public List<EmployeePosition> AllowedEmployeePositions;
     public abstract EmployeePosition CoreEmployeePosition { get; }
-    public List<RecipeName> AllowedRecipes;
-
+    public abstract RecipeName DefaultProduct { get; }
+    public abstract  List<RecipeName> AllowedRecipes { get; }
+    public abstract List<int> AllowedStoredItemIDs { get; }
     public abstract int OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
     public float BaseProgressRatePerHour = 60;
     List<Item> _currentProductsCrafted = new();
+
+    BoxCollider _boxCollider;
+    public BoxCollider BoxCollider { get { return _boxCollider ??= gameObject.GetComponent<BoxCollider>(); } }
 
     public void AddOperatorToArea(int operatorData)
     {
@@ -48,15 +54,15 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
     }
 
-    public void RemoveOperatorFromArea(ActorData operatorData)
+    public void RemoveOperatorFromArea(int operatorID)
     {
-        if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorData.ActorID))
+        if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorID))
         {
-            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorData.ActorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
+            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
         else
         {
-            Debug.Log($"Operator {operatorData.ActorID}: {operatorData.ActorName.GetName()} not found in operating areas.");
+            Debug.Log($"Operator {operatorID} not found in operating areas.");
         }
     }
 
@@ -73,7 +79,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         return TickRate.OneSecond;
     }
 
-    public void OnTick()
+    public virtual void OnTick()
     {
         if (!_initialised) return;
 
@@ -81,7 +87,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         // Change material check to only happen when operator is set or leaves, or when material is used.
 
         if (!StationData.StationIsActive) Debug.Log($"StationIsActive: {StationData.StationIsActive}");
-        if(!IsStationBeingOperated) Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
+        if (!IsStationBeingOperated) Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
         if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)) Debug.Log($"InventoryContainsAllItems: {StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)}");
 
         if (
@@ -93,8 +99,22 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
     }
 
-    protected void _operateStation()
+    protected virtual void _operateStation()
     {
+        if (StationData.StationProgressData.CurrentProduct.RecipeName == RecipeName.None && DefaultProduct != RecipeName.None)
+        {
+            Debug.Log($"CurrentProduct is None: {StationData.StationProgressData.CurrentProduct}");
+
+            if (Manager_Jobsite.GetJobsiteData(StationData.JobsiteID).JobsiteFactionID != 1)
+            {
+                Debug.Log($"Setting CurrentProduct to DefaultProduct: {DefaultProduct}");
+
+                StationData.StationProgressData.CurrentProduct = Manager_Recipe.GetRecipe(DefaultProduct);
+            }
+        }
+        
+        Debug.Log($"Station: {name} CurrentProduct: {StationData.StationProgressData.CurrentProduct.RecipeName}");
+
         foreach(var operatingArea in AllOperatingAreasInStation)
         {
             StationData.StationProgressData.Progress(operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct));
@@ -103,7 +123,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     public void Initialise()
     {
-        InitialiseStationName();
         AllOperatingAreasInStation = GetAllOperatingAreasInStation();
 
         var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
@@ -118,8 +137,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
 
         SetInteractRange();
-        InitialiseRequiredEmployeePositions();
-        InitialiseAllowedRecipes();
+        InitialiseAllowedEmployeePositions();
         InitialiseStartingInventory();
 
         Manager_TickRate.RegisterTickable(this);
@@ -127,13 +145,21 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         _initialised = true;
     }
 
-    public virtual void InitialiseStationName()
+    public OperatingAreaComponent GetOperatingArea(int operatingAreaID)
     {
-        throw new ArgumentException("Cannot use base class.");
+        return AllOperatingAreasInStation.FirstOrDefault(oa => oa.OperatingAreaData.OperatingAreaID == operatingAreaID);
     }
 
     public List<OperatingAreaComponent> GetAllOperatingAreasInStation()
     {
+        foreach(Transform child in transform)
+        {
+            if (child.name.Contains("OperatingArea"))
+            {
+                Destroy(child);
+            }
+        }
+
         var operatingAreas = new List<OperatingAreaComponent>();
 
         for (int i = 1; i <= OperatingAreaCount; i++)
@@ -146,23 +172,11 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     protected abstract OperatingAreaComponent _createOperatingArea(int operatingAreaID);
 
-    public virtual void InitialiseRequiredEmployeePositions()
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    public abstract void InitialiseAllowedEmployeePositions();
 
-    public virtual void InitialiseAllowedRecipes()
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
-
-    public virtual void InitialiseStartingInventory()
-    {
-        
-    }
+    public abstract void InitialiseStartingInventory();
 
     public void SetStationData(StationData stationData) => StationData = stationData;
-    public void SetJobsiteID(int jobsiteID) => StationData.JobsiteID = jobsiteID;
 
     public void SetInteractRange(float interactRange = 2)
     {
@@ -294,7 +308,7 @@ public class StationComponent_Editor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspectorExcept(nameof(StationComponent.StationData), nameof(StationComponent.AllRequiredEmployeePositions), nameof(StationComponent.AllowedRecipes));
+        DrawDefaultInspectorExcept(nameof(StationComponent.StationData), nameof(StationComponent.AllowedEmployeePositions), nameof(StationComponent.AllowedRecipes));
 
         StationComponent stationComponent = (StationComponent)target;
         StationData stationData = stationComponent.StationData;
@@ -305,14 +319,12 @@ public class StationComponent_Editor : Editor
 
         if (_showBasicInfo)
         {
-            stationData.StationID = EditorGUILayout.IntField("StationID", stationData.StationID);
-            stationData.StationType = (StationType)EditorGUILayout.EnumPopup("StationType", stationData.StationType);
-            stationData.StationName = (StationName)EditorGUILayout.EnumPopup("StationName", stationData.StationName);
-            stationData.JobsiteID = EditorGUILayout.IntField("JobsiteID", stationData.JobsiteID);
-            stationData.StationIsActive = EditorGUILayout.Toggle("StationIsActive", stationData.StationIsActive);
-            stationData.StationDescription = EditorGUILayout.TextField("StationDescription", stationData.StationDescription);
-
-            EditorUtility.SetDirty(stationComponent);
+            EditorGUILayout.LabelField("StationID", stationData.StationID.ToString());
+            EditorGUILayout.LabelField("StationType", stationData.StationType.ToString());
+            EditorGUILayout.LabelField("StationName", stationData.StationName.ToString());
+            EditorGUILayout.LabelField("JobsiteID", stationData.JobsiteID.ToString());
+            EditorGUILayout.LabelField("StationIsActive", stationData.StationIsActive.ToString());
+            EditorGUILayout.LabelField("StationDescription", stationData.StationDescription);
         }
 
         if (stationData.ProductionData != null)
@@ -395,41 +407,6 @@ public class StationComponent_Editor : Editor
                 EditorGUILayout.PropertyField(property, true);
             }
             enterChildren = false;
-        }
-    }
-}
-
-[Serializable]
-public class StationProgressData
-{
-    public float CurrentProgress;
-    public float CurrentQuality;
-    public Recipe CurrentProduct;
-
-    public StationProgressData(Recipe currentProduct)
-    {
-        CurrentProgress = 0;
-        CurrentQuality = 0;
-
-        CurrentProduct = currentProduct;
-    }
-
-    public void Progress(float progress)
-    {
-        //if (progress == 0) return;
-
-        CurrentProgress += progress;
-        CurrentQuality += progress;
-
-        // Max progress is 0 for some reason.
-
-        Debug.LogError($"CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
-
-        if (CurrentProgress >= CurrentProduct.RequiredProgress)
-        {
-            Debug.Log($"CurrentProduct: {CurrentProduct.RecipeName} has been crafted.");
-            // Create the item using total quality.
-            return;
         }
     }
 }

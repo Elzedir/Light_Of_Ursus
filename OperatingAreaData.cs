@@ -6,19 +6,33 @@ using UnityEngine;
 [Serializable]
 public class OperatingAreaData
 {
+    #region ID Info
     public int OperatingAreaID;
     public int StationID;
+    StationComponent _station;
+    public StationComponent Station { get { return _station ??= Manager_Station.GetStation(StationID); } }
+    public int JobsiteID;
+    JobsiteComponent _jobsite;
+    public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
+    #endregion
 
     public bool OperatingAreaIsActive = true;
 
+    #region Operator
     public int CurrentOperatorID;
+    Actor_Base _currentOperator;
+    public Actor_Base CurrentOperator { get { return _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID); } }
     public bool HasOperator() => CurrentOperatorID != 0;
     public bool IsOperatorMovingToOperatingArea = false;
+    #endregion
+
+    public OrderData OrderData;
 
     public OperatingAreaData(int operatingAreaID, int stationID)
     {
         OperatingAreaID = operatingAreaID;
         StationID = stationID;
+        JobsiteID = Station.StationData.JobsiteID;
         CurrentOperatorID = 0;
     }
 

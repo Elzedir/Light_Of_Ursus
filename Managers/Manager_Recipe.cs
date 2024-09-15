@@ -69,6 +69,7 @@ public class Manager_Recipe : MonoBehaviour
 
 public enum RecipeName 
 {
+    None,
     Plank,
     Log
 }

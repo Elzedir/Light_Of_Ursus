@@ -5,8 +5,13 @@ using UnityEngine;
 
 public class StationComponent_Tree : StationComponent
 {
+    public override StationName StationName => StationName.Tree;
+    public override StationType StationType => StationType.Resource;
     public override EmployeePosition CoreEmployeePosition => EmployeePosition.Logger;
 
+    public override RecipeName DefaultProduct => RecipeName.Log;
+    public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Log };
+    public override List<int> AllowedStoredItemIDs => new List<int>();
     public override int OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
@@ -44,19 +49,9 @@ public class StationComponent_Tree : StationComponent
         return operatingAreaComponent;
     }
 
-    public override void InitialiseStationName()
+    public override void InitialiseAllowedEmployeePositions()
     {
-        StationData.SetStationName(StationName.Tree);
-    }
-
-    public override void InitialiseRequiredEmployeePositions()
-    {
-        AllRequiredEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
-    }
-
-    public override void InitialiseAllowedRecipes()
-    {
-        AllowedRecipes.Add(RecipeName.Log);
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
     }
 
     public override void InitialiseStartingInventory()

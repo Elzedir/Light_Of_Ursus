@@ -9,7 +9,6 @@ public class Manager_City : MonoBehaviour, IDataPersistence
     public static AllCities_SO AllCities;
     public static Dictionary<int, CityData> AllCityData;
     public static Dictionary<int, CityComponent> AllCityComponents = new();
-    public int LastUnusedCityID = 1;
 
     public void SaveData(SaveData data)
     {
@@ -111,7 +110,7 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         AllCityData.Add(cityData.CityID, cityData);
     }
 
-    public void UpdateAllCityData(CityData cityData)
+    public void UpdateCityData(CityData cityData)
     {
         if (!AllCityData.ContainsKey(cityData.CityID))
         {
@@ -142,15 +141,5 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         }
 
         return AllCityComponents[cityID];
-    }
-
-    public int GetRandomCityID()
-    {
-        int cityID = 1;
-        while (AllCityData.ContainsKey(cityID))
-        {
-            cityID++;
-        }
-        return cityID;
     }
 }

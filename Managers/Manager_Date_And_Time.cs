@@ -82,25 +82,10 @@ public class Date
 {
     public int TotalDays;
 
-    public Date(int totalDays)
-    {
-        TotalDays = totalDays;
-    }
+    public Date(int totalDays) => TotalDays = totalDays;
+    public Date (int day, int month, int year) => TotalDays = ConvertToTotalDays(day, month, year);
 
-    public Date (int day, int month, int year)
-    {
-        TotalDays = ConvertToTotalDays(day, month, year);
-    }
-
-    public static int operator - (Date a, Date b)
-    {
-        return a.TotalDays - b.TotalDays;
-    }
-
-    public float GetAge(Date birthday)
-    {
-        return TotalDays - birthday.TotalDays;
-    }
+    public float GetAge() => CurrentDate.CurrentTotalDays - TotalDays;
 
     public static (int day, int month, int year) ConvertFromTotalDays(int totalDays)
     {

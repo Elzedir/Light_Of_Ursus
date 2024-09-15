@@ -29,6 +29,7 @@ public class ActorData
     public StatsAndAbilities StatsAndAbilities;
     public InventoryAndEquipment InventoryAndEquipment;
     public QuestData ActorQuests;
+    public OrderData OrderData;
 
     public void PrepareForInitialisation()
     {
@@ -68,6 +69,7 @@ public class ActorData
         StatsAndAbilities = new StatsAndAbilities(ActorID);
         InventoryAndEquipment = new InventoryAndEquipment(ActorID);
         ActorQuests = new QuestData(ActorID);
+        OrderData = new OrderData(ActorID);
     }
 }
 
@@ -110,6 +112,8 @@ public class FullIdentification
     public ActorName ActorName;
     public int ActorFactionID;
     public int ActorCityID;
+    public Date ActorBirthDate;
+    public float ActorAge => ActorBirthDate.GetAge();
     public Family ActorFamily;
     public Background Background;
 
@@ -299,16 +303,13 @@ public class ActorStats
 {
     public int ActorID;
 
-    public Date ActorBirthDate;
-    public float ActorAge;
-
     public ActorLevelData ActorLevelData;
-    public int ActorGold;
     public SPECIAL ActorSpecial;
-
     public CombatStats CombatStats;
 
     public ActorStats(int actorID) => ActorID = actorID;
+
+    public float CarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
 }
 
 [Serializable]
@@ -327,6 +328,7 @@ public class ActorAspects
         if (index == -1)
         {
             Debug.Log("No empty aspect slots available.");
+            return;
         }
 
         ActorAspectList[index] = aspect;
@@ -351,7 +353,7 @@ public class ActorAspects
 public class ActorLevelData
 {
     public int ActorID;
-    public int Level;
+    public int ActorLevel;
     public int TotalExperience;
     public int TotalSkillPoints;
     public int UsedSkillPoints;
@@ -362,7 +364,7 @@ public class ActorLevelData
     public ActorLevelData(int actorID, int level = 1, int totalExperience = 0, int totalSkillPoints = 0, int totalSPECIALPoints = 0, bool canAddNewSkillSet = false)
     {
         ActorID = actorID;
-        Level = level;
+        ActorLevel = level;
         TotalExperience = totalExperience;
         TotalSkillPoints = totalSkillPoints;
         TotalSPECIALPoints = totalSPECIALPoints;
@@ -378,7 +380,7 @@ public class ActorLevelData
 
     public void LevelUpCheck()
     {
-        var levelData = Manager_CharacterLevels.AllLevelUpData[Level];
+        var levelData = Manager_CharacterLevels.AllLevelUpData[ActorLevel];
 
         if (TotalExperience >= levelData.TotalExperienceRequired)
         {
@@ -390,7 +392,7 @@ public class ActorLevelData
     {
         var actorData = Manager_Actor.GetActorData(ActorID);
 
-        Level = levelData.Level;
+        ActorLevel = levelData.Level;
         TotalSkillPoints += levelData.SkillPoints;
         TotalSPECIALPoints += levelData.SPECIALPoints;
 
@@ -501,4 +503,20 @@ public class QuestData
     }
 
     public QuestData(int actorID) => ActorID = actorID;
+}
+
+
+[Serializable]
+public class OrderData
+{
+    public int ActorID;
+    public List<int> AllOrderIDs;
+    public bool HasOrder() => AllOrderIDs.Any(o => Manager_Order.GetOrder(o).OrderStatus != OrderStatus.Complete);
+
+    public OrderData(int actorID) => ActorID = actorID;
+
+    public void AddOrder(int orderID) => AllOrderIDs.Add(orderID);
+    public void RemoveOrder(int orderID) => AllOrderIDs.Remove(orderID);
+    public void RemoveCompletedOrders() => AllOrderIDs.RemoveAll(o => Manager_Order.GetOrder(o).OrderStatus == OrderStatus.Complete);
+    public void RemoveAllOrders() => AllOrderIDs.Clear();
 }

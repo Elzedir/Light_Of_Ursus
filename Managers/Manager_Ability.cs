@@ -48,7 +48,7 @@ public class Manager_Ability : MonoBehaviour
         {
             if (actor == null) throw new ArgumentException("Actor is null.");
 
-            actor.ActorBody.AddForce(new Vector3(Camera.main.transform.forward.x, 25, Camera.main.transform.forward.z), ForceMode.Impulse);
+            actor.RigidBody.AddForce(new Vector3(Camera.main.transform.forward.x, 25, Camera.main.transform.forward.z), ForceMode.Impulse);
 
             float elapsedTime = 0;
             GameObject reticleGO = new GameObject("Reticle");
@@ -82,8 +82,8 @@ public class Manager_Ability : MonoBehaviour
 
         void stomp(RaycastHit hit, Actor_Base actor)
         {
-            Vector3 direction = (hit.point - actor.ActorBody.transform.position).normalized;
-            actor.ActorBody.AddForce(direction * 50, ForceMode.Impulse);
+            Vector3 direction = (hit.point - actor.RigidBody.transform.position).normalized;
+            actor.RigidBody.AddForce(direction * 50, ForceMode.Impulse);
         }
 
         return new Ability(

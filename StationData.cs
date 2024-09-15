@@ -1,9 +1,5 @@
-using NUnit.Framework.Constraints;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using TMPro;
 using UnityEditor;
 using UnityEngine;
 
@@ -28,11 +24,11 @@ public enum StationName
 }
 
 [Serializable]
-public class StationData : IStationInventory
+public abstract class StationData : IStationInventory
 {
     public int StationID;
-    public StationType StationType;
-    public StationName StationName;
+    public abstract StationName StationName { get; }
+    public abstract StationType StationType { get; }
     public int JobsiteID;
 
     public bool StationIsActive = true;
@@ -67,7 +63,7 @@ public class StationData : IStationInventory
 
     void _initialiseStationData()
     {
-        // Start working
+        if (StationProgressData == null) StationProgressData = new StationProgressData();
     }
 
     public bool AddOperatorToStation(int operatorID)
@@ -97,34 +93,18 @@ public class StationData : IStationInventory
         return false;
     }
 
-    public List<Item> GetStationYield(Actor_Base actor)
-    {
-        throw new ArgumentException("Base class cannot be used.");
-    }
+    public abstract List<Item> GetStationYield(Actor_Base actor);
 
-    public Vector3 GetOperatingPosition()
-    {
-        throw new ArgumentException("Base class cannot be used.");
-    }
+    public abstract Vector3 GetOperatingPosition();
 
     public void SetStationIsActive(bool stationIsActive)
     {
         StationIsActive = stationIsActive;
     }
 
-    public void SetStationName(StationName stationName)
-    {
-        StationName = stationName;
-    }
-
     public GameObject GetGameObject()
     {
         return Manager_Station.GetStation(StationID).gameObject;
-    }
-
-    public StationName GetStationName()
-    {
-        return StationName;
     }
 
     public InventoryData GetInventoryData()
@@ -150,5 +130,82 @@ public class StationData_Drawer : PropertyDrawer
     {
         return EditorGUI.GetPropertyHeight(property, label, true);
 
+    }
+}
+
+[Serializable]
+public class ProductionData
+{
+    public List<Item> AllProducedItems;
+    public List<Item> EstimatedProductionRatePerHour;
+    public List<Item> ActualProductionRatePerHour;
+    public int StationID;
+    private StationComponent _station;
+
+    public StationComponent Station
+    {
+        get
+        {
+            try { return _station ??= Manager_Station.GetStation(StationID); }
+            catch (Exception e) { Debug.LogError(e); return null; }
+        }
+        set
+        {
+            _station = value;
+        }
+    }
+
+    public ProductionData(List<Item> allProducedItems, int stationID)
+    {
+        AllProducedItems = allProducedItems;
+        StationID = stationID;
+    }
+
+    public List<Item> GetActualProductionRatePerHour()
+    {
+        return ActualProductionRatePerHour = Station.GetActualProductionRatePerHour();
+    }
+
+    public List<Item> GetEstimatedProductionRatePerHour()
+    {
+        return EstimatedProductionRatePerHour = Station.GetEstimatedProductionRatePerHour();
+    }
+}
+
+[Serializable]
+public class StationProgressData
+{
+    public float CurrentProgress;
+    public float CurrentQuality;
+    public Recipe CurrentProduct;
+    public void SetCurrentProduct(Recipe currentProduct) => CurrentProduct = currentProduct;
+
+    public StationProgressData()
+    {
+        CurrentProgress = 0;
+        CurrentQuality = 0;
+
+        CurrentProduct = null;
+    }
+
+    public void Progress(float progress)
+    {
+        //if (progress == 0) return;
+
+        if (CurrentProduct.RecipeName == RecipeName.None) return;
+
+        CurrentProgress += progress;
+        CurrentQuality += progress;
+
+        // Max progress is 0 for some reason.
+
+        Debug.LogError($"For Recipe {CurrentProduct.RecipeName} CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
+
+        if (CurrentProgress >= CurrentProduct.RequiredProgress)
+        {
+            Debug.Log($"CurrentProduct: {CurrentProduct.RecipeName} has been crafted.");
+            // Create the item using total quality.
+            return;
+        }
     }
 }

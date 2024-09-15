@@ -28,7 +28,7 @@ public enum EmployeePosition
     Hauler,
 }
 
-public class JobsiteComponent : MonoBehaviour, ITickable
+public abstract class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;
     public void SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
@@ -39,19 +39,16 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
     public bool JobsiteOpen = true;
 
+    public float IdealRatio;
+    public void SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
     public int PermittedProductionInequality = 10;
     public bool CustomerPresent = false;
-
-    public void Awake()
-    {
-        
-    }
 
     public void Initialise()
     {
         AllStationsInJobsite = GetAllStationsInJobsite();
 
-        AllStationsInJobsite.ForEach(station => station.SetJobsiteID(JobsiteData.JobsiteID));
+        AllStationsInJobsite.ForEach(station => station.StationData.JobsiteID = JobsiteData.JobsiteID);
 
         Manager_TickRate.RegisterTickable(this);
     }
@@ -72,12 +69,10 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         return TickRate.OneGameHour;
     }
 
-    protected virtual bool _compareProductionOutput() { throw new ArgumentException("Cannot use base class"); }
+    protected abstract bool _compareProductionOutput();
 
-    protected virtual void _adjustProduction() { throw new ArgumentException("Cannot use base class"); }
-
-    protected virtual void _redistributeEmployees() { throw new ArgumentException("Cannot use base class"); }
-    protected virtual VocationName _getRelevantVocation(EmployeePosition position) { throw new ArgumentException("Cannot use base class"); }
+    protected abstract void _adjustProduction(float idealRatio);
+    protected abstract VocationName _getRelevantVocation(EmployeePosition position);
 
     public void RefreshJobsite()
     {
@@ -99,7 +94,7 @@ public class JobsiteComponent : MonoBehaviour, ITickable
 
         foreach (var station in AllStationsInJobsite)
         {
-            foreach (var position in station.AllRequiredEmployeePositions)
+            foreach (var position in station.AllowedEmployeePositions)
             {
                 employeePositions.Add(position);
             }
@@ -115,12 +110,12 @@ public class JobsiteComponent : MonoBehaviour, ITickable
             station.RemoveAllOperators();
         }
 
-        var employees = employeeIDs.Select(employeeID => Manager_Actor.GetActorData(employeeID)).ToList();
+        var tempEmployees = employeeIDs.Select(employeeID => Manager_Actor.GetActorData(employeeID)).ToList();
 
         foreach (var station in AllStationsInJobsite)
         {
-            var allowedPositions = station.AllRequiredEmployeePositions;
-            var employeesForStation = employees
+            var allowedPositions = station.AllowedEmployeePositions;
+            var employeesForStation = tempEmployees
                 .Where(e => allowedPositions.Contains(e.CareerAndJobs.EmployeePosition))
                 .OrderByDescending(e => e.CareerAndJobs.EmployeePosition)
                 .ThenByDescending(e => e.VocationData.GetVocationExperience(_getRelevantVocation(e.CareerAndJobs.EmployeePosition)))
@@ -129,7 +124,12 @@ public class JobsiteComponent : MonoBehaviour, ITickable
             foreach (var employee in employeesForStation)
             {
                 JobsiteData.AddEmployeeToStation(employee.ActorID, station.StationData.StationID);
-                employees.Remove(employee);
+                tempEmployees.Remove(employee);
+            }
+
+            if (tempEmployees.Count > 0)
+            {
+                Debug.Log($"Not all employees were assigned to stations. {tempEmployees.Count} employees left.");
             }
         }
     }
@@ -153,47 +153,5 @@ public class JobsiteComponent : MonoBehaviour, ITickable
         }
 
         return result;
-    }
-}
-
-[Serializable]
-public class ProductionData
-{
-    public List<Item> AllProducedItems;
-    public List<Item> EstimatedProductionRatePerHour;
-    public List<Item> ActualProductionRatePerHour;
-    public int StationID;
-    private StationComponent _station;
-
-    public StationComponent Station
-    {
-        get
-        {
-            if (_station == null)
-            {
-                _station = Manager_Station.GetStation(StationID);
-            }
-            return _station;
-        }
-        set
-        {
-            _station = value;
-        }
-    }
-
-    public ProductionData(List<Item> allProducedItems, int stationID)
-    {
-        AllProducedItems = allProducedItems;
-        StationID = stationID;
-    }
-
-    public List<Item> GetActualProductionRatePerHour()
-    {
-        return ActualProductionRatePerHour = Station.GetActualProductionRatePerHour();
-    }
-
-    public List<Item> GetEstimatedProductionRatePerHour()
-    {
-        return EstimatedProductionRatePerHour = Station.GetEstimatedProductionRatePerHour();
     }
 }

@@ -31,6 +31,8 @@ public class JobsiteData
 
     public List<int> AllStationIDs;
 
+    // Work out how to do quotas and set production rate
+
     public void InitialiseJobsiteData()
     {
         var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
