@@ -2,18 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class Manager_Station : MonoBehaviour, IDataPersistence
 {
     public static AllStations_SO AllStations;
-    public static Dictionary<int, StationData> AllStationData;
+    public static Dictionary<int, StationData> AllStationData = new();
+    
+    static int _lastUnusedStationID = 1;
     public static Dictionary<int, StationComponent> AllStationComponents = new();
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
     public void LoadData(SaveData saveData)
     {
-        AllStationData = saveData.SavedStationData?.AllStationData.ToDictionary(x => x.StationID);
+        if (saveData == null)
+        {
+            Debug.Log("No SaveData found in LoadData.");
+            return;
+        }
+        if (saveData.SavedStationData == null)
+        {
+            Debug.Log("No SavedStationData found in SaveData.");
+            return;
+        }
+        if (saveData.SavedStationData.AllStationData == null)
+        {
+            Debug.Log("No AllStationData found in SavedStationData.");
+            return;
+        }
+        if (saveData.SavedStationData.AllStationData.Count == 0)
+        {
+            Debug.Log("AllStationData count is 0.");
+            return;
+        }
+
+        AllStationData = saveData.SavedStationData.AllStationData.ToDictionary(x => x.StationID);
     }
 
     public void OnSceneLoaded()
@@ -25,8 +53,6 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
-        if (AllStationData == null) AllStationData = new();
-
         foreach (var station in _findAllStationComponents())
         {
             if (station.StationData == null) { Debug.Log($"Station: {station.name} does not have StationData."); continue; }
@@ -43,7 +69,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
 
             if (!AllStationData.ContainsKey(station.StationData.StationID))
             {
-                Debug.Log($"Station: {station.StationData.StationID}: {station.StationData.StationName} was not in AllStationData");
+                Debug.Log($"Station: {station.StationData.StationID}: {station.StationName} was not in AllStationData");
                 AddToAllStationData(station.StationData);
             }
 
@@ -109,17 +135,6 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
         return AllStationComponents[stationID];
     }
 
-
-    public int GetRandomStationID()
-    {
-        int stationID = 1;
-        while (AllStationData.ContainsKey(stationID))
-        {
-            stationID++;
-        }
-        return stationID;
-    }
-
     public static void GetNearestStationToPosition(Vector3 position, StationName stationName, out StationComponent nearestStation)
     {
         nearestStation = null;
@@ -135,5 +150,15 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
                 nearestDistance = distance;
             }
         }
+    }
+
+    public static int GetStationID()
+    {
+        while(AllStationData.ContainsKey(_lastUnusedStationID))
+        {
+            _lastUnusedStationID++;
+        }
+
+        return _lastUnusedStationID;
     }
 }

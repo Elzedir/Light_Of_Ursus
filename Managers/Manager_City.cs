@@ -7,7 +7,8 @@ using UnityEngine;
 public class Manager_City : MonoBehaviour, IDataPersistence
 {
     public static AllCities_SO AllCities;
-    public static Dictionary<int, CityData> AllCityData;
+    public static Dictionary<int, CityData> AllCityData = new();
+    static int _lastUnusedCityID = 1;
     public static Dictionary<int, CityComponent> AllCityComponents = new();
 
     public void SaveData(SaveData data)
@@ -17,6 +18,27 @@ public class Manager_City : MonoBehaviour, IDataPersistence
     }
     public void LoadData(SaveData data)
     {
+        if (data == null)
+        {
+            Debug.Log("No SaveData found in LoadData.");
+            return;
+        }
+        if (data.SavedCityData == null)
+        {
+            Debug.Log("No SavedCityData found in SaveData.");
+            return;
+        }
+        if (data.SavedCityData.AllCityData == null)
+        {
+            Debug.Log("No AllCityData found in SavedCityData.");
+            return;
+        }
+        if (data.SavedCityData.AllCityData.Count == 0)
+        {
+            Debug.Log("AllCityData count is 0.");
+            return;
+        }
+        
         AllCityData = data.SavedCityData?.AllCityData.ToDictionary(x => x.CityID);
         AllCityData?.Values.ToList().ForEach(cityData => cityData.LoadData());
     }
@@ -42,8 +64,6 @@ public class Manager_City : MonoBehaviour, IDataPersistence
 
     void _initialiseAllCityData()
     {
-        if (AllCityData == null) AllCityData = new();
-
         foreach (var city in _findAllCityComponents())
         {
             if (city.CityData == null) { Debug.Log($"City: {city.name} does not have CityData."); continue; }
@@ -141,5 +161,15 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         }
 
         return AllCityComponents[cityID];
+    }
+
+    public int GetRandomCityID()
+    {
+        while (AllCityData.ContainsKey(_lastUnusedCityID))
+        {
+            _lastUnusedCityID++;
+        }
+
+        return _lastUnusedCityID;
     }
 }

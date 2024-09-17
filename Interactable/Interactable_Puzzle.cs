@@ -31,12 +31,12 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(Actor_Base interactor)
+    public bool WithinInteractRange(ActorComponent interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(Actor_Base actor)
+    public IEnumerator Interact(ActorComponent actor)
     {
         if (actor.TryGetComponent(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
         { 

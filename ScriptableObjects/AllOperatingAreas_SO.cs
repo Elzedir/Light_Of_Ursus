@@ -20,17 +20,12 @@ public class AllOperatingAreas_SO : ScriptableObject
     {
         AllOperatingAreaData.Clear();
     }
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllOperatingAreas_SO))]
 public class AllOperatingAreasSOEditor : Editor
 {
     int _selectedOperatingAreaIndex = -1;
-
-    Vector2 _operatingAreaScrollPos;
 
     public override void OnInspectorGUI()
     {
@@ -43,7 +38,11 @@ public class AllOperatingAreasSOEditor : Editor
         }
 
         EditorGUILayout.LabelField("All Operating Areas", EditorStyles.boldLabel);
-        _operatingAreaScrollPos = EditorGUILayout.BeginScrollView(_operatingAreaScrollPos, GUILayout.Height(GetListHeight(allOperatingAreasSO.AllOperatingAreaData.Count)));
+
+        Vector2 operatingAreaScrollPos = Vector2.zero;
+
+        operatingAreaScrollPos = EditorGUILayout.BeginScrollView(operatingAreaScrollPos, GUILayout.Height(GetListHeight(allOperatingAreasSO.AllOperatingAreaData.Count)));
+        
         _selectedOperatingAreaIndex = GUILayout.SelectionGrid(_selectedOperatingAreaIndex, GetOperatingAreaNames(allOperatingAreasSO), 1);
         EditorGUILayout.EndScrollView();
 

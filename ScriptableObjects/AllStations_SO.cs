@@ -20,9 +20,6 @@ public class AllStations_SO : ScriptableObject
     {
         AllStationData.Clear();
     }
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllStations_SO))]
@@ -58,7 +55,7 @@ public class AllStationsSOEditor : Editor
 
     private string[] GetStationNames(AllStations_SO allStationsSO)
     {
-        return allStationsSO.AllStationData.Select(s => s.StationName.ToString()).ToArray();
+        return allStationsSO.AllStationData.Select(s => s.StationID.ToString()).ToArray();
     }
 
     private float GetListHeight(int itemCount)
@@ -69,7 +66,7 @@ public class AllStationsSOEditor : Editor
     private void DrawStationAdditionalData(StationData selectedStationData)
     {
         EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
+        //EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
         EditorGUILayout.LabelField("Station ID", selectedStationData.StationID.ToString());
         EditorGUILayout.LabelField("Jobsite ID", selectedStationData.JobsiteID.ToString());
 

@@ -24,11 +24,9 @@ public enum StationName
 }
 
 [Serializable]
-public abstract class StationData : IStationInventory
+public class StationData : IStationInventory
 {
     public int StationID;
-    public abstract StationName StationName { get; }
-    public abstract StationType StationType { get; }
     public int JobsiteID;
 
     public bool StationIsActive = true;
@@ -92,10 +90,6 @@ public abstract class StationData : IStationInventory
         Debug.Log($"CurrentOperators does not contain operator: {operatorID}");
         return false;
     }
-
-    public abstract List<Item> GetStationYield(Actor_Base actor);
-
-    public abstract Vector3 GetOperatingPosition();
 
     public void SetStationIsActive(bool stationIsActive)
     {

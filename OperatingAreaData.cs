@@ -20,8 +20,8 @@ public class OperatingAreaData
 
     #region Operator
     public int CurrentOperatorID;
-    Actor_Base _currentOperator;
-    public Actor_Base CurrentOperator { get { return _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID); } }
+    ActorComponent _currentOperator;
+    public ActorComponent CurrentOperator { get { return _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID); } }
     public bool HasOperator() => CurrentOperatorID != 0;
     public bool IsOperatorMovingToOperatingArea = false;
     #endregion

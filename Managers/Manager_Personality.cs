@@ -103,13 +103,13 @@ public enum PersonalityTraitName { Arrogant, Ambitious, Brave, Craven, Deceitful
 
 public class PersonalityComponent
 {
-    public Actor_Base Actor;
+    public ActorComponent Actor;
     public string PersonalityTitle;
     public string PersonalityDescription;
 
     public HashSet<PersonalityTrait> PersonalityTraits = new();
 
-    public PersonalityComponent(Actor_Base actor, HashSet<PersonalityTrait> personalityTraits)
+    public PersonalityComponent(ActorComponent actor, HashSet<PersonalityTrait> personalityTraits)
     {
         Actor = actor;
         PersonalityTraits = personalityTraits;

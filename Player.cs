@@ -7,7 +7,7 @@ using static UnityEditor.Timeline.TimelinePlaybackControls;
 
 public class Player : Controller, IDataPersistence
 {
-    Actor_Base _actor;
+    ActorComponent _actor;
     public float SpeedIncrease;
     Collider _coll_Body;
     Animator _animator;
@@ -26,7 +26,7 @@ public class Player : Controller, IDataPersistence
 
     public void Start()
     {
-        _actor = GetComponent<Actor_Base>();
+        _actor = GetComponent<ActorComponent>();
         _coll_Body = GetComponent<Collider>();
         _animator = GetComponent<Animator>();
         //_animation = GameObject.Find("TestActor").GetComponent<Animation>();

@@ -15,13 +15,10 @@ public class AllCities_SO : ScriptableObject
         AllCityData = allCityData;
     }
 
-    public void ClearRegionData()
+    public void ClearCityData()
     {
         AllCityData.Clear();
     }
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllCities_SO))]
@@ -42,7 +39,7 @@ public class AllCitiesSOEditor : Editor
 
         if (GUILayout.Button("Clear City Data"))
         {
-            allCitiesSO.ClearRegionData();
+            allCitiesSO.ClearCityData();
             EditorUtility.SetDirty(allCitiesSO);
         }
 

@@ -3,7 +3,7 @@ using System.Linq;
 
 public class Manager_Relation
 {
-    public static float GetRelation(Actor_Base a, Actor_Base b)
+    public static float GetRelation(ActorComponent a, ActorComponent b)
     {
         float relation = 0;
 

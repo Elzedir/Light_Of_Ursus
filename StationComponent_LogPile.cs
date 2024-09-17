@@ -50,10 +50,7 @@ public class StationComponent_LogPile : StationComponent
     }
     public bool SalesEnabled = false;
 
-    public override void InitialiseStationNameAndType()
-    {
-        StationData.SetStationName(StationName.Log_Pile);
-    }
+    public override void InitialiseStartingInventory() { }
 
     public override void InitialiseAllowedEmployeePositions()
     {
@@ -75,9 +72,9 @@ public class StationComponent_LogPile : StationComponent
             if (!operatingArea.CanHaul()) continue;
 
             var stationsToHaulFrom = Manager_Jobsite.GetJobsite(StationData.JobsiteID).AllStationsInJobsite
-                .Where(s => s.StationData.StationType == StationType.Crafter)
+                .Where(s => s.StationType == StationType.Crafter)
                 .Where(s => s.AllowedRecipes.Contains(RecipeName.Plank))
-                .Where(s => s.StationData.InventoryData.InventoryContainsAnyItems(new List<int> { 2300 }).Count > 0)
+                .Where(s => s.StationData.InventoryData.InventoryContainsItems(new List<int> { 1100, 2300 }).Count > 0)
                 .ToList();
 
             if (stationsToHaulFrom.Count == 0) continue;
@@ -85,15 +82,21 @@ public class StationComponent_LogPile : StationComponent
             // Temporary for now, later, find the nearest station and haul from there.
             var stationToHaulFrom = stationsToHaulFrom[Random.Range(0, stationsToHaulFrom.Count)];
 
-            var itemsToHaul = stationToHaulFrom.StationData.InventoryData.InventoryContainsAnyItems(new List<int> { 2300 });
+            var itemsToHaul = stationToHaulFrom.StationData.InventoryData.InventoryContainsItems(new List<int> { 1100, 2300 });
 
             if (itemsToHaul.Count == 0) continue;
 
-            // Find a new way to add new orderIDs.
-            var haulOrderFetch = new Order_Haul_Fetch(0, 0, stationToHaulFrom.StationData.StationID, StationData.StationID, OrderStatus.Pending, itemsToHaul);
-
+            var haulOrderFetch = new Order_Haul_Fetch(
+                actorID: operatingArea.OperatingAreaData.CurrentOperatorID, 
+                stationID_Source: stationToHaulFrom.StationData.StationID, 
+                stationID_Destination: StationData.StationID, 
+                orderStatus: OrderStatus.Pending, 
+                orderItems: itemsToHaul);
+            
             // Check if there are any items in any of the stations that need to be hauled, usually from crafter to storage since raw materials would be directly transferred to the gatherer. Or from a raw material storage to the crafter.
             // Check for any dropped items too.
+
+            operatingArea.OperatingAreaData.OrderData.AddOrder(haulOrderFetch.OrderID);
         }
     }
 }

@@ -5,8 +5,9 @@ using UnityEngine;
 public class Manager_Actor : MonoBehaviour, IDataPersistence
 {
     public static AllActors_SO AllActors;
-    public static Dictionary<int, ActorData> AllActorData;
-    public static Dictionary<int, Actor_Base> AllActorComponents = new();
+    public static Dictionary<int, ActorData> AllActorData = new();
+    static int _lastUnusedActorID = 1;
+    public static Dictionary<int, ActorComponent> AllActorComponents = new();
 
     public void SaveData(SaveData data)
     {
@@ -40,8 +41,6 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
-        if(AllActorData == null) AllActorData = new();
-
         foreach (var actor in _findAllActorComponents())
         {
             if (actor.ActorData == null) { Debug.Log($"Actor: {actor.name} does not have ActorData."); continue; }
@@ -66,10 +65,10 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         }
     }
 
-    static List<Actor_Base> _findAllActorComponents()
+    static List<ActorComponent> _findAllActorComponents()
     {
         return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-            .OfType<Actor_Base>()
+            .OfType<ActorComponent>()
             .ToList();
     }
 
@@ -116,7 +115,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return AllActorData[actorID];
     }
 
-    public static Actor_Base GetActor(int actorID, bool generateActorIfNotFound = false)
+    public static ActorComponent GetActor(int actorID, bool generateActorIfNotFound = false)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
@@ -130,9 +129,9 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return null;
     }
 
-    public static Actor_Base SpawnNewActor(Vector3 spawnPoint)
+    public static ActorComponent SpawnNewActor(Vector3 spawnPoint)
     {
-        Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
+        ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
 
         actor.SetActorData(GenerateNewActorData(actor));
         actor.Initialise();
@@ -143,12 +142,12 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     }
 
     // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-    public static Actor_Base SpawnActor(Vector3 spawnPoint, int actorID, bool despawnActorIfExists = false)
+    public static ActorComponent SpawnActor(Vector3 spawnPoint, int actorID, bool despawnActorIfExists = false)
     {
         if (despawnActorIfExists) DespawnActor(actorID);
         else if (AllActorComponents.ContainsKey(actorID)) return AllActorComponents[actorID];
 
-        Actor_Base actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Base>();
+        ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
 
         actor.SetActorData(GetActorData(actorID));
         actor.Initialise();
@@ -190,7 +189,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     static GameObject _createNewActorGO(Vector3 spawnPoint)
     {
         GameObject actorBody = new GameObject();
-        actorBody.transform.parent = GameObject.Find("Characters").transform;
+        actorBody.transform.parent = GameObject.Find("Wanderers").transform;
         actorBody.transform.position = spawnPoint;
         Rigidbody actorRb = actorBody.AddComponent<Rigidbody>();
 
@@ -207,7 +206,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return actorGO;
     }
 
-    public static ActorData GenerateNewActorData(Actor_Base actor) // ActorGenerationParameters parameters, select things like minimum skill range, abilties, etc.)
+    public static ActorData GenerateNewActorData(ActorComponent actor) // ActorGenerationParameters parameters, select things like minimum skill range, abilties, etc.)
     {
         actor.SetActorData(new ActorData(new FullIdentification(
                 actorID: GetRandomActorID(),
@@ -234,15 +233,15 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
     public static int GetRandomActorID()
     {
-        int actorID = 1;
-        while (AllActorData.ContainsKey(actorID))
+        while (AllActorData.ContainsKey(_lastUnusedActorID))
         {
-            actorID++;
+            _lastUnusedActorID++;
         }
-        return actorID;
+
+        return _lastUnusedActorID;
     }
 
-    public static ActorName GetRandomActorName(Actor_Base actor)
+    public static ActorName GetRandomActorName(ActorComponent actor)
     {
         // Get name based on culture, religion, species, etc.
 

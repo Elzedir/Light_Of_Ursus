@@ -44,7 +44,7 @@ public class Manager_Ability : MonoBehaviour
 
     Ability _eagleStomp()
     {
-        IEnumerator eagleStomp(Actor_Base actor = null)
+        IEnumerator eagleStomp(ActorComponent actor = null)
         {
             if (actor == null) throw new ArgumentException("Actor is null.");
 
@@ -80,7 +80,7 @@ public class Manager_Ability : MonoBehaviour
             UnityEngine.Object.Destroy(reticleGO);
         }
 
-        void stomp(RaycastHit hit, Actor_Base actor)
+        void stomp(RaycastHit hit, ActorComponent actor)
         {
             Vector3 direction = (hit.point - actor.RigidBody.transform.position).normalized;
             actor.RigidBody.AddForce(direction * 50, ForceMode.Impulse);

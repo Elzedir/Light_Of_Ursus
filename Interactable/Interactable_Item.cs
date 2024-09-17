@@ -14,12 +14,12 @@ public class Interactable_Item : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(Actor_Base interactor)
+    public bool WithinInteractRange(ActorComponent interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(Actor_Base actor)
+    public IEnumerator Interact(ActorComponent actor)
     {
         if (Item == null) throw new ArgumentException("Item has not been initialised");
 

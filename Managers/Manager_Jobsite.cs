@@ -6,25 +6,48 @@ using UnityEngine;
 
 public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 {
-    public static AllJobsites_SO AllJobsites;
+    public static AllJobsites_SO DisplayAllJobsites;
 
-    public static Dictionary<int, JobsiteData> AllJobsiteData;
+    public static Dictionary<int, JobsiteData> AllJobsiteData = new();
+    static int _lastUnusedJobsiteID = 1;
     public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
 
     public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
-    public void LoadData(SaveData data) => AllJobsiteData = data.SavedJobsiteData?.AllJobsiteData.ToDictionary(x => x.JobsiteID);
+    public void LoadData(SaveData data)
+    {
+        if (data == null)
+        {
+            Debug.Log("No SaveData found in LoadData.");
+            return;
+        }
+        if (data.SavedJobsiteData == null)
+        {
+            Debug.Log("No SavedJobsiteData found in SaveData.");
+            return;
+        }
+        if (data.SavedJobsiteData.AllJobsiteData == null)
+        {
+            Debug.Log("No AllJobsiteData found in SavedJobsiteData.");
+            return;
+        }
+        if (data.SavedJobsiteData.AllJobsiteData.Count == 0)
+        {
+            Debug.Log("AllJobsiteData count is 0.");
+            return;
+        }
+        
+        AllJobsiteData = data.SavedJobsiteData.AllJobsiteData.ToDictionary(x => x.JobsiteID);
+    }
 
     public void OnSceneLoaded()
     {
-        AllJobsites = Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO");
+        DisplayAllJobsites = Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO");
 
         Manager_Initialisation.OnInitialiseManagerJobsite += _initialise;
     }
 
     void _initialise()
     {
-        if (AllJobsiteData == null) AllJobsiteData = new();
-
         foreach (var jobsite in _findAllJobsiteComponents())
         {
             if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
@@ -53,7 +76,7 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
             jobsiteData.InitialiseJobsiteData();
         }
 
-        AllJobsites.AllJobsiteData = AllJobsiteData.Values.ToList();
+        DisplayAllJobsites.AllJobsiteData = AllJobsiteData.Values.ToList();
 
         foreach (var jobsite in AllJobsiteData)
         {
@@ -133,11 +156,11 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 
     public int GetRandomJobsiteID()
     {
-        int jobsiteID = 1;
-        while (AllJobsiteData.ContainsKey(jobsiteID))
+        while (AllJobsiteData.ContainsKey(_lastUnusedJobsiteID))
         {
-            jobsiteID++;
+            _lastUnusedJobsiteID++;
         }
-        return jobsiteID;
+
+        return _lastUnusedJobsiteID;
     }
 }

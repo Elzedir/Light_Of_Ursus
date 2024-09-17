@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 [Serializable]
 public class FactionData
@@ -20,10 +21,20 @@ public class FactionData
 
     public void InitialiseFaction()
     {
-        // foreach (var actorID in AllFactionActorIDs)
-        // {
-        //     Manager_Actor.GetActorData(actorID).PrepareForInitialisation();
-        // }
+        var factionsGO =  GameObject.Find("Factions");
+
+        if (factionsGO == null) 
+        {
+            Debug.LogError("No Factions GameObject found.");
+            return;
+        }
+
+        if (Manager_Game.FindTransformRecursively(factionsGO.transform, $"{FactionID}: {FactionName}") == null)
+        {
+            var factionGO = new GameObject($"{FactionID}: {FactionName}");
+            factionGO.transform.SetParent(factionsGO.transform);
+            factionGO.transform.position = Vector3.zero;
+        }
     }
 
     public void AddToFactionActorIDList(int actorID) => AllFactionActorIDs.Add(actorID);
@@ -35,3 +46,5 @@ public class FactionData
         AllFactionActorIDs.Clear();
     }
 }
+
+

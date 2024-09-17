@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Manager_Order : MonoBehaviour, IDataPersistence
 {
-    //public static AllOrders_SO AllOrders;
+    public static AllOrders_SO DisplayAllOrders;
     public static Dictionary<int, Order_Base> AllOrders;
+    public static int LastUnusedOrderID = 1;
 
     public void SaveData(SaveData data)
     {
@@ -86,6 +88,29 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
 
         AllOrders.Remove(order.OrderID);
     }
+
+    public static void RemoveAllCompleteOrders()
+    {
+        var completedOrderIDs = AllOrders
+        .Where(order => order.Value.OrderStatus == OrderStatus.Complete)
+        .Select(order => order.Key)
+        .ToList();
+
+        foreach (var orderID in completedOrderIDs)
+        {
+            AllOrders.Remove(orderID);
+        }
+    }
+
+    public static int GetOrderID()
+    {
+        while(AllOrders.ContainsKey(LastUnusedOrderID))
+        {
+            LastUnusedOrderID++;
+        }
+
+        return LastUnusedOrderID;
+    }
 }
 
 public enum OrderType
@@ -109,11 +134,11 @@ public abstract class Order_Base
     public int OrderID;
     public abstract OrderType OrderType { get; }
     public int ActorID;
-    Actor_Base _actor;
-    public Actor_Base Actor { get { return _actor ??= Manager_Actor.GetActor(ActorID); } }
+    ActorComponent _actor;
+    public ActorComponent Actor { get { return _actor ??= Manager_Actor.GetActor(ActorID); } }
     public int OperatingAreaID;
     OperatingAreaComponent _operatingArea;
-    public OperatingAreaComponent OperatingArea { get { return _operatingArea ??= Manager_Station.GetStationData(StationID_Destination).GetOperatingArea(OperatingAreaID); } }
+    public OperatingAreaComponent OperatingArea { get { return _operatingArea ??= Manager_Station.GetStation(StationID_Destination).GetOperatingArea(OperatingAreaID); } }
     public int StationID_Source;
     StationComponent _station_Source;
     public StationComponent Station_Source { get { return _station_Source ??= Manager_Station.GetStation(StationID_Source); } }
@@ -128,9 +153,9 @@ public abstract class Order_Base
 
     protected Coroutine _actorMoveCoroutine;
 
-    public Order_Base(int orderID, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
+    public Order_Base(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
     {
-        OrderID = orderID;
+        OrderID = Manager_Order.GetOrderID();
         ActorID = actorID;
         StationID_Source = stationID_Source;
         JobsiteID = Station_Source.StationData.JobsiteID;
@@ -189,7 +214,7 @@ public abstract class Order_Base
 [Serializable]
 public abstract class Order_Haul : Order_Base
 {
-    public Order_Haul(int orderID, int actorID, int stationID_source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(orderID, actorID, stationID_source, stationID_Destination, orderStatus, orderItems) { }
+    public Order_Haul(int actorID, int stationID_source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_source, stationID_Destination, orderStatus, orderItems) { }
 
     public override IEnumerator ExecuteOrder()
     {
@@ -218,7 +243,7 @@ public abstract class Order_Haul : Order_Base
     protected abstract bool _transferItems();
     protected void _createDeliverOrder()
     {
-        Order_Haul_Deliver order_Deliver = new Order_Haul_Deliver(Manager_Order.AllOrders.Count + 1, ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
+        Order_Haul_Deliver order_Deliver = new Order_Haul_Deliver(ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
     }
 }
 
@@ -226,7 +251,7 @@ public abstract class Order_Haul : Order_Base
 public class Order_Haul_Fetch : Order_Haul
 {
     public override OrderType OrderType => OrderType.Haul_Fetch;
-    public Order_Haul_Fetch(int orderID, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(orderID, actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
+    public Order_Haul_Fetch(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
 
     protected override bool _transferItems()
     {
@@ -257,7 +282,7 @@ public class Order_Haul_Fetch : Order_Haul
 public class Order_Haul_Deliver : Order_Haul
 {
     public override OrderType OrderType => OrderType.Haul_Deliver;
-    public Order_Haul_Deliver(int orderID, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(orderID, actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
+    public Order_Haul_Deliver(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
 
     protected override bool _transferItems()
     {
@@ -290,7 +315,7 @@ public class Order_Craft : Order_Base
     public override OrderType OrderType => OrderType.Craft;
     public Recipe Recipe;
 
-    public Order_Craft(int orderID, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems, Recipe recipe) : base(orderID, actorID, stationID_Source, stationID_Destination, orderStatus, orderItems)
+    public Order_Craft(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems, Recipe recipe) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems)
     {
         Recipe = recipe;
     }

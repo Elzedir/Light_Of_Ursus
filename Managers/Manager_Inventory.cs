@@ -16,8 +16,7 @@ public interface IInventoryOwner
 
 public interface IStationInventory : IInventoryOwner
 {
-    Vector3 GetOperatingPosition();
-    List<Item> GetStationYield(Actor_Base actor);
+    
 }
 
 [Serializable]
@@ -254,7 +253,7 @@ public class InventoryData
         }
     }
 
-    public List<Item> InventoryMissingAnyItems(List<Item> items)
+    public List<Item> InventoryMissingItems(List<Item> items)
     {
         List<Item> missingItems = new();
 
@@ -271,7 +270,7 @@ public class InventoryData
         return missingItems;
     }
 
-    public List<Item> InventoryContainsAnyItems(List<int> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
+    public List<Item> InventoryContainsItems(List<int> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
 
     public bool InventoryContainsAllItems(List<Item> items)
     {

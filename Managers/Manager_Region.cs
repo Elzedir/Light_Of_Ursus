@@ -9,11 +9,36 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
     const string _allRegionSOPath = "ScriptableObjects/AllRegions_SO";
 
     public static AllRegions_SO AllRegions;
-    public static Dictionary<int, RegionData> AllRegionData;
+    public static Dictionary<int, RegionData> AllRegionData = new();
+    static int _lastUnusedRegionID = 1;
     public static Dictionary<int, RegionComponent> AllRegionComponents = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedRegionData = new SavedRegionData(AllRegionData.Values.ToList());
-    public void LoadData(SaveData saveData) => AllRegionData = saveData.SavedRegionData?.AllRegionData.ToDictionary(x => x.RegionID);
+    public void LoadData(SaveData saveData)
+    {
+        if (saveData == null)
+        {
+            Debug.Log("No SaveData found in LoadData.");
+            return;
+        }
+        if (saveData.SavedRegionData == null)
+        {
+            Debug.Log("No SavedRegionData found in SaveData.");
+            return;
+        }
+        if (saveData.SavedRegionData.AllRegionData == null)
+        {
+            Debug.Log("No AllRegionData found in SavedRegionData.");
+            return;
+        }
+        if (saveData.SavedRegionData.AllRegionData.Count == 0)
+        {
+            Debug.Log("AllRegionData count is 0.");
+            return;
+        }
+        
+        AllRegionData = saveData.SavedRegionData?.AllRegionData.ToDictionary(x => x.RegionID);
+    }
 
     public void OnSceneLoaded()
     {
@@ -29,8 +54,6 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
 
     void _initialiseAllRegionData()
     {
-        if (AllRegionData == null) AllRegionData = new();
-
         foreach (var region in _findAllRegionComponents())
         {
             if (region.RegionData == null) { Debug.Log($"Region: {region.name} does not have RegionData."); continue; }
@@ -150,11 +173,11 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
 
     public int GetRandomRegionID()
     {
-        int regionID = 1;
-        while (AllRegionData.ContainsKey(regionID))
+        while (AllRegionData.ContainsKey(_lastUnusedRegionID))
         {
-            regionID++;
+            _lastUnusedRegionID++;
         }
-        return regionID;
+
+        return _lastUnusedRegionID;
     }
 }

@@ -17,8 +17,8 @@ public class Menu_LoadGame : Menu_Base
             Manager_Game.FindTransformRecursively(transform.parent, "ConfirmationPanel").GetComponent<SaveSlot_Confirmation>().ActivateMenu(
                 "Starting a New Game with this slot will override the currently saved data. Are you sure?",
                 () => {
-                    Manager_Data.Instance.ChangeProfile(saveSlot.GetSaveSlotID());
-                    Manager_Data.Instance.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
+                    DataPersistenceManager.DataPersistence_SO.ChangeProfile(saveSlot.GetSaveSlotID());
+                    DataPersistenceManager.DataPersistence_SO.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
                     _saveGameAndLoadNewGame();
                 },
                 () => {
@@ -28,8 +28,8 @@ public class Menu_LoadGame : Menu_Base
         }
         else
         {
-            Manager_Data.Instance.ChangeProfile(saveSlot.GetSaveSlotID());
-            Manager_Data.Instance.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
+            DataPersistenceManager.DataPersistence_SO.ChangeProfile(saveSlot.GetSaveSlotID());
+            DataPersistenceManager.DataPersistence_SO.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
             _saveGameAndLoadNewGame();
         }
     }
@@ -50,8 +50,8 @@ public class Menu_LoadGame : Menu_Base
         }
         else
         {
-            Manager_Data.Instance.ChangeProfile(saveSlot.GetSaveSlotID());
-            Manager_Data.Instance.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
+            DataPersistenceManager.DataPersistence_SO.ChangeProfile(saveSlot.GetSaveSlotID());
+            DataPersistenceManager.DataPersistence_SO.SetCurrentSaveData(new SaveData(saveSlot.GetSaveSlotID(), saveSlot.GetSaveGameName()));
             _saveGameAndLoadNewGame();
         }
     }
@@ -61,7 +61,7 @@ public class Menu_LoadGame : Menu_Base
         Manager_Game.FindTransformRecursively(transform.parent, "ConfirmationPanel").GetComponent<SaveSlot_Confirmation>().ActivateMenu(
                 "Are you sure you want to clear this data?",
                 () => {
-                    Manager_Data.Instance.CurrentProfile.DeleteSave(saveSlot.GetSaveGameName());
+                    DataPersistenceManager.DataPersistence_SO.CurrentProfile.DeleteSave(saveSlot.GetSaveGameName());
                     ActivateMenu(_menuMain);
                 },
                 () => {
@@ -72,7 +72,7 @@ public class Menu_LoadGame : Menu_Base
 
     private void _saveGameAndLoadNewGame()
     {
-        Manager_Data.Instance.SaveGame("");
+        DataPersistenceManager.DataPersistence_SO.SaveGame("");
         _menuMain.NewGame();
     }
 
@@ -88,7 +88,7 @@ public class Menu_LoadGame : Menu_Base
         if (!_saveSlotParent) _saveSlotParent = Manager_Game.FindTransformRecursively(transform, "SavedGamesParent");
         if (!_saveSlot) _saveSlot = Manager_Game.FindTransformRecursively(transform, "SaveSlot").GetComponent<SaveSlot>();
 
-        foreach (var saveData in Manager_Data.Instance.CurrentProfile.AllSavedDatas)
+        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedDatas)
         {
             if (saveData.Key == "TheExister") continue;
 

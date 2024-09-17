@@ -19,9 +19,6 @@ public class AllRegions_SO : ScriptableObject
     {
         AllRegionData.Clear();
     }
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllRegions_SO))]

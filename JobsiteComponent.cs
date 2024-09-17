@@ -83,7 +83,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
     public StationComponent GetNearestStationInJobsite(Vector3 position, StationName stationName)
     => AllStationsInJobsite
-    .Where(station => station.StationData.StationName == stationName)
+    .Where(station => station.StationName == stationName)
     .OrderBy(station => Vector3.Distance(position, station.transform.position))
     .FirstOrDefault();
 

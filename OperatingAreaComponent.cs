@@ -61,7 +61,7 @@ public class OperatingAreaComponent : MonoBehaviour
         return true;
     }
 
-    protected IEnumerator MoveOperatorToOperatingArea(Actor_Base actor, Vector3 position)
+    protected IEnumerator MoveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
     {
         if (OperatingAreaData.IsOperatorMovingToOperatingArea) yield break;
 

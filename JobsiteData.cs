@@ -43,7 +43,7 @@ public class JobsiteData
         {
             if (!AllStationIDs.Contains(station.StationData.StationID))
             {
-                Debug.Log($"Station: {station.StationData.StationID}: {station.StationData.StationName}  was not in AllStationIDs");
+                Debug.Log($"Station: {station.StationData.StationID}: {station.StationName}  was not in AllStationIDs");
                 AllStationIDs.Add(station.StationData.StationID);
             }
         }

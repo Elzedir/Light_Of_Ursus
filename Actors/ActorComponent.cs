@@ -4,7 +4,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
-public class Actor_Base : MonoBehaviour, IInventoryOwner
+public class ActorComponent : MonoBehaviour, IInventoryOwner
 {
     public ActorData ActorData;
     public void SetActorData(ActorData actorData) => ActorData = actorData;

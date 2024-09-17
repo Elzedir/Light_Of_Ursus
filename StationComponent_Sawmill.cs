@@ -51,23 +51,20 @@ public class StationComponent_Sawmill : StationComponent
         return operatingAreaComponent;
     }
 
-    public override void InitialiseStationNameAndType()
-    {
-        StationData.SetStationName(StationName.Sawmill);
-    }
+    public override void InitialiseStartingInventory() { }
 
     public override void InitialiseAllowedEmployeePositions()
     {
         AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
     }
 
-    public override IEnumerator Interact(Actor_Base actor)
+    public override IEnumerator Interact(ActorComponent actor)
     {
         yield break;
         // Open inventory
     }
 
-    public override void CraftItem(RecipeName recipeName, Actor_Base actor)
+    public override void CraftItem(RecipeName recipeName, ActorComponent actor)
     {
         if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
         if (!AllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
@@ -83,14 +80,14 @@ public class StationComponent_Sawmill : StationComponent
         _onCraftItem(yield);
     }
 
-    protected override List<Item> _getCost(List<Item> ingredients, Actor_Base actor)
+    protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
         return new List<Item>(); // For now
 
         // Base resource cost on actor relevant skill
     }
 
-    protected override List<Item> _getYield(List<Item> products, Actor_Base actor)
+    protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
         return new List<Item> { new Item(1100, 3) }; // For now
 

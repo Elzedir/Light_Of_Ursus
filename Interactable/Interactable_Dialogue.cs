@@ -12,12 +12,12 @@ public class Interactable_Dialogue : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(Actor_Base interactor)
+    public bool WithinInteractRange(ActorComponent interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(Actor_Base actor)
+    public IEnumerator Interact(ActorComponent actor)
     {
         Manager_Dialogue.Instance.OpenDialogue(actor.gameObject, Manager_Dialogue.Instance.GetConversation(name));
 

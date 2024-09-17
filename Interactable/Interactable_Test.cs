@@ -13,12 +13,12 @@ public class Interactable_Test : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(Actor_Base interactor)
+    public bool WithinInteractRange(ActorComponent interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(Actor_Base actor)
+    public IEnumerator Interact(ActorComponent actor)
     {
         if (transform.name == "Sword")
         {
@@ -39,14 +39,14 @@ public class Interactable_Test : MonoBehaviour, IInteractable
     {
         if (!_swordEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<ActorComponent>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
             {
                 _swordEquipped = true;
             }
         }
         else
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.UnequipItem(4))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<ActorComponent>().EquipmentComponent.UnequipItem(4))
             {
                 _swordEquipped = false;
             }
@@ -58,14 +58,14 @@ public class Interactable_Test : MonoBehaviour, IInteractable
     {
         if (!_shieldEquipped)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<ActorComponent>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
             {
                 _shieldEquipped = true;
             }
         }
         else
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Base>().EquipmentComponent.UnequipItem(3))
+            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<ActorComponent>().EquipmentComponent.UnequipItem(3))
             {
                 _shieldEquipped = false;
             }

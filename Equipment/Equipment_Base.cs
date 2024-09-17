@@ -9,7 +9,7 @@ public class Equipment_Base : MonoBehaviour
 {
     public int SlotID { get; protected set; }
     public EquipmentSlot EquipmentSlot { get; protected set; }
-    public Actor_Base Actor { get; private set; }
+    public ActorComponent Actor { get; private set; }
     public Item Item;
     public MeshFilter MeshFilter { get; protected set; }
     public MeshRenderer MeshRenderer { get; protected set; }
@@ -18,7 +18,7 @@ public class Equipment_Base : MonoBehaviour
 
     public virtual void Initialise()
     {
-        Actor = GetComponentInParent<Actor_Base>();
+        Actor = GetComponentInParent<ActorComponent>();
         MeshFilter = GetComponent<MeshFilter>();
         MeshRenderer = GetComponent<MeshRenderer>();
         Animator = GetComponent<Animator>();

@@ -183,17 +183,17 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(Actor_Base interactor)
+    public bool WithinInteractRange(ActorComponent interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public virtual IEnumerator Interact(Actor_Base actor)
+    public virtual IEnumerator Interact(ActorComponent actor)
     {
         throw new ArgumentException("Cannot use base class.");
     }
 
-    public virtual void CraftItem(RecipeName recipeName, Actor_Base actor)
+    public virtual void CraftItem(RecipeName recipeName, ActorComponent actor)
     {
         throw new ArgumentException("Cannot use base class.");
     }
@@ -203,12 +203,12 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         throw new ArgumentException("Cannot use base class.");
     }
 
-    protected virtual List<Item> _getCost(List<Item> ingredients, Actor_Base actor)
+    protected virtual List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
         throw new ArgumentException("Cannot use base class.");
     }
 
-    protected virtual List<Item> _getYield(List<Item> ingredients, Actor_Base actor)
+    protected virtual List<Item> _getYield(List<Item> ingredients, ActorComponent actor)
     {
         throw new ArgumentException("Cannot use base class.");
     }
@@ -271,29 +271,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     }
 }
 
-[Serializable]
-public class Operator
-{
-    public int OperatorID;
-    public string OperatorName;
-    public EmployeePosition OperatorPosition;
-    public int OperatingAreaID;
-
-    public Operator(int actorID, EmployeePosition careerAndJobs, int operatingAreaID)
-    {
-        OperatorID = actorID;
-        OperatorPosition = careerAndJobs;
-        OperatingAreaID = operatingAreaID;
-    }
-
-    public Operator(Operator other)
-    {
-        OperatorID = other.OperatorID;
-        OperatorPosition = other.OperatorPosition;
-        OperatingAreaID = other.OperatingAreaID;
-    }
-}
-
 [CustomEditor(typeof(StationComponent), true)]
 public class StationComponent_Editor : Editor
 {
@@ -315,13 +292,15 @@ public class StationComponent_Editor : Editor
 
         if (stationData == null) return;
 
+        EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
+
         _showBasicInfo = EditorGUILayout.Toggle("Basic Info", _showBasicInfo);
 
         if (_showBasicInfo)
         {
             EditorGUILayout.LabelField("StationID", stationData.StationID.ToString());
-            EditorGUILayout.LabelField("StationType", stationData.StationType.ToString());
-            EditorGUILayout.LabelField("StationName", stationData.StationName.ToString());
+            //EditorGUILayout.LabelField("StationType", stationData.StationType.ToString());
+            //EditorGUILayout.LabelField("StationName", stationData.StationName.ToString());
             EditorGUILayout.LabelField("JobsiteID", stationData.JobsiteID.ToString());
             EditorGUILayout.LabelField("StationIsActive", stationData.StationIsActive.ToString());
             EditorGUILayout.LabelField("StationDescription", stationData.StationDescription);
@@ -408,5 +387,28 @@ public class StationComponent_Editor : Editor
             }
             enterChildren = false;
         }
+    }
+}
+
+[Serializable]
+public class Operator
+{
+    public int OperatorID;
+    public string OperatorName;
+    public EmployeePosition OperatorPosition;
+    public int OperatingAreaID;
+
+    public Operator(int actorID, EmployeePosition careerAndJobs, int operatingAreaID)
+    {
+        OperatorID = actorID;
+        OperatorPosition = careerAndJobs;
+        OperatingAreaID = operatingAreaID;
+    }
+
+    public Operator(Operator other)
+    {
+        OperatorID = other.OperatorID;
+        OperatorPosition = other.OperatorPosition;
+        OperatingAreaID = other.OperatingAreaID;
     }
 }

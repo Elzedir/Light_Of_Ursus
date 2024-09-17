@@ -42,7 +42,23 @@ public class ActorData
 
         if ( actor != null)
         {
-            // Nothing so far
+            var actorFaction = Manager_Faction.GetFaction(ActorFactionID);
+
+            if (actorFaction == null)
+            {
+                Debug.LogError($"Actor {ActorID} cannot find faction {ActorFactionID}.");
+                return;
+            }
+
+            var factionGO = GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
+
+            if (factionGO == null)
+            {
+                Debug.LogError($"Actor {ActorID} cannot find faction GameObject {actorFaction.FactionID}: {actorFaction.FactionName}.");
+                return;
+            }
+
+            actor.transform.parent.SetParent(factionGO.transform);
         } 
         else
         {

@@ -12,9 +12,6 @@ public class AllActors_SO : ScriptableObject
     public List<ActorData> AllActorData;
 
     public void ClearActorData() => AllActorData.Clear();
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllActors_SO))]
@@ -39,9 +36,6 @@ public class AllActors_SOEditor : Editor
     public override void OnInspectorGUI()
     {
         AllActors_SO allActorSO = (AllActors_SO)target;
-
-        if (GUILayout.Button("Save Data")) allActorSO.CallSaveData();
-        if (GUILayout.Button("Load Data")) allActorSO.CallLoadData();
 
         if (GUILayout.Button("Clear Actor Data"))
         {

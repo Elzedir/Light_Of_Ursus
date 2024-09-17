@@ -68,7 +68,7 @@ public class Manager_Job : MonoBehaviour
 
     Job _smith()
     {
-        IEnumerator smith(Actor_Base actor, int jobsite)
+        IEnumerator smith(ActorComponent actor, int jobsite)
         {
             if (actor == null) throw new ArgumentException("Actor is null;");
 
@@ -139,7 +139,7 @@ public class Job
         JobTasks = job.JobTasks;
     }
 
-    public IEnumerator PerformJob(Actor_Base actor)
+    public IEnumerator PerformJob(ActorComponent actor)
     {
         foreach(Task task in JobTasks)
         {
@@ -194,9 +194,9 @@ public class Task
 
     public List<AnimationClip> TaskAnimationClips;
 
-    public Func<Actor_Base, int, IEnumerator> TaskAction;
+    public Func<ActorComponent, int, IEnumerator> TaskAction;
 
-    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<Actor_Base, int, IEnumerator> taskAction)
+    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<ActorComponent, int, IEnumerator> taskAction)
     {
         TaskName = taskName;
         TaskDescription = taskDescription;
@@ -208,7 +208,7 @@ public class Task
         TaskAction = taskAction;
     }
 
-    public IEnumerator GetTaskAction(Actor_Base actor, int jobsiteID)
+    public IEnumerator GetTaskAction(ActorComponent actor, int jobsiteID)
     {
         return TaskAction(actor, jobsiteID);
     }

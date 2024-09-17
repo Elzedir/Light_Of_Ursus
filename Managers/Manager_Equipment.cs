@@ -14,10 +14,10 @@ public class Manager_Equipment
 public class EquipmentComponent
 {
     Dictionary<int, Equipment_Base> EquipmentSlots = new();
-    Actor_Base _actor;
+    ActorComponent _actor;
     Transform _equipmentParent;
 
-    public EquipmentComponent(Actor_Base actor)
+    public EquipmentComponent(ActorComponent actor)
     {
         _actor = actor;
         _equipmentParent = _actor.transform.parent.GetChild(0);

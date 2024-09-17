@@ -12,9 +12,6 @@ public class AllFactions_SO : ScriptableObject
     public List<FactionData> AllFactionData;
 
     public void ClearFactionData() => AllFactionData.Clear();
-
-    public void CallSaveData() { Manager_Data.Instance.SaveGame(""); Debug.Log("Saved Game"); }
-    public void CallLoadData() { Manager_Data.Instance.LoadGame(""); Debug.Log("Loaded Game"); }
 }
 
 [CustomEditor(typeof(AllFactions_SO))]
@@ -31,9 +28,6 @@ public class AllFactions_SOEditor : Editor
     public override void OnInspectorGUI()
     {
         AllFactions_SO allFactionSO = (AllFactions_SO)target;
-
-        if (GUILayout.Button("Save Data")) allFactionSO.CallSaveData();
-        if (GUILayout.Button("Load Data")) allFactionSO.CallLoadData();
 
         if (GUILayout.Button("Clear Faction Data"))
         {

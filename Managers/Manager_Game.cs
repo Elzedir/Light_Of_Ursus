@@ -48,6 +48,15 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     Transform _manager_Parent;
 
+    
+
+    [Header("Auto Saving Configuration")]
+    [SerializeField] bool _autoSaveEnabled = false;
+    [SerializeField] float _autoSaveTimeSeconds = 60f;
+    [SerializeField] int _numberOfAutoSaves = 5;
+    
+    Coroutine _autoSaveCoroutine;
+
     void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); } else if (Instance != this) Destroy(gameObject);
@@ -101,12 +110,13 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
 
-        _createManager("Manager_Data", _manager_Parent).AddComponent<Manager_Data>().OnSceneLoaded();
-
         Manager_Initialisation.InitialiseFactions();
         Manager_Initialisation.InitialiseRegions();
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseJobsites();
+
+        if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
+        _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
 
         GameObject _createManager(string name, Transform parent)
         {
@@ -153,7 +163,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 
     public void LoadScene(string nextScene = null, Interactable_Puzzle puzzle = null)
     {
-        Manager_Data.Instance.SaveGame("");
+        DataPersistenceManager.DataPersistence_SO.SaveGame("");
 
         string currentScene = SceneManager.GetActiveScene().name;
 

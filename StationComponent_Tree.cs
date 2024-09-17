@@ -65,7 +65,7 @@ public class StationComponent_Tree : StationComponent
         }
     }
 
-    public override void CraftItem(RecipeName recipeName, Actor_Base actor)
+    public override void CraftItem(RecipeName recipeName, ActorComponent actor)
     {
         if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
         if (!AllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
@@ -86,14 +86,14 @@ public class StationComponent_Tree : StationComponent
         _onCraftItem(yield);
     }
 
-    protected override List<Item> _getCost(List<Item> ingredients, Actor_Base actor)
+    protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
         return new List<Item>(); // For now
 
         // Base resource cost on actor relevant skill
     }
 
-    protected override List<Item> _getYield(List<Item> products, Actor_Base actor)
+    protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
         return new List<Item> { new Item(1100, 3) }; // For now
 
