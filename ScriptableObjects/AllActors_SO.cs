@@ -11,6 +11,11 @@ public class AllActors_SO : ScriptableObject
 {
     public List<ActorData> AllActorData;
 
+    public void LoadData(SaveData saveData)
+    {
+        AllActorData = saveData.SavedActorData.AllActorData;
+    }
+
     public void ClearActorData() => AllActorData.Clear();
 }
 

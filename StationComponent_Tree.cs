@@ -93,6 +93,18 @@ public class StationComponent_Tree : StationComponent
         // Base resource cost on actor relevant skill
     }
 
+    public override IEnumerator Interact(ActorComponent actor)
+    {
+        Debug.LogError("No Interact method implemented for Tree.");
+        yield return null;
+    }
+
+    public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
+    {
+        Debug.LogError("No GetItemsToDropOff method implemented for Tree.");
+        return new List<Item>();
+    }
+
     protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
         return new List<Item> { new Item(1100, 3) }; // For now

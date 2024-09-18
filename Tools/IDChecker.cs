@@ -80,7 +80,7 @@ public class IDChecker : EditorWindow
                 continue;
             }
 
-            if (!existingIDs.Add(station.StationData.StationID))
+            if (!existingIDs.Add(station.StationData.StationID) || station.StationData.StationID == 0)
             {
                 duplicateStations.Add(station);
             }

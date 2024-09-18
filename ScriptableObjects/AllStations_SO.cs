@@ -16,6 +16,11 @@ public class AllStations_SO : ScriptableObject
         AllStationData = allStationData;
     }
 
+    public void LoadData(SaveData saveData)
+    {
+        AllStationData = saveData.SavedStationData.AllStationData;
+    }
+
     public void ClearStationData()
     {
         AllStationData.Clear();

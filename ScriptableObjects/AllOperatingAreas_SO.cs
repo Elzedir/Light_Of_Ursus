@@ -16,6 +16,12 @@ public class AllOperatingAreas_SO : ScriptableObject
         AllOperatingAreaData = allOperatingAreaData;
     }
 
+    public void LoadData(SaveData saveData)
+    {
+        // Temporary, later put in checks
+        AllOperatingAreaData = saveData?.SavedOperatingAreaData?.AllOperatingAreaData;
+    }
+
     public void ClearOperatingAreaData()
     {
         AllOperatingAreaData.Clear();

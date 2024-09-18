@@ -26,6 +26,8 @@ public enum FactionRelationshipStatus
 
 public class Faction_Data_SO : ScriptableObject
 {
+    // To delete all
+
     public FactionName FactionName;
     public List<FactionRelationship> FactionData = new();
 

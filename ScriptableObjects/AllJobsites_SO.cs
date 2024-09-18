@@ -16,6 +16,11 @@ public class AllJobsites_SO : ScriptableObject
         AllJobsiteData = allJobsiteData;
     }
 
+    public void LoadData(SaveData saveData)
+    {
+        AllJobsiteData = saveData.SavedJobsiteData.AllJobsiteData;
+    }
+
     public void ClearJobsiteData()
     {
         AllJobsiteData.Clear();

@@ -49,6 +49,17 @@ public class SaveAndLoadSO : EditorWindow
         allOperatingAreasSO.ClearOperatingAreaData();
         allOrdersSO.ClearOrderData();
 
-        DataPersistenceManager.DataPersistence_SO.LoadGame("");
+        var saveData = DataPersistenceManager.DataPersistence_SO.GetLatestSaveData();
+
+        allFactionsSO.LoadData(saveData);
+        allActorsSO.LoadData(saveData);
+        allRegionsSO.LoadData(saveData);
+        allCitiesSO.LoadData(saveData);
+        allJobsitesSO.LoadData(saveData);
+        allStationsSO.LoadData(saveData);
+        allOperatingAreasSO.LoadData(saveData);
+        //allOrdersSO.LoadData(saveData);
+
+        Debug.Log("All SOs loaded.");
     }
 }

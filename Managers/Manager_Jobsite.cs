@@ -6,7 +6,8 @@ using UnityEngine;
 
 public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 {
-    public static AllJobsites_SO DisplayAllJobsites;
+    static AllJobsites_SO _displayAllJobsites;
+    public static AllJobsites_SO DisplayAllJobsites { get => _displayAllJobsites ??= Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO"); }
 
     public static Dictionary<int, JobsiteData> AllJobsiteData = new();
     static int _lastUnusedJobsiteID = 1;
@@ -41,8 +42,6 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 
     public void OnSceneLoaded()
     {
-        DisplayAllJobsites = Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO");
-
         Manager_Initialisation.OnInitialiseManagerJobsite += _initialise;
     }
 

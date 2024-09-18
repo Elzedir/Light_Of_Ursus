@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Linq;
 using System.IO;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 
 [CreateAssetMenu(fileName = "DataPersistence_SO", menuName = "SOList/DataPersistence_SO")]
 [Serializable]
@@ -25,33 +26,31 @@ public class DataPersistence_SO : ScriptableObject
     public void SetCurrentSaveData(SaveData saveData) => CurrentSaveData = saveData;
     public bool HasSaveData() => CurrentSaveData != null;
     List<IDataPersistence> _dataPersistenceObjects { get { return new List<IDataPersistence>(FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None).OfType<IDataPersistence>()); } }
-    public ProfileData CurrentProfile;
+    public ProfileData _currentProfile;
+    public ProfileData CurrentProfile
+    {
+        get
+        {
+            if (_currentProfile.ProfileID == 0) return _currentProfile = GetMostRecentlyUpdatedProfile();
+            else return _currentProfile;
+        }
+        set
+        { 
+            _currentProfile = value;
+        }
+    }
     Dictionary<int, ProfileData> _allProfiles;
     public Dictionary<int, ProfileData> AllProfiles { get { return _allProfiles ??= LoadAllProfiles(); } }
 
-    int _lastUnusedProfileID = 1;
+    int _lastUnusedProfileID = 2;
     public int GetRandomProfileID()
     {
-        while (!AllProfiles.ContainsKey(_lastUnusedProfileID))
+        while (AllProfiles.ContainsKey(_lastUnusedProfileID))
         {
             _lastUnusedProfileID++;
         }
 
         return _lastUnusedProfileID;
-    }
-
-    public void OnSceneLoaded()
-    {
-        _initialise();
-
-        LoadGame("");
-    }
-
-    void _initialise()
-    {
-        if (_disableDataPersistence) Debug.LogWarning("Data Persistence is currently disabled!");
-
-        CurrentProfile = GetMostRecentlyUpdatedProfile();
     }
 
     public void ChangeProfile(int profileID)
@@ -66,7 +65,7 @@ public class DataPersistence_SO : ScriptableObject
     public void DeleteProfileData(ProfileData profileData)
     {
         profileData.DeleteProfile();
-        GetMostRecentlyUpdatedProfile();
+        CurrentProfile = GetMostRecentlyUpdatedProfile();
         LoadGame("");
     }
 
@@ -76,7 +75,7 @@ public class DataPersistence_SO : ScriptableObject
         {
             Debug.LogWarning("Overrode selected profile id with test id: " + _currentTestSelectedProfileName);
 
-            return new ProfileData(0, _currentTestSelectedProfileName, 0, _useEncryption);
+            return new ProfileData(1, _currentTestSelectedProfileName, 0, _useEncryption);
         }
 
         var mostRecentProfile = LoadAllProfilesLatestSave()
@@ -205,6 +204,8 @@ public class DataPersistence_SO : ScriptableObject
     {
         if (_disableDataPersistence || CurrentProfile.ProfileName == "Create New Profile") return;
 
+        if (string.IsNullOrEmpty(CurrentProfile.ProfileName)) { Debug.LogError("Profile Name is null or empty."); return; }
+
         saveDataName = saveDataName == "" ? GetLatestSave(CurrentProfile.ProfileName) : saveDataName;
 
         CurrentSaveData = CurrentProfile.LoadData(saveDataName, CurrentProfile.ProfileName);
@@ -216,10 +217,15 @@ public class DataPersistence_SO : ScriptableObject
         foreach (IDataPersistence data in _dataPersistenceObjects) data.LoadData(CurrentSaveData);
     }
 
-    void OnApplicationQuit()
+    public SaveData GetLatestSaveData()
     {
-        Debug.Log("Data Saved");
-        SaveGame("ExitSave");
+        if (string.IsNullOrEmpty(CurrentProfile.ProfileName)) { Debug.LogError("Profile Name is null or empty."); return null; }
+
+        CurrentSaveData = CurrentProfile.LoadData(GetLatestSave(CurrentProfile.ProfileName), CurrentProfile.ProfileName);
+
+        if (CurrentSaveData == null) { Debug.Log("No data was found."); return null; }
+
+        return CurrentSaveData;
     }
 
     public IEnumerator AutoSave(float _autoSaveTimeSeconds, int _numberOfAutoSaves, bool _autoSaveEnabled)
@@ -377,14 +383,17 @@ public class ProfileData
         {
             var factionData = JsonUtility.FromJson<FactionData>(_fromJSON(factionDirectoryPath, "FactionSaveData.json"));
 
-            try
+            if (!saveData.SavedFactionData.AllFactionData.Any(f => f.FactionID == factionData.FactionID))
             {
-                saveData.SavedFactionData.AllFactionData.Add(factionData);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error occurred when trying to load faction data: {e}");
-                return;
+                try
+                {
+                    saveData.SavedFactionData.AllFactionData.Add(factionData);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Error occurred when trying to load faction data: {e}");
+                    return;
+                }
             }
 
             string actorsPath = Path.Combine(factionDirectoryPath, "Actors");
@@ -435,11 +444,13 @@ public class ProfileData
             Directory.CreateDirectory(saveGamePath);
 
             _saveNestedRegionData(saveGamePath, saveData);
+
             _saveNestedFactionData(saveGamePath, saveData);
 
             if (LoadData(saveDataName, profileName) != null)
             {
-                string backupDirectoryPath = saveGamePath + _backupExtension;
+                var backupExtension = string.IsNullOrEmpty(_backupExtension) ? ".bak" : _backupExtension;
+                string backupDirectoryPath = saveGamePath + backupExtension;
                 _copyDirectory(saveGamePath, backupDirectoryPath);
             }
             else
@@ -558,7 +569,9 @@ public class ProfileData
 
     bool _attemptRollback(string fullPath)
     {
-        string backupFilePath = fullPath + _backupExtension;
+        var backupExtension = string.IsNullOrEmpty(_backupExtension) ? ".bak" : _backupExtension;
+
+        string backupFilePath = fullPath + backupExtension;
 
         if (!File.Exists(backupFilePath))
         {
@@ -622,6 +635,7 @@ public class SaveData
     public SavedOperatingAreaData SavedOperatingAreaData;
     public SavedFactionData SavedFactionData;
     public SavedActorData SavedActorData;
+    public SavedOrderData SavedOrderData;
 
     // Player info
     public Vector3 PlayerPosition;
@@ -724,8 +738,55 @@ public class SavedActorData
     public SavedActorData(List<ActorData> allActorData) => AllActorData = allActorData;
 }
 
+public class SavedOrderData
+{
+    public List<OrderData> AllOrderData = new();
+
+    public SavedOrderData(List<OrderData> allOrderData) => AllOrderData = allOrderData;
+}
+
 public class DataPersistenceManager
 {
     static DataPersistence_SO _dataPersistence_SO;
     public static DataPersistence_SO DataPersistence_SO { get { return _dataPersistence_SO ??= Resources.Load<DataPersistence_SO>("ScriptableObjects/DataPersistence_SO"); } }
+}
+
+[CustomEditor(typeof(DataPersistence_SO))]
+public class DataPersistence_SOEditor : Editor
+{
+    private string profileName = "";
+
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        DataPersistence_SO dataPersistenceSO = (DataPersistence_SO)target;
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Profile Management", EditorStyles.boldLabel);
+
+        profileName = EditorGUILayout.TextField("Profile Name", profileName);
+
+        if (GUILayout.Button("Load Profile"))
+        {
+            if (dataPersistenceSO.AllProfiles.Values.Any(p => p.ProfileName == profileName))
+            {
+                ProfileData profileData = dataPersistenceSO.LoadProfileData(profileName);
+                if (profileData != null)
+                {
+                    dataPersistenceSO.CurrentProfile = profileData;
+                    dataPersistenceSO.LoadGame("");
+                    Debug.Log($"Profile '{profileName}' loaded successfully.");
+                }
+                else
+                {
+                    Debug.LogError($"Profile '{profileName}' could not be loaded.");
+                }
+            }
+            else
+            {
+                Debug.LogError($"Profile '{profileName}' does not exist.");
+            }
+        }
+    }
 }

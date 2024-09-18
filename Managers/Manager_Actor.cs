@@ -138,6 +138,8 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
         AllActorComponents[actor.ActorData.ActorID] = actor;
 
+        Manager_Faction.AllocateActorToFactionGO(actor.transform, actor.ActorData.ActorFactionID);
+
         return actor;
     }
 
@@ -152,7 +154,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         actor.SetActorData(GetActorData(actorID));
         actor.Initialise();
 
-        AllActorComponents[actor.ActorData.ActorID] = actor;
+        Manager_Faction.AllocateActorToFactionGO(actor.transform, actor.ActorData.ActorFactionID);
 
         return actor;
     }
@@ -189,7 +191,6 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     static GameObject _createNewActorGO(Vector3 spawnPoint)
     {
         GameObject actorBody = new GameObject();
-        actorBody.transform.parent = GameObject.Find("Wanderers").transform;
         actorBody.transform.position = spawnPoint;
         Rigidbody actorRb = actorBody.AddComponent<Rigidbody>();
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -92,5 +93,11 @@ public class StationComponent_Sawmill : StationComponent
         return new List<Item> { new Item(1100, 3) }; // For now
 
         // Base resource yield on actor relevant skill
+    }
+
+    public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
+    {
+        return inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
+        .Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
     }
 }

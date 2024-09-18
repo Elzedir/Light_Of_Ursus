@@ -182,24 +182,29 @@ public class StationProgressData
         CurrentProduct = null;
     }
 
-    public void Progress(float progress)
+    public bool Progress(float progress)
     {
-        //if (progress == 0) return;
+        if (progress == 0 || CurrentProduct.RecipeName == RecipeName.None) return false;
 
-        if (CurrentProduct.RecipeName == RecipeName.None) return;
+        if (CurrentProduct.RequiredProgress == 0)
+        {
+            Debug.LogError($"For Recipe {CurrentProduct.RecipeName} CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
+            return false;
+        }
 
         CurrentProgress += progress;
         CurrentQuality += progress;
 
-        // Max progress is 0 for some reason.
-
-        Debug.LogError($"For Recipe {CurrentProduct.RecipeName} CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
+        Debug.Log($"CurrentProgress: {CurrentProgress} CurrentQuality: {CurrentQuality}");
 
         if (CurrentProgress >= CurrentProduct.RequiredProgress)
         {
             Debug.Log($"CurrentProduct: {CurrentProduct.RecipeName} has been crafted.");
-            // Create the item using total quality.
-            return;
+
+            CurrentProgress = 0;
+            return true;
         }
+
+        return false;
     }
 }

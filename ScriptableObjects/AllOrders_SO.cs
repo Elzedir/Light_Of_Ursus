@@ -9,16 +9,21 @@ using UnityEngine;
 [Serializable]
 public class AllOrders_SO : ScriptableObject
 {
-    public List<OrderData> AllOrders;
+    public List<OrderData> AllOrderData;
 
-    public void SetAllOperatingAreaData(List<OrderData> allOrders)
+    public void SetAllOperatingAreaData(List<OrderData> allOrderData)
     {
-        AllOrders = allOrders;
+        AllOrderData = allOrderData;
+    }
+
+    public void LoadData(SaveData saveData)
+    {
+        AllOrderData = saveData.SavedOrderData.AllOrderData;
     }
 
     public void ClearOrderData()
     {
-        AllOrders.Clear();
+        AllOrderData.Clear();
     }
 }
 
@@ -40,20 +45,20 @@ public class AllOrdersSOEditor : Editor
         }
 
         EditorGUILayout.LabelField("All Orders", EditorStyles.boldLabel);
-        _orderScrollPos = EditorGUILayout.BeginScrollView(_orderScrollPos, GUILayout.Height(GetListHeight(allOrdersSO.AllOrders.Count)));
+        _orderScrollPos = EditorGUILayout.BeginScrollView(_orderScrollPos, GUILayout.Height(GetListHeight(allOrdersSO.AllOrderData.Count)));
         _selectedOrderIndex = GUILayout.SelectionGrid(_selectedOrderIndex, GetOrderTypes(allOrdersSO), 1);
         EditorGUILayout.EndScrollView();
 
-        if (_selectedOrderIndex >= 0 && _selectedOrderIndex < allOrdersSO.AllOrders.Count)
+        if (_selectedOrderIndex >= 0 && _selectedOrderIndex < allOrdersSO.AllOrderData.Count)
         {
-            var selectedOrder = allOrdersSO.AllOrders[_selectedOrderIndex];
+            var selectedOrder = allOrdersSO.AllOrderData[_selectedOrderIndex];
             DrawOrderAdditionalData(selectedOrder);
         }
     }
 
     private string[] GetOrderTypes(AllOrders_SO allOrdersSO)
     {
-        return allOrdersSO.AllOrders.Select(o => o.AllOrderIDs.ToString()).ToArray();
+        return allOrdersSO.AllOrderData.Select(o => o.AllOrderIDs.ToString()).ToArray();
     }
 
     private float GetListHeight(int itemCount)

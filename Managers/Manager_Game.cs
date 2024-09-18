@@ -110,6 +110,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
 
+        DataPersistenceManager.DataPersistence_SO.LoadGame("");
+
         Manager_Initialisation.InitialiseFactions();
         Manager_Initialisation.InitialiseRegions();
         Manager_Initialisation.InitialiseActors();
@@ -331,5 +333,11 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         {
             obstaclePositions.Add(collider.transform.position);
         }
+    }
+
+    void OnApplicationQuit()
+    {
+        Debug.Log("Data Saved");
+        DataPersistenceManager.DataPersistence_SO.SaveGame("ExitSave");
     }
 }

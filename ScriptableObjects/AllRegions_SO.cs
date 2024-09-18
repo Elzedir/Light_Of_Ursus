@@ -15,6 +15,11 @@ public class AllRegions_SO : ScriptableObject
         AllRegionData = allRegionData;
     }
 
+    public void LoadData(SaveData saveData)
+    {
+        AllRegionData = saveData.SavedRegionData.AllRegionData;
+    }
+
     public void ClearRegionData()
     {
         AllRegionData.Clear();

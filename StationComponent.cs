@@ -88,7 +88,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
         if (!StationData.StationIsActive) Debug.Log($"StationIsActive: {StationData.StationIsActive}");
         if (!IsStationBeingOperated) Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
-        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)) Debug.Log($"InventoryContainsAllItems: {StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)}");
+        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)) Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
 
         if (
             StationData.StationIsActive && 
@@ -112,12 +112,13 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
                 StationData.StationProgressData.CurrentProduct = Manager_Recipe.GetRecipe(DefaultProduct);
             }
         }
-        
-        Debug.Log($"Station: {name} CurrentProduct: {StationData.StationProgressData.CurrentProduct.RecipeName}");
 
         foreach(var operatingArea in AllOperatingAreasInStation)
         {
-            StationData.StationProgressData.Progress(operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct));
+            if (StationData.StationProgressData.Progress(operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct)))
+            {
+                _onCraftItem(StationData.StationProgressData.CurrentProduct.RecipeProducts);
+            }
         }
     }
 
@@ -188,30 +189,15 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public virtual IEnumerator Interact(ActorComponent actor)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    public abstract IEnumerator Interact(ActorComponent actor);
 
-    public virtual void CraftItem(RecipeName recipeName, ActorComponent actor)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    public abstract void CraftItem(RecipeName recipeName, ActorComponent actor);
 
-    public virtual List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    public abstract List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner);
 
-    protected virtual List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    protected abstract List<Item> _getCost(List<Item> ingredients, ActorComponent actor);
 
-    protected virtual List<Item> _getYield(List<Item> ingredients, ActorComponent actor)
-    {
-        throw new ArgumentException("Cannot use base class.");
-    }
+    protected abstract List<Item> _getYield(List<Item> ingredients, ActorComponent actor);
 
     public virtual bool AddItemsToStation(List<Item> items)
     {

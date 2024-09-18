@@ -10,9 +10,14 @@ public class AllCities_SO : ScriptableObject
 {
     public List<CityData> AllCityData;
 
-    public void SetAllRegionData(List<CityData> allCityData)
+    public void SetAllCityData(List<CityData> allCityData)
     {
         AllCityData = allCityData;
+    }
+
+    public void LoadData(SaveData saveData)
+    {
+        AllCityData = saveData.SavedCityData.AllCityData;
     }
 
     public void ClearCityData()
@@ -22,7 +27,7 @@ public class AllCities_SO : ScriptableObject
 }
 
 [CustomEditor(typeof(AllCities_SO))]
-public class AllCitiesSOEditor : Editor
+public class AllCities_SOEditor : Editor
 {
     int _selectedCityIndex = -1;
     bool _showJobsites = false;

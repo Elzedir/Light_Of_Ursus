@@ -11,6 +11,11 @@ public class AllFactions_SO : ScriptableObject
 {
     public List<FactionData> AllFactionData;
 
+    public void LoadData(SaveData saveData)
+    {
+        AllFactionData = saveData.SavedFactionData.AllFactionData;
+    }
+
     public void ClearFactionData() => AllFactionData.Clear();
 }
 

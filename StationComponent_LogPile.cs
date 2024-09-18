@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
@@ -65,8 +66,6 @@ public class StationComponent_LogPile : StationComponent
 
     protected override void _operateStation()
     {
-        Debug.Log($"Station: {name} CurrentProduct: {StationData.StationProgressData.CurrentProduct.RecipeName}");
-
         foreach (var operatingArea in AllOperatingAreasInStation)
         {
             if (!operatingArea.CanHaul()) continue;
@@ -98,5 +97,30 @@ public class StationComponent_LogPile : StationComponent
 
             operatingArea.OperatingAreaData.OrderData.AddOrder(haulOrderFetch.OrderID);
         }
+    }
+
+    public override void CraftItem(RecipeName recipeName, ActorComponent actor)
+    {
+        Debug.LogError("Log Pile does not craft items.");
+    }
+
+    public override IEnumerator Interact(ActorComponent actor)
+    {
+        Debug.LogError("No Interact method implemented for Log Pile.");
+        yield return null;
+    }
+
+    protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
+    {
+        return new List<Item>(); // For now
+
+        // Base resource cost on actor relevant skill
+    }
+
+    protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
+    {
+        return new List<Item>(); // For now
+
+        // Base resource yield on actor relevant skill
     }
 }
