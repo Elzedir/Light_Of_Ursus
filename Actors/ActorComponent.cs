@@ -72,15 +72,19 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
 
     public IEnumerator BasicMove(Vector3 targetPosition, float speed = 1)
     {
-        while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
-        {
-            Vector3 direction = (targetPosition - transform.parent.position).normalized;
+        // while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
+        // {
+        //     Vector3 direction = (targetPosition - transform.parent.position).normalized;
 
-            RigidBody.velocity = direction * speed;
+        //     RigidBody.velocity = direction * speed;
 
-            yield return null;
-        }
+        //     yield return null;
+        // }
 
+        //yield return new WaitForSeconds(Vector3.Distance(transform.parent.position, targetPosition / speed));
+
+        yield return new WaitForSeconds(0.5f);
+        // For now, not waiting, just teleporting.
         RigidBody.velocity = Vector3.zero;
         transform.parent.position = targetPosition;
     }

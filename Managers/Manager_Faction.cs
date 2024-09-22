@@ -111,7 +111,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         return _lastUnusedFactionID;
     }
 
-    public static void AllocateActorToFactionGO(Transform actorTransform, int factionID)
+    public static void AllocateActorToFactionGO(ActorComponent actor, int factionID)
     {
         var faction = GetFaction(factionID);
 
@@ -129,7 +129,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
             return;
         }
 
-        actorTransform.SetParent(factionGO.transform);
+        actor.transform.parent.SetParent(factionGO.transform);
     }
 }
 

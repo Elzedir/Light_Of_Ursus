@@ -6,10 +6,10 @@ using UnityEngine;
 public enum VocationName
 {
     None,
-    Farmer,
-    Logger,
-    Sawyer,
-    Miner
+    Farming,
+    Logging,
+    Sawying,
+    Mining
 }
 
 public class Manager_Vocation
@@ -25,7 +25,7 @@ public class Manager_Vocation
     void _logger()
     {
         AllVocations.Add(new Vocation(
-            vocationName: VocationName.Logger,
+            vocationName: VocationName.Logging,
             vocationDescription: "A logger",
             allVocationTitles: new Dictionary<int, VocationTitle>
             {
@@ -40,7 +40,7 @@ public class Manager_Vocation
     void _lumberjack()
     {
         AllVocations.Add(new Vocation(
-            vocationName: VocationName.Sawyer,
+            vocationName: VocationName.Sawying,
             vocationDescription: "A sawyer",
             allVocationTitles: new Dictionary<int, VocationTitle> 
             {
@@ -81,67 +81,12 @@ public class Vocation
         AllVocationTitles = allVocationTitles;
     }
 
-    public VocationTitle CheckVocationTitle(float currentVocationExperience)
+    public VocationTitle GetVocationTitle(float currentVocationExperience)
     {
         return AllVocationTitles
             .Where(kv => currentVocationExperience >= kv.Key)
             .OrderByDescending(kv => kv.Key)
             .Select(kv => kv.Value)
             .FirstOrDefault();
-    }
-}
-
-public class VocationData
-{
-    public int ActorID;
-
-    public VocationTitle VocationTitle;
-    public Dictionary<VocationName, float> Vocations;
-    public void SetVocations(Dictionary<VocationName, float> vocations) => Vocations = vocations;
-
-    public VocationData(int actorID) => ActorID = actorID;
-
-    public void AddVocation(VocationName vocationName, float vocationExperience)
-    {
-        if (Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} already exists in Vocations.");
-
-        Vocations.Add(vocationName, 0);
-    }
-
-    public void RemoveVocation(VocationName vocationName)
-    {
-        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
-
-        Vocations.Remove(vocationName);
-    }
-
-    public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
-    {
-        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
-
-        Vocations[vocationName] += experienceChange;
-    }
-
-    public float GetVocationExperience(VocationName vocationName)
-    {
-        if (!Vocations.ContainsKey(vocationName)) throw new ArgumentException($"Vocation: {vocationName} does not exist in Vocations.");
-
-        return Vocations[vocationName];
-    }
-
-    public float GetProgress(VocationRequirement vocationRequirement)
-    {
-        var currentExperience = Vocations[vocationRequirement.VocationName];
-
-        if (currentExperience < vocationRequirement.MinimumVocationExperience)
-        {
-            return 0;
-        }
-
-        var progress = ((currentExperience - vocationRequirement.ExpectedVocationExperience) / Math.Max(currentExperience, 1));
-
-        if (progress < 0) return 1 / Math.Abs(progress);
-
-        return progress;
     }
 }

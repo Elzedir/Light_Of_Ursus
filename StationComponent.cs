@@ -83,6 +83,10 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     {
         if (!_initialised) return;
 
+        a
+        // Make all of them work on their own timers, similar what we do for Mangater_Tickrate, and then call each station when ready, and then attribute completion rate to each worker, to make sure they get an output when they are done, but if they stop, then the total gets added to the total output of the station and aids other workers in their completion rate according to their skill?
+        
+        // Change the actor check so that an actor with no knowledge of the recipe cannot operate the station if they are AI.
         // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
         // Change material check to only happen when operator is set or leaves, or when material is used.
 
@@ -115,9 +119,13 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
         foreach(var operatingArea in AllOperatingAreasInStation)
         {
-            if (StationData.StationProgressData.Progress(operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct)))
+            var progressMade = operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct);
+            var itemCrafted = StationData.StationProgressData.Progress(progressMade);
+
+            if (itemCrafted)
             {
-                _onCraftItem(StationData.StationProgressData.CurrentProduct.RecipeProducts);
+                // For now is the final person who adds the last progress, but change to a cumulative system later.
+                CraftItem(StationData.StationProgressData.CurrentProduct.RecipeName, Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID));
             }
         }
     }

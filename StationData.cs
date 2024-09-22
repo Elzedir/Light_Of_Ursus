@@ -195,13 +195,12 @@ public class StationProgressData
         CurrentProgress += progress;
         CurrentQuality += progress;
 
-        Debug.Log($"CurrentProgress: {CurrentProgress} CurrentQuality: {CurrentQuality}");
+        Debug.Log($"Progress: {progress} CurrentProgress: {CurrentProgress} CurrentQuality: {CurrentQuality} MaxProgress: {CurrentProduct.RequiredProgress}");
 
         if (CurrentProgress >= CurrentProduct.RequiredProgress)
         {
-            Debug.Log($"CurrentProduct: {CurrentProduct.RecipeName} has been crafted.");
-
             CurrentProgress = 0;
+            CurrentQuality = 0;
             return true;
         }
 

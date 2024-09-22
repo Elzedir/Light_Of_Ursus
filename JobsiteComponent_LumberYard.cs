@@ -106,10 +106,10 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
         {
             case EmployeePosition.Logger:
             case EmployeePosition.Assistant_Logger:
-                return VocationName.Logger;
+                return VocationName.Logging;
             case EmployeePosition.Sawyer:
             case EmployeePosition.Assistant_Sawyer:
-                return VocationName.Sawyer;
+                return VocationName.Sawying;
             default:
                 return VocationName.None;
         }

@@ -22,13 +22,13 @@ public interface IStationInventory : IInventoryOwner
 [Serializable]
 public class InventoryData
 {
-    public IInventoryOwner InventoryOwner;
+    public int ActorID;
     public int Gold = 0;
     public List<Item> AllInventoryItems;
 
-    public InventoryData(IInventoryOwner inventoryOwner, List<Item> allInventoryItems)
+    public InventoryData(int actorID, List<Item> allInventoryItems)
     {
-        InventoryOwner = inventoryOwner;
+        ActorID = actorID;
         AllInventoryItems = allInventoryItems;
     }
 
@@ -128,6 +128,7 @@ public class InventoryData
             }
             else
             {
+                Debug.Log($"Couldn't remove {itemToRemove.ItemName} from inventory.");
                 removedAllItems = false;
                 break;
             }
@@ -143,33 +144,55 @@ public class InventoryData
             return false;
         }
 
+        Debug.Log("Removed all items.");
+
         return true;
 
         bool removeItem(Item item)
         {
+            Debug.Log($"Removing {item.ItemName} from inventory.");
+
             var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
-            if (!existingItems.Any()) return false;
+            if (!existingItems.Any())
+            {
+                Debug.Log($"No {item.ItemName} in inventory.");
+                return false;
+            }
 
-            if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount) return false;
+            if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount)
+            {
+                Debug.Log($"Not enough {item.ItemName} in inventory.");
+                return false;
+            }
 
             int amountToRemove = item.ItemAmount;
 
+            Debug.Log($"Removing {amountToRemove} {item.ItemName} from inventory.");
+
             foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
+                Debug.Log($"Removing {stackItem.ItemAmount} {item.ItemName} from stack.");
+
                 if (amountToRemove <= 0) break;
+
+                Debug.Log($"Amount to remove: {amountToRemove}");
 
                 if (stackItem.ItemAmount <= amountToRemove)
                 {
+                    Debug.Log($"Removing {stackItem.ItemAmount} {item.ItemName} from stack.");
                     amountToRemove -= stackItem.ItemAmount;
                     AllInventoryItems.Remove(stackItem);
                 }
                 else
                 {
+                    Debug.Log($"Final remove {amountToRemove} {item.ItemName} from stack.");
                     stackItem.ItemAmount -= amountToRemove;
                     amountToRemove = 0;
                 }
             }
+
+            Debug.Log($"Removed {item.ItemName} from inventory.");
 
             return true;
         }
@@ -196,7 +219,9 @@ public class InventoryData
 
         if (!AddToInventory(items))
         {
-            DropItems(items, InventoryOwner.GetGameObject().transform.position, itemsNotInInventory: true);
+            var actor = Manager_Actor.GetActor(ActorID);
+
+            DropItems(items, actor.transform.position, itemsNotInInventory: true);
             Debug.Log("Took items out of inventory and can't put them back");
         }
 

@@ -22,6 +22,11 @@ public class SaveAndLoadSO : EditorWindow
         {
             LoadAllSOs();
         }
+
+        if (GUILayout.Button("Delete Test Save File"))
+        {
+            DeleteTestSaveFile();
+        }
     }
 
     private void SaveAllSOs()
@@ -61,5 +66,10 @@ public class SaveAndLoadSO : EditorWindow
         //allOrdersSO.LoadData(saveData);
 
         Debug.Log("All SOs loaded.");
+    }
+
+    private void DeleteTestSaveFile()
+    {
+        DataPersistenceManager.DataPersistence_SO.DeleteTestSaveFile();
     }
 }

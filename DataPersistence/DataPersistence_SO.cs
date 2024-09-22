@@ -62,9 +62,14 @@ public class DataPersistence_SO : ScriptableObject
         LoadGame("");
     }
 
-    public void DeleteProfileData(ProfileData profileData)
+    public void DeleteProfileData(string profileName)
     {
+        ProfileData profileData = LoadProfileData(profileName);
+
+        if (profileData == null) { Debug.LogError("Profile not found."); return; }
+
         profileData.DeleteProfile();
+        
         CurrentProfile = GetMostRecentlyUpdatedProfile();
         LoadGame("");
     }
@@ -127,10 +132,9 @@ public class DataPersistence_SO : ScriptableObject
             }
             else
             {
-
                 Debug.Log("ProfileData File didn't exist, created");
 
-                var newProfileData = new ProfileData(GetRandomProfileID(), directoryInfo.Name, 0, _useEncryption);
+                var newProfileData = new ProfileData(1, directoryInfo.Name, 0, _useEncryption);
                 string newProfileDataJson = JsonUtility.ToJson(newProfileData);
 
                 File.WriteAllText(profileDataFilePath, newProfileDataJson);
@@ -239,6 +243,26 @@ public class DataPersistence_SO : ScriptableObject
             SaveGame($"AutoSave_{CurrentProfile.AutoSaveCounter}");
             CurrentProfile.AutoSaveCounter = CurrentProfile.AutoSaveCounter % _numberOfAutoSaves + 1;
             Debug.Log("Auto Saved Game");
+        }
+    }
+
+    public void DeleteTestSaveFile()
+    {
+        string fullPath = Path.Combine(Application.persistentDataPath, _currentTestSelectedProfileName);
+
+        try
+        {
+            if (Directory.Exists(fullPath))
+            {
+                Directory.Delete(Path.GetDirectoryName(fullPath), true);
+                Debug.Log("Deleted Test Save File");
+            }
+
+            else Debug.LogWarning($"Tried to delete profile data, but data was not found: {fullPath}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to delete profile data for profileName: {_currentTestSelectedProfileName} at path: {fullPath} \n {e}");
         }
     }
 }

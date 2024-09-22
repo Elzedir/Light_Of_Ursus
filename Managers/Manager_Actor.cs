@@ -17,7 +17,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         AllActors.AllActorData = AllActorData.Values.ToList();
     }
 
-    public void LoadData(SaveData data) 
+    public void LoadData(SaveData data)
     {
         try
         {
@@ -30,7 +30,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         }
 
         AllActors.AllActorData = AllActorData.Values.ToList();
-    } 
+    }
 
     public void OnSceneLoaded()
     {
@@ -59,7 +59,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
             if (!AllActorData.ContainsKey(actor.ActorData.ActorID)) Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
         }
 
-        foreach(var actor in AllActorData)
+        foreach (var actor in AllActorData)
         {
             actor.Value.PrepareForInitialisation();
         }
@@ -129,16 +129,16 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return null;
     }
 
-    public static ActorComponent SpawnNewActor(Vector3 spawnPoint)
+    public static ActorComponent SpawnNewActor(Vector3 spawnPoint, ActorGenerationParameters actorGenerationParameters)
     {
         ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
 
-        actor.SetActorData(GenerateNewActorData(actor));
+        actor.SetActorData(GenerateNewActorData(actor, actorGenerationParameters));
         actor.Initialise();
 
         AllActorComponents[actor.ActorData.ActorID] = actor;
 
-        Manager_Faction.AllocateActorToFactionGO(actor.transform, actor.ActorData.ActorFactionID);
+        Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
 
         return actor;
     }
@@ -154,7 +154,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         actor.SetActorData(GetActorData(actorID));
         actor.Initialise();
 
-        Manager_Faction.AllocateActorToFactionGO(actor.transform, actor.ActorData.ActorFactionID);
+        Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
 
         return actor;
     }
@@ -193,6 +193,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         GameObject actorBody = new GameObject();
         actorBody.transform.position = spawnPoint;
         Rigidbody actorRb = actorBody.AddComponent<Rigidbody>();
+        actorRb.useGravity = false;
 
         GameObject actorGO = new GameObject();
         actorGO.transform.parent = actorBody.transform;
@@ -203,25 +204,50 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         actorGO.AddComponent<Animation>();
         actorGO.AddComponent<MeshRenderer>();
         actorGO.AddComponent<MeshFilter>();
-    
+
         return actorGO;
     }
 
-    public static ActorData GenerateNewActorData(ActorComponent actor) // ActorGenerationParameters parameters, select things like minimum skill range, abilties, etc.)
+    public static ActorData GenerateNewActorData(ActorComponent actor, ActorGenerationParameters actorGenerationParameters)
     {
-        actor.SetActorData(new ActorData(new FullIdentification(
-                actorID: GetRandomActorID(),
-                actorName: GetRandomActorName(actor),
-                actorFactionID: GetRandomFaction(),
-                actorCityID: 0 // Placeholder, usually will pass through city in parameters, or -1 for not a citizen
-                )
-        ));
+        var fullIdentification = new FullIdentification(
+        actorID: actorGenerationParameters.ActorID != 0 ? actorGenerationParameters.ActorID : GetRandomActorID(),
+        actorName: actorGenerationParameters.ActorName ?? GetRandomActorName(actor),
+        actorFactionID: actorGenerationParameters.FactionID != 0 ? actorGenerationParameters.FactionID : GetRandomFaction(),
+        actorCityID: actorGenerationParameters.CityID
+    );
+
+        actor.SetActorData(new ActorData(fullIdentification));
+
+        foreach (var recipe in actorGenerationParameters.InitialRecipes)
+        {
+            Debug.Log($"Adding recipe: {recipe}");
+            actor.ActorData.CraftingData.AddRecipe(recipe);
+        }
+
+        // Add initial vocations
+        foreach (var vocation in actorGenerationParameters.ActorVocations)
+        {
+            Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
+            actor.ActorData.VocationData.AddVocation(vocation.VocationName, vocation.VocationExperience);
+        }
 
         // Temporary
         //actor.ActorData.ActorName = new ActorName($"Test_{actor.ActorData.ActorID}", "of Tester");
 
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Log);
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
+
+        Debug.Log($"Added recipes for {actor.ActorData.ActorName.GetName()}: ");
+
+        foreach (var recipe in actor.ActorData.CraftingData.KnownRecipes)
+        {
+            Debug.Log($"Recipe: {recipe}");
+        }
+        
+
+        //Find a better way to put into groups.
+        actor.ActorData.InventoryAndEquipment.InventoryData = new InventoryData(fullIdentification.ActorID, new List<Item>());
 
         actor.ActorData.SpeciesAndPersonality.SetSpecies(GetRandomSpecies());
         actor.ActorData.SpeciesAndPersonality.SetPersonality(GetRandomPersonality());
@@ -276,10 +302,22 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
 public class ActorGenerationParameters
 {
-    
+    public int ActorID = 0;
+    public ActorName ActorName;
+    public int FactionID = 0;
+    public int CityID = 0;
+    public List<RecipeName> InitialRecipes = new List<RecipeName>();
+    public List<ActorVocation> ActorVocations = new();
 
-    public ActorGenerationParameters()
+    public ActorGenerationParameters() { }
+
+    public ActorGenerationParameters(int actorID, ActorName actorName, int factionID, int cityID, List<RecipeName> initialRecipes, List<ActorVocation> actorVocations)
     {
-
+        ActorID = actorID;
+        ActorName = actorName;
+        FactionID = factionID;
+        CityID = cityID;
+        InitialRecipes = initialRecipes;
+        ActorVocations = actorVocations;
     }
 }

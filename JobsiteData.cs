@@ -197,9 +197,9 @@ public class JobsiteData
     {
         CityComponent city = Manager_City.GetCity(CityID);
 
-        var vocationAndExperience = _getVocationAndMinimumExperienceRequired(position); // Will add to optional parameters
+        var actorGenerationParameters = _getActorGenerationParameters(position);
 
-        var actor = Manager_Actor.SpawnNewActor(city.CitySpawnZone.transform.position);
+        var actor = Manager_Actor.SpawnNewActor(city.CitySpawnZone.transform.position, actorGenerationParameters);
 
         city.CityData.Population.AddCitizen(actor.ActorData.ActorID);
         AddEmployeeToJobsite(actor.ActorData.ActorID);
@@ -226,7 +226,52 @@ public class JobsiteData
 
     protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(EmployeePosition position)
     {
-        return new List<VocationRequirement> { new VocationRequirement(VocationName.None, 0) };
+        var vocationRequirements = new List<VocationRequirement>();
+
+        switch(position)
+        {
+            case EmployeePosition.Owner:
+                vocationRequirements = new List<VocationRequirement>();
+                break;
+            case EmployeePosition.Logger:
+                vocationRequirements = new List<VocationRequirement>
+                {
+                    new VocationRequirement(VocationName.Logging, 1000)
+                };
+                break;
+            default:
+                Debug.Log($"EmployeePosition: {position} not recognised.");
+                break;
+        }
+
+        return vocationRequirements;
+    }
+
+    protected ActorGenerationParameters _getActorGenerationParameters(EmployeePosition position)
+    {
+        var actorGenerationParameters = new ActorGenerationParameters();
+
+        switch(position)
+        {
+            case EmployeePosition.Owner:
+                actorGenerationParameters.ActorVocations = new List<ActorVocation>();
+                break;
+            case EmployeePosition.Logger:
+                actorGenerationParameters.ActorVocations = new List<ActorVocation>
+                {
+                    new ActorVocation(VocationName.Logging, 1000)
+                };
+                actorGenerationParameters.InitialRecipes = new List<RecipeName>
+                {
+                    RecipeName.Log
+                };
+                break;
+            default:
+                Debug.Log($"EmployeePosition: {position} not recognised.");
+                break;
+        }
+
+        return actorGenerationParameters;
     }
 
     public void AddEmployeeToJobsite(int employeeID)

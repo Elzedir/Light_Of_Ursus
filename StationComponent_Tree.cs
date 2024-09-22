@@ -79,7 +79,7 @@ public class StationComponent_Tree : StationComponent
 
         if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }
         // Later allow it to partially remove logs to chop the tree down completely.
-        if (!StationData.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
+        if (!actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
 
         Debug.Log("Crafted item");
 
@@ -88,7 +88,10 @@ public class StationComponent_Tree : StationComponent
 
     protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
-        return new List<Item>(); // For now
+        return new List<Item> 
+        { 
+            new Item(1100, 1) 
+        };
 
         // Base resource cost on actor relevant skill
     }

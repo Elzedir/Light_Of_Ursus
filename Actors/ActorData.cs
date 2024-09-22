@@ -444,7 +444,7 @@ public class CraftingData
 
     public bool AddRecipe(RecipeName recipeName)
     {
-        if (!KnownRecipes.Contains(recipeName)) return false;
+        if (KnownRecipes.Contains(recipeName)) return false;
 
         KnownRecipes.Add(recipeName);
 
@@ -535,4 +535,91 @@ public class OrderData
     public void RemoveOrder(int orderID) => AllOrderIDs.Remove(orderID);
     public void RemoveCompletedOrders() => AllOrderIDs.RemoveAll(o => Manager_Order.GetOrder(o).OrderStatus == OrderStatus.Complete);
     public void RemoveAllOrders() => AllOrderIDs.Clear();
+}
+
+[Serializable]
+public class VocationData
+{
+    public int ActorID;
+
+    public List<ActorVocation> ActorVocations = new();
+    public void SetVocations(List<ActorVocation> vocations) => ActorVocations = vocations;
+
+    public VocationData(int actorID) => ActorID = actorID;
+
+    public void AddVocation(VocationName vocationName, float vocationExperience)
+    {
+        if (ActorVocations.Any(v => v.VocationName == vocationName)) 
+        {
+            Debug.Log($"Vocation: {vocationName} already exists in Vocations.");
+            return;
+        }
+
+        ActorVocations.Add(new ActorVocation(vocationName, vocationExperience));
+    }
+
+    public void RemoveVocation(VocationName vocationName)
+    {
+        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        {
+            Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
+            return;
+        }
+
+        ActorVocations.Remove(ActorVocations.First(v => v.VocationName == vocationName));
+    }
+
+    public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
+    {
+        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        {
+            Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
+            return;
+        }
+
+        ActorVocations.First(v => v.VocationName == vocationName).VocationExperience += experienceChange;
+    }
+
+    public float GetVocationExperience(VocationName vocationName)
+    {
+        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        {
+            Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
+            return 0;
+        }
+
+        return ActorVocations.First(v => v.VocationName == vocationName).VocationExperience;
+    }
+
+    public float GetProgress(VocationRequirement vocationRequirement)
+    {
+        var currentExperience = GetVocationExperience(vocationRequirement.VocationName);
+
+        if (currentExperience < vocationRequirement.MinimumVocationExperience)
+        {
+            return 0;
+        }
+
+        var progress = ((currentExperience - vocationRequirement.ExpectedVocationExperience) / Math.Max(currentExperience, 1));
+
+        if (progress < 0) return 1 / Math.Abs(progress);
+
+        return progress;
+    }
+}
+
+[Serializable]
+public class ActorVocation
+{
+    public VocationName VocationName;
+    public VocationTitle VocationTitle;
+    public float VocationExperience;
+    public ActorVocation(VocationName vocationName, float vocationExperience)
+    {
+        VocationName = vocationName;
+        VocationExperience = vocationExperience;
+
+        // Impement later
+        //VocationTitle = Manager_Vocation.GetVocation(vocationName).GetVocationTitle(vocationExperience);
+    }
 }
