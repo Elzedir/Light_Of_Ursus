@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -51,18 +52,20 @@ public class StationComponent_Tree : StationComponent
 
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Logger, EmployeePosition.Logger, EmployeePosition.Assistant_Logger };
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Logger, };
     }
 
     public override void InitialiseStartingInventory()
     {
         if (StationData.InventoryData.AllInventoryItems.Count == 0)
         {
-            StationData.InventoryData.AddToInventory(new List<Item>
-        {
-            new Item(1100, 100)
-        });
+            StationData.InventoryData.AddToInventory(new List<Item>());
         }
+    }
+
+    public override List<Item> GetInventoryItemsToHaul()
+    {
+        return StationData.InventoryData.AllInventoryItems.Where(i => i.ItemID == 1100).ToList();
     }
 
     public override void CraftItem(RecipeName recipeName, ActorComponent actor)
@@ -75,23 +78,17 @@ public class StationComponent_Tree : StationComponent
         var cost = _getCost(recipe.RequiredIngredients, actor);
         var yield = _getYield(recipe.RecipeProducts, actor);
 
-        Debug.Log($"Cost: {cost.Count} Yield: {yield.Count}");
-
         if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }
+        // Have another system where the tree loses durability instead or something.
         // Later allow it to partially remove logs to chop the tree down completely.
-        if (!actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
-
-        Debug.Log("Crafted item");
+        if (!StationData.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
 
         _onCraftItem(yield);
     }
 
     protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
-        return new List<Item> 
-        { 
-            new Item(1100, 1) 
-        };
+        return new List<Item>();
 
         // Base resource cost on actor relevant skill
     }
@@ -110,7 +107,7 @@ public class StationComponent_Tree : StationComponent
 
     protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
-        return new List<Item> { new Item(1100, 3) }; // For now
+        return new List<Item> { new Item(1100, 1) }; // For now
 
         // Base resource yield on actor relevant skill
     }

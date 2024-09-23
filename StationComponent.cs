@@ -82,9 +82,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public virtual void OnTick()
     {
         if (!_initialised) return;
-
-        a
-        // Make all of them work on their own timers, similar what we do for Mangater_Tickrate, and then call each station when ready, and then attribute completion rate to each worker, to make sure they get an output when they are done, but if they stop, then the total gets added to the total output of the station and aids other workers in their completion rate according to their skill?
         
         // Change the actor check so that an actor with no knowledge of the recipe cannot operate the station if they are AI.
         // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
@@ -184,6 +181,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract void InitialiseAllowedEmployeePositions();
 
     public abstract void InitialiseStartingInventory();
+    public abstract List<Item> GetInventoryItemsToHaul();
 
     public void SetStationData(StationData stationData) => StationData = stationData;
 

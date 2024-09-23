@@ -53,6 +53,8 @@ public class StationComponent_LogPile : StationComponent
 
     public override void InitialiseStartingInventory() { }
 
+    public override List<Item> GetInventoryItemsToHaul() { return new List<Item>(); }
+
     public override void InitialiseAllowedEmployeePositions()
     {
         AllowedEmployeePositions = new() { EmployeePosition.None };
@@ -68,22 +70,60 @@ public class StationComponent_LogPile : StationComponent
     {
         foreach (var operatingArea in AllOperatingAreasInStation)
         {
-            if (!operatingArea.CanHaul()) continue;
+            if (operatingArea.OperatingAreaData.CurrentOperatorID == 0) continue;
 
-            var stationsToHaulFrom = Manager_Jobsite.GetJobsite(StationData.JobsiteID).AllStationsInJobsite
-                .Where(s => s.StationType == StationType.Crafter)
-                .Where(s => s.AllowedRecipes.Contains(RecipeName.Plank))
-                .Where(s => s.StationData.InventoryData.InventoryContainsItems(new List<int> { 1100, 2300 }).Count > 0)
-                .ToList();
+            var actor = Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID);
 
-            if (stationsToHaulFrom.Count == 0) continue;
+            if (actorHasHaulOrder())
+            {
+                actor.ActorData.OrderData.ExecuteNextOrder(OrderType.Haul_Deliver);
+            }
+            else if (actorCanHaul())
+            {
+                _createNewHaulOrder(operatingArea);
+            }
+            else
+            {
+                Debug.Log($"Actor: {operatingArea.OperatingAreaData.CurrentOperatorID} can't haul.");
+            }
+
+            bool actorHasHaulOrder()
+            {
+                if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Deliver)) return true;
+                if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Fetch)) return true;
+                return false;
+            }
+
+            bool actorCanHaul()
+            {
+                // Check if the actor has sufficient space, weight, combat situation, etc.
+                return true;
+            }
+        }
+    }
+
+    void _createNewHaulOrder(OperatingAreaComponent operatingArea)
+    {
+        var stationsToHaulFrom = _getAllStationsToHaulFrom();
+
+            if (stationsToHaulFrom.Count == 0) 
+            {
+                Debug.Log($"No stations to haul from in Jobsite: {StationData.JobsiteID}");
+                return;
+            }
+
+            Debug.Log($"Stations to haul from: {string.Join(", ", stationsToHaulFrom.Select(s => $"{s.StationData.StationID}: {s.StationName}"))}");
 
             // Temporary for now, later, find the nearest station and haul from there.
             var stationToHaulFrom = stationsToHaulFrom[Random.Range(0, stationsToHaulFrom.Count)];
 
             var itemsToHaul = stationToHaulFrom.StationData.InventoryData.InventoryContainsItems(new List<int> { 1100, 2300 });
 
-            if (itemsToHaul.Count == 0) continue;
+            if (itemsToHaul.Count == 0)
+            {
+                Debug.Log($"No items to haul from {stationToHaulFrom.StationName}.");
+                return;
+            }
 
             var haulOrderFetch = new Order_Haul_Fetch(
                 actorID: operatingArea.OperatingAreaData.CurrentOperatorID, 
@@ -92,11 +132,28 @@ public class StationComponent_LogPile : StationComponent
                 orderStatus: OrderStatus.Pending, 
                 orderItems: itemsToHaul);
             
-            // Check if there are any items in any of the stations that need to be hauled, usually from crafter to storage since raw materials would be directly transferred to the gatherer. Or from a raw material storage to the crafter.
+            Debug.Log($"HaulOrderFetch: {haulOrderFetch.OrderID} for Actor: {haulOrderFetch.ActorID} from {stationToHaulFrom.StationName} to {StationName}");
+            
             // Check for any dropped items too.
+    }
 
-            operatingArea.OperatingAreaData.OrderData.AddOrder(haulOrderFetch.OrderID);
+    List<StationComponent> _getAllStationsToHaulFrom()
+    {
+        var stationsToHaulFrom = new List<StationComponent>();
+        
+        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
+
+        foreach (var station in jobsite.AllStationsInJobsite)
+        {
+            if (station.GetInventoryItemsToHaul().Count <= 0)
+            {
+                continue;
+            }
+
+            stationsToHaulFrom.Add(station);
         }
+
+        return stationsToHaulFrom;
     }
 
     public override void CraftItem(RecipeName recipeName, ActorComponent actor)

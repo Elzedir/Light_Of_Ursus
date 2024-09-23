@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -226,26 +227,15 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         }
 
         // Add initial vocations
-        foreach (var vocation in actorGenerationParameters.ActorVocations)
+        foreach (var vocation in actorGenerationParameters.InitialVocations)
         {
             Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
             actor.ActorData.VocationData.AddVocation(vocation.VocationName, vocation.VocationExperience);
         }
 
-        // Temporary
-        //actor.ActorData.ActorName = new ActorName($"Test_{actor.ActorData.ActorID}", "of Tester");
-
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Log);
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
-
-        Debug.Log($"Added recipes for {actor.ActorData.ActorName.GetName()}: ");
-
-        foreach (var recipe in actor.ActorData.CraftingData.KnownRecipes)
-        {
-            Debug.Log($"Recipe: {recipe}");
-        }
         
-
         //Find a better way to put into groups.
         actor.ActorData.InventoryAndEquipment.InventoryData = new InventoryData(fullIdentification.ActorID, new List<Item>());
 
@@ -300,24 +290,22 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     }
 }
 
+[Serializable]
 public class ActorGenerationParameters
 {
-    public int ActorID = 0;
-    public ActorName ActorName;
-    public int FactionID = 0;
-    public int CityID = 0;
-    public List<RecipeName> InitialRecipes = new List<RecipeName>();
-    public List<ActorVocation> ActorVocations = new();
+    public int ActorID { get; private set; } = 0;
+    public ActorName ActorName{ get; private set; }
+    public int FactionID { get; private set; } = 0;
+    public int CityID { get; private set; } = 0;
+    public List<RecipeName> InitialRecipes { get; private set; } = new List<RecipeName>();
+    public List<ActorVocation> InitialVocations { get; private set; } = new();
 
-    public ActorGenerationParameters() { }
-
-    public ActorGenerationParameters(int actorID, ActorName actorName, int factionID, int cityID, List<RecipeName> initialRecipes, List<ActorVocation> actorVocations)
-    {
-        ActorID = actorID;
-        ActorName = actorName;
-        FactionID = factionID;
-        CityID = cityID;
-        InitialRecipes = initialRecipes;
-        ActorVocations = actorVocations;
-    }
+    public void SetActorID(int actorID) => ActorID = actorID;
+    public void SetActorName(ActorName actorName) => ActorName = actorName;
+    public void SetFactionID(int factionID) => FactionID = factionID;
+    public void SetCityID(int cityID) => CityID = cityID;
+    public void SetInitialRecipes(List<RecipeName> initialRecipes) => InitialRecipes = initialRecipes;
+    public void AddInitialRecipe(RecipeName recipeName) => InitialRecipes.Add(recipeName);
+    public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;
+    public void AddInitialVocation(ActorVocation actorVocation) => InitialVocations.Add(actorVocation);
 }

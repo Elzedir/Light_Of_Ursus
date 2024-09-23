@@ -4,30 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-public enum EmployeePosition
-{
-    None,
-
-    Owner,
-
-    Shopkeeper,
-    Assistant_Shopkeeper,
-
-    Chief_Logger,
-    Logger,
-    Assistant_Logger,
-
-    Chief_Sawyer,
-    Sawyer,
-    Assistant_Sawyer,
-
-    Chief_Smith,
-    Smith,
-    Assistant_Smith,
-
-    Hauler,
-}
-
 public abstract class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;

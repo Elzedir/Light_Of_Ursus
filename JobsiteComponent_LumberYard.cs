@@ -105,12 +105,11 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
         switch (position)
         {
             case EmployeePosition.Logger:
-            case EmployeePosition.Assistant_Logger:
                 return VocationName.Logging;
             case EmployeePosition.Sawyer:
-            case EmployeePosition.Assistant_Sawyer:
                 return VocationName.Sawying;
             default:
+                Debug.Log($"EmployeePosition: {position} does not have a relevant vocation.");
                 return VocationName.None;
         }
     }

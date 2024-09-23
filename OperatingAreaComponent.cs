@@ -51,16 +51,6 @@ public class OperatingAreaComponent : MonoBehaviour
         }
     }
 
-    public bool CanHaul()
-    {
-        if (OperatingAreaData.CurrentOperatorID == 0 ) return false;
-
-        // Other things that could prevent the operator from hauling like full inventory weight, or other conditions.
-        // Not if HasOrder() since I want to be able to queue orders.
-
-        return true;
-    }
-
     protected IEnumerator MoveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
     {
         if (OperatingAreaData.IsOperatorMovingToOperatingArea) yield break;

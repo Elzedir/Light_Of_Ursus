@@ -30,9 +30,9 @@ public class AllOrders_SO : ScriptableObject
 [CustomEditor(typeof(AllOrders_SO))]
 public class AllOrdersSOEditor : Editor
 {
-    int _selectedOrderIndex = -1;
+    int _selectedOrderDataIndex = -1;
 
-    Vector2 _orderScrollPos;
+    Vector2 _orderDataScrollPos;
 
     public override void OnInspectorGUI()
     {
@@ -44,21 +44,21 @@ public class AllOrdersSOEditor : Editor
             EditorUtility.SetDirty(allOrdersSO);
         }
 
-        EditorGUILayout.LabelField("All Orders", EditorStyles.boldLabel);
-        _orderScrollPos = EditorGUILayout.BeginScrollView(_orderScrollPos, GUILayout.Height(GetListHeight(allOrdersSO.AllOrderData.Count)));
-        _selectedOrderIndex = GUILayout.SelectionGrid(_selectedOrderIndex, GetOrderTypes(allOrdersSO), 1);
+        EditorGUILayout.LabelField("All OrderDatas", EditorStyles.boldLabel);
+        _orderDataScrollPos = EditorGUILayout.BeginScrollView(_orderDataScrollPos, GUILayout.Height(GetListHeight(allOrdersSO.AllOrderData.Count)));
+        _selectedOrderDataIndex = GUILayout.SelectionGrid(_selectedOrderDataIndex, GetOrderTypes(allOrdersSO), 1);
         EditorGUILayout.EndScrollView();
 
-        if (_selectedOrderIndex >= 0 && _selectedOrderIndex < allOrdersSO.AllOrderData.Count)
+        if (_selectedOrderDataIndex >= 0 && _selectedOrderDataIndex < allOrdersSO.AllOrderData.Count)
         {
-            var selectedOrder = allOrdersSO.AllOrderData[_selectedOrderIndex];
-            DrawOrderAdditionalData(selectedOrder);
+            var selectedOrderData = allOrdersSO.AllOrderData[_selectedOrderDataIndex];
+            DrawOrderAdditionalData(selectedOrderData);
         }
     }
 
     private string[] GetOrderTypes(AllOrders_SO allOrdersSO)
     {
-        return allOrdersSO.AllOrderData.Select(o => o.AllOrderIDs.ToString()).ToArray();
+        return allOrdersSO.AllOrderData.Select(o => o.AllCurrentOrders.ToString()).ToArray();
     }
 
     private float GetListHeight(int itemCount)
@@ -77,7 +77,7 @@ public class AllOrdersSOEditor : Editor
 
         try
         {
-            foreach (var orderID in selectedOrderData.AllOrderIDs)
+            foreach (var orderID in selectedOrderData.AllCurrentOrders)
             {
                 EditorGUILayout.LabelField($"- {orderID}");
             }

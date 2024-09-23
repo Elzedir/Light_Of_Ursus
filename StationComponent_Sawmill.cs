@@ -54,9 +54,14 @@ public class StationComponent_Sawmill : StationComponent
 
     public override void InitialiseStartingInventory() { }
 
+    public override List<Item> GetInventoryItemsToHaul()
+    {
+        return StationData.InventoryData.AllInventoryItems.Where(i => i.ItemID ==2300).ToList();
+    }
+
     public override void InitialiseAllowedEmployeePositions()
     {
-        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Chief_Sawyer, EmployeePosition.Sawyer, EmployeePosition.Assistant_Sawyer };
+        AllowedEmployeePositions = new() { EmployeePosition.Owner, EmployeePosition.Sawyer };
     }
 
     public override IEnumerator Interact(ActorComponent actor)

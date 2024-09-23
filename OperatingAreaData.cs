@@ -26,8 +26,6 @@ public class OperatingAreaData
     public bool IsOperatorMovingToOperatingArea = false;
     #endregion
 
-    public OrderData OrderData;
-
     public OperatingAreaData(int operatingAreaID, int stationID)
     {
         OperatingAreaID = operatingAreaID;

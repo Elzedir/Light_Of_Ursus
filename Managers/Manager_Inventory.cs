@@ -144,14 +144,10 @@ public class InventoryData
             return false;
         }
 
-        Debug.Log("Removed all items.");
-
         return true;
 
         bool removeItem(Item item)
         {
-            Debug.Log($"Removing {item.ItemName} from inventory.");
-
             var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
             if (!existingItems.Any())
@@ -168,31 +164,21 @@ public class InventoryData
 
             int amountToRemove = item.ItemAmount;
 
-            Debug.Log($"Removing {amountToRemove} {item.ItemName} from inventory.");
-
             foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
-                Debug.Log($"Removing {stackItem.ItemAmount} {item.ItemName} from stack.");
-
                 if (amountToRemove <= 0) break;
-
-                Debug.Log($"Amount to remove: {amountToRemove}");
 
                 if (stackItem.ItemAmount <= amountToRemove)
                 {
-                    Debug.Log($"Removing {stackItem.ItemAmount} {item.ItemName} from stack.");
                     amountToRemove -= stackItem.ItemAmount;
                     AllInventoryItems.Remove(stackItem);
                 }
                 else
                 {
-                    Debug.Log($"Final remove {amountToRemove} {item.ItemName} from stack.");
                     stackItem.ItemAmount -= amountToRemove;
                     amountToRemove = 0;
                 }
             }
-
-            Debug.Log($"Removed {item.ItemName} from inventory.");
 
             return true;
         }

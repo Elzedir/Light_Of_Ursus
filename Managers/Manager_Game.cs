@@ -109,6 +109,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
         _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
         _createManager("Manager_Actor", _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
+        _createManager("Manager_Order", _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
         DataPersistenceManager.DataPersistence_SO.LoadGame("");
 

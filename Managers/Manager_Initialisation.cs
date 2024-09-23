@@ -12,6 +12,7 @@ public class Manager_Initialisation
     public static event Action OnInitialiseManagerJobsite;
     public static event Action OnInitialiseManagerStation;
     public static event Action OnInitialiseManagerOperatingArea;
+    public static event Action OnInitialiseManagerOrder;
 
     public static event Action OnInitialiseManagerActor;
     public static event Action OnInitialiseActorData;
@@ -32,6 +33,7 @@ public class Manager_Initialisation
         OnInitialiseManagerJobsite?.Invoke();
         OnInitialiseManagerStation?.Invoke();
         OnInitialiseManagerOperatingArea?.Invoke();
+        OnInitialiseManagerOrder?.Invoke();
     }
 
     public static void InitialiseActors()

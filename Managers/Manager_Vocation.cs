@@ -9,6 +9,7 @@ public enum VocationName
     Farming,
     Logging,
     Sawying,
+    Smithing,
     Mining
 }
 

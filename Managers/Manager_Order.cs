@@ -2,30 +2,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using UnityEngine;
 
 public class Manager_Order : MonoBehaviour, IDataPersistence
 {
-    public static AllOrders_SO DisplayAllOrders;
-    public static Dictionary<int, Order_Base> AllOrders;
-    public static int LastUnusedOrderID = 1;
+    static AllOrders_SO _displayAllOrders;
+    public static AllOrders_SO DisplayAllOrders { get { return _displayAllOrders ??= Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO"); } }
+    public static Dictionary<int, OrderData> AllOrderData;
+    static int _lastUnusedOrderID = 1;
 
     public void SaveData(SaveData data)
     {
-        //AllOrderData.Values.ToList().ForEach(orderData => orderData.SaveData());
-        //data.SavedCityData = new SavedCityData(AllOrderData.Values.ToList());
+        data.SavedOrderData = new SavedOrderData(AllOrderData.Values.ToList());
     }
     public void LoadData(SaveData data)
     {
-        //AllOrderData = data.SavedOrderData?.AllOrderData.ToDictionary(x => x.OrderID);
-        //AllOrderData?.Values.ToList().ForEach(orderData => orderData.LoadData());
+        AllOrderData = data.SavedOrderData?.AllOrderData.ToDictionary(x => x.ActorID);
     }
 
     public void OnSceneLoaded()
     {
-        //AllOrders = Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO");
-
-        //Manager_Initialisation.OnInitialiseManagerOrder += _initialise;
+        Manager_Initialisation.OnInitialiseManagerOrder += _initialise;
     }
 
     void _initialise()
@@ -35,81 +33,210 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
 
     void _initialiseAllOrderData()
     {
-        if (AllOrders == null) AllOrders = new();
+        if (AllOrderData == null) AllOrderData = new();
 
-        // foreach (var orderData in AllOrderData.Values)
-        // {
-        //     orderData.InitialiseOrderData();
-        // }
-
-        // AllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
     }
 
-    public static void AddOrder(Order_Base order)
+    public static void AddOrderData(OrderData orderData)
     {
-        if (AllOrders.ContainsKey(order.OrderID))
+        if (AllOrderData.ContainsKey(orderData.ActorID))
         {
-            Debug.Log($"AllOrders already contains OrderID: {order.OrderID}");
+            Debug.Log($"OrderData with ActorID: {orderData.ActorID} already exists.");
             return;
         }
 
-        AllOrders.Add(order.OrderID, order);
+        AllOrderData.Add(orderData.ActorID, orderData);
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
     }
 
-    public static void UpdateOrder(Order_Base order)
+    public static void RemoveOrderData(OrderData orderData)
     {
-        if (!AllOrders.ContainsKey(order.OrderID))
+        if (!AllOrderData.ContainsKey(orderData.ActorID))
         {
-            Debug.LogError($"CityData: {order.OrderID} does not exist in AllCityData.");
+            Debug.Log($"OrderData with ActorID: {orderData.ActorID} does not exist.");
             return;
         }
 
-        AllOrders[order.OrderID] = order;
+        AllOrderData.Remove(orderData.ActorID);
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
     }
 
-    public static Order_Base GetOrder(int orderID)
+    public static void RemoveAllOrderData()
     {
-        if (!AllOrders.ContainsKey(orderID))
-        {
-            Debug.Log($"OrderID: {orderID} does not exist in AllOrders.");
-            return null;
-        }
-
-        return AllOrders[orderID];
+        AllOrderData.Clear();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
     }
 
-    public static void RemoveOrder(Order_Base order)
+    public static void GetOrderData(int orderID)
     {
-        if (!AllOrders.ContainsKey(order.OrderID))
+        if (!AllOrderData.ContainsKey(orderID))
         {
-            Debug.LogError($"OrderID: {order.OrderID} does not exist in AllOrders.");
+            Debug.Log($"OrderData with ID: {orderID} does not exist.");
             return;
         }
 
-        AllOrders.Remove(order.OrderID);
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
     }
 
-    public static void RemoveAllCompleteOrders()
+    public static int GetOrderBaseID()
     {
-        var completedOrderIDs = AllOrders
-        .Where(order => order.Value.OrderStatus == OrderStatus.Complete)
-        .Select(order => order.Key)
-        .ToList();
-
-        foreach (var orderID in completedOrderIDs)
+        while(AllOrderData.ContainsKey(_lastUnusedOrderID))
         {
-            AllOrders.Remove(orderID);
+            _lastUnusedOrderID++;
+        }
+
+        return _lastUnusedOrderID;
+    }
+}
+
+[Serializable]
+public class OrderData
+{
+    public int ActorID;
+    public OrderData(int actorID) => ActorID = actorID;
+
+    int _lastUnusedOrderID = 1;
+    public List<Order_Base> AllCurrentOrders = new();
+    public List<Order_Base> AllCompletedOrders = new();
+
+    Coroutine _orderCoroutine;
+
+    a
+
+    // Create a priority queue system so replacement orders can be created and executed in the correct order of priority. And that deliver orders can follow fetch orders.
+
+    public void ExecuteNextOrder(OrderType orderType = OrderType.None)
+    {
+
+        if (AllCurrentOrders.Count <= 0) return;
+
+        // Implement priority system later.
+
+        Order_Base highestPriorityOrder = AllCurrentOrders.OrderByDescending(o => o.OrderID).FirstOrDefault();
+
+        if (highestPriorityOrder == null)
+        {
+            Debug.Log("No highest priority order found.");
+            return;
+        }
+
+        highestPriorityOrder.ExecuteOrder();
+
+        if (orderType == OrderType.None)
+        {
+            if (AllCurrentOrders.Count > 0)
+            {
+                AllCurrentOrders[0].ExecuteOrder();
+            }
+            else
+            {
+                Debug.Log($"No orders for Actor: {ActorID}");
+            }
+        }
+        else
+        {
+            if (AllCurrentOrders.Any(o => o.OrderType == orderType))
+            {
+                AllCurrentOrders.FirstOrDefault(o => o.OrderType == orderType).ExecuteOrder();
+            }
+            else
+            {
+                Debug.Log($"No {orderType} orders for Actor: {ActorID}");
+            }
         }
     }
 
-    public static int GetOrderID()
+    public void ExecuteOrder(int orderID)
     {
-        while(AllOrders.ContainsKey(LastUnusedOrderID))
+        if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
         {
-            LastUnusedOrderID++;
+            Debug.Log($"Order: {orderID} does not exist for Actor: {ActorID}");
+            return;
         }
 
-        return LastUnusedOrderID;
+        AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID).ExecuteOrder();
+    }
+
+    public bool HasCurrentOrder(OrderType orderType = OrderType.None)
+    {
+        if (orderType == OrderType.None) return AllCurrentOrders.Count > 0;
+
+        return AllCurrentOrders.Any(o => o.OrderType == orderType);
+    }
+
+    public void AddCurrentOrder(Order_Base order)
+    {
+        if (AllCurrentOrders.Any(o => o.OrderID == order.OrderID))
+        {
+            Debug.Log($"Order: {order.OrderID} already exists for Actor: {ActorID}");
+            return;
+        }
+
+        AllCurrentOrders.Add(order);
+    }
+
+    public void ReplaceCurrentOrder(Order_Base order)
+    {
+        if (!AllCurrentOrders.Any(o => o.OrderID == order.OrderID))
+        {
+            Debug.Log($"Order: {order.OrderID} does not exist for Actor: {ActorID}");
+            return;
+        }
+
+        // Stick in the priority queue right behind the current order.
+
+        AllCurrentOrders.RemoveAll(o => o.OrderID == order.OrderID);
+        AllCurrentOrders.Add(order);
+    }
+
+    public void CompleteOrder(int orderID, Order_Base replacementOrder = null)
+    {
+        if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
+        {
+            Debug.Log($"Order: {orderID} does not exist for Actor: {ActorID}");
+            return;
+        }
+
+        AllCompletedOrders.Add(AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID));
+        AllCurrentOrders.RemoveAll(o => o.OrderID == orderID);
+
+        if (replacementOrder != null)
+        {
+            AddCurrentOrder(replacementOrder);
+        }
+    }
+
+    public void RemoveCurrentOrder(int orderID)
+    {
+        if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
+        {
+            Debug.Log($"Order: {orderID} does not exist for Actor: {ActorID}");
+            return;
+        }
+
+        AllCurrentOrders.RemoveAll(o => o.OrderID == orderID);
+    }
+
+    public void RemoveCompletedOrders()
+    {
+        AllCompletedOrders.Clear();
+    }
+
+    public void RemoveCurrentOrders()
+    {
+        AllCurrentOrders.Clear();
+    }
+
+    public int GetOrderID()
+    {
+        // Later put in a way to clear them if the orders number over 1000 or 10 000, to prevent overflow.
+        while(AllCurrentOrders.Any(o => o.OrderID == _lastUnusedOrderID))
+        {
+            _lastUnusedOrderID++;
+        }
+
+        return _lastUnusedOrderID;
     }
 }
 
@@ -151,28 +278,28 @@ public abstract class Order_Base
     public OrderStatus OrderStatus;
     public List<Item> OrderItems;
 
+    protected Coroutine _orderCoroutine;
     protected Coroutine _actorMoveCoroutine;
 
     public Order_Base(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
     {
-        OrderID = Manager_Order.GetOrderID();
         ActorID = actorID;
+        OrderID = Actor.ActorData.OrderData.GetOrderID();
         StationID_Source = stationID_Source;
         JobsiteID = Station_Source.StationData.JobsiteID;
         StationID_Destination = stationID_Destination;
         OrderStatus = orderStatus;
         OrderItems = orderItems;
 
-        Manager_Order.AddOrder(this);
-        Actor.ActorData.OrderData.AddOrder(OrderID);
+        Actor.ActorData.OrderData.AddCurrentOrder(this);
     }
 
     public void ChangeActor(int actorID)
     {
-        Actor.ActorData.OrderData.RemoveOrder(OrderID);
+        Actor.ActorData.OrderData.RemoveCurrentOrder(OrderID);
         ActorID = actorID;
         _actor = null;
-        Actor.ActorData.OrderData.AddOrder(OrderID);
+        Actor.ActorData.OrderData.AddCurrentOrder(this);
     }
     
     public void ChangeStationSource(int stationID)
@@ -187,26 +314,35 @@ public abstract class Order_Base
         _station_Destination = null;
     }
 
-    public abstract IEnumerator ExecuteOrder();
+    public abstract void ExecuteOrder();
+    public abstract IEnumerator _executeOrder();
 
     protected IEnumerator _moveOperatorToOperatingArea(Vector3 position)
     {
         OrderStatus = OrderStatus.Active;
-
-        Manager_Order.UpdateOrder(this);
 
         yield return Actor.StartCoroutine(Actor.BasicMove(position));
 
         if (Actor.transform.position != position) Actor.transform.position = position;
     }
 
-    public void HaltOrder()
+    public void HaltCurrentOrder()
+    {
+        if (_orderCoroutine != null)
+        {
+            Actor.StopCoroutine(_orderCoroutine);
+            OrderStatus = OrderStatus.Pending;
+            _orderCoroutine = null;
+        }
+    }
+
+    public void HaltCurrentMoveOrder()
     {
         if (_actorMoveCoroutine != null)
         {
             Actor.StopCoroutine(_actorMoveCoroutine);
             OrderStatus = OrderStatus.Pending;
-            Manager_Order.UpdateOrder(this);
+            _actorMoveCoroutine = null;
         }
     }
 }
@@ -216,34 +352,55 @@ public abstract class Order_Haul : Order_Base
 {
     public Order_Haul(int actorID, int stationID_source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_source, stationID_Destination, orderStatus, orderItems) { }
 
-    public override IEnumerator ExecuteOrder()
+    public override void ExecuteOrder()
+    {
+        if (OrderStatus == OrderStatus.Pending)
+        {
+            HaltCurrentOrder();
+
+            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
+        }
+    }
+
+    public override IEnumerator _executeOrder()
     {
         if (ActorID == 0 || StationID_Source == 0 || OrderItems.Count <= 0)
         {
             Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Source}, or OrderItemIDs {OrderItems.Count} is invalid.");
-            yield break;
+            throw new Exception("Invalid Order.");
         }
 
-        if (Actor.transform.position != null && Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
+        if (Actor.transform.position == null)
         {
-            HaltOrder();
+            Debug.Log("Actor position is null.");
+            throw new Exception("Invalid Actor Position.");
+        }
+
+        if (Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
+        {
+            HaltCurrentMoveOrder();
 
             yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.transform.position));
 
             _transferItems();
-
-            if (OrderType == OrderType.Haul_Fetch) _createDeliverOrder();
         }
 
         OrderStatus = OrderStatus.Complete;
 
-        Manager_Order.RemoveOrder(this);
+        if (OrderType == OrderType.Haul_Deliver)
+        {
+            Actor.ActorData.OrderData.CompleteOrder(OrderID, _createReturnDeliverOrder());
+        }
+        else
+        {
+            Actor.ActorData.OrderData.CompleteOrder(OrderID);
+        }
     }
 
     protected abstract bool _transferItems();
-    protected void _createDeliverOrder()
+    protected Order_Haul_Deliver _createReturnDeliverOrder()
     {
-        Order_Haul_Deliver order_Deliver = new Order_Haul_Deliver(ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
+        return new Order_Haul_Deliver(ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
     }
 }
 
@@ -320,23 +477,33 @@ public class Order_Craft : Order_Base
         Recipe = recipe;
     }
 
-    public override IEnumerator ExecuteOrder()
+    public override void ExecuteOrder()
+    {
+        if (OrderStatus == OrderStatus.Pending)
+        {
+            HaltCurrentMoveOrder();
+            HaltCurrentOrder();
+
+            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
+        }
+    }
+
+    public override IEnumerator _executeOrder()
     {
         if (ActorID == 0 || StationID_Source == 0 || OrderItems.Count <= 0)
         {
             Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Source}, or OrderItemIDs {OrderItems.Count} is invalid.");
-            yield break;
+            throw new Exception("Invalid Order.");
         }
 
         if (Actor.transform.position != null && Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
         {
-            HaltOrder();
+            HaltCurrentMoveOrder();
 
             yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.transform.position));
         }
 
         OrderStatus = OrderStatus.Complete;
-
-        Manager_Order.RemoveOrder(this);
+        Actor.ActorData.OrderData.CompleteOrder(OrderID);
     }
 }

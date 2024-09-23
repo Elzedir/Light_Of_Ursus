@@ -521,22 +521,6 @@ public class QuestData
     public QuestData(int actorID) => ActorID = actorID;
 }
 
-
-[Serializable]
-public class OrderData
-{
-    public int ActorID;
-    public List<int> AllOrderIDs;
-    public bool HasOrder() => AllOrderIDs.Any(o => Manager_Order.GetOrder(o).OrderStatus != OrderStatus.Complete);
-
-    public OrderData(int actorID) => ActorID = actorID;
-
-    public void AddOrder(int orderID) => AllOrderIDs.Add(orderID);
-    public void RemoveOrder(int orderID) => AllOrderIDs.Remove(orderID);
-    public void RemoveCompletedOrders() => AllOrderIDs.RemoveAll(o => Manager_Order.GetOrder(o).OrderStatus == OrderStatus.Complete);
-    public void RemoveAllOrders() => AllOrderIDs.Clear();
-}
-
 [Serializable]
 public class VocationData
 {

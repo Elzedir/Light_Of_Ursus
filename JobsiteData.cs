@@ -26,10 +26,32 @@ public class JobsiteData
     public int OwnerID;
 
     public List<int> AllEmployeeIDs;
+    Dictionary<int, ActorComponent> _allEmployees;
+    public Dictionary<int, ActorComponent> AllEmployees { get => _allEmployees ??= _populateAllEmployees(); }
+    Dictionary<int, ActorComponent> _populateAllEmployees()
+    {
+        var allEmployees = new Dictionary<int, ActorComponent>();
+
+        foreach (var employeeID in AllEmployeeIDs)
+        {
+            var employee = Manager_Actor.GetActor(employeeID);
+
+            if (employee == null)
+            {
+                Debug.Log($"Employee with ID {employeeID} not found.");
+                continue;
+            }
+
+            allEmployees.Add(employeeID, employee);
+        }
+
+        return allEmployees;
+    }
 
     public ProsperityData ProsperityData;
 
     public List<int> AllStationIDs;
+    public Dictionary<(int ActorID, int OrderID), Order_Base> AllOrders = new();
 
     // Work out how to do quotas and set production rate
 
@@ -118,27 +140,27 @@ public class JobsiteData
     protected int _findEmployeeFromJobsite(EmployeePosition position)
     {
         if (AllEmployeeIDs == null || !AllEmployeeIDs.Any())
-    {
-        Debug.Log("No employees found in the jobsite.");
-        return -1;
-    }
+        {
+            Debug.Log("No employees found in the jobsite.");
+            return -1;
+        }
 
-    int employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
-    if (employeeID == 0)
-    {
-        Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
-        return -1;
-    }
+        int employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
+        if (employeeID == 0)
+        {
+            Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
+            return -1;
+        }
 
-    var actor = Manager_Actor.GetActor(actorID: employeeID, generateActorIfNotFound: true);
-    if (actor == null || actor.ActorData == null)
-    {
-        Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
-        return -1;
-    }
+        var actor = Manager_Actor.GetActor(actorID: employeeID, generateActorIfNotFound: true);
+        if (actor == null || actor.ActorData == null)
+        {
+            Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
+            return -1;
+        }
 
-    Debug.Log($"Found employee: {employeeID} for position: {position}");
-    return actor.ActorData.ActorID;
+        Debug.Log($"Found employee: {employeeID} for position: {position}");
+        return actor.ActorData.ActorID;
     }
 
     protected int _findEmployeeFromCity(EmployeePosition position)
@@ -197,7 +219,13 @@ public class JobsiteData
     {
         CityComponent city = Manager_City.GetCity(CityID);
 
-        var actorGenerationParameters = _getActorGenerationParameters(position);
+        var employeeMaster = AllEmployeeTypesManager.AllEmployeeTypes_SO.GetEmployeeType(position);
+
+        if (employeeMaster == null) throw new Exception($"EmployeeMaster for position: {position} is null.");
+
+        var actorGenerationParameters = employeeMaster.ActorGenerationParameters;
+
+        if (actorGenerationParameters == null) throw new Exception($"ActorGenerationParameters for position: {position} is null.");
 
         var actor = Manager_Actor.SpawnNewActor(city.CitySpawnZone.transform.position, actorGenerationParameters);
 
@@ -239,39 +267,21 @@ public class JobsiteData
                     new VocationRequirement(VocationName.Logging, 1000)
                 };
                 break;
+            case EmployeePosition.Sawyer:
+                vocationRequirements = new List<VocationRequirement>
+                {
+                    new VocationRequirement(VocationName.Sawying, 1000)
+                };
+                break;
+            case EmployeePosition.Hauler:
+                vocationRequirements = new List<VocationRequirement>();
+                break;
             default:
                 Debug.Log($"EmployeePosition: {position} not recognised.");
                 break;
         }
 
         return vocationRequirements;
-    }
-
-    protected ActorGenerationParameters _getActorGenerationParameters(EmployeePosition position)
-    {
-        var actorGenerationParameters = new ActorGenerationParameters();
-
-        switch(position)
-        {
-            case EmployeePosition.Owner:
-                actorGenerationParameters.ActorVocations = new List<ActorVocation>();
-                break;
-            case EmployeePosition.Logger:
-                actorGenerationParameters.ActorVocations = new List<ActorVocation>
-                {
-                    new ActorVocation(VocationName.Logging, 1000)
-                };
-                actorGenerationParameters.InitialRecipes = new List<RecipeName>
-                {
-                    RecipeName.Log
-                };
-                break;
-            default:
-                Debug.Log($"EmployeePosition: {position} not recognised.");
-                break;
-        }
-
-        return actorGenerationParameters;
     }
 
     public void AddEmployeeToJobsite(int employeeID)
