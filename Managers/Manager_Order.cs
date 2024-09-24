@@ -102,28 +102,30 @@ public class OrderData
 
     Coroutine _orderCoroutine;
 
-    a
 
     // Create a priority queue system so replacement orders can be created and executed in the correct order of priority. And that deliver orders can follow fetch orders.
 
-    public void ExecuteNextOrder(OrderType orderType = OrderType.None)
+    public void ExecuteNextOrder(List<OrderType> orderTypes = null)
     {
-
         if (AllCurrentOrders.Count <= 0) return;
 
-        // Implement priority system later.
+        if (AllCurrentOrders.Any(o => o.OrderStatus == OrderStatus.Active))
+        {
+            Debug.Log($"Actor: {ActorID} already has an active order.");
+            return;
+        }
 
-        Order_Base highestPriorityOrder = AllCurrentOrders.OrderByDescending(o => o.OrderID).FirstOrDefault();
+        Order_Base nextOrder = AllCurrentOrders.FirstOrDefault();
 
-        if (highestPriorityOrder == null)
+        if (nextOrder == null)
         {
             Debug.Log("No highest priority order found.");
             return;
         }
 
-        highestPriorityOrder.ExecuteOrder();
+        nextOrder.ExecuteOrder();
 
-        if (orderType == OrderType.None)
+        if (orderTypes == null)
         {
             if (AllCurrentOrders.Count > 0)
             {
@@ -136,13 +138,13 @@ public class OrderData
         }
         else
         {
-            if (AllCurrentOrders.Any(o => o.OrderType == orderType))
+            if (AllCurrentOrders.Any(o => orderTypes.Contains(o.OrderType)))
             {
-                AllCurrentOrders.FirstOrDefault(o => o.OrderType == orderType).ExecuteOrder();
+                AllCurrentOrders.FirstOrDefault(o => orderTypes.Contains(o.OrderType)).ExecuteOrder();
             }
             else
             {
-                Debug.Log($"No {orderType} orders for Actor: {ActorID}");
+                Debug.Log($"No orders of type: {string.Join(", ", orderTypes)} for Actor: {ActorID}");
             }
         }
     }
@@ -165,11 +167,17 @@ public class OrderData
         return AllCurrentOrders.Any(o => o.OrderType == orderType);
     }
 
-    public void AddCurrentOrder(Order_Base order)
+    public void AddCurrentOrder(Order_Base order, int index = -1)
     {
         if (AllCurrentOrders.Any(o => o.OrderID == order.OrderID))
         {
             Debug.Log($"Order: {order.OrderID} already exists for Actor: {ActorID}");
+            return;
+        }
+
+        if (index >= 0)
+        {
+            AllCurrentOrders.Insert(index, order);
             return;
         }
 
@@ -186,8 +194,10 @@ public class OrderData
 
         // Stick in the priority queue right behind the current order.
 
+        var index = AllCurrentOrders.IndexOf(AllCurrentOrders.FirstOrDefault(o => o.OrderID == order.OrderID));
+
         AllCurrentOrders.RemoveAll(o => o.OrderID == order.OrderID);
-        AllCurrentOrders.Add(order);
+        AllCurrentOrders.Insert(index, order);
     }
 
     public void CompleteOrder(int orderID, Order_Base replacementOrder = null)
@@ -198,12 +208,14 @@ public class OrderData
             return;
         }
 
+        var index = AllCurrentOrders.IndexOf(AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID));
+
         AllCompletedOrders.Add(AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID));
         AllCurrentOrders.RemoveAll(o => o.OrderID == orderID);
 
         if (replacementOrder != null)
         {
-            AddCurrentOrder(replacementOrder);
+            AddCurrentOrder(replacementOrder, index);
         }
     }
 
@@ -228,6 +240,11 @@ public class OrderData
         AllCurrentOrders.Clear();
     }
 
+    public Order_Base GetOrderById(int orderID)
+    {
+        return AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID);
+    }
+
     public int GetOrderID()
     {
         // Later put in a way to clear them if the orders number over 1000 or 10 000, to prevent overflow.
@@ -246,6 +263,7 @@ public enum OrderType
     Haul_Fetch,
     Haul_Deliver,
     Craft,
+    Hire,
 }
 
 public enum OrderStatus
@@ -256,22 +274,19 @@ public enum OrderStatus
 }
 
 [Serializable]
-public abstract class Order_Base
+public class Order_Base
 {
     public int OrderID;
-    public abstract OrderType OrderType { get; }
+    public OrderType OrderType;
     public int ActorID;
     ActorComponent _actor;
     public ActorComponent Actor { get { return _actor ??= Manager_Actor.GetActor(ActorID); } }
-    public int OperatingAreaID;
-    OperatingAreaComponent _operatingArea;
-    public OperatingAreaComponent OperatingArea { get { return _operatingArea ??= Manager_Station.GetStation(StationID_Destination).GetOperatingArea(OperatingAreaID); } }
     public int StationID_Source;
     StationComponent _station_Source;
     public StationComponent Station_Source { get { return _station_Source ??= Manager_Station.GetStation(StationID_Source); } }
     public int StationID_Destination;
     StationComponent _station_Destination;
-    public StationComponent Station_Destination { get { return _station_Destination ??= Manager_Station.GetStation(StationID_Source); } }
+    public StationComponent Station_Destination { get { return _station_Destination ??= Manager_Station.GetStation(StationID_Destination); } }
     public int JobsiteID;
     JobsiteComponent _jobsite;
     public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
@@ -281,8 +296,9 @@ public abstract class Order_Base
     protected Coroutine _orderCoroutine;
     protected Coroutine _actorMoveCoroutine;
 
-    public Order_Base(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
+    public Order_Base(OrderType orderType, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
     {
+        OrderType = orderType;
         ActorID = actorID;
         OrderID = Actor.ActorData.OrderData.GetOrderID();
         StationID_Source = stationID_Source;
@@ -314,13 +330,165 @@ public abstract class Order_Base
         _station_Destination = null;
     }
 
-    public abstract void ExecuteOrder();
-    public abstract IEnumerator _executeOrder();
+    public void ExecuteOrder()
+    {
+        if (OrderStatus == OrderStatus.Pending)
+        {
+            HaltCurrentOrder();
+
+            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
+        }
+    }
+    public IEnumerator _executeOrder()
+    {
+        OrderStatus = OrderStatus.Active;
+        bool orderSuccess = false;
+
+        if (ActorID == 0 || StationID_Destination == 0 || OrderItems.Count <= 0)
+        {
+            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination}, or OrderItemIDs {OrderItems.Count} is invalid.");
+            HaltCurrentOrder();
+            throw new Exception("Invalid Order.");
+        }
+
+        if (Actor.transform.position == null)
+        {
+            Debug.Log("Actor position is null.");
+            HaltCurrentOrder();
+            throw new Exception("Invalid Actor Position.");
+        }
+
+        // Eventually put in a check to see if the station still has the resources. If not, then return.
+
+        if (Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
+        {
+            HaltCurrentMoveOrder();
+
+            yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.CollectionPoint.position));
+
+            if (_transferItems()) orderSuccess = true;
+        }
+
+        OrderStatus = OrderStatus.Complete;
+
+        if (OrderType == OrderType.Haul_Fetch && orderSuccess)
+        {
+            Debug.Log($"Actor: {ActorID} successfully fetched items from Station: {StationID_Destination}.");
+            Actor.ActorData.OrderData.CompleteOrder(OrderID, _createReturnDeliverOrder());
+        }
+        else
+        {
+            Debug.Log($"Actor: {ActorID} successfully delivered items to Station: {StationID_Destination}.");
+            Actor.ActorData.OrderData.CompleteOrder(OrderID);
+        }
+    }
+
+    protected bool _transferItems()
+    {
+        if (OrderType == OrderType.Haul_Fetch)
+        {
+            if (!Station_Destination.StationData.InventoryData.RemoveFromInventory(OrderItems))
+            {
+                Debug.Log($"Failed to remove items from Station: {Station_Destination.StationData.StationID} inventory.");
+                return false;
+            }
+
+            if (!Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
+            {
+                Debug.Log("Failed to add items to Actor inventory.");
+
+                if (Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
+                {
+                    Debug.Log("Failed to add items back to Station inventory.");
+                    return false;
+                }
+
+                return false;
+            }
+
+            Debug.Log($"Actor: {ActorID} successfully fetched items from Station: {StationID_Destination}.");
+
+            return true;
+        }
+
+        if (OrderType == OrderType.Haul_Deliver)
+        {
+            if (!Actor.ActorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(OrderItems))
+            {
+                Debug.Log("Failed to remove items from Actor inventory.");
+                return false;
+            }
+
+            if (!Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
+            {
+                Debug.Log("Failed to add items to Station inventory.");
+
+                if (Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
+                {
+                    Debug.Log("Failed to add items back to Actor inventory.");
+                    return false;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        Debug.Log("Invalid OrderType.");
+        return false;
+    }
+    protected Order_Base _createReturnDeliverOrder()
+    {
+        var stationsToHaulTo = _getAlLStationsToHaulTo();
+
+        if (stationsToHaulTo.Count == 0)
+        {
+            Debug.Log($"No stations to haul to in Jobsite: {JobsiteID}");
+            Debug.Log($"Creating return deliver order for Actor: {ActorID} to Station: {StationID_Source}.");
+
+            return new Order_Base(OrderType.Haul_Deliver, ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
+        }
+
+        foreach (var stationToHaulTo in stationsToHaulTo)
+        {
+            var itemsToHaul = Actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsItems(stationToHaulTo.AllowedStoredItemIDs);
+
+            if (itemsToHaul.Count == 0)
+            {
+                Debug.Log($"No items to haul to {stationToHaulTo.StationName}.");
+                continue;
+            }
+
+            Debug.Log($"Creating deliver order for Actor: {ActorID} to Station: {stationToHaulTo.StationData.StationID}.");
+
+            return new Order_Base(OrderType.Haul_Deliver, ActorID, StationID_Destination, stationToHaulTo.StationData.StationID, OrderStatus.Pending, itemsToHaul);
+        }
+
+        Debug.Log($"Cannot haul to existing stations in Jobsite: {JobsiteID}");   
+
+        return null;
+    }
+
+    protected List<StationComponent> _getAlLStationsToHaulTo()
+    {
+        var stationsToHaulTo = new List<StationComponent>();
+
+        var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
+
+        foreach (var station in jobsite.AllStationsInJobsite)
+        {
+            if (station.AllowedStoredItemIDs.Contains(1100) || station.AllowedStoredItemIDs.Contains(2300))
+            {
+                stationsToHaulTo.Add(station);
+            }
+        }
+
+        return stationsToHaulTo;
+    }
 
     protected IEnumerator _moveOperatorToOperatingArea(Vector3 position)
     {
-        OrderStatus = OrderStatus.Active;
-
         yield return Actor.StartCoroutine(Actor.BasicMove(position));
 
         if (Actor.transform.position != position) Actor.transform.position = position;
@@ -331,9 +499,10 @@ public abstract class Order_Base
         if (_orderCoroutine != null)
         {
             Actor.StopCoroutine(_orderCoroutine);
-            OrderStatus = OrderStatus.Pending;
-            _orderCoroutine = null;
         }
+
+        OrderStatus = OrderStatus.Pending;
+        _orderCoroutine = null;
     }
 
     public void HaltCurrentMoveOrder()
@@ -341,169 +510,114 @@ public abstract class Order_Base
         if (_actorMoveCoroutine != null)
         {
             Actor.StopCoroutine(_actorMoveCoroutine);
-            OrderStatus = OrderStatus.Pending;
-            _actorMoveCoroutine = null;
         }
+
+        OrderStatus = OrderStatus.Pending;
+        _actorMoveCoroutine = null;
     }
 }
 
-[Serializable]
-public abstract class Order_Haul : Order_Base
+public enum RequestStatus
 {
-    public Order_Haul(int actorID, int stationID_source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_source, stationID_Destination, orderStatus, orderItems) { }
+    Pending,
+    Accepted,
+    Cancelled
+}
 
-    public override void ExecuteOrder()
+public abstract class Order_Request
+{
+    public abstract OrderType OrderType { get; }
+    public int StationID;
+    public RequestStatus RequestStatus;
+
+    public Order_Request(int stationID)
     {
-        if (OrderStatus == OrderStatus.Pending)
+        if (stationID == 0)
         {
-            HaltCurrentOrder();
-
-            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
+            Debug.Log("Invalid StationID.");
+            return;
         }
+
+        StationID = stationID;
+        RequestStatus = RequestStatus.Pending;
     }
 
-    public override IEnumerator _executeOrder()
+    public void AcceptRequest()
     {
-        if (ActorID == 0 || StationID_Source == 0 || OrderItems.Count <= 0)
-        {
-            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Source}, or OrderItemIDs {OrderItems.Count} is invalid.");
-            throw new Exception("Invalid Order.");
-        }
-
-        if (Actor.transform.position == null)
-        {
-            Debug.Log("Actor position is null.");
-            throw new Exception("Invalid Actor Position.");
-        }
-
-        if (Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
-        {
-            HaltCurrentMoveOrder();
-
-            yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.transform.position));
-
-            _transferItems();
-        }
-
-        OrderStatus = OrderStatus.Complete;
-
-        if (OrderType == OrderType.Haul_Deliver)
-        {
-            Actor.ActorData.OrderData.CompleteOrder(OrderID, _createReturnDeliverOrder());
-        }
-        else
-        {
-            Actor.ActorData.OrderData.CompleteOrder(OrderID);
-        }
-    }
-
-    protected abstract bool _transferItems();
-    protected Order_Haul_Deliver _createReturnDeliverOrder()
-    {
-        return new Order_Haul_Deliver(ActorID, StationID_Destination, StationID_Source, OrderStatus.Pending, OrderItems);
+        RequestStatus = RequestStatus.Accepted;
     }
 }
 
-[Serializable]
-public class Order_Haul_Fetch : Order_Haul
+public class Order_Request_Haul : Order_Request
 {
     public override OrderType OrderType => OrderType.Haul_Fetch;
-    public Order_Haul_Fetch(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
+    public List<Item> DesiredItems;
 
-    protected override bool _transferItems()
+    public Order_Request_Haul(int stationID, List<Item> desiredItems) : base(stationID)
     {
-        if (!Station_Destination.StationData.InventoryData.RemoveFromInventory(OrderItems))
+        if (desiredItems.Count <= 0)
         {
-            Debug.Log("Failed to remove items from Station inventory.");
-            return false;
+            Debug.Log("No items in desiredItems.");
+            return;
         }
 
-        if (!Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
-        {
-            Debug.Log("Failed to add items to Actor inventory.");
+        DesiredItems = desiredItems;
+    }
 
-            if (Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
-            {
-                Debug.Log("Failed to add items back to Station inventory.");
-                return false;
-            }
+    public void AddOrderItem(Item orderItem)
+    {
+        DesiredItems.Add(orderItem);
+    }
 
-            return false;
-        }
+    public void RemoveOrderItem(Item orderItem)
+    {
+        DesiredItems.Remove(orderItem);
+    }
 
-        return true;
+    public void ClearOrderItems()
+    {
+        DesiredItems.Clear();
+    }
+
+    public void ReplaceOrderItems(List<Item> orderItems)
+    {
+        DesiredItems = orderItems;
     }
 }
 
-[Serializable]
-public class Order_Haul_Deliver : Order_Haul
+public class Order_Request_Hire : Order_Request
 {
-    public override OrderType OrderType => OrderType.Haul_Deliver;
-    public Order_Haul_Deliver(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems) { }
+    public override OrderType OrderType => OrderType.Hire;
+    public List<EmployeePosition> DesiredEmployeePositions;
 
-    protected override bool _transferItems()
+    public Order_Request_Hire(int stationID, List<EmployeePosition> desiredEmployeePositions) : base(stationID)
     {
-        if (!Actor.ActorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(OrderItems))
+        if (desiredEmployeePositions.Count <= 0)
         {
-            Debug.Log("Failed to remove items from Actor inventory.");
-            return false;
+            Debug.Log("No desired employee positions.");
+            return;
         }
 
-        if (!Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
-        {
-            Debug.Log("Failed to add items to Station inventory.");
-
-            if (Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
-            {
-                Debug.Log("Failed to add items back to Actor inventory.");
-                return false;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-}
-
-[Serializable]
-public class Order_Craft : Order_Base
-{
-    public override OrderType OrderType => OrderType.Craft;
-    public Recipe Recipe;
-
-    public Order_Craft(int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems, Recipe recipe) : base(actorID, stationID_Source, stationID_Destination, orderStatus, orderItems)
-    {
-        Recipe = recipe;
+        DesiredEmployeePositions = desiredEmployeePositions;
     }
 
-    public override void ExecuteOrder()
+    public void AddDesiredEmployeePosition(EmployeePosition desiredEmployeePosition)
     {
-        if (OrderStatus == OrderStatus.Pending)
-        {
-            HaltCurrentMoveOrder();
-            HaltCurrentOrder();
-
-            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
-        }
+        DesiredEmployeePositions.Add(desiredEmployeePosition);
     }
 
-    public override IEnumerator _executeOrder()
+    public void RemoveDesiredEmployeePosition(EmployeePosition desiredEmployeePosition)
     {
-        if (ActorID == 0 || StationID_Source == 0 || OrderItems.Count <= 0)
-        {
-            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Source}, or OrderItemIDs {OrderItems.Count} is invalid.");
-            throw new Exception("Invalid Order.");
-        }
+        DesiredEmployeePositions.Remove(desiredEmployeePosition);
+    }
 
-        if (Actor.transform.position != null && Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
-        {
-            HaltCurrentMoveOrder();
+    public void ClearDesiredEmployeePositions()
+    {
+        DesiredEmployeePositions.Clear();
+    }
 
-            yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.transform.position));
-        }
-
-        OrderStatus = OrderStatus.Complete;
-        Actor.ActorData.OrderData.CompleteOrder(OrderID);
+    public void ReplaceDesiredEmployeePositions(List<EmployeePosition> desiredEmployeePositions)
+    {
+        DesiredEmployeePositions = desiredEmployeePositions;
     }
 }

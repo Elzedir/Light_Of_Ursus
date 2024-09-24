@@ -32,6 +32,8 @@ public class AllStationsSOEditor : Editor
 {
     int _selectedStationIndex = -1;
     bool _showOperatingAreas = false;
+    bool _showInventory = false;
+    bool _showOrders = false;
 
     Vector2 _stationScrollPos;
     Vector2 _operatingAreaScrollPos;
@@ -83,6 +85,20 @@ public class AllStationsSOEditor : Editor
             {
                 DrawOperatingAreaAdditionalData(selectedStationData.AllOperatingAreaIDs);
             }
+
+            _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
+
+            if (_showInventory)
+            {
+                DrawInventoryAdditionalData(selectedStationData.InventoryData);
+            }
+
+            // _showOrders = EditorGUILayout.Toggle("Orders", _showOrders);
+
+            // if (_showOrders)
+            // {
+            //     DrawOrderAdditionalData(selectedStationData.Orders);
+            // }
         }
     }
 
@@ -106,6 +122,39 @@ public class AllStationsSOEditor : Editor
         finally
         {
             EditorGUILayout.EndScrollView();
+        }
+    }
+
+    private void DrawInventoryAdditionalData(InventoryData inventoryData)
+    {
+        EditorGUILayout.LabelField("Inventory Data", EditorStyles.boldLabel);
+
+        foreach (var inventoryItem in inventoryData.AllInventoryItems)
+        {
+            EditorGUILayout.LabelField("Item ID", inventoryItem.ItemID.ToString());
+            EditorGUILayout.LabelField("Item Name", inventoryItem.ItemName);
+            EditorGUILayout.LabelField("Item Quantity", inventoryItem.ItemAmount.ToString());
+        }
+    }
+
+    private void DrawOrderAdditionalData(Dictionary<(int ActorID, int OrderID), Order_Base> allOrderData)
+    {
+        EditorGUILayout.LabelField("Order Data", EditorStyles.boldLabel);
+
+        foreach (var orderTuple in allOrderData)
+        {
+            EditorGUILayout.LabelField("Order ID", orderTuple.Key.ToString());
+            var orderData = orderTuple.Value;
+
+            if (orderData is Order_Base orderHaul)
+            {
+                EditorGUILayout.LabelField("Order Type", Enum.GetName(typeof(OrderType), orderHaul.OrderType));
+                EditorGUILayout.LabelField("Actor ID", orderHaul.ActorID.ToString());
+                EditorGUILayout.LabelField("Source Station ID", orderHaul.StationID_Source.ToString());
+                EditorGUILayout.LabelField("Destination Station ID", orderHaul.StationID_Destination.ToString());
+                EditorGUILayout.LabelField("Order Status", orderHaul.OrderStatus.ToString());
+                EditorGUILayout.LabelField("Order Items", orderHaul.OrderItems.ToString());
+            }
         }
     }
 }

@@ -2,7 +2,6 @@ using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Chaser : MonoBehaviour, PathfinderMover_3D

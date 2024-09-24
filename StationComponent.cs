@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -39,6 +38,25 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     BoxCollider _boxCollider;
     public BoxCollider BoxCollider { get { return _boxCollider ??= gameObject.GetComponent<BoxCollider>(); } }
+
+    // Temporary
+    public Transform CollectionPoint;
+
+    public Dictionary<(int ActorID, int OrderID), Order_Base> CurrentOrders = new();
+    public Dictionary<OrderType, Order_Request> OrderRequests = new();
+    public Order_Request GetOrderRequest(OrderType orderType) => OrderRequests.ContainsKey(orderType) ? OrderRequests[orderType] : null;
+    public void AddOrderRequest(OrderType orderType, Order_Request orderRequest)
+    {
+        if (OrderRequests.ContainsKey(orderType))
+        {
+            OrderRequests[orderType] = orderRequest;
+        }
+        else
+        {
+            OrderRequests.Add(orderType, orderRequest);
+        }
+    }
+    public void RemoveOrderRequest(OrderType orderType) => OrderRequests.Remove(orderType);
 
     public void AddOperatorToArea(int operatorData)
     {
@@ -82,22 +100,49 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public virtual void OnTick()
     {
         if (!_initialised) return;
-        
+
         // Change the actor check so that an actor with no knowledge of the recipe cannot operate the station if they are AI.
         // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
         // Change material check to only happen when operator is set or leaves, or when material is used.
 
-        if (!StationData.StationIsActive) Debug.Log($"StationIsActive: {StationData.StationIsActive}");
-        if (!IsStationBeingOperated) Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
-        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients)) Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
-
-        if (
-            StationData.StationIsActive && 
-            IsStationBeingOperated && 
-            StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
+        if (!StationData.StationIsActive)
         {
-            _operateStation();
+            Debug.Log($"StationIsActive: {StationData.StationIsActive}");
+            return;
         }
+
+        if (!IsStationBeingOperated)
+        {
+            Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
+            if (GetOrderRequest(OrderType.Hire) == null)
+            {
+                //  This won't do anything for now, but we'll use it later on.
+                OrderRequests.Add(OrderType.Hire, new Order_Request_Hire(StationData.StationID, new List<EmployeePosition> { CoreEmployeePosition }));
+            }
+            else
+            {
+                var orderRequest = GetOrderRequest(OrderType.Hire) as Order_Request_Hire;
+
+                if (!orderRequest.DesiredEmployeePositions.Contains(CoreEmployeePosition))
+                {
+                    orderRequest.DesiredEmployeePositions.Add(CoreEmployeePosition);
+                }
+                else
+                {
+                    Debug.Log($"DesiredEmployeePositions already contains CoreEmployeePosition: {CoreEmployeePosition}");
+                }
+            }
+
+            return;
+        }
+
+        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
+        {
+            Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
+            return;
+        }
+
+        _operateStation();
     }
 
     protected virtual void _operateStation()
@@ -160,7 +205,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     {
         foreach(Transform child in transform)
         {
-            if (child.name.Contains("OperatingArea"))
+            if (child.name.Contains("OperatingArea") || child.name.Contains("CollectionPoint"))
             {
                 Destroy(child);
             }
@@ -172,6 +217,10 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         {
             operatingAreas.Add(_createOperatingArea(i));
         }
+
+        CollectionPoint = new GameObject("CollectionPoint").transform;
+        CollectionPoint.SetParent(transform);
+        CollectionPoint.localPosition = new Vector3(0, 0, -2);
 
         return operatingAreas;
     }

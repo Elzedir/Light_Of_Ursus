@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class StationComponent_LogPile : StationComponent
@@ -43,7 +42,7 @@ public class StationComponent_LogPile : StationComponent
                 break;
         }
 
-        var operatingArea = operatingAreaComponent.AddComponent<BoxCollider>();
+        var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
         operatingArea.isTrigger = true;
         operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
 
@@ -76,7 +75,7 @@ public class StationComponent_LogPile : StationComponent
 
             if (actorHasHaulOrder())
             {
-                actor.ActorData.OrderData.ExecuteNextOrder(OrderType.Haul_Deliver);
+                actor.ActorData.OrderData.ExecuteNextOrder(new List<OrderType> { OrderType.Haul_Deliver, OrderType.Haul_Fetch });
             }
             else if (actorCanHaul())
             {
@@ -125,14 +124,17 @@ public class StationComponent_LogPile : StationComponent
                 return;
             }
 
-            var haulOrderFetch = new Order_Haul_Fetch(
+            var haulOrderFetch = new Order_Base(
+                orderType: OrderType.Haul_Fetch,
                 actorID: operatingArea.OperatingAreaData.CurrentOperatorID, 
-                stationID_Source: stationToHaulFrom.StationData.StationID, 
-                stationID_Destination: StationData.StationID, 
+                stationID_Source: StationData.StationID, 
+                stationID_Destination: stationToHaulFrom.StationData.StationID, 
                 orderStatus: OrderStatus.Pending, 
                 orderItems: itemsToHaul);
             
-            Debug.Log($"HaulOrderFetch: {haulOrderFetch.OrderID} for Actor: {haulOrderFetch.ActorID} from {stationToHaulFrom.StationName} to {StationName}");
+            Debug.Log($"HaulOrderFetch: {haulOrderFetch.OrderID} for Actor: {haulOrderFetch.ActorID} from {stationToHaulFrom.StationName}");
+
+            // Have the actor drop at anther station, rather than the logpile for now, or create the logic to decide where it will go.
             
             // Check for any dropped items too.
     }

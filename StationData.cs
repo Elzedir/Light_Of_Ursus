@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,8 +40,6 @@ public class StationData : IStationInventory
     public ProductionData ProductionData;
 
     public List<int> AllOperatingAreaIDs;
-
-    public Dictionary<(int ActorID, int OrderID), Order_Base> Orders;
 
     public void InitialiseStationData()
     {

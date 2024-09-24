@@ -27,6 +27,7 @@ public class AllActors_SOEditor : Editor
     bool _showGameObjectProperties = false;
     bool _showSpeciesAndPersonality = false;
     bool _showCareerAndJobs = false;
+    bool _showOrders = false;
 
     Vector2 _actorScrollPos;
     
@@ -170,6 +171,15 @@ public class AllActors_SOEditor : Editor
             //EditorGUILayout.LabelField("Actor Quests", EditorStyles.boldLabel);
             //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);
         }
+
+        var orderData = actorData.OrderData;
+
+        _showOrders = EditorGUILayout.Toggle("Orders", _showOrders);
+
+        if (_showOrders)
+        {
+            DrawOrderData(orderData);
+        }
     }
 
     private void DrawGameObjectProperties(GameObjectProperties gameObjectProperties)
@@ -235,5 +245,46 @@ public class AllActors_SOEditor : Editor
     void DrawEquipment(EquipmentData data)
     {
 
+    }
+
+    int _selectedCurrentOrderIndex = -1;
+    Vector2 currentOrderScrollPos;
+
+    int _selectedCompletedOrderIndex = -1;
+    Vector2 completedOrderScrollPos;
+
+    void DrawOrderData(OrderData data)
+    {
+        EditorGUILayout.LabelField("OrderData", EditorStyles.boldLabel);
+
+        currentOrderScrollPos = EditorGUILayout.BeginScrollView(currentOrderScrollPos, GUILayout.Height(Math.Min(100, data.AllCurrentOrders.Count * 20)));
+        _selectedCurrentOrderIndex = GUILayout.SelectionGrid(_selectedCurrentOrderIndex, GetOrderNames(data), 1);
+        EditorGUILayout.EndScrollView();
+
+        if (_selectedCurrentOrderIndex >= 0 && _selectedCurrentOrderIndex < data.AllCurrentOrders.Count)
+        {
+            DrawOrder(data.AllCurrentOrders[_selectedCurrentOrderIndex]);
+        }
+
+        completedOrderScrollPos = EditorGUILayout.BeginScrollView(completedOrderScrollPos, GUILayout.Height(Math.Min(100, data.AllCompletedOrders.Count * 20)));
+        _selectedCompletedOrderIndex = GUILayout.SelectionGrid(_selectedCompletedOrderIndex, GetOrderNames(data), 1);
+        EditorGUILayout.EndScrollView();
+
+        if (_selectedCompletedOrderIndex >= 0 && _selectedCompletedOrderIndex < data.AllCompletedOrders.Count)
+        {
+            DrawOrder(data.AllCompletedOrders[_selectedCompletedOrderIndex]);
+        }
+    }
+
+    private string[] GetOrderNames(OrderData data)
+    {
+        return data.AllCurrentOrders.Select(o => o.OrderType.ToString()).ToArray();
+    }
+
+    void DrawOrder(Order_Base order)
+    {
+        EditorGUILayout.LabelField("Order Type", order.OrderType.ToString());
+        EditorGUILayout.LabelField("Order ID", order.OrderID.ToString());
+        EditorGUILayout.LabelField("Order Status", order.OrderStatus.ToString());
     }
 }

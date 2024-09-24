@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class StationComponent_Tree : StationComponent
@@ -43,7 +42,7 @@ public class StationComponent_Tree : StationComponent
                 break;
         }
 
-        var operatingArea = operatingAreaComponent.AddComponent<BoxCollider>();
+        var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
         operatingArea.isTrigger = true;
         operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
 
