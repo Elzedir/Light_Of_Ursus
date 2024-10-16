@@ -102,7 +102,7 @@ public class AllStationsSOEditor : Editor
         }
     }
 
-    private void DrawOperatingAreaAdditionalData(List<int> allOperatingAreaData)
+    private void DrawOperatingAreaAdditionalData(List<uint> allOperatingAreaData)
     {
         _operatingAreaScrollPos = EditorGUILayout.BeginScrollView(_operatingAreaScrollPos, GUILayout.Height(GetListHeight(allOperatingAreaData.Count)));
 

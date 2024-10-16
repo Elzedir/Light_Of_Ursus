@@ -50,20 +50,20 @@ public class Manager_CharacterLevels
 [Serializable]
 public class CharacterLevelData
 {
-    public int Level;
-    public int TotalExperienceRequired;
+    public uint Level;
+    public uint TotalExperienceRequired;
     public LevelUpBonusType BonusType;
-    public int BonusStatPoints;
-    public int SkillPoints;
-    public int SPECIALPoints;
+    public uint BonusStatPoints;
+    public uint SkillPoints;
+    public uint SPECIALPoints;
 
     public CharacterLevelData(
-        int level,
-        int totalExperienceRequired,
+        uint level,
+        uint totalExperienceRequired,
         LevelUpBonusType bonusType,
-        int bonusStatPoints,
-        int skillPoints,
-        int specialPoints
+        uint bonusStatPoints,
+        uint skillPoints,
+        uint specialPoints
         )
     {
         Level = level;

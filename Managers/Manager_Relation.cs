@@ -13,7 +13,7 @@ public class Manager_Relation
         return relation;
     }
 
-    static float _compareFaction(int a, int b)
+    static float _compareFaction(uint a, uint b)
     {
         FactionData factionDataA = Manager_Faction.GetFaction(a);
 

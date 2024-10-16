@@ -97,7 +97,7 @@ public class AllJobsitesSOEditor : Editor
         }
     }
 
-    private void DrawStationAdditionalData(List<int> allStationData)
+    private void DrawStationAdditionalData(List<uint> allStationData)
     {
         _stationScrollPos = EditorGUILayout.BeginScrollView(_stationScrollPos, GUILayout.Height(GetListHeight(allStationData.Count)));
 

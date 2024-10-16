@@ -12,10 +12,10 @@ public enum ItemType {
 
 public class Manager_Item
 {
-    public static Dictionary<int, Item_Master> AllItems = new();
-    public static Item_Master GetItemData(int itemID) => new Item_Master(AllItems[itemID]);
+    public static Dictionary<uint, Item_Master> AllItems = new();
+    public static Item_Master GetMasterItem(uint itemID) => new Item_Master(AllItems[itemID]);
 
-    static int _lastUnusedID = 100000;
+    static uint _lastUnusedID = 100000;
 
     public static void Initialise()
     {
@@ -30,7 +30,7 @@ public class Manager_Item
     {
         if (AllItems.ContainsKey(itemData.CommonStats_Item.ItemID))
         {
-            int alreadyUsedID = itemData.CommonStats_Item.ItemID;
+            uint alreadyUsedID = itemData.CommonStats_Item.ItemID;
 
             while (AllItems.ContainsKey(_lastUnusedID))
             {
@@ -38,7 +38,7 @@ public class Manager_Item
             }
 
             itemData.CommonStats_Item.ItemID = _lastUnusedID;
-            Debug.Log($"ItemName: {itemData.CommonStats_Item.ItemName} ItemID is now: {itemData.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetItemData(alreadyUsedID).CommonStats_Item.ItemName}");
+            Debug.Log($"ItemName: {itemData.CommonStats_Item.ItemName} ItemID is now: {itemData.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetMasterItem(alreadyUsedID).CommonStats_Item.ItemName}");
             //throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
         }
 
@@ -116,14 +116,14 @@ public enum ItemQualityName
 [Serializable]
 public class Item
 {
-    public int ItemID;
+    public uint ItemID;
     public string ItemName;
-    public int ItemAmount;
-    public int MaxStackSize;
+    public uint ItemAmount;
+    public uint MaxStackSize;
 
-    public Item(int itemID, int itemAmount)
+    public Item(uint itemID, uint itemAmount)
     {
-        var masterItem = Manager_Item.GetItemData(itemID);
+        var masterItem = Manager_Item.GetMasterItem(itemID);
 
         ItemID = itemID;
         ItemName = masterItem.CommonStats_Item.ItemName;
@@ -148,9 +148,13 @@ public class Item_Master
     public ArmourStats_Item ArmourStats_Item;
     public FixedModifiers_Item FixedModifiers_Item;
     public PercentageModifiers_Item PercentageModifiers_Item;
+    public PriorityStats_Item PriorityStats_Item;
 
-    public Item_Master(CommonStats_Item commonStats_Item, VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
-        FixedModifiers_Item fixedModifiers_Item, PercentageModifiers_Item percentageModifiers_Item)
+    public Item_Master(
+        CommonStats_Item commonStats_Item, 
+        VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
+        FixedModifiers_Item fixedModifiers_Item, PercentageModifiers_Item percentageModifiers_Item,
+        PriorityStats_Item priorityStats_Item)
     {
         CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
         VisualStats_Item = visualStats_Item ?? new VisualStats_Item();
@@ -158,6 +162,7 @@ public class Item_Master
         ArmourStats_Item = armourStats_Item ?? new ArmourStats_Item();
         FixedModifiers_Item = fixedModifiers_Item ?? new FixedModifiers_Item();
         PercentageModifiers_Item = percentageModifiers_Item ?? new PercentageModifiers_Item();
+        PriorityStats_Item = priorityStats_Item ?? new PriorityStats_Item();
     }
 
     public Item_Master(Item_Master item)
@@ -168,6 +173,7 @@ public class Item_Master
         ArmourStats_Item = new ArmourStats_Item(item.ArmourStats_Item);
         FixedModifiers_Item = new FixedModifiers_Item(item.FixedModifiers_Item);
         PercentageModifiers_Item = new PercentageModifiers_Item(item.PercentageModifiers_Item);
+        PriorityStats_Item = new PriorityStats_Item(item.PriorityStats_Item);
     }
 }
 
@@ -196,26 +202,26 @@ public class Item_Drawer : PropertyDrawer
 [Serializable]
 public class CommonStats_Item
 {
-    public int ItemID;
+    public uint ItemID;
     public string ItemName;
     public ItemType ItemType;
     public List<EquipmentSlot> EquipmentSlots;
-    public int MaxStackSize;
-    public int ItemLevel;
+    public uint MaxStackSize;
+    public uint ItemLevel;
     public ItemQualityName ItemQuality;
-    public int ItemValue;
+    public uint ItemValue;
     public float ItemWeight;
     public bool ItemEquippable;
 
     public CommonStats_Item(
-        int itemID = 0,
+        uint itemID = 0,
         string itemName = "",
         ItemType itemType = ItemType.Misc,
         List<EquipmentSlot> equipmentSlots = null,
-        int maxStackSize = 0,
-        int itemLevel = 0,
+        uint maxStackSize = 0,
+        uint itemLevel = 0,
         ItemQualityName itemQuality = ItemQualityName.Junk,
-        int itemValue = 0,
+        uint itemValue = 0,
         float itemWeight = 0,
         bool itemEquippable = false
         )
@@ -551,17 +557,8 @@ public class WeaponStats_Item
         float maxChargeTime = 0
         )
     {
-        if (weaponType == null)
-        {
-            weaponType = new WeaponType[] { WeaponType.None };
-        }
-        if (weaponClass == null)
-        {
-            weaponClass = new WeaponClass[] { WeaponClass.None };
-        }
-
-        WeaponTypeArray = weaponType;
-        WeaponClassArray = weaponClass;
+        WeaponTypeArray = weaponType != null ? weaponType : new WeaponType[] { WeaponType.None };
+        WeaponClassArray = weaponClass != null ? weaponClass : new WeaponClass[] { WeaponClass.None };
         MaxChargeTime = maxChargeTime;
     }
 
@@ -592,5 +589,35 @@ public class ArmourStats_Item
     {
         EquipmentSlot = other.EquipmentSlot;
         ItemCoverage = other.ItemCoverage;
+    }
+}
+
+public class PriorityStats_Item
+{
+    public Dictionary<StationName, uint> Priority_StationForStorage;
+    public Dictionary<StationName, uint> Priority_StationForProduction;
+
+    public PriorityStats_Item(
+        Dictionary<StationName, uint> priority_StationForStorage = null,
+        Dictionary<StationName, uint> priority_StationForProduction = null)
+    {
+        Priority_StationForStorage = priority_StationForStorage != null
+            ? new Dictionary<StationName, uint>(priority_StationForStorage)
+            : new Dictionary<StationName, uint>();
+
+        Priority_StationForProduction = priority_StationForProduction != null
+            ? new Dictionary<StationName, uint>(priority_StationForProduction)
+            : new Dictionary<StationName, uint>();
+    }
+
+    public PriorityStats_Item(PriorityStats_Item other)
+    {
+        Priority_StationForStorage = other.Priority_StationForStorage != null
+            ? new Dictionary<StationName, uint>(other.Priority_StationForStorage)
+            : new Dictionary<StationName, uint>();
+
+        Priority_StationForProduction = other.Priority_StationForProduction != null
+            ? new Dictionary<StationName, uint>(other.Priority_StationForProduction)
+            : new Dictionary<StationName, uint>();
     }
 }

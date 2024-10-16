@@ -20,6 +20,8 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
     public PersonalityComponent PersonalityComponent;
     public GroundedCheckComponent GroundedObject;
 
+    public Coroutine ActorHaulCoroutine;
+
     void Awake()
     {
         Manager_Initialisation.OnInitialiseActors += Initialise;
@@ -76,16 +78,16 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
         // {
         //     Vector3 direction = (targetPosition - transform.parent.position).normalized;
 
-        //     RigidBody.velocity = direction * speed;
+        //     RigidBody.linearVelocity = direction * speed;
 
         //     yield return null;
         // }
 
-        //yield return new WaitForSeconds(Vector3.Distance(transform.parent.position, targetPosition / speed));
+        // yield return new WaitForSeconds(Vector3.Distance(transform.parent.position, targetPosition / speed));
 
         yield return new WaitForSeconds(0.5f);
         // For now, not waiting, just teleporting.
-        RigidBody.velocity = Vector3.zero;
+        RigidBody.linearVelocity = Vector3.zero;
         transform.parent.position = targetPosition;
     }
 

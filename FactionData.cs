@@ -5,13 +5,13 @@ using UnityEngine;
 [Serializable]
 public class FactionData
 {
-    public int FactionID;
+    public uint FactionID;
     public string FactionName;
 
-    public HashSet<int> AllFactionActorIDs = new();
+    public HashSet<uint> AllFactionActorIDs = new();
     public List<FactionRelationData> AllFactionRelations;
 
-    public FactionData(int factionID, string factionName, HashSet<int> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
+    public FactionData(uint factionID, string factionName, HashSet<uint> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
     {
         FactionID = factionID;
         FactionName = factionName;
@@ -37,9 +37,9 @@ public class FactionData
         }
     }
 
-    public void AddToFactionActorIDList(int actorID) => AllFactionActorIDs.Add(actorID);
+    public void AddToFactionActorIDList(uint actorID) => AllFactionActorIDs.Add(actorID);
 
-    public void RemoveFromFactionActorIDList(int actorID) => AllFactionActorIDs.Remove(actorID);
+    public void RemoveFromFactionActorIDList(uint actorID) => AllFactionActorIDs.Remove(actorID);
 
     public void ClearActorData()
     {

@@ -11,10 +11,10 @@ public class StationComponent_Tree : StationComponent
 
     public override RecipeName DefaultProduct => RecipeName.Log;
     public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Log };
-    public override List<int> AllowedStoredItemIDs => new List<int>();
-    public override int OperatingAreaCount => 4;
+    public override List<uint> AllowedStoredItemIDs => new List<uint>();
+    public override uint OperatingAreaCount => 4;
 
-    protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
+    protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
     {
         var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
         operatingAreaComponent.transform.SetParent(transform);

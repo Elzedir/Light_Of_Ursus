@@ -48,6 +48,6 @@ public class List_Armour : Manager_Item
             attackSpeed: 0.92f
             );
 
-        AddToList(new Item_Master(commonStats_Item: commonStats_Item, null, null, armourStats_Item: armourStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers));
+        AddToList(new Item_Master(commonStats_Item: commonStats_Item, null, null, armourStats_Item: armourStats, fixedModifiers_Item: fixedModifiers, percentageModifiers_Item: percentageModifiers, null));
     }
 }

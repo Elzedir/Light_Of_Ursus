@@ -15,22 +15,22 @@ public enum JobsiteName
 [Serializable]
 public class JobsiteData
 {
-    public int JobsiteID;
+    public uint JobsiteID;
     public JobsiteName JobsiteName;
-    public int JobsiteFactionID;
-    public int CityID;
+    public uint JobsiteFactionID;
+    public uint CityID;
 
     public bool JobsiteIsActive = true;
     public void SetJobsiteIsActive(bool jobsiteIsActive) => JobsiteIsActive = jobsiteIsActive;
     public string JobsiteDescription;
-    public int OwnerID;
+    public uint OwnerID;
 
-    public List<int> AllEmployeeIDs;
-    Dictionary<int, ActorComponent> _allEmployees;
-    public Dictionary<int, ActorComponent> AllEmployees { get => _allEmployees ??= _populateAllEmployees(); }
-    Dictionary<int, ActorComponent> _populateAllEmployees()
+    public List<uint> AllEmployeeIDs;
+    Dictionary<uint, ActorComponent> _allEmployees;
+    public Dictionary<uint, ActorComponent> AllEmployees { get => _allEmployees ??= _populateAllEmployees(); }
+    Dictionary<uint, ActorComponent> _populateAllEmployees()
     {
-        var allEmployees = new Dictionary<int, ActorComponent>();
+        var allEmployees = new Dictionary<uint, ActorComponent>();
 
         foreach (var employeeID in AllEmployeeIDs)
         {
@@ -50,8 +50,8 @@ public class JobsiteData
 
     public ProsperityData ProsperityData;
 
-    public List<int> AllStationIDs;
-    public Dictionary<(int ActorID, int OrderID), Order_Base> AllOrders = new();
+    public List<uint> AllStationIDs;
+    public Dictionary<(uint ActorID, uint OrderID), Order_Base> AllOrders = new();
 
     // Work out how to do quotas and set production rate
 
@@ -97,23 +97,23 @@ public class JobsiteData
         // And change all affected things, like perks, job settings, etc.
     }
 
-    public void SetOwner(int ownerID)
+    public void SetOwner(uint ownerID)
     {
         OwnerID = ownerID;
     }
 
-    public int GetNewOwner()
+    public uint GetNewOwner()
     {
-        int newOwnerID = _findEmployeeFromJobsite(EmployeePosition.Owner);
+        uint newOwnerID = _findEmployeeFromJobsite(EmployeePosition.Owner);
 
-        if (newOwnerID != -1)
+        if (newOwnerID != 0)
         {
             return OwnerID = newOwnerID;
         }
 
         newOwnerID = _findEmployeeFromCity(EmployeePosition.Owner);
 
-        if (newOwnerID != -1)
+        if (newOwnerID != 0)
         {
             return OwnerID = newOwnerID;
         }
@@ -134,62 +134,62 @@ public class JobsiteData
         }
 
         Debug.Log("Couldn't generate new owner.");
-        return -1;
+        return 0;
     }
 
-    protected int _findEmployeeFromJobsite(EmployeePosition position)
+    protected uint _findEmployeeFromJobsite(EmployeePosition position)
     {
         if (AllEmployeeIDs == null || !AllEmployeeIDs.Any())
         {
             Debug.Log("No employees found in the jobsite.");
-            return -1;
+            return 0;
         }
 
-        int employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
+        uint employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
         if (employeeID == 0)
         {
             Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
-            return -1;
+            return 0;
         }
 
         var actor = Manager_Actor.GetActor(actorID: employeeID, generateActorIfNotFound: true);
         if (actor == null || actor.ActorData == null)
         {
             Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
-            return -1;
+            return 0;
         }
 
         Debug.Log($"Found employee: {employeeID} for position: {position}");
         return actor.ActorData.ActorID;
     }
 
-    protected int _findEmployeeFromCity(EmployeePosition position)
+    protected uint _findEmployeeFromCity(EmployeePosition position)
     {
         var city = Manager_City.GetCity(CityID);
         if (city == null)
         {
             Debug.Log($"City with ID {CityID} not found.");
-            return -1;
+            return 0;
         }
 
         var cityData = city.CityData;
         if (cityData == null)
         {
             Debug.Log($"CityData for city with ID {CityID} is null.");
-            return -1;
+            return 0;
         }
 
         var population = cityData.Population;
         if (population == null)
         {
             Debug.Log($"Population data for city with ID {CityID} is null.");
-            return -1;
+            return 0;
         }
 
         if (population.AllCitizenIDs == null || !population.AllCitizenIDs.Any())
         {
             Debug.Log("No citizens found in the city.");
-            return -1;
+            return 0;
         }
 
         var citizenID = population.AllCitizenIDs
@@ -201,21 +201,21 @@ public class JobsiteData
         if (citizenID == 0)
         {
             Debug.LogWarning($"No suitable citizen found for position: {position} in city with ID {CityID}.");
-            return -1;
+            return 0;
         }
 
         var actor = Manager_Actor.GetActor(actorID: citizenID, generateActorIfNotFound: true);
         if (actor == null || actor.ActorData == null)
         {
             Debug.Log($"Failed to get or generate actor for citizen ID {citizenID}.");
-            return -1;
+            return 0;
         }
 
         Debug.Log($"Found citizen: {citizenID} for position: {position}");
         return actor.ActorData.ActorID;
     }
 
-    protected int _generateNewEmployee(EmployeePosition position)
+    protected uint _generateNewEmployee(EmployeePosition position)
     {
         CityComponent city = Manager_City.GetCity(CityID);
 
@@ -235,7 +235,7 @@ public class JobsiteData
         return actor.ActorData.ActorID;
     }
 
-    protected bool _hasMinimumVocationRequired(int citizenID, List<VocationRequirement> vocationRequirements)
+    protected bool _hasMinimumVocationRequired(uint citizenID, List<VocationRequirement> vocationRequirements)
     {
         var actorData = Manager_Actor.GetActorData(citizenID);
 
@@ -284,7 +284,7 @@ public class JobsiteData
         return vocationRequirements;
     }
 
-    public void AddEmployeeToJobsite(int employeeID)
+    public void AddEmployeeToJobsite(uint employeeID)
     {
         if (AllEmployeeIDs.Contains(employeeID))
         {
@@ -296,14 +296,14 @@ public class JobsiteData
         Manager_Actor.GetActorData(employeeID).CareerAndJobs.SetJobsiteID(JobsiteID);
     }
 
-    public void HireEmployee(int employeeID)
+    public void HireEmployee(uint employeeID)
     {
         AddEmployeeToJobsite(employeeID);
 
         // And then apply relevant relation buff
     }
 
-    public void RemoveEmployeeFromJobsite(int employeeID)
+    public void RemoveEmployeeFromJobsite(uint employeeID)
     {
         if (!AllEmployeeIDs.Contains(employeeID))
         {
@@ -312,19 +312,19 @@ public class JobsiteData
         }
 
         AllEmployeeIDs.Remove(employeeID);
-        Manager_Actor.GetActorData(employeeID).CareerAndJobs.SetJobsiteID(-1);
+        Manager_Actor.GetActorData(employeeID).CareerAndJobs.SetJobsiteID(0);
 
         // Remove employee job from employee job component.
     }
 
-    public void FireEmployee(int employeeID)
+    public void FireEmployee(uint employeeID)
     {
         RemoveEmployeeFromJobsite(employeeID);
 
         // And then apply relation debuff.
     }
 
-    public bool AddEmployeeToStation(int employeeID, int stationID)
+    public bool AddEmployeeToStation(uint employeeID, uint stationID)
     {
         RemoveEmployeeFromStation(employeeID);
 
@@ -353,7 +353,7 @@ public class JobsiteData
         return true;
     }
 
-    public bool RemoveEmployeeFromStation(int employeeID)
+    public bool RemoveEmployeeFromStation(uint employeeID)
     {
         var stationID = Manager_Actor.GetActorData(employeeID)?.CareerAndJobs.StationID;
 
@@ -389,12 +389,12 @@ public class JobsiteData
             return false;
         }
 
-        Manager_Actor.GetActorData(employeeID)?.CareerAndJobs.SetStationID(-1);
+        Manager_Actor.GetActorData(employeeID)?.CareerAndJobs.SetStationID(0);
 
         return true;
     }
 
-    public List<int> GetAllOperators() => AllStationIDs.SelectMany(stationID => Manager_Station.GetStationData(stationID).CurrentOperatorIDs).ToList();
+    public List<uint> GetAllOperators() => AllStationIDs.SelectMany(stationID => Manager_Station.GetStationData(stationID).CurrentOperatorIDs).ToList();
 
     // public void AllocateEmployeesToStations()
     // {

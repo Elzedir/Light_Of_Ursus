@@ -126,7 +126,7 @@ public class AllCities_SOEditor : Editor
         EditorGUILayout.EndScrollView();
     }
 
-    private void DrawJobsiteAdditionalData(List<int> allJobsiteIDs)
+    private void DrawJobsiteAdditionalData(List<uint> allJobsiteIDs)
     {
         _jobsiteScrollPos = EditorGUILayout.BeginScrollView(_jobsiteScrollPos, GUILayout.Height(GetListHeight(allJobsiteIDs.Count)));
 

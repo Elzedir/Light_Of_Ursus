@@ -172,13 +172,21 @@ public class AllActors_SOEditor : Editor
             //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);
         }
 
-        var orderData = actorData.OrderData;
+        // var orderData = actorData.OrderData;
 
-        _showOrders = EditorGUILayout.Toggle("Orders", _showOrders);
+        // _showOrders = EditorGUILayout.Toggle("Orders", _showOrders);
 
-        if (_showOrders)
+        // if (_showOrders)
+        // {
+        //     DrawOrderData(orderData);
+        // }
+
+        var order = actorData.CurrentOrder;
+
+        if (order != null)
         {
-            DrawOrderData(orderData);
+            EditorGUILayout.LabelField("Current Order", EditorStyles.boldLabel);
+            DrawOrder(order);
         }
     }
 

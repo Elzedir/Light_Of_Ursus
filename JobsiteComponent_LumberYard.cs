@@ -16,7 +16,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
         var mergedItems = producedItems
         .GroupBy(item => item.ItemID)
-        .Select(group => new Item(group.Key, group.Sum(item => item.ItemAmount)))
+        .Select(group => new Item(group.Key, (uint)group.Sum(item => item.ItemAmount)))
         .ToList();
 
         var duplicateItems = producedItems
@@ -56,8 +56,8 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
     protected override void _adjustProduction(float idealRatio)
     {
-        var allEmployees = new List<int>(JobsiteData.AllEmployeeIDs);
-        var bestCombination = new List<int>();
+        var allEmployees = new List<uint>(JobsiteData.AllEmployeeIDs);
+        var bestCombination = new List<uint>();
         float bestRatioDifference = float.MaxValue;
 
         var allCombinations = _getAllCombinations(allEmployees);
@@ -73,7 +73,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
 
             var mergedEstimatedProduction = estimatedProduction
             .GroupBy(item => item.ItemID)
-            .Select(group => new Item(group.Key, group.Sum(item => item.ItemAmount)))
+            .Select(group => new Item(group.Key, (uint)group.Sum(item => item.ItemAmount)))
             .ToList();
 
             float estimatedLogProduction = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
@@ -91,7 +91,7 @@ public class JobsiteComponent_LumberYard : JobsiteComponent
                 Debug.Log($"Combination {i} the is best ratio");
 
                 bestRatioDifference = ratioDifference;
-                bestCombination = new List<int>(combination);
+                bestCombination = new List<uint>(combination);
             }
         }
 

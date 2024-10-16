@@ -122,7 +122,7 @@ public class Player : Controller, IDataPersistence
                 _rigidBody.transform.rotation = Quaternion.Slerp(_rigidBody.transform.rotation, Quaternion.LookRotation(desiredMoveDirection), 0.15f);
             }
 
-            if (!_movementLocked) _rigidBody.velocity = desiredMoveDirection * _speed;
+            if (!_movementLocked) _rigidBody.linearVelocity = desiredMoveDirection * _speed;
         }
 
         _animator.SetFloat("Speed", _move.magnitude);
@@ -170,7 +170,7 @@ public class Player : Controller, IDataPersistence
 
         _eagleStompActive = false;
 
-        _rigidBody.velocity = Vector3.zero;
+        _rigidBody.linearVelocity = Vector3.zero;
 
         _movementLocked = false;
     }

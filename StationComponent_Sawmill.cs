@@ -13,10 +13,10 @@ public class StationComponent_Sawmill : StationComponent
 
     public override RecipeName DefaultProduct => RecipeName.Plank;
     public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Plank };
-    public override List<int> AllowedStoredItemIDs => new List<int> { 1100, 2300 };
-    public override int OperatingAreaCount => 4;
+    public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
+    public override uint OperatingAreaCount => 4;
 
-    protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
+    protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
     {
         var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
         operatingAreaComponent.transform.SetParent(transform);
@@ -87,21 +87,23 @@ public class StationComponent_Sawmill : StationComponent
 
     protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
     {
-        return new List<Item>(); // For now
+        return ingredients;
 
         // Base resource cost on actor relevant skill
     }
 
     protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
-        return new List<Item> { new Item(1100, 3) }; // For now
+        return products; // For now
 
         // Base resource yield on actor relevant skill
     }
 
     public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
     {
-        return inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
-        .Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
+        return inventoryOwner.GetInventoryData().AllInventoryItems
+        .Where(item => AllowedStoredItemIDs.Contains(item.ItemID))
+        .Select(i => new Item(i.ItemID, i.ItemAmount))
+        .ToList();
     }
 }

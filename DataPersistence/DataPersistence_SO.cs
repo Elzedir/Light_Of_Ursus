@@ -39,11 +39,11 @@ public class DataPersistence_SO : ScriptableObject
             _currentProfile = value;
         }
     }
-    Dictionary<int, ProfileData> _allProfiles;
-    public Dictionary<int, ProfileData> AllProfiles { get { return _allProfiles ??= LoadAllProfiles(); } }
+    Dictionary<uint, ProfileData> _allProfiles;
+    public Dictionary<uint, ProfileData> AllProfiles { get { return _allProfiles ??= LoadAllProfiles(); } }
 
-    int _lastUnusedProfileID = 2;
-    public int GetRandomProfileID()
+    uint _lastUnusedProfileID = 2;
+    public uint GetRandomProfileID()
     {
         while (AllProfiles.ContainsKey(_lastUnusedProfileID))
         {
@@ -53,7 +53,7 @@ public class DataPersistence_SO : ScriptableObject
         return _lastUnusedProfileID;
     }
 
-    public void ChangeProfile(int profileID)
+    public void ChangeProfile(uint profileID)
     {
         CurrentProfile = AllProfiles[profileID];
 
@@ -115,9 +115,9 @@ public class DataPersistence_SO : ScriptableObject
         return allProfilesLatestSave;
     }
 
-    public Dictionary<int, ProfileData> LoadAllProfiles()
+    public Dictionary<uint, ProfileData> LoadAllProfiles()
     {
-        Dictionary<int, ProfileData> allProfiles = new();
+        Dictionary<uint, ProfileData> allProfiles = new();
 
         foreach (var directoryInfo in new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories().Where(d => d.Name != "Unity"))
         {
@@ -276,7 +276,7 @@ public interface IDataPersistence
 [Serializable]
 public class ProfileData
 {
-    public int ProfileID;
+    public uint ProfileID;
     public string ProfileName;
     Dictionary<string, SaveData> _allSavedDatas;
     public Dictionary<string, SaveData> AllSavedDatas { get { return _allSavedDatas ??= GetAllSavedDatas(); } }
@@ -285,7 +285,7 @@ public class ProfileData
     readonly string _encryptionCodeWord = "word";
     readonly string _backupExtension = ".bak";
 
-    public ProfileData(int profileID, string profileName, int autoSaveCounter, bool useEncryption)
+    public ProfileData(uint profileID, string profileName, int autoSaveCounter, bool useEncryption)
     {
         ProfileID = profileID;
         ProfileName = profileName;
@@ -501,7 +501,7 @@ public class ProfileData
     {
         string factionDataPath = _toJSON(savePath, "Factions", "AllFactionsSaveData.json", saveData.SavedFactionData);
 
-        HashSet<int> factionActorIDs = new HashSet<int>();
+        HashSet<uint> factionActorIDs = new HashSet<uint>();
 
         foreach (var factionData in saveData.SavedFactionData.AllFactionData)
         {
@@ -676,7 +676,7 @@ public class SaveData
     public List<PuzzleData> PuzzleData;
     // Try replace with a list of serialised classes instead.
 
-    public SaveData(int currentProfileID, string currentProfileName)
+    public SaveData(uint currentProfileID, string currentProfileName)
     {
         SavedProfileData = new SavedProfileData(currentProfileID, currentProfileName);
     }
@@ -686,12 +686,12 @@ public class SaveData
 public class SavedProfileData
 {
     public long LastUpdated;
-    public int SaveDataID;
+    public uint SaveDataID;
     public string SaveDataName;
-    public int ProfileID;
+    public uint ProfileID;
     public string ProfileName;
 
-    public SavedProfileData(int profileID, string profileName)
+    public SavedProfileData(uint profileID, string profileName)
     {
         ProfileID = profileID;
         ProfileName = profileName;
@@ -710,7 +710,7 @@ public class SavedProfileData
 [Serializable]
 public class SavedRegionData
 {
-    public int LastSavedRegionID = 1;
+    public uint LastSavedRegionID = 1;
     public List<RegionData> AllRegionData = new();
 
     public SavedRegionData(List<RegionData> allRegionData) => AllRegionData = allRegionData;

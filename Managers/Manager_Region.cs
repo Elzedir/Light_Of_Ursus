@@ -9,9 +9,9 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
     const string _allRegionSOPath = "ScriptableObjects/AllRegions_SO";
 
     public static AllRegions_SO AllRegions;
-    public static Dictionary<int, RegionData> AllRegionData = new();
-    static int _lastUnusedRegionID = 1;
-    public static Dictionary<int, RegionComponent> AllRegionComponents = new();
+    public static Dictionary<uint, RegionData> AllRegionData = new();
+    static uint _lastUnusedRegionID = 1;
+    public static Dictionary<uint, RegionComponent> AllRegionComponents = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedRegionData = new SavedRegionData(AllRegionData.Values.ToList());
     public void LoadData(SaveData saveData)
@@ -149,7 +149,7 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
         AllRegionData[regionData.RegionID] = regionData;
     }
 
-    public static RegionData GetRegionData(int regionID)
+    public static RegionData GetRegionData(uint regionID)
     {
         if (!AllRegionData.ContainsKey(regionID))
         {
@@ -160,7 +160,7 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
         return AllRegionData[regionID];
     }
 
-    public static RegionComponent GetRegion(int regionID)
+    public static RegionComponent GetRegion(uint regionID)
     {
         if (!AllRegionComponents.ContainsKey(regionID))
         {
@@ -171,7 +171,7 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
         return AllRegionComponents[regionID];
     }
 
-    public int GetRandomRegionID()
+    public uint GetRandomRegionID()
     {
         while (AllRegionData.ContainsKey(_lastUnusedRegionID))
         {

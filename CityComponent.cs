@@ -20,7 +20,7 @@ public class CityComponent : MonoBehaviour
     }
 
     public void SetCityData(CityData cityData) => CityData = cityData;
-    public void SetRegionID(int regionID) => CityData.RegionID = regionID;
+    public void SetRegionID(uint regionID) => CityData.RegionID = regionID;
 
     public void RefreshCity()
     {

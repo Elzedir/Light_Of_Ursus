@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class ProfileUI : MonoBehaviour
 {
     Menu_Main _menu;
-    int _profileID;
+    uint _profileID;
     string _profileName;
     Button _button;
 

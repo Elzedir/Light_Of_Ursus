@@ -238,9 +238,9 @@ public class Pathfinder_Base_3D
         _mainPriorityQueue.Enqueue(_targetVoxel, _calculatePriority(_targetVoxel));
     }
 
-    Priority_3D _calculatePriority(Voxel_Base node)
+    Priority_Old _calculatePriority(Voxel_Base node)
     {
-        return new Priority_3D(Math.Min(node.G, node.RHS) + _manhattanDistance(node, _startVoxel) + _priorityModifier, Math.Min(node.G, node.RHS));
+        return new Priority_Old(Math.Min(node.G, node.RHS) + _manhattanDistance(node, _startVoxel) + _priorityModifier, Math.Min(node.G, node.RHS));
     }
     double _manhattanDistance(Voxel_Base a, Voxel_Base b)
     {
@@ -305,7 +305,7 @@ public class Pathfinder_Base_3D
     {
         while (_mainPriorityQueue.Peek().CompareTo(_calculatePriority(_startVoxel)) < 0 || _startVoxel.RHS != _startVoxel.G)
         {
-            Priority_3D highestPriority = _mainPriorityQueue.Peek();
+            Priority_Old highestPriority = _mainPriorityQueue.Peek();
             Voxel_Base node = _mainPriorityQueue.Dequeue();
             if (node == null) break;
 
@@ -921,17 +921,17 @@ public class Voxel_Base
     }
 }
 
-public class Priority_3D
+public class Priority_Old
 {
     public double PrimaryPriority;
     public double SecondaryPriority;
 
-    public Priority_3D(double primaryPriority, double secondaryPriority)
+    public Priority_Old(double primaryPriority, double secondaryPriority)
     {
         PrimaryPriority = primaryPriority;
         SecondaryPriority = secondaryPriority;
     }
-    public int CompareTo(Priority_3D that)
+    public int CompareTo(Priority_Old that)
     {
         if (PrimaryPriority < that.PrimaryPriority) return -1;
         else if (PrimaryPriority > that.PrimaryPriority) return 1;
@@ -941,14 +941,14 @@ public class Priority_3D
     }
 }
 
-public class NodeQueue_3D
+public class Queue_Voxel
 {
-    public Voxel_Base Node;
-    public Priority_3D Priority;
+    public Voxel_Base Voxel;
+    public Priority_Old Priority;
 
-    public NodeQueue_3D(Voxel_Base node, Priority_3D priority)
+    public Queue_Voxel(Voxel_Base voxel, Priority_Old priority)
     {
-        Node = node;
+        Voxel = voxel;
         Priority = priority;
     }
 }
@@ -956,52 +956,52 @@ public class NodeQueue_3D
 public class PriorityQueue_3D
 {
     int _currentPosition;
-    NodeQueue_3D[] _nodeQueue;
+    Queue_Voxel[] _voxelQueue;
     Dictionary<Voxel_Base, int> _priorityQueue;
 
     public PriorityQueue_3D(int maxNodes)
     {
         _currentPosition = 0;
-        _nodeQueue = new NodeQueue_3D[maxNodes];
+        _voxelQueue = new Queue_Voxel[maxNodes];
         _priorityQueue = new Dictionary<Voxel_Base, int>();
     }
 
-    public Priority_3D Peek()
+    public Priority_Old Peek()
     {
-        if (_currentPosition == 0) return new Priority_3D(Double.PositiveInfinity, Double.PositiveInfinity);
+        if (_currentPosition == 0) return new Priority_Old(Double.PositiveInfinity, Double.PositiveInfinity);
 
-        return _nodeQueue[1].Priority;
+        return _voxelQueue[1].Priority;
     }
 
     public Voxel_Base Dequeue()
     {
         if (_currentPosition == 0) return null;
 
-        Voxel_Base node = _nodeQueue[1].Node;
-        _nodeQueue[1] = _nodeQueue[_currentPosition];
-        _priorityQueue[_nodeQueue[1].Node] = 1;
+        Voxel_Base node = _voxelQueue[1].Voxel;
+        _voxelQueue[1] = _voxelQueue[_currentPosition];
+        _priorityQueue[_voxelQueue[1].Voxel] = 1;
         _priorityQueue[node] = 0;
         _currentPosition--;
         _moveDown(1);
         return node;
     }
 
-    public void Enqueue(Voxel_Base node, Priority_3D priority)
+    public void Enqueue(Voxel_Base node, Priority_Old priority)
     {
-        NodeQueue_3D nodeQueue = new NodeQueue_3D(node, priority);
+        Queue_Voxel nodeQueue = new Queue_Voxel(node, priority);
         _currentPosition++;
         _priorityQueue[node] = _currentPosition;
-        if (_currentPosition == _nodeQueue.Length) Array.Resize<NodeQueue_3D>(ref _nodeQueue, _nodeQueue.Length * 2);
-        _nodeQueue[_currentPosition] = nodeQueue;
+        if (_currentPosition == _voxelQueue.Length) Array.Resize<Queue_Voxel>(ref _voxelQueue, _voxelQueue.Length * 2);
+        _voxelQueue[_currentPosition] = nodeQueue;
         _moveUp(_currentPosition);
     }
 
-    public void Update(Voxel_Base node, Priority_3D priority)
+    public void Update(Voxel_Base node, Priority_Old priority)
     {
         int index = _priorityQueue[node];
         if (index == 0) return;
-        Priority_3D priorityOld = _nodeQueue[index].Priority;
-        _nodeQueue[index].Priority = priority;
+        Priority_Old priorityOld = _voxelQueue[index].Priority;
+        _voxelQueue[index].Priority = priority;
         if (priorityOld.CompareTo(priority) < 0)
         {
             _moveDown(index);
@@ -1019,8 +1019,8 @@ public class PriorityQueue_3D
         if (index == 0) return;
 
         _priorityQueue[node] = 0;
-        _nodeQueue[index] = _nodeQueue[_currentPosition];
-        _priorityQueue[_nodeQueue[index].Node] = index;
+        _voxelQueue[index] = _voxelQueue[_currentPosition];
+        _priorityQueue[_voxelQueue[index].Voxel] = index;
         _currentPosition--;
         _moveDown(index);
     }
@@ -1045,7 +1045,7 @@ public class PriorityQueue_3D
         {
             smallerChild = childL;
         }
-        else if (_nodeQueue[childL].Priority.CompareTo(_nodeQueue[childR].Priority) < 0)
+        else if (_voxelQueue[childL].Priority.CompareTo(_voxelQueue[childR].Priority) < 0)
         {
             smallerChild = childL;
         }
@@ -1053,7 +1053,7 @@ public class PriorityQueue_3D
         {
             smallerChild = childR;
         }
-        if (_nodeQueue[index].Priority.CompareTo(_nodeQueue[smallerChild].Priority) > 0)
+        if (_voxelQueue[index].Priority.CompareTo(_voxelQueue[smallerChild].Priority) > 0)
         {
             _swap(index, smallerChild);
             _moveDown(smallerChild);
@@ -1064,7 +1064,7 @@ public class PriorityQueue_3D
     {
         if (index == 1) return;
         int parent = index / 2;
-        if (_nodeQueue[parent].Priority.CompareTo(_nodeQueue[index].Priority) > 0)
+        if (_voxelQueue[parent].Priority.CompareTo(_voxelQueue[index].Priority) > 0)
         {
             _swap(parent, index);
             _moveUp(parent);
@@ -1073,11 +1073,11 @@ public class PriorityQueue_3D
 
     void _swap(int indexA, int indexB)
     {
-        NodeQueue_3D tempQueue = _nodeQueue[indexA];
-        _nodeQueue[indexA] = _nodeQueue[indexB];
-        _priorityQueue[_nodeQueue[indexB].Node] = indexA;
-        _nodeQueue[indexB] = tempQueue;
-        _priorityQueue[tempQueue.Node] = indexB;
+        Queue_Voxel tempQueue = _voxelQueue[indexA];
+        _voxelQueue[indexA] = _voxelQueue[indexB];
+        _priorityQueue[_voxelQueue[indexB].Voxel] = indexA;
+        _voxelQueue[indexB] = tempQueue;
+        _priorityQueue[tempQueue.Voxel] = indexB;
     }
 }
 public enum MoverType { Ground, Fly, Dig, Swim }

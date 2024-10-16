@@ -102,7 +102,7 @@ public class AllFactions_SOEditor : Editor
         EditorGUILayout.EndScrollView();
     }
 
-    void DrawActorAdditionalData(HashSet<int> actorIDs)
+    void DrawActorAdditionalData(HashSet<uint> actorIDs)
     {
         _actorScrollPos = EditorGUILayout.BeginScrollView(_actorScrollPos, GUILayout.Height(Math.Min(200, actorIDs.Count * 20)));
 

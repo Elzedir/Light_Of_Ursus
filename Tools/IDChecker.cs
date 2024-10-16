@@ -56,9 +56,9 @@ public class IDChecker : EditorWindow
         }
     }
 
-    private int GetNewID(HashSet<int> existingIDs)
+    private uint GetNewID(HashSet<uint> existingIDs)
     {
-        int newID = 1;
+        uint newID = 1;
         while (existingIDs.Contains(newID))
         {
             newID++;
@@ -69,7 +69,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixStationIDs()
     {
         var stations = FindObjectsByType<StationComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateStations = new List<StationComponent>();
 
         foreach (var station in stations)
@@ -88,7 +88,7 @@ public class IDChecker : EditorWindow
 
         foreach (var station in duplicateStations)
         {
-            int newStationID = GetNewID(existingIDs);
+            uint newStationID = GetNewID(existingIDs);
             station.StationData.StationID = newStationID;
             existingIDs.Add(newStationID);
 
@@ -104,7 +104,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixJobsiteIDs()
     {
         var jobsites = FindObjectsByType<JobsiteComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateJobsites = new List<JobsiteComponent>();
 
         foreach (var jobsite in jobsites)
@@ -123,7 +123,7 @@ public class IDChecker : EditorWindow
 
         foreach (var jobsite in duplicateJobsites)
         {
-            int newJobsiteID = GetNewID(existingIDs);
+            uint newJobsiteID = GetNewID(existingIDs);
             jobsite.JobsiteData.JobsiteID = newJobsiteID;
             existingIDs.Add(newJobsiteID);
 
@@ -139,7 +139,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixCityIDs()
     {
         var cities = FindObjectsByType<CityComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateCities = new List<CityComponent>();
 
         foreach (var city in cities)
@@ -158,7 +158,7 @@ public class IDChecker : EditorWindow
 
         foreach (var city in duplicateCities)
         {
-            int newCityID = GetNewID(existingIDs);
+            uint newCityID = GetNewID(existingIDs);
             city.CityData.CityID = newCityID;
             existingIDs.Add(newCityID);
 
@@ -174,7 +174,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixRegionIDs()
     {
         var regions = FindObjectsByType<RegionComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateRegions = new List<RegionComponent>();
 
         foreach (var region in regions)
@@ -193,7 +193,7 @@ public class IDChecker : EditorWindow
 
         foreach (var region in duplicateRegions)
         {
-            int newRegionID = GetNewID(existingIDs);
+            uint newRegionID = GetNewID(existingIDs);
             region.RegionData.RegionID = newRegionID;
             existingIDs.Add(newRegionID);
 
@@ -209,7 +209,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixActorIDs()
     {
         var actors = FindObjectsByType<ActorComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateActors = new List<ActorComponent>();
 
         foreach (var actor in actors)
@@ -228,7 +228,7 @@ public class IDChecker : EditorWindow
 
         foreach (var actor in duplicateActors)
         {
-            int newActorID = GetNewID(existingIDs);
+            uint newActorID = GetNewID(existingIDs);
             actor.ActorData.ActorID = newActorID;
             existingIDs.Add(newActorID);
 
@@ -244,7 +244,7 @@ public class IDChecker : EditorWindow
     private void CheckAndFixFactionIDs()
     {
         var factions = FindObjectsByType<FactionComponent>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<int>();
+        var existingIDs = new HashSet<uint>();
         var duplicateFactions = new List<FactionComponent>();
 
         foreach (var faction in factions)
@@ -263,7 +263,7 @@ public class IDChecker : EditorWindow
 
         foreach (var faction in duplicateFactions)
         {
-            int newFactionID = GetNewID(existingIDs);
+            uint newFactionID = GetNewID(existingIDs);
             faction.FactionData.FactionID = newFactionID;
             existingIDs.Add(newFactionID);
 

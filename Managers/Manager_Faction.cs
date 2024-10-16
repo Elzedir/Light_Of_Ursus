@@ -9,8 +9,8 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
     static AllFactions_SO _allFactionsSO;
     public static AllFactions_SO AllFactions_SO { get { return _allFactionsSO ??= Resources.Load<AllFactions_SO>("ScriptableObjects/AllFactions_SO"); } }
 
-    public static Dictionary<int, FactionData> AllFactionData = new();
-    static int _lastUnusedFactionID = 1;
+    public static Dictionary<uint, FactionData> AllFactionData = new();
+    static uint _lastUnusedFactionID = 1;
 
     public void SaveData(SaveData saveData)
     {
@@ -51,7 +51,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
             AllFactionData.Add(0, new FactionData(
             factionID: 0,
             factionName: "Wanderers",
-            new HashSet<int>(),
+            new HashSet<uint>(),
             new List<FactionRelationData>()
             ));
         }
@@ -61,7 +61,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
             AllFactionData.Add(1, new FactionData(
             factionID: 1,
             factionName: "Player Faction",
-            new HashSet<int>(),
+            new HashSet<uint>(),
             new List<FactionRelationData>()
             ));
         }
@@ -88,9 +88,9 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
 
     public static void UpdateAllFactionData(FactionData factionData) => AllFactionData[factionData.FactionID] = factionData;
 
-    public static void RemoveFromFactionData(int factionID) => AllFactionData.Remove(factionID);
+    public static void RemoveFromFactionData(uint factionID) => AllFactionData.Remove(factionID);
 
-    public static FactionData GetFaction(int factionID)
+    public static FactionData GetFaction(uint factionID)
     {
         if (!AllFactionData.ContainsKey(factionID))
         {
@@ -101,7 +101,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         return AllFactionData[factionID];
     }
 
-    public int GetRandomFactionID()
+    public uint GetRandomFactionID()
     {
         while (AllFactionData.ContainsKey(_lastUnusedFactionID))
         {
@@ -111,7 +111,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         return _lastUnusedFactionID;
     }
 
-    public static void AllocateActorToFactionGO(ActorComponent actor, int factionID)
+    public static void AllocateActorToFactionGO(ActorComponent actor, uint factionID)
     {
         var faction = GetFaction(factionID);
 
@@ -190,13 +190,13 @@ public class FactionGOChecker : EditorWindow
 
         existingObjectsCheck();
 
-        var factionIDsWithoutGOs = existingFactionIDs.Where(fID => existingFactionGOs.All(fgo => fgo.name != $"{fID}: {factionsSO.AllFactionData[fID].FactionName}")).ToList();
+        var factionIDsWithoutGOs = existingFactionIDs.Where(fID => existingFactionGOs.All(fgo => fgo.name != $"{fID}: {factionsSO.AllFactionData[(int)fID].FactionName}")).ToList();
 
-        var factionIDsToRemove = new List<int>();
+        var factionIDsToRemove = new List<uint>();
         foreach (var factionID in factionIDsWithoutGOs)
         {
-            Debug.LogWarning($"Creating FactionGO and FactionComponent for FactionID: {factionID}: {factionsSO.AllFactionData[factionID].FactionName}");
-            _createFactionGO(factionsGO, factionID, factionsSO.AllFactionData[factionID].FactionName, factionsSO);
+            Debug.LogWarning($"Creating FactionGO and FactionComponent for FactionID: {factionID}: {factionsSO.AllFactionData[(int)factionID].FactionName}");
+            _createFactionGO(factionsGO, factionID, factionsSO.AllFactionData[(int)factionID].FactionName, factionsSO);
             factionIDsToRemove.Add(factionID);
         }
 
@@ -208,13 +208,13 @@ public class FactionGOChecker : EditorWindow
         existingObjectsCheck();
 
         var factionIDsWithoutComponents = existingFactionIDs.Where(fID => existingFactionComponents.All(fc => fc.FactionData.FactionID != fID)).ToList();
-        var factionIDsWithoutComponentsToRemove = new List<int>();
+        var factionIDsWithoutComponentsToRemove = new List<uint>();
         foreach (var factionID in factionIDsWithoutComponents)
         {
-            var existingFactionGO = existingFactionGOs.FirstOrDefault(fgo => fgo.name == $"{factionID}: {factionsSO.AllFactionData[factionID].FactionName}");
+            var existingFactionGO = existingFactionGOs.FirstOrDefault(fgo => fgo.name == $"{factionID}: {factionsSO.AllFactionData[(int)factionID].FactionName}");
             if (existingFactionGO != null)
             {
-                Debug.LogWarning($"Updating FactionComponent with existing FactionGO to match existing FactionID: {factionID}: {factionsSO.AllFactionData[factionID].FactionName}");
+                Debug.LogWarning($"Updating FactionComponent with existing FactionGO to match existing FactionID: {factionID}: {factionsSO.AllFactionData[(int)factionID].FactionName}");
                 if (existingFactionGO.GetComponent<FactionComponent>() != null)
                 {
                     Debug.LogWarning($"Destroying existing FactionComponent on FactionGO: {existingFactionGO.name}");
@@ -337,7 +337,7 @@ public class FactionGOChecker : EditorWindow
         }
     }
 
-    void _createFactionGO(GameObject factionsGO, int factionID, string factionName, AllFactions_SO factionsSO)
+    void _createFactionGO(GameObject factionsGO, uint factionID, string factionName, AllFactions_SO factionsSO)
     {
         var factionGO = new GameObject($"{factionID}: {factionName}");
         factionGO.transform.SetParent(factionsGO.transform);

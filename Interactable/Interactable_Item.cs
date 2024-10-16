@@ -50,7 +50,7 @@ public class Interactable_Item : MonoBehaviour, IInteractable
 
     public void InitialiseInteractableItem(Item item)
     {
-        var masterItem = Manager_Item.GetItemData(item.ItemID);
+        var masterItem = Manager_Item.GetMasterItem(item.ItemID);
 
         if (masterItem.VisualStats_Item != null)
         {

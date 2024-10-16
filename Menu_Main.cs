@@ -78,7 +78,7 @@ public class Menu_Main : MonoBehaviour
         Manager_Game.FindTransformRecursively(transform.parent, "SwitchProfilePanel").gameObject.SetActive(false);
     }
 
-    public void SwitchProfile(int profileID)
+    public void SwitchProfile(uint profileID)
     {
         DataPersistenceManager.DataPersistence_SO.ChangeProfile(profileID);
         CloseSwitchProfile();

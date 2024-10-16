@@ -6,9 +6,9 @@ using UnityEngine;
 public class Manager_Actor : MonoBehaviour, IDataPersistence
 {
     public static AllActors_SO AllActors;
-    public static Dictionary<int, ActorData> AllActorData = new();
-    static int _lastUnusedActorID = 1;
-    public static Dictionary<int, ActorComponent> AllActorComponents = new();
+    public static Dictionary<uint, ActorData> AllActorData = new();
+    static uint _lastUnusedActorID = 1;
+    public static Dictionary<uint, ActorComponent> AllActorComponents = new();
 
     public void SaveData(SaveData data)
     {
@@ -94,7 +94,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
         AllActorData[actorData.ActorID] = actorData;
     }
-    public static void RemoveFromAllActorData(int actorID)
+    public static void RemoveFromAllActorData(uint actorID)
     {
         if (!AllActorData.ContainsKey(actorID))
         {
@@ -105,7 +105,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         AllActorData.Remove(actorID);
     }
 
-    public static ActorData GetActorData(int actorID)
+    public static ActorData GetActorData(uint actorID)
     {
         if (!AllActorData.ContainsKey(actorID))
         {
@@ -116,7 +116,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return AllActorData[actorID];
     }
 
-    public static ActorComponent GetActor(int actorID, bool generateActorIfNotFound = false)
+    public static ActorComponent GetActor(uint actorID, bool generateActorIfNotFound = false)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
@@ -145,7 +145,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     }
 
     // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-    public static ActorComponent SpawnActor(Vector3 spawnPoint, int actorID, bool despawnActorIfExists = false)
+    public static ActorComponent SpawnActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
     {
         if (despawnActorIfExists) DespawnActor(actorID);
         else if (AllActorComponents.ContainsKey(actorID)) return AllActorComponents[actorID];
@@ -170,7 +170,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         }
     }
 
-    public static void DespawnActor(int actorID)
+    public static void DespawnActor(uint actorID)
     {
         if (AllActorComponents.ContainsKey(actorID))
         {
@@ -248,7 +248,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return actor.ActorData;
     }
 
-    public static int GetRandomActorID()
+    public static uint GetRandomActorID()
     {
         while (AllActorData.ContainsKey(_lastUnusedActorID))
         {
@@ -265,7 +265,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         return new ActorName($"Test_{UnityEngine.Random.Range(0, 50000)}", $"of Tester");
     }
 
-    private static int GetRandomFaction()
+    private static uint GetRandomFaction()
     {
         // Take race and things into account for faction
 
@@ -293,17 +293,17 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 [Serializable]
 public class ActorGenerationParameters
 {
-    public int ActorID { get; private set; } = 0;
+    public uint ActorID { get; private set; } = 0;
     public ActorName ActorName{ get; private set; }
-    public int FactionID { get; private set; } = 0;
-    public int CityID { get; private set; } = 0;
+    public uint FactionID { get; private set; } = 0;
+    public uint CityID { get; private set; } = 0;
     public List<RecipeName> InitialRecipes { get; private set; } = new List<RecipeName>();
     public List<ActorVocation> InitialVocations { get; private set; } = new();
 
-    public void SetActorID(int actorID) => ActorID = actorID;
+    public void SetActorID(uint actorID) => ActorID = actorID;
     public void SetActorName(ActorName actorName) => ActorName = actorName;
-    public void SetFactionID(int factionID) => FactionID = factionID;
-    public void SetCityID(int cityID) => CityID = cityID;
+    public void SetFactionID(uint factionID) => FactionID = factionID;
+    public void SetCityID(uint cityID) => CityID = cityID;
     public void SetInitialRecipes(List<RecipeName> initialRecipes) => InitialRecipes = initialRecipes;
     public void AddInitialRecipe(RecipeName recipeName) => InitialRecipes.Add(recipeName);
     public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;

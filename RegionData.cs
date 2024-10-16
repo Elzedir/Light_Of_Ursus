@@ -8,7 +8,7 @@ using UnityEngine;
 [Serializable]
 public class RegionData
 {
-    public int RegionID;
+    public uint RegionID;
     public string RegionName;
     public int RegionFactionID;
 
@@ -17,7 +17,7 @@ public class RegionData
     public ProsperityData ProsperityData;
 
     public FactionName Faction;
-    public List<int> AllCityIDs;
+    public List<uint> AllCityIDs;
 
     public void InitialiseRegionData()
     {

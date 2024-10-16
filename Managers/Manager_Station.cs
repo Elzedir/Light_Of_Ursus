@@ -11,10 +11,10 @@ using UnityEditor;
 public class Manager_Station : MonoBehaviour, IDataPersistence
 {
     public static AllStations_SO AllStations;
-    public static Dictionary<int, StationData> AllStationData = new();
+    public static Dictionary<uint, StationData> AllStationData = new();
     
-    static int _lastUnusedStationID = 1;
-    public static Dictionary<int, StationComponent> AllStationComponents = new();
+    static uint _lastUnusedStationID = 1;
+    public static Dictionary<uint, StationComponent> AllStationComponents = new();
     public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
@@ -114,7 +114,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
     }
 
     
-    public static StationData GetStationData(int stationID)
+    public static StationData GetStationData(uint stationID)
     {
         if (!AllStationData.ContainsKey(stationID))
         {
@@ -124,7 +124,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
 
         return AllStationData[stationID];
     }
-    public static StationComponent GetStation(int stationID)
+    public static StationComponent GetStation(uint stationID)
     {
         if (!AllStationComponents.ContainsKey(stationID))
         {
@@ -152,7 +152,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
         }
     }
 
-    public static int GetStationID()
+    public static uint GetStationID()
     {
         while(AllStationData.ContainsKey(_lastUnusedStationID))
         {

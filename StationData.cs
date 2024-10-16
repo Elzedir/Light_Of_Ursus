@@ -26,20 +26,20 @@ public enum StationName
 [Serializable]
 public class StationData : IStationInventory
 {
-    public int StationID;
-    public int JobsiteID;
+    public uint StationID;
+    public uint JobsiteID;
 
     public bool StationIsActive = true;
 
     public string StationDescription;
     public InventoryData InventoryData;
 
-    public List<int> CurrentOperatorIDs;
+    public List<uint> CurrentOperatorIDs;
 
     public StationProgressData StationProgressData;
     public ProductionData ProductionData;
 
-    public List<int> AllOperatingAreaIDs;
+    public List<uint> AllOperatingAreaIDs;
 
     public void InitialiseStationData()
     {
@@ -64,7 +64,7 @@ public class StationData : IStationInventory
         if (StationProgressData == null) StationProgressData = new StationProgressData();
     }
 
-    public bool AddOperatorToStation(int operatorID)
+    public bool AddOperatorToStation(uint operatorID)
     {
         if (CurrentOperatorIDs.Contains(operatorID)) 
         { 
@@ -78,7 +78,7 @@ public class StationData : IStationInventory
         return true;
     }
 
-    public bool RemoveOperatorFromStation(int operatorID)
+    public bool RemoveOperatorFromStation(uint operatorID)
     {
         if (CurrentOperatorIDs.Contains(operatorID))
         {
@@ -133,7 +133,7 @@ public class ProductionData
     public List<Item> AllProducedItems;
     public List<Item> EstimatedProductionRatePerHour;
     public List<Item> ActualProductionRatePerHour;
-    public int StationID;
+    public uint StationID;
     private StationComponent _station;
 
     public StationComponent Station
@@ -149,7 +149,7 @@ public class ProductionData
         }
     }
 
-    public ProductionData(List<Item> allProducedItems, int stationID)
+    public ProductionData(List<Item> allProducedItems, uint stationID)
     {
         AllProducedItems = allProducedItems;
         StationID = stationID;

@@ -167,17 +167,11 @@ public class OrderData
         return AllCurrentOrders.Any(o => o.OrderType == orderType);
     }
 
-    public void AddCurrentOrder(Order_Base order, int index = -1)
+    public void AddCurrentOrder(Order_Base order)
     {
         if (AllCurrentOrders.Any(o => o.OrderID == order.OrderID))
         {
             Debug.Log($"Order: {order.OrderID} already exists for Actor: {ActorID}");
-            return;
-        }
-
-        if (index >= 0)
-        {
-            AllCurrentOrders.Insert(index, order);
             return;
         }
 
@@ -200,7 +194,7 @@ public class OrderData
         AllCurrentOrders.Insert(index, order);
     }
 
-    public void CompleteOrder(int orderID, Order_Base replacementOrder = null)
+    public void CompleteOrder(int orderID)
     {
         if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
         {
@@ -208,15 +202,8 @@ public class OrderData
             return;
         }
 
-        var index = AllCurrentOrders.IndexOf(AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID));
-
         AllCompletedOrders.Add(AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID));
         AllCurrentOrders.RemoveAll(o => o.OrderID == orderID);
-
-        if (replacementOrder != null)
-        {
-            AddCurrentOrder(replacementOrder, index);
-        }
     }
 
     public void RemoveCurrentOrder(int orderID)
@@ -276,55 +263,59 @@ public enum OrderStatus
 [Serializable]
 public class Order_Base
 {
-    public int OrderID;
+    public uint OrderID;
     public OrderType OrderType;
-    public int ActorID;
+    public uint ActorID;
     ActorComponent _actor;
     public ActorComponent Actor { get { return _actor ??= Manager_Actor.GetActor(ActorID); } }
-    public int StationID_Source;
+    public uint StationID_Source;
     StationComponent _station_Source;
     public StationComponent Station_Source { get { return _station_Source ??= Manager_Station.GetStation(StationID_Source); } }
-    public int StationID_Destination;
+    public uint StationID_Destination;
     StationComponent _station_Destination;
     public StationComponent Station_Destination { get { return _station_Destination ??= Manager_Station.GetStation(StationID_Destination); } }
-    public int JobsiteID;
+    public uint JobsiteID;
     JobsiteComponent _jobsite;
     public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
     public OrderStatus OrderStatus;
     public List<Item> OrderItems;
 
+    public Order_Base ReturnOrder;
+
+    public void AddReturnOrder(Order_Base returnOrder) => ReturnOrder = returnOrder;
+
     protected Coroutine _orderCoroutine;
     protected Coroutine _actorMoveCoroutine;
 
-    public Order_Base(OrderType orderType, int actorID, int stationID_Source, int stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
+    public Order_Base(OrderType orderType, uint actorID, uint stationID_Source, uint stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
     {
         OrderType = orderType;
         ActorID = actorID;
-        OrderID = Actor.ActorData.OrderData.GetOrderID();
+        //OrderID = Actor.ActorData.OrderData.GetOrderID();
         StationID_Source = stationID_Source;
         JobsiteID = Station_Source.StationData.JobsiteID;
         StationID_Destination = stationID_Destination;
         OrderStatus = orderStatus;
         OrderItems = orderItems;
 
-        Actor.ActorData.OrderData.AddCurrentOrder(this);
+        //Actor.ActorData.OrderData.AddCurrentOrder(this);
     }
 
-    public void ChangeActor(int actorID)
+    public void ChangeActor(uint actorID)
     {
-        Actor.ActorData.OrderData.RemoveCurrentOrder(OrderID);
+        //Actor.ActorData.OrderData.RemoveCurrentOrder(OrderID);
         ActorID = actorID;
         _actor = null;
-        Actor.ActorData.OrderData.AddCurrentOrder(this);
+        //Actor.ActorData.OrderData.AddCurrentOrder(this);
     }
     
-    public void ChangeStationSource(int stationID)
+    public void ChangeStationSource(uint stationID)
     {
         StationID_Source = stationID;
         _station_Source = null;
     }
 
-    public void ChangeStationDestination(int stationID)
+    public void ChangeStationDestination(uint stationID)
     {
         StationID_Destination = stationID;
         _station_Destination = null;
@@ -373,13 +364,15 @@ public class Order_Base
 
         if (OrderType == OrderType.Haul_Fetch && orderSuccess)
         {
-            Debug.Log($"Actor: {ActorID} successfully fetched items from Station: {StationID_Destination}.");
-            Actor.ActorData.OrderData.CompleteOrder(OrderID, _createReturnDeliverOrder());
+            //Actor.ActorData.OrderData.CompleteOrder(OrderID);
+            Actor.ActorData.CurrentOrder = null;
+            AddReturnOrder(_createReturnDeliverOrder());
+            ReturnOrder.ExecuteOrder();
         }
         else
         {
-            Debug.Log($"Actor: {ActorID} successfully delivered items to Station: {StationID_Destination}.");
-            Actor.ActorData.OrderData.CompleteOrder(OrderID);
+            //Actor.ActorData.OrderData.CompleteOrder(OrderID);
+            Actor.ActorData.CurrentOrder = null;
         }
     }
 
@@ -452,7 +445,7 @@ public class Order_Base
 
         foreach (var stationToHaulTo in stationsToHaulTo)
         {
-            var itemsToHaul = Actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsItems(stationToHaulTo.AllowedStoredItemIDs);
+            var itemsToHaul = Actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
 
             if (itemsToHaul.Count == 0)
             {
@@ -548,40 +541,77 @@ public abstract class Order_Request
     }
 }
 
-public class Order_Request_Haul : Order_Request
+public class Order_Request_Haul_Fetch : Order_Request
 {
     public override OrderType OrderType => OrderType.Haul_Fetch;
-    public List<Item> DesiredItems;
+    public List<Item> Items = new();
 
-    public Order_Request_Haul(int stationID, List<Item> desiredItems) : base(stationID)
+    public Order_Request_Haul_Fetch(int stationID, List<Item> items) : base(stationID)
     {
-        if (desiredItems.Count <= 0)
+        if (items.Count <= 0)
         {
             Debug.Log("No items in desiredItems.");
             return;
         }
 
-        DesiredItems = desiredItems;
+        Items = items;
     }
 
     public void AddOrderItem(Item orderItem)
     {
-        DesiredItems.Add(orderItem);
+        Items.Add(orderItem);
     }
 
     public void RemoveOrderItem(Item orderItem)
     {
-        DesiredItems.Remove(orderItem);
+        Items.Remove(orderItem);
     }
 
     public void ClearOrderItems()
     {
-        DesiredItems.Clear();
+        Items.Clear();
     }
 
     public void ReplaceOrderItems(List<Item> orderItems)
     {
-        DesiredItems = orderItems;
+        Items = orderItems;
+    }
+}
+
+public class Order_Request_Haul_Deliver : Order_Request
+{
+    public override OrderType OrderType => OrderType.Haul_Deliver;
+    public List<Item> Items = new();
+
+    public Order_Request_Haul_Deliver(int stationID, List<Item> items) : base(stationID)
+    {
+        if (items.Count <= 0)
+        {
+            Debug.Log("No items in desiredItems.");
+            return;
+        }
+
+        Items = items;
+    }
+
+    public void AddOrderItem(Item orderItem)
+    {
+        Items.Add(orderItem);
+    }
+
+    public void RemoveOrderItem(Item orderItem)
+    {
+        Items.Remove(orderItem);
+    }
+
+    public void ClearOrderItems()
+    {
+        Items.Clear();
+    }
+
+    public void ReplaceOrderItems(List<Item> orderItems)
+    {
+        Items = orderItems;
     }
 }
 

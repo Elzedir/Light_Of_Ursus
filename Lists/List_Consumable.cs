@@ -24,6 +24,6 @@ public class List_Consumable : Manager_Item
             healthRecovery: 5
             );
 
-        AddToList(new Item_Master(commonStats_Item: commonStats_Item, null, null, null, fixedModifiers_Item: fixedModifiers, null));
+        AddToList(new Item_Master(commonStats_Item: commonStats_Item, null, null, null, fixedModifiers_Item: fixedModifiers, null, null));
     }
 }

@@ -22,17 +22,17 @@ public interface IStationInventory : IInventoryOwner
 [Serializable]
 public class InventoryData
 {
-    public int ActorID;
+    public uint ActorID;
     public int Gold = 0;
     public List<Item> AllInventoryItems;
 
-    public InventoryData(int actorID, List<Item> allInventoryItems)
+    public InventoryData(uint actorID, List<Item> allInventoryItems)
     {
         ActorID = actorID;
         AllInventoryItems = allInventoryItems;
     }
 
-    public Item GetItemFromInventory(int itemID)
+    public Item GetItemFromInventory(uint itemID)
     {
         return AllInventoryItems.FirstOrDefault(i => i.ItemID == itemID);
     }
@@ -68,7 +68,7 @@ public class InventoryData
         bool addItem(Item item)
         {
             var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
-            int amountToAdd = item.ItemAmount;
+            uint amountToAdd = item.ItemAmount;
 
             if (existingItems.Any())
             {
@@ -83,11 +83,11 @@ public class InventoryData
             return true;
         }
 
-        void addNewItems(int amountToAdd, Item item)
+        void addNewItems(uint amountToAdd, Item item)
         {
             while (amountToAdd > 0)
             {
-                int amountAdded = Math.Min(amountToAdd, item.MaxStackSize);
+                uint amountAdded = Math.Min(amountToAdd, item.MaxStackSize);
 
                 var newItem = new Item(item.ItemID, amountAdded);
 
@@ -97,17 +97,17 @@ public class InventoryData
             }
         }
 
-        void addToExistingItems(List<Item> existingItems, ref int amountToAdd)
+        void addToExistingItems(List<Item> existingItems, ref uint amountToAdd)
         {
             foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
                 if (amountToAdd <= 0) break;
 
-                int availableSpace = stackItem.MaxStackSize - stackItem.ItemAmount;
+                uint availableSpace = stackItem.MaxStackSize - stackItem.ItemAmount;
 
                 if (availableSpace > 0)
                 {
-                    int amountAdded = Math.Min(amountToAdd, availableSpace);
+                    uint amountAdded = Math.Min(amountToAdd, availableSpace);
                     stackItem.ItemAmount += amountAdded;
                     amountToAdd -= amountAdded;
                 }
@@ -162,7 +162,7 @@ public class InventoryData
                 return false;
             }
 
-            int amountToRemove = item.ItemAmount;
+            uint amountToRemove = item.ItemAmount;
 
             foreach (var stackItem in existingItems.OrderBy(i => i.ItemAmount))
             {
@@ -264,6 +264,9 @@ public class InventoryData
         }
     }
 
+    
+    public List<Item> InventoryContainsReturnedItems(List<uint> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
+    public bool InventoryContainsAnyItems(List<uint> itemIDs) => AllInventoryItems.Any(i => itemIDs.Contains(i.ItemID));
     public List<Item> InventoryMissingItems(List<Item> items)
     {
         List<Item> missingItems = new();
@@ -272,22 +275,26 @@ public class InventoryData
         {
             var existingItems = AllInventoryItems.Where(i => i.ItemID == item.ItemID).ToList();
 
-            if (!existingItems.Any() || existingItems.Sum(i => i.ItemAmount) < item.ItemAmount)
+            if (!existingItems.Any())
             {
                 missingItems.Add(item);
+            }
+            else if (existingItems.Sum(i => i.ItemAmount) < item.ItemAmount)
+            {
+                missingItems.Add(new Item(item.ItemID, item.ItemAmount - (uint)existingItems.Sum(i => i.ItemAmount)));
             }
         }
 
         return missingItems;
     }
 
-    public List<Item> InventoryContainsItems(List<int> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
-
-    public bool InventoryContainsAllItems(List<Item> items)
+    public bool InventoryContainsAllItems(List<Item> requiredItems)
     {
-        foreach (var item in items)
+        foreach (var requiredItem in requiredItems)
         {
-            if (!AllInventoryItems.Any(i => i.ItemID == item.ItemID && i.ItemAmount >= item.ItemAmount))
+            var existingItems = AllInventoryItems.Where(i => i.ItemID == requiredItem.ItemID).ToList();
+            
+            if (!AllInventoryItems.Any(i => i.ItemID == requiredItem.ItemID && i.ItemAmount >= requiredItem.ItemAmount))
             {
                 return false;
             }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -8,7 +7,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 {
     public JobsiteData JobsiteData;
     public void SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
-    public void SetCityID(int cityID) => JobsiteData.CityID = cityID;
+    public void SetCityID(uint cityID) => JobsiteData.CityID = cityID;
 
     public List<StationComponent> AllStationsInJobsite;
     public List<EmployeePosition> AllCoreEmployeePositions;
@@ -79,7 +78,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         return employeePositions.ToList();
     }
 
-    protected virtual void _assignEmployeesToStations(List<int> employeeIDs)
+    protected virtual void _assignEmployeesToStations(List<uint> employeeIDs)
     {
         foreach (var station in AllStationsInJobsite)
         {
@@ -110,14 +109,14 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         }
     }
 
-    protected virtual List<List<int>> _getAllCombinations(List<int> employees)
+    protected virtual List<List<uint>> _getAllCombinations(List<uint> employees)
     {
-        var result = new List<List<int>>();
+        var result = new List<List<uint>>();
         int combinationCount = (int)Mathf.Pow(2, employees.Count);
 
         for (int i = 1; i < combinationCount; i++)
         {
-            var combination = new List<int>();
+            var combination = new List<uint>();
             for (int j = 0; j < employees.Count; j++)
             {
                 if ((i & (1 << j)) != 0)

@@ -7,11 +7,11 @@ using UnityEngine;
 public class OperatingAreaData
 {
     #region ID Info
-    public int OperatingAreaID;
-    public int StationID;
+    public uint OperatingAreaID;
+    public uint StationID;
     StationComponent _station;
     public StationComponent Station { get { return _station ??= Manager_Station.GetStation(StationID); } }
-    public int JobsiteID;
+    public uint JobsiteID;
     JobsiteComponent _jobsite;
     public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
     #endregion
@@ -19,14 +19,14 @@ public class OperatingAreaData
     public bool OperatingAreaIsActive = true;
 
     #region Operator
-    public int CurrentOperatorID;
+    public uint CurrentOperatorID;
     ActorComponent _currentOperator;
     public ActorComponent CurrentOperator { get { return _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID); } }
     public bool HasOperator() => CurrentOperatorID != 0;
     public bool IsOperatorMovingToOperatingArea = false;
     #endregion
 
-    public OperatingAreaData(int operatingAreaID, int stationID)
+    public OperatingAreaData(uint operatingAreaID, uint stationID)
     {
         OperatingAreaID = operatingAreaID;
         StationID = stationID;
@@ -34,7 +34,7 @@ public class OperatingAreaData
         CurrentOperatorID = 0;
     }
 
-    public bool AddOperatorToOperatingArea(int operatorID)
+    public bool AddOperatorToOperatingArea(uint operatorID)
     {
         if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
 
@@ -45,14 +45,14 @@ public class OperatingAreaData
 
     public bool RemoveOperatorFromOperatingArea()
     {
-        if (CurrentOperatorID == -1)
+        if (CurrentOperatorID == 0)
         {
             Debug.Log($"OperatingArea does not have current operator.");
             return false;
         }
 
         Manager_Actor.GetActorData(CurrentOperatorID).CareerAndJobs.OperatingAreaID = 0;
-        CurrentOperatorID = -1;
+        CurrentOperatorID = 0;
         IsOperatorMovingToOperatingArea = false;
         return true;
     }

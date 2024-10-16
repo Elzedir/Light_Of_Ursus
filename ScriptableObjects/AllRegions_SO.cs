@@ -81,7 +81,7 @@ public class AllRegionsSOEditor : Editor
         }
     }
 
-    private void DrawCityAdditionalData(List<int> allCityIDs)
+    private void DrawCityAdditionalData(List<uint> allCityIDs)
     {
         _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(allCityIDs.Count)));
 

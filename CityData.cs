@@ -17,16 +17,16 @@ public class CityData
         Population.LoadData();
     }
 
-    public int CityID;
+    public uint CityID;
     public string CityName;
-    public int CityFactionID;
-    public int RegionID;
+    public uint CityFactionID;
+    public uint RegionID;
 
     public string CityDescription;
 
     public PopulationData Population;
     public ProsperityData ProsperityData;
-    public List<int> AllJobsiteIDs;
+    public List<uint> AllJobsiteIDs;
 
     public void InitialiseCityData()
     {
@@ -73,15 +73,15 @@ public class PopulationData
 
     public void LoadData()
     {
-        AllCitizenIDs = new HashSet<int>(AllCitizenIDList);
+        AllCitizenIDs = new HashSet<uint>(AllCitizenIDList);
     }
 
     public float CurrentPopulation;
     public float MaxPopulation;
     public float ExpectedPopulation;
-    public List<int> AllCitizenIDList;
+    public List<uint> AllCitizenIDList;
 
-    public HashSet<int> AllCitizenIDs = new();
+    public HashSet<uint> AllCitizenIDs = new();
 
     public void DisplayCurrentPopulation()
     {
@@ -93,7 +93,7 @@ public class PopulationData
         // Calculate expected population
     }
 
-    public void AddCitizen(int citizenID)
+    public void AddCitizen(uint citizenID)
     {
         if (AllCitizenIDs.Contains(citizenID))
         {
@@ -105,7 +105,7 @@ public class PopulationData
         DisplayCurrentPopulation();
     }
 
-    public void RemoveCitizen(int actorID)
+    public void RemoveCitizen(uint actorID)
     {
         if (!AllCitizenIDs.Contains(actorID))
         {

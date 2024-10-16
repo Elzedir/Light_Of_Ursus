@@ -9,9 +9,9 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
     static AllJobsites_SO _displayAllJobsites;
     public static AllJobsites_SO DisplayAllJobsites { get => _displayAllJobsites ??= Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO"); }
 
-    public static Dictionary<int, JobsiteData> AllJobsiteData = new();
-    static int _lastUnusedJobsiteID = 1;
-    public static Dictionary<int, JobsiteComponent> AllJobsiteComponents = new();
+    public static Dictionary<uint, JobsiteData> AllJobsiteData = new();
+    static uint _lastUnusedJobsiteID = 1;
+    public static Dictionary<uint, JobsiteComponent> AllJobsiteComponents = new();
 
     public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
     public void LoadData(SaveData data)
@@ -130,7 +130,7 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
         AllJobsiteData[jobsiteData.JobsiteID] = jobsiteData;
     }
 
-    public static JobsiteData GetJobsiteData(int jobsiteID)
+    public static JobsiteData GetJobsiteData(uint jobsiteID)
     {
         if (!AllJobsiteData.ContainsKey(jobsiteID))
         {
@@ -142,7 +142,7 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
     }
 
     
-    public static JobsiteComponent GetJobsite(int jobsiteID)
+    public static JobsiteComponent GetJobsite(uint jobsiteID)
     {
         if (!AllJobsiteComponents.ContainsKey(jobsiteID))
         {
@@ -153,7 +153,7 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
         return AllJobsiteComponents[jobsiteID];
     }
 
-    public int GetRandomJobsiteID()
+    public uint GetRandomJobsiteID()
     {
         while (AllJobsiteData.ContainsKey(_lastUnusedJobsiteID))
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,11 +30,11 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract EmployeePosition CoreEmployeePosition { get; }
     public abstract RecipeName DefaultProduct { get; }
     public abstract  List<RecipeName> AllowedRecipes { get; }
-    public abstract List<int> AllowedStoredItemIDs { get; }
-    public abstract int OperatingAreaCount { get; }
+    public abstract List<uint> AllowedStoredItemIDs { get; }
+    public abstract uint OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
-    public float BaseProgressRatePerHour = 60;
+    float _baseProgressRatePerHour = 1;
     List<Item> _currentProductsCrafted = new();
 
     BoxCollider _boxCollider;
@@ -42,7 +43,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     // Temporary
     public Transform CollectionPoint;
 
-    public Dictionary<(int ActorID, int OrderID), Order_Base> CurrentOrders = new();
+    public Dictionary<(uint ActorID, int OrderID), Order_Base> CurrentOrders = new();
     public Dictionary<OrderType, Order_Request> OrderRequests = new();
     public Order_Request GetOrderRequest(OrderType orderType) => OrderRequests.ContainsKey(orderType) ? OrderRequests[orderType] : null;
     public void AddOrderRequest(OrderType orderType, Order_Request orderRequest)
@@ -58,7 +59,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     }
     public void RemoveOrderRequest(OrderType orderType) => OrderRequests.Remove(orderType);
 
-    public void AddOperatorToArea(int operatorData)
+    public void AddOperatorToArea(uint operatorData)
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
         
@@ -72,7 +73,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
     }
 
-    public void RemoveOperatorFromArea(int operatorID)
+    public void RemoveOperatorFromArea(uint operatorID)
     {
         if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorID))
         {
@@ -114,24 +115,27 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         if (!IsStationBeingOperated)
         {
             Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
-            if (GetOrderRequest(OrderType.Hire) == null)
-            {
-                //  This won't do anything for now, but we'll use it later on.
-                OrderRequests.Add(OrderType.Hire, new Order_Request_Hire(StationData.StationID, new List<EmployeePosition> { CoreEmployeePosition }));
-            }
-            else
-            {
-                var orderRequest = GetOrderRequest(OrderType.Hire) as Order_Request_Hire;
 
-                if (!orderRequest.DesiredEmployeePositions.Contains(CoreEmployeePosition))
-                {
-                    orderRequest.DesiredEmployeePositions.Add(CoreEmployeePosition);
-                }
-                else
-                {
-                    Debug.Log($"DesiredEmployeePositions already contains CoreEmployeePosition: {CoreEmployeePosition}");
-                }
-            }
+            // Trying a new job system instead
+
+            // if (GetOrderRequest(OrderType.Hire) == null)
+            // {
+            //     //  This won't do anything for now, but we'll use it later on.
+            //     OrderRequests.Add(OrderType.Hire, new Order_Request_Hire(StationData.StationID, new List<EmployeePosition> { CoreEmployeePosition }));
+            // }
+            // else
+            // {
+            //     var orderRequest = GetOrderRequest(OrderType.Hire) as Order_Request_Hire;
+
+            //     if (!orderRequest.DesiredEmployeePositions.Contains(CoreEmployeePosition))
+            //     {
+            //         orderRequest.DesiredEmployeePositions.Add(CoreEmployeePosition);
+            //     }
+            //     else
+            //     {
+            //         Debug.Log($"DesiredEmployeePositions already contains CoreEmployeePosition: {CoreEmployeePosition}");
+            //     }
+            // }
 
             return;
         }
@@ -139,6 +143,41 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
         {
             Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
+
+            // Trying a new job system instead
+            
+            // if (GetOrderRequest(OrderType.Haul_Deliver) == null)
+            // {
+            //     OrderRequests.Add(OrderType.Haul_Deliver, new Order_Request_Haul_Deliver(StationData.StationID, GetInventoryItemsToHaul()));
+            // }
+            // else
+            // {
+            //     var orderRequest = GetOrderRequest(OrderType.Haul_Deliver) as Order_Request_Haul_Deliver;
+                
+            //     var existingItemIDs = orderRequest.Items.Select(i => i.ItemID).ToList();
+            //     var missingItems = StationData.InventoryData.InventoryMissingItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients);
+
+            //     foreach (var missingItem in missingItems)
+            //     {
+            //         if (!existingItemIDs.Contains(missingItem.ItemID))
+            //         {
+            //             orderRequest.Items.Add(missingItem);
+            //         }
+            //         else
+            //         {
+            //             var existingItem = orderRequest.Items.FirstOrDefault(i => i.ItemID == missingItem.ItemID);
+
+            //             if (existingItem.ItemAmount < missingItem.ItemAmount)
+            //             {
+            //                 existingItem.ItemAmount += missingItem.ItemAmount;
+            //             }
+            //             else
+            //             {
+            //                 Debug.Log($"Items already contains enough of missing item {missingItem.ItemID}. Waiting for hauler to deliver.");
+            //             }
+            //         }
+            //     }
+            // }
             return;
         }
 
@@ -159,16 +198,18 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
             }
         }
 
-        foreach(var operatingArea in AllOperatingAreasInStation)
+        foreach (var operatingArea in AllOperatingAreasInStation)
         {
-            var progressMade = operatingArea.Operate(BaseProgressRatePerHour, StationData.StationProgressData.CurrentProduct);
+            var progressMade = operatingArea.Operate(_baseProgressRatePerHour, StationData.StationProgressData.CurrentProduct);
             var itemCrafted = StationData.StationProgressData.Progress(progressMade);
 
-            if (itemCrafted)
-            {
-                // For now is the final person who adds the last progress, but change to a cumulative system later.
-                CraftItem(StationData.StationProgressData.CurrentProduct.RecipeName, Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID));
-            }
+            if (!itemCrafted) continue;
+
+            // For now is the final person who adds the last progress, but change to a cumulative system later.
+            CraftItem(
+                StationData.StationProgressData.CurrentProduct.RecipeName, 
+                Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID)
+                );
         }
     }
 
@@ -213,7 +254,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
         var operatingAreas = new List<OperatingAreaComponent>();
 
-        for (int i = 1; i <= OperatingAreaCount; i++)
+        for (uint i = 1; i <= OperatingAreaCount; i++)
         {
             operatingAreas.Add(_createOperatingArea(i));
         }
@@ -225,7 +266,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         return operatingAreas;
     }
 
-    protected abstract OperatingAreaComponent _createOperatingArea(int operatingAreaID);
+    protected abstract OperatingAreaComponent _createOperatingArea(uint operatingAreaID);
 
     public abstract void InitialiseAllowedEmployeePositions();
 
@@ -284,7 +325,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
         foreach (var currentOperatorID in StationData.CurrentOperatorIDs)
         {
-            var individualProductionRate = BaseProgressRatePerHour;
+            var individualProductionRate = _baseProgressRatePerHour;
 
             foreach(var vocation in StationData.StationProgressData.CurrentProduct.RequiredVocations)
             {
@@ -309,6 +350,79 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
 
         return estimatedProductionItems;
+    }
+
+    protected List<StationComponent> _getAllStationsToHaulTo(ActorComponent actor)
+    {
+        var stationsToHaulTo = new List<StationComponent>();
+
+        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
+        var actorInventory = actor.ActorData.InventoryAndEquipment.InventoryData;
+
+        foreach (var station in jobsite.AllStationsInJobsite)
+        {
+            if (station.AllowedStoredItemIDs.Count == 0) continue;
+
+            if (actorInventory.InventoryContainsAnyItems(station.AllowedStoredItemIDs))
+            {
+                stationsToHaulTo.Add(station);
+                break;
+            }
+        }
+
+        return stationsToHaulTo;
+    }
+
+    protected List<StationComponent> _getAllStationsToHaulFrom()
+    {
+        var stationsToHaulFrom = new List<StationComponent>();
+        
+        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
+
+        var PriorityQueue_Station = new PriorityQueue_Station(jobsite.AllStationsInJobsite.Count);
+
+        foreach (var station in jobsite.AllStationsInJobsite)
+        {
+            if (station.GetInventoryItemsToHaul().Count <= 0)
+            {
+                continue;
+            }
+
+            stationsToHaulFrom.Add(station);
+        }
+
+        return stationsToHaulFrom;
+    }
+
+    protected List<StationComponent> _prioritiseStations(List<StationComponent> stations, List<uint> itemIDs)
+    {
+        var stationPriorities = new List<StationPriority>();
+
+        foreach (var station in stations)
+        {
+            foreach (var itemID in itemIDs)
+            {
+                if (!station.AllowedStoredItemIDs.Contains(itemID)) continue;
+
+                var priorityValue = 0.0;
+                var storagePriorities = Manager_Item.GetMasterItem(itemID).PriorityStats_Item.Priority_StationForStorage;
+
+                if (!storagePriorities.ContainsKey(station.StationName))
+                {
+                    priorityValue = 0;
+                }
+                else
+                {
+                    priorityValue += storagePriorities[station.StationName];
+                }
+
+                stationPriorities.Add(new StationPriority (station, new Priority(priorityValue)));
+            }
+        }
+
+        stationPriorities.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+
+        return stationPriorities.Select(sp => sp.Station).ToList();
     }
 }
 
@@ -397,6 +511,8 @@ public class StationComponent_Editor : Editor
 
         if (stationData.StationProgressData != null)
         {
+            _showProgress = EditorGUILayout.Toggle("Progress", _showProgress);
+
             if (_showProgress)
             {
                 EditorGUILayout.LabelField("CurrentProgress", stationData.StationProgressData.CurrentProgress.ToString());
@@ -408,9 +524,18 @@ public class StationComponent_Editor : Editor
                 {
                     EditorGUILayout.LabelField("RecipeName", stationData.StationProgressData.CurrentProduct.RecipeName.ToString());
                     EditorGUILayout.LabelField("RequiredProgress", stationData.StationProgressData.CurrentProduct.RequiredProgress.ToString());
-                    EditorGUILayout.LabelField("RequiredIngredients", stationData.StationProgressData.CurrentProduct.RequiredIngredients.Count.ToString());
-                    EditorGUILayout.LabelField("RecipeProducts", stationData.StationProgressData.CurrentProduct.RecipeProducts.Count.ToString());
-                    EditorGUILayout.LabelField("RequiredVocations", stationData.StationProgressData.CurrentProduct.RequiredVocations.Count.ToString());
+                    foreach (var ingredient in stationData.StationProgressData.CurrentProduct.RequiredIngredients)
+                    {
+                        EditorGUILayout.LabelField($"Ingredient: {ingredient.ItemID}: {ingredient.ItemName} Qty: {ingredient.ItemAmount}");
+                    }
+                    foreach (var product in stationData.StationProgressData.CurrentProduct.RecipeProducts)
+                    {
+                        EditorGUILayout.LabelField($"Product: {product.ItemID}: {product.ItemName} Qty: {product.ItemAmount}");
+                    }
+                    foreach (var vocations in stationData.StationProgressData.CurrentProduct.RequiredVocations)
+                    {
+                        EditorGUILayout.LabelField($"Vocation: {vocations.VocationName}");
+                    }
                 }
             }
         }
@@ -451,5 +576,171 @@ public class Operator
         OperatorID = other.OperatorID;
         OperatorPosition = other.OperatorPosition;
         OperatingAreaID = other.OperatingAreaID;
+    }
+}
+
+public class Priority
+{
+    public List<double> AllPriorities;
+
+    public Priority(params double[] priorities)
+    {
+        AllPriorities = new List<double>(priorities);
+    }
+
+    public int CompareTo(Priority that)
+    {
+        for (int i = 0; i < Math.Min(AllPriorities.Count, that.AllPriorities.Count); i++)
+        {
+            if (AllPriorities[i] < that.AllPriorities[i]) return -1;
+            else if (AllPriorities[i] > that.AllPriorities[i]) return 1;
+        }
+
+        if (AllPriorities.Count > that.AllPriorities.Count) return 1;
+        else if (AllPriorities.Count < that.AllPriorities.Count) return -1;
+
+        return 0;
+    }
+}
+
+public class StationPriority
+{
+    public StationComponent Station;
+    public Priority Priority;
+
+    public StationPriority(StationComponent station, Priority priority)
+    {
+        Station = station;
+        Priority = priority;
+    }
+}
+
+public class PriorityQueue_Station
+{
+    int _currentPosition;
+    StationPriority[] _allStationPriorities;
+    Dictionary<StationComponent, int> _priorityQueue;
+
+    public PriorityQueue_Station(int maxStations)
+    {
+        _currentPosition = 0;
+        _allStationPriorities = new StationPriority[maxStations];
+        _priorityQueue = new Dictionary<StationComponent, int>();
+    }
+
+    public Priority Peek()
+    {
+        if (_currentPosition == 0) return new Priority(-1);
+
+        return _allStationPriorities[1].Priority;
+    }
+
+    public StationComponent Dequeue()
+    {
+        if (_currentPosition == 0) return null;
+
+        StationComponent station = _allStationPriorities[1].Station;
+        _allStationPriorities[1] = _allStationPriorities[_currentPosition];
+        _priorityQueue[_allStationPriorities[1].Station] = 1;
+        _priorityQueue[station] = 0;
+        _currentPosition--;
+        _moveDown(1);
+        return station;
+    }
+
+    public void Enqueue(StationComponent station, Priority priority)
+    {
+        StationPriority queueStation = new StationPriority(station, priority);
+        _currentPosition++;
+        _priorityQueue[station] = _currentPosition;
+        if (_currentPosition == _allStationPriorities.Length) Array.Resize<StationPriority>(ref _allStationPriorities, _allStationPriorities.Length * 2);
+        _allStationPriorities[_currentPosition] = queueStation;
+        _moveUp(_currentPosition);
+    }
+
+    public void Update(StationComponent station, Priority priority)
+    {
+        int index = _priorityQueue[station];
+        if (index == 0) return;
+        Priority priorityOld = _allStationPriorities[index].Priority;
+        _allStationPriorities[index].Priority = priority;
+        if (priorityOld.CompareTo(priority) < 0)
+        {
+            _moveDown(index);
+        }
+        else
+        {
+            _moveUp(index);
+        }
+    }
+
+    public void Remove(StationComponent station)
+    {
+        int index = _priorityQueue[station];
+
+        if (index == 0) return;
+
+        _priorityQueue[station] = 0;
+        _allStationPriorities[index] = _allStationPriorities[_currentPosition];
+        _priorityQueue[_allStationPriorities[index].Station] = index;
+        _currentPosition--;
+        _moveDown(index);
+    }
+
+    public bool Contains(StationComponent station)
+    {
+        int index;
+        if (!_priorityQueue.TryGetValue(station, out index))
+        {
+            return false;
+        }
+        return index != 0;
+    }
+
+    void _moveDown(int index)
+    {
+        int childL = index * 2;
+        if (childL > _currentPosition) return;
+        int childR = index * 2 + 1;
+        int smallerChild;
+
+        if (childR > _currentPosition)
+        {
+            smallerChild = childL;
+        }
+        else if (_allStationPriorities[childL].Priority.CompareTo(_allStationPriorities[childR].Priority) < 0)
+        {
+            smallerChild = childL;
+        }
+        else
+        {
+            smallerChild = childR;
+        }
+        if (_allStationPriorities[index].Priority.CompareTo(_allStationPriorities[smallerChild].Priority) > 0)
+        {
+            _swap(index, smallerChild);
+            _moveDown(smallerChild);
+        }
+    }
+
+    void _moveUp(int index)
+    {
+        if (index == 1) return;
+        int parent = index / 2;
+
+        if (_allStationPriorities[parent].Priority.CompareTo(_allStationPriorities[index].Priority) > 0)
+        {
+            _swap(parent, index);
+            _moveUp(parent);
+        }
+    }
+
+    void _swap(int indexA, int indexB)
+    {
+        StationPriority tempStation = _allStationPriorities[indexA];
+        _allStationPriorities[indexA] = _allStationPriorities[indexB];
+        _priorityQueue[_allStationPriorities[indexB].Station] = indexA;
+        _allStationPriorities[indexB] = tempStation;
+        _priorityQueue[tempStation.Station] = indexB;
     }
 }

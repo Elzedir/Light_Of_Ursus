@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +12,10 @@ public class StationComponent_LogPile : StationComponent
 
     public override RecipeName DefaultProduct => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
     public override List<RecipeName> AllowedRecipes => new List<RecipeName>();
-    public override List<int> AllowedStoredItemIDs => new List<int> { 1100, 2300 };
+    public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
 
-    public override int OperatingAreaCount => 4;
-    protected override OperatingAreaComponent _createOperatingArea(int operatingAreaID)
+    public override uint OperatingAreaCount => 4;
+    protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
     {
         var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
         operatingAreaComponent.transform.SetParent(transform);
@@ -73,90 +74,271 @@ public class StationComponent_LogPile : StationComponent
 
             var actor = Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID);
 
-            if (actorHasHaulOrder())
+            // if (actorHasHaulOrder())
+            // {
+            //     //actor.ActorData.OrderData.ExecuteNextOrder(new List<OrderType> { OrderType.Haul_Deliver, OrderType.Haul_Fetch });
+            //     Debug.Log($"Actor: {operatingArea.OperatingAreaData.CurrentOperatorID} has a haul order.");
+            //     return;
+            // }
+
+            if (actorCanHaul())
             {
-                actor.ActorData.OrderData.ExecuteNextOrder(new List<OrderType> { OrderType.Haul_Deliver, OrderType.Haul_Fetch });
-            }
-            else if (actorCanHaul())
-            {
-                _createNewHaulOrder(operatingArea);
+                // Dump resources first before hauling more
+
+                if (_canDumpItems(actor)) return;
+
+                if (_canFetchItems(actor)) return;
+
+                //Debug.Log($"No stations to haul from.");
+                return;
+
+                // Have the actor drop at anther station, rather than the logpile for now, or create the logic to decide where it will go.
+
+                // Check for any dropped items too.
+
+                // Trying new job system
+
+                // var order = _createNewHaulOrder(operatingArea);
+
+                // if (order == null) return;
+
+                // actor.ActorData.CurrentOrder = order;
+                // actor.ActorData.CurrentOrder.ExecuteOrder();
             }
             else
             {
                 Debug.Log($"Actor: {operatingArea.OperatingAreaData.CurrentOperatorID} can't haul.");
             }
 
-            bool actorHasHaulOrder()
-            {
-                if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Deliver)) return true;
-                if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Fetch)) return true;
-                return false;
-            }
+            // bool actorHasHaulOrder()
+            // {
+            //     //if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Deliver)) return true;
+            //     //if (actor.ActorData.OrderData.HasCurrentOrder(OrderType.Haul_Fetch)) return true;
+            //     if (actor.ActorData.CurrentOrder != null) return true;
+            //     return false;
+            // }
 
             bool actorCanHaul()
             {
                 // Check if the actor has sufficient space, weight, combat situation, etc.
+
+                if (actor.ActorHaulCoroutine != null) return false;
+
                 return true;
             }
         }
     }
 
-    void _createNewHaulOrder(OperatingAreaComponent operatingArea)
+    protected bool _canDumpItems(ActorComponent actor)
     {
-        var stationsToHaulFrom = _getAllStationsToHaulFrom();
+        var stationsToHaulTo = _getAllStationsToHaulTo(actor);
 
-            if (stationsToHaulFrom.Count == 0) 
-            {
-                Debug.Log($"No stations to haul from in Jobsite: {StationData.JobsiteID}");
-                return;
-            }
+        if (stationsToHaulTo.Count > 0) Debug.Log($"Stations to haul to: {stationsToHaulTo.Count}");
 
-            Debug.Log($"Stations to haul from: {string.Join(", ", stationsToHaulFrom.Select(s => $"{s.StationData.StationID}: {s.StationName}"))}");
+        foreach (var stationToHaulTo in stationsToHaulTo)
+        {
+            var itemsToDump = actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
 
-            // Temporary for now, later, find the nearest station and haul from there.
-            var stationToHaulFrom = stationsToHaulFrom[Random.Range(0, stationsToHaulFrom.Count)];
+            Debug.Log($"Items to dump: {itemsToDump.Count}");
 
-            var itemsToHaul = stationToHaulFrom.StationData.InventoryData.InventoryContainsItems(new List<int> { 1100, 2300 });
+            if (itemsToDump.Count <= 0) continue;
 
-            if (itemsToHaul.Count == 0)
-            {
-                Debug.Log($"No items to haul from {stationToHaulFrom.StationName}.");
-                return;
-            }
-
-            var haulOrderFetch = new Order_Base(
-                orderType: OrderType.Haul_Fetch,
-                actorID: operatingArea.OperatingAreaData.CurrentOperatorID, 
-                stationID_Source: StationData.StationID, 
-                stationID_Destination: stationToHaulFrom.StationData.StationID, 
-                orderStatus: OrderStatus.Pending, 
-                orderItems: itemsToHaul);
-            
-            Debug.Log($"HaulOrderFetch: {haulOrderFetch.OrderID} for Actor: {haulOrderFetch.ActorID} from {stationToHaulFrom.StationName}");
-
-            // Have the actor drop at anther station, rather than the logpile for now, or create the logic to decide where it will go.
-            
-            // Check for any dropped items too.
+            StartCoroutine(_dumpItems(actor, stationToHaulTo, itemsToDump));
+            return true;
+        }
+ 
+        return false;
     }
 
-    List<StationComponent> _getAllStationsToHaulFrom()
+    IEnumerator _dumpItems(ActorComponent actor, StationComponent station, List<Item> itemsToDump)
     {
-        var stationsToHaulFrom = new List<StationComponent>();
-        
-        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
+        bool success = false;
 
-        foreach (var station in jobsite.AllStationsInJobsite)
+        var ActorID = actor.ActorData.ActorID;
+        var StationID_Destination = station.StationData.StationID;
+
+        if (ActorID == 0 || StationID_Destination == 0)
         {
-            if (station.GetInventoryItemsToHaul().Count <= 0)
-            {
-                continue;
-            }
-
-            stationsToHaulFrom.Add(station);
+            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination} is invalid.");
+            throw new Exception("Invalid Order.");
         }
 
-        return stationsToHaulFrom;
+        if (actor.transform.position == null)
+        {
+            Debug.Log("Actor position is null.");
+            throw new Exception("Invalid Actor Position.");
+        }
+
+        // Eventually put in a check to see if the station still has the resources. If not, then return.
+
+        if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+        {
+            yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
+
+            if (_dump(actor, station, itemsToDump)) success = true;
+
+            actor.ActorHaulCoroutine = null;
+        }
+
+        if (success)
+        {
+            actor.ActorData.CurrentOrder = null;
+        }
     }
+
+    bool _dump(ActorComponent actor, StationComponent station, List<Item> orderItems)
+    {
+        if (!actor.ActorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(orderItems))
+        {
+            Debug.Log("Failed to remove items from Actor inventory.");
+            return false;
+        }
+
+        if (!station.StationData.InventoryData.AddToInventory(orderItems))
+        {
+            Debug.Log("Failed to add items to Station inventory.");
+
+            if (actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(orderItems))
+            {
+                Debug.Log("Failed to add items back to Actor inventory.");
+                return false;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    bool _canFetchItems(ActorComponent actor)
+    {
+        var allStationsToHaulFrom = _getAllStationsToHaulFrom()
+        .Where(s => s.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs).Count > 0)
+        .ToList();
+
+        allStationsToHaulFrom = _prioritiseStations(allStationsToHaulFrom, AllowedStoredItemIDs);
+
+        if (allStationsToHaulFrom.Count < 0)
+        {
+            Debug.Log($"No stations to haul from.");
+
+            return false;
+        }
+
+        var highestPriorityStation = allStationsToHaulFrom[0];
+
+        StartCoroutine(_fetchItems(
+            actor,
+            highestPriorityStation,
+            highestPriorityStation.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs)));
+        return true;
+    }
+
+    IEnumerator _fetchItems( ActorComponent actor, StationComponent stationDestination, List<Item> itemsToFetch)
+    {
+        bool orderSuccess = false;
+
+        var ActorID = actor.ActorData.ActorID;
+        var StationID_Destination = stationDestination.StationData.StationID;
+
+        if (ActorID == 0 || StationID_Destination == 0)
+        {
+            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination} is invalid.");
+            throw new Exception("Invalid Order.");
+        }
+
+        if (actor.transform.position == null)
+        {
+            Debug.Log("Actor position is null.");
+            throw new Exception("Invalid Actor Position.");
+        }
+
+        // Eventually put in a check to see if the station still has the resources. If not, then return.
+
+        if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+        {
+            yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
+
+            if (_fetch(stationDestination, actor, itemsToFetch)) orderSuccess = true;
+
+            actor.ActorHaulCoroutine = null;
+        }
+
+        if (orderSuccess)
+        {
+            actor.ActorData.CurrentOrder = null;
+        }
+    }
+
+    protected bool _fetch(StationComponent station, ActorComponent actor, List<Item> orderItems)
+    {
+        if (!station.StationData.InventoryData.RemoveFromInventory(orderItems))
+        {
+            Debug.Log($"Failed to remove items from Station: {station.StationData.StationID} inventory.");
+            return false;
+        }
+
+        if (!actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(orderItems))
+        {
+            Debug.Log("Failed to add items to Actor inventory.");
+
+            if (station.StationData.InventoryData.AddToInventory(orderItems))
+            {
+                Debug.Log("Failed to add items back to Station inventory.");
+                return false;
+            }
+
+            return false;
+        }
+
+        //Debug.Log($"Actor: {actor.ActorData.ActorID} successfully fetched items from Station: {station.StationData.StationID}.");
+
+        return true;
+    }
+
+    protected IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
+    {
+        yield return actor.StartCoroutine(actor.BasicMove(position));
+
+        if (actor.transform.position != position) actor.transform.position = position;
+    }
+
+    // Order_Base _createNewHaulOrder(OperatingAreaComponent operatingArea)
+    // {
+    //     var stationsToHaulFrom = _getAllStationsToHaulFrom();
+
+    //         if (stationsToHaulFrom.Count == 0) 
+    //         {
+    //             return null;
+    //         }
+
+    //         // Temporary for now, later, find the nearest station and haul from there.
+    //         var stationToHaulFrom = stationsToHaulFrom[UnityEngine.Random.Range(0, stationsToHaulFrom.Count)];
+
+    //         var itemsToHaul = stationToHaulFrom.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs);
+
+    //         if (itemsToHaul.Count == 0)
+    //         {
+    //             Debug.Log($"No items to haul from {stationToHaulFrom.StationName}.");
+    //             return null;
+    //         }
+
+    //         var haulOrderFetch = new Order_Base(
+    //             orderType: OrderType.Haul_Fetch,
+    //             actorID: operatingArea.OperatingAreaData.CurrentOperatorID, 
+    //             stationID_Source: StationData.StationID, 
+    //             stationID_Destination: stationToHaulFrom.StationData.StationID, 
+    //             orderStatus: OrderStatus.Pending, 
+    //             orderItems: itemsToHaul);
+            
+    //         Debug.Log($"HaulOrderFetch: {haulOrderFetch.OrderID} for Actor: {haulOrderFetch.ActorID} from {stationToHaulFrom.StationName}");
+
+    //         return haulOrderFetch;
+
+    //         // Have the actor drop at anther station, rather than the logpile for now, or create the logic to decide where it will go.
+            
+    //         // Check for any dropped items too.
+    // }
 
     public override void CraftItem(RecipeName recipeName, ActorComponent actor)
     {

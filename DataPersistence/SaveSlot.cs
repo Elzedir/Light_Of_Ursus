@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class SaveSlot : MonoBehaviour
 {
     [Header("Profile")]
-    [SerializeField] int _saveSlotID = 0;
-    public int GetSaveSlotID() => _saveSlotID;
+    [SerializeField] uint _saveSlotID = 0;
+    public uint GetSaveSlotID() => _saveSlotID;
     [SerializeField] string _saveSlotName = "";
     public string GetSaveGameName() => _saveSlotName;
 

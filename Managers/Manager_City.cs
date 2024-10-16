@@ -7,9 +7,9 @@ using UnityEngine;
 public class Manager_City : MonoBehaviour, IDataPersistence
 {
     public static AllCities_SO AllCities;
-    public static Dictionary<int, CityData> AllCityData = new();
-    static int _lastUnusedCityID = 1;
-    public static Dictionary<int, CityComponent> AllCityComponents = new();
+    public static Dictionary<uint, CityData> AllCityData = new();
+    static uint _lastUnusedCityID = 1;
+    public static Dictionary<uint, CityComponent> AllCityComponents = new();
 
     public void SaveData(SaveData data)
     {
@@ -141,7 +141,7 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         AllCityData[cityData.CityID] = cityData;
     }
 
-    public static CityData GetCityData(int cityID)
+    public static CityData GetCityData(uint cityID)
     {
         if (!AllCityData.ContainsKey(cityID))
         {
@@ -152,7 +152,7 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         return AllCityData[cityID];
     }
 
-    public static CityComponent GetCity(int cityID)
+    public static CityComponent GetCity(uint cityID)
     {
         if (!AllCityComponents.ContainsKey(cityID))
         {
@@ -163,7 +163,7 @@ public class Manager_City : MonoBehaviour, IDataPersistence
         return AllCityComponents[cityID];
     }
 
-    public int GetRandomCityID()
+    public uint GetRandomCityID()
     {
         while (AllCityData.ContainsKey(_lastUnusedCityID))
         {
