@@ -1,30 +1,37 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
+using UnityEngine;
 
 public enum StateName
 {
     Alive,
-    Dead,
+
+    CanReanimate,
+    IsReanimated,
     
     Alerted,
     Hostile,
 
-    Jumping,
+    CanJump,
+    IsJumping,
 
-    Berserk, 
+    CanBerserk,
+    IsBerserking, 
     
-    OnFire,
     InFire,
+    OnFire,
 
-    Talkable,
-    Talking,
+    CanTalk,
+    IsTalking,
 
-    DodgeAvailable,
-    Dodging,
+    CanDodge,
+    IsDodging,
 
-    BlockAvailable,
-    Blocking,
+    CanBlock,
+    IsBlocking,
+
+    CanGetPregnant,
+    IsPregnant,
 }
 
 public enum ConditionName
@@ -46,39 +53,104 @@ public class Manager_StateAndCondition
 
     static void _addState(State state)
     {
-        if (state == null && AllStates.ContainsKey(state.StateName)) throw new ArgumentException($"Title: {state} is null or exists in AllTitles.");
+        if (state == null || AllStates.ContainsKey(state.StateName)) throw new ArgumentException($"Title: {state} is null or exists in AllTitles.");
 
         AllStates.Add(state.StateName, state);
     }
 
     static void _addCondition(Condition condition)
     {
-        if (condition == null && AllConditions.ContainsKey(condition.ConditionName)) throw new ArgumentException($"Title: {condition} is null or exists in AllTitles.");
+        if (condition == null || AllConditions.ContainsKey(condition.ConditionName)) throw new ArgumentException($"Title: {condition} is null or exists in AllTitles.");
 
         AllConditions.Add(condition.ConditionName, condition);
     }
 
-    public static void GetState(StateName stateName, out State state)
+    public static State GetState(StateName stateName)
     {
-        AllStates.TryGetValue(stateName, out state);
+        if (!AllStates.ContainsKey(stateName))
+        {
+            Debug.LogError($"State: {stateName} is not in AllStates list");
+            return null;
+        }
+        return AllStates[stateName];
     }
 
-    public static void GetCondition(ConditionName conditionName, out Condition condition)
+    public static Condition GetCondition(ConditionName conditionName)
     {
-        AllConditions.TryGetValue(conditionName, out condition);
+        if (!AllConditions.ContainsKey(conditionName))
+        {
+            Debug.LogError($"Condition: {conditionName} is not in AllConditions list");
+            return null;
+        }
+
+        return AllConditions[conditionName];
     }
 }
 
 public class StateAndConditionComponent : ITickable
 {
-    public Dictionary<StateName, float> CurrentStates = new();
+    public uint ActorID;
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+
+    public StateAndConditionComponent(uint actorID) => ActorID = actorID;
+
+    public void Initialise()
+    {
+        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneSecond);
+    }
+
+    public void OnTick()
+    {
+        Actor.ActorData.StatsAndAbilities.Actor_StatesAndConditions.Tick();
+    }
+}
+
+[Serializable]
+public class State // Permanent or Perpetual thing
+{
+    public StateName StateName;
+}
+
+[Serializable]
+public class Condition // Temprary and tickable thing
+{
+    public ConditionName ConditionName;
+}
+
+[Serializable]
+public class Actor_StatesAndConditions
+{
+    public uint ActorID;
+    public Actor_StatesAndConditions(uint actorID) => ActorID = actorID;
+
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+
+    PriorityQueue _actorPriorityQueue;
+    public PriorityQueue ActorPriorityQueue { get => _actorPriorityQueue ??=Actor.TaskComponent.PriorityQueue; }
+
+    public Dictionary<StateName, bool> CurrentStates = new();
     public Dictionary<ConditionName, float> CurrentConditions = new();
 
-    public bool CanGetPregnant { get; private set; } // FInd where to put, maybe actorData
-
-    public void SetState(StateName stateName, float timer)
+    public void SetState(StateName stateName, bool state)
     {
-        CurrentStates[stateName] = timer;
+        CurrentStates[stateName] = state;
+    }
+
+    public void AddCondition(ConditionName conditionName)
+    {
+        if (CurrentConditions.ContainsKey(conditionName))
+        {
+            CurrentConditions[conditionName] = 0;
+            return;
+        }
+
+        var condition = Manager_StateAndCondition.GetCondition(conditionName);
+
+        if (condition == null) return;
+
+        CurrentConditions[conditionName] = 0;
     }
 
     public void SetCondition(ConditionName conditionName, float timer)
@@ -86,43 +158,26 @@ public class StateAndConditionComponent : ITickable
         CurrentConditions[conditionName] = timer;
     }
 
-    public void OnTick()
+    public void RemoveCondition(ConditionName conditionName)
     {
-        for (int i = 0; i < CurrentStates.Count; i++)
-        {
-            //if (CurrentStates[i] <= 0) continue;
-            //CurrentStates[i]--;
-            // And execute state effect
-        }
+        if (!CurrentConditions.ContainsKey(conditionName)) return;
 
-        for (int i = 0; i < CurrentConditions.Count; i++)
-        {
-            //if (CurrentConditions[i] <= 0) continue;
-            //CurrentStates[i]--;
-            // And execute state effect
-        }
+        CurrentConditions.Remove(conditionName);
+
+        Modify priority
     }
 
-    public TickRate GetTickRate()
+    public void Tick()
     {
-        return TickRate.OneSecond;
+        foreach(var condition in CurrentConditions)
+        {
+            if (condition.Value <= 0)
+            {
+                RemoveCondition(condition.Key);
+                continue;
+            }
+
+            CurrentConditions[condition.Key] -= 1;
+        }
     }
-}
-
-[Serializable]
-public class State
-{
-    public StateName StateName;
-}
-
-[Serializable]
-public class Condition
-{
-    public ConditionName ConditionName;
-}
-
-[Serializable]
-public class Actor_States_And_Conditions
-{
-    
 }

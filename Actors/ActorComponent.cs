@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
 public class ActorComponent : MonoBehaviour, IInventoryOwner
 {
+    uint _actorID { get { return ActorData.ActorID; } }
     public ActorData ActorData;
     public void SetActorData(ActorData actorData) => ActorData = actorData;
     Rigidbody _rigidBody;
@@ -18,8 +20,8 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
     public Animation ActorAnimation;
     public EquipmentComponent EquipmentComponent;
     public PersonalityComponent PersonalityComponent;
-    public GroundedCheckComponent GroundedObject;
-
+    public GroundedCheckComponent GroundCheckComponent;
+    public TaskComponent TaskComponent;
     public Coroutine ActorHaulCoroutine;
 
     void Awake()
@@ -53,7 +55,10 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
 
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
-        PersonalityComponent = new PersonalityComponent(this, ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
+
+        TaskComponent = new TaskComponent(_actorID);
+        PersonalityComponent = new PersonalityComponent(_actorID);
+        PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
         UpdateVisuals();
     }
@@ -67,9 +72,9 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
 
     public bool IsGrounded()
     {
-        if (GroundedObject == null) GroundedObject = Manager_GroundCheck.AddGroundedObject(gameObject);
+        if (GroundCheckComponent == null) GroundCheckComponent = Manager_GroundCheck.AddGroundedObject(gameObject);
 
-        return GroundedObject.IsGrounded();
+        return GroundCheckComponent.IsGrounded();
     }
 
     public IEnumerator BasicMove(Vector3 targetPosition, float speed = 1)
@@ -98,6 +103,259 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
 
     public InventoryData GetInventoryData()
     {
-        return ActorData.InventoryAndEquipment.InventoryData;
+        return ActorData.InventoryData;
+    }
+}
+
+public enum ActionType
+{
+    Basic,
+    Survival,
+    Social,
+    Maintenance,
+    Production,
+    Intellectual,
+    Skill,
+    Logistics,
+    Management,
+    Communication,
+    Investigation,
+}
+
+public enum ActionName
+{
+    // Basic Actions
+    Idle,
+    Move,
+    Haul,
+    Interact,
+    Work,
+    Rest,
+
+    // Survival Actions
+    Eat,
+    Drink,
+    Sleep,
+
+    // Social Actions
+    Socialise,
+    Play,
+    Exercise,
+
+    // Maintenance Actions
+    Clean,
+    Repair,
+    Build,
+
+    // Production Actions
+    Plant,
+    Harvest,
+    Cook,
+    Craft,
+
+    // Intellectual Actions
+    Research,
+    Study,
+    Teach,
+
+    // Skill Actions
+    Train,
+    Heal,
+    Perform,
+    Entertain,
+    Create,
+    Destroy,
+
+    // Logistics Actions
+    Collect,
+    Store,
+    Retrieve,
+    Deliver,
+    Transport,
+    Trade,
+    Buy,
+    Sell,
+
+    // Management Actions
+    Upgrade,
+    Downgrade,
+    Hire,
+    Fire,
+    Promote,
+    Demote,
+    Assign,
+    Unassign,
+    Schedule,
+    Unscheduled,
+    Plan,
+    Execute,
+    Cancel,
+    Pause,
+    Resume,
+    Stop,
+    Start,
+    Finish,
+    Continue,
+    Restart,
+    Repeat,
+    Wait,
+
+    // Communication Actions
+    Listen,
+    Speak,
+    Read,
+    Write,
+    Watch,
+    Observe,
+    Record,
+    Report,
+    Document,
+    Communicate,
+    Negotiate,
+    Mediate,
+    Arbitrate,
+    Adjudicate,
+    Judge,
+    Prosecute,
+    Defend,
+    Accuse,
+
+    // Investigation Actions
+    Investigate,
+    Inspect,
+    Search,
+    Find,
+    Discover,
+    Explore,
+    Map,
+    Chart,
+    Survey,
+    Measure,
+    Analyse,
+    Evaluate,
+    Assess,
+    Test,
+    Experiment,
+    Hypothesise,
+    Theorise,
+    Prove,
+    Disprove,
+    Verify,
+    Validate,
+    Invalidate,
+    Correct,
+    Improve,
+    Enhance,
+    Develop,
+    Innovate,
+    Invent,
+    Design,
+    Prepare,
+    Organise,
+    Coordinate,
+    Manage,
+    Lead,
+    Follow,
+    Support,
+    Assist,
+    Help,
+    Aid,
+    Guide,
+    Mentor,
+    Coach,
+    Learn,
+}
+
+public class TaskComponent
+{
+    public uint ActorID;
+    public TaskComponent(uint actorID) => ActorID = actorID;
+
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+
+    public PriorityQueue PriorityQueue;
+    public List<Priority> CachedPriorityQueue;
+    bool _syncingCachedQueue = false;
+    float _timeDeferment = 1f;
+
+    void _initialiseTasks()
+    {
+        PriorityQueue = new PriorityQueue(100);
+    }
+
+    public void SyncCachedPriorityQueue()
+    {
+        foreach (var priority in CachedPriorityQueue)
+        {
+            if (!PriorityQueue.Update(priority.PriorityID, priority.AllPriorities))
+            {
+                PriorityQueue.Enqueue(priority.PriorityID, priority.AllPriorities);
+            }
+        }
+
+        CachedPriorityQueue.Clear();
+        _syncingCachedQueue = false;
+    }
+    void SyncCachedPriorityQueue_DeferredUpdate()
+    {
+        _syncingCachedQueue = true;
+        Manager_DeferredActions.AddDeferredAction(SyncCachedPriorityQueue, _timeDeferment);
+    }
+
+    public void AddToCachedPriorityQueue(Priority priority)
+    {
+        CachedPriorityQueue.Add(priority);
+
+        if (!_syncingCachedQueue) SyncCachedPriorityQueue_DeferredUpdate();
+    }
+
+    public void AddTask(TaskName taskName, List<double> priorities)
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        PriorityQueue.Enqueue((uint)taskName, priorities);
+    }
+
+    public void UpdateTask(TaskName taskName, List<double> priorities)
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        PriorityQueue.Update((uint)taskName, priorities);
+    }
+
+    public void RemoveTask(TaskName taskName)
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        PriorityQueue.Remove((uint)taskName);
+    }
+
+    public Priority CheckNextTask()
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        return PriorityQueue.Peek();
+    }
+
+    public Priority CheckSpecificTask(TaskName taskName)
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        return PriorityQueue.Peek((uint)taskName);
+    }
+
+    public Priority PerformNextTask()
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        return PriorityQueue.Dequeue();
+    }
+
+    public Priority PerformSpecificTask(TaskName taskName)
+    {
+        if (PriorityQueue == null) _initialiseTasks();
+
+        return PriorityQueue.Dequeue((uint)taskName);
     }
 }

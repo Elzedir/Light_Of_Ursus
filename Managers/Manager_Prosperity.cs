@@ -24,7 +24,7 @@ public class ProsperityData : ITickable
 
         GameObject = gameObject;
         // Eventually initialise the data based on region, city, jobsite, etc.
-        Manager_TickRate.RegisterTickable(this);
+        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneGameDay);
     }
 
     public void ChangeProsperity(float prosperityChange)
@@ -54,10 +54,5 @@ public class ProsperityData : ITickable
         if (CurrentProsperity == MaxProsperity) return 0;
 
         return BaseProsperityGrowthPerDay; // Add modifiers afterwards.
-    }
-
-    public TickRate GetTickRate()
-    {
-        return TickRate.OneGameDay;
     }
 }

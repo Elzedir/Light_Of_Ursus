@@ -12,7 +12,7 @@ public enum TickRate
 public class Manager_TickRate : MonoBehaviour
 {
     static Dictionary<TickRate, float> _nextTickTimes;
-    static Dictionary<TickRate, List<ITickable>> _tickableGroups;
+    static Dictionary<TickRate, List<Action>> _tickableGroups;
 
     public void OnSceneLoaded()
     {
@@ -28,16 +28,16 @@ public class Manager_TickRate : MonoBehaviour
                 { TickRate.OneGameYear, UnityEngine.Time.time + 172800f }
             };
 
-        _tickableGroups = new Dictionary<TickRate, List<ITickable>>
+        _tickableGroups = new Dictionary<TickRate, List<Action>>
             {
-                { TickRate.OneTenthSecond, new List<ITickable>() },
-                { TickRate.OneSecond, new List<ITickable>() },
-                { TickRate.TenSeconds, new List<ITickable>() },
-                { TickRate.OneHundredSeconds, new List<ITickable>() },
-                { TickRate.OneGameHour, new List<ITickable>() },
-                { TickRate.OneGameDay, new List<ITickable>() },
-                { TickRate.OneGameMonth, new List<ITickable>() },
-                { TickRate.OneGameYear, new List<ITickable>() }
+                { TickRate.OneTenthSecond, new List<Action>() },
+                { TickRate.OneSecond, new List<Action>() },
+                { TickRate.TenSeconds, new List<Action>() },
+                { TickRate.OneHundredSeconds, new List<Action>() },
+                { TickRate.OneGameHour, new List<Action>() },
+                { TickRate.OneGameDay, new List<Action>() },
+                { TickRate.OneGameMonth, new List<Action>() },
+                { TickRate.OneGameYear, new List<Action>() }
             };
     }
 
@@ -85,20 +85,16 @@ public class Manager_TickRate : MonoBehaviour
         }
     }
 
-    public static void RegisterTickable(ITickable tickable)
+    public static void RegisterTickable(Action tickable, TickRate tickRate)
     {
-        TickRate tickRate = tickable.GetTickRate();
-
         if (_tickableGroups.ContainsKey(tickRate) && !_tickableGroups[tickRate].Contains(tickable))
         {
             _tickableGroups[tickRate].Add(tickable);
         }
     }
 
-    public static void UnregisterTickable(ITickable tickable)
+    public static void UnregisterTickable(Action tickable, TickRate tickRate)
     {
-        TickRate tickRate = tickable.GetTickRate();
-
         if (_tickableGroups.ContainsKey(tickRate) && _tickableGroups[tickRate].Contains(tickable))
         {
             _tickableGroups[tickRate].Remove(tickable);
@@ -109,7 +105,7 @@ public class Manager_TickRate : MonoBehaviour
     {
         foreach (var tickable in _tickableGroups[tickRate])
         {
-            tickable.OnTick();
+            tickable();
         }
     }
 }
@@ -117,5 +113,86 @@ public class Manager_TickRate : MonoBehaviour
 public interface ITickable
 {
     void OnTick();
-    TickRate GetTickRate();
+}
+
+public class Manager_DeferredActions : ITickable
+{
+    static bool _initialised;
+    static Dictionary<Action, float> _deferredActions;
+
+    public void OnTick()
+    {
+        
+    }
+
+    static void _initialise()
+    {
+        Manager_TickRate.RegisterTickable(OnTickStatic, TickRate.OneTenthSecond);
+        _initialised = true;
+    }
+
+    public static void OnTickStatic()
+    {
+        if (_deferredActions == null || _deferredActions.Count <= 0) return;
+
+        TickDeferredActions();
+    }
+    
+    public static void AddDeferredAction(Action function, float timeDeferment)
+    {
+        if (!_initialised) _initialise();
+
+        if (_deferredActions == null) _deferredActions = new Dictionary<Action, float>();
+
+        _deferredActions.Add(function, timeDeferment);
+    }
+
+    public static void ExecuteDeferredAction(Action function)
+    {
+        if (_deferredActions == null) return;
+
+        if (!_deferredActions.ContainsKey(function))
+        {
+            Debug.LogError($"Function: {function} does not exist in DeferredActions.");
+            return;
+        }
+
+        function();
+        RemoveDeferredAction(function);
+    }
+
+    public static void RemoveDeferredAction(Action function)
+    {
+        if (_deferredActions == null) return;
+
+        if (!_deferredActions.ContainsKey(function))
+        {
+            Debug.LogError($"Function: {function} does not exist in DeferredActions.");
+            return;
+        }
+
+        _deferredActions.Remove(function);
+    }
+
+    public static void TickDeferredActions()
+    {
+        var actionsToExecute = new List<Action>();
+
+        foreach (var deferredAction in _deferredActions)
+        {
+            if (deferredAction.Value <= 0)
+            {
+                actionsToExecute.Add(deferredAction.Key);
+            }
+            else
+            {
+                _deferredActions[deferredAction.Key] -= UnityEngine.Time.deltaTime;
+            }
+        }
+
+        for (int i = 0; i < actionsToExecute.Count; i++)
+        {
+            ExecuteDeferredAction(actionsToExecute[i]);
+        }
+    }
 }

@@ -386,7 +386,7 @@ public class Order_Base
                 return false;
             }
 
-            if (!Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
+            if (!Actor.ActorData.InventoryData.AddToInventory(OrderItems))
             {
                 Debug.Log("Failed to add items to Actor inventory.");
 
@@ -406,7 +406,7 @@ public class Order_Base
 
         if (OrderType == OrderType.Haul_Deliver)
         {
-            if (!Actor.ActorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(OrderItems))
+            if (!Actor.ActorData.InventoryData.RemoveFromInventory(OrderItems))
             {
                 Debug.Log("Failed to remove items from Actor inventory.");
                 return false;
@@ -416,7 +416,7 @@ public class Order_Base
             {
                 Debug.Log("Failed to add items to Station inventory.");
 
-                if (Actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(OrderItems))
+                if (Actor.ActorData.InventoryData.AddToInventory(OrderItems))
                 {
                     Debug.Log("Failed to add items back to Actor inventory.");
                     return false;
@@ -445,7 +445,7 @@ public class Order_Base
 
         foreach (var stationToHaulTo in stationsToHaulTo)
         {
-            var itemsToHaul = Actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
+            var itemsToHaul = Actor.ActorData.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
 
             if (itemsToHaul.Count == 0)
             {

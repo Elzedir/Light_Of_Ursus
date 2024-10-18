@@ -26,7 +26,8 @@ public class ActorData
     public VocationData VocationData;
     public SpeciesAndPersonality SpeciesAndPersonality;
     public StatsAndAbilities StatsAndAbilities;
-    public InventoryAndEquipment InventoryAndEquipment;
+    public InventoryData InventoryData;
+    public EquipmentData EquipmentData;
     public QuestData ActorQuests;
     //public OrderData OrderData;
     public Order_Base CurrentOrder;
@@ -83,7 +84,9 @@ public class ActorData
         VocationData = new VocationData(ActorID);
         SpeciesAndPersonality = new SpeciesAndPersonality(ActorID);
         StatsAndAbilities = new StatsAndAbilities(ActorID);
-        InventoryAndEquipment = new InventoryAndEquipment(ActorID);
+
+        InventoryData = new InventoryData(ActorID);
+        EquipmentData = new EquipmentData(ActorID);
         ActorQuests = new QuestData(ActorID);
         //OrderData = new OrderData(ActorID);
         CurrentOrder = null;
@@ -264,30 +267,19 @@ public class SpeciesAndPersonality
 public class StatsAndAbilities
 {
     public uint ActorID;
-
-    public ActorStats ActorStats;
-    public void SetActorStats(ActorStats actorStats) => ActorStats = actorStats;
-    public Actor_States_And_Conditions ActorStates;
-    public void SetActorStates(Actor_States_And_Conditions actorStates) => ActorStates = actorStates;
-    public ActorAspects ActorAspects;
-    public void SetActorAspects(ActorAspects actorAspects) => ActorAspects = actorAspects;
-    public ActorAbilities ActorAbilities;
-    public void SetActorAbilities(ActorAbilities actorAbilities) => ActorAbilities = actorAbilities;
-
     public StatsAndAbilities(uint actorID) => ActorID = actorID;
-}
 
-[Serializable]
-public class InventoryAndEquipment
-{
-    public uint ActorID;
-    
-    public InventoryData InventoryData;
-    public void SetInventoryData(InventoryData inventoryData) => InventoryData = inventoryData;
-    public EquipmentData EquipmentData;
-    public void SetEquipmentData(EquipmentData equipmentData) => EquipmentData = equipmentData;
+    public Actor_Stats Actor_Stats;
+    public void SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
 
-    public InventoryAndEquipment(uint actorID) => ActorID = actorID;
+    public Actor_StatesAndConditions Actor_StatesAndConditions;
+    public void SetActorStates(Actor_StatesAndConditions actorStates) => Actor_StatesAndConditions = actorStates;
+
+    public Actor_Aspects Actor_Aspects;
+    public void SetActorAspects(Actor_Aspects actor_Aspects) => Actor_Aspects = actor_Aspects;
+
+    public Actor_Abilities Actor_Abilities;
+    public void SetActorAbilities(Actor_Abilities actor_Abilities) => Actor_Abilities = actor_Abilities;
 }
 
 [Serializable]
@@ -316,41 +308,56 @@ public enum SpeciesName
 }
 
 [Serializable]
-public class ActorStats
+public class Actor_Stats
 {
     public uint ActorID;
+    public Actor_Stats(uint actorID) => ActorID = actorID;
 
     public ActorLevelData ActorLevelData;
     public SPECIAL ActorSpecial;
     public CombatStats CombatStats;
 
-    public ActorStats(uint actorID) => ActorID = actorID;
 
-    public float CarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
+    public float TotalCarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
+    public float AvailableCarryWeight => TotalCarryWeight - Manager_Actor.GetActorData(ActorID).InventoryData.GetTotalInventoryWeight();
 }
 
 [Serializable]
-public class ActorAspects
+public class Actor_Aspects
 {
     public uint ActorID;
+    public Actor_Aspects(uint actorID) => ActorID = actorID;
 
-    public ClassName ActorTitle;
-    public void SetActorTitle(ClassName actorTitle) => ActorTitle = actorTitle;
+    public ClassTitle ActorClassTitle { get { return Manager_Aspect.GetCharacterTitle(ActorAspectList); } }
+
     public List<AspectName> ActorAspectList;
     public void SetActorAspectList(List<AspectName> actorAspectList) => ActorAspectList = actorAspectList;
-    public void AddAspect(AspectName aspect)
+
+    public bool CanAddAspect(AspectName aspectName)
     {
+        return ActorAspectList.Contains(AspectName.None) || !ActorAspectList.Contains(aspectName);
+    }
+
+    public bool AddAspect(AspectName aspect)
+    {
+        if (!CanAddAspect(aspect))
+        {
+            Debug.Log("Cannot add aspect.");
+            return false;
+        }
+
         var index = ActorAspectList.FindIndex(a => a == AspectName.None);
 
         if (index == -1)
         {
-            Debug.Log("No empty aspect slots available.");
-            return;
+            Debug.LogError("No empty aspect slots available even after check.");
+            return false;
         }
 
         ActorAspectList[index] = aspect;
-        SetActorTitle(Manager_Aspect.GetCharacterTitle(ActorAspectList));
+        return true;
     }
+    
     public void ChangeAspect(AspectName aspect, int index)
     {
         if (index < 0 || index >= ActorAspectList.Count)
@@ -360,10 +367,7 @@ public class ActorAspects
         }
 
         ActorAspectList[index] = aspect;
-        SetActorTitle(Manager_Aspect.GetCharacterTitle(ActorAspectList));
     }
-
-    public ActorAspects(uint actorID) => ActorID = actorID;
 }
 
 [Serializable]
@@ -416,13 +420,13 @@ public class ActorLevelData
         switch (levelData.BonusType)
         {
             case LevelUpBonusType.Health:
-                actorData.StatsAndAbilities.ActorStats.CombatStats.MaxHealth += levelData.BonusStatPoints;
+                actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxHealth += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Mana:
-                actorData.StatsAndAbilities.ActorStats.CombatStats.MaxMana += levelData.BonusStatPoints;
+                actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxMana += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Stamina:
-                actorData.StatsAndAbilities.ActorStats.CombatStats.MaxStamina += levelData.BonusStatPoints;
+                actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxStamina += levelData.BonusStatPoints;
                 break;
             case LevelUpBonusType.Skillset:
                 CanAddNewSkillSet = true;
@@ -467,7 +471,7 @@ public class CraftingData
         {
             foreach (var ingredient in ingredients)
             {
-                var inventoryItem = actorData.InventoryAndEquipment.InventoryData.GetItemFromInventory(ingredient.ItemID);
+                var inventoryItem = actorData.InventoryData.GetItemFromInventory(ingredient.ItemID);
 
                 if (inventoryItem == null || inventoryItem.ItemAmount < ingredient.ItemAmount)
                 {
@@ -487,14 +491,14 @@ public class CraftingData
 
         var actorData = Manager_Actor.GetActorData(ActorID);
 
-        if (actorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
+        if (actorData.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
         {
-            if (actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RequiredIngredients))
+            if (actorData.InventoryData.AddToInventory(recipe.RequiredIngredients))
             {
                 yield break;
             }
 
-            actorData.InventoryAndEquipment.InventoryData.AddToInventory(recipe.RequiredIngredients);
+            actorData.InventoryData.AddToInventory(recipe.RequiredIngredients);
             Debug.Log($"Cannot add products into inventory"); 
             yield break;
         }

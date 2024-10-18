@@ -143,11 +143,11 @@ public class AllActors_SOEditor : Editor
             EditorGUILayout.LabelField("Stats And Abilities", EditorStyles.boldLabel);
         }
 
-        if (actorData.InventoryAndEquipment != null)
+        if (actorData.InventoryData != null)
         {
             EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
 
-            var inventoryData = actorData.InventoryAndEquipment.InventoryData;
+            var inventoryData = actorData.InventoryData;
 
             _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
 
@@ -156,7 +156,7 @@ public class AllActors_SOEditor : Editor
                 DrawInventory(inventoryData);
             }
 
-            var equipmentData = actorData.InventoryAndEquipment.EquipmentData;
+            var equipmentData = actorData.EquipmentData;
 
             _showEquipment = EditorGUILayout.Toggle("Equipment", _showEquipment);
 

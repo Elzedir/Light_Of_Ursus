@@ -23,18 +23,39 @@ public interface IStationInventory : IInventoryOwner
 public class InventoryData
 {
     public uint ActorID;
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
     public int Gold = 0;
     public List<Item> AllInventoryItems;
-
-    public InventoryData(uint actorID, List<Item> allInventoryItems)
-    {
-        ActorID = actorID;
-        AllInventoryItems = allInventoryItems;
-    }
+    public float GetTotalInventoryWeight() => AllInventoryItems.Sum(i => i.ItemAmount * Manager_Item.GetMasterItem(i.ItemID).CommonStats_Item.ItemWeight);
+    public InventoryData(uint actorID) => ActorID = actorID;
+    public void SetInventory(List<Item> allInventoryItems) => AllInventoryItems = allInventoryItems;
 
     public Item GetItemFromInventory(uint itemID)
     {
         return AllInventoryItems.FirstOrDefault(i => i.ItemID == itemID);
+    }
+
+    public bool HasSpaceForItem(List<Item> items)
+    {
+        float totalWeight = 0;
+
+        foreach(Item item in items)
+        {
+            var itemMaster = Manager_Item.GetMasterItem(item.ItemID);
+
+            var itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
+
+            totalWeight += itemWeight;
+        }
+
+        if (totalWeight > Actor.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight)
+        {
+            Debug.LogWarning("Not enough space in inventory.");
+            return false;
+        }
+
+        return true;
     }
 
     public bool AddToInventory(List<Item> items)
@@ -266,7 +287,7 @@ public class InventoryData
 
     
     public List<Item> InventoryContainsReturnedItems(List<uint> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
-    public bool InventoryContainsAnyItems(List<uint> itemIDs) => AllInventoryItems.Any(i => itemIDs.Contains(i.ItemID));
+    
     public List<Item> InventoryMissingItems(List<Item> items)
     {
         List<Item> missingItems = new();
@@ -288,6 +309,7 @@ public class InventoryData
         return missingItems;
     }
 
+    public bool InventoryContainsAnyItems(List<uint> itemIDs) => AllInventoryItems.Any(i => itemIDs.Contains(i.ItemID));
     public bool InventoryContainsAllItems(List<Item> requiredItems)
     {
         foreach (var requiredItem in requiredItems)

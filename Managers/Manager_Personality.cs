@@ -103,15 +103,18 @@ public enum PersonalityTraitName { Arrogant, Ambitious, Brave, Craven, Deceitful
 
 public class PersonalityComponent
 {
-    public ActorComponent Actor;
+    public uint ActorID;
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
     public string PersonalityTitle;
     public string PersonalityDescription;
 
     public HashSet<PersonalityTrait> PersonalityTraits = new();
 
-    public PersonalityComponent(ActorComponent actor, HashSet<PersonalityTrait> personalityTraits)
+    public PersonalityComponent(uint actorID) => ActorID = actorID;
+
+    public void SetPersonalityTraits(HashSet<PersonalityTrait> personalityTraits)
     {
-        Actor = actor;
         PersonalityTraits = personalityTraits;
 
         _setPersonalityTitle();

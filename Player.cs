@@ -244,13 +244,13 @@ public class Player : Controller, IDataPersistence
             switch (context.control.name)
             {
                 case "numpadMinus":
-                    Manager_Date_And_Time.DecreaseTimeScale();
+                    Manager_DateAndTime.DecreaseTimeScale();
                     break;
                 case "numpadPlus":
-                    Manager_Date_And_Time.IncreaseTimeScale();
+                    Manager_DateAndTime.IncreaseTimeScale();
                     break;
                 case "numpad0":
-                    Manager_Date_And_Time.ResetTimeScale();
+                    Manager_DateAndTime.ResetTimeScale();
                     break;
                 default:
                     Debug.LogWarning($"{context.control.name} key pressed");

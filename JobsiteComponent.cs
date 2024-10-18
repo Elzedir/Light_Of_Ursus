@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -12,6 +13,8 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
     public List<StationComponent> AllStationsInJobsite;
     public List<EmployeePosition> AllCoreEmployeePositions;
 
+    public PriorityQueue PriorityQueue;
+
     public bool JobsiteOpen = true;
 
     public float IdealRatio;
@@ -25,7 +28,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
         AllStationsInJobsite.ForEach(station => station.StationData.JobsiteID = JobsiteData.JobsiteID);
 
-        Manager_TickRate.RegisterTickable(this);
+        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneGameHour);
     }
 
     public virtual void OnTick()
@@ -37,11 +40,6 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         }
 
         _compareProductionOutput();
-    }
-
-    public TickRate GetTickRate()
-    {
-        return TickRate.OneGameHour;
     }
 
     protected abstract bool _compareProductionOutput();
@@ -128,5 +126,304 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         }
 
         return result;
+    }
+
+    public StationComponent GetStationToFetch()
+    {
+        if (PriorityQueue == null) PriorityQueue = new PriorityQueue(AllStationsInJobsite.Count);
+
+        foreach (var station in AllStationsInJobsite)
+        {
+            List<double> priorityValues = new();
+            var itemsToHaul = station.GetInventoryItemsToHaul();
+
+            var allItemPriorities = 0.0;
+
+            foreach (var item in itemsToHaul)
+            {
+                if (station.DesiredStoredItemIDs.Contains(item.ItemID))
+                {
+                    Debug.LogWarning($"Item: {item.ItemID} is allowed to be stored in {station.StationName} but is being hauled.");
+                }
+
+                var storagePriorities = Manager_Item.GetMasterItem(item.ItemID).PriorityStats_Item.Priority_StationForStorage;
+
+                if (!storagePriorities.ContainsKey(station.StationName))
+                {
+                    // Debug.Log($"Station {station.StationName} not found in storage priorities.");
+                    allItemPriorities += 0;
+                }
+                else
+                {
+                    var itemPriority = storagePriorities[station.StationName] * item.ItemAmount;
+                    // Debug.Log($"Station {station.StationName} found in storage priorities.");
+                    allItemPriorities += itemPriority;
+                }
+
+                // Debug.Log($"Priority value: {priorityValue}");
+            }
+
+            priorityValues.Add(allItemPriorities);
+
+            // Debug.Log($"Adding station {station.StationName} to stationPriorities.");
+
+            PriorityQueue.Enqueue(station.StationID, priorityValues);
+        }
+
+        // foreach(var stationPriority in stationPriorities)
+        // {
+        //     Debug.Log($"Station: {stationPriority.Station.StationName} Priority: {stationPriority.Priority.AllPriorities[0]}");
+        // }
+
+        return Manager_Station.GetStation(PriorityQueue.Dequeue().PriorityID);
+    }
+
+    public StationComponent GetStationToDeliver()
+    {
+        if (PriorityQueue == null) PriorityQueue = new PriorityQueue(AllStationsInJobsite.Count);
+
+        foreach (var station in AllStationsInJobsite)
+        {
+            
+        }
+
+        return null;
+    }
+}
+
+public class Priority
+{
+    public uint PriorityID;
+
+    public List<double> AllPriorities;
+
+    public Priority(uint priorityID, List<double> priorities)
+    {
+        PriorityID = priorityID;
+        AllPriorities = new List<double>(priorities);
+    }
+
+    public int CompareTo(Priority that)
+    {
+        for (int i = 0; i < Math.Min(AllPriorities.Count, that.AllPriorities.Count); i++)
+        {
+            if (AllPriorities[i] < that.AllPriorities[i]) return -1;
+            else if (AllPriorities[i] > that.AllPriorities[i]) return 1;
+        }
+
+        if (AllPriorities.Count > that.AllPriorities.Count) return 1;
+        else if (AllPriorities.Count < that.AllPriorities.Count) return -1;
+
+        return 0;
+    }
+}
+
+public class PriorityQueue
+{
+    int _currentPosition;
+    Priority[] _allPriorities;
+    Dictionary<uint, int> _priorityQueue;
+
+    public PriorityQueue(int maxPriorities)
+    {
+        _currentPosition = 0;
+        _allPriorities = new Priority[maxPriorities];
+        _priorityQueue = new Dictionary<uint, int>();
+    }
+
+    public Priority Peek(uint priorityID = 1)
+    {
+        if (priorityID == 1)
+        {
+            if (_currentPosition == 0) return null;
+
+            return _allPriorities[1];
+        }
+        else
+        {
+            int index;
+
+            if (!_priorityQueue.TryGetValue(priorityID, out index)) return null;
+
+            return index == 0 ? null : _allPriorities[index];
+        }
+    }
+
+    public Priority Dequeue(uint priorityID = 1)
+    {
+        if (priorityID == 1)
+        {
+            if (_currentPosition == 0) return null;
+
+            Priority priority = _allPriorities[1];
+            _allPriorities[1] = _allPriorities[_currentPosition];
+            _priorityQueue[_allPriorities[1].PriorityID] = 1;
+            _priorityQueue[priority.PriorityID] = 0;
+            _currentPosition--;
+            _moveDown(1);
+
+            return priority;
+        }
+        else
+        {
+            int index;
+
+            if (!_priorityQueue.TryGetValue(priorityID, out index)) return null;
+            
+            if (index == 0) return null;
+
+            Priority priority = _allPriorities[index];
+            _priorityQueue[priorityID] = 0;
+            _allPriorities[index] = _allPriorities[_currentPosition];
+            _priorityQueue[_allPriorities[_currentPosition].PriorityID] = index;
+            _currentPosition--;
+            _moveDown(index);
+
+            return priority;
+        }
+    }
+
+    public void Enqueue(uint priorityID, List<double> priorities)
+    {
+        Priority priority = new Priority(priorityID, priorities);
+        _currentPosition++;
+        _priorityQueue[priorityID] = _currentPosition;
+        if (_currentPosition == _allPriorities.Length) Array.Resize<Priority>(ref _allPriorities, _allPriorities.Length * 2);
+        _allPriorities[_currentPosition] = priority;
+        _moveUp(_currentPosition);
+    }
+
+    public bool Update(uint priorityID, List<double> priorities)
+    {
+        if (priorities.Count == 0)
+        {
+            if (!Remove(priorityID))
+            {
+                Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
+                return false;
+            }
+            
+            return true;
+        }
+
+        int index;
+
+        if (!_priorityQueue.TryGetValue(priorityID, out index))
+        {
+            return false;
+        }
+
+        if (index == 0)
+        {
+            Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
+            return false;
+        }
+        
+        Priority priority_New = new Priority(priorityID, priorities);
+        Priority priority_Old = _allPriorities[index];
+
+        _allPriorities[index] = priority_New;
+
+        if (priority_Old.CompareTo(priority_New) < 0)
+        {
+            _moveDown(index);
+        }
+        else
+        {
+            _moveUp(index);
+        }
+
+        return true;
+    }
+
+    public bool Remove(uint priorityID)
+    {
+        int index;
+
+        if (!_priorityQueue.TryGetValue(priorityID, out index))
+        {
+            return false;
+        }
+
+        if (index == 0)
+        {
+            Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
+            return false;
+        }
+
+        _priorityQueue[priorityID] = 0;
+        _allPriorities[index] = _allPriorities[_currentPosition];
+        _priorityQueue[_allPriorities[index].PriorityID] = index;
+        _currentPosition--;
+        _moveDown(index);
+
+        return true;
+    }
+
+    void _moveDown(int index)
+    {
+        int childL = index * 2;
+
+        if (childL > _currentPosition) return;
+
+        int childR = index * 2 + 1;
+        int smallerChild;
+
+        if (childR > _currentPosition)
+        {
+            smallerChild = childL;
+        }
+        else if (_allPriorities[childL].CompareTo(_allPriorities[childR]) < 0)
+        {
+            smallerChild = childL;
+        }
+        else
+        {
+            smallerChild = childR;
+        }
+
+        if (_allPriorities[index].CompareTo(_allPriorities[smallerChild]) > 0)
+        {
+            _swap(index, smallerChild);
+            _moveDown(smallerChild);
+        }
+    }
+
+    void _moveUp(int index)
+    {
+        if (index == 1) return;
+        int parent = index / 2;
+
+        if (_allPriorities[parent].CompareTo(_allPriorities[index]) > 0)
+        {
+            _swap(parent, index);
+            _moveUp(parent);
+        }
+    }
+
+    void _swap(int indexA, int indexB)
+    {
+        Priority tempPriorityA = _allPriorities[indexA];
+        _allPriorities[indexA] = _allPriorities[indexB];
+        _priorityQueue[_allPriorities[indexB].PriorityID] = indexA;
+        _allPriorities[indexB] = tempPriorityA;
+        _priorityQueue[tempPriorityA.PriorityID] = indexB;
+    }
+}
+
+public class PriorityGenerator
+{
+    Create a priority generator that accounts for items and statuses
+
+    public static List<double> GeneratePriorityList(int count, double min, double max)
+    {
+        List<double> priorities = new List<double>();
+
+        for (int i = 0; i < count; i++)
+        {
+            priorities.Add(UnityEngine.Random.Range((float)min, (float)max));
+        }
+
+        return priorities;
     }
 }

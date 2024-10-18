@@ -136,7 +136,7 @@ public class Ability
 }
 
 [Serializable]
-public class ActorAbilities
+public class Actor_Abilities
 {
     public Dictionary<Ability, float> AbilityList = new();
 }

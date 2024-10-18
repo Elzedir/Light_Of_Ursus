@@ -100,7 +100,7 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         _createManager("Manager_Recipe", _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
         
         Manager_Career.Initialise();
-        Manager_Date_And_Time.Initialise();
+        Manager_DateAndTime.Initialise();
         Manager_Personality.Initialise();
 
         _createManager("Manager_Faction", _manager_Parent).AddComponent<Manager_Faction>().OnSceneLoaded();

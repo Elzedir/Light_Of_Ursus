@@ -141,6 +141,8 @@ public class EquipmentComponent
 [Serializable]
 public class EquipmentData
 {
+    public uint ActorID;
+
     public Item Head;
     public Item Neck;
     public Item Chest;
@@ -151,7 +153,9 @@ public class EquipmentData
     public Item Legs;
     public Item Feet;
 
-    public EquipmentData(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
+    public EquipmentData(uint actorID) => ActorID = actorID;
+
+    public void SetEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
     {
         Head = head;
         Neck = neck;

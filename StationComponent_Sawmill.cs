@@ -14,6 +14,7 @@ public class StationComponent_Sawmill : StationComponent
     public override RecipeName DefaultProduct => RecipeName.Plank;
     public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Plank };
     public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
+    public override List<uint> DesiredStoredItemIDs => new List<uint> { 1100 };
     public override uint OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -52,11 +53,6 @@ public class StationComponent_Sawmill : StationComponent
     }
 
     public override void InitialiseStartingInventory() { }
-
-    public override List<Item> GetInventoryItemsToHaul()
-    {
-        return StationData.InventoryData.AllInventoryItems.Where(i => i.ItemID ==2300).ToList();
-    }
 
     public override void InitialiseAllowedEmployeePositions()
     {
@@ -99,7 +95,7 @@ public class StationComponent_Sawmill : StationComponent
         // Base resource yield on actor relevant skill
     }
 
-    public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
     {
         return inventoryOwner.GetInventoryData().AllInventoryItems
         .Where(item => AllowedStoredItemIDs.Contains(item.ItemID))

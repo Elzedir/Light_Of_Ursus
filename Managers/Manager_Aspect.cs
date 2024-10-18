@@ -17,7 +17,7 @@ public enum AspectName
     Volition, // Auramancy, Will
 }
 
-public enum ClassName
+public enum ClassTitle
 {
     None,
     ErrUmmWellFck,
@@ -173,250 +173,250 @@ public enum ClassName
 
 public class Manager_Aspect // Can turn this into an SO eventually since it will be static.
 {
-    public static Dictionary<(AspectName, AspectName, AspectName), ClassName> AllClassList { get; private set; } = new();
+    public static Dictionary<(AspectName, AspectName, AspectName), ClassTitle> AllClassList { get; private set; } = new();
 
     public static void InitialiseSpecialisations()
     {
-        AllClassList.Add((AspectName.None, AspectName.None, AspectName.None), ClassName.Aspectless);
+        AllClassList.Add((AspectName.None, AspectName.None, AspectName.None), ClassTitle.Aspectless);
 
-        AllClassList.Add((AspectName.Defiance, AspectName.None, AspectName.None), ClassName.Defender);
+        AllClassList.Add((AspectName.Defiance, AspectName.None, AspectName.None), ClassTitle.Defender);
         
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.None), ClassName.Exorcist);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Esthesis), ClassName.Silentpsalm);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Glory), ClassName.Woundwarden);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Grace), ClassName.Hallowblaze);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Hunt), ClassName.Deathwarden);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Involution), ClassName.Hexwarden);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Shadow), ClassName.Shadoward);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Soul), ClassName.Tombwarden);
-        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Volition), ClassName.Zenith);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.None), ClassTitle.Exorcist);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Esthesis), ClassTitle.Silentpsalm);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Glory), ClassTitle.Woundwarden);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Grace), ClassTitle.Hallowblaze);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Hunt), ClassTitle.Deathwarden);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Involution), ClassTitle.Hexwarden);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Shadow), ClassTitle.Shadoward);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Soul), ClassTitle.Tombwarden);
+        AllClassList.Add((AspectName.Defiance, AspectName.Essence, AspectName.Volition), ClassTitle.Zenith);
 
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.None), ClassName.Ironbard);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Glory), ClassName.Justicar);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Grace), ClassName.Hymnguard);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Hunt), ClassName.Argent);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Involution), ClassName.Earthsinger);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Shadow), ClassName.Nocturneanthem);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Soul), ClassName.Tombcaller);
-        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Volition), ClassName.Elegist);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.None), ClassTitle.Ironbard);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Glory), ClassTitle.Justicar);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Grace), ClassTitle.Hymnguard);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Hunt), ClassTitle.Argent);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Involution), ClassTitle.Earthsinger);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Shadow), ClassTitle.Nocturneanthem);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Soul), ClassTitle.Tombcaller);
+        AllClassList.Add((AspectName.Defiance, AspectName.Esthesis, AspectName.Volition), ClassTitle.Elegist);
 
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.None), ClassName.Bastion);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Grace), ClassName.Templar);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Hunt), ClassName.Hordebreaker);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Involution), ClassName.Crusader);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Shadow), ClassName.Enforcer);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Soul), ClassName.Skullknight);
-        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Volition), ClassName.Honourguard);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.None), ClassTitle.Bastion);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Grace), ClassTitle.Templar);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Hunt), ClassTitle.Hordebreaker);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Involution), ClassTitle.Crusader);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Shadow), ClassTitle.Enforcer);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Soul), ClassTitle.Skullknight);
+        AllClassList.Add((AspectName.Defiance, AspectName.Glory, AspectName.Volition), ClassTitle.Honourguard);
 
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.None), ClassName.Guardian);
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Hunt), ClassName.Dawnsentinel);
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Involution), ClassName.Hierophant);
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Shadow), ClassName.Aethermend);
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Soul), ClassName.Eldritch_Shephard);
-        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Volition), ClassName.Paladin);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.None), ClassTitle.Guardian);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Hunt), ClassTitle.Dawnsentinel);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Involution), ClassTitle.Hierophant);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Shadow), ClassTitle.Aethermend);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Soul), ClassTitle.Eldritch_Shephard);
+        AllClassList.Add((AspectName.Defiance, AspectName.Grace, AspectName.Volition), ClassTitle.Paladin);
 
-        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.None), ClassName.Dreadstone);
-        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Involution), ClassName.Battlebow);
-        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Shadow), ClassName.Haunter);
-        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Soul), ClassName.Immortus);
-        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Volition), ClassName.Dreadnaught);
+        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.None), ClassTitle.Dreadstone);
+        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Involution), ClassTitle.Battlebow);
+        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Shadow), ClassTitle.Haunter);
+        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Soul), ClassTitle.Immortus);
+        AllClassList.Add((AspectName.Defiance, AspectName.Hunt, AspectName.Volition), ClassTitle.Dreadnaught);
         
-        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.None), ClassName.Enthraller);
-        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Shadow), ClassName.Darkaegis);
-        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Soul), ClassName.Abyssalich);
-        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Volition), ClassName.Archon);
+        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.None), ClassTitle.Enthraller);
+        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Shadow), ClassTitle.Darkaegis);
+        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Soul), ClassTitle.Abyssalich);
+        AllClassList.Add((AspectName.Defiance, AspectName.Involution, AspectName.Volition), ClassTitle.Archon);
         
-        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.None), ClassName.Blackguard);
-        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.Soul), ClassName.Netherwarden);
-        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.Volition), ClassName.Shadowknight);
+        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.None), ClassTitle.Blackguard);
+        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.Soul), ClassTitle.Netherwarden);
+        AllClassList.Add((AspectName.Defiance, AspectName.Shadow, AspectName.Volition), ClassTitle.Shadowknight);
         
-        AllClassList.Add((AspectName.Defiance, AspectName.Soul, AspectName.None), ClassName.Boneweaver);
-        AllClassList.Add((AspectName.Defiance, AspectName.Soul, AspectName.Volition), ClassName.Soulwrought);
+        AllClassList.Add((AspectName.Defiance, AspectName.Soul, AspectName.None), ClassTitle.Boneweaver);
+        AllClassList.Add((AspectName.Defiance, AspectName.Soul, AspectName.Volition), ClassTitle.Soulwrought);
         
-        AllClassList.Add((AspectName.Defiance, AspectName.Volition, AspectName.None), ClassName.Custodian);
+        AllClassList.Add((AspectName.Defiance, AspectName.Volition, AspectName.None), ClassTitle.Custodian);
         
-        AllClassList.Add((AspectName.Essence, AspectName.None, AspectName.None), ClassName.Thaumaturge);
+        AllClassList.Add((AspectName.Essence, AspectName.None, AspectName.None), ClassTitle.Thaumaturge);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.None), ClassName.Spellsinger);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Glory), ClassName.Hexblade);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Grace), ClassName.Mourningchorus);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Hunt), ClassName.Ebonsong);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Involution), ClassName.Stormcaller);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Shadow), ClassName.Blighter);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Soul), ClassName.Scion);
-        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Volition), ClassName.Dawncaller);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.None), ClassTitle.Spellsinger);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Glory), ClassTitle.Hexblade);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Grace), ClassTitle.Mourningchorus);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Hunt), ClassTitle.Ebonsong);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Involution), ClassTitle.Stormcaller);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Shadow), ClassTitle.Blighter);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Soul), ClassTitle.Scion);
+        AllClassList.Add((AspectName.Essence, AspectName.Esthesis, AspectName.Volition), ClassTitle.Dawncaller);
 
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.None), ClassName.Spellsword);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Grace), ClassName.Witcher);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Hunt), ClassName.Doombringer);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Involution), ClassName.Battlemage);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Shadow), ClassName.Shadowbane);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Soul), ClassName.Harbinger);
-        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Volition), ClassName.Inquisitor);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.None), ClassTitle.Spellsword);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Grace), ClassTitle.Witcher);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Hunt), ClassTitle.Doombringer);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Involution), ClassTitle.Battlemage);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Shadow), ClassTitle.Shadowbane);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Soul), ClassTitle.Harbinger);
+        AllClassList.Add((AspectName.Essence, AspectName.Glory, AspectName.Volition), ClassTitle.Inquisitor);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.None), ClassName.Traumapothicar);
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Hunt), ClassName.Brightbow);
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Involution), ClassName.Poxbane);
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Shadow), ClassName.Nightcloak);
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Soul), ClassName.Eidolon);
-        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Volition), ClassName.Purifier);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.None), ClassTitle.Traumapothicar);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Hunt), ClassTitle.Brightbow);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Involution), ClassTitle.Poxbane);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Shadow), ClassTitle.Nightcloak);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Soul), ClassTitle.Eidolon);
+        AllClassList.Add((AspectName.Essence, AspectName.Grace, AspectName.Volition), ClassTitle.Purifier);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.None), ClassName.Arcanehunter);
-        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Involution), ClassName.Hexranger);
-        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Shadow), ClassName.Nocturl);
-        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Soul), ClassName.Reaper);
-        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Volition), ClassName.Fiendhunter);
+        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.None), ClassTitle.Arcanehunter);
+        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Involution), ClassTitle.Hexranger);
+        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Shadow), ClassTitle.Nocturl);
+        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Soul), ClassTitle.Reaper);
+        AllClassList.Add((AspectName.Essence, AspectName.Hunt, AspectName.Volition), ClassTitle.Fiendhunter);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.None), ClassName.Arcanist);
-        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Shadow), ClassName.Hellweaver);
-        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Soul), ClassName.Athame);
-        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Volition), ClassName.Chaotician);
+        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.None), ClassTitle.Arcanist);
+        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Shadow), ClassTitle.Hellweaver);
+        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Soul), ClassTitle.Athame);
+        AllClassList.Add((AspectName.Essence, AspectName.Involution, AspectName.Volition), ClassTitle.Chaotician);
 
-        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.None), ClassName.Daggerspell);
-        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.Soul), ClassName.Necroetherist);
-        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.Volition), ClassName.Planeshifter);
+        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.None), ClassTitle.Daggerspell);
+        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.Soul), ClassTitle.Necroetherist);
+        AllClassList.Add((AspectName.Essence, AspectName.Shadow, AspectName.Volition), ClassTitle.Planeshifter);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Soul, AspectName.None), ClassName.Phantasm);
-        AllClassList.Add((AspectName.Essence, AspectName.Soul, AspectName.Volition), ClassName.Demonologist);
+        AllClassList.Add((AspectName.Essence, AspectName.Soul, AspectName.None), ClassTitle.Phantasm);
+        AllClassList.Add((AspectName.Essence, AspectName.Soul, AspectName.Volition), ClassTitle.Demonologist);
         
-        AllClassList.Add((AspectName.Essence, AspectName.Volition, AspectName.None), ClassName.Archivist);
+        AllClassList.Add((AspectName.Essence, AspectName.Volition, AspectName.None), ClassTitle.Archivist);
         
-        AllClassList.Add((AspectName.Esthesis, AspectName.None, AspectName.None), ClassName.Euphonic);
+        AllClassList.Add((AspectName.Esthesis, AspectName.None, AspectName.None), ClassTitle.Euphonic);
         
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.None), ClassName.Duelist);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Grace), ClassName.Sorrowsong);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Hunt), ClassName.Worldwalker);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Involution), ClassName.Vulgarist);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Shadow), ClassName.Edgewalker);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Soul), ClassName.Bloodskald);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Volition), ClassName.Bladedancer);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.None), ClassTitle.Duelist);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Grace), ClassTitle.Sorrowsong);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Hunt), ClassTitle.Worldwalker);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Involution), ClassTitle.Vulgarist);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Shadow), ClassTitle.Edgewalker);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Soul), ClassTitle.Bloodskald);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Glory, AspectName.Volition), ClassTitle.Bladedancer);
         
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.None), ClassName.Epiphanist);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Hunt), ClassName.Herald);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Involution), ClassName.Oracle);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Shadow), ClassName.Shadowcantor);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Soul), ClassName.Soulsong);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Volition), ClassName.Seraphim);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.None), ClassTitle.Epiphanist);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Hunt), ClassTitle.Herald);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Involution), ClassTitle.Oracle);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Shadow), ClassTitle.Shadowcantor);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Soul), ClassTitle.Soulsong);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Grace, AspectName.Volition), ClassTitle.Seraphim);
 
-        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.None), ClassName.Wanderer);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Involution), ClassName.Bowdancer);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Shadow), ClassName.Darkstring);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Soul), ClassName.Gravesinger);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Volition), ClassName.Gaian);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.None), ClassTitle.Wanderer);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Involution), ClassTitle.Bowdancer);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Shadow), ClassTitle.Darkstring);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Soul), ClassTitle.Gravesinger);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Hunt, AspectName.Volition), ClassTitle.Gaian);
 
-        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.None), ClassName.Howler);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Shadow), ClassName.Siren);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Soul), ClassName.Necroharmonist);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Volition), ClassName.Dreambreaker);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.None), ClassTitle.Howler);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Shadow), ClassTitle.Siren);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Soul), ClassTitle.Necroharmonist);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Involution, AspectName.Volition), ClassTitle.Dreambreaker);
 
-        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.None), ClassName.Gypsy);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.Soul), ClassName.Requiem);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.Volition), ClassName.Etherweaver);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.None), ClassTitle.Gypsy);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.Soul), ClassTitle.Requiem);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Shadow, AspectName.Volition), ClassTitle.Etherweaver);
 
-        AllClassList.Add((AspectName.Esthesis, AspectName.Soul, AspectName.None), ClassName.Soulsinger);
-        AllClassList.Add((AspectName.Esthesis, AspectName.Soul, AspectName.Volition), ClassName.Lamentor);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Soul, AspectName.None), ClassTitle.Soulsinger);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Soul, AspectName.Volition), ClassTitle.Lamentor);
 
-        AllClassList.Add((AspectName.Esthesis, AspectName.Volition, AspectName.None), ClassName.Soothsayer);
+        AllClassList.Add((AspectName.Esthesis, AspectName.Volition, AspectName.None), ClassTitle.Soothsayer);
 
-        AllClassList.Add((AspectName.Glory, AspectName.None, AspectName.None), ClassName.Soldier);
+        AllClassList.Add((AspectName.Glory, AspectName.None, AspectName.None), ClassTitle.Soldier);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.None), ClassName.Cleric);
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Hunt), ClassName.Lightstrider);
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Involution), ClassName.Confessor);
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Shadow), ClassName.Twilightkeeper);
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Soul), ClassName.Defiler);
-        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Volition), ClassName.Warpriest);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.None), ClassTitle.Cleric);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Hunt), ClassTitle.Lightstrider);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Involution), ClassTitle.Confessor);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Shadow), ClassTitle.Twilightkeeper);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Soul), ClassTitle.Defiler);
+        AllClassList.Add((AspectName.Glory, AspectName.Grace, AspectName.Volition), ClassTitle.Warpriest);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.None), ClassName.Ranger);
-        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Involution), ClassName.Doomlord);
-        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Shadow), ClassName.Darkrunner);
-        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Soul), ClassName.Bloodarrow);
-        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Volition), ClassName.Outrider);
+        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.None), ClassTitle.Ranger);
+        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Involution), ClassTitle.Doomlord);
+        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Shadow), ClassTitle.Darkrunner);
+        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Soul), ClassTitle.Bloodarrow);
+        AllClassList.Add((AspectName.Glory, AspectName.Hunt, AspectName.Volition), ClassTitle.Outrider);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.None), ClassName.Dreadblade);
-        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Shadow), ClassName.Executioner);
-        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Soul), ClassName.Skulltaker);
-        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Volition), ClassName.Abolisher);
+        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.None), ClassTitle.Dreadblade);
+        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Shadow), ClassTitle.Executioner);
+        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Soul), ClassTitle.Skulltaker);
+        AllClassList.Add((AspectName.Glory, AspectName.Involution, AspectName.Volition), ClassTitle.Abolisher);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.None), ClassName.Jacknife);
-        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.Soul), ClassName.Nightbearer);
-        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.Volition), ClassName.Dervish);
+        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.None), ClassTitle.Jacknife);
+        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.Soul), ClassTitle.Nightbearer);
+        AllClassList.Add((AspectName.Glory, AspectName.Shadow, AspectName.Volition), ClassTitle.Dervish);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Soul, AspectName.None), ClassName.Bloodthrall);
-        AllClassList.Add((AspectName.Glory, AspectName.Soul, AspectName.Volition), ClassName.Bloodreaver);
+        AllClassList.Add((AspectName.Glory, AspectName.Soul, AspectName.None), ClassTitle.Bloodthrall);
+        AllClassList.Add((AspectName.Glory, AspectName.Soul, AspectName.Volition), ClassTitle.Bloodreaver);
 
-        AllClassList.Add((AspectName.Glory, AspectName.Volition, AspectName.None), ClassName.Feral);
+        AllClassList.Add((AspectName.Glory, AspectName.Volition, AspectName.None), ClassTitle.Feral);
 
-        AllClassList.Add((AspectName.Grace, AspectName.None, AspectName.None), ClassName.Caretaker);
+        AllClassList.Add((AspectName.Grace, AspectName.None, AspectName.None), ClassTitle.Caretaker);
 
-        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.None), ClassName.Naturalist);
-        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Involution), ClassName.Primeval);
-        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Shadow), ClassName.Penance);
-        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Soul), ClassName.Wraithranger);
-        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Volition), ClassName.Druid);
+        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.None), ClassTitle.Naturalist);
+        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Involution), ClassTitle.Primeval);
+        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Shadow), ClassTitle.Penance);
+        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Soul), ClassTitle.Wraithranger);
+        AllClassList.Add((AspectName.Grace, AspectName.Hunt, AspectName.Volition), ClassTitle.Druid);
 
-        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.None), ClassName.Chaplain);
-        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Shadow), ClassName.Mesmer);
-        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Soul), ClassName.Cadaveric);
-        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Volition), ClassName.Auspician);
+        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.None), ClassTitle.Chaplain);
+        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Shadow), ClassTitle.Mesmer);
+        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Soul), ClassTitle.Cadaveric);
+        AllClassList.Add((AspectName.Grace, AspectName.Involution, AspectName.Volition), ClassTitle.Auspician);
 
-        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.None), ClassName.Shadowcure);
-        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.Soul), ClassName.Revenant);
-        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.Volition), ClassName.Nightingale);
+        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.None), ClassTitle.Shadowcure);
+        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.Soul), ClassTitle.Revenant);
+        AllClassList.Add((AspectName.Grace, AspectName.Shadow, AspectName.Volition), ClassTitle.Nightingale);
 
-        AllClassList.Add((AspectName.Grace, AspectName.Soul, AspectName.None), ClassName.Netheraid);
-        AllClassList.Add((AspectName.Grace, AspectName.Soul, AspectName.Volition), ClassName.Mortisculpt);
+        AllClassList.Add((AspectName.Grace, AspectName.Soul, AspectName.None), ClassTitle.Netheraid);
+        AllClassList.Add((AspectName.Grace, AspectName.Soul, AspectName.Volition), ClassTitle.Mortisculpt);
 
-        AllClassList.Add((AspectName.Grace, AspectName.Volition, AspectName.None), ClassName.Alchemist);
+        AllClassList.Add((AspectName.Grace, AspectName.Volition, AspectName.None), ClassTitle.Alchemist);
 
-        AllClassList.Add((AspectName.Hunt, AspectName.None, AspectName.None), ClassName.Sharpshot);
+        AllClassList.Add((AspectName.Hunt, AspectName.None, AspectName.None), ClassTitle.Sharpshot);
 
-        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.None), ClassName.Farslayer);
-        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Shadow), ClassName.Trickster);
-        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Soul), ClassName.Deathgrim);
-        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Volition), ClassName.Dreadhunter);
+        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.None), ClassTitle.Farslayer);
+        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Shadow), ClassTitle.Trickster);
+        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Soul), ClassTitle.Deathgrim);
+        AllClassList.Add((AspectName.Hunt, AspectName.Involution, AspectName.Volition), ClassTitle.Dreadhunter);
         
-        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.None), ClassName.Shadestrider);
-        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.Soul), ClassName.Bonestalker);
-        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.Volition), ClassName.Infiltrator);
+        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.None), ClassTitle.Shadestrider);
+        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.Soul), ClassTitle.Bonestalker);
+        AllClassList.Add((AspectName.Hunt, AspectName.Shadow, AspectName.Volition), ClassTitle.Infiltrator);
         
-        AllClassList.Add((AspectName.Hunt, AspectName.Soul, AspectName.None), ClassName.Soulbow);
-        AllClassList.Add((AspectName.Hunt, AspectName.Soul, AspectName.Volition), ClassName.Harvester);
+        AllClassList.Add((AspectName.Hunt, AspectName.Soul, AspectName.None), ClassTitle.Soulbow);
+        AllClassList.Add((AspectName.Hunt, AspectName.Soul, AspectName.Volition), ClassTitle.Harvester);
         
-        AllClassList.Add((AspectName.Hunt, AspectName.Volition, AspectName.None), ClassName.Astralranger);
+        AllClassList.Add((AspectName.Hunt, AspectName.Volition, AspectName.None), ClassTitle.Astralranger);
         
-        AllClassList.Add((AspectName.Involution, AspectName.None, AspectName.None), ClassName.Enchantrix);
+        AllClassList.Add((AspectName.Involution, AspectName.None, AspectName.None), ClassTitle.Enchantrix);
         
-        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.None), ClassName.Nightwitch);
-        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.Soul), ClassName.Phantombinder);
-        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.Volition), ClassName.Enigmatist);
+        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.None), ClassTitle.Nightwitch);
+        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.Soul), ClassTitle.Phantombinder);
+        AllClassList.Add((AspectName.Involution, AspectName.Shadow, AspectName.Volition), ClassTitle.Enigmatist);
         
-        AllClassList.Add((AspectName.Involution, AspectName.Soul, AspectName.None), ClassName.Shaman);
-        AllClassList.Add((AspectName.Involution, AspectName.Soul, AspectName.Volition), ClassName.Animist);
+        AllClassList.Add((AspectName.Involution, AspectName.Soul, AspectName.None), ClassTitle.Shaman);
+        AllClassList.Add((AspectName.Involution, AspectName.Soul, AspectName.Volition), ClassTitle.Animist);
         
-        AllClassList.Add((AspectName.Involution, AspectName.Volition, AspectName.None), ClassName.Ephemeralist);
+        AllClassList.Add((AspectName.Involution, AspectName.Volition, AspectName.None), ClassTitle.Ephemeralist);
         
-        AllClassList.Add((AspectName.Shadow, AspectName.None, AspectName.None), ClassName.Assassin);
+        AllClassList.Add((AspectName.Shadow, AspectName.None, AspectName.None), ClassTitle.Assassin);
         
-        AllClassList.Add((AspectName.Shadow, AspectName.Soul, AspectName.None), ClassName.Cabalist);
-        AllClassList.Add((AspectName.Shadow, AspectName.Soul, AspectName.Volition), ClassName.Fleshshaper);
+        AllClassList.Add((AspectName.Shadow, AspectName.Soul, AspectName.None), ClassTitle.Cabalist);
+        AllClassList.Add((AspectName.Shadow, AspectName.Soul, AspectName.Volition), ClassTitle.Fleshshaper);
         
-        AllClassList.Add((AspectName.Shadow, AspectName.Volition, AspectName.None), ClassName.Cursedrinker);
+        AllClassList.Add((AspectName.Shadow, AspectName.Volition, AspectName.None), ClassTitle.Cursedrinker);
         
-        AllClassList.Add((AspectName.Soul, AspectName.None, AspectName.None), ClassName.Necroscribe);
+        AllClassList.Add((AspectName.Soul, AspectName.None, AspectName.None), ClassTitle.Necroscribe);
         
-        AllClassList.Add((AspectName.Soul, AspectName.Volition, AspectName.None), ClassName.Evoker);
+        AllClassList.Add((AspectName.Soul, AspectName.Volition, AspectName.None), ClassTitle.Evoker);
         
-        AllClassList.Add((AspectName.Volition, AspectName.None, AspectName.None), ClassName.Philosopher);
+        AllClassList.Add((AspectName.Volition, AspectName.None, AspectName.None), ClassTitle.Philosopher);
     }
 
-    public static ClassName GetCharacterTitle(List<AspectName> aspectList)
+    public static ClassTitle GetCharacterTitle(List<AspectName> aspectList)
     {
         if (AllClassList.ContainsKey((aspectList[0], aspectList[1], aspectList[2])))
         {
             return AllClassList[(aspectList[0], aspectList[1], aspectList[2])];
         }
 
-        return ClassName.None;
+        return ClassTitle.None;
     }
 }

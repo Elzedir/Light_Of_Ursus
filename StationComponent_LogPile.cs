@@ -13,6 +13,7 @@ public class StationComponent_LogPile : StationComponent
     public override RecipeName DefaultProduct => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
     public override List<RecipeName> AllowedRecipes => new List<RecipeName>();
     public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
+    public override List<uint> DesiredStoredItemIDs => new List<uint> { 1100, 2300 };
 
     public override uint OperatingAreaCount => 4;
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -53,14 +54,12 @@ public class StationComponent_LogPile : StationComponent
 
     public override void InitialiseStartingInventory() { }
 
-    public override List<Item> GetInventoryItemsToHaul() { return new List<Item>(); }
-
     public override void InitialiseAllowedEmployeePositions()
     {
         AllowedEmployeePositions = new() { EmployeePosition.None };
     }
 
-    public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
     {
         return inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
         .Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
@@ -83,9 +82,9 @@ public class StationComponent_LogPile : StationComponent
 
             if (actorCanHaul())
             {
-                // Dump resources first before hauling more
+                // Deliver resources first before hauling more
 
-                if (_canDumpItems(actor)) return;
+                if (_canDeliverItems(actor)) return;
 
                 if (_canFetchItems(actor)) return;
 
@@ -129,7 +128,7 @@ public class StationComponent_LogPile : StationComponent
         }
     }
 
-    protected bool _canDumpItems(ActorComponent actor)
+    protected bool _canDeliverItems(ActorComponent actor)
     {
         var stationsToHaulTo = _getAllStationsToHaulTo(actor);
 
@@ -137,20 +136,20 @@ public class StationComponent_LogPile : StationComponent
 
         foreach (var stationToHaulTo in stationsToHaulTo)
         {
-            var itemsToDump = actor.ActorData.InventoryAndEquipment.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
+            var itemsToDeliver = actor.ActorData.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
 
-            Debug.Log($"Items to dump: {itemsToDump.Count}");
+            Debug.Log($"Items to deliver: {itemsToDeliver.Count}");
 
-            if (itemsToDump.Count <= 0) continue;
+            if (itemsToDeliver.Count <= 0) continue;
 
-            StartCoroutine(_dumpItems(actor, stationToHaulTo, itemsToDump));
+            StartCoroutine(_deliverItems(actor, stationToHaulTo, itemsToDeliver));
             return true;
         }
  
         return false;
     }
 
-    IEnumerator _dumpItems(ActorComponent actor, StationComponent station, List<Item> itemsToDump)
+    IEnumerator _deliverItems(ActorComponent actor, StationComponent station, List<Item> itemsToDeliver)
     {
         bool success = false;
 
@@ -175,7 +174,7 @@ public class StationComponent_LogPile : StationComponent
         {
             yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
 
-            if (_dump(actor, station, itemsToDump)) success = true;
+            if (_deliver(actor, station, itemsToDeliver)) success = true;
 
             actor.ActorHaulCoroutine = null;
         }
@@ -186,9 +185,9 @@ public class StationComponent_LogPile : StationComponent
         }
     }
 
-    bool _dump(ActorComponent actor, StationComponent station, List<Item> orderItems)
+    bool _deliver(ActorComponent actor, StationComponent station, List<Item> orderItems)
     {
-        if (!actor.ActorData.InventoryAndEquipment.InventoryData.RemoveFromInventory(orderItems))
+        if (!actor.ActorData.InventoryData.RemoveFromInventory(orderItems))
         {
             Debug.Log("Failed to remove items from Actor inventory.");
             return false;
@@ -198,7 +197,7 @@ public class StationComponent_LogPile : StationComponent
         {
             Debug.Log("Failed to add items to Station inventory.");
 
-            if (actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(orderItems))
+            if (actor.ActorData.InventoryData.AddToInventory(orderItems))
             {
                 Debug.Log("Failed to add items back to Actor inventory.");
                 return false;
@@ -212,13 +211,27 @@ public class StationComponent_LogPile : StationComponent
 
     bool _canFetchItems(ActorComponent actor)
     {
+        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
+
+        if (jobsite == null)
+        {
+            Debug.Log($"Jobsite: {StationData.JobsiteID} is null.");
+            return false;
+        }
+
+        var priorityQueue = jobsite.PriorityQueue;
+
+        if (priorityQueue.Peek() == null)
+        {
+            Debug.LogWarning($"PriorityQueue is empty.");
+            return false;
+        }
+
         var allStationsToHaulFrom = _getAllStationsToHaulFrom()
         .Where(s => s.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs).Count > 0)
         .ToList();
 
-        allStationsToHaulFrom = _prioritiseStations(allStationsToHaulFrom, AllowedStoredItemIDs);
-
-        if (allStationsToHaulFrom.Count < 0)
+        if (allStationsToHaulFrom.Count <= 0)
         {
             Debug.Log($"No stations to haul from.");
 
@@ -278,7 +291,7 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
-        if (!actor.ActorData.InventoryAndEquipment.InventoryData.AddToInventory(orderItems))
+        if (!actor.ActorData.InventoryData.AddToInventory(orderItems))
         {
             Debug.Log("Failed to add items to Actor inventory.");
 

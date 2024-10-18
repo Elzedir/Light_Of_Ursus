@@ -477,14 +477,14 @@ public class JobsiteData
 
                     var newEmployeeID = _findEmployeeFromJobsite(station.CoreEmployeePosition);
 
-                    if (newEmployeeID == -1)
+                    if (newEmployeeID == 0)
                     {
                         Debug.Log($"Couldn't find employee from Jobsite for position: {station.CoreEmployeePosition}");
                     }
 
                     newEmployeeID = _findEmployeeFromCity(station.CoreEmployeePosition);
 
-                    if (newEmployeeID == -1)
+                    if (newEmployeeID == 0)
                     {
                         Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
                         newEmployeeID = _generateNewEmployee(station.CoreEmployeePosition);

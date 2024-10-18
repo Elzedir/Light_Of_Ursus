@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class Manager_Date_And_Time : MonoBehaviour
+public class Manager_DateAndTime : MonoBehaviour
 {
     static TextMeshProUGUI _dateText;
     static TextMeshProUGUI _timeText;
@@ -37,7 +37,7 @@ public class Manager_Date_And_Time : MonoBehaviour
 
     public static void SetTimeScale(float timeScale)
     {
-        if (timeScale < 0) { Debug.LogError($"Timescale: {timeScale} cannot be less than 0.");  return; }
+        if (timeScale < 0) { Debug.LogError($"Timescale: {timeScale} cannot be less than 0."); return; }
 
         _currentTimeScale = timeScale;
         UnityEngine.Time.timeScale = _currentTimeScale;
@@ -118,7 +118,7 @@ public class CurrentDate
     {
         CurrentTotalDays += days;
 
-        Manager_Date_And_Time.SetCurrentDate(GetCurrentDateAsString());
+        Manager_DateAndTime.SetCurrentDate(GetCurrentDateAsString());
 
         if (days != 0) NewDay?.Invoke();
     }
@@ -150,7 +150,7 @@ public class Time
     {
         CurrentTime.CurrentMinute = minute;
         CurrentTime.CurrentHour = hour;
-        Manager_TickRate.RegisterTickable(new CurrentTime());
+        Manager_TickRate.RegisterTickable(new CurrentTime().OnTick, TickRate.OneSecond);
     }
 }
 
@@ -179,7 +179,7 @@ public class CurrentTime : ITickable
                 }
             }
 
-            Manager_Date_And_Time.SetCurrentTime($"{CurrentHour:00}:{CurrentMinute:00}");
+            Manager_DateAndTime.SetCurrentTime($"{CurrentHour:00}:{CurrentMinute:00}");
 
             _halfTime = false;
         }
@@ -187,10 +187,5 @@ public class CurrentTime : ITickable
         {
             _halfTime = true;
         }
-    }
-
-    public TickRate GetTickRate()
-    {
-        return TickRate.OneSecond;
     }
 }

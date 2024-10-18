@@ -12,6 +12,7 @@ public class StationComponent_Tree : StationComponent
     public override RecipeName DefaultProduct => RecipeName.Log;
     public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Log };
     public override List<uint> AllowedStoredItemIDs => new List<uint>();
+    public override List<uint> DesiredStoredItemIDs => new List<uint>();
     public override uint OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -62,11 +63,6 @@ public class StationComponent_Tree : StationComponent
         }
     }
 
-    public override List<Item> GetInventoryItemsToHaul()
-    {
-        return StationData.InventoryData.AllInventoryItems.Where(i => i.ItemID == 1100).ToList();
-    }
-
     public override void CraftItem(RecipeName recipeName, ActorComponent actor)
     {
         if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
@@ -98,7 +94,7 @@ public class StationComponent_Tree : StationComponent
         yield return null;
     }
 
-    public override List<Item> GetItemsToDropOff(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
     {
         Debug.LogError("No GetItemsToDropOff method implemented for Tree.");
         return new List<Item>();
