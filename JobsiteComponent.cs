@@ -134,10 +134,10 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
         foreach (var station in AllStationsInJobsite)
         {
-            List<double> priorityValues = new();
+            List<float> priorityValues = new();
             var itemsToHaul = station.GetInventoryItemsToHaul();
 
-            var allItemPriorities = 0.0;
+            var allItemPriorities = 0f;
 
             foreach (var item in itemsToHaul)
             {
@@ -195,12 +195,12 @@ public class Priority
 {
     public uint PriorityID;
 
-    public List<double> AllPriorities;
+    public List<float> AllPriorities;
 
-    public Priority(uint priorityID, List<double> priorities)
+    public Priority(uint priorityID, List<float> priorities)
     {
         PriorityID = priorityID;
-        AllPriorities = new List<double>(priorities);
+        AllPriorities = new List<float>(priorities);
     }
 
     public int CompareTo(Priority that)
@@ -283,17 +283,32 @@ public class PriorityQueue
         }
     }
 
-    public void Enqueue(uint priorityID, List<double> priorities)
+    public bool Enqueue(uint priorityID, List<float> priorities)
     {
+        if (_priorityQueue.TryGetValue(priorityID, out _))
+        {
+            Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
+
+            if (!Update(priorityID, priorities))
+            {
+                Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
+                return false;
+            }
+
+            return true;
+        }
+
         Priority priority = new Priority(priorityID, priorities);
         _currentPosition++;
         _priorityQueue[priorityID] = _currentPosition;
         if (_currentPosition == _allPriorities.Length) Array.Resize<Priority>(ref _allPriorities, _allPriorities.Length * 2);
         _allPriorities[_currentPosition] = priority;
         _moveUp(_currentPosition);
+
+        return true;
     }
 
-    public bool Update(uint priorityID, List<double> priorities)
+    public bool Update(uint priorityID, List<float> priorities)
     {
         if (priorities.Count == 0)
         {
@@ -310,7 +325,13 @@ public class PriorityQueue
 
         if (!_priorityQueue.TryGetValue(priorityID, out index))
         {
-            return false;
+            if (!Enqueue(priorityID, priorities))
+            {
+                Debug.LogError($"PriorityID: {priorityID} unable to be enqueued.");
+                return false;
+            }
+
+            return true;
         }
 
         if (index == 0)
@@ -408,22 +429,5 @@ public class PriorityQueue
         _priorityQueue[_allPriorities[indexB].PriorityID] = indexA;
         _allPriorities[indexB] = tempPriorityA;
         _priorityQueue[tempPriorityA.PriorityID] = indexB;
-    }
-}
-
-public class PriorityGenerator
-{
-    Create a priority generator that accounts for items and statuses
-
-    public static List<double> GeneratePriorityList(int count, double min, double max)
-    {
-        List<double> priorities = new List<double>();
-
-        for (int i = 0; i < count; i++)
-        {
-            priorities.Add(UnityEngine.Random.Range((float)min, (float)max));
-        }
-
-        return priorities;
     }
 }

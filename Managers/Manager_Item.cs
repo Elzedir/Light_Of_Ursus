@@ -138,6 +138,11 @@ public class Item
         ItemAmount = item.ItemAmount;
         MaxStackSize = item.MaxStackSize;
     }
+
+    public static uint GetItemListCount_AllItems(List<Item> items) 
+    => (uint)items.Sum(item => item.ItemAmount);
+    public static uint GetItemListCount_SpecificItem(List<Item> items, uint itemID) 
+    => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
 }
 
 public class Item_Master

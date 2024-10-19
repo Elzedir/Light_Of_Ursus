@@ -6,6 +6,15 @@ public enum StateName
 {
     Alive,
 
+    CanBeDepressed,
+    IsDepressed,
+
+    CanDrown,
+    IsDrowning,
+
+    CanSuffocate,
+    IsSuffocating,
+
     CanReanimate,
     IsReanimated,
     
@@ -37,8 +46,35 @@ public enum StateName
 public enum ConditionName
 {
     None,
-    Depressed,
+
+    // Health
     Inspired,
+    
+    // Movement
+
+    // Social
+    Drunk,
+    High,
+    
+    // Combat
+    Bleeding,
+    Drowning,
+    Poisoned,
+    Stunned,
+    Paralysed,
+    Blinded,
+    Deafened,
+    Silenced,
+    Cursed,
+    Charmed,
+    Enraged,
+    Frightened,
+    Panicked,
+    Confused,
+    Dazed,
+    Distracted,
+    Dominated,
+    Burning,
 }
 
 public class Manager_StateAndCondition
@@ -119,16 +155,15 @@ public class Condition // Temprary and tickable thing
 }
 
 [Serializable]
-public class Actor_StatesAndConditions
+public class Actor_StatesAndConditions : DataSubClass
 {
-    public uint ActorID;
-    public Actor_StatesAndConditions(uint actorID) => ActorID = actorID;
+    public Actor_StatesAndConditions(uint actorID) : base(actorID) 
+    { 
 
-    ActorComponent _actor;
-    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+    }
 
-    PriorityQueue _actorPriorityQueue;
-    public PriorityQueue ActorPriorityQueue { get => _actorPriorityQueue ??=Actor.TaskComponent.PriorityQueue; }
+    PriorityComponent _actorPriorityComponent;
+    public PriorityComponent ActorPriorityComponent { get => _actorPriorityComponent ??= Actor.PriorityComponent; }
 
     public Dictionary<StateName, bool> CurrentStates = new();
     public Dictionary<ConditionName, float> CurrentConditions = new();
@@ -164,7 +199,7 @@ public class Actor_StatesAndConditions
 
         CurrentConditions.Remove(conditionName);
 
-        Modify priority
+        _priorityChangeCheck(conditionName);
     }
 
     public void Tick()
@@ -179,5 +214,54 @@ public class Actor_StatesAndConditions
 
             CurrentConditions[condition.Key] -= 1;
         }
+    }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        calculate whether a priority change is needed
+    }
+
+    protected void _priorityChangeCheck(ConditionName conditionName)
+    {
+        PriorityImportance priorityImportance;
+
+        switch (conditionName)
+        {
+            case ConditionName.Drowning:
+                priorityImportance = PriorityImportance.Critical;
+                break;
+            case ConditionName.Burning:
+            case ConditionName.Bleeding:
+                priorityImportance = PriorityImportance.High;
+                break;
+            case ConditionName.Panicked:
+                priorityImportance = PriorityImportance.Medium;
+                break;
+            default:
+                priorityImportance = PriorityImportance.Low;
+                break;
+        }
+
+        var priorities = PriorityGenerator_Condition.GeneratePriority(conditionName);
+
+        switch (priorityImportance)
+        {
+            case PriorityImportance.Critical:
+                ActorPriorityComponent.UpdateAllPriorities();
+                break;
+            case PriorityImportance.High:
+                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.High);
+                break;
+            case PriorityImportance.Medium:
+                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.Medium);
+                break;
+            case PriorityImportance.Low:
+                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.Low);
+                break;
+            default:
+                Debug.LogError($"PriorityImportance: {priorityImportance} not found.");
+                break;
+        } 
+        
     }
 }

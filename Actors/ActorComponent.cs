@@ -21,7 +21,7 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
     public EquipmentComponent EquipmentComponent;
     public PersonalityComponent PersonalityComponent;
     public GroundedCheckComponent GroundCheckComponent;
-    public TaskComponent TaskComponent;
+    public PriorityComponent PriorityComponent;
     public Coroutine ActorHaulCoroutine;
 
     void Awake()
@@ -56,7 +56,7 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
 
-        TaskComponent = new TaskComponent(_actorID);
+        PriorityComponent = new PriorityComponent(_actorID);
         PersonalityComponent = new PersonalityComponent(_actorID);
         PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
@@ -105,21 +105,6 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
     {
         return ActorData.InventoryData;
     }
-}
-
-public enum ActionType
-{
-    Basic,
-    Survival,
-    Social,
-    Maintenance,
-    Production,
-    Intellectual,
-    Skill,
-    Logistics,
-    Management,
-    Communication,
-    Investigation,
 }
 
 public enum ActionName
@@ -266,96 +251,142 @@ public enum ActionName
     Learn,
 }
 
-public class TaskComponent
+public enum PriorityImportance
 {
-    public uint ActorID;
-    public TaskComponent(uint actorID) => ActorID = actorID;
+    Low,
+    Medium,
+    High,
+    Critical,
+}
 
-    ActorComponent _actor;
-    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+public class PriorityComponent : DataSubClass
+{
+    public PriorityComponent(uint actorID) : base(actorID) { }
 
-    public PriorityQueue PriorityQueue;
-    public List<Priority> CachedPriorityQueue;
+    public PriorityQueue ActionQueue;
+    public Dictionary<PriorityImportance, List<Priority>> CachedActionQueue;
     bool _syncingCachedQueue = false;
     float _timeDeferment = 1f;
 
-    void _initialiseTasks()
+    public void OnFullIdentificationChange()
     {
-        PriorityQueue = new PriorityQueue(100);
+        
     }
 
-    public void SyncCachedPriorityQueue()
+    void _initialiseActions()
     {
-        foreach (var priority in CachedPriorityQueue)
+        ActionQueue = new PriorityQueue(100);
+    }
+
+    public void UpdateAllPriorities()
+    {
+        SyncCachedActionQueueHigh();
+
+        foreach(var priority in ActionQueue.AllPriorities)
         {
-            if (!PriorityQueue.Update(priority.PriorityID, priority.AllPriorities))
+
+
+            if (!ActionQueue.Update(priority.PriorityID, priority.AllPriorities))
             {
-                PriorityQueue.Enqueue(priority.PriorityID, priority.AllPriorities);
+                
+            }
+        }
+    }
+
+    public void SyncCachedActionQueueHigh(bool syncing = false)
+    {
+        foreach (var priority in CachedActionQueue[PriorityImportance.Low])
+        {
+            if (!ActionQueue.Update(priority.PriorityID, priority.AllPriorities))
+            {
+                if (!ActionQueue.Enqueue(priority.PriorityID, priority.AllPriorities))
+                {
+                    Debug.LogError($"PriorityID: {priority.PriorityID} unable to be added to PriorityQueue.");
+                }
             }
         }
 
-        CachedPriorityQueue.Clear();
-        _syncingCachedQueue = false;
+        CachedActionQueue[PriorityImportance.Low].Clear();
+        if (syncing) _syncingCachedQueue = false;
     }
-    void SyncCachedPriorityQueue_DeferredUpdate()
+
+    void _syncCachedActionQueueHigh_DeferredUpdate()
     {
         _syncingCachedQueue = true;
-        Manager_DeferredActions.AddDeferredAction(SyncCachedPriorityQueue, _timeDeferment);
+        Manager_DeferredActions.AddDeferredAction(() => SyncCachedActionQueueHigh(true), _timeDeferment);
     }
 
-    public void AddToCachedPriorityQueue(Priority priority)
+    public void AddToCachedActionQueue(Priority priority, PriorityImportance priorityImportance)
     {
-        CachedPriorityQueue.Add(priority);
+        if (CachedActionQueue == null) CachedActionQueue = new Dictionary<PriorityImportance, List<Priority>>();
 
-        if (!_syncingCachedQueue) SyncCachedPriorityQueue_DeferredUpdate();
+        if (!CachedActionQueue.ContainsKey(priorityImportance)) CachedActionQueue.Add(priorityImportance, new List<Priority>());
+
+        CachedActionQueue[priorityImportance].Add(priority);
+
+        if (!_syncingCachedQueue) _syncCachedActionQueueHigh_DeferredUpdate();
     }
 
-    public void AddTask(TaskName taskName, List<double> priorities)
+    public void AddAction(ActionName actionName, List<float> priorities)
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        PriorityQueue.Enqueue((uint)taskName, priorities);
+        if (!ActionQueue.Enqueue((uint)actionName, priorities))
+        {
+            Debug.LogError($"ActionName: {actionName} unable to be added to PriorityQueue.");
+        }
     }
 
-    public void UpdateTask(TaskName taskName, List<double> priorities)
+    public void UpdateAction(ActionName actionName, List<float> priorities)
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        PriorityQueue.Update((uint)taskName, priorities);
+        if (!ActionQueue.Update((uint)actionName, priorities))
+        {
+            Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
+        }
     }
 
-    public void RemoveTask(TaskName taskName)
+    public void RemoveAction(ActionName actionName)
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        PriorityQueue.Remove((uint)taskName);
+        if (!ActionQueue.Remove((uint)actionName))
+        {
+            Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
+        }
     }
 
-    public Priority CheckNextTask()
+    public Priority CheckNextAction()
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        return PriorityQueue.Peek();
+        return ActionQueue.Peek();
     }
 
-    public Priority CheckSpecificTask(TaskName taskName)
+    public Priority CheckSpecificAction(ActionName actionName)
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        return PriorityQueue.Peek((uint)taskName);
+        return ActionQueue.Peek((uint)actionName);
     }
 
-    public Priority PerformNextTask()
+    public Priority PerformNextAction()
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        return PriorityQueue.Dequeue();
+        return ActionQueue.Dequeue();
     }
 
-    public Priority PerformSpecificTask(TaskName taskName)
+    public Priority PerformSpecificAction(ActionName actionName)
     {
-        if (PriorityQueue == null) _initialiseTasks();
+        if (ActionQueue == null) _initialiseActions();
 
-        return PriorityQueue.Dequeue((uint)taskName);
+        return ActionQueue.Dequeue((uint)actionName);
+    }
+
+    protected override void _priorityChangeCheck()
+    {
+        
     }
 }

@@ -34,28 +34,28 @@ public class Manager_Job : MonoBehaviour
             new List<Task>
             {
                 new Task(
-                    taskName: TaskName.Chop_Trees,
+                    taskName: JobTaskName.Chop_Trees,
                     taskDescription: "Chop trees",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
                     taskAction: null
                     ),
                 new Task(
-                    taskName: TaskName.Process_Trees,
+                    taskName: JobTaskName.Process_Trees,
                     taskDescription: "Process logs into wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
                     taskAction: null
                     ),
                 new Task(
-                    taskName: TaskName.Drop_Off_Wood,
+                    taskName: JobTaskName.Drop_Off_Wood,
                     taskDescription: "Drop wood in woodpile",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
                     taskAction: null
                     ),
                 new Task(
-                    taskName: TaskName.Sell_Wood,
+                    taskName: JobTaskName.Sell_Wood,
                     taskDescription: "Sell wood",
                     jobName: JobName.Lumberjack,
                     taskAnimationClips: null,
@@ -79,7 +79,7 @@ public class Manager_Job : MonoBehaviour
             new List<Task>
             {
                 new Task(
-                    taskName: TaskName.Beat_Iron,
+                    taskName: JobTaskName.Beat_Iron,
                     taskDescription: "Beat iron",
                     jobName: JobName.Smith,
                     taskAnimationClips: null,
@@ -166,7 +166,7 @@ public class Job_Drawer : PropertyDrawer
     }
 }
 
-public enum TaskName 
+public enum JobTaskName
 {
     Beat_Iron,
 
@@ -185,7 +185,7 @@ public enum TaskName
 [Serializable]
 public class Task
 {
-    public TaskName TaskName;
+    public JobTaskName TaskName;
     public string TaskDescription;
 
     public JobName JobName;
@@ -194,7 +194,7 @@ public class Task
 
     public Func<ActorComponent, int, IEnumerator> TaskAction;
 
-    public Task(TaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<ActorComponent, int, IEnumerator> taskAction)
+    public Task(JobTaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<ActorComponent, int, IEnumerator> taskAction)
     {
         TaskName = taskName;
         TaskDescription = taskDescription;

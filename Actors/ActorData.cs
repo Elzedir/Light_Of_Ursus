@@ -10,7 +10,7 @@ public class ActorData
 {
     public void UpdateActorData()
     {
-        GameObjectProperties.UpdateActorData();
+        GameObjectProperties.UpdateActorGOProperties();
     }
 
     public uint ActorID;
@@ -41,30 +41,37 @@ public class ActorData
     {
         var actor = Manager_Actor.GetActor(ActorID, true);
 
-        if ( actor != null)
-        {
-            var actorFaction = Manager_Faction.GetFaction(ActorFactionID);
-
-            if (actorFaction == null)
-            {
-                Debug.LogError($"Actor {ActorID} cannot find faction {ActorFactionID}.");
-                return;
-            }
-
-            var factionGO = GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
-
-            if (factionGO == null)
-            {
-                Debug.LogError($"Actor {ActorID} cannot find faction GameObject {actorFaction.FactionID}: {actorFaction.FactionName}.");
-                return;
-            }
-
-            actor.transform.parent.SetParent(factionGO.transform);
-        } 
-        else
+        if (actor == null)
         {
             Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
         }
+        
+        var actorFaction = Manager_Faction.GetFaction(ActorFactionID);
+
+        if (actorFaction == null)
+        {
+            Debug.LogError($"Actor {ActorID} cannot find faction {ActorFactionID}.");
+            return;
+        }
+
+        var factionGO = GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
+
+        if (factionGO == null)
+        {
+            Debug.LogError($"Actor {ActorID} cannot find faction GameObject {actorFaction.FactionID}: {actorFaction.FactionName}.");
+            return;
+        }
+
+        actor.transform.parent.SetParent(factionGO.transform);
+
+        _setDataChangeEvents(actor.PriorityComponent);
+    }
+
+    public event Action OnFullIdentificationChange;
+
+    void _setDataChangeEvents(PriorityComponent priorityComponent)
+    {
+        FullIdentification.OnDataChange = priorityComponent.OnFullIdentificationChange;
     }
 
     // Make an ability to make a deep copy of every class here and every class that needs to be saved.
@@ -124,11 +131,33 @@ public class ActorData_Drawer : PropertyDrawer
     }
 }
 
-[Serializable]
-
-public class FullIdentification
+public abstract class DataSubClass
 {
     public uint ActorID;
+    public DataSubClass(uint actorID) => ActorID = actorID;
+
+    ActorComponent _actor;
+    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+    public Action OnDataChange;
+    protected void _priorityChangeCheck()
+    {
+        if (!_priorityChangeNeeded()) return;
+        OnDataChange?.Invoke();
+    }
+
+    protected abstract bool _priorityChangeNeeded();
+}
+
+[Serializable]
+public class FullIdentification : DataSubClass
+{
+    public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID) : base(actorID)
+    {
+        ActorName = actorName;
+        ActorFactionID = actorFactionID;
+        ActorCityID = actorCityID;
+    }
+
     public ActorName ActorName;
     public uint ActorFactionID;
     public uint ActorCityID;
@@ -137,19 +166,16 @@ public class FullIdentification
     public Family ActorFamily;
     public Background Background;
 
-    public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID)
+    protected override bool _priorityChangeNeeded()
     {
-        ActorID = actorID;
-        ActorName = actorName;
-        ActorFactionID = actorFactionID;
-        ActorCityID = actorCityID;
+        return false;
     }
 }
 
 [Serializable]
-public class Background
+public class Background : DataSubClass
 {
-    public uint ActorID;
+    public Background(uint actorID) : base(actorID) { }
 
     public string Birthplace;
     public Date Birthdate;
@@ -157,18 +183,22 @@ public class Background
     public Dynasty ActorDynasty;
     public string Religion;
 
-    public Background(uint actorID) => ActorID = actorID;
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class GameObjectProperties
+public class GameObjectProperties : DataSubClass
 {
-    public void UpdateActorData()
+    public GameObjectProperties(uint actorID) : base(actorID) { }
+
+    public void UpdateActorGOProperties()
     {
         SetActorTransformProperties();
     }
 
-    public uint ActorID;
     [NonSerialized] Transform _actorTransform;
     public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(ActorID)?.transform; } }
     public void SetActorTransformProperties()
@@ -183,18 +213,18 @@ public class GameObjectProperties
         _setActorRotation(ActorTransform.rotation);
         _setActorScale(ActorTransform.localScale);
     }
+
     public Vector3 LastSavedActorPosition;
     void _setActorPosition(Vector3 actorPosition) => LastSavedActorPosition = actorPosition;
     public Quaternion LastSavedActorRotation;
     void _setActorRotation(Quaternion actorRotation) => LastSavedActorRotation = actorRotation;
     public Vector3 LastSavedActorScale;
     void _setActorScale(Vector3 actorScale) => LastSavedActorScale = actorScale;
+
     public Mesh ActorMesh;
     public void SetActorMesh(Mesh actorMesh) => ActorMesh = actorMesh;
     public Material ActorMaterial;
     public void SetActorMaterial(Material actorMaterial) => ActorMaterial = actorMaterial;
-
-    public GameObjectProperties(uint actorID) => ActorID = actorID;
 
     public void SetGameObjectProperties(Transform actorTransform)
     {
@@ -208,29 +238,40 @@ public class GameObjectProperties
         ActorMesh ??= Resources.GetBuiltinResource<Mesh>("Cube.fbx"); // Later will come from species
         ActorMaterial ??= Resources.Load<Material>("Materials/Material_Red"); // Later will come from species
     }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class WorldStateData
+public class WorldStateData : DataSubClass
 {
-    public uint ActorID;
-    public WorldStateData(uint actorID) => ActorID = actorID;
+    public WorldStateData(uint actorID) : base(actorID) { }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class Relationships
+public class Relationships : DataSubClass
 {
-    public uint ActorID;
-
+    public Relationships(uint actorID) : base(actorID) { }
     public List<Relation> AllRelationships;
 
-    public Relationships(uint actorID) => ActorID = actorID;
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class CareerAndJobs
+public class CareerAndJobs : DataSubClass
 {
-    public uint ActorID;
+    public CareerAndJobs(uint actorID) : base(actorID) { }
 
     public bool JobsActive;
     public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
@@ -247,27 +288,32 @@ public class CareerAndJobs
     public EmployeePosition EmployeePosition;
     public void SetEmployeePosition(EmployeePosition employeePosition) => EmployeePosition = employeePosition;
 
-    public CareerAndJobs(uint actorID) => ActorID = actorID;
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class SpeciesAndPersonality
+public class SpeciesAndPersonality : DataSubClass
 {
-    public uint ActorID;
+    public SpeciesAndPersonality(uint actorID) : base(actorID) { }
 
     public SpeciesName ActorSpecies;
     public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
     public ActorPersonality ActorPersonality;
     public void SetPersonality(ActorPersonality actorPersonality) => ActorPersonality = actorPersonality;
 
-    public SpeciesAndPersonality(uint actorID) => ActorID = actorID;
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class StatsAndAbilities
+public class StatsAndAbilities : DataSubClass
 {
-    public uint ActorID;
-    public StatsAndAbilities(uint actorID) => ActorID = actorID;
+    public StatsAndAbilities(uint actorID) : base(actorID) { }
 
     public Actor_Stats Actor_Stats;
     public void SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
@@ -280,6 +326,13 @@ public class StatsAndAbilities
 
     public Actor_Abilities Actor_Abilities;
     public void SetActorAbilities(Actor_Abilities actor_Abilities) => Actor_Abilities = actor_Abilities;
+
+    public override event Action OnDataChange;
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
@@ -308,25 +361,27 @@ public enum SpeciesName
 }
 
 [Serializable]
-public class Actor_Stats
+public class Actor_Stats : DataSubClass
 {
-    public uint ActorID;
-    public Actor_Stats(uint actorID) => ActorID = actorID;
+    public Actor_Stats(uint actorID) : base(actorID) { }
 
     public ActorLevelData ActorLevelData;
     public SPECIAL ActorSpecial;
     public CombatStats CombatStats;
 
-
     public float TotalCarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
     public float AvailableCarryWeight => TotalCarryWeight - Manager_Actor.GetActorData(ActorID).InventoryData.GetTotalInventoryWeight();
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class Actor_Aspects
+public class Actor_Aspects : DataSubClass
 {
-    public uint ActorID;
-    public Actor_Aspects(uint actorID) => ActorID = actorID;
+    public Actor_Aspects(uint actorID) : base(actorID) { }
 
     public ClassTitle ActorClassTitle { get { return Manager_Aspect.GetCharacterTitle(ActorAspectList); } }
 
@@ -368,12 +423,25 @@ public class Actor_Aspects
 
         ActorAspectList[index] = aspect;
     }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class ActorLevelData
+public class ActorLevelData : DataSubClass
 {
-    public uint ActorID;
+    public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0, uint totalSPECIALPoints = 0, bool canAddNewSkillSet = false) : base(actorID)
+    {
+        ActorLevel = level;
+        TotalExperience = totalExperience;
+        TotalSkillPoints = totalSkillPoints;
+        TotalSPECIALPoints = totalSPECIALPoints;
+        CanAddNewSkillSet = canAddNewSkillSet;
+    }
+
     public uint ActorLevel;
     public uint TotalExperience;
     public uint TotalSkillPoints;
@@ -381,16 +449,6 @@ public class ActorLevelData
     public uint TotalSPECIALPoints;
     public uint UsedSPECIALPoints;
     public bool CanAddNewSkillSet;
-
-    public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0, uint totalSPECIALPoints = 0, bool canAddNewSkillSet = false)
-    {
-        ActorID = actorID;
-        ActorLevel = level;
-        TotalExperience = totalExperience;
-        TotalSkillPoints = totalSkillPoints;
-        TotalSPECIALPoints = totalSPECIALPoints;
-        CanAddNewSkillSet = canAddNewSkillSet;
-    }
 
     public void AddExperience(uint experience)
     {
@@ -436,16 +494,19 @@ public class ActorLevelData
                 break;
         }
     }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class CraftingData
+public class CraftingData : DataSubClass
 {
-    public uint ActorID;
+    public CraftingData(uint actorID) : base(actorID) { }
 
     public List<RecipeName> KnownRecipes = new();
-
-    public CraftingData(uint actorID) => ActorID = actorID;
 
     public bool AddRecipe(RecipeName recipeName)
     {
@@ -508,14 +569,17 @@ public class CraftingData
             yield break;
         }
     }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
-
-
 [Serializable]
-public class QuestData
+public class QuestData : DataSubClass
 {
-    public uint ActorID;
+    public QuestData(uint actorID) : base(actorID) { }
 
     public List<Quest> ActorQuests = new();
     public void SetStage(int QuestID, int stageID, int stageProgress)
@@ -523,18 +587,19 @@ public class QuestData
         ActorQuests.FirstOrDefault(q => q.QuestID == QuestID).SetQuestStage(stageID, stageProgress);
     }
 
-    public QuestData(uint actorID) => ActorID = actorID;
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
-public class VocationData
+public class VocationData : DataSubClass
 {
-    public uint ActorID;
+    public VocationData(uint actorID) : base(actorID) { }
 
     public List<ActorVocation> ActorVocations = new();
     public void SetVocations(List<ActorVocation> vocations) => ActorVocations = vocations;
-
-    public VocationData(uint actorID) => ActorID = actorID;
 
     public void AddVocation(VocationName vocationName, float vocationExperience)
     {
@@ -595,6 +660,11 @@ public class VocationData
 
         return progress;
     }
+
+    protected override bool _priorityChangeNeeded()
+    {
+        return false;
+    }
 }
 
 [Serializable]
@@ -610,5 +680,63 @@ public class ActorVocation
 
         // Impement later
         //VocationTitle = Manager_Vocation.GetVocation(vocationName).GetVocationTitle(vocationExperience);
+    }
+}
+
+public abstract class PriorityGenerator
+{
+    protected static float DefaultMaxPriority => 10;
+
+    protected static float _stayAboveTarget(float current, float target, float maxPriority) 
+    => Math.Clamp(current - target, 0, maxPriority);
+    protected static float _stayBelowTarget(float current, float target, float maxPriority) 
+    => Math.Clamp(target - current, 0, maxPriority);
+    protected static float _stayAtTarget(float current, float target, float maxPriority) 
+    => Math.Clamp(current == target ? 0 : maxPriority, 0, maxPriority);
+
+    protected static float _stayWithinRange(float current, float min, float max, float maxPriority) 
+    => Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority);
+    protected static float _stayOutsideRange(float current, float min, float max, float maxPriority) 
+    => Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority);
+
+    protected static float _stayAbovePercentage(float current, float total, float targetPercentage, float maxPriority) 
+    => Math.Clamp(Math.Abs(targetPercentage / 100 - (current / total)) * 100, 0, maxPriority);
+    protected static float _stayBelowPercentage(float current, float total, float targetPercentage, float maxPriority) 
+    => Math.Clamp(Math.Abs((current / total) - targetPercentage / 100) * 100, 0, maxPriority);
+    protected static float _stayAtPercentage(float current, float total, float targetPercentage, float maxPriority) 
+    => Math.Clamp(Math.Abs((current / total) - targetPercentage / 100) * 100, 0, maxPriority);
+
+    protected static float _stayWithinPercentageRange(float current, float total, float minPercentage, float maxPercentage, float maxPriority)
+    => Math.Clamp(Math.Min(Math.Abs((current / total) - minPercentage / 100), Math.Abs((current / total) - maxPercentage / 100)) * 100, 0, maxPriority);
+    protected static float _stayOutsidePercentageRange(float current, float total, float minPercentage, float maxPercentage, float maxPriority)
+    => Math.Clamp(Math.Max(Math.Abs((current / total) - minPercentage / 100), Math.Abs((current / total) - maxPercentage / 100)) * 100, 0, maxPriority);
+}
+
+public class PriorityGenerator_Fetch : PriorityGenerator
+{
+    public static List<float> GeneratePriority(List<Item> items, Vector3Int targetPosition, float maxPriority = 0)
+    {
+        maxPriority = Math.Max(DefaultMaxPriority, maxPriority);
+
+        return new List<float>
+        {
+            _stayAboveTarget(Item.GetItemListCount_AllItems(items), 0, maxPriority)
+            + _stayAboveTarget(Vector3Int.Distance(Vector3Int.zero, targetPosition), 0, maxPriority),
+
+
+        };
+    }
+}
+
+public class PriorityGenerator_Condition : PriorityGenerator
+{
+    public static List<float> GeneratePriority(List<Item> items, Vector3Int targetPosition, float maxPriority = 0)
+    {
+        return new List<float>
+        {
+            (
+                0
+            ), 
+        };
     }
 }
