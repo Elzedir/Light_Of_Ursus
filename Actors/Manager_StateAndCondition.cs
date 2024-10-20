@@ -1,81 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-public enum StateName
-{
-    Alive,
-
-    CanBeDepressed,
-    IsDepressed,
-
-    CanDrown,
-    IsDrowning,
-
-    CanSuffocate,
-    IsSuffocating,
-
-    CanReanimate,
-    IsReanimated,
-    
-    Alerted,
-    Hostile,
-
-    CanJump,
-    IsJumping,
-
-    CanBerserk,
-    IsBerserking, 
-    
-    InFire,
-    OnFire,
-
-    CanTalk,
-    IsTalking,
-
-    CanDodge,
-    IsDodging,
-
-    CanBlock,
-    IsBlocking,
-
-    CanGetPregnant,
-    IsPregnant,
-}
-
-public enum ConditionName
-{
-    None,
-
-    // Health
-    Inspired,
-    
-    // Movement
-
-    // Social
-    Drunk,
-    High,
-    
-    // Combat
-    Bleeding,
-    Drowning,
-    Poisoned,
-    Stunned,
-    Paralysed,
-    Blinded,
-    Deafened,
-    Silenced,
-    Cursed,
-    Charmed,
-    Enraged,
-    Frightened,
-    Panicked,
-    Confused,
-    Dazed,
-    Distracted,
-    Dominated,
-    Burning,
-}
+using UnityEngine.Android;
 
 public class Manager_StateAndCondition
 {
@@ -89,14 +15,22 @@ public class Manager_StateAndCondition
 
     static void _addState(State state)
     {
-        if (state == null || AllStates.ContainsKey(state.StateName)) throw new ArgumentException($"Title: {state} is null or exists in AllTitles.");
+        if (state == null || AllStates.ContainsKey(state.StateName))
+        {
+            Debug.LogError($"State: {state} is null or exists in AllStates.");
+            return;
+        }
 
         AllStates.Add(state.StateName, state);
     }
 
     static void _addCondition(Condition condition)
     {
-        if (condition == null || AllConditions.ContainsKey(condition.ConditionName)) throw new ArgumentException($"Title: {condition} is null or exists in AllTitles.");
+        if (condition == null || AllConditions.ContainsKey(condition.ConditionName))
+        {
+            Debug.LogError($"Condition: {condition} is null or exists in AllConditions.");
+            return;
+        }
 
         AllConditions.Add(condition.ConditionName, condition);
     }
@@ -138,7 +72,7 @@ public class StateAndConditionComponent : ITickable
 
     public void OnTick()
     {
-        Actor.ActorData.StatsAndAbilities.Actor_StatesAndConditions.Tick();
+        Actor.ActorData.StatsAndAbilities.Actor_Conditions.Tick();
     }
 }
 
@@ -152,59 +86,54 @@ public class State // Permanent or Perpetual thing
 public class Condition // Temprary and tickable thing
 {
     public ConditionName ConditionName;
+    public float DefaultConditionDuration;
+}
+
+public enum ConditionName
+{
+    None,
+
+    // Health
+    Inspired,
+    
+    // Movement
+
+    // Social
+    Drunk,
+    High,
+    
+    // Combat
+    Bleeding,
+    Drowning,
+    Poisoned,
+    Stunned,
+    Paralysed,
+    Blinded,
+    Deafened,
+    Silenced,
+    Cursed,
+    Charmed,
+    Enraged,
+    Frightened,
+    Panicked,
+    Confused,
+    Dazed,
+    Distracted,
+    Dominated,
+    Burning,
 }
 
 [Serializable]
-public class Actor_StatesAndConditions : DataSubClass
+public class Actor_Conditions : DataSubClass
 {
-    public Actor_StatesAndConditions(uint actorID) : base(actorID) 
-    { 
+    public Actor_Conditions(uint actorID) : base(actorID) { }
 
-    }
-
-    PriorityComponent _actorPriorityComponent;
-    public PriorityComponent ActorPriorityComponent { get => _actorPriorityComponent ??= Actor.PriorityComponent; }
-
-    public Dictionary<StateName, bool> CurrentStates = new();
     public Dictionary<ConditionName, float> CurrentConditions = new();
-
-    public void SetState(StateName stateName, bool state)
-    {
-        CurrentStates[stateName] = state;
-    }
-
-    public void AddCondition(ConditionName conditionName)
-    {
-        if (CurrentConditions.ContainsKey(conditionName))
-        {
-            CurrentConditions[conditionName] = 0;
-            return;
-        }
-
-        var condition = Manager_StateAndCondition.GetCondition(conditionName);
-
-        if (condition == null) return;
-
-        CurrentConditions[conditionName] = 0;
-    }
-
-    public void SetCondition(ConditionName conditionName, float timer)
-    {
-        CurrentConditions[conditionName] = timer;
-    }
-
-    public void RemoveCondition(ConditionName conditionName)
-    {
-        if (!CurrentConditions.ContainsKey(conditionName)) return;
-
-        CurrentConditions.Remove(conditionName);
-
-        _priorityChangeCheck(conditionName);
-    }
+    protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
     public void Tick()
     {
-        foreach(var condition in CurrentConditions)
+        foreach (var condition in CurrentConditions)
         {
             if (condition.Value <= 0)
             {
@@ -216,52 +145,149 @@ public class Actor_StatesAndConditions : DataSubClass
         }
     }
 
-    protected override bool _priorityChangeNeeded()
+    public void AddCondition(ConditionName conditionName)
     {
-        calculate whether a priority change is needed
-    }
-
-    protected void _priorityChangeCheck(ConditionName conditionName)
-    {
-        PriorityImportance priorityImportance;
-
-        switch (conditionName)
+        if (CurrentConditions.ContainsKey(conditionName))
         {
-            case ConditionName.Drowning:
-                priorityImportance = PriorityImportance.Critical;
-                break;
-            case ConditionName.Burning:
-            case ConditionName.Bleeding:
-                priorityImportance = PriorityImportance.High;
-                break;
-            case ConditionName.Panicked:
-                priorityImportance = PriorityImportance.Medium;
-                break;
-            default:
-                priorityImportance = PriorityImportance.Low;
-                break;
+            // CurrentConditions[conditionName] = 0; For now do nothing, but later can add to the total condition duration.
+            return;
         }
 
-        var priorities = PriorityGenerator_Condition.GeneratePriority(conditionName);
+        var condition = Manager_StateAndCondition.GetCondition(conditionName);
 
-        switch (priorityImportance)
-        {
-            case PriorityImportance.Critical:
-                ActorPriorityComponent.UpdateAllPriorities();
-                break;
-            case PriorityImportance.High:
-                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.High);
-                break;
-            case PriorityImportance.Medium:
-                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.Medium);
-                break;
-            case PriorityImportance.Low:
-                ActorPriorityComponent.AddToCachedActionQueue(new Priority((uint)conditionName, priorities), PriorityImportance.Low);
-                break;
-            default:
-                Debug.LogError($"PriorityImportance: {priorityImportance} not found.");
-                break;
-        } 
-        
+        if (condition == null) return;
+
+        CurrentConditions[conditionName] = condition.DefaultConditionDuration;
+
+        _priorityChangeCheck(conditionName);
     }
+
+    public void SetConditionTimer(ConditionName conditionName, float timer)
+    {
+        CurrentConditions[conditionName] = timer;
+
+        _priorityChangeCheck(conditionName);
+    }
+
+    public void RemoveCondition(ConditionName conditionName)
+    {
+        if (!CurrentConditions.ContainsKey(conditionName)) return;
+
+        CurrentConditions.Remove(conditionName);
+
+        _priorityChangeCheck(conditionName);
+    }
+
+    protected override void _setOnDataChange() => OnDataChange = (Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToChange)
+    => Actor.PriorityComponent.OnConditionChange(actionsToChange);
+
+    protected override Dictionary<ActionName, Dictionary<PriorityParameter, object>> _getActionsToChange(object dataChanged)
+    {
+        var conditionName = (ConditionName)dataChanged;
+
+        if (!ActionsAndParameters.TryGetValue(conditionName, out var actionsAndImportance))
+        {
+            Debug.LogError($"Condition: {conditionName} is not in ActionsToUpdateOnDataChange list");
+            return null;
+        }
+
+        var actionsToChange = new Dictionary<ActionName, Dictionary<PriorityParameter, object>>();
+
+        foreach (var action in actionsAndImportance)
+        {
+            actionsToChange.Add(action.Key, action.Value);
+        }
+
+        return actionsToChange;
+    }
+
+    public static Dictionary<ConditionName, Dictionary<ActionName, Dictionary<PriorityParameter, object>>> ActionsAndParameters = new()
+    {
+        { ConditionName.Paralysed, new Dictionary<ActionName, Dictionary<PriorityParameter, object>>
+            {
+                { ActionName.Move, new Dictionary<PriorityParameter, object>
+                    {
+                        { PriorityParameter.PriorityImportance, PriorityImportance.Critical }
+                    }
+                },
+            }
+        },
+    };
+}
+
+public enum StateName
+{
+    None, 
+
+    Alive,
+
+    CanBeDepressed,
+    IsDepressed,
+
+    CanDrown,
+    IsDrowning,
+
+    CanSuffocate,
+    IsSuffocating,
+
+    CanReanimate,
+    IsReanimated,
+    
+    Alerted,
+    Hostile,
+
+    CanJump,
+    IsJumping,
+
+    CanBerserk,
+    IsBerserking, 
+    
+    InFire,
+    OnFire,
+
+    CanTalk,
+    IsTalking,
+
+    CanDodge,
+    IsDodging,
+
+    CanBlock,
+    IsBlocking,
+
+    CanGetPregnant,
+    IsPregnant,
+}
+
+public class Actor_States : DataSubClass
+{
+    public Actor_States(uint actorID) : base(actorID) { }
+    public Dictionary<StateName, bool> CurrentStates = new();
+    StateName _changedStateName;
+
+    public void SetState(StateName stateName, bool state)
+    {
+        CurrentStates[stateName] = state;
+
+        _stateChanged(stateName);
+    }
+
+    void _stateChanged(StateName conditionName)
+    {
+        _changedStateName = conditionName;
+
+        _priorityChangeCheck();
+
+        _changedStateName = StateName.None;
+    }
+
+    protected override bool _priorityChangeNeeded() => _changedStateName != StateName.None;
+
+    public static Dictionary<StateName, List<ActionName>> ActionsToUpdateOnChange = new()
+    {
+        { StateName.Hostile, new List<ActionName>
+            {
+                ActionName.Move
+            }
+        },
+    };
 }

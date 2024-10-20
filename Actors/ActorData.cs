@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Android;
 
 [Serializable]
 public class ActorData
@@ -63,15 +64,6 @@ public class ActorData
         }
 
         actor.transform.parent.SetParent(factionGO.transform);
-
-        _setDataChangeEvents(actor.PriorityComponent);
-    }
-
-    public event Action OnFullIdentificationChange;
-
-    void _setDataChangeEvents(PriorityComponent priorityComponent)
-    {
-        FullIdentification.OnDataChange = priorityComponent.OnFullIdentificationChange;
     }
 
     // Make an ability to make a deep copy of every class here and every class that needs to be saved.
@@ -131,21 +123,39 @@ public class ActorData_Drawer : PropertyDrawer
     }
 }
 
-public abstract class DataSubClass
+public abstract class ActorReferences
 {
     public uint ActorID;
-    public DataSubClass(uint actorID) => ActorID = actorID;
+    public ActorReferences(uint actorID) => ActorID = actorID;
 
     ActorComponent _actor;
     public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
-    public Action OnDataChange;
-    protected void _priorityChangeCheck()
-    {
-        if (!_priorityChangeNeeded()) return;
-        OnDataChange?.Invoke();
-    }
+}
 
-    protected abstract bool _priorityChangeNeeded();
+public abstract class DataSubClass : ActorReferences
+{
+    public DataSubClass(uint actorID) : base(actorID) { }
+
+    public Action<Dictionary<ActionName, Dictionary<PriorityParameter, object>>> OnDataChange;
+    
+    protected void _priorityChangeCheck(object dataChanged)
+    {
+        if (!_priorityChangeNeeded(dataChanged)) return;
+
+        if (OnDataChange == null) _setOnDataChange();
+
+        if (OnDataChange == null) 
+        {
+            Debug.LogError("OnDataChange is still null after resetting data change notifications.");
+            return;
+        }
+
+        OnDataChange(_getActionsToChange(dataChanged));
+    }
+    
+    protected abstract bool _priorityChangeNeeded(object dataChanged);
+    protected abstract void _setOnDataChange();
+    protected abstract Dictionary<ActionName, Dictionary<PriorityParameter, object>> _getActionsToChange(object dataChanged);
 }
 
 [Serializable]
@@ -166,9 +176,20 @@ public class FullIdentification : DataSubClass
     public Family ActorFamily;
     public Background Background;
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        => Actor.PriorityComponent.OnFullIdentificationChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -183,9 +204,20 @@ public class Background : DataSubClass
     public Dynasty ActorDynasty;
     public string Religion;
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnBackgroundChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -239,9 +271,20 @@ public class GameObjectProperties : DataSubClass
         ActorMaterial ??= Resources.Load<Material>("Materials/Material_Red"); // Later will come from species
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnGameObjectPropertiesChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -250,9 +293,20 @@ public class WorldStateData : DataSubClass
 {
     public WorldStateData(uint actorID) : base(actorID) { }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnWorldStateChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -262,9 +316,20 @@ public class Relationships : DataSubClass
     public Relationships(uint actorID) : base(actorID) { }
     public List<Relation> AllRelationships;
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnRelationshipChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -288,9 +353,20 @@ public class CareerAndJobs : DataSubClass
     public EmployeePosition EmployeePosition;
     public void SetEmployeePosition(EmployeePosition employeePosition) => EmployeePosition = employeePosition;
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnCareerAndJobsChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -304,9 +380,20 @@ public class SpeciesAndPersonality : DataSubClass
     public ActorPersonality ActorPersonality;
     public void SetPersonality(ActorPersonality actorPersonality) => ActorPersonality = actorPersonality;
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnSpeciesAndPersonalityChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -318,8 +405,11 @@ public class StatsAndAbilities : DataSubClass
     public Actor_Stats Actor_Stats;
     public void SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
 
-    public Actor_StatesAndConditions Actor_StatesAndConditions;
-    public void SetActorStates(Actor_StatesAndConditions actorStates) => Actor_StatesAndConditions = actorStates;
+    public Actor_Conditions Actor_Conditions;
+    public void SetActorStates(Actor_Conditions actorStates) => Actor_Conditions = actorStates;
+
+    public Actor_States Actor_States;
+    public void SetActorStates(Actor_States actorStates) => Actor_States = actorStates;
 
     public Actor_Aspects Actor_Aspects;
     public void SetActorAspects(Actor_Aspects actor_Aspects) => Actor_Aspects = actor_Aspects;
@@ -327,11 +417,20 @@ public class StatsAndAbilities : DataSubClass
     public Actor_Abilities Actor_Abilities;
     public void SetActorAbilities(Actor_Abilities actor_Abilities) => Actor_Abilities = actor_Abilities;
 
-    public override event Action OnDataChange;
-
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnStatsAndAbilitiesChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -372,9 +471,20 @@ public class Actor_Stats : DataSubClass
     public float TotalCarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
     public float AvailableCarryWeight => TotalCarryWeight - Manager_Actor.GetActorData(ActorID).InventoryData.GetTotalInventoryWeight();
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnStatsAndAbilitiesChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -424,9 +534,20 @@ public class Actor_Aspects : DataSubClass
         ActorAspectList[index] = aspect;
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnStatsAndAbilitiesChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -495,9 +616,20 @@ public class ActorLevelData : DataSubClass
         }
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnStatsAndAbilitiesChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -570,9 +702,20 @@ public class CraftingData : DataSubClass
         }
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnCraftingDataChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -587,9 +730,20 @@ public class QuestData : DataSubClass
         ActorQuests.FirstOrDefault(q => q.QuestID == QuestID).SetQuestStage(stageID, stageProgress);
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnQuestDataChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -661,9 +815,20 @@ public class VocationData : DataSubClass
         return progress;
     }
 
-    protected override bool _priorityChangeNeeded()
+    protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
+    }
+
+    protected override void _setOnDataChange()
+    {
+        // OnDataChange = (Dictionary<ActionName, PriorityImportance> actionsToChange)
+        // => Actor.PriorityComponent.OnVocationDataChange();
+    }
+
+    protected override Dictionary<ActionName, PriorityImportance> _getActionsToChange(object dataChanged)
+    {
+        return new Dictionary<ActionName, PriorityImportance>();
     }
 }
 
@@ -710,33 +875,53 @@ public abstract class PriorityGenerator
     => Math.Clamp(Math.Min(Math.Abs((current / total) - minPercentage / 100), Math.Abs((current / total) - maxPercentage / 100)) * 100, 0, maxPriority);
     protected static float _stayOutsidePercentageRange(float current, float total, float minPercentage, float maxPercentage, float maxPriority)
     => Math.Clamp(Math.Max(Math.Abs((current / total) - minPercentage / 100), Math.Abs((current / total) - maxPercentage / 100)) * 100, 0, maxPriority);
-}
 
-public class PriorityGenerator_Fetch : PriorityGenerator
-{
-    public static List<float> GeneratePriority(List<Item> items, Vector3Int targetPosition, float maxPriority = 0)
+    public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
     {
-        maxPriority = Math.Max(DefaultMaxPriority, maxPriority);
-
-        return new List<float>
+        switch(actionName)
         {
-            _stayAboveTarget(Item.GetItemListCount_AllItems(items), 0, maxPriority)
-            + _stayAboveTarget(Vector3Int.Distance(Vector3Int.zero, targetPosition), 0, maxPriority),
-
-
-        };
+            case ActionName.Fetch:
+                return _fetch(parameters);
+            default:
+                Debug.LogError($"ActionName: {actionName} not found.");
+                return null;
+        }
     }
-}
 
-public class PriorityGenerator_Condition : PriorityGenerator
-{
-    public static List<float> GeneratePriority(List<Item> items, Vector3Int targetPosition, float maxPriority = 0)
+    a
+    // Sort out passing through the correct parameters and using them to generate priority.
+
+    static List<float> _fetch(Dictionary<PriorityParameter, object> parameters)
     {
+        var maxPriority = DefaultMaxPriority;
+        var itemsToHaul = new List<Item>();
+        var targetPosition = Vector3.zero;
+
+        foreach(var parameter in parameters)
+        {
+            switch(parameter.Key)
+            {
+                case PriorityParameter.MaxPriority:
+                    maxPriority = (float)parameter.Value;
+                    break;
+                case PriorityParameter.ItemsToFetch:
+                    itemsToHaul = (List<Item>)parameter.Value;
+                    break;
+                case PriorityParameter.TargetPosition:
+                    targetPosition = (Vector3)parameter.Value;
+                    break;
+                default:
+                    Debug.LogError($"Parameter: {parameter.Key} not found.");
+                    break;
+            }
+        }
+
+        var currentItemCount = Item.GetItemListCount_AllItems(itemsToHaul);
+
         return new List<float>
         {
-            (
-                0
-            ), 
+            _stayAboveTarget(currentItemCount, 0, maxPriority)
+            + _stayAboveTarget(Vector3.Distance(Vector3.zero, targetPosition), 0, maxPriority),
         };
     }
 }

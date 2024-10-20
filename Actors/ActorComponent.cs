@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Android;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
@@ -112,7 +113,6 @@ public enum ActionName
     // Basic Actions
     Idle,
     Move,
-    Haul,
     Interact,
     Work,
     Rest,
@@ -154,7 +154,7 @@ public enum ActionName
     // Logistics Actions
     Collect,
     Store,
-    Retrieve,
+    Fetch,
     Deliver,
     Transport,
     Trade,
@@ -259,7 +259,19 @@ public enum PriorityImportance
     Critical,
 }
 
-public class PriorityComponent : DataSubClass
+public enum PriorityParameter
+{
+    PriorityImportance,
+    MaxPriority,
+    ItemsToFetch,
+    ItemsToDeliver,
+    TargetPosition,
+    WeightOfItem,
+    TimeToComplete,
+
+}
+
+public class PriorityComponent : ActorReferences
 {
     public PriorityComponent(uint actorID) : base(actorID) { }
 
@@ -270,27 +282,65 @@ public class PriorityComponent : DataSubClass
 
     public void OnFullIdentificationChange()
     {
-        
+        // Update all relevant actions
     }
+
+    public void OnConditionChange(Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToPrioritise)
+    {
+        foreach (var action in actionsToPrioritise)
+        {
+            if (action.Value == null) 
+            {
+                Debug.LogError($"Action: {action.Key} has no values.");
+                continue;
+            }
+
+            PriorityImportance priorityImportance;
+
+            if (!action.Value.TryGetValue(PriorityParameter.PriorityImportance, out object priorityImportanceObject))
+            {
+                Debug.LogError($"Action: {action.Key} has no PriorityImportance value.");
+                priorityImportance = PriorityImportance.Low;
+            }
+
+            priorityImportance = (PriorityImportance)priorityImportanceObject;
+
+            var priorities = PriorityGenerator.GeneratePriorities(action.Key, action.Value);
+
+            switch (priorityImportance)
+            {
+                case PriorityImportance.Critical:
+                    FullPriorityUpdate();
+                    break;
+                case PriorityImportance.High:
+                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.High);
+                    break;
+                case PriorityImportance.Medium:
+                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Medium);
+                    break;
+                case PriorityImportance.Low:
+                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Low);
+                    break;
+                default:
+                    Debug.LogError($"PriorityImportance: {action.Value} not found.");
+                    break;
+            }
+        }
+    }
+
+    // For an action Haul, the priorities would be:
+    // 1. Distance to target
+    // 2. Weight of item
+    // 3. Time to complete
 
     void _initialiseActions()
     {
         ActionQueue = new PriorityQueue(100);
     }
 
-    public void UpdateAllPriorities()
+    public void FullPriorityUpdate()
     {
         SyncCachedActionQueueHigh();
-
-        foreach(var priority in ActionQueue.AllPriorities)
-        {
-
-
-            if (!ActionQueue.Update(priority.PriorityID, priority.AllPriorities))
-            {
-                
-            }
-        }
     }
 
     public void SyncCachedActionQueueHigh(bool syncing = false)
@@ -385,8 +435,5 @@ public class PriorityComponent : DataSubClass
         return ActionQueue.Dequeue((uint)actionName);
     }
 
-    protected override void _priorityChangeCheck()
-    {
-        
-    }
+    
 }
