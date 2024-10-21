@@ -133,11 +133,12 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
     public static ActorComponent SpawnNewActor(Vector3 spawnPoint, ActorGenerationParameters actorGenerationParameters)
     {
         ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
-
+        
         actor.SetActorData(GenerateNewActorData(actor, actorGenerationParameters));
-        actor.Initialise();
 
         AllActorComponents[actor.ActorData.ActorID] = actor;
+        
+        actor.Initialise();
 
         Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
 

@@ -86,7 +86,7 @@ public class StationComponent_LogPile : StationComponent
 
                 if (_canDeliverItems(actor)) return;
 
-                if (_canFetchItems(actor)) return;
+                if (_fetchItemsCheck(actor)) return;
 
                 //Debug.Log($"No stations to haul from.");
                 return;
@@ -209,41 +209,18 @@ public class StationComponent_LogPile : StationComponent
         return true;
     }
 
-    bool _canFetchItems(ActorComponent actor)
+    bool _fetchItemsCheck(ActorComponent actor)
     {
-        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
-
-        if (jobsite == null)
+        if (Jobsite == null)
         {
             Debug.Log($"Jobsite: {StationData.JobsiteID} is null.");
             return false;
         }
 
-        var priorityQueue = jobsite.PriorityQueue;
+        var stationAndItems = Jobsite.GetStationToHaulFrom(actor);
 
-        if (priorityQueue.Peek() == null)
-        {
-            Debug.LogWarning($"PriorityQueue is empty.");
-            return false;
-        }
+        StartCoroutine(_fetchItems(actor, stationAndItems.Station, stationAndItems.Items));
 
-        var allStationsToHaulFrom = _getAllStationsToHaulFrom()
-        .Where(s => s.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs).Count > 0)
-        .ToList();
-
-        if (allStationsToHaulFrom.Count <= 0)
-        {
-            Debug.Log($"No stations to haul from.");
-
-            return false;
-        }
-
-        var highestPriorityStation = allStationsToHaulFrom[0];
-
-        StartCoroutine(_fetchItems(
-            actor,
-            highestPriorityStation,
-            highestPriorityStation.StationData.InventoryData.InventoryContainsReturnedItems(AllowedStoredItemIDs)));
         return true;
     }
 

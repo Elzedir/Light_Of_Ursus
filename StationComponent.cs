@@ -17,6 +17,7 @@ public enum StationType
 public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 {
     public uint StationID { get { return StationData.StationID; } }
+    public JobsiteComponent Jobsite { get { return StationData.Jobsite; } }
     bool _initialised = false;
 
     public StationData StationData;
@@ -186,7 +187,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         {
             Debug.Log($"CurrentProduct is None: {StationData.StationProgressData.CurrentProduct}");
 
-            if (Manager_Jobsite.GetJobsiteData(StationData.JobsiteID).JobsiteFactionID != 1)
+            if (Jobsite.JobsiteData.JobsiteFactionID != 1)
             {
                 Debug.Log($"Setting CurrentProduct to DefaultProduct: {DefaultProduct}");
 
@@ -355,10 +356,9 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     {
         var stationsToHaulTo = new List<StationComponent>();
 
-        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
         var actorInventory = actor.ActorData.InventoryData;
 
-        foreach (var station in jobsite.AllStationsInJobsite)
+        foreach (var station in Jobsite.AllStationsInJobsite)
         {
             if (station.AllowedStoredItemIDs.Count == 0) continue;
 
@@ -370,25 +370,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
 
         return stationsToHaulTo;
-    }
-
-    protected List<StationComponent> _getAllStationsToHaulFrom()
-    {
-        var stationsToHaulFrom = new List<StationComponent>();
-        
-        var jobsite = Manager_Jobsite.GetJobsite(StationData.JobsiteID);
-
-        foreach (var station in jobsite.AllStationsInJobsite)
-        {
-            if (station.GetInventoryItemsToHaul().Count <= 0)
-            {
-                continue;
-            }
-
-            stationsToHaulFrom.Add(station);
-        }
-
-        return stationsToHaulFrom;
     }
 }
 

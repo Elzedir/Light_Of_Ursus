@@ -27,7 +27,11 @@ public enum StationName
 public class StationData : IStationInventory
 {
     public uint StationID;
-    public uint JobsiteID;
+
+    readonly JobsiteReferences _jobsiteReferences;
+    public void SetJobsiteID(uint jobsiteID) => _jobsiteReferences.SetJobsiteID(jobsiteID);
+    public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
+    public JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
 
     public bool StationIsActive = true;
 

@@ -6,6 +6,7 @@ using UnityEngine;
 
 public abstract class JobsiteComponent : MonoBehaviour, ITickable
 {
+    public uint JobsiteID { get { return JobsiteData.JobsiteID; } }
     public JobsiteData JobsiteData;
     public void SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
     public void SetCityID(uint cityID) => JobsiteData.CityID = cityID;
@@ -13,7 +14,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
     public List<StationComponent> AllStationsInJobsite;
     public List<EmployeePosition> AllCoreEmployeePositions;
 
-    public PriorityQueue PriorityQueue;
+    public PriorityComponent_Jobsite PriorityComponent;
 
     public bool JobsiteOpen = true;
 
@@ -26,7 +27,7 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
     {
         AllStationsInJobsite = GetAllStationsInJobsite();
 
-        AllStationsInJobsite.ForEach(station => station.StationData.JobsiteID = JobsiteData.JobsiteID);
+        AllStationsInJobsite.ForEach(station => station.StationData.SetJobsiteID(JobsiteID));
 
         Manager_TickRate.RegisterTickable(OnTick, TickRate.OneGameHour);
     }
@@ -130,8 +131,6 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
     public StationComponent GetStationToFetch()
     {
-        if (PriorityQueue == null) PriorityQueue = new PriorityQueue(AllStationsInJobsite.Count);
-
         foreach (var station in AllStationsInJobsite)
         {
             List<float> priorityValues = new();
@@ -150,37 +149,26 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
                 if (!storagePriorities.ContainsKey(station.StationName))
                 {
-                    // Debug.Log($"Station {station.StationName} not found in storage priorities.");
                     allItemPriorities += 0;
                 }
                 else
                 {
                     var itemPriority = storagePriorities[station.StationName] * item.ItemAmount;
-                    // Debug.Log($"Station {station.StationName} found in storage priorities.");
                     allItemPriorities += itemPriority;
                 }
-
-                // Debug.Log($"Priority value: {priorityValue}");
             }
 
             priorityValues.Add(allItemPriorities);
 
-            // Debug.Log($"Adding station {station.StationName} to stationPriorities.");
-
-            PriorityQueue.Enqueue(station.StationID, priorityValues);
+            PriorityComponent.Enqueue(station.StationID, priorityValues);
         }
 
-        // foreach(var stationPriority in stationPriorities)
-        // {
-        //     Debug.Log($"Station: {stationPriority.Station.StationName} Priority: {stationPriority.Priority.AllPriorities[0]}");
-        // }
-
-        return Manager_Station.GetStation(PriorityQueue.Dequeue().PriorityID);
+        return Manager_Station.GetStation(PriorityComponent.Dequeue().PriorityID);
     }
 
     public StationComponent GetStationToDeliver()
     {
-        if (PriorityQueue == null) PriorityQueue = new PriorityQueue(AllStationsInJobsite.Count);
+        if (PriorityComponent == null) PriorityComponent = new PriorityQueue(AllStationsInJobsite.Count);
 
         foreach (var station in AllStationsInJobsite)
         {
@@ -188,6 +176,53 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         }
 
         return null;
+    }
+
+    public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
+    {
+        a
+
+        // Find a way to prioritise stations to haul from in the JobsiteManager
+        // Then find a way to search in the priority list for the station that is most compatible with the hauler,
+        // ordered by priority
+
+        var stationToHaulFrom = PriorityComponent.SpecificAction(ActionName.Fetch, hauler);
+
+        if (stationToHaulFrom == null)
+        {
+            Debug.Log($"No station to haul from.");
+            return (null, null);
+        }
+
+        return stationToHaulFrom;
+    }
+
+    protected void _prioritiseStationsToHaulFrom()
+    {
+        var allStationsToHaulFrom = _getAllStationsToHaulFrom();
+
+        if (allStationsToHaulFrom.Count <= 0)
+        {
+            Debug.Log($"No stations to haul from.");
+
+            return;
+        }
+    }
+
+    protected Dictionary<StationComponent, List<Item>> _getAllStationsToHaulFrom()
+    {
+        var stationsToHaulFrom = new Dictionary<StationComponent, List<Item>>();
+
+        foreach (var station in AllStationsInJobsite)
+        {
+            var itemsToHaul = station.GetInventoryItemsToHaul();
+
+            if (station.GetInventoryItemsToHaul().Count <= 0) continue;
+
+            stationsToHaulFrom.Add(station, itemsToHaul);
+        }
+
+        return stationsToHaulFrom;
     }
 }
 
@@ -430,4 +465,14 @@ public class PriorityQueue
         _allPriorities[indexB] = tempPriorityA;
         _priorityQueue[tempPriorityA.PriorityID] = indexB;
     }
+}
+
+public class PriorityComponent_Jobsite : PriorityComponent
+{
+    readonly JobsiteReferences _jobsiteReferences;
+
+    public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
+    protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
+
+    public PriorityComponent_Jobsite(uint jobsiteID) => _jobsiteReferences = new JobsiteReferences(jobsiteID);
 }

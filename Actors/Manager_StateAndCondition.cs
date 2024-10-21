@@ -129,7 +129,6 @@ public class Actor_Conditions : DataSubClass
     public Actor_Conditions(uint actorID) : base(actorID) { }
 
     public Dictionary<ConditionName, float> CurrentConditions = new();
-    protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
     public void Tick()
     {
@@ -177,31 +176,9 @@ public class Actor_Conditions : DataSubClass
 
         _priorityChangeCheck(conditionName);
     }
+    protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-    protected override void _setOnDataChange() => OnDataChange = (Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToChange)
-    => Actor.PriorityComponent.OnConditionChange(actionsToChange);
-
-    protected override Dictionary<ActionName, Dictionary<PriorityParameter, object>> _getActionsToChange(object dataChanged)
-    {
-        var conditionName = (ConditionName)dataChanged;
-
-        if (!ActionsAndParameters.TryGetValue(conditionName, out var actionsAndImportance))
-        {
-            Debug.LogError($"Condition: {conditionName} is not in ActionsToUpdateOnDataChange list");
-            return null;
-        }
-
-        var actionsToChange = new Dictionary<ActionName, Dictionary<PriorityParameter, object>>();
-
-        foreach (var action in actionsAndImportance)
-        {
-            actionsToChange.Add(action.Key, action.Value);
-        }
-
-        return actionsToChange;
-    }
-
-    public static Dictionary<ConditionName, Dictionary<ActionName, Dictionary<PriorityParameter, object>>> ActionsAndParameters = new()
+    public new static Dictionary<ConditionName, Dictionary<ActionName, Dictionary<PriorityParameter, object>>> ActionsAndParameters = new()
     {
         { ConditionName.Paralysed, new Dictionary<ActionName, Dictionary<PriorityParameter, object>>
             {
@@ -261,33 +238,14 @@ public enum StateName
 public class Actor_States : DataSubClass
 {
     public Actor_States(uint actorID) : base(actorID) { }
-    public Dictionary<StateName, bool> CurrentStates = new();
-    StateName _changedStateName;
+    public Dictionary<StateName, bool> CurrentStates = new();    
 
     public void SetState(StateName stateName, bool state)
     {
         CurrentStates[stateName] = state;
 
-        _stateChanged(stateName);
+        _priorityChangeCheck(stateName);
     }
 
-    void _stateChanged(StateName conditionName)
-    {
-        _changedStateName = conditionName;
-
-        _priorityChangeCheck();
-
-        _changedStateName = StateName.None;
-    }
-
-    protected override bool _priorityChangeNeeded() => _changedStateName != StateName.None;
-
-    public static Dictionary<StateName, List<ActionName>> ActionsToUpdateOnChange = new()
-    {
-        { StateName.Hostile, new List<ActionName>
-            {
-                ActionName.Move
-            }
-        },
-    };
+    protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
 }

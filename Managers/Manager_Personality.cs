@@ -101,17 +101,14 @@ public class Manager_Personality
 
 public enum PersonalityTraitName { Arrogant, Ambitious, Brave, Craven, Deceitful, Honest, Humble, Just, Sadistic, Savage, Vengeful }
 
-public class PersonalityComponent
+public class PersonalityComponent : ActorReferences
 {
-    public uint ActorID;
-    ActorComponent _actor;
-    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
+    public PersonalityComponent(uint actorID) : base(actorID) { }
+
     public string PersonalityTitle;
     public string PersonalityDescription;
 
     public HashSet<PersonalityTrait> PersonalityTraits = new();
-
-    public PersonalityComponent(uint actorID) => ActorID = actorID;
 
     public void SetPersonalityTraits(HashSet<PersonalityTrait> personalityTraits)
     {
@@ -123,6 +120,8 @@ public class PersonalityComponent
     void _setPersonalityTitle()
     {
         (PersonalityTitle, PersonalityDescription) = Manager_Personality.GetPersonalityTitleAndDescription(this);
+
+        Debug.Log(ActorID);
 
         Actor.ActorData.SpeciesAndPersonality.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
     }

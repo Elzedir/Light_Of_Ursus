@@ -22,7 +22,7 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
     public EquipmentComponent EquipmentComponent;
     public PersonalityComponent PersonalityComponent;
     public GroundedCheckComponent GroundCheckComponent;
-    public PriorityComponent PriorityComponent;
+    public PriorityComponent_Actor PriorityComponent;
     public Coroutine ActorHaulCoroutine;
 
     void Awake()
@@ -57,7 +57,7 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
         transform.parent.name = $"{ActorData.ActorName.Name}Body";
         transform.name = $"{ActorData.ActorName.Name}";
 
-        PriorityComponent = new PriorityComponent(_actorID);
+        PriorityComponent = new PriorityComponent_Actor(_actorID);
         PersonalityComponent = new PersonalityComponent(_actorID);
         PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
 
@@ -265,27 +265,21 @@ public enum PriorityParameter
     MaxPriority,
     ItemsToFetch,
     ItemsToDeliver,
+    ActorPosition,
     TargetPosition,
     WeightOfItem,
     TimeToComplete,
 
 }
 
-public class PriorityComponent : ActorReferences
+public class PriorityComponent
 {
-    public PriorityComponent(uint actorID) : base(actorID) { }
+    public PriorityQueue PriorityQueue;
+    public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
+    protected bool _syncingCachedQueue = false;
+    protected float _timeDeferment = 1f;
 
-    public PriorityQueue ActionQueue;
-    public Dictionary<PriorityImportance, List<Priority>> CachedActionQueue;
-    bool _syncingCachedQueue = false;
-    float _timeDeferment = 1f;
-
-    public void OnFullIdentificationChange()
-    {
-        // Update all relevant actions
-    }
-
-    public void OnConditionChange(Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToPrioritise)
+    public void OnDataChanged(Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToPrioritise)
     {
         foreach (var action in actionsToPrioritise)
         {
@@ -313,13 +307,13 @@ public class PriorityComponent : ActorReferences
                     FullPriorityUpdate();
                     break;
                 case PriorityImportance.High:
-                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.High);
+                    AddToCachedPriorityQueue(new Priority((uint)action.Key, priorities), PriorityImportance.High);
                     break;
                 case PriorityImportance.Medium:
-                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Medium);
+                    AddToCachedPriorityQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Medium);
                     break;
                 case PriorityImportance.Low:
-                    AddToCachedActionQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Low);
+                    AddToCachedPriorityQueue(new Priority((uint)action.Key, priorities), PriorityImportance.Low);
                     break;
                 default:
                     Debug.LogError($"PriorityImportance: {action.Value} not found.");
@@ -328,60 +322,55 @@ public class PriorityComponent : ActorReferences
         }
     }
 
-    // For an action Haul, the priorities would be:
-    // 1. Distance to target
-    // 2. Weight of item
-    // 3. Time to complete
-
-    void _initialiseActions()
-    {
-        ActionQueue = new PriorityQueue(100);
-    }
-
     public void FullPriorityUpdate()
     {
-        SyncCachedActionQueueHigh();
+        SyncCachedPriorityQueueHigh();
     }
 
-    public void SyncCachedActionQueueHigh(bool syncing = false)
+    public void SyncCachedPriorityQueueHigh(bool syncing = false)
     {
-        foreach (var priority in CachedActionQueue[PriorityImportance.Low])
+        foreach (var priority in CachedPriorityQueue[PriorityImportance.Low])
         {
-            if (!ActionQueue.Update(priority.PriorityID, priority.AllPriorities))
+            if (!PriorityQueue.Update(priority.PriorityID, priority.AllPriorities))
             {
-                if (!ActionQueue.Enqueue(priority.PriorityID, priority.AllPriorities))
+                if (!PriorityQueue.Enqueue(priority.PriorityID, priority.AllPriorities))
                 {
                     Debug.LogError($"PriorityID: {priority.PriorityID} unable to be added to PriorityQueue.");
                 }
             }
         }
 
-        CachedActionQueue[PriorityImportance.Low].Clear();
+        CachedPriorityQueue[PriorityImportance.Low].Clear();
         if (syncing) _syncingCachedQueue = false;
     }
 
-    void _syncCachedActionQueueHigh_DeferredUpdate()
+    void _syncCachedPriorityQueueHigh_DeferredUpdate()
     {
         _syncingCachedQueue = true;
-        Manager_DeferredActions.AddDeferredAction(() => SyncCachedActionQueueHigh(true), _timeDeferment);
+        Manager_DeferredActions.AddDeferredAction(() => SyncCachedPriorityQueueHigh(true), _timeDeferment);
     }
 
-    public void AddToCachedActionQueue(Priority priority, PriorityImportance priorityImportance)
+    public void AddToCachedPriorityQueue(Priority priority, PriorityImportance priorityImportance)
     {
-        if (CachedActionQueue == null) CachedActionQueue = new Dictionary<PriorityImportance, List<Priority>>();
+        if (CachedPriorityQueue == null) CachedPriorityQueue = new Dictionary<PriorityImportance, List<Priority>>();
 
-        if (!CachedActionQueue.ContainsKey(priorityImportance)) CachedActionQueue.Add(priorityImportance, new List<Priority>());
+        if (!CachedPriorityQueue.ContainsKey(priorityImportance)) CachedPriorityQueue.Add(priorityImportance, new List<Priority>());
 
-        CachedActionQueue[priorityImportance].Add(priority);
+        CachedPriorityQueue[priorityImportance].Add(priority);
 
-        if (!_syncingCachedQueue) _syncCachedActionQueueHigh_DeferredUpdate();
+        if (!_syncingCachedQueue) _syncCachedPriorityQueueHigh_DeferredUpdate();
+    }
+
+    void _initialiseActions()
+    {
+        PriorityQueue = new PriorityQueue(100);
     }
 
     public void AddAction(ActionName actionName, List<float> priorities)
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        if (!ActionQueue.Enqueue((uint)actionName, priorities))
+        if (!PriorityQueue.Enqueue((uint)actionName, priorities))
         {
             Debug.LogError($"ActionName: {actionName} unable to be added to PriorityQueue.");
         }
@@ -389,9 +378,9 @@ public class PriorityComponent : ActorReferences
 
     public void UpdateAction(ActionName actionName, List<float> priorities)
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        if (!ActionQueue.Update((uint)actionName, priorities))
+        if (!PriorityQueue.Update((uint)actionName, priorities))
         {
             Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
         }
@@ -399,9 +388,9 @@ public class PriorityComponent : ActorReferences
 
     public void RemoveAction(ActionName actionName)
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        if (!ActionQueue.Remove((uint)actionName))
+        if (!PriorityQueue.Remove((uint)actionName))
         {
             Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
         }
@@ -409,31 +398,39 @@ public class PriorityComponent : ActorReferences
 
     public Priority CheckNextAction()
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        return ActionQueue.Peek();
+        return PriorityQueue.Peek();
     }
 
     public Priority CheckSpecificAction(ActionName actionName)
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        return ActionQueue.Peek((uint)actionName);
+        return PriorityQueue.Peek((uint)actionName);
     }
 
     public Priority PerformNextAction()
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        return ActionQueue.Dequeue();
+        return PriorityQueue.Dequeue();
     }
 
     public Priority PerformSpecificAction(ActionName actionName)
     {
-        if (ActionQueue == null) _initialiseActions();
+        if (PriorityQueue == null) _initialiseActions();
 
-        return ActionQueue.Dequeue((uint)actionName);
-    }
+        return PriorityQueue.Dequeue((uint)actionName);
+    }    
+}
 
-    
+public class PriorityComponent_Actor : PriorityComponent
+{
+    readonly ActorReferences _actorReferences;
+
+    public uint ActorID { get { return _actorReferences.ActorID; } }
+    protected ActorComponent Actor { get { return _actorReferences.Actor; } }
+
+    public PriorityComponent_Actor(uint actorID) => _actorReferences = new ActorReferences(actorID);
 }
