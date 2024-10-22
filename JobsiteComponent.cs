@@ -129,100 +129,11 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
         return result;
     }
 
-    public StationComponent GetStationToFetch()
-    {
-        foreach (var station in AllStationsInJobsite)
-        {
-            List<float> priorityValues = new();
-            var itemsToHaul = station.GetInventoryItemsToHaul();
-
-            var allItemPriorities = 0f;
-
-            foreach (var item in itemsToHaul)
-            {
-                if (station.DesiredStoredItemIDs.Contains(item.ItemID))
-                {
-                    Debug.LogWarning($"Item: {item.ItemID} is allowed to be stored in {station.StationName} but is being hauled.");
-                }
-
-                var storagePriorities = Manager_Item.GetMasterItem(item.ItemID).PriorityStats_Item.Priority_StationForStorage;
-
-                if (!storagePriorities.ContainsKey(station.StationName))
-                {
-                    allItemPriorities += 0;
-                }
-                else
-                {
-                    var itemPriority = storagePriorities[station.StationName] * item.ItemAmount;
-                    allItemPriorities += itemPriority;
-                }
-            }
-
-            priorityValues.Add(allItemPriorities);
-
-            PriorityComponent.Enqueue(station.StationID, priorityValues);
-        }
-
-        return Manager_Station.GetStation(PriorityComponent.Dequeue().PriorityID);
-    }
-
-    public StationComponent GetStationToDeliver()
-    {
-        if (PriorityComponent == null) PriorityComponent = new PriorityQueue(AllStationsInJobsite.Count);
-
-        foreach (var station in AllStationsInJobsite)
-        {
-            
-        }
-
-        return null;
-    }
+    protected void _prioritiseAllStationsToHaulFrom() => PriorityComponent.FullPriorityUpdate(AllStationsInJobsite.Cast<object>().ToList());
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
     {
-        a
-
-        // Find a way to prioritise stations to haul from in the JobsiteManager
-        // Then find a way to search in the priority list for the station that is most compatible with the hauler,
-        // ordered by priority
-
-        var stationToHaulFrom = PriorityComponent.SpecificAction(ActionName.Fetch, hauler);
-
-        if (stationToHaulFrom == null)
-        {
-            Debug.Log($"No station to haul from.");
-            return (null, null);
-        }
-
-        return stationToHaulFrom;
-    }
-
-    protected void _prioritiseStationsToHaulFrom()
-    {
-        var allStationsToHaulFrom = _getAllStationsToHaulFrom();
-
-        if (allStationsToHaulFrom.Count <= 0)
-        {
-            Debug.Log($"No stations to haul from.");
-
-            return;
-        }
-    }
-
-    protected Dictionary<StationComponent, List<Item>> _getAllStationsToHaulFrom()
-    {
-        var stationsToHaulFrom = new Dictionary<StationComponent, List<Item>>();
-
-        foreach (var station in AllStationsInJobsite)
-        {
-            var itemsToHaul = station.GetInventoryItemsToHaul();
-
-            if (station.GetInventoryItemsToHaul().Count <= 0) continue;
-
-            stationsToHaulFrom.Add(station, itemsToHaul);
-        }
-
-        return stationsToHaulFrom;
+        return PriorityComponent.GetStationToHaulFrom(hauler);
     }
 }
 
@@ -282,6 +193,13 @@ public class PriorityQueue
 
             return index == 0 ? null : _allPriorities[index];
         }
+    }
+
+    public Priority[] PeekAll()
+    {
+        if (_currentPosition == 0) return null;
+
+        return _allPriorities;
     }
 
     public Priority Dequeue(uint priorityID = 1)
@@ -475,4 +393,47 @@ public class PriorityComponent_Jobsite : PriorityComponent
     protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
 
     public PriorityComponent_Jobsite(uint jobsiteID) => _jobsiteReferences = new JobsiteReferences(jobsiteID);
+
+    protected override void _updateAllPriorities(List<object> allData)
+    {
+        List<StationComponent> allStations = allData.Cast<StationComponent>().ToList();
+
+        foreach (var station in allStations)
+        {
+            var itemsToHaul = station.GetInventoryItemsToHaul();
+
+            if (itemsToHaul.Count <= 0) continue;
+
+            var priorityValues = PriorityGenerator.GeneratePriorities(ActionName.Fetch, new Dictionary<PriorityParameter, object>
+            {
+                { PriorityParameter.ItemsToFetch, itemsToHaul },
+                { PriorityParameter.TargetPosition, station.transform.position },
+            });
+
+            PriorityQueue.Enqueue(station.StationID, priorityValues);
+        }
+    }
+
+    public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
+    {
+        foreach(var station in PriorityQueue.PeekAll())
+        {
+            var newPriority = PriorityGenerator.GeneratePriorities(ActionName.Fetch, new Dictionary<PriorityParameter, object>
+            {
+                { PriorityParameter.ExistingPriority, station.AllPriorities },
+                { PriorityParameter.ActorPosition, hauler.transform.position },
+                { PriorityParameter.TargetPosition, Manager_Station.GetStation(station.PriorityID).transform.position },
+            });
+
+            PriorityQueue.Update(station.PriorityID, newPriority);
+        }
+
+        var highestPriorityStation = Manager_Station.GetStation(PriorityQueue.Dequeue().PriorityID);
+
+        a
+
+        // Currently hauling all the items that need to be hauled from station, should instead change to only haul the items that the actor can carry.
+
+        return (highestPriorityStation, highestPriorityStation.GetInventoryItemsToHaul());
+    }
 }

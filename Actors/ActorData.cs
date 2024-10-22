@@ -785,6 +785,9 @@ public abstract class PriorityGenerator
 
     public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
     {
+        // But now the problem is that I must not override the priorities that are already set, so I need to find a way to add to the existing priorities when adding from another source. Instead when we choose an actor priority, we simply add the priority for the station to the
+        // priority of the action in his own priority queue.
+
         switch(actionName)
         {
             case ActionName.Fetch:
@@ -798,16 +801,20 @@ public abstract class PriorityGenerator
     static List<float> _fetch(Dictionary<PriorityParameter, object> parameters)
     {
         var maxPriority = DefaultMaxPriority;
+        var existingPriority = new List<float>();
         var itemsToFetch = new List<Item>();
         var actorPosition = Vector3.zero;
         var targetPosition = Vector3.zero;
 
-        foreach(var parameter in parameters)
+        foreach (var parameter in parameters)
         {
-            switch(parameter.Key)
+            switch (parameter.Key)
             {
                 case PriorityParameter.MaxPriority:
                     maxPriority = (float)parameter.Value;
+                    break;
+                case PriorityParameter.ExistingPriority:
+                    existingPriority = (List<float>)parameter.Value;
                     break;
                 case PriorityParameter.ItemsToFetch:
                     itemsToFetch = (List<Item>)parameter.Value;
@@ -824,14 +831,19 @@ public abstract class PriorityGenerator
             }
         }
 
-        return new List<float>
-        {
-            // I need to find a way to limit the number of priorities that are allocated here so that they are comparable to the different actions. For example, attack vs haul, so that haul doesn't override attack just because there are a lot of items to haul.
-            // Find a way to caluclate desired distance for fetching, maybe base it off average distance to fetchable stations.
+        var priority_ItemQuantity = itemsToFetch.Count != 0 ? _moreItemsDesired(itemsToFetch, 0, maxPriority) : 0;
+        var priority_Distance = actorPosition != Vector3.zero && targetPosition != Vector3.zero
+        ? _lessDistanceDesired(actorPosition, targetPosition, 5, maxPriority)
+        : 0;
 
-            _lessItemsDesired(itemsToFetch, 0, maxPriority)
-            + _lessDistanceDesired(actorPosition, targetPosition, 5, maxPriority),
+        var newPriorities = new List<float>
+        {
+            priority_ItemQuantity + priority_Distance
         };
+
+        if (existingPriority.Count > 0) newPriorities.AddRange(existingPriority);
+
+        return newPriorities;
     }
 
     static List<float> _deliver(Dictionary<PriorityParameter, object> parameters)

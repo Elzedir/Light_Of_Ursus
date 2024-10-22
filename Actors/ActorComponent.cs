@@ -261,6 +261,8 @@ public enum PriorityImportance
 
 public enum PriorityParameter
 {
+    None,
+    ExistingPriority,
     PriorityImportance,
     MaxPriority,
     ItemsToFetch,
@@ -272,7 +274,7 @@ public enum PriorityParameter
 
 }
 
-public class PriorityComponent
+public abstract class PriorityComponent
 {
     public PriorityQueue PriorityQueue;
     public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
@@ -304,7 +306,7 @@ public class PriorityComponent
             switch (priorityImportance)
             {
                 case PriorityImportance.Critical:
-                    FullPriorityUpdate();
+                    PriorityQueue.Update((uint)action.Key, priorities);
                     break;
                 case PriorityImportance.High:
                     AddToCachedPriorityQueue(new Priority((uint)action.Key, priorities), PriorityImportance.High);
@@ -322,10 +324,16 @@ public class PriorityComponent
         }
     }
 
-    public void FullPriorityUpdate()
+    public void FullPriorityUpdate(List<object> allData)
     {
         SyncCachedPriorityQueueHigh();
+        //SyncCachedPriorityQueueMedium();
+        //SyncCachedPriorityQueueLow();
+
+        _updateAllPriorities(allData);
     }
+
+    protected abstract void _updateAllPriorities(List<object> allData);
 
     public void SyncCachedPriorityQueueHigh(bool syncing = false)
     {
@@ -396,32 +404,32 @@ public class PriorityComponent
         }
     }
 
-    public Priority CheckNextAction()
+    public Priority CheckNextPriority()
     {
         if (PriorityQueue == null) _initialiseActions();
 
         return PriorityQueue.Peek();
     }
 
-    public Priority CheckSpecificAction(ActionName actionName)
+    public Priority CheckSpecificPriority(uint priorityID)
     {
         if (PriorityQueue == null) _initialiseActions();
 
-        return PriorityQueue.Peek((uint)actionName);
+        return PriorityQueue.Peek(priorityID);
     }
 
-    public Priority PerformNextAction()
+    public Priority GetNextPriority()
     {
         if (PriorityQueue == null) _initialiseActions();
 
         return PriorityQueue.Dequeue();
     }
 
-    public Priority PerformSpecificAction(ActionName actionName)
+    public Priority GetSpecificPriority(uint priorityID)
     {
         if (PriorityQueue == null) _initialiseActions();
 
-        return PriorityQueue.Dequeue((uint)actionName);
+        return PriorityQueue.Dequeue(priorityID);
     }    
 }
 
@@ -433,4 +441,9 @@ public class PriorityComponent_Actor : PriorityComponent
     protected ActorComponent Actor { get { return _actorReferences.Actor; } }
 
     public PriorityComponent_Actor(uint actorID) => _actorReferences = new ActorReferences(actorID);
+
+    protected override void _updateAllPriorities(List<object> allData)
+    {
+        throw new NotImplementedException();
+    }
 }
