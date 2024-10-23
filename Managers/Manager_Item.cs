@@ -12,8 +12,18 @@ public enum ItemType {
 
 public class Manager_Item
 {
+    static Item_Master[] _allItems;
     public static Dictionary<uint, Item_Master> AllItems = new();
-    public static Item_Master GetMasterItem(uint itemID) => new Item_Master(AllItems[itemID]);
+    public static Item_Master GetMasterItem(uint itemID)
+    {
+        if (!AllItems.TryGetValue(itemID, out Item_Master item))
+        {
+            Debug.LogError("Item with ID " + itemID + " not found in AllItems.");
+            return null;
+        }
+
+        return item;
+    }
 
     static uint _lastUnusedID = 100000;
 
@@ -125,6 +135,12 @@ public class Item
     {
         var masterItem = Manager_Item.GetMasterItem(itemID);
 
+        if (masterItem == null) 
+        {
+            Debug.LogError("MasterItem for itemID: " + itemID + " is null");
+            return;
+        }
+
         ItemID = itemID;
         ItemName = masterItem.CommonStats_Item.ItemName;
         ItemAmount = itemAmount;
@@ -137,6 +153,19 @@ public class Item
         ItemName = item.ItemName;
         ItemAmount = item.ItemAmount;
         MaxStackSize = item.MaxStackSize;
+    }
+
+    public CommonStats_Item GetCommonStats()
+    {
+        var masterItem = Manager_Item.GetMasterItem(ItemID);
+
+        if (masterItem == null) 
+        {
+            Debug.LogError("MasterItem is null");
+            return null;
+        }
+
+        return new CommonStats_Item(masterItem.CommonStats_Item);
     }
 
     public static uint GetItemListCount_AllItems(List<Item> items) 

@@ -25,6 +25,8 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract StationType StationType { get; }
     public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0); } }
 
+    public PriorityComponent_Station PriorityComponent;
+
     public float InteractRange { get; protected set; }
 
     public List<EmployeePosition> AllowedEmployeePositions;
@@ -523,5 +525,24 @@ public class Operator
         OperatorID = other.OperatorID;
         OperatorPosition = other.OperatorPosition;
         OperatingAreaID = other.OperatingAreaID;
+    }
+}
+
+public class PriorityComponent_Station : PriorityComponent
+{
+    public PriorityComponent_Station(uint stationID) 
+    {
+        _stationReferences = new StationReferences(stationID);
+        PriorityQueue = new PriorityQueue(100);
+    } 
+
+    readonly StationReferences _stationReferences;
+
+    public uint JobsiteID { get { return _stationReferences.StationID; } }
+    protected StationComponent Jobsite { get { return _stationReferences.Station; } }
+
+    protected override void _updateAllPriorities(List<object> allData)
+    {
+        List<StationComponent> allStations = allData.Cast<StationComponent>().ToList();
     }
 }

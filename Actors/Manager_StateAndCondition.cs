@@ -6,7 +6,7 @@ using UnityEngine.Android;
 public class Manager_StateAndCondition
 {
     public static Dictionary<StateName, State> AllStates = new();
-    public static Dictionary<ConditionName, Condition> AllConditions = new();
+    public static Dictionary<ConditionName, Condition_Master> AllConditions = new();
 
     public static void Initialise()
     {
@@ -24,7 +24,7 @@ public class Manager_StateAndCondition
         AllStates.Add(state.StateName, state);
     }
 
-    static void _addCondition(Condition condition)
+    static void _addCondition(Condition_Master condition)
     {
         if (condition == null || AllConditions.ContainsKey(condition.ConditionName))
         {
@@ -45,7 +45,7 @@ public class Manager_StateAndCondition
         return AllStates[stateName];
     }
 
-    public static Condition GetCondition(ConditionName conditionName)
+    public static Condition_Master GetCondition_Master(ConditionName conditionName)
     {
         if (!AllConditions.ContainsKey(conditionName))
         {
@@ -82,11 +82,17 @@ public class State // Permanent or Perpetual thing
     public StateName StateName;
 }
 
+public class Condition_Master
+{
+    public ConditionName ConditionName;
+    public float DefaultConditionDuration;
+}
+
 [Serializable]
 public class Condition // Temprary and tickable thing
 {
     public ConditionName ConditionName;
-    public float DefaultConditionDuration;
+    public float ConditionDuration;
 }
 
 public enum ConditionName
@@ -124,11 +130,14 @@ public enum ConditionName
 }
 
 [Serializable]
-public class Actor_Conditions : DataSubClass
+public class Actor_Conditions : Priority_Data
 {
     public Actor_Conditions(uint actorID) : base(actorID) { }
-
-    public Dictionary<ConditionName, float> CurrentConditions = new();
+    Dictionary<ConditionName, float> _currentConditions = new();
+    public Dictionary<ConditionName, float> CurrentConditions 
+    { 
+        get { return _currentConditions; } set { _currentConditions = value; _priorityChangeCheck(DataChanged.ChangedCondition); } 
+    }
 
     public void Tick()
     {
@@ -152,20 +161,16 @@ public class Actor_Conditions : DataSubClass
             return;
         }
 
-        var condition = Manager_StateAndCondition.GetCondition(conditionName);
+        var condition_Master = Manager_StateAndCondition.GetCondition_Master(conditionName);
 
-        if (condition == null) return;
+        if (condition_Master == null) return;
 
-        CurrentConditions[conditionName] = condition.DefaultConditionDuration;
-
-        _priorityChangeCheck(conditionName);
+        CurrentConditions[conditionName] = condition_Master.DefaultConditionDuration;
     }
 
     public void SetConditionTimer(ConditionName conditionName, float timer)
     {
         CurrentConditions[conditionName] = timer;
-
-        _priorityChangeCheck(conditionName);
     }
 
     public void RemoveCondition(ConditionName conditionName)
@@ -173,22 +178,12 @@ public class Actor_Conditions : DataSubClass
         if (!CurrentConditions.ContainsKey(conditionName)) return;
 
         CurrentConditions.Remove(conditionName);
-
-        _priorityChangeCheck(conditionName);
     }
     protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-    public new static Dictionary<ConditionName, Dictionary<ActionName, Dictionary<PriorityParameter, object>>> ActionsAndParameters = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
     {
-        { ConditionName.Paralysed, new Dictionary<ActionName, Dictionary<PriorityParameter, object>>
-            {
-                { ActionName.Move, new Dictionary<PriorityParameter, object>
-                    {
-                        { PriorityParameter.PriorityImportance, PriorityImportance.Critical }
-                    }
-                },
-            }
-        },
+        
     };
 }
 
@@ -235,7 +230,7 @@ public enum StateName
     IsPregnant,
 }
 
-public class Actor_States : DataSubClass
+public class Actor_States : Priority_Data
 {
     public Actor_States(uint actorID) : base(actorID) { }
     public Dictionary<StateName, bool> CurrentStates = new();    
@@ -244,8 +239,13 @@ public class Actor_States : DataSubClass
     {
         CurrentStates[stateName] = state;
 
-        _priorityChangeCheck(stateName);
+        _priorityChangeCheck(DataChanged.ChangedState);
     }
 
     protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+        
+    };
 }

@@ -28,8 +28,19 @@ public class StationData : IStationInventory
 {
     public uint StationID;
 
-    readonly JobsiteReferences _jobsiteReferences;
-    public void SetJobsiteID(uint jobsiteID) => _jobsiteReferences.SetJobsiteID(jobsiteID);
+    JobsiteReferences _jobsiteReferences;
+    public void SetJobsiteID(uint jobsiteID)
+    {
+        if (_jobsiteReferences == null) _jobsiteReferences = new JobsiteReferences(jobsiteID);
+
+        if (_jobsiteReferences.JobsiteID == jobsiteID)
+        {
+            Debug.Log($"JobsiteID: {jobsiteID} is being set to same ID.");
+            return;
+        }
+
+        _jobsiteReferences.SetJobsiteID(jobsiteID);
+    }
     public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
     public JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
 
@@ -208,4 +219,13 @@ public class StationProgressData
 
         return false;
     }
+}
+
+public class StationReferences
+{
+    public uint StationID;
+    public StationReferences(uint stationID) => StationID = stationID;
+
+    StationComponent _station;
+    public StationComponent Station { get => _station ??= Manager_Station.GetStation(StationID); }
 }

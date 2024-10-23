@@ -132,63 +132,45 @@ public class ActorReferences
     public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
 }
 
-public abstract class DataSubClass
+public enum DataChanged
 {
-    readonly ActorReferences ActorReferences;
-    public uint ActorID { get { return ActorReferences.ActorID; } }
-    protected ActorComponent Actor { get { return ActorReferences.Actor; }}
+    None,
 
-    public DataSubClass(uint actorID) => ActorReferences = new ActorReferences(actorID);
+    #region Full Identification
+    ChangedName,
+    ChangedFaction,
+    ChangedCity,
+    ChangedBirthdate,
+    ChangedFamily,
+    ChangedBackground,
+    #endregion
 
-    public Action<Dictionary<ActionName, Dictionary<PriorityParameter, object>>> OnDataChange;
-    
-    protected void _priorityChangeCheck(object dataChanged)
-    {
-        if (!_priorityChangeNeeded(dataChanged)) return;
+    ChangedPersonality,
+    ChangedBirthplace,
+    ChangedDynasty,
+    ChangedReligion,
+    MovedActor,
+    RotatedActor,
+    ScaledActor,
+    ChangedMesh,
+    ChangedMaterial,
+    ToggledDoJobs,
+    ChangedJobsite,
+    ChangedStation,
+    ChangedOperatingArea,
+    ChangedEmployeePosition,
+    ChangedSpecies,
+    ChangedInventory,
+    DroppedItems,
 
-        if (OnDataChange == null) _setOnDataChange();
-
-        if (OnDataChange == null) 
-        {
-            Debug.LogError("OnDataChange is still null after resetting data change notifications.");
-            return;
-        }
-
-        OnDataChange(_getActionsToChange(dataChanged));
-    }
-    
-    protected abstract bool _priorityChangeNeeded(object dataChanged);
-    protected void _setOnDataChange() => OnDataChange = (Dictionary<ActionName, Dictionary<PriorityParameter, object>> actionsToChange)
-    => Actor.PriorityComponent.OnDataChanged(actionsToChange);
-    protected Dictionary<ActionName, Dictionary<PriorityParameter, object>> _getActionsToChange(object dataChanged)
-    {
-        if (ActionsAndParameters.Count == 0)
-        {
-            Debug.LogError("ActionsAndParameters is empty.");
-            return null;
-        }
-
-        if (!ActionsAndParameters.TryGetValue(dataChanged, out var actionsAndImportance))
-        {
-            Debug.LogError($"DataChanged: {dataChanged} is not in ActionsAndParameters list");
-            return null;
-        }
-
-        var actionsToChange = new Dictionary<ActionName, Dictionary<PriorityParameter, object>>();
-
-        foreach (var action in actionsAndImportance)
-        {
-            actionsToChange.Add(action.Key, action.Value);
-        }
-
-        return actionsToChange;
-    }
-
-    protected static Dictionary<object, Dictionary<ActionName, Dictionary<PriorityParameter, object>>> ActionsAndParameters;
+    #region States And Conditions
+    ChangedState,
+    ChangedCondition,
+    #endregion
 }
 
 [Serializable]
-public class FullIdentification : DataSubClass
+public class FullIdentification : Priority_Data
 {
     public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID) : base(actorID)
     {
@@ -209,10 +191,15 @@ public class FullIdentification : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class Background : DataSubClass
+public class Background : Priority_Data
 {
     public Background(uint actorID) : base(actorID) { }
 
@@ -226,10 +213,15 @@ public class Background : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class GameObjectProperties : DataSubClass
+public class GameObjectProperties : Priority_Data
 {
     public GameObjectProperties(uint actorID) : base(actorID) { }
 
@@ -282,10 +274,15 @@ public class GameObjectProperties : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class WorldStateData : DataSubClass
+public class WorldStateData : Priority_Data
 {
     public WorldStateData(uint actorID) : base(actorID) { }
 
@@ -293,10 +290,15 @@ public class WorldStateData : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class Relationships : DataSubClass
+public class Relationships : Priority_Data
 {
     public Relationships(uint actorID) : base(actorID) { }
     public List<Relation> AllRelationships;
@@ -305,10 +307,15 @@ public class Relationships : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class CareerAndJobs : DataSubClass
+public class CareerAndJobs : Priority_Data
 {
     public CareerAndJobs(uint actorID) : base(actorID) { }
 
@@ -320,7 +327,7 @@ public class CareerAndJobs : DataSubClass
 
     public uint StationID;
     public void SetStationID(uint stationID) => StationID = stationID;
-    
+
     public uint OperatingAreaID;
     public void SetOperatingAreaID(uint operatingAreaID) => OperatingAreaID = operatingAreaID;
 
@@ -331,10 +338,15 @@ public class CareerAndJobs : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class SpeciesAndPersonality : DataSubClass
+public class SpeciesAndPersonality : Priority_Data
 {
     public SpeciesAndPersonality(uint actorID) : base(actorID) { }
 
@@ -347,13 +359,26 @@ public class SpeciesAndPersonality : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class StatsAndAbilities : DataSubClass
+public class StatsAndAbilities
 {
-    public StatsAndAbilities(uint actorID) : base(actorID) { }
-
+    uint _actorID;
+    public StatsAndAbilities(uint actorID)
+    {
+        _actorID = actorID;
+        Actor_Stats = new Actor_Stats(actorID);
+        Actor_Conditions = new Actor_Conditions(actorID);
+        Actor_States = new Actor_States(actorID);
+        Actor_Aspects = new Actor_Aspects(actorID);
+        Actor_Abilities = new Actor_Abilities(actorID);
+    }
     public Actor_Stats Actor_Stats;
     public void SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
 
@@ -368,11 +393,6 @@ public class StatsAndAbilities : DataSubClass
 
     public Actor_Abilities Actor_Abilities;
     public void SetActorAbilities(Actor_Abilities actor_Abilities) => Actor_Abilities = actor_Abilities;
-
-    protected override bool _priorityChangeNeeded(object dataChanged)
-    {
-        return false;
-    }
 }
 
 [Serializable]
@@ -401,7 +421,7 @@ public enum SpeciesName
 }
 
 [Serializable]
-public class Actor_Stats : DataSubClass
+public class Actor_Stats : Priority_Data
 {
     public Actor_Stats(uint actorID) : base(actorID) { }
 
@@ -416,10 +436,15 @@ public class Actor_Stats : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class Actor_Aspects : DataSubClass
+public class Actor_Aspects : Priority_Data
 {
     public Actor_Aspects(uint actorID) : base(actorID) { }
 
@@ -452,7 +477,7 @@ public class Actor_Aspects : DataSubClass
         ActorAspectList[index] = aspect;
         return true;
     }
-    
+
     public void ChangeAspect(AspectName aspect, int index)
     {
         if (index < 0 || index >= ActorAspectList.Count)
@@ -468,10 +493,15 @@ public class Actor_Aspects : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class ActorLevelData : DataSubClass
+public class ActorLevelData : Priority_Data
 {
     public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0, uint totalSPECIALPoints = 0, bool canAddNewSkillSet = false) : base(actorID)
     {
@@ -539,10 +569,15 @@ public class ActorLevelData : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class CraftingData : DataSubClass
+public class CraftingData : Priority_Data
 {
     public CraftingData(uint actorID) : base(actorID) { }
 
@@ -600,7 +635,7 @@ public class CraftingData : DataSubClass
             }
 
             actorData.InventoryData.AddToInventory(recipe.RequiredIngredients);
-            Debug.Log($"Cannot add products into inventory"); 
+            Debug.Log($"Cannot add products into inventory");
             yield break;
         }
         else
@@ -614,10 +649,15 @@ public class CraftingData : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class QuestData : DataSubClass
+public class QuestData : Priority_Data
 {
     public QuestData(uint actorID) : base(actorID) { }
 
@@ -631,10 +671,15 @@ public class QuestData : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
-public class VocationData : DataSubClass
+public class VocationData : Priority_Data
 {
     public VocationData(uint actorID) : base(actorID) { }
 
@@ -643,7 +688,7 @@ public class VocationData : DataSubClass
 
     public void AddVocation(VocationName vocationName, float vocationExperience)
     {
-        if (ActorVocations.Any(v => v.VocationName == vocationName)) 
+        if (ActorVocations.Any(v => v.VocationName == vocationName))
         {
             Debug.Log($"Vocation: {vocationName} already exists in Vocations.");
             return;
@@ -654,7 +699,7 @@ public class VocationData : DataSubClass
 
     public void RemoveVocation(VocationName vocationName)
     {
-        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        if (!ActorVocations.Any(v => v.VocationName == vocationName))
         {
             Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
             return;
@@ -665,7 +710,7 @@ public class VocationData : DataSubClass
 
     public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
     {
-        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        if (!ActorVocations.Any(v => v.VocationName == vocationName))
         {
             Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
             return;
@@ -676,7 +721,7 @@ public class VocationData : DataSubClass
 
     public float GetVocationExperience(VocationName vocationName)
     {
-        if (!ActorVocations.Any(v => v.VocationName == vocationName)) 
+        if (!ActorVocations.Any(v => v.VocationName == vocationName))
         {
             Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
             return 0;
@@ -705,6 +750,11 @@ public class VocationData : DataSubClass
     {
         return false;
     }
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+
+    };
 }
 
 [Serializable]
@@ -720,167 +770,5 @@ public class ActorVocation
 
         // Impement later
         //VocationTitle = Manager_Vocation.GetVocation(vocationName).GetVocationTitle(vocationExperience);
-    }
-}
-
-public abstract class PriorityGenerator
-{
-    protected static float DefaultMaxPriority => 10;
-
-    protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority) 
-    => Math.Clamp(current - target, 0, maxPriority);
-    protected static float _addPriorityIfBelowTarget(float current, float target, float maxPriority) 
-    => Math.Clamp(target - current, 0, maxPriority);
-    protected static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority) 
-    => Math.Clamp(Math.Abs(current - target), 0, maxPriority);
-
-    protected static float _addPriorityIfOutsideRange(float current, float min, float max, float maxPriority)
-    => (current < min || current > max) ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
-    protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority) 
-    => (current > min || current < max) ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
-
-    protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp((current / total - targetPercentage / 100) * 100, 0, maxPriority);
-    protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp((targetPercentage / 100 - current / total) * 100, 0, maxPriority);
-    protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * 100, 0, maxPriority);
-
-    protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max, float maxPriority)
-    {
-        current = current / total * 100;
-        return (current < min || current > max)
-        ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max )), 0, maxPriority)
-        : 0;
-    }
-    protected static float _addPriorityIfInsidePercentRange
-    (float current, float total, float min, float max, float maxPriority)
-    {
-        current = current / total * 100;
-
-        return (current >= min && current <= max) 
-        ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
-        : 0;
-    }
-
-    protected static float _moreItemsDesired(List<Item> items, float target, float maxPriority)
-    {
-        return _addPriorityIfAboveTarget(Item.GetItemListCount_AllItems(items), target, maxPriority);
-    }
-
-    protected static float _lessItemsDesired(List<Item> items, float target, float maxPriority)
-    {
-        return _addPriorityIfBelowTarget(Item.GetItemListCount_AllItems(items), target, maxPriority);
-    }
-
-    protected static float _moreDistanceDesired(Vector3 currentPosition, Vector3 targetPosition, float targetDistance, float maxPriority)
-    {
-        return _addPriorityIfAboveTarget(Vector3.Distance(currentPosition, targetPosition), targetDistance, maxPriority);
-    }
-
-    protected static float _lessDistanceDesired(Vector3 currentPosition, Vector3 targetPosition, float targetDistance, float maxPriority)
-    {
-        return _addPriorityIfBelowTarget(Vector3.Distance(currentPosition, targetPosition), targetDistance, maxPriority);
-    }
-
-    public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
-    {
-        // But now the problem is that I must not override the priorities that are already set, so I need to find a way to add to the existing priorities when adding from another source. Instead when we choose an actor priority, we simply add the priority for the station to the
-        // priority of the action in his own priority queue.
-
-        switch(actionName)
-        {
-            case ActionName.Fetch:
-                return _fetch(parameters);
-            default:
-                Debug.LogError($"ActionName: {actionName} not found.");
-                return null;
-        }
-    }
-
-    static List<float> _fetch(Dictionary<PriorityParameter, object> parameters)
-    {
-        var maxPriority = DefaultMaxPriority;
-        var existingPriority = new List<float>();
-        var itemsToFetch = new List<Item>();
-        var actorPosition = Vector3.zero;
-        var targetPosition = Vector3.zero;
-
-        foreach (var parameter in parameters)
-        {
-            switch (parameter.Key)
-            {
-                case PriorityParameter.MaxPriority:
-                    maxPriority = (float)parameter.Value;
-                    break;
-                case PriorityParameter.ExistingPriority:
-                    existingPriority = (List<float>)parameter.Value;
-                    break;
-                case PriorityParameter.ItemsToFetch:
-                    itemsToFetch = (List<Item>)parameter.Value;
-                    break;
-                case PriorityParameter.ActorPosition:
-                    actorPosition = (Vector3)parameter.Value;
-                    break;
-                case PriorityParameter.TargetPosition:
-                    targetPosition = (Vector3)parameter.Value;
-                    break;
-                default:
-                    Debug.LogError($"Parameter: {parameter.Key} not found.");
-                    break;
-            }
-        }
-
-        var priority_ItemQuantity = itemsToFetch.Count != 0 ? _moreItemsDesired(itemsToFetch, 0, maxPriority) : 0;
-        var priority_Distance = actorPosition != Vector3.zero && targetPosition != Vector3.zero
-        ? _lessDistanceDesired(actorPosition, targetPosition, 5, maxPriority)
-        : 0;
-
-        var newPriorities = new List<float>
-        {
-            priority_ItemQuantity + priority_Distance
-        };
-
-        if (existingPriority.Count > 0) newPriorities.AddRange(existingPriority);
-
-        return newPriorities;
-    }
-
-    static List<float> _deliver(Dictionary<PriorityParameter, object> parameters)
-    {
-        var maxPriority = DefaultMaxPriority;
-        var itemsToDeliver = new List<Item>();
-        var actorPosition = Vector3.zero;
-        var targetPosition = Vector3.zero;
-
-        foreach(var parameter in parameters)
-        {
-            switch(parameter.Key)
-            {
-                case PriorityParameter.MaxPriority:
-                    maxPriority = (float)parameter.Value;
-                    break;
-                case PriorityParameter.ItemsToDeliver:
-                    itemsToDeliver = (List<Item>)parameter.Value;
-                    break;
-                case PriorityParameter.ActorPosition:
-                    actorPosition = (Vector3)parameter.Value;
-                    break;
-                case PriorityParameter.TargetPosition:
-                    targetPosition = (Vector3)parameter.Value;
-                    break;
-                default:
-                    Debug.LogError($"Parameter: {parameter.Key} not found.");
-                    break;
-            }
-        }
-
-        return new List<float>
-        {
-            // Find a way to calculate desired distance for delivery, maybe base it off average distance to deliverable stations.
-
-            _moreItemsDesired(itemsToDeliver, 0, maxPriority)
-            + _lessDistanceDesired(actorPosition, targetPosition, 5, maxPriority),
-        };
     }
 }

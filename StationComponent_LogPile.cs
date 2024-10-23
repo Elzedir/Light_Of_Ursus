@@ -219,6 +219,18 @@ public class StationComponent_LogPile : StationComponent
 
         var stationAndItems = Jobsite.GetStationToHaulFrom(actor);
 
+        if (stationAndItems.Station == null)
+        {
+            Debug.Log($"No stations to haul from.");
+            return false;
+        }
+
+        if (stationAndItems.Items.Count == 0)
+        {
+            Debug.Log($"No items to haul from {stationAndItems.Station.StationName}.");
+            return false;
+        }
+
         StartCoroutine(_fetchItems(actor, stationAndItems.Station, stationAndItems.Items));
 
         return true;

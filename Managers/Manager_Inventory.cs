@@ -11,24 +11,31 @@ public class Manager_Inventory : MonoBehaviour
 public interface IInventoryOwner
 {
     GameObject GetGameObject();
-    InventoryData GetInventoryData();
+}
+
+public interface IActorInventory : IInventoryOwner
+{
+    InventoryData_Actor GetInventoryData();
 }
 
 public interface IStationInventory : IInventoryOwner
 {
-    
+    InventoryData_Station GetInventoryData();
 }
 
 [Serializable]
-public class InventoryData
+public abstract class InventoryData
 {
-    public uint ActorID;
-    ActorComponent _actor;
-    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
     public int Gold = 0;
-    public List<Item> AllInventoryItems;
+
+    public List<Item> _allInventoryItems;
+    public List<Item> AllInventoryItems
+    {
+        get { return _allInventoryItems; }
+        set { _allInventoryItems = value; _priorityChangeCheck(DataChanged.ChangedInventory, true); }
+    }
+
     public float GetTotalInventoryWeight() => AllInventoryItems.Sum(i => i.ItemAmount * Manager_Item.GetMasterItem(i.ItemID).CommonStats_Item.ItemWeight);
-    public InventoryData(uint actorID) => ActorID = actorID;
     public void SetInventory(List<Item> allInventoryItems) => AllInventoryItems = allInventoryItems;
 
     public Item GetItemFromInventory(uint itemID)
@@ -40,7 +47,7 @@ public class InventoryData
     {
         float totalWeight = 0;
 
-        foreach(Item item in items)
+        foreach (Item item in items)
         {
             var itemMaster = Manager_Item.GetMasterItem(item.ItemID);
 
@@ -285,9 +292,9 @@ public class InventoryData
         }
     }
 
-    
+
     public List<Item> InventoryContainsReturnedItems(List<uint> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
-    
+
     public List<Item> InventoryMissingItems(List<Item> items)
     {
         List<Item> missingItems = new();
@@ -315,7 +322,7 @@ public class InventoryData
         foreach (var requiredItem in requiredItems)
         {
             var existingItems = AllInventoryItems.Where(i => i.ItemID == requiredItem.ItemID).ToList();
-            
+
             if (!AllInventoryItems.Any(i => i.ItemID == requiredItem.ItemID && i.ItemAmount >= requiredItem.ItemAmount))
             {
                 return false;
@@ -324,4 +331,27 @@ public class InventoryData
 
         return true;
     }
+
+    protected override bool _priorityChangeNeeded(object dataChanged) => true;
+
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    {
+        { 
+            DataChanged.ChangedInventory, 
+            new()
+            {
+
+            }
+        }
+    };
+}
+
+public class InventoryData_Actor : InventoryData
+{
+    
+}
+
+public class InventoryData_Station : InventoryData
+{
+
 }

@@ -136,7 +136,10 @@ public class Ability
 }
 
 [Serializable]
-public class Actor_Abilities
+public class Actor_Abilities : Priority_Data
 {
+    public Actor_Abilities(uint actorID) : base(actorID) { }
     public Dictionary<Ability, float> AbilityList = new();
+    protected override bool _priorityChangeNeeded(object dataChanged) => false;
+    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new();
 }
