@@ -94,7 +94,7 @@ public class StationComponent_Tree : StationComponent
         yield return null;
     }
 
-    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(InventoryData inventoryOwner)
     {
         Debug.LogError("No GetItemsToDropOff method implemented for Tree.");
         return new List<Item>();

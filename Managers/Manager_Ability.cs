@@ -136,10 +136,13 @@ public class Ability
 }
 
 [Serializable]
-public class Actor_Abilities : Priority_Data
+public class Actor_Abilities : PriorityData
 {
-    public Actor_Abilities(uint actorID) : base(actorID) { }
+    public Actor_Abilities(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
+
     public Dictionary<Ability, float> AbilityList = new();
     protected override bool _priorityChangeNeeded(object dataChanged) => false;
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new();
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new();
 }

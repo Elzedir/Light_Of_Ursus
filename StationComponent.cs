@@ -272,7 +272,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract void InitialiseStartingInventory();
     public List<Item> GetInventoryItemsToHaul()
     {
-        return StationData.InventoryData.AllInventoryItems.Where(i => !DesiredStoredItemIDs.Contains(i.ItemID)).ToList();
+        return StationData.InventoryData.GetInventoryItemsToHaul();
     }
 
     public void SetStationData(StationData stationData) => StationData = stationData;
@@ -291,7 +291,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     public abstract void CraftItem(RecipeName recipeName, ActorComponent actor);
 
-    public abstract List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner);
+    public abstract List<Item> GetItemsToDeliver(InventoryData inventoryOwner);
 
     protected abstract List<Item> _getCost(List<Item> ingredients, ActorComponent actor);
 
@@ -532,11 +532,11 @@ public class PriorityComponent_Station : PriorityComponent
 {
     public PriorityComponent_Station(uint stationID) 
     {
-        _stationReferences = new StationReferences(stationID);
+        _stationReferences = new ComponentReference_Station(stationID);
         PriorityQueue = new PriorityQueue(100);
     } 
 
-    readonly StationReferences _stationReferences;
+    readonly ComponentReference_Station _stationReferences;
 
     public uint JobsiteID { get { return _stationReferences.StationID; } }
     protected StationComponent Jobsite { get { return _stationReferences.Station; } }

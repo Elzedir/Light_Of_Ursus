@@ -130,9 +130,13 @@ public enum ConditionName
 }
 
 [Serializable]
-public class Actor_Conditions : Priority_Data
+public class Actor_Conditions : PriorityData
 {
-    public Actor_Conditions(uint actorID) : base(actorID) { }
+    public Actor_Conditions(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
+
+
     Dictionary<ConditionName, float> _currentConditions = new();
     public Dictionary<ConditionName, float> CurrentConditions 
     { 
@@ -181,7 +185,7 @@ public class Actor_Conditions : Priority_Data
     }
     protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
         
     };
@@ -230,9 +234,12 @@ public enum StateName
     IsPregnant,
 }
 
-public class Actor_States : Priority_Data
+public class Actor_States : PriorityData
 {
-    public Actor_States(uint actorID) : base(actorID) { }
+    public Actor_States(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
+
     public Dictionary<StateName, bool> CurrentStates = new();    
 
     public void SetState(StateName stateName, bool state)
@@ -244,7 +251,7 @@ public class Actor_States : Priority_Data
 
     protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
         
     };

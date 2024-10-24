@@ -101,7 +101,7 @@ public class Manager_Personality
 
 public enum PersonalityTraitName { Arrogant, Ambitious, Brave, Craven, Deceitful, Honest, Humble, Just, Sadistic, Savage, Vengeful }
 
-public class PersonalityComponent : ActorReferences
+public class PersonalityComponent : ComponentReference_Actor
 {
     public PersonalityComponent(uint actorID) : base(actorID) { }
 

@@ -50,12 +50,12 @@ public abstract class PriorityGenerator
 
     protected static float _moreItemsDesired(List<Item> items, float target, float maxPriority)
     {
-        return _addPriorityIfAboveTarget(Item.GetItemListCount_AllItems(items), target, maxPriority);
+        return _addPriorityIfAboveTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
     protected static float _lessItemsDesired(List<Item> items, float target, float maxPriority)
     {
-        return _addPriorityIfBelowTarget(Item.GetItemListCount_AllItems(items), target, maxPriority);
+        return _addPriorityIfBelowTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
     protected static float _moreDistanceDesired(Vector3 currentPosition, Vector3 targetPosition, float targetDistance, float maxPriority)
@@ -112,11 +112,11 @@ public abstract class PriorityGenerator
             }
         }
         
-        var allItemsToFetch = station.GetInventoryItemsToHaul();
+        var allItemsToFetch = inventory_target.GetInventoryItemsToHaul();
         var priority_ItemQuantity = allItemsToFetch.Count != 0 ? _moreItemsDesired(allItemsToFetch, 0, maxPriority) : 0;
 
-        var haulerPosition = actor.transform.position;
-        var targetPosition = inventory_target..position;
+        var haulerPosition = inventory_hauler.Reference.GameObject.transform.position;
+        var targetPosition = inventory_target.Reference.GameObject.transform.position;
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired(haulerPosition, targetPosition, 5, maxPriority)
         : 0;
@@ -315,14 +315,14 @@ public abstract class PriorityComponent
 
 public class PriorityComponent_Actor : PriorityComponent
 {
-    readonly ActorReferences _actorReferences;
+    readonly ComponentReference_Actor _actorReferences;
 
     public uint ActorID { get { return _actorReferences.ActorID; } }
     protected ActorComponent Actor { get { return _actorReferences.Actor; } }
 
     public PriorityComponent_Actor(uint actorID)
     {
-        _actorReferences = new ActorReferences(actorID);
+        _actorReferences = new ComponentReference_Actor(actorID);
         PriorityQueue = new PriorityQueue(100);
     }
 
@@ -338,11 +338,11 @@ public class PriorityComponent_Jobsite : PriorityComponent
 {
     public PriorityComponent_Jobsite(uint jobsiteID) 
     {
-        _jobsiteReferences = new JobsiteReferences(jobsiteID);
+        _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
         PriorityQueue = new PriorityQueue(100);
     } 
 
-    readonly JobsiteReferences _jobsiteReferences;
+    readonly ComponentReference_Jobsite _jobsiteReferences;
 
     public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
     protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
@@ -408,14 +408,30 @@ public class PriorityComponent_Jobsite : PriorityComponent
     }
 }
 
-public abstract class Priority_Data
+public abstract class PriorityData
 {
-    public uint PriorityID;
-    public Priority_Data(uint priorityID) => PriorityID = priorityID; 
+    public ComponentReference Reference { get; private set; }
 
-    protected abstract PriorityComponent PriorityComponent { get; }
+    public PriorityData (uint componentID, ComponentType componentType)
+    {
+        switch(componentType)
+        {
+            case ComponentType.Actor:
+                Reference = new ComponentReference_Actor(componentID);
+                break;
+            case ComponentType.Station:
+                Reference = new ComponentReference_Station(componentID);
+                break;
+            default:
+                Debug.LogError($"ComponentType: {componentType} not found.");
+                break;
+        }
+    }
     
-    public Action<DataChanged, List<PriorityParameter>> OnDataChange;
+    protected PriorityComponent _priorityComponent;
+    public abstract PriorityComponent PriorityComponent { get; }
+    
+    public Action<DataChanged, List<PriorityParameter>> OnDataChange { get; set; }
     
     protected void _priorityChangeCheck(DataChanged dataChanged, bool forceChange = false)
     {
@@ -437,13 +453,13 @@ public abstract class Priority_Data
     => PriorityComponent.OnDataChanged(DataChanged, changedParameters);
     protected List<PriorityParameter> _getActionsToChange(DataChanged dataChanged)
     {
-        if (PriorityParameterList.Count == 0)
+        if (_priorityParameterList.Count == 0)
         {
             Debug.LogError("ActionsAndParameters is empty.");
             return null;
         }
 
-        if (!PriorityParameterList.TryGetValue(dataChanged, out var priorityParameters))
+        if (!_priorityParameterList.TryGetValue(dataChanged, out var priorityParameters))
         {
             Debug.LogError($"DataChanged: {dataChanged} is not in ActionsAndParameters list");
             return null;
@@ -452,29 +468,52 @@ public abstract class Priority_Data
         return priorityParameters;
     }
 
-    protected abstract Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; }
+    protected abstract Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; }
 }
 
-public abstract class Priority_Data_Actor : Priority_Data
+public abstract class ComponentReference
 {
-    public Priority_Data_Actor(uint actorID) : base(actorID) { }
+    public uint ComponentID { get; private set; }
+    public ComponentReference(uint componentID) => ComponentID = componentID;
 
-    readonly ActorReferences ActorReferences;
-    public uint ActorID { get { return ActorReferences.ActorID; } }
-    protected ActorComponent Actor { get { return ActorReferences.Actor; }}
-
-    protected override PriorityComponent PriorityComponent { get { return Actor.PriorityComponent; } }
+    protected abstract object _component { get; }
+    public abstract GameObject GameObject { get; }
 }
 
-public abstract class Priority_Data_Station : Priority_Data
+public class ComponentReference_Actor : ComponentReference
 {
-    public Priority_Data_Station(uint stationID) : base(stationID) { }
+    public uint ActorID => ComponentID;
+    public ComponentReference_Actor(uint actorID) : base(actorID) { }
 
-    readonly StationReferences StationReferences;
-    public uint StationID { get { return StationReferences.StationID; } }
-    protected StationComponent Station { get { return StationReferences.Station; }}
+    ActorComponent _actor;
+    protected override object _component { get => _actor ??= Manager_Actor.GetActor(ComponentID); } 
+    public ActorComponent Actor => _component as ActorComponent;
 
-    protected override PriorityComponent PriorityComponent { get { return Station.PriorityComponent; } }
+    public override GameObject GameObject => Actor.gameObject;
+}
+
+public class ComponentReference_Station : ComponentReference
+{
+    public uint StationID => ComponentID;
+    public ComponentReference_Station(uint stationID) : base(stationID) { }
+
+    StationComponent _station;
+    protected override object _component { get => _station ??= Manager_Station.GetStation(StationID); }
+    public StationComponent Station => _component as StationComponent;
+
+    public override GameObject GameObject => Station.gameObject;
+}
+
+public class ComponentReference_Jobsite : ComponentReference
+{
+    public uint JobsiteID => ComponentID;
+    public ComponentReference_Jobsite(uint jobsiteID) : base(jobsiteID) { }
+
+    JobsiteComponent _jobsite;
+    protected override object _component { get => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); }
+    public JobsiteComponent Jobsite => _component as JobsiteComponent;
+
+    public override GameObject GameObject => Jobsite.gameObject;
 }
 
 public class PriorityParameter

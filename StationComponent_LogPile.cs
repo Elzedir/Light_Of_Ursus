@@ -59,10 +59,10 @@ public class StationComponent_LogPile : StationComponent
         AllowedEmployeePositions = new() { EmployeePosition.None };
     }
 
-    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(InventoryData inventoryOwner)
     {
-        return inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
-        .Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
+        return null;//inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
+        //.Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
     }
 
     protected override void _operateStation()
@@ -221,6 +221,9 @@ public class StationComponent_LogPile : StationComponent
 
         if (stationAndItems.Station == null)
         {
+            a
+            // Permanently returning null currently.
+
             Debug.Log($"No stations to haul from.");
             return false;
         }

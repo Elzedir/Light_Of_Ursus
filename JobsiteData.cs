@@ -532,17 +532,3 @@ public class JobsiteData_Drawer : PropertyDrawer
 
     }
 }
-
-public class JobsiteReferences
-{
-    public uint JobsiteID;
-    public JobsiteReferences(uint jobsiteID) => JobsiteID = jobsiteID;
-    public void SetJobsiteID(uint jobsiteID)
-    {
-        JobsiteID = jobsiteID;
-        _jobsite = null;
-    }
-
-    JobsiteComponent _jobsite;
-    public JobsiteComponent Jobsite { get => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); }
-}

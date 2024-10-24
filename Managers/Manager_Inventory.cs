@@ -8,62 +8,53 @@ public class Manager_Inventory : MonoBehaviour
     
 }
 
-public interface IInventoryOwner
+public enum ComponentType
 {
-    GameObject GetGameObject();
-}
-
-public interface IActorInventory : IInventoryOwner
-{
-    InventoryData_Actor GetInventoryData();
-}
-
-public interface IStationInventory : IInventoryOwner
-{
-    InventoryData_Station GetInventoryData();
+    Actor,
+    Station
 }
 
 [Serializable]
-public abstract class InventoryData
+public abstract class InventoryData : PriorityData
 {
-    public int Gold = 0;
+    public InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType) { }
 
+    public abstract ComponentType ComponentType { get; }
+
+    ComponentReference _reference => Reference as ComponentReference;
+
+    public int Gold = 0;
+    bool _skipNextPriorityCheck = false;
+    public void SkipNextPriorityCheck() => _skipNextPriorityCheck = true;
     public List<Item> _allInventoryItems;
     public List<Item> AllInventoryItems
     {
-        get { return _allInventoryItems; }
-        set { _allInventoryItems = value; _priorityChangeCheck(DataChanged.ChangedInventory, true); }
+        get { return _allInventoryItems ??= new(); }
+        set 
+        { 
+            _allInventoryItems = value; 
+            
+            if (_skipNextPriorityCheck)
+            {
+                _skipNextPriorityCheck = false;
+                return;
+            } 
+            
+            _priorityChangeCheck(DataChanged.ChangedInventory, true); 
+        }
     }
 
-    public float GetTotalInventoryWeight() => AllInventoryItems.Sum(i => i.ItemAmount * Manager_Item.GetMasterItem(i.ItemID).CommonStats_Item.ItemWeight);
-    public void SetInventory(List<Item> allInventoryItems) => AllInventoryItems = allInventoryItems;
+    public void SetInventory(List<Item> allInventoryItems, bool skipPriorityCheck = false)
+    {
+        if (skipPriorityCheck) SkipNextPriorityCheck();
+        AllInventoryItems = allInventoryItems;
+    }
 
     public Item GetItemFromInventory(uint itemID)
     {
         return AllInventoryItems.FirstOrDefault(i => i.ItemID == itemID);
     }
-
-    public bool HasSpaceForItem(List<Item> items)
-    {
-        float totalWeight = 0;
-
-        foreach (Item item in items)
-        {
-            var itemMaster = Manager_Item.GetMasterItem(item.ItemID);
-
-            var itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
-
-            totalWeight += itemWeight;
-        }
-
-        if (totalWeight > Actor.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight)
-        {
-            Debug.LogWarning("Not enough space in inventory.");
-            return false;
-        }
-
-        return true;
-    }
+    public abstract bool HasSpaceForItems(List<Item> items);
 
     public bool AddToInventory(List<Item> items)
     {
@@ -214,9 +205,6 @@ public abstract class InventoryData
 
     public bool TransferItemFromInventory(InventoryData target, List<Item> items)
     {
-        Debug.Log(string.Join(", ", items.Select(i => $"{i.ItemName}: {i.ItemAmount}")));
-        Debug.Log(target);
-
         if (!RemoveFromInventory(items))
         {
             Debug.Log("Can't remove items from inventory to transfer.");
@@ -233,9 +221,7 @@ public abstract class InventoryData
 
         if (!AddToInventory(items))
         {
-            var actor = Manager_Actor.GetActor(ActorID);
-
-            DropItems(items, actor.transform.position, itemsNotInInventory: true);
+            DropItems(items, _reference.GameObject.transform.position, itemsNotInInventory: true, dropAsGroup: true);
             Debug.Log("Took items out of inventory and can't put them back");
         }
 
@@ -292,7 +278,6 @@ public abstract class InventoryData
         }
     }
 
-
     public List<Item> InventoryContainsReturnedItems(List<uint> itemIDs) => AllInventoryItems.Where(i => itemIDs.Contains(i.ItemID)).ToList();
 
     public List<Item> InventoryMissingItems(List<Item> items)
@@ -332,9 +317,7 @@ public abstract class InventoryData
         return true;
     }
 
-    protected override bool _priorityChangeNeeded(object dataChanged) => true;
-
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
         { 
             DataChanged.ChangedInventory, 
@@ -344,14 +327,65 @@ public abstract class InventoryData
             }
         }
     };
+
+    public abstract List<Item> GetInventoryItemsToHaul();
 }
 
 public class InventoryData_Actor : InventoryData
 {
-    
+    public InventoryData_Actor(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public override ComponentType ComponentType => ComponentType.Actor;
+    public InventoryData_Actor GetInventoryData() => this;
+
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
+
+    protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
+
+    float _availableCarryWeight;
+    public float AvailableCarryWeight => _availableCarryWeight != 0 
+    ? _availableCarryWeight 
+    : ActorReference.Actor.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+    public override bool HasSpaceForItems(List<Item> items)
+    {
+        if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)
+        {
+            Debug.Log("Too heavy for inventory.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public override List<Item> GetInventoryItemsToHaul()
+    {
+        Debug.LogError("Not implemented yet.");
+        return null;
+    }
 }
 
 public class InventoryData_Station : InventoryData
 {
+    public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station) { }
+    public override ComponentType ComponentType => ComponentType.Station;
+    public InventoryData_Station GetInventoryData() => this;
 
+    public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
+
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= StationReference.Station.PriorityComponent; }
+    public uint MaxInventorySpace = 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
+    public List<uint> GetDesiredStoredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
+    protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
+    public override bool HasSpaceForItems(List<Item> items)
+    {
+        if (Item.GetItemListTotal_CountAllItems(items) > MaxInventorySpace)
+        {
+            Debug.Log("Not enough space in inventory.");
+            return false;
+        }
+
+        return true;
+    }
+    public override List<Item> GetInventoryItemsToHaul() => AllInventoryItems.Where(i => !GetDesiredStoredItemIDs().Contains(i.ItemID)).ToList();
 }

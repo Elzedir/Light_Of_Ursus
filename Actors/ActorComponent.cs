@@ -6,7 +6,7 @@ using UnityEngine.Android;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
-public class ActorComponent : MonoBehaviour, IInventoryOwner
+public class ActorComponent : MonoBehaviour
 {
     uint _actorID { get { return ActorData.ActorID; } }
     public ActorData ActorData;
@@ -95,16 +95,6 @@ public class ActorComponent : MonoBehaviour, IInventoryOwner
         // For now, not waiting, just teleporting.
         RigidBody.linearVelocity = Vector3.zero;
         transform.parent.position = targetPosition;
-    }
-
-    public GameObject GetGameObject()
-    {
-        return gameObject;
-    }
-
-    public InventoryData GetInventoryData()
-    {
-        return ActorData.InventoryData;
     }
 }
 

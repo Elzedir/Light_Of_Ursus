@@ -72,7 +72,7 @@ public class ActorData
     {
         FullIdentification = fullIdentification;
 
-        ActorID = FullIdentification.ActorID;
+        ActorID = FullIdentification.ActorReference.ActorID;
         ActorFactionID = FullIdentification.ActorFactionID;
         ActorName = FullIdentification.ActorName;
 
@@ -84,7 +84,7 @@ public class ActorData
         SpeciesAndPersonality = new SpeciesAndPersonality(ActorID);
         StatsAndAbilities = new StatsAndAbilities(ActorID);
 
-        InventoryData = new InventoryData(ActorID);
+        InventoryData = new InventoryData_Actor(ActorID);
         EquipmentData = new EquipmentData(ActorID);
         ActorQuests = new QuestData(ActorID);
         //OrderData = new OrderData(ActorID);
@@ -121,15 +121,6 @@ public class ActorData_Drawer : PropertyDrawer
     {
         return EditorGUI.GetPropertyHeight(property, label, true);
     }
-}
-
-public class ActorReferences
-{
-    public uint ActorID;
-    public ActorReferences(uint actorID) => ActorID = actorID;
-
-    ActorComponent _actor;
-    public ActorComponent Actor { get => _actor ??= Manager_Actor.GetActor(ActorID); }
 }
 
 public enum DataChanged
@@ -170,14 +161,17 @@ public enum DataChanged
 }
 
 [Serializable]
-public class FullIdentification : Priority_Data
+public class FullIdentification : PriorityData
 {
-    public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID) : base(actorID)
+    public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID) : base(actorID, ComponentType.Actor)
     {
         ActorName = actorName;
         ActorFactionID = actorFactionID;
         ActorCityID = actorCityID;
     }
+
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public ActorName ActorName;
     public uint ActorFactionID;
@@ -192,16 +186,19 @@ public class FullIdentification : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class Background : Priority_Data
+public class Background : PriorityData
 {
-    public Background(uint actorID) : base(actorID) { }
+    public Background(uint actorID) : base(actorID, ComponentType.Actor) { }
+
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public string Birthplace;
     public Date Birthdate;
@@ -214,16 +211,18 @@ public class Background : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class GameObjectProperties : Priority_Data
+public class GameObjectProperties : PriorityData
 {
-    public GameObjectProperties(uint actorID) : base(actorID) { }
+    public GameObjectProperties(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public void UpdateActorGOProperties()
     {
@@ -231,12 +230,12 @@ public class GameObjectProperties : Priority_Data
     }
 
     [NonSerialized] Transform _actorTransform;
-    public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(ActorID)?.transform; } }
+    public Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(ActorReference.ActorID)?.transform; } }
     public void SetActorTransformProperties()
     {
         if (ActorTransform == null)
         {
-            Debug.Log($"ActorTransform for actor {ActorID} is null.");
+            Debug.Log($"ActorTransform for actor {ActorReference.ActorID} is null.");
             return;
         }
 
@@ -275,32 +274,36 @@ public class GameObjectProperties : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class WorldStateData : Priority_Data
+public class WorldStateData : PriorityData
 {
-    public WorldStateData(uint actorID) : base(actorID) { }
+    public WorldStateData(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class Relationships : Priority_Data
+public class Relationships : PriorityData
 {
-    public Relationships(uint actorID) : base(actorID) { }
+    public Relationships(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
     public List<Relation> AllRelationships;
 
     protected override bool _priorityChangeNeeded(object dataChanged)
@@ -308,16 +311,18 @@ public class Relationships : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class CareerAndJobs : Priority_Data
+public class CareerAndJobs : PriorityData
 {
-    public CareerAndJobs(uint actorID) : base(actorID) { }
+    public CareerAndJobs(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public bool JobsActive;
     public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
@@ -339,16 +344,18 @@ public class CareerAndJobs : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class SpeciesAndPersonality : Priority_Data
+public class SpeciesAndPersonality : PriorityData
 {
-    public SpeciesAndPersonality(uint actorID) : base(actorID) { }
+    public SpeciesAndPersonality(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public SpeciesName ActorSpecies;
     public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
@@ -360,7 +367,7 @@ public class SpeciesAndPersonality : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -369,16 +376,16 @@ public class SpeciesAndPersonality : Priority_Data
 [Serializable]
 public class StatsAndAbilities
 {
-    uint _actorID;
     public StatsAndAbilities(uint actorID)
     {
-        _actorID = actorID;
+        
         Actor_Stats = new Actor_Stats(actorID);
         Actor_Conditions = new Actor_Conditions(actorID);
         Actor_States = new Actor_States(actorID);
         Actor_Aspects = new Actor_Aspects(actorID);
         Actor_Abilities = new Actor_Abilities(actorID);
     }
+    
     public Actor_Stats Actor_Stats;
     public void SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
 
@@ -421,32 +428,36 @@ public enum SpeciesName
 }
 
 [Serializable]
-public class Actor_Stats : Priority_Data
+public class Actor_Stats : PriorityData
 {
-    public Actor_Stats(uint actorID) : base(actorID) { }
+    public Actor_Stats(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public ActorLevelData ActorLevelData;
     public SPECIAL ActorSpecial;
     public CombatStats CombatStats;
 
     public float TotalCarryWeight => ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
-    public float AvailableCarryWeight => TotalCarryWeight - Manager_Actor.GetActorData(ActorID).InventoryData.GetTotalInventoryWeight();
+    public float AvailableCarryWeight => TotalCarryWeight - Item.GetItemListTotal_Weight(ActorReference.Actor.ActorData.InventoryData.AllInventoryItems);
 
     protected override bool _priorityChangeNeeded(object dataChanged)
     {
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class Actor_Aspects : Priority_Data
+public class Actor_Aspects : PriorityData
 {
-    public Actor_Aspects(uint actorID) : base(actorID) { }
+    public Actor_Aspects(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public ClassTitle ActorClassTitle { get { return Manager_Aspect.GetCharacterTitle(ActorAspectList); } }
 
@@ -494,16 +505,16 @@ public class Actor_Aspects : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class ActorLevelData : Priority_Data
+public class ActorLevelData : PriorityData
 {
-    public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0, uint totalSPECIALPoints = 0, bool canAddNewSkillSet = false) : base(actorID)
+    public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0, uint totalSPECIALPoints = 0, bool canAddNewSkillSet = false) : base(actorID, ComponentType.Actor)
     {
         ActorLevel = level;
         TotalExperience = totalExperience;
@@ -511,6 +522,8 @@ public class ActorLevelData : Priority_Data
         TotalSPECIALPoints = totalSPECIALPoints;
         CanAddNewSkillSet = canAddNewSkillSet;
     }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public uint ActorLevel;
     public uint TotalExperience;
@@ -539,7 +552,7 @@ public class ActorLevelData : Priority_Data
 
     void _levelUp(CharacterLevelData levelData)
     {
-        var actorData = Manager_Actor.GetActorData(ActorID);
+        var actorData = Manager_Actor.GetActorData(ActorReference.ActorID);
 
         ActorLevel = levelData.Level;
         TotalSkillPoints += levelData.SkillPoints;
@@ -570,16 +583,18 @@ public class ActorLevelData : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class CraftingData : Priority_Data
+public class CraftingData : PriorityData
 {
-    public CraftingData(uint actorID) : base(actorID) { }
+    public CraftingData(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public List<RecipeName> KnownRecipes = new();
 
@@ -596,7 +611,7 @@ public class CraftingData : Priority_Data
     {
         var recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        var actorData = Manager_Actor.GetActorData(ActorID);
+        var actorData = Manager_Actor.GetActorData(ActorReference.ActorID);
 
         while (inventoryContainsAllIngredients(recipe.RequiredIngredients))
         {
@@ -625,7 +640,7 @@ public class CraftingData : Priority_Data
 
         Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
 
-        var actorData = Manager_Actor.GetActorData(ActorID);
+        var actorData = Manager_Actor.GetActorData(ActorReference.ActorID);
 
         if (actorData.InventoryData.RemoveFromInventory(recipe.RequiredIngredients))
         {
@@ -650,16 +665,18 @@ public class CraftingData : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class QuestData : Priority_Data
+public class QuestData : PriorityData
 {
-    public QuestData(uint actorID) : base(actorID) { }
+    public QuestData(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public List<Quest> ActorQuests = new();
     public void SetStage(int QuestID, int stageID, int stageProgress)
@@ -672,16 +689,18 @@ public class QuestData : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };
 }
 
 [Serializable]
-public class VocationData : Priority_Data
+public class VocationData : PriorityData
 {
-    public VocationData(uint actorID) : base(actorID) { }
+    public VocationData(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+    public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
 
     public List<ActorVocation> ActorVocations = new();
     public void SetVocations(List<ActorVocation> vocations) => ActorVocations = vocations;
@@ -751,7 +770,7 @@ public class VocationData : Priority_Data
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> PriorityParameterList { get; } = new()
+    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
     {
 
     };

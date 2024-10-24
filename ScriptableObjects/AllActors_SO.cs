@@ -84,7 +84,7 @@ public class AllActors_SOEditor : Editor
         {
             EditorGUILayout.LabelField("Full Identification", EditorStyles.boldLabel);
 
-            EditorGUILayout.LabelField("Actor ID", actorData.FullIdentification.ActorID.ToString());
+            EditorGUILayout.LabelField("Actor ID", actorData.FullIdentification.ActorReference.ActorID.ToString());
 
             if (actorData.FullIdentification.ActorName != null)
             {

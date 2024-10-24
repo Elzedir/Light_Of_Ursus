@@ -236,9 +236,9 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Log);
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
-        
+
         //Find a better way to put into groups.
-        actor.ActorData.InventoryData.SetInventory(new List<Item>());
+        actor.ActorData.InventoryData.SetInventory(new List<Item>(), true);
         actor.ActorData.EquipmentData.SetEquipment(null, null, null, null, null, null, null, null, null);
 
         actor.ActorData.SpeciesAndPersonality.SetSpecies(GetRandomSpecies());

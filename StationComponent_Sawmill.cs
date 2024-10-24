@@ -95,11 +95,11 @@ public class StationComponent_Sawmill : StationComponent
         // Base resource yield on actor relevant skill
     }
 
-    public override List<Item> GetItemsToDeliver(IInventoryOwner inventoryOwner)
+    public override List<Item> GetItemsToDeliver(InventoryData inventoryOwner)
     {
-        return inventoryOwner.GetInventoryData().AllInventoryItems
-        .Where(item => AllowedStoredItemIDs.Contains(item.ItemID))
-        .Select(i => new Item(i.ItemID, i.ItemAmount))
-        .ToList();
+        return null; //inventoryOwner.GetInventoryData().AllInventoryItems
+        // .Where(item => AllowedStoredItemIDs.Contains(item.ItemID))
+        // .Select(i => new Item(i.ItemID, i.ItemAmount))
+        // .ToList();
     }
 }

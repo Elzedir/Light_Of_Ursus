@@ -155,23 +155,23 @@ public class Item
         MaxStackSize = item.MaxStackSize;
     }
 
-    public CommonStats_Item GetCommonStats()
-    {
-        var masterItem = Manager_Item.GetMasterItem(ItemID);
+    public static uint GetItemListTotal_CountAllItems(List<Item> items) 
+    => (uint)items.Sum(item => item.ItemAmount);
+    public static uint GetItemListTotal_CountSpecificItem(List<Item> items, uint itemID) 
+    => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
 
-        if (masterItem == null) 
+    public static float GetItemListTotal_Weight(List<Item> items)
+    {
+        float totalWeight = 0;
+
+        foreach (Item item in items)
         {
-            Debug.LogError("MasterItem is null");
-            return null;
+            totalWeight += item.ItemAmount * Manager_Item.GetMasterItem(item.ItemID).CommonStats_Item.ItemWeight;
         }
 
-        return new CommonStats_Item(masterItem.CommonStats_Item);
+        return totalWeight;
     }
 
-    public static uint GetItemListCount_AllItems(List<Item> items) 
-    => (uint)items.Sum(item => item.ItemAmount);
-    public static uint GetItemListCount_SpecificItem(List<Item> items, uint itemID) 
-    => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
 }
 
 public class Item_Master

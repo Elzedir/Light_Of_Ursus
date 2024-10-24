@@ -24,30 +24,20 @@ public enum StationName
 }
 
 [Serializable]
-public class StationData : IStationInventory
+public class StationData
 {
     public uint StationID;
 
-    JobsiteReferences _jobsiteReferences;
-    public void SetJobsiteID(uint jobsiteID)
-    {
-        if (_jobsiteReferences == null) _jobsiteReferences = new JobsiteReferences(jobsiteID);
-
-        if (_jobsiteReferences.JobsiteID == jobsiteID)
-        {
-            Debug.Log($"JobsiteID: {jobsiteID} is being set to same ID.");
-            return;
-        }
-
-        _jobsiteReferences.SetJobsiteID(jobsiteID);
-    }
+    ComponentReference_Jobsite _jobsiteReferences;
+    public void SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
     public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
     public JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
 
     public bool StationIsActive = true;
 
     public string StationDescription;
-    public InventoryData InventoryData;
+    public InventoryData _inventoryData;
+    public InventoryData InventoryData { get { return _inventoryData ??= new InventoryData_Station(StationID); } }
 
     public List<uint> CurrentOperatorIDs;
 
@@ -109,16 +99,6 @@ public class StationData : IStationInventory
     public void SetStationIsActive(bool stationIsActive)
     {
         StationIsActive = stationIsActive;
-    }
-
-    public GameObject GetGameObject()
-    {
-        return Manager_Station.GetStation(StationID).gameObject;
-    }
-
-    public InventoryData GetInventoryData()
-    {
-        return InventoryData;
     }
 }
 
@@ -219,13 +199,4 @@ public class StationProgressData
 
         return false;
     }
-}
-
-public class StationReferences
-{
-    public uint StationID;
-    public StationReferences(uint stationID) => StationID = stationID;
-
-    StationComponent _station;
-    public StationComponent Station { get => _station ??= Manager_Station.GetStation(StationID); }
 }
