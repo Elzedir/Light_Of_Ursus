@@ -221,9 +221,6 @@ public class StationComponent_LogPile : StationComponent
 
         if (stationAndItems.Station == null)
         {
-            a
-            // Permanently returning null currently.
-
             Debug.Log($"No stations to haul from.");
             return false;
         }

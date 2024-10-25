@@ -8,8 +8,22 @@ public class Manager_Priority : MonoBehaviour
     
 }
 
-public abstract class PriorityGenerator
+public class PriorityGenerator
 {
+
+    // Create a dictionary that contains the action name and a list of priority parameters. This will contiain the "existing priorities" that will be updated accordingly, so that we don't have to add and subract, instead just replace the existing priorities according to the conditions that are met or not met. That way we can simply add the actor distance to the slot and it will automatically update the priority by including it in its calculations.
+    static Dictionary<ActionName, Dictionary<PriorityParameterName, object>> _existingParameters = new()
+    {
+        { ActionName.Haul, new Dictionary<PriorityParameterName, object>
+        {
+            { PriorityParameterName.MaxPriority, null },
+            { PriorityParameterName.MaxItems, null },
+            { PriorityParameterName.MaxDistance, null },
+            { PriorityParameterName.InventoryHauler, null },
+            { PriorityParameterName.InventoryTarget, null },
+        }},
+    };
+
     protected static float DefaultMaxPriority => 10;
 
     protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority) 
@@ -25,11 +39,11 @@ public abstract class PriorityGenerator
     => (current > min || current < max) ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
 
     protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp((current / total - targetPercentage / 100) * 100, 0, maxPriority);
+    => Math.Clamp((current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
     protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp((targetPercentage / 100 - current / total) * 100, 0, maxPriority);
+    => Math.Clamp((targetPercentage / 100 - current / total) * maxPriority, 0, maxPriority);
     protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage, float maxPriority) 
-    => Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * 100, 0, maxPriority);
+    => Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
 
     protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max, float maxPriority)
     {
@@ -48,87 +62,118 @@ public abstract class PriorityGenerator
         : 0;
     }
 
-    protected static float _moreItemsDesired(List<Item> items, float target, float maxPriority)
-    {
-        return _addPriorityIfAboveTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
-    }
-
-    protected static float _lessItemsDesired(List<Item> items, float target, float maxPriority)
+    protected static float _moreItemsDesired_Target(List<Item> items, float target, float maxPriority)
     {
         return _addPriorityIfBelowTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
-    protected static float _moreDistanceDesired(Vector3 currentPosition, Vector3 targetPosition, float targetDistance, float maxPriority)
+    protected static float _lessItemsDesired_Target(List<Item> items, float target, float maxPriority)
     {
-        return _addPriorityIfAboveTarget(Vector3.Distance(currentPosition, targetPosition), targetDistance, maxPriority);
+        return _addPriorityIfAboveTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
-    protected static float _lessDistanceDesired(Vector3 currentPosition, Vector3 targetPosition, float targetDistance, float maxPriority)
+    protected static float _exactItemsDesired_Target(List<Item> items, float target, float maxPriority)
     {
-        return _addPriorityIfBelowTarget(Vector3.Distance(currentPosition, targetPosition), targetDistance, maxPriority);
+        return _addPriorityIfNotEqualTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
+    }
+
+    protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority)
+    {
+        return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
+    }
+
+    protected static float _lessItemsDesired_Total(List<Item> items, float total, float maxPriority)
+    {
+        return _addPriorityIfBelowPercent(Item.GetItemListTotal_CountAllItems(items), total, 100, maxPriority);
+    }
+
+    protected static float _exactItemsDesired_Total(List<Item> items, float total, float maxPriority)
+    {
+        return _addPriorityIfNotEqualPercent(Item.GetItemListTotal_CountAllItems(items), total, 100, maxPriority);
+    }
+
+    protected static float _moreDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+    {
+        return _addPriorityIfBelowTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
+    }
+
+    protected static float _lessDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+    {
+        return _addPriorityIfAboveTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
+    }
+
+    protected static float _exactDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+    {
+        return _addPriorityIfNotEqualTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
+    }
+
+    protected static float _moreDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+    {
+        return _addPriorityIfAbovePercent(Vector3.Distance(currentPosition, targetPosition), total, 0, maxPriority);
+    }
+
+    protected static float _lessDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+    {
+        return _addPriorityIfBelowPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
+    }
+
+    protected static float _exactDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+    {
+        return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
     }
 
     public static List<float> GeneratePriorities(ActionName actionName, List<PriorityParameter> parameters)
     {
-        // But now the problem is that I must not override the priorities that are already set, so I need to find a way to add to the existing priorities when adding from another source. Instead when we choose an actor priority, we simply add the priority for the station to the
-        // priority of the action in his own priority queue.
+        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
+        {
+            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
+            return null;
+        }
+
+        foreach (var parameter in parameters)
+        {
+            if (!existingPriority.ContainsKey(parameter.ParameterName))
+            {
+                Debug.LogError($"Parameter: {parameter.ParameterName} not found.");
+                continue;
+            }
+
+            existingPriority[parameter.ParameterName] = parameter.ParameterValue;
+        }
 
         switch(actionName)
         {
             case ActionName.Haul:
-                return _haul(parameters);
+                return _generateHaulPriority(existingPriority);
             default:
                 Debug.LogError($"ActionName: {actionName} not found.");
                 return null;
         }
     }
 
-    static List<float> _haul(List<PriorityParameter> parameters)
+    static List<float> _generateHaulPriority(Dictionary<PriorityParameterName, object> existingPriorities)
     {
-        float maxPriority = DefaultMaxPriority;
-        List<float> existingPriority = null;
-        InventoryData inventory_hauler = null;
-        InventoryData inventory_target = null;
+        var maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
+        var maxDistance = existingPriorities[PriorityParameterName.MaxDistance] as float? ?? 0;
+        var maxItems = existingPriorities[PriorityParameterName.MaxItems] as float? ?? 0;
+        var inventory_hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
+        var inventory_target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
 
-        foreach (var parameter in parameters)
-        {
-            switch (parameter.ParameterName)
-            {
-                case PriorityParameterName.MaxPriority:
-                    maxPriority = (float)parameter.ParameterValue;
-                    break;
-                case PriorityParameterName.ExistingPriority:
-                    existingPriority = (List<float>)parameter.ParameterValue;
-                    break;
-                case PriorityParameterName.InventoryHauler:
-                    inventory_hauler = (InventoryData)parameter.ParameterValue;
-                    break;
-                case PriorityParameterName.InventoryTarget:
-                    inventory_target = (InventoryData)parameter.ParameterValue;
-                    break;
-                default:
-                    Debug.LogError($"Parameter: {parameter.ParameterName} not found.");
-                    break;
-            }
-        }
-        
         var allItemsToFetch = inventory_target.GetInventoryItemsToHaul();
-        var priority_ItemQuantity = allItemsToFetch.Count != 0 ? _moreItemsDesired(allItemsToFetch, 0, maxPriority) : 0;
-
+        
         var haulerPosition = inventory_hauler.Reference.GameObject.transform.position;
         var targetPosition = inventory_target.Reference.GameObject.transform.position;
-        var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-        ? _lessDistanceDesired(haulerPosition, targetPosition, 5, maxPriority)
-        : 0;
 
-        var newPriorities = new List<float>
+        var priority_ItemQuantity = allItemsToFetch.Count != 0 
+        ? _moreItemsDesired_Target(allItemsToFetch, maxItems, maxPriority) : 0;
+
+        var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+        ? _lessDistanceDesired_Total(haulerPosition, targetPosition, maxDistance, maxPriority) : 0;
+
+        return new List<float>
         {
             priority_ItemQuantity + priority_Distance
         };
-
-        if (existingPriority.Count > 0) newPriorities.AddRange(existingPriority);
-
-        return newPriorities;
     }
 }
 
@@ -146,8 +191,9 @@ public enum PriorityParameterName
     None,
 
 
-    ExistingPriority,
     MaxPriority,
+    MaxItems,
+    MaxDistance,
     InventoryHauler,
     InventoryTarget,
     Jobsite,
@@ -369,20 +415,15 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
     {
-        var allStations = PriorityQueue.PeekAll();
-
-        if (allStations == null || allStations.Length <= 0) return (null, null);
-
-        foreach (var station in allStations)
+        foreach (var station in Jobsite.AllStationsInJobsite)
         {
             var newPriority = PriorityGenerator.GeneratePriorities(ActionName.Haul, new List<PriorityParameter>
             {
-                // new PriorityParameter( PriorityParameterName.ExistingPriority, station.AllPriorities),
-                // new PriorityParameter( PriorityParameterName.Actor, hauler),
-                // new PriorityParameter( PriorityParameterName.Station, Manager_Station.GetStation(station.PriorityID)),
+                new PriorityParameter( PriorityParameterName.InventoryHauler, hauler),
+                new PriorityParameter( PriorityParameterName.InventoryTarget, station.StationData.InventoryData),
             });
 
-            PriorityQueue.Update(station.PriorityID, newPriority);
+            PriorityQueue.Update(station.StationID, newPriority);
         }
 
         var highestPriorityStation = Manager_Station.GetStation(PriorityQueue.Dequeue().PriorityID);
