@@ -141,7 +141,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
         if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
         {
-            Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
+            //Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
 
             // Trying a new job system instead
             

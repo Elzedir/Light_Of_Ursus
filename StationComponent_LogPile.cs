@@ -71,7 +71,7 @@ public class StationComponent_LogPile : StationComponent
         {
             if (operatingArea.OperatingAreaData.CurrentOperatorID == 0) continue;
 
-            var actor = Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID);
+            ActorComponent actor = Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID);
 
             // if (actorHasHaulOrder())
             // {

@@ -16,9 +16,10 @@ public class PriorityGenerator
     {
         { ActionName.Haul, new Dictionary<PriorityParameterName, object>
         {
+            { PriorityParameterName.PreviousPriority, null },
             { PriorityParameterName.MaxPriority, null },
-            { PriorityParameterName.MaxItems, null },
-            { PriorityParameterName.MaxDistance, null },
+            { PriorityParameterName.TotalItems, null },
+            { PriorityParameterName.TotalDistance, null },
             { PriorityParameterName.InventoryHauler, null },
             { PriorityParameterName.InventoryTarget, null },
         }},
@@ -153,22 +154,41 @@ public class PriorityGenerator
 
     static List<float> _generateHaulPriority(Dictionary<PriorityParameterName, object> existingPriorities)
     {
-        var maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
-        var maxDistance = existingPriorities[PriorityParameterName.MaxDistance] as float? ?? 0;
-        var maxItems = existingPriorities[PriorityParameterName.MaxItems] as float? ?? 0;
-        var inventory_hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
-        var inventory_target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
+        List<float> previousPriority = existingPriorities[PriorityParameterName.PreviousPriority] as List<float> ?? new List<float>();
+        float maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
+        float totalDistance = existingPriorities[PriorityParameterName.TotalDistance] as float? ?? 0;
+        float totalItems = existingPriorities[PriorityParameterName.TotalItems] as float? ?? 0;
+        InventoryData inventory_Hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
+        InventoryData inventory_Target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
 
-        var allItemsToFetch = inventory_target.GetInventoryItemsToHaul();
+        if (maxPriority == 0) 
+        {
+            Debug.LogError("MaxPriority is 0. Default initialiser failed.");
+            return null;
+        }
+
+        if (totalItems == 0 && totalDistance == 0)
+        {
+            Debug.LogError($"MaxItems and MaxDistance are 0.");
+            return previousPriority;
+        }
+
+        if (inventory_Hauler == null || inventory_Target == null)
+        {
+            Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
+            return previousPriority;
+        }
+
+        var allItemsToFetch = inventory_Target.GetInventoryItemsToHaul();
         
-        var haulerPosition = inventory_hauler.Reference.GameObject.transform.position;
-        var targetPosition = inventory_target.Reference.GameObject.transform.position;
+        var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
+        var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
         var priority_ItemQuantity = allItemsToFetch.Count != 0 
-        ? _moreItemsDesired_Target(allItemsToFetch, maxItems, maxPriority) : 0;
+        ? _moreItemsDesired_Target(allItemsToFetch, totalItems, maxPriority) : 0;
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-        ? _lessDistanceDesired_Total(haulerPosition, targetPosition, maxDistance, maxPriority) : 0;
+        ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
 
         return new List<float>
         {
@@ -190,10 +210,10 @@ public enum PriorityParameterName
 {
     None,
 
-
+    PreviousPriority,
     MaxPriority,
-    MaxItems,
-    MaxDistance,
+    TotalItems,
+    TotalDistance,
     InventoryHauler,
     InventoryTarget,
     Jobsite,
@@ -378,8 +398,6 @@ public class PriorityComponent_Actor : PriorityComponent
     }
 }
 
-
-
 public class PriorityComponent_Jobsite : PriorityComponent
 {
     public PriorityComponent_Jobsite(uint jobsiteID) 
@@ -415,28 +433,59 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
     {
+        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToHaul()));
+        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
+
+        Debug.Log($"TotalItems: {totalItems}, TotalDistance: {totalDistance}");
+
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
-            var newPriority = PriorityGenerator.GeneratePriorities(ActionName.Haul, new List<PriorityParameter>
+            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Haul, new List<PriorityParameter>
             {
-                new PriorityParameter( PriorityParameterName.InventoryHauler, hauler),
+                new PriorityParameter( PriorityParameterName.TotalItems, totalItems),
+                new PriorityParameter (PriorityParameterName.TotalDistance, totalDistance),
+                new PriorityParameter( PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData),
                 new PriorityParameter( PriorityParameterName.InventoryTarget, station.StationData.InventoryData),
             });
 
-            PriorityQueue.Update(station.StationID, newPriority);
+            if (newPriorities == null || newPriorities.Count == 0) continue;
+
+            PriorityQueue.Update(station.StationID, newPriorities);
         }
 
-        var highestPriorityStation = Manager_Station.GetStation(PriorityQueue.Dequeue().PriorityID);
-        var availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
-        var allItemsInStation = highestPriorityStation.GetInventoryItemsToHaul();
+        var allStations = PriorityQueue.PeekAll();
 
-        var itemsToHaul = new List<Item>();
+        // Correct priorities, however wrong order in PriorityQueue
+
+        foreach(var station in allStations)
+        {
+            if (station == null) continue;
+            Debug.Log($"Station: {station.PriorityID} AllPrioties: {station.AllPriorities[0]}");
+        }
+
+        StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
+        
+        if (peekedStation == null) return (null, null);
+
+        Debug.Log("PriorityQueue has a peek.");
+
+        var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
+
+        Debug.Log($"AllItemsInStation: {allItemsInStation.Count}");
+
+        if (allItemsInStation.Count == 0) return (null, null);
+
+        float availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+
+        List<Item> itemsToHaul = new List<Item>();
 
         while (allItemsInStation.Count > 0 && availableCarryWeight > 0)
         {
-            var item = allItemsInStation[0];
-            var itemMaster = Manager_Item.GetMasterItem(item.ItemID);
-            var itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
+            Debug.Log($"AllItemsInStation: {allItemsInStation.Count}, AvailableCarryWeight: {availableCarryWeight}");
+
+            Item item = allItemsInStation[0];
+            Item_Master itemMaster = Manager_Item.GetMasterItem(item.ItemID);
+            float itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
 
             if (itemWeight > availableCarryWeight) break;
 
@@ -445,7 +494,11 @@ public class PriorityComponent_Jobsite : PriorityComponent
             availableCarryWeight -= itemWeight;
         }
 
-        return (highestPriorityStation, itemsToHaul);
+        if (itemsToHaul.Count == 0) return (null, null);
+
+        PriorityQueue.Dequeue(peekedStation.StationID);
+
+        return (peekedStation, itemsToHaul);
     }
 }
 
@@ -600,14 +653,18 @@ public class Priority
 
 public class PriorityQueue
 {
+    a
+
+    // Priority order is still wrong 
+
     int _currentPosition;
-    Priority[] _allPriorities;
+    Priority[] _priorityArray;
     Dictionary<uint, int> _priorityQueue;
 
     public PriorityQueue(int maxPriorities)
     {
         _currentPosition = 0;
-        _allPriorities = new Priority[maxPriorities];
+        _priorityArray = new Priority[maxPriorities];
         _priorityQueue = new Dictionary<uint, int>();
     }
 
@@ -617,7 +674,7 @@ public class PriorityQueue
         {
             if (_currentPosition == 0) return null;
 
-            return _allPriorities[1];
+            return _priorityArray[1];
         }
         else
         {
@@ -625,7 +682,7 @@ public class PriorityQueue
 
             if (!_priorityQueue.TryGetValue(priorityID, out index)) return null;
 
-            return index == 0 ? null : _allPriorities[index];
+            return index == 0 ? null : _priorityArray[index];
         }
     }
 
@@ -633,7 +690,7 @@ public class PriorityQueue
     {
         if (_currentPosition == 0) return null;
 
-        return _allPriorities;
+        return _priorityArray.Skip(1).ToArray();
     }
 
     public Priority Dequeue(uint priorityID = 1)
@@ -642,9 +699,9 @@ public class PriorityQueue
         {
             if (_currentPosition == 0) return null;
 
-            Priority priority = _allPriorities[1];
-            _allPriorities[1] = _allPriorities[_currentPosition];
-            _priorityQueue[_allPriorities[1].PriorityID] = 1;
+            Priority priority = _priorityArray[1];
+            _priorityArray[1] = _priorityArray[_currentPosition];
+            _priorityQueue[_priorityArray[1].PriorityID] = 1;
             _priorityQueue[priority.PriorityID] = 0;
             _currentPosition--;
             _moveDown(1);
@@ -659,10 +716,10 @@ public class PriorityQueue
             
             if (index == 0) return null;
 
-            Priority priority = _allPriorities[index];
+            Priority priority = _priorityArray[index];
             _priorityQueue[priorityID] = 0;
-            _allPriorities[index] = _allPriorities[_currentPosition];
-            _priorityQueue[_allPriorities[_currentPosition].PriorityID] = index;
+            _priorityArray[index] = _priorityArray[_currentPosition];
+            _priorityQueue[_priorityArray[_currentPosition].PriorityID] = index;
             _currentPosition--;
             _moveDown(index);
 
@@ -688,16 +745,16 @@ public class PriorityQueue
         Priority priority = new Priority(priorityID, priorities);
         _currentPosition++;
         _priorityQueue[priorityID] = _currentPosition;
-        if (_currentPosition == _allPriorities.Length) Array.Resize<Priority>(ref _allPriorities, _allPriorities.Length * 2);
-        _allPriorities[_currentPosition] = priority;
+        if (_currentPosition == _priorityArray.Length) Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
+        _priorityArray[_currentPosition] = priority;
         _moveUp(_currentPosition);
 
         return true;
     }
 
-    public bool Update(uint priorityID, List<float> priorities)
+    public bool Update(uint priorityID, List<float> newPriorities)
     {
-        if (priorities.Count == 0)
+        if (newPriorities.Count == 0)
         {
             if (!Remove(priorityID))
             {
@@ -712,7 +769,7 @@ public class PriorityQueue
 
         if (!_priorityQueue.TryGetValue(priorityID, out index))
         {
-            if (!Enqueue(priorityID, priorities))
+            if (!Enqueue(priorityID, newPriorities))
             {
                 Debug.LogError($"PriorityID: {priorityID} unable to be enqueued.");
                 return false;
@@ -721,16 +778,28 @@ public class PriorityQueue
             return true;
         }
 
+        // Debug.Log($"priorityID: {priorityID}, Index: {index}");
+
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     Debug.Log($"{_priorityArray}");
+        //     Debug.Log($"{i}: PriorityID: {_priorityArray[i]}");
+
+        //     if (_priorityArray[i] == null) continue;
+
+        //     Debug.Log($"{i}: PriorityID: {_priorityArray[i].PriorityID}, Priority: {_priorityArray[i].AllPriorities}");
+        // }
+
         if (index == 0)
         {
             Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
             return false;
         }
         
-        Priority priority_New = new Priority(priorityID, priorities);
-        Priority priority_Old = _allPriorities[index];
+        Priority priority_New = new Priority(priorityID, newPriorities);
+        Priority priority_Old = _priorityArray[index];
 
-        _allPriorities[index] = priority_New;
+        _priorityArray[index] = priority_New;
 
         if (priority_Old.CompareTo(priority_New) < 0)
         {
@@ -760,8 +829,8 @@ public class PriorityQueue
         }
 
         _priorityQueue[priorityID] = 0;
-        _allPriorities[index] = _allPriorities[_currentPosition];
-        _priorityQueue[_allPriorities[index].PriorityID] = index;
+        _priorityArray[index] = _priorityArray[_currentPosition];
+        _priorityQueue[_priorityArray[index].PriorityID] = index;
         _currentPosition--;
         _moveDown(index);
 
@@ -775,26 +844,26 @@ public class PriorityQueue
         if (childL > _currentPosition) return;
 
         int childR = index * 2 + 1;
-        int smallerChild;
+        int largerChild;
 
         if (childR > _currentPosition)
         {
-            smallerChild = childL;
+            largerChild = childL;
         }
-        else if (_allPriorities[childL].CompareTo(_allPriorities[childR]) < 0)
+        else if (_priorityArray[childL].CompareTo(_priorityArray[childR]) > 0)
         {
-            smallerChild = childL;
+            largerChild = childL;
         }
         else
         {
-            smallerChild = childR;
+            largerChild = childR;
         }
 
-        if (_allPriorities[index].CompareTo(_allPriorities[smallerChild]) > 0)
-        {
-            _swap(index, smallerChild);
-            _moveDown(smallerChild);
-        }
+        if (_priorityArray[index].CompareTo(_priorityArray[largerChild]) >= 0) return;
+
+        _swap(index, largerChild);
+        _moveDown(largerChild);
+
     }
 
     void _moveUp(int index)
@@ -802,7 +871,7 @@ public class PriorityQueue
         if (index == 1) return;
         int parent = index / 2;
 
-        if (_allPriorities[parent].CompareTo(_allPriorities[index]) > 0)
+        if (_priorityArray[parent].CompareTo(_priorityArray[index]) < 0)
         {
             _swap(parent, index);
             _moveUp(parent);
@@ -811,10 +880,10 @@ public class PriorityQueue
 
     void _swap(int indexA, int indexB)
     {
-        Priority tempPriorityA = _allPriorities[indexA];
-        _allPriorities[indexA] = _allPriorities[indexB];
-        _priorityQueue[_allPriorities[indexB].PriorityID] = indexA;
-        _allPriorities[indexB] = tempPriorityA;
+        Priority tempPriorityA = _priorityArray[indexA];
+        _priorityArray[indexA] = _priorityArray[indexB];
+        _priorityQueue[_priorityArray[indexB].PriorityID] = indexA;
+        _priorityArray[indexB] = tempPriorityA;
         _priorityQueue[tempPriorityA.PriorityID] = indexB;
     }
 }
