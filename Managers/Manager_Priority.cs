@@ -65,6 +65,7 @@ public class PriorityGenerator
 
     protected static float _moreItemsDesired_Target(List<Item> items, float target, float maxPriority)
     {
+        Debug.Log($"MoreItemsDesired Item Count: {Item.GetItemListTotal_CountAllItems(items)}");
         return _addPriorityIfBelowTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
@@ -80,6 +81,7 @@ public class PriorityGenerator
 
     protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority)
     {
+        Debug.Log($"MoreItemsDesired Item Count: {Item.GetItemListTotal_CountAllItems(items)}");
         return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
     }
 
@@ -180,15 +182,26 @@ public class PriorityGenerator
         }
 
         var allItemsToFetch = inventory_Target.GetInventoryItemsToHaul();
-        
+
         var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
         var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
+        Debug.Log($"AllItemsCount: {allItemsToFetch.Count}, TotalItems: {totalItems}, maxPriority: {maxPriority}");
+
         var priority_ItemQuantity = allItemsToFetch.Count != 0 
-        ? _moreItemsDesired_Target(allItemsToFetch, totalItems, maxPriority) : 0;
+        ? _moreItemsDesired_Total(allItemsToFetch, totalItems, maxPriority) : 0;
+
+        Debug.Log($"haulerPosition: {haulerPosition}, targetPosition: {targetPosition}, totalDistance: {totalDistance}, maxPriority: {maxPriority}");
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
+
+        Debug.Log($"Station: {inventory_Target.Reference.GameObject.name} with priorities: Item: {priority_ItemQuantity}, Distance: {priority_Distance} wants to haul:");
+
+        foreach (var item in allItemsToFetch)
+        {
+            Debug.Log($"Item: {item.ItemID} Amount: {item.ItemAmount}");
+        }
 
         return new List<float>
         {
@@ -471,6 +484,8 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
 
+        Debug.Log($"PeekedStation: {peekedStation.StationID}");
+
         Debug.Log($"AllItemsInStation: {allItemsInStation.Count}");
 
         if (allItemsInStation.Count == 0) return (null, null);
@@ -653,10 +668,6 @@ public class Priority
 
 public class PriorityQueue
 {
-    a
-
-    // Priority order is still wrong 
-
     int _currentPosition;
     Priority[] _priorityArray;
     Dictionary<uint, int> _priorityQueue;
@@ -729,7 +740,7 @@ public class PriorityQueue
 
     public bool Enqueue(uint priorityID, List<float> priorities)
     {
-        if (_priorityQueue.TryGetValue(priorityID, out _))
+        if (_priorityQueue.TryGetValue(priorityID, out int index) && index != 0)
         {
             Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
 
@@ -765,9 +776,7 @@ public class PriorityQueue
             return true;
         }
 
-        int index;
-
-        if (!_priorityQueue.TryGetValue(priorityID, out index))
+        if (!_priorityQueue.TryGetValue(priorityID, out int index) || index == 0)
         {
             if (!Enqueue(priorityID, newPriorities))
             {
@@ -776,24 +785,6 @@ public class PriorityQueue
             }
 
             return true;
-        }
-
-        // Debug.Log($"priorityID: {priorityID}, Index: {index}");
-
-        // for (int i = 0; i < 5; i++)
-        // {
-        //     Debug.Log($"{_priorityArray}");
-        //     Debug.Log($"{i}: PriorityID: {_priorityArray[i]}");
-
-        //     if (_priorityArray[i] == null) continue;
-
-        //     Debug.Log($"{i}: PriorityID: {_priorityArray[i].PriorityID}, Priority: {_priorityArray[i].AllPriorities}");
-        // }
-
-        if (index == 0)
-        {
-            Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
-            return false;
         }
         
         Priority priority_New = new Priority(priorityID, newPriorities);
@@ -815,14 +806,7 @@ public class PriorityQueue
 
     public bool Remove(uint priorityID)
     {
-        int index;
-
-        if (!_priorityQueue.TryGetValue(priorityID, out index))
-        {
-            return false;
-        }
-
-        if (index == 0)
+        if (!_priorityQueue.TryGetValue(priorityID, out int index) || index == 0)
         {
             Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
             return false;
