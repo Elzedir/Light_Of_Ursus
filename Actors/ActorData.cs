@@ -186,7 +186,7 @@ public class FullIdentification : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -211,7 +211,7 @@ public class Background : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -274,7 +274,7 @@ public class GameObjectProperties : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -292,7 +292,7 @@ public class WorldStateData : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -311,7 +311,7 @@ public class Relationships : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -344,7 +344,7 @@ public class CareerAndJobs : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -367,7 +367,7 @@ public class SpeciesAndPersonality : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -446,7 +446,7 @@ public class Actor_Stats : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -505,7 +505,7 @@ public class Actor_Aspects : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -583,7 +583,7 @@ public class ActorLevelData : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -665,7 +665,7 @@ public class CraftingData : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -689,7 +689,7 @@ public class QuestData : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };
@@ -770,7 +770,7 @@ public class VocationData : PriorityData
         return false;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
 
     };

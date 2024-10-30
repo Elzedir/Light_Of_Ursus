@@ -137,4 +137,9 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
     {
         return PriorityComponent.GetStationToHaulFrom(hauler);
     }
+
+    public (StationComponent Station, List<Item> Items) GetStationToHaulTo(ActorComponent hauler)
+    {
+        return PriorityComponent.GetStationToHaulTo(hauler);
+    }
 }

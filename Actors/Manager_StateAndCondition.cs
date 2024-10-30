@@ -185,7 +185,7 @@ public class Actor_Conditions : PriorityData
     }
     protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
         
     };
@@ -251,7 +251,7 @@ public class Actor_States : PriorityData
 
     protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
         
     };

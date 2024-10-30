@@ -78,7 +78,7 @@ public class ActorComponent : MonoBehaviour
         return GroundCheckComponent.IsGrounded();
     }
 
-    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 1)
+    public IEnumerator BasicMove(Vector3 targetPosition, float speed = 2)
     {
         // while (Vector3.Distance(transform.parent.position, targetPosition) > 0.1f)
         // {
@@ -89,7 +89,7 @@ public class ActorComponent : MonoBehaviour
         //     yield return null;
         // }
 
-        // yield return new WaitForSeconds(Vector3.Distance(transform.parent.position, targetPosition / speed));
+        yield return new WaitForSeconds(Vector3.Distance(transform.parent.position, targetPosition / speed));
 
         yield return new WaitForSeconds(0.5f);
         // For now, not waiting, just teleporting.
@@ -103,6 +103,7 @@ public enum ActionName
     None,
     All,
 
-    Haul,
+    Deliver,
+    Fetch,
     Scavenge,
 }

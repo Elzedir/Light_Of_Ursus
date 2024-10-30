@@ -12,45 +12,33 @@ public class PriorityGenerator
 {
 
     // Create a dictionary that contains the action name and a list of priority parameters. This will contiain the "existing priorities" that will be updated accordingly, so that we don't have to add and subract, instead just replace the existing priorities according to the conditions that are met or not met. That way we can simply add the actor distance to the slot and it will automatically update the priority by including it in its calculations.
-    static Dictionary<ActionName, Dictionary<PriorityParameterName, object>> _existingParameters = new()
-    {
-        { ActionName.Haul, new Dictionary<PriorityParameterName, object>
-        {
-            { PriorityParameterName.PreviousPriority, null },
-            { PriorityParameterName.MaxPriority, null },
-            { PriorityParameterName.TotalItems, null },
-            { PriorityParameterName.TotalDistance, null },
-            { PriorityParameterName.InventoryHauler, null },
-            { PriorityParameterName.InventoryTarget, null },
-        }},
-    };
 
     protected static float DefaultMaxPriority => 10;
 
-    protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority) 
+    protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
     => Math.Clamp(current - target, 0, maxPriority);
-    protected static float _addPriorityIfBelowTarget(float current, float target, float maxPriority) 
+    protected static float _addPriorityIfBelowTarget(float current, float target, float maxPriority)
     => Math.Clamp(target - current, 0, maxPriority);
-    protected static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority) 
+    protected static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority)
     => Math.Clamp(Math.Abs(current - target), 0, maxPriority);
 
     protected static float _addPriorityIfOutsideRange(float current, float min, float max, float maxPriority)
     => (current < min || current > max) ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
-    protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority) 
+    protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority)
     => (current > min || current < max) ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
 
-    protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage, float maxPriority) 
+    protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage, float maxPriority)
     => Math.Clamp((current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
-    protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage, float maxPriority) 
+    protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage, float maxPriority)
     => Math.Clamp((targetPercentage / 100 - current / total) * maxPriority, 0, maxPriority);
-    protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage, float maxPriority) 
+    protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage, float maxPriority)
     => Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
 
     protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max, float maxPriority)
     {
         current = current / total * 100;
         return (current < min || current > max)
-        ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max )), 0, maxPriority)
+        ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
         : 0;
     }
     protected static float _addPriorityIfInsidePercentRange
@@ -58,7 +46,7 @@ public class PriorityGenerator
     {
         current = current / total * 100;
 
-        return (current >= min && current <= max) 
+        return (current >= min && current <= max)
         ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
         : 0;
     }
@@ -125,36 +113,21 @@ public class PriorityGenerator
         return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
     }
 
-    public static List<float> GeneratePriorities(ActionName actionName, List<PriorityParameter> parameters)
+    public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
     {
-        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
+        switch (actionName)
         {
-            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
-            return null;
-        }
-
-        foreach (var parameter in parameters)
-        {
-            if (!existingPriority.ContainsKey(parameter.ParameterName))
-            {
-                Debug.LogError($"Parameter: {parameter.ParameterName} not found.");
-                continue;
-            }
-
-            existingPriority[parameter.ParameterName] = parameter.ParameterValue;
-        }
-
-        switch(actionName)
-        {
-            case ActionName.Haul:
-                return _generateHaulPriority(existingPriority);
+            case ActionName.Fetch:
+                return _generateFetchPriority(parameters);
+            case ActionName.Deliver:
+                return _generateDeliverPriority(parameters);
             default:
                 Debug.LogError($"ActionName: {actionName} not found.");
                 return null;
         }
     }
 
-    static List<float> _generateHaulPriority(Dictionary<PriorityParameterName, object> existingPriorities)
+    static List<float> _generateFetchPriority(Dictionary<PriorityParameterName, object> existingPriorities)
     {
         List<float> previousPriority = existingPriorities[PriorityParameterName.PreviousPriority] as List<float> ?? new List<float>();
         float maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
@@ -163,7 +136,7 @@ public class PriorityGenerator
         InventoryData inventory_Hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
         InventoryData inventory_Target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
 
-        if (maxPriority == 0) 
+        if (maxPriority == 0)
         {
             Debug.LogError("MaxPriority is 0. Default initialiser failed.");
             return null;
@@ -181,14 +154,20 @@ public class PriorityGenerator
             return previousPriority;
         }
 
-        var allItemsToFetch = inventory_Target.GetInventoryItemsToHaul();
+        var allItemsToFetch = inventory_Target.GetInventoryItemsToFetch();
+
+        if (allItemsToFetch.Count == 0)
+        {
+            Debug.Log("No items to fetch.");
+            return new List<float> { 0 };
+        }
 
         var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
         var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
         Debug.Log($"AllItemsCount: {allItemsToFetch.Count}, TotalItems: {totalItems}, maxPriority: {maxPriority}");
 
-        var priority_ItemQuantity = allItemsToFetch.Count != 0 
+        var priority_ItemQuantity = allItemsToFetch.Count != 0
         ? _moreItemsDesired_Total(allItemsToFetch, totalItems, maxPriority) : 0;
 
         Debug.Log($"haulerPosition: {haulerPosition}, targetPosition: {targetPosition}, totalDistance: {totalDistance}, maxPriority: {maxPriority}");
@@ -198,10 +177,117 @@ public class PriorityGenerator
 
         Debug.Log($"Station: {inventory_Target.Reference.GameObject.name} with priorities: Item: {priority_ItemQuantity}, Distance: {priority_Distance} wants to haul:");
 
-        foreach (var item in allItemsToFetch)
+        Transform _priorityDisplay = GameObject.Find("TestPanel").transform;
+        StationName stationName = inventory_Target.Reference.GameObject.GetComponent<StationComponent>().StationName;
+        Transform stationPanel = null;
+
+        switch (stationName)
         {
-            Debug.Log($"Item: {item.ItemID} Amount: {item.ItemAmount}");
+            case StationName.Tree:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "TreePanel");
+                break;
+            case StationName.Sawmill:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "SawmillPanel");
+                break;
+            case StationName.Log_Pile:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "LogPilePanel");
+                break;
+            default:
+                Debug.LogError($"StationName: {stationName} not found.");
+                return previousPriority;
         }
+
+        GameObject _itemPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Item").gameObject;
+        GameObject _distancePriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Distance").gameObject;
+        GameObject _totalPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Total").gameObject;
+
+        _itemPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Item: {priority_ItemQuantity.ToString()}";
+        _distancePriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Distance: {priority_Distance.ToString()}";
+        _totalPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Total: {(priority_ItemQuantity + priority_Distance).ToString()}";
+
+        return new List<float>
+        {
+            priority_ItemQuantity + priority_Distance
+        };
+    }
+
+    static List<float> _generateDeliverPriority(Dictionary<PriorityParameterName, object> existingPriorities)
+    {
+        List<float> previousPriority = existingPriorities[PriorityParameterName.PreviousPriority] as List<float> ?? new List<float>();
+        float maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
+        float totalDistance = existingPriorities[PriorityParameterName.TotalDistance] as float? ?? 0;
+        float totalItems = existingPriorities[PriorityParameterName.TotalItems] as float? ?? 0;
+        InventoryData inventory_Hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
+        InventoryData inventory_Target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
+
+        if (maxPriority == 0)
+        {
+            Debug.LogError("MaxPriority is 0. Default initialiser failed.");
+            return null;
+        }
+
+        if (totalItems == 0 && totalDistance == 0)
+        {
+            Debug.LogError($"MaxItems and MaxDistance are 0.");
+            return previousPriority;
+        }
+
+        if (inventory_Hauler == null || inventory_Target == null)
+        {
+            Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
+            return previousPriority;
+        }
+
+        var allItemsToDeliver = inventory_Target.GetInventoryItemsToDeliver(inventory_Hauler);
+
+        if (allItemsToDeliver.Count == 0)
+        {
+            Debug.Log("No items to fetch.");
+            return new List<float> { 0 };
+        }
+
+        var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
+        var targetPosition = inventory_Target.Reference.GameObject.transform.position;
+
+        Debug.Log($"AllItemsCount: {allItemsToDeliver.Count}, TotalItems: {totalItems}, maxPriority: {maxPriority}");
+
+        var priority_ItemQuantity = allItemsToDeliver.Count != 0
+        ? _moreItemsDesired_Total(allItemsToDeliver, totalItems, maxPriority) : 0;
+
+        Debug.Log($"haulerPosition: {haulerPosition}, targetPosition: {targetPosition}, totalDistance: {totalDistance}, maxPriority: {maxPriority}");
+
+        var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+        ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
+
+        Debug.Log($"Station: {inventory_Target.Reference.GameObject.name} with priorities: Item: {priority_ItemQuantity}, Distance: {priority_Distance} wants to haul:");
+
+        Transform _priorityDisplay = GameObject.Find("TestPanel").transform;
+        StationName stationName = inventory_Target.Reference.GameObject.GetComponent<StationComponent>().StationName;
+        Transform stationPanel = null;
+
+        switch (stationName)
+        {
+            case StationName.Tree:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "TreePanel");
+                break;
+            case StationName.Sawmill:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "SawmillPanel");
+                break;
+            case StationName.Log_Pile:
+                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "LogPilePanel");
+                break;
+            default:
+                Debug.LogError($"StationName: {stationName} not found.");
+                return previousPriority;
+        }
+
+        GameObject _itemPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Item").gameObject;
+        GameObject _distancePriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Distance").gameObject;
+        GameObject _totalPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Total").gameObject;
+
+        _itemPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Item: {priority_ItemQuantity.ToString()}";
+        _distancePriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Distance: {priority_Distance.ToString()}";
+        _totalPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Total: {(priority_ItemQuantity + priority_Distance).ToString()}";
 
         return new List<float>
         {
@@ -246,6 +332,48 @@ public class ActionToChange
 
 public abstract class PriorityComponent
 {
+    protected Dictionary<ActionName, Dictionary<PriorityParameterName, object>> _existingParameters = new()
+    {
+        { ActionName.Fetch, new Dictionary<PriorityParameterName, object>
+        {
+            { PriorityParameterName.PreviousPriority, null },
+            { PriorityParameterName.MaxPriority, null },
+            { PriorityParameterName.TotalItems, null },
+            { PriorityParameterName.TotalDistance, null },
+            { PriorityParameterName.InventoryHauler, null },
+            { PriorityParameterName.InventoryTarget, null },
+        }},
+        { ActionName.Deliver, new Dictionary<PriorityParameterName, object>
+        {
+            { PriorityParameterName.PreviousPriority, null },
+            { PriorityParameterName.MaxPriority, null },
+            { PriorityParameterName.TotalItems, null },
+            { PriorityParameterName.TotalDistance, null },
+            { PriorityParameterName.InventoryHauler, null },
+            { PriorityParameterName.InventoryTarget, null },
+        }},
+    };
+
+    protected void _updateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
+    {
+        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
+        {
+            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
+            return;
+        }
+
+        foreach (var parameter in parameters)
+        {
+            if (!existingPriority.ContainsKey(parameter.Key))
+            {
+                Debug.LogError($"Parameter: {parameter.Key} not found.");
+                continue;
+            }
+
+            existingPriority[parameter.Key] = parameter.Value;
+        }
+    }
+
     public PriorityQueue PriorityQueue;
 
     public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
@@ -253,12 +381,12 @@ public abstract class PriorityComponent
     {
         { DataChanged.ChangedInventory, new List<ActionToChange> 
         { 
-            new ActionToChange(ActionName.Haul, PriorityImportance.High),
+            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
         }},
 
         { DataChanged.DroppedItems, new List<ActionToChange> 
         { 
-            new ActionToChange(ActionName.Haul, PriorityImportance.High),
+            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
             new ActionToChange(ActionName.Scavenge, PriorityImportance.Medium),
         }},
     };
@@ -266,7 +394,7 @@ public abstract class PriorityComponent
     protected bool _syncingCachedQueue = false;
     protected float _timeDeferment = 1f;
 
-    public void OnDataChanged(DataChanged dataChanged, List<PriorityParameter> changedParameters)
+    public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameterName, object> changedParameters)
     {
         if (!_actionsToChange.TryGetValue(dataChanged, out var actionsToChange))
         {
@@ -434,7 +562,7 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
             if (itemsToHaul.Count <= 0) continue;
 
-            var priorityValues = PriorityGenerator.GeneratePriorities(ActionName.Haul, new List<PriorityParameter>
+            var priorityValues = PriorityGenerator.GeneratePriorities(ActionName.Fetch, new Dictionary<PriorityParameterName, object>
             {
                 // new PriorityParameter( PriorityParameterName., itemsToHaul),
                 // new PriorityParameter( PriorityParameterName.TargetPosition, station.transform.position),
@@ -453,18 +581,111 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
-            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Haul, new List<PriorityParameter>
+            _updateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameterName, object>
             {
-                new PriorityParameter( PriorityParameterName.TotalItems, totalItems),
-                new PriorityParameter (PriorityParameterName.TotalDistance, totalDistance),
-                new PriorityParameter( PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData),
-                new PriorityParameter( PriorityParameterName.InventoryTarget, station.StationData.InventoryData),
+                { PriorityParameterName.TotalItems, totalItems },
+                { PriorityParameterName.TotalDistance, totalDistance },
+                { PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData },
+                { PriorityParameterName.InventoryTarget, station.StationData.InventoryData }, 
             });
+
+            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Fetch, _existingParameters[ActionName.Fetch]);
 
             if (newPriorities == null || newPriorities.Count == 0) continue;
 
             PriorityQueue.Update(station.StationID, newPriorities);
         }
+
+        var transform = Manager_Game.FindTransformRecursively(GameObject.Find("TestPanel").transform, "PeekFrom").gameObject; 
+        var priority = PriorityQueue.Peek();
+
+        if (priority != null)
+        {
+            var text = transform.GetComponent<TMPro.TextMeshProUGUI>().text = $"Peek: {PriorityQueue.Peek().PriorityID}: {Manager_Station.GetStation(PriorityQueue.Peek().PriorityID).StationName}";
+        }
+
+        var allStations = PriorityQueue.PeekAll();
+
+        // Correct priorities, however wrong order in PriorityQueue
+
+        foreach(var station in allStations)
+        {
+            if (station == null) continue;
+            Debug.Log($"Station: {station.PriorityID} AllPrioties: {station.AllPriorities[0]}");
+        }
+
+        StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
+        
+        if (peekedStation == null) return (null, null);
+
+        Debug.Log("PriorityQueue has a peek.");
+
+        var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
+
+        Debug.Log($"PeekedStation: {peekedStation.StationID}");
+
+        Debug.Log($"AllItemsInStation: {allItemsInStation.Count}");
+
+        if (allItemsInStation.Count == 0) return (null, null);
+
+        float availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+
+        List<Item> itemsToHaul = new List<Item>();
+
+        while (allItemsInStation.Count > 0 && availableCarryWeight > 0)
+        {
+            Debug.Log($"AllItemsInStation: {allItemsInStation.Count}, AvailableCarryWeight: {availableCarryWeight}");
+
+            Item item = allItemsInStation[0];
+            Item_Master itemMaster = Manager_Item.GetMasterItem(item.ItemID);
+            float itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
+
+            if (itemWeight > availableCarryWeight) break;
+
+            itemsToHaul.Add(item);
+            allItemsInStation.Remove(item);
+            availableCarryWeight -= itemWeight;
+        }
+
+        if (itemsToHaul.Count == 0) return (null, null);
+
+        PriorityQueue.Dequeue(peekedStation.StationID);
+
+        return (peekedStation, itemsToHaul);
+    }
+
+    public (StationComponent Station, List<Item> Items) GetStationToHaulTo(ActorComponent hauler)
+    {
+        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToHaul()));
+        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
+
+        Debug.Log($"TotalItems: {totalItems}, TotalDistance: {totalDistance}");
+
+        foreach (var station in Jobsite.AllStationsInJobsite)
+        {
+            _updateExistingPriorityParameters(ActionName.Deliver, new Dictionary<PriorityParameterName, object>
+            {
+                { PriorityParameterName.TotalItems, totalItems },
+                { PriorityParameterName.TotalDistance, totalDistance },
+                { PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData },
+                { PriorityParameterName.InventoryTarget, station.StationData.InventoryData }, 
+            });
+
+            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, _existingParameters[ActionName.Deliver]);
+
+            if (newPriorities == null || newPriorities.Count == 0) continue;
+
+            PriorityQueue.Update(station.StationID, newPriorities);
+        }
+
+        var transform = Manager_Game.FindTransformRecursively(GameObject.Find("TestPanel").transform, "PeekTo").gameObject; 
+        var priority = PriorityQueue.Peek();
+
+        if (priority != null)
+        {
+            var text = transform.GetComponent<TMPro.TextMeshProUGUI>().text = $"Peek: {PriorityQueue.Peek().PriorityID}: {Manager_Station.GetStation(PriorityQueue.Peek().PriorityID).StationName}";
+        }
+        
 
         var allStations = PriorityQueue.PeekAll();
 
@@ -540,7 +761,7 @@ public abstract class PriorityData
     protected PriorityComponent _priorityComponent;
     public abstract PriorityComponent PriorityComponent { get; }
     
-    public Action<DataChanged, List<PriorityParameter>> OnDataChange { get; set; }
+    public Action<DataChanged, Dictionary<PriorityParameterName, object>> OnDataChange { get; set; }
     
     protected void _priorityChangeCheck(DataChanged dataChanged, bool forceChange = false)
     {
@@ -560,7 +781,7 @@ public abstract class PriorityData
     protected abstract bool _priorityChangeNeeded(object dataChanged);
     protected void _setOnDataChange() => OnDataChange = (DataChanged, changedParameters)
     => PriorityComponent.OnDataChanged(DataChanged, changedParameters);
-    protected List<PriorityParameter> _getActionsToChange(DataChanged dataChanged)
+    protected Dictionary<PriorityParameterName, object> _getActionsToChange(DataChanged dataChanged)
     {
         if (_priorityParameterList.Count == 0)
         {
@@ -577,7 +798,7 @@ public abstract class PriorityData
         return priorityParameters;
     }
 
-    protected abstract Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; }
+    protected abstract Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; }
 }
 
 public abstract class ComponentReference
@@ -623,18 +844,6 @@ public class ComponentReference_Jobsite : ComponentReference
     public JobsiteComponent Jobsite => _component as JobsiteComponent;
 
     public override GameObject GameObject => Jobsite.gameObject;
-}
-
-public class PriorityParameter
-{
-    public PriorityParameterName ParameterName;
-    public object ParameterValue;
-
-    public PriorityParameter(PriorityParameterName parameterName, object parameterValue)
-    {
-        ParameterName = parameterName;
-        ParameterValue = parameterValue;
-    }
 }
 
 

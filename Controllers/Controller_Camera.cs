@@ -1,6 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Build.Content;
+using UnityEditor;
 using UnityEngine;
 
 public class Controller_Camera : MonoBehaviour
@@ -12,6 +11,17 @@ public class Controller_Camera : MonoBehaviour
     public Player _player;
     public float boundX = 0.15f;
     public float boundY = 0.05f;
+
+    public bool _lockCamera;
+    
+    public void LockCamera()
+    {
+        _lockCamera = !_lockCamera;
+        
+        if (_lockCamera) Cursor.lockState = CursorLockMode.Locked;
+        else Cursor.lockState = CursorLockMode.None;
+    }
+
     public AnimationCurve Curve = AnimationCurve.EaseInOut(0, 1, 1, 0);
     protected Vector3 _originalPosition;
     protected Vector3 _lastPos;
@@ -46,7 +56,6 @@ public class Controller_Camera : MonoBehaviour
         }
 
         _camera = GetComponent<Camera>();
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
     public void SetOffset(Vector3 position, Quaternion rotation)
@@ -180,5 +189,20 @@ public class Controller_Camera : MonoBehaviour
         _camera.transform.rotation = newRotation;
 
         IsCoroutineRunning = false;
+    }
+}
+
+[CustomEditor(typeof(Controller_Camera))]
+public class ControllerCameraEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        Controller_Camera controllerCamera = (Controller_Camera)target;
+        if (GUILayout.Button("Toggle Lock Camera"))
+        {
+            controllerCamera.LockCamera();
+        }
     }
 }

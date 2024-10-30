@@ -272,7 +272,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract void InitialiseStartingInventory();
     public List<Item> GetInventoryItemsToHaul()
     {
-        return StationData.InventoryData.GetInventoryItemsToHaul();
+        return StationData.InventoryData.GetInventoryItemsToFetch();
     }
 
     public void SetStationData(StationData stationData) => StationData = stationData;
@@ -352,26 +352,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         }
 
         return estimatedProductionItems;
-    }
-
-    protected List<StationComponent> _getAllStationsToHaulTo(ActorComponent actor)
-    {
-        var stationsToHaulTo = new List<StationComponent>();
-
-        var actorInventory = actor.ActorData.InventoryData;
-
-        foreach (var station in Jobsite.AllStationsInJobsite)
-        {
-            if (station.AllowedStoredItemIDs.Count == 0) continue;
-
-            if (actorInventory.InventoryContainsAnyItems(station.AllowedStoredItemIDs))
-            {
-                stationsToHaulTo.Add(station);
-                break;
-            }
-        }
-
-        return stationsToHaulTo;
     }
 }
 

@@ -130,28 +130,39 @@ public class StationComponent_LogPile : StationComponent
 
     protected bool _canDeliverItems(ActorComponent actor)
     {
-        var stationsToHaulTo = _getAllStationsToHaulTo(actor);
-
-        if (stationsToHaulTo.Count > 0) Debug.Log($"Stations to haul to: {stationsToHaulTo.Count}");
-
-        foreach (var stationToHaulTo in stationsToHaulTo)
+        if (Jobsite == null)
         {
-            var itemsToDeliver = actor.ActorData.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
-
-            Debug.Log($"Items to deliver: {itemsToDeliver.Count}");
-
-            if (itemsToDeliver.Count <= 0) continue;
-
-            StartCoroutine(_deliverItems(actor, stationToHaulTo, itemsToDeliver));
-            return true;
+            Debug.Log($"Jobsite: {StationData.JobsiteID} is null.");
+            return false;
         }
- 
-        return false;
+
+        var stationAndItems = Jobsite.GetStationToHaulTo(actor);
+
+        if (stationAndItems.Station == null)
+        {
+            Debug.Log($"No stations to haul to.");
+            return false;
+        }
+
+        if (stationAndItems.Items.Count == 0)
+        {
+            Debug.Log($"No items to haul to {stationAndItems.Station.StationName}.");
+            return false;
+        }
+
+        Debug.Log($"Actor: {actor.ActorData.ActorID} is delivering items to {stationAndItems.Station.StationName}.");
+
+        StartCoroutine(_deliverItems(actor, stationAndItems.Station, stationAndItems.Items));
+
+        return true;
     }
+
+    
+    // Also add in a delay to mimic them moving, so that we can allocate properly so that they don't all go to the same station.
 
     IEnumerator _deliverItems(ActorComponent actor, StationComponent station, List<Item> itemsToDeliver)
     {
-        bool success = false;
+        bool orderSuccess = false;
 
         var ActorID = actor.ActorData.ActorID;
         var StationID_Destination = station.StationData.StationID;
@@ -174,12 +185,12 @@ public class StationComponent_LogPile : StationComponent
         {
             yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
 
-            if (_deliver(actor, station, itemsToDeliver)) success = true;
+            if (_deliver(actor, station, itemsToDeliver)) orderSuccess = true;
 
             actor.ActorHaulCoroutine = null;
         }
 
-        if (success)
+        if (orderSuccess)
         {
             actor.ActorData.CurrentOrder = null;
         }
@@ -206,6 +217,8 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
+        //Debug.Log($"Actor: {actor.ActorData.ActorID} successfully delivered items to Station: {station.StationData.StationID}.");
+
         return true;
     }
 
@@ -231,6 +244,10 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
+        Debug.Log($"Actor: {actor.ActorData.ActorID} is fetching items from {stationAndItems.Station.StationName}.");
+
+        StationData.InventoryData.AddToInventoryItemsOnHold(stationAndItems.Items);
+
         StartCoroutine(_fetchItems(actor, stationAndItems.Station, stationAndItems.Items));
 
         return true;
@@ -246,15 +263,16 @@ public class StationComponent_LogPile : StationComponent
         if (ActorID == 0 || StationID_Destination == 0)
         {
             Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination} is invalid.");
+            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
             throw new Exception("Invalid Order.");
         }
 
         if (actor.transform.position == null)
         {
             Debug.Log("Actor position is null.");
+            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
             throw new Exception("Invalid Actor Position.");
         }
-
         // Eventually put in a check to see if the station still has the resources. If not, then return.
 
         if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
@@ -263,12 +281,18 @@ public class StationComponent_LogPile : StationComponent
 
             if (_fetch(stationDestination, actor, itemsToFetch)) orderSuccess = true;
 
+            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
+
             actor.ActorHaulCoroutine = null;
         }
 
         if (orderSuccess)
         {
             actor.ActorData.CurrentOrder = null;
+        }
+        else
+        {
+            Debug.LogWarning($"Failed to fetch items from Station: {stationDestination.StationData.StationID}.");
         }
     }
 

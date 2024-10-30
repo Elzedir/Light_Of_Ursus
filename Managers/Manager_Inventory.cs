@@ -44,6 +44,44 @@ public abstract class InventoryData : PriorityData
         }
     }
 
+    public Dictionary<uint, Item> InventoryItemsOnHold = new();
+    public void AddToInventoryItemsOnHold(List<Item> items)
+    {
+        if (items == null) return;
+
+        foreach (var item in items)
+        {
+            if (InventoryItemsOnHold.ContainsKey(item.ItemID))
+            {
+                InventoryItemsOnHold[item.ItemID].ItemAmount += item.ItemAmount;
+            }
+            else
+            {
+                InventoryItemsOnHold.Add(item.ItemID, item);
+            }
+        }
+    }
+
+    public void RemoveFromInventoryItemsOnHold(List<Item> items)
+    {
+        if (items == null) return;
+
+        foreach (var item in items)
+        {
+            if (InventoryItemsOnHold.ContainsKey(item.ItemID))
+            {
+                if (InventoryItemsOnHold[item.ItemID].ItemAmount <= item.ItemAmount)
+                {
+                    InventoryItemsOnHold.Remove(item.ItemID);
+                }
+                else
+                {
+                    InventoryItemsOnHold[item.ItemID].ItemAmount -= item.ItemAmount;
+                }
+            }
+        }
+    }
+
     public void SetInventory(List<Item> allInventoryItems, bool skipPriorityCheck = false)
     {
         if (skipPriorityCheck) SkipNextPriorityCheck();
@@ -317,7 +355,7 @@ public abstract class InventoryData : PriorityData
         return true;
     }
 
-    protected override Dictionary<DataChanged, List<PriorityParameter>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
     {
         { 
             DataChanged.ChangedInventory, 
@@ -328,7 +366,8 @@ public abstract class InventoryData : PriorityData
         }
     };
 
-    public abstract List<Item> GetInventoryItemsToHaul();
+    public abstract List<Item> GetInventoryItemsToFetch();
+    public abstract List<Item> GetInventoryItemsToDeliver(InventoryData inventory);
 }
 
 public class InventoryData_Actor : InventoryData
@@ -358,7 +397,13 @@ public class InventoryData_Actor : InventoryData
         return true;
     }
 
-    public override List<Item> GetInventoryItemsToHaul()
+    public override List<Item> GetInventoryItemsToFetch()
+    {
+        Debug.LogError("Not implemented yet.");
+        return null;
+    }
+
+    public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
     {
         Debug.LogError("Not implemented yet.");
         return null;
@@ -375,7 +420,7 @@ public class InventoryData_Station : InventoryData
 
     public override PriorityComponent PriorityComponent { get => _priorityComponent ??= StationReference.Station.PriorityComponent; }
     public uint MaxInventorySpace = 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
-    public List<uint> GetDesiredStoredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
+    List<uint> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
     protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
     public override bool HasSpaceForItems(List<Item> items)
     {
@@ -387,5 +432,34 @@ public class InventoryData_Station : InventoryData
 
         return true;
     }
-    public override List<Item> GetInventoryItemsToHaul() => AllInventoryItems.Where(i => !GetDesiredStoredItemIDs().Contains(i.ItemID)).ToList();
+
+    public override List<Item> GetInventoryItemsToFetch()
+    {
+        var itemsToFetch = AllInventoryItems.Where(i => !_getDesiredItemIDs().Contains(i.ItemID)).ToList();
+
+        for (int i = 0; i < itemsToFetch.Count; i++)
+        {
+            if (!InventoryItemsOnHold.ContainsKey(itemsToFetch[i].ItemID)) continue;
+
+            if (InventoryItemsOnHold[itemsToFetch[i].ItemID].ItemAmount > itemsToFetch[i].ItemAmount)
+            {
+                Debug.LogError("Item amount in inventory is less than the amount on hold.");
+                itemsToFetch.RemoveAt(i);
+                continue;
+            }
+            else if (InventoryItemsOnHold[itemsToFetch[i].ItemID].ItemAmount == itemsToFetch[i].ItemAmount)
+            {
+                Debug.Log("All items are on hold.");
+                itemsToFetch.RemoveAt(i);
+                continue;
+            }
+            else
+            {
+                itemsToFetch[i].ItemAmount -= InventoryItemsOnHold[itemsToFetch[i].ItemID].ItemAmount;
+            }
+        }
+
+        return itemsToFetch;
+    } 
+    public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory) => inventory.AllInventoryItems.Where(i => _getDesiredItemIDs().Contains(i.ItemID)).ToList();
 }
