@@ -507,22 +507,3 @@ public class Operator
         OperatingAreaID = other.OperatingAreaID;
     }
 }
-
-public class PriorityComponent_Station : PriorityComponent
-{
-    public PriorityComponent_Station(uint stationID) 
-    {
-        _stationReferences = new ComponentReference_Station(stationID);
-        PriorityQueue = new PriorityQueue(100);
-    } 
-
-    readonly ComponentReference_Station _stationReferences;
-
-    public uint JobsiteID { get { return _stationReferences.StationID; } }
-    protected StationComponent Jobsite { get { return _stationReferences.Station; } }
-
-    protected override void _updateAllPriorities(List<object> allData)
-    {
-        List<StationComponent> allStations = allData.Cast<StationComponent>().ToList();
-    }
-}

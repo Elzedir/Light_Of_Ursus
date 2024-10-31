@@ -354,26 +354,6 @@ public abstract class PriorityComponent
         }},
     };
 
-    protected void _updateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
-    {
-        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
-        {
-            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
-            return;
-        }
-
-        foreach (var parameter in parameters)
-        {
-            if (!existingPriority.ContainsKey(parameter.Key))
-            {
-                Debug.LogError($"Parameter: {parameter.Key} not found.");
-                continue;
-            }
-
-            existingPriority[parameter.Key] = parameter.Value;
-        }
-    }
-
     public PriorityQueue PriorityQueue;
 
     public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
@@ -435,11 +415,7 @@ public abstract class PriorityComponent
         SyncCachedPriorityQueueHigh();
         //SyncCachedPriorityQueueMedium();
         //SyncCachedPriorityQueueLow();
-
-        _updateAllPriorities(allData);
     }
-
-    protected abstract void _updateAllPriorities(List<object> allData);
 
     public void SyncCachedPriorityQueueHigh(bool syncing = false)
     {
@@ -517,6 +493,26 @@ public abstract class PriorityComponent
     public Priority GetSpecificPriority(uint priorityID)
     {
         return PriorityQueue.Dequeue(priorityID);
+    }
+
+    protected void _updateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
+    {
+        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
+        {
+            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
+            return;
+        }
+
+        foreach (var parameter in parameters)
+        {
+            if (!existingPriority.ContainsKey(parameter.Key))
+            {
+                Debug.LogError($"Parameter: {parameter.Key} not found.");
+                continue;
+            }
+
+            existingPriority[parameter.Key] = parameter.Value;
+        }
     }    
 }
 
@@ -532,11 +528,20 @@ public class PriorityComponent_Actor : PriorityComponent
         _actorReferences = new ComponentReference_Actor(actorID);
         PriorityQueue = new PriorityQueue(100);
     }
+}
 
-    protected override void _updateAllPriorities(List<object> allData)
+public class PriorityComponent_Station : PriorityComponent
+{
+    public PriorityComponent_Station(uint stationID) 
     {
-        throw new NotImplementedException();
-    }
+        _stationReferences = new ComponentReference_Station(stationID);
+        PriorityQueue = new PriorityQueue(10);
+    } 
+
+    readonly ComponentReference_Station _stationReferences;
+
+    public uint JobsiteID { get { return _stationReferences.StationID; } }
+    protected StationComponent Jobsite { get { return _stationReferences.Station; } }
 }
 
 public class PriorityComponent_Jobsite : PriorityComponent
@@ -544,33 +549,13 @@ public class PriorityComponent_Jobsite : PriorityComponent
     public PriorityComponent_Jobsite(uint jobsiteID) 
     {
         _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
-        PriorityQueue = new PriorityQueue(100);
+        PriorityQueue = new PriorityQueue(10);
     } 
 
     readonly ComponentReference_Jobsite _jobsiteReferences;
 
     public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
     protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
-
-    protected override void _updateAllPriorities(List<object> allData)
-    {
-        List<StationComponent> allStations = allData.Cast<StationComponent>().ToList();
-
-        foreach (var station in allStations)
-        {
-            var itemsToHaul = station.GetInventoryItemsToHaul();
-
-            if (itemsToHaul.Count <= 0) continue;
-
-            var priorityValues = PriorityGenerator.GeneratePriorities(ActionName.Fetch, new Dictionary<PriorityParameterName, object>
-            {
-                // new PriorityParameter( PriorityParameterName., itemsToHaul),
-                // new PriorityParameter( PriorityParameterName.TargetPosition, station.transform.position),
-            });
-
-            PriorityQueue.Enqueue(station.StationID, priorityValues);
-        }
-    }
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
     {
@@ -581,6 +566,10 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
+            a
+
+            // Instead, have each station have their own PriorityQueue which will contain all the possible actions for a station, and they will sort them accordingly. Then, the jobsite will get the action with the highest priority. This way, we can have multiple actions for a station, and the jobsite will get the highest priority action for the station. Then it will compare the highestpriorityaction for each station (incude an ability to look for a specific action like here ActionName.Haul) and then take the station with the highest priority. It will then update its own Action PriorityQueue to have the action_fetch contain the uid for the station with the highest priority to fetch, and deliver, etc. That way when we want to perform an action, we just take the relevant action from the PriorityQueue, and get the station or thing we will perform that action to.
+
             _updateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameterName, object>
             {
                 { PriorityParameterName.TotalItems, totalItems },
@@ -596,35 +585,11 @@ public class PriorityComponent_Jobsite : PriorityComponent
             PriorityQueue.Update(station.StationID, newPriorities);
         }
 
-        var transform = Manager_Game.FindTransformRecursively(GameObject.Find("TestPanel").transform, "PeekFrom").gameObject; 
-        var priority = PriorityQueue.Peek();
-
-        if (priority != null)
-        {
-            var text = transform.GetComponent<TMPro.TextMeshProUGUI>().text = $"Peek: {PriorityQueue.Peek().PriorityID}: {Manager_Station.GetStation(PriorityQueue.Peek().PriorityID).StationName}";
-        }
-
-        var allStations = PriorityQueue.PeekAll();
-
-        // Correct priorities, however wrong order in PriorityQueue
-
-        foreach(var station in allStations)
-        {
-            if (station == null) continue;
-            Debug.Log($"Station: {station.PriorityID} AllPrioties: {station.AllPriorities[0]}");
-        }
-
         StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
         
         if (peekedStation == null) return (null, null);
 
-        Debug.Log("PriorityQueue has a peek.");
-
         var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
-
-        Debug.Log($"PeekedStation: {peekedStation.StationID}");
-
-        Debug.Log($"AllItemsInStation: {allItemsInStation.Count}");
 
         if (allItemsInStation.Count == 0) return (null, null);
 
@@ -678,36 +643,20 @@ public class PriorityComponent_Jobsite : PriorityComponent
             PriorityQueue.Update(station.StationID, newPriorities);
         }
 
-        var transform = Manager_Game.FindTransformRecursively(GameObject.Find("TestPanel").transform, "PeekTo").gameObject; 
-        var priority = PriorityQueue.Peek();
-
-        if (priority != null)
+        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
         {
-            var text = transform.GetComponent<TMPro.TextMeshProUGUI>().text = $"Peek: {PriorityQueue.Peek().PriorityID}: {Manager_Station.GetStation(PriorityQueue.Peek().PriorityID).StationName}";
-        }
-        
+            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = totalItems.ToString() } },
+            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = totalDistance.ToString() } },
+            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (totalItems + totalDistance).ToString() } },
+        };
 
-        var allStations = PriorityQueue.PeekAll();
-
-        // Correct priorities, however wrong order in PriorityQueue
-
-        foreach(var station in allStations)
-        {
-            if (station == null) continue;
-            Debug.Log($"Station: {station.PriorityID} AllPrioties: {station.AllPriorities[0]}");
-        }
+        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
 
         StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
         
         if (peekedStation == null) return (null, null);
 
-        Debug.Log("PriorityQueue has a peek.");
-
         var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
-
-        Debug.Log($"PeekedStation: {peekedStation.StationID}");
-
-        Debug.Log($"AllItemsInStation: {allItemsInStation.Count}");
 
         if (allItemsInStation.Count == 0) return (null, null);
 
