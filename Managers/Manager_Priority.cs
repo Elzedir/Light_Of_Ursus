@@ -113,28 +113,33 @@ public class PriorityGenerator
         return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
     }
 
-    public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
+    public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameter, object> existingPriorityParameters)
     {
+        if (existingPriorityParameters == null)
+        {
+            Debug.LogError($"ActionName: {actionName} not found in _actionPriorityParameters.");
+            return null;
+        }
+
         switch (actionName)
         {
             case ActionName.Fetch:
-                return _generateFetchPriority(parameters);
+                return _generateFetchPriority(existingPriorityParameters) ?? new List<float>();
             case ActionName.Deliver:
-                return _generateDeliverPriority(parameters);
+                return _generateDeliverPriority(existingPriorityParameters) ?? new List<float>();
             default:
                 Debug.LogError($"ActionName: {actionName} not found.");
                 return null;
         }
     }
 
-    static List<float> _generateFetchPriority(Dictionary<PriorityParameterName, object> existingPriorities)
+    static List<float> _generateFetchPriority(Dictionary<PriorityParameter, object> existingPriorityParameters)
     {
-        List<float> previousPriority = existingPriorities[PriorityParameterName.PreviousPriority] as List<float> ?? new List<float>();
-        float maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
-        float totalDistance = existingPriorities[PriorityParameterName.TotalDistance] as float? ?? 0;
-        float totalItems = existingPriorities[PriorityParameterName.TotalItems] as float? ?? 0;
-        InventoryData inventory_Hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
-        InventoryData inventory_Target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
+        float maxPriority = existingPriorityParameters[PriorityParameter.MaxPriority] as float? ?? DefaultMaxPriority;
+        float totalDistance = existingPriorityParameters[PriorityParameter.TotalDistance] as float? ?? 0;
+        float totalItems = existingPriorityParameters[PriorityParameter.TotalItems] as float? ?? 0;
+        InventoryData inventory_Hauler = existingPriorityParameters[PriorityParameter.InventoryHauler] as InventoryData;
+        InventoryData inventory_Target = existingPriorityParameters[PriorityParameter.InventoryTarget] as InventoryData;
 
         if (maxPriority == 0)
         {
@@ -145,13 +150,13 @@ public class PriorityGenerator
         if (totalItems == 0 && totalDistance == 0)
         {
             Debug.LogError($"MaxItems and MaxDistance are 0.");
-            return previousPriority;
+            return new List<float> { 0 };
         }
 
         if (inventory_Hauler == null || inventory_Target == null)
         {
             Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-            return previousPriority;
+            return new List<float> { 0 };
         }
 
         var allItemsToFetch = inventory_Target.GetInventoryItemsToFetch();
@@ -165,45 +170,20 @@ public class PriorityGenerator
         var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
         var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
-        Debug.Log($"AllItemsCount: {allItemsToFetch.Count}, TotalItems: {totalItems}, maxPriority: {maxPriority}");
-
         var priority_ItemQuantity = allItemsToFetch.Count != 0
         ? _moreItemsDesired_Total(allItemsToFetch, totalItems, maxPriority) : 0;
-
-        Debug.Log($"haulerPosition: {haulerPosition}, targetPosition: {targetPosition}, totalDistance: {totalDistance}, maxPriority: {maxPriority}");
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
 
-        Debug.Log($"Station: {inventory_Target.Reference.GameObject.name} with priorities: Item: {priority_ItemQuantity}, Distance: {priority_Distance} wants to haul:");
-
-        Transform _priorityDisplay = GameObject.Find("TestPanel").transform;
-        StationName stationName = inventory_Target.Reference.GameObject.GetComponent<StationComponent>().StationName;
-        Transform stationPanel = null;
-
-        switch (stationName)
+        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
         {
-            case StationName.Tree:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "TreePanel");
-                break;
-            case StationName.Sawmill:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "SawmillPanel");
-                break;
-            case StationName.Log_Pile:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "LogPilePanel");
-                break;
-            default:
-                Debug.LogError($"StationName: {stationName} not found.");
-                return previousPriority;
-        }
+            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = priority_ItemQuantity.ToString() } },
+            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = priority_Distance.ToString() } },
+            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (priority_ItemQuantity + priority_Distance).ToString() } },
+        };
 
-        GameObject _itemPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Item").gameObject;
-        GameObject _distancePriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Distance").gameObject;
-        GameObject _totalPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Total").gameObject;
-
-        _itemPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Item: {priority_ItemQuantity.ToString()}";
-        _distancePriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Distance: {priority_Distance.ToString()}";
-        _totalPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Total: {(priority_ItemQuantity + priority_Distance).ToString()}";
+        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
 
         return new List<float>
         {
@@ -211,14 +191,13 @@ public class PriorityGenerator
         };
     }
 
-    static List<float> _generateDeliverPriority(Dictionary<PriorityParameterName, object> existingPriorities)
+    static List<float> _generateDeliverPriority(Dictionary<PriorityParameter, object> existingPriorities)
     {
-        List<float> previousPriority = existingPriorities[PriorityParameterName.PreviousPriority] as List<float> ?? new List<float>();
-        float maxPriority = existingPriorities[PriorityParameterName.MaxPriority] as float? ?? DefaultMaxPriority;
-        float totalDistance = existingPriorities[PriorityParameterName.TotalDistance] as float? ?? 0;
-        float totalItems = existingPriorities[PriorityParameterName.TotalItems] as float? ?? 0;
-        InventoryData inventory_Hauler = existingPriorities[PriorityParameterName.InventoryHauler] as InventoryData;
-        InventoryData inventory_Target = existingPriorities[PriorityParameterName.InventoryTarget] as InventoryData;
+        float maxPriority = existingPriorities[PriorityParameter.MaxPriority] as float? ?? DefaultMaxPriority;
+        float totalDistance = existingPriorities[PriorityParameter.TotalDistance] as float? ?? 0;
+        float totalItems = existingPriorities[PriorityParameter.TotalItems] as float? ?? 0;
+        InventoryData inventory_Hauler = existingPriorities[PriorityParameter.InventoryHauler] as InventoryData;
+        InventoryData inventory_Target = existingPriorities[PriorityParameter.InventoryTarget] as InventoryData;
 
         if (maxPriority == 0)
         {
@@ -229,13 +208,13 @@ public class PriorityGenerator
         if (totalItems == 0 && totalDistance == 0)
         {
             Debug.LogError($"MaxItems and MaxDistance are 0.");
-            return previousPriority;
+            return new List<float> { 0 };
         }
 
         if (inventory_Hauler == null || inventory_Target == null)
         {
             Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-            return previousPriority;
+            return new List<float> { 0 };
         }
 
         var allItemsToDeliver = inventory_Target.GetInventoryItemsToDeliver(inventory_Hauler);
@@ -249,45 +228,20 @@ public class PriorityGenerator
         var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
         var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
-        Debug.Log($"AllItemsCount: {allItemsToDeliver.Count}, TotalItems: {totalItems}, maxPriority: {maxPriority}");
-
         var priority_ItemQuantity = allItemsToDeliver.Count != 0
         ? _moreItemsDesired_Total(allItemsToDeliver, totalItems, maxPriority) : 0;
-
-        Debug.Log($"haulerPosition: {haulerPosition}, targetPosition: {targetPosition}, totalDistance: {totalDistance}, maxPriority: {maxPriority}");
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
 
-        Debug.Log($"Station: {inventory_Target.Reference.GameObject.name} with priorities: Item: {priority_ItemQuantity}, Distance: {priority_Distance} wants to haul:");
-
-        Transform _priorityDisplay = GameObject.Find("TestPanel").transform;
-        StationName stationName = inventory_Target.Reference.GameObject.GetComponent<StationComponent>().StationName;
-        Transform stationPanel = null;
-
-        switch (stationName)
+        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
         {
-            case StationName.Tree:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "TreePanel");
-                break;
-            case StationName.Sawmill:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "SawmillPanel");
-                break;
-            case StationName.Log_Pile:
-                stationPanel = Manager_Game.FindTransformRecursively(_priorityDisplay, "LogPilePanel");
-                break;
-            default:
-                Debug.LogError($"StationName: {stationName} not found.");
-                return previousPriority;
-        }
+            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = priority_ItemQuantity.ToString() } },
+            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = priority_Distance.ToString() } },
+            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (priority_ItemQuantity + priority_Distance).ToString() } },
+        };
 
-        GameObject _itemPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Item").gameObject;
-        GameObject _distancePriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Distance").gameObject;
-        GameObject _totalPriorityDisplay = Manager_Game.FindTransformRecursively(stationPanel.transform, "Total").gameObject;
-
-        _itemPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Item: {priority_ItemQuantity.ToString()}";
-        _distancePriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Distance: {priority_Distance.ToString()}";
-        _totalPriorityDisplay.GetComponent<TMPro.TextMeshProUGUI>().text = $"Total: {(priority_ItemQuantity + priority_Distance).ToString()}";
+        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
 
         return new List<float>
         {
@@ -305,11 +259,10 @@ public enum PriorityImportance
     Critical,
 }
 
-public enum PriorityParameterName
+public enum PriorityParameter
 {
     None,
 
-    PreviousPriority,
     MaxPriority,
     TotalItems,
     TotalDistance,
@@ -332,64 +285,53 @@ public class ActionToChange
 
 public abstract class PriorityComponent
 {
-    protected Dictionary<ActionName, Dictionary<PriorityParameterName, object>> _existingParameters = new()
+    public Dictionary<ActionName, Dictionary<PriorityParameter, object>> _actionPriorityParameters = new()
     {
-        { ActionName.Fetch, new Dictionary<PriorityParameterName, object>
+        { ActionName.Deliver, new Dictionary<PriorityParameter, object>
         {
-            { PriorityParameterName.PreviousPriority, null },
-            { PriorityParameterName.MaxPriority, null },
-            { PriorityParameterName.TotalItems, null },
-            { PriorityParameterName.TotalDistance, null },
-            { PriorityParameterName.InventoryHauler, null },
-            { PriorityParameterName.InventoryTarget, null },
+            { PriorityParameter.MaxPriority, null },
+            { PriorityParameter.TotalItems, null },
+            { PriorityParameter.TotalDistance, null },
+            { PriorityParameter.InventoryHauler, null },
+            { PriorityParameter.InventoryTarget, null },
         }},
-        { ActionName.Deliver, new Dictionary<PriorityParameterName, object>
+
+        { ActionName.Fetch, new Dictionary<PriorityParameter, object>
         {
-            { PriorityParameterName.PreviousPriority, null },
-            { PriorityParameterName.MaxPriority, null },
-            { PriorityParameterName.TotalItems, null },
-            { PriorityParameterName.TotalDistance, null },
-            { PriorityParameterName.InventoryHauler, null },
-            { PriorityParameterName.InventoryTarget, null },
+            { PriorityParameter.MaxPriority, null },
+            { PriorityParameter.TotalItems, null },
+            { PriorityParameter.TotalDistance, null },
+            { PriorityParameter.InventoryHauler, null },
+            { PriorityParameter.InventoryTarget, null },
         }},
     };
 
-    public PriorityQueue PriorityQueue;
+    public Dictionary<ActionName, PriorityQueue> AllPriorityQueues = new();
 
     public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
-    Dictionary<DataChanged, List<ActionToChange>> _actionsToChange = new()
-    {
-        { DataChanged.ChangedInventory, new List<ActionToChange> 
-        { 
-            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
-        }},
-
-        { DataChanged.DroppedItems, new List<ActionToChange> 
-        { 
-            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
-            new ActionToChange(ActionName.Scavenge, PriorityImportance.Medium),
-        }},
-    };
+    protected abstract Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; }
 
     protected bool _syncingCachedQueue = false;
     protected float _timeDeferment = 1f;
 
-    public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameterName, object> changedParameters)
+    public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameter, object> changedParameters)
     {
         if (!_actionsToChange.TryGetValue(dataChanged, out var actionsToChange))
         {
-            Debug.LogError($"DataChanged: {dataChanged} not found in _actionsToChange.");
+            Debug.Log($"DataChanged: {dataChanged} not found in _actionsToChange for {this}.");
             return;
         }
 
         foreach (var action in actionsToChange)
         {
-            var priorities = PriorityGenerator.GeneratePriorities(action.ActionName, changedParameters);
+            var parameters = UpdateExistingPriorityParameters(action.ActionName, changedParameters);
+
+            var priorities = PriorityGenerator.GeneratePriorities(action.ActionName, parameters);
 
             switch (action.PriorityImportance)
             {
                 case PriorityImportance.Critical:
-                    if (!PriorityQueue.Update((uint)action.ActionName, priorities))
+                    if (!AllPriorityQueues[action.ActionName].Update((uint)action.ActionName, priorities))
                     {
                         Debug.LogError($"Action: {action} unable to be updated in PriorityQueue.");
                     };
@@ -419,11 +361,11 @@ public abstract class PriorityComponent
 
     public void SyncCachedPriorityQueueHigh(bool syncing = false)
     {
-        foreach (var priority in CachedPriorityQueue[PriorityImportance.Low])
+        foreach (PriorityQueue priorityQueue in AllPriorityQueues.Values)
         {
-            if (!PriorityQueue.Update(priority.PriorityID, priority.AllPriorities))
+            foreach (var priority in CachedPriorityQueue[PriorityImportance.High])
             {
-                if (!PriorityQueue.Enqueue(priority.PriorityID, priority.AllPriorities))
+                if (!priorityQueue.Update(priority.PriorityID, priority.AllPriorities))
                 {
                     Debug.LogError($"PriorityID: {priority.PriorityID} unable to be added to PriorityQueue.");
                 }
@@ -451,17 +393,9 @@ public abstract class PriorityComponent
         if (!_syncingCachedQueue) _syncCachedPriorityQueueHigh_DeferredUpdate();
     }
 
-    public void AddAction(ActionName actionName, List<float> priorities)
-    {
-        if (!PriorityQueue.Enqueue((uint)actionName, priorities))
-        {
-            Debug.LogError($"ActionName: {actionName} unable to be added to PriorityQueue.");
-        }
-    }
-
     public void UpdateAction(ActionName actionName, List<float> priorities)
     {
-        if (!PriorityQueue.Update((uint)actionName, priorities))
+        if (!AllPriorityQueues[actionName].Update((uint)actionName, priorities))
         {
             Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
         }
@@ -469,50 +403,42 @@ public abstract class PriorityComponent
 
     public void RemoveAction(ActionName actionName)
     {
-        if (!PriorityQueue.Remove((uint)actionName))
+        if (!AllPriorityQueues[actionName].Remove((uint)actionName))
         {
             Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
         }
     }
 
-    public Priority CheckNextPriority()
+    public Priority CheckHighestPriority(ActionName actionName)
     {
-        return PriorityQueue.Peek();
+        return AllPriorityQueues[actionName].Peek();
     }
 
-    public Priority CheckSpecificPriority(uint priorityID)
+    public Priority GetHighestPriority(ActionName actionName)
     {
-        return PriorityQueue.Peek(priorityID);
+        return AllPriorityQueues[actionName].Dequeue();
     }
 
-    public Priority GetNextPriority()
+    public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
     {
-        return PriorityQueue.Dequeue();
-    }
-
-    public Priority GetSpecificPriority(uint priorityID)
-    {
-        return PriorityQueue.Dequeue(priorityID);
-    }
-
-    protected void _updateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameterName, object> parameters)
-    {
-        if (!_existingParameters.TryGetValue(actionName, out var existingPriority))
+        if (!_actionPriorityParameters.TryGetValue(actionName, out var existingPriorityParameters))
         {
             Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
-            return;
+            return null;
         }
 
         foreach (var parameter in parameters)
         {
-            if (!existingPriority.ContainsKey(parameter.Key))
+            if (!existingPriorityParameters.ContainsKey(parameter.Key))
             {
                 Debug.LogError($"Parameter: {parameter.Key} not found.");
                 continue;
             }
 
-            existingPriority[parameter.Key] = parameter.Value;
+            existingPriorityParameters[parameter.Key] = parameter.Value;
         }
+
+        return existingPriorityParameters;
     }    
 }
 
@@ -526,8 +452,21 @@ public class PriorityComponent_Actor : PriorityComponent
     public PriorityComponent_Actor(uint actorID)
     {
         _actorReferences = new ComponentReference_Actor(actorID);
-        PriorityQueue = new PriorityQueue(100);
     }
+
+    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
+    {
+        { DataChanged.ChangedInventory, new List<ActionToChange>
+        {
+            new ActionToChange(ActionName.Deliver, PriorityImportance.High),
+        }},
+
+        { DataChanged.DroppedItems, new List<ActionToChange>
+        {
+            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
+            new ActionToChange(ActionName.Scavenge, PriorityImportance.Medium),
+        }},
+    };
 }
 
 public class PriorityComponent_Station : PriorityComponent
@@ -535,13 +474,20 @@ public class PriorityComponent_Station : PriorityComponent
     public PriorityComponent_Station(uint stationID) 
     {
         _stationReferences = new ComponentReference_Station(stationID);
-        PriorityQueue = new PriorityQueue(10);
     } 
 
     readonly ComponentReference_Station _stationReferences;
 
     public uint JobsiteID { get { return _stationReferences.StationID; } }
     protected StationComponent Jobsite { get { return _stationReferences.Station; } }
+
+    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
+    {
+        { DataChanged.ChangedInventory, new List<ActionToChange>
+        {
+            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
+        }},
+    };
 }
 
 public class PriorityComponent_Jobsite : PriorityComponent
@@ -549,7 +495,6 @@ public class PriorityComponent_Jobsite : PriorityComponent
     public PriorityComponent_Jobsite(uint jobsiteID) 
     {
         _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
-        PriorityQueue = new PriorityQueue(10);
     } 
 
     readonly ComponentReference_Jobsite _jobsiteReferences;
@@ -566,26 +511,22 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
-            a
-
-            // Instead, have each station have their own PriorityQueue which will contain all the possible actions for a station, and they will sort them accordingly. Then, the jobsite will get the action with the highest priority. This way, we can have multiple actions for a station, and the jobsite will get the highest priority action for the station. Then it will compare the highestpriorityaction for each station (incude an ability to look for a specific action like here ActionName.Haul) and then take the station with the highest priority. It will then update its own Action PriorityQueue to have the action_fetch contain the uid for the station with the highest priority to fetch, and deliver, etc. That way when we want to perform an action, we just take the relevant action from the PriorityQueue, and get the station or thing we will perform that action to.
-
-            _updateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameterName, object>
+            var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameter, object>
             {
-                { PriorityParameterName.TotalItems, totalItems },
-                { PriorityParameterName.TotalDistance, totalDistance },
-                { PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData },
-                { PriorityParameterName.InventoryTarget, station.StationData.InventoryData }, 
+                { PriorityParameter.TotalItems, totalItems },
+                { PriorityParameter.TotalDistance, totalDistance },
+                { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
+                { PriorityParameter.InventoryTarget, station.StationData.InventoryData },
             });
 
-            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Fetch, _existingParameters[ActionName.Fetch]);
+            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Fetch, priorityParameters);
 
             if (newPriorities == null || newPriorities.Count == 0) continue;
 
-            PriorityQueue.Update(station.StationID, newPriorities);
+            AllPriorityQueues[ActionName.Fetch].Update(station.StationID, newPriorities);
         }
 
-        StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
+        StationComponent peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Fetch].Peek().PriorityID);
         
         if (peekedStation == null) return (null, null);
 
@@ -614,7 +555,7 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         if (itemsToHaul.Count == 0) return (null, null);
 
-        PriorityQueue.Dequeue(peekedStation.StationID);
+        AllPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
 
         return (peekedStation, itemsToHaul);
     }
@@ -628,31 +569,22 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
-            _updateExistingPriorityParameters(ActionName.Deliver, new Dictionary<PriorityParameterName, object>
+            var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Deliver, new Dictionary<PriorityParameter, object>
             {
-                { PriorityParameterName.TotalItems, totalItems },
-                { PriorityParameterName.TotalDistance, totalDistance },
-                { PriorityParameterName.InventoryHauler, hauler.ActorData.InventoryData },
-                { PriorityParameterName.InventoryTarget, station.StationData.InventoryData }, 
+                { PriorityParameter.TotalItems, totalItems },
+                { PriorityParameter.TotalDistance, totalDistance },
+                { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
+                { PriorityParameter.InventoryTarget, station.StationData.InventoryData }, 
             });
 
-            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, _existingParameters[ActionName.Deliver]);
+            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, priorityParameters);
 
             if (newPriorities == null || newPriorities.Count == 0) continue;
 
-            PriorityQueue.Update(station.StationID, newPriorities);
+            AllPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
         }
 
-        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
-        {
-            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = totalItems.ToString() } },
-            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = totalDistance.ToString() } },
-            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (totalItems + totalDistance).ToString() } },
-        };
-
-        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
-
-        StationComponent peekedStation = Manager_Station.GetStation(PriorityQueue.Peek().PriorityID);
+        StationComponent peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Deliver].Peek().PriorityID);
         
         if (peekedStation == null) return (null, null);
 
@@ -681,10 +613,15 @@ public class PriorityComponent_Jobsite : PriorityComponent
 
         if (itemsToHaul.Count == 0) return (null, null);
 
-        PriorityQueue.Dequeue(peekedStation.StationID);
+        AllPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
 
         return (peekedStation, itemsToHaul);
     }
+
+    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
+    {
+        
+    };
 }
 
 public abstract class PriorityData
@@ -710,7 +647,7 @@ public abstract class PriorityData
     protected PriorityComponent _priorityComponent;
     public abstract PriorityComponent PriorityComponent { get; }
     
-    public Action<DataChanged, Dictionary<PriorityParameterName, object>> OnDataChange { get; set; }
+    public Action<DataChanged, Dictionary<PriorityParameter, object>> OnDataChange { get; set; }
     
     protected void _priorityChangeCheck(DataChanged dataChanged, bool forceChange = false)
     {
@@ -730,7 +667,7 @@ public abstract class PriorityData
     protected abstract bool _priorityChangeNeeded(object dataChanged);
     protected void _setOnDataChange() => OnDataChange = (DataChanged, changedParameters)
     => PriorityComponent.OnDataChanged(DataChanged, changedParameters);
-    protected Dictionary<PriorityParameterName, object> _getActionsToChange(DataChanged dataChanged)
+    protected Dictionary<PriorityParameter, object> _getActionsToChange(DataChanged dataChanged)
     {
         if (_priorityParameterList.Count == 0)
         {
@@ -747,7 +684,7 @@ public abstract class PriorityData
         return priorityParameters;
     }
 
-    protected abstract Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; }
+    protected abstract Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; }
 }
 
 public abstract class ComponentReference
@@ -800,7 +737,6 @@ public class ComponentReference_Jobsite : ComponentReference
 public class Priority
 {
     public uint PriorityID;
-
     public List<float> AllPriorities;
 
     public Priority(uint priorityID, List<float> priorities)
@@ -896,7 +832,7 @@ public class PriorityQueue
         }
     }
 
-    public bool Enqueue(uint priorityID, List<float> priorities)
+    bool _enqueue(uint priorityID, List<float> priorities)
     {
         if (_priorityQueue.TryGetValue(priorityID, out int index) && index != 0)
         {
@@ -936,7 +872,7 @@ public class PriorityQueue
 
         if (!_priorityQueue.TryGetValue(priorityID, out int index) || index == 0)
         {
-            if (!Enqueue(priorityID, newPriorities))
+            if (!_enqueue(priorityID, newPriorities))
             {
                 Debug.LogError($"PriorityID: {priorityID} unable to be enqueued.");
                 return false;

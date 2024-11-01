@@ -27,7 +27,7 @@ public class Debug_Visualiser : MonoBehaviour
         get { return _dataPrefab ??= (_dataPrefab = Manager_Game.FindTransformRecursively(transform, "DataPanel").gameObject); }
     }
 
-    public Dictionary<DebugPanelType, DebugPanel> DebugPanels = new();
+    public Dictionary<uint, DebugVisual> DebugVisuals = new();
 
     public void ClosePanel()
     {
@@ -40,20 +40,20 @@ public class Debug_Visualiser : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void UpdateDebugVisualiser(DebugPanelType debugPanelType, Dictionary<DebugDataType, DebugData> data)
+    public void UpdateDebugVisualiser(uint debugID, DebugPanelType debugPanelType, Dictionary<DebugDataType, DebugData> data)
     {
-        if (!DebugPanels.ContainsKey(debugPanelType))
+        if (!DebugVisuals.ContainsKey(debugID))
         {
-            DebugPanels.Add(debugPanelType, new());
+            DebugVisuals.Add(debugID, new DebugVisual(debugPanelType, data));
             _updatePanels();
         }
 
-        DebugPanels[debugPanelType].UpdateData(data);
+        DebugVisuals[debugID].UpdateData(data);
     }
 
     public void RemoveDebugPanel(DebugPanelType debugPanelType)
     {
-        DebugPanels.Remove(debugPanelType);
+        DebugVisuals.Remove(debugPanelType);
         _updatePanels();
     }
 
@@ -67,7 +67,7 @@ public class Debug_Visualiser : MonoBehaviour
             }
         }
 
-        foreach (var debugPanel in DebugPanels)
+        foreach (var debugPanel in DebugVisuals)
         {
             var panelGO = Instantiate(DebugPrefab, transform);
             panelGO.SetActive(true);
@@ -84,6 +84,18 @@ public class Debug_Visualiser : MonoBehaviour
                 data.name = existingData.Key.ToString();
             }
         }
+    }
+}
+
+public class DebugVisual
+{
+    public DebugPanelType DebugPanelType;
+    public Dictionary<DebugDataType, DebugData> DebugData;
+
+    public DebugVisual(DebugPanelType debugPanelType, Dictionary<DebugDataType, DebugData> debugData)
+    {
+        DebugPanelType = debugPanelType;
+        DebugData = debugData;
     }
 }
 
@@ -109,7 +121,7 @@ public class DebugPanel : MonoBehaviour
         Title.text = title;
     }
 
-    public void UpdateData(Dictionary<DebugDataType, DebugData> data)
+    public void UpdateData(Dictionary<uint, (DebugData)> data)
     {
         foreach (var debugData in data)
         {

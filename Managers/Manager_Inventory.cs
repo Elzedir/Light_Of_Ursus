@@ -355,7 +355,7 @@ public abstract class InventoryData : PriorityData
         return true;
     }
 
-    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new()
+    protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new()
     {
         { 
             DataChanged.ChangedInventory, 
