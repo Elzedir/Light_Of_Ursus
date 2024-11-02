@@ -628,30 +628,30 @@ public class ArmourStats_Item
 
 public class PriorityStats_Item
 {
-    public Dictionary<StationName, uint> Priority_StationForStorage;
-    public Dictionary<StationName, uint> Priority_StationForProduction;
+    public Dictionary<PriorityImportance, List<StationName>> Priority_StationsForStorage;
+    public Dictionary<PriorityImportance, List<StationName>> Priority_StationsForProduction;
 
     public PriorityStats_Item(
-        Dictionary<StationName, uint> priority_StationForStorage = null,
-        Dictionary<StationName, uint> priority_StationForProduction = null)
+        Dictionary<PriorityImportance, List<StationName>> priority_StationsForStorage = null,
+        Dictionary<PriorityImportance, List<StationName>> priority_StationsForProduction = null)
     {
-        Priority_StationForStorage = priority_StationForStorage != null
-            ? new Dictionary<StationName, uint>(priority_StationForStorage)
-            : new Dictionary<StationName, uint>();
+        Priority_StationsForStorage = priority_StationsForStorage != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(priority_StationsForStorage)
+            : new Dictionary<PriorityImportance, List<StationName>>();
 
-        Priority_StationForProduction = priority_StationForProduction != null
-            ? new Dictionary<StationName, uint>(priority_StationForProduction)
-            : new Dictionary<StationName, uint>();
+        Priority_StationsForProduction = priority_StationsForProduction != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(priority_StationsForProduction)
+            : new Dictionary<PriorityImportance, List<StationName>>();
     }
 
     public PriorityStats_Item(PriorityStats_Item other)
     {
-        Priority_StationForStorage = other.Priority_StationForStorage != null
-            ? new Dictionary<StationName, uint>(other.Priority_StationForStorage)
-            : new Dictionary<StationName, uint>();
+        Priority_StationsForStorage = other.Priority_StationsForStorage != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_StationsForStorage)
+            : new Dictionary<PriorityImportance, List<StationName>>();
 
-        Priority_StationForProduction = other.Priority_StationForProduction != null
-            ? new Dictionary<StationName, uint>(other.Priority_StationForProduction)
-            : new Dictionary<StationName, uint>();
+        Priority_StationsForProduction = other.Priority_StationsForProduction != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_StationsForProduction)
+            : new Dictionary<PriorityImportance, List<StationName>>();
     }
 }

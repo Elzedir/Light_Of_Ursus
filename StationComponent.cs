@@ -214,6 +214,8 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
 
     public void Initialise()
     {
+        PriorityComponent = new PriorityComponent_Station(StationID);
+
         AllOperatingAreasInStation = GetAllOperatingAreasInStation();
 
         var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
@@ -270,9 +272,14 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract void InitialiseAllowedEmployeePositions();
 
     public abstract void InitialiseStartingInventory();
-    public List<Item> GetInventoryItemsToHaul()
+    public List<Item> GetInventoryItemsToFetch()
     {
         return StationData.InventoryData.GetInventoryItemsToFetch();
+    }
+
+    public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+    {
+        return StationData.InventoryData.GetInventoryItemsToDeliver(inventory);
     }
 
     public void SetStationData(StationData stationData) => StationData = stationData;

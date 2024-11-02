@@ -135,11 +135,52 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
     {
-        return PriorityComponent.GetStationToHaulFrom(hauler);
+        return PriorityComponent.GetStationToFetchFrom(hauler);
     }
 
     public (StationComponent Station, List<Item> Items) GetStationToHaulTo(ActorComponent hauler)
     {
-        return PriorityComponent.GetStationToHaulTo(hauler);
+        return PriorityComponent.GetStationToDeliverTo(hauler);
+    }
+
+    public List<StationComponent> GetRelevantStations(ActionName actionName, InventoryData inventoryData)
+    {
+        switch(actionName)
+        {
+            case ActionName.Fetch:
+                return _relevantStations_Fetch();
+            case ActionName.Deliver:
+                return _relevantStations_Deliver(inventoryData);
+            default:
+                return new List<StationComponent>();
+        }
+    }
+
+    List<StationComponent> _relevantStations_Fetch()
+    {
+        var allStationsCanFetch = AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
+        return allStationsCanFetch;
+    }
+
+    List<StationComponent> _relevantStations_Deliver(InventoryData inventoryData)
+    {
+        var allStationsCanDeliver = AllStationsInJobsite.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0).ToList();
+
+        a
+        // find a way to prioritise stations using MasterItem.PriorityStats, check the highest priority List<Station> that is in allStationsCanDeliver and return those stations. If there are multiple stations with the same priority, return all of them.
+
+        if (!allStationsCanDeliver.Any()) return allStationsCanDeliver;
+        else
+        {
+            for(int i = 0; i < allStationsCanDeliver.Count; i++)
+            {
+                if (allStationsCanDeliver[i])
+                {
+                    allStationsCanDeliver.RemoveAt(i);
+                }
+            }
+        }
+
+        return allStationsCanDeliver;
     }
 }

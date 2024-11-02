@@ -14,20 +14,33 @@ public class Debug_Visualiser : MonoBehaviour
     Button _xButton;
     Button XButton
     {
-        get { return _xButton ??= (_xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>()); }
+        get { return _xButton ??= _xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>(); }
     }
+
     GameObject _debugPrefab;
     public GameObject DebugPrefab
     {
-        get { return _debugPrefab ??= (_debugPrefab = Manager_Game.FindTransformRecursively(transform, "DebugPanel").gameObject); }
+        get { return _debugPrefab ??= _debugPrefab = Manager_Game.FindTransformRecursively(transform, "DebugPanel").gameObject; }
     }
+
     GameObject _dataPrefab;
     public GameObject DataPrefab
     {
-        get { return _dataPrefab ??= (_dataPrefab = Manager_Game.FindTransformRecursively(transform, "DataPanel").gameObject); }
+        get { return _dataPrefab ??= _dataPrefab = Manager_Game.FindTransformRecursively(transform, "DataPanel").gameObject; }
     }
 
-    public Dictionary<uint, DebugVisual> DebugVisuals = new();
+    GameObject _debugPanelParent;
+    public GameObject DebugPanelParent
+    {
+        get { return _debugPanelParent ??= _debugPanelParent = Manager_Game.FindTransformRecursively(transform, "DebugPanelParent").gameObject; }
+    }
+
+    public Dictionary<(ActionName, object, uint), List<(DebugDataType DebugDataType, string DebugValue)>> AllDebugData = new();
+
+    void Start()
+    {
+        DebugPrefab.SetActive(false);
+    }
 
     public void ClosePanel()
     {
@@ -40,71 +53,58 @@ public class Debug_Visualiser : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void UpdateDebugVisualiser(uint debugID, DebugPanelType debugPanelType, Dictionary<DebugDataType, DebugData> data)
+    public void UpdateDebugVisualiser((ActionName, object, uint) debugID, List<(DebugDataType, string)> data)
     {
-        if (!DebugVisuals.ContainsKey(debugID))
+        if (!AllDebugData.ContainsKey(debugID))
         {
-            DebugVisuals.Add(debugID, new DebugVisual(debugPanelType, data));
+            AllDebugData.Add(debugID, data);
             _updatePanels();
         }
 
-        DebugVisuals[debugID].UpdateData(data);
+        AllDebugData[debugID] = data;
     }
 
-    public void RemoveDebugPanel(DebugPanelType debugPanelType)
+    public void RemoveDebugPanel((ActionName, object, uint) debugID)
     {
-        DebugVisuals.Remove(debugPanelType);
+        AllDebugData.Remove(debugID);
         _updatePanels();
     }
 
     void _updatePanels()
     {
-        foreach (Transform child in transform)
+        foreach (Transform child in DebugPanelParent.transform)
         {
-            if (child.name.Contains("Debug") && child.gameObject != DebugPrefab)
+            if (child.name.Contains("Station"))
             {
                 Destroy(child.gameObject);
             }
-        }
-
-        foreach (var debugPanel in DebugVisuals)
-        {
-            var panelGO = Instantiate(DebugPrefab, transform);
-            panelGO.SetActive(true);
-            var panel = panelGO.AddComponent<DebugPanel>();
-            panel.InitialiseDebugPanel(debugPanel.Value.Title.text);
-            panel.name = debugPanel.Value.Title.text;
-
-            foreach (var existingData in debugPanel.Value.AllData)
+            else
             {
-                var dataPanel = Instantiate(DataPrefab, panelGO.transform);
-                dataPanel.SetActive(true);
-                var data = dataPanel.AddComponent<DebugData>();
-                data.InitialiseDebugData(existingData.Key, existingData.Value.Value);
-                data.name = existingData.Key.ToString();
+                Debug.LogError($"Child not debug. Child: {child.name}");
             }
         }
+
+        foreach (var debugObject in AllDebugData)
+        {
+            var panelGO = Instantiate(DebugPrefab, DebugPanelParent.transform);
+            panelGO.SetActive(true);
+            var panel = panelGO.AddComponent<DebugPanel>();
+            panel.InitialiseDebugPanel(debugObject.Key.ToString());
+            Transform dataParent = Manager_Game.FindTransformRecursively(panelGO.transform, "AllData");
+
+            foreach (var debugData in debugObject.Value)
+            {
+                var dataPanel = Instantiate(DataPrefab, dataParent);
+                dataPanel.SetActive(true);
+                var data = dataPanel.AddComponent<DebugData>();
+                data.InitialiseDebugData(debugData.DebugDataType, debugData.DebugValue);
+            }
+        }
+
+        DebugPrefab.SetActive(true);
+        DebugPrefab.SetActive(false);
     }
 }
-
-public class DebugVisual
-{
-    public DebugPanelType DebugPanelType;
-    public Dictionary<DebugDataType, DebugData> DebugData;
-
-    public DebugVisual(DebugPanelType debugPanelType, Dictionary<DebugDataType, DebugData> debugData)
-    {
-        DebugPanelType = debugPanelType;
-        DebugData = debugData;
-    }
-}
-
-public enum DebugPanelType
-{
-    HaulTo,
-    HaulFrom,
-}
-
 
 public class DebugPanel : MonoBehaviour
 {
@@ -114,24 +114,26 @@ public class DebugPanel : MonoBehaviour
         get { return _title ??= (_title = Manager_Game.FindTransformRecursively(transform, "Title").GetComponent<TextMeshProUGUI>()); }
         set { _title = value; }
     }
+
     public Dictionary<DebugDataType, DebugData> AllData;
 
     public void InitialiseDebugPanel(string title)
     {
         Title.text = title;
+        name = title;
     }
 
-    public void UpdateData(Dictionary<uint, (DebugData)> data)
+    public void UpdateData(List<DebugData> data)
     {
         foreach (var debugData in data)
         {
-            if (AllData.ContainsKey(debugData.Key))
+            if (AllData.ContainsKey(debugData.DebugDataType))
             {
-                AllData[debugData.Key].Value = debugData.Value.Value;
+                AllData[debugData.DebugDataType].DebugValue = debugData.DebugValue;
             }
             else
             {
-                AllData.Add(debugData.Key, debugData.Value);
+                AllData.Add(debugData.DebugDataType, debugData);
             }
         }
     }
@@ -143,20 +145,33 @@ public class DebugPanel : MonoBehaviour
 }
 
 public enum DebugDataType
-{
-    Priority_Item,
+{    Priority_Item,
     Priority_Distance,
     Priority_Total,
 }
 
 public class DebugData : MonoBehaviour
 {
-    public DebugDataType DebugDataType;
-    public string Value;
+    TextMeshProUGUI _dataTitle;
+    public TextMeshProUGUI DataTitle 
+    {
+        get { return _dataTitle ??= (_dataTitle = Manager_Game.FindTransformRecursively(transform, "DataTitle").GetComponent<TextMeshProUGUI>()); }
+        set { _dataTitle = value; }
+    }
 
-    public void InitialiseDebugData(DebugDataType debugDataType, string value)
+    public DebugDataType DebugDataType;
+    public string _debugValue;
+    public string DebugValue { get { return _debugValue; } set { _debugValue = value; _setName(); } }
+
+    public void InitialiseDebugData(DebugDataType debugDataType, string debugValue)
     {
         DebugDataType = debugDataType;
-        Value = value;
+        DebugValue = debugValue;
+    }
+
+    void _setName()
+    {
+        DataTitle.text = $"{DebugDataType} - {DebugValue}";
+        name = DataTitle.text;
     }
 }

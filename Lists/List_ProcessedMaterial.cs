@@ -46,10 +46,10 @@ public class List_ProcessedMaterial : Manager_Item
             new VisualStats_Item(itemMesh: GameObject.Find("TestPlank").GetComponent<MeshFilter>().mesh, itemMaterial: Resources.Load<Material>("Materials/Material_Yellow"), itemScale: new Vector3(0.1f, 1, 0.2f)),
             null, null, null, null,
             new PriorityStats_Item(
-                new Dictionary<StationName, uint>
+                priority_StationsForProduction: new Dictionary<PriorityImportance, List<StationName>>
                 {
-                    { StationName.Log_Pile, 2 },
-                    { StationName.Sawmill, 1 }
+                    { PriorityImportance.High, new() { StationName.Log_Pile } },
+                    { PriorityImportance.Medium, new() { StationName.Sawmill } },
                 }
             )));
         AddToList(new Item_Master(new CommonStats_Item(itemID: 2301, itemType: ItemType.Processed_Material, itemName: "Timber", maxStackSize: 100, itemWeight: 3, itemValue: 4)

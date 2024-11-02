@@ -175,15 +175,17 @@ public class PriorityGenerator
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
-
-        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
+        
+        List<(DebugDataType, string)> debugData = new List<(DebugDataType, string)>
         {
-            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = priority_ItemQuantity.ToString() } },
-            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = priority_Distance.ToString() } },
-            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (priority_ItemQuantity + priority_Distance).ToString() } },
+            { (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()) },
+            { (DebugDataType.Priority_Distance, priority_Distance.ToString()) },
+            { (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString()) },
         };
 
-        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
+        (ActionName, object, uint) debugID = (ActionName.Fetch, inventory_Target.ComponentType, inventory_Target.Reference.ComponentID);
+
+        Debug_Visualiser.Instance.UpdateDebugVisualiser(debugID, debugData);
 
         return new List<float>
         {
@@ -234,14 +236,16 @@ public class PriorityGenerator
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
 
-        Dictionary<DebugDataType, DebugData> debugData = new Dictionary<DebugDataType, DebugData>
+        List<(DebugDataType, string)> debugData = new List<(DebugDataType, string)>
         {
-            { DebugDataType.Priority_Item, new DebugData { DebugDataType = DebugDataType.Priority_Item, Value = priority_ItemQuantity.ToString() } },
-            { DebugDataType.Priority_Distance, new DebugData { DebugDataType = DebugDataType.Priority_Distance, Value = priority_Distance.ToString() } },
-            { DebugDataType.Priority_Total, new DebugData { DebugDataType = DebugDataType.Priority_Total, Value = (priority_ItemQuantity + priority_Distance).ToString() } },
+            { (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()) },
+            { (DebugDataType.Priority_Distance, priority_Distance.ToString()) },
+            { (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString()) },
         };
 
-        Debug_Visualiser.Instance.UpdateDebugVisualiser(DebugPanelType.HaulTo, debugData);
+        (ActionName, object, uint) debugID = (ActionName.Deliver, inventory_Target.ComponentType, inventory_Target.Reference.ComponentID);
+
+        Debug_Visualiser.Instance.UpdateDebugVisualiser(debugID, debugData);
 
         return new List<float>
         {
@@ -263,6 +267,7 @@ public enum PriorityParameter
 {
     None,
 
+    // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every totalitems, totaldistance, etc has an attached maxPriority.
     MaxPriority,
     TotalItems,
     TotalDistance,
@@ -306,7 +311,12 @@ public abstract class PriorityComponent
         }},
     };
 
-    public Dictionary<ActionName, PriorityQueue> AllPriorityQueues = new();
+    public Dictionary<ActionName, PriorityQueue> AllPriorityQueues = new()
+    {
+        { ActionName.Fetch, new PriorityQueue(1) },
+        { ActionName.Deliver, new PriorityQueue(1) },
+        { ActionName.Scavenge, new PriorityQueue(1) },
+    };
 
     public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
     protected abstract Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; }
@@ -485,6 +495,7 @@ public class PriorityComponent_Station : PriorityComponent
     {
         { DataChanged.ChangedInventory, new List<ActionToChange>
         {
+            new ActionToChange(ActionName.Deliver, PriorityImportance.High),
             new ActionToChange(ActionName.Fetch, PriorityImportance.High),
         }},
     };
@@ -502,18 +513,24 @@ public class PriorityComponent_Jobsite : PriorityComponent
     public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
     protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
 
-    public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
+    public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
     {
-        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToHaul()));
-        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
+        List<StationComponent> allRelevantStations = Jobsite.AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
 
-        Debug.Log($"TotalItems: {totalItems}, TotalDistance: {totalDistance}");
+        if (allRelevantStations.Count == 0)
+        {
+            Debug.Log("No stations to fetch from.");
+            return (null, null);
+        }
+
+        float totalItemsToFetch = allRelevantStations.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
+        float totalDistance = allRelevantStations.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
             var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameter, object>
             {
-                { PriorityParameter.TotalItems, totalItems },
+                { PriorityParameter.TotalItems, totalItemsToFetch },
                 { PriorityParameter.TotalDistance, totalDistance },
                 { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
                 { PriorityParameter.InventoryTarget, station.StationData.InventoryData },
@@ -530,7 +547,7 @@ public class PriorityComponent_Jobsite : PriorityComponent
         
         if (peekedStation == null) return (null, null);
 
-        var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
+        var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
 
         if (allItemsInStation.Count == 0) return (null, null);
 
@@ -560,12 +577,18 @@ public class PriorityComponent_Jobsite : PriorityComponent
         return (peekedStation, itemsToHaul);
     }
 
-    public (StationComponent Station, List<Item> Items) GetStationToHaulTo(ActorComponent hauler)
+    public (StationComponent Station, List<Item> Items) GetStationToDeliverTo(ActorComponent hauler)
     {
-        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToHaul()));
-        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
+        List<StationComponent> allRelevantStations = Jobsite.GetRelevantStations(ActionName.Deliver, hauler.ActorData.InventoryData);
 
-        Debug.Log($"TotalItems: {totalItems}, TotalDistance: {totalDistance}");
+        if (allRelevantStations.Count == 0)
+        {
+            Debug.Log("No stations to fetch from.");
+            return (null, null);
+        }
+        
+        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
+        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
 
         foreach (var station in Jobsite.AllStationsInJobsite)
         {
@@ -588,7 +611,7 @@ public class PriorityComponent_Jobsite : PriorityComponent
         
         if (peekedStation == null) return (null, null);
 
-        var allItemsInStation = peekedStation.GetInventoryItemsToHaul();
+        var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
 
         if (allItemsInStation.Count == 0) return (null, null);
 

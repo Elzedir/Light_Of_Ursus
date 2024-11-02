@@ -45,10 +45,10 @@ public class List_RawMaterial : Manager_Item
         AddToList(new Item_Master(new CommonStats_Item(itemID: 1100, itemType: ItemType.Raw_Material, itemName: $"{RawMaterialName.Log}", maxStackSize: 100, itemWeight: 3, itemValue: 5),
             null, null, null, null, null,
             new PriorityStats_Item(
-                new Dictionary<StationName, uint>
+                priority_StationsForStorage: new Dictionary<PriorityImportance, List<StationName>>
                 {
-                    { StationName.Sawmill, 2 },
-                    { StationName.Log_Pile, 1 }
+                    { PriorityImportance.High, new() { StationName.Sawmill } },
+                    { PriorityImportance.Medium, new() { StationName.Log_Pile } },
                 } 
             )));
         AddToList(new Item_Master(new CommonStats_Item(itemID: 1101, itemType: ItemType.Raw_Material, itemName: "Pine Wood", maxStackSize: 100, itemWeight: 3, itemValue: 4),
