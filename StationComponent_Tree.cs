@@ -94,12 +94,6 @@ public class StationComponent_Tree : StationComponent
         yield return null;
     }
 
-    public override List<Item> GetItemsToDeliver(InventoryData inventoryOwner)
-    {
-        Debug.LogError("No GetItemsToDropOff method implemented for Tree.");
-        return new List<Item>();
-    }
-
     protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
     {
         return new List<Item> { new Item(1100, 1) }; // For now

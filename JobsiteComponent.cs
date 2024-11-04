@@ -158,29 +158,11 @@ public abstract class JobsiteComponent : MonoBehaviour, ITickable
 
     List<StationComponent> _relevantStations_Fetch()
     {
-        var allStationsCanFetch = AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
-        return allStationsCanFetch;
+        return AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
     }
 
     List<StationComponent> _relevantStations_Deliver(InventoryData inventoryData)
     {
-        var allStationsCanDeliver = AllStationsInJobsite.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0).ToList();
-
-        a
-        // find a way to prioritise stations using MasterItem.PriorityStats, check the highest priority List<Station> that is in allStationsCanDeliver and return those stations. If there are multiple stations with the same priority, return all of them.
-
-        if (!allStationsCanDeliver.Any()) return allStationsCanDeliver;
-        else
-        {
-            for(int i = 0; i < allStationsCanDeliver.Count; i++)
-            {
-                if (allStationsCanDeliver[i])
-                {
-                    allStationsCanDeliver.RemoveAt(i);
-                }
-            }
-        }
-
-        return allStationsCanDeliver;
+        return AllStationsInJobsite.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0).ToList();
     }
 }

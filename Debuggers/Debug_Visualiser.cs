@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,35 +12,50 @@ public class Debug_Visualiser : MonoBehaviour
         get { return _instance ??= GameObject.Find("Debug_Visualiser").GetComponent<Debug_Visualiser>(); }
     }
 
-    Button _xButton;
-    Button XButton
-    {
-        get { return _xButton ??= _xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>(); }
-    }
-
-    GameObject _debugPrefab;
-    public GameObject DebugPrefab
-    {
-        get { return _debugPrefab ??= _debugPrefab = Manager_Game.FindTransformRecursively(transform, "DebugPanel").gameObject; }
-    }
-
-    GameObject _dataPrefab;
-    public GameObject DataPrefab
-    {
-        get { return _dataPrefab ??= _dataPrefab = Manager_Game.FindTransformRecursively(transform, "DataPanel").gameObject; }
-    }
-
     GameObject _debugPanelParent;
     public GameObject DebugPanelParent
     {
         get { return _debugPanelParent ??= _debugPanelParent = Manager_Game.FindTransformRecursively(transform, "DebugPanelParent").gameObject; }
     }
 
-    public Dictionary<(ActionName, object, uint), List<(DebugDataType DebugDataType, string DebugValue)>> AllDebugData = new();
+    Button _xButton;
+    Button XButton
+    {
+        get { return _xButton ??= _xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>(); }
+    }
+
+    GameObject _debugSectionPrefab;
+    GameObject DebugSectionPrefab
+    {
+        get { return _debugSectionPrefab ??= _debugSectionPrefab = Manager_Game.FindTransformRecursively(transform, "DebugSectionPrefab").gameObject; }
+    }
+
+    GameObject _debugEntryPrefab;
+    public GameObject DebugEntryPrefab
+    {
+        get { return _debugEntryPrefab ??= _debugEntryPrefab = Manager_Game.FindTransformRecursively(transform, "DebugEntryPrefab").gameObject; }
+    }
+
+    GameObject _debugDataPrefab;
+    public GameObject DebugDataPrefab
+    {
+        get { return _debugDataPrefab ??= _debugDataPrefab = Manager_Game.FindTransformRecursively(transform, "DebugDataPrefab").gameObject; }
+    }
+
+    public Dictionary<DebugSectionType, DebugSection> AllDebugSections = new();
 
     void Start()
     {
-        DebugPrefab.SetActive(false);
+        TogglePrefabs(false);
+    }
+
+    public void TogglePrefabs(bool toggle)
+    {
+        DebugSectionPrefab.SetActive(toggle);
+        DebugEntryPrefab.SetActive(toggle);
+        DebugDataPrefab.SetActive(toggle);
+
+        
     }
 
     public void ClosePanel()
@@ -49,129 +65,117 @@ public class Debug_Visualiser : MonoBehaviour
 
     public void OpenPanel()
     {
-        DebugPrefab.SetActive(false);
         gameObject.SetActive(true);
     }
 
-    public void UpdateDebugVisualiser((ActionName, object, uint) debugID, List<(DebugDataType, string)> data)
+    public void UpdateDebugSection(DebugSection_Data debugSectionData)
     {
-        if (!AllDebugData.ContainsKey(debugID))
+        TogglePrefabs(true);
+
+        if (!AllDebugSections.ContainsKey(debugSectionData.DebugSectionType))
         {
-            AllDebugData.Add(debugID, data);
-            _updatePanels();
+            var newDebugSection = Instantiate(DebugSectionPrefab, DebugPanelParent.transform).AddComponent<DebugSection>();
+            Destroy(Manager_Game.FindTransformRecursively(newDebugSection.transform, "DebugEntryPrefab").gameObject);
+            newDebugSection.InitialiseDebugSection(new DebugSection_Data(debugSectionData));
+            AllDebugSections.Add(debugSectionData.DebugSectionType, newDebugSection);
+
+            TogglePrefabs(false);
+            
+            return;
         }
 
-        AllDebugData[debugID] = data;
+        AllDebugSections[debugSectionData.DebugSectionType].UpdateDebugSection(debugSectionData.AllEntryData);
+
+        TogglePrefabs(false);
     }
 
-    public void RemoveDebugPanel((ActionName, object, uint) debugID)
+    public void UpdateDebugEntry(DebugSectionType debugSectionType, DebugEntry_Data debugEntryData)
     {
-        AllDebugData.Remove(debugID);
-        _updatePanels();
-    }
+        TogglePrefabs(true);
 
-    void _updatePanels()
-    {
-        foreach (Transform child in DebugPanelParent.transform)
+        if (!AllDebugSections.ContainsKey(debugSectionType))
         {
-            if (child.name.Contains("Station"))
-            {
-                Destroy(child.gameObject);
-            }
-            else
-            {
-                Debug.LogError($"Child not debug. Child: {child.name}");
-            }
+            var newDebugEntryDataList = new List<DebugEntry_Data> { debugEntryData };
+            var newDebugSectionData = new DebugSection_Data(debugSectionType, newDebugEntryDataList);
+
+            UpdateDebugSection(newDebugSectionData);
+
+            TogglePrefabs(false);
+
+            return;
         }
 
-        foreach (var debugObject in AllDebugData)
+        if (!AllDebugSections[debugSectionType].AllDebugEntries.ContainsKey(debugEntryData.DebugEntryKey.GetID()))
         {
-            var panelGO = Instantiate(DebugPrefab, DebugPanelParent.transform);
-            panelGO.SetActive(true);
-            var panel = panelGO.AddComponent<DebugPanel>();
-            panel.InitialiseDebugPanel(debugObject.Key.ToString());
-            Transform dataParent = Manager_Game.FindTransformRecursively(panelGO.transform, "AllData");
+            var newDebugEntryDataList = new List<DebugEntry_Data> { debugEntryData };
 
-            foreach (var debugData in debugObject.Value)
-            {
-                var dataPanel = Instantiate(DataPrefab, dataParent);
-                dataPanel.SetActive(true);
-                var data = dataPanel.AddComponent<DebugData>();
-                data.InitialiseDebugData(debugData.DebugDataType, debugData.DebugValue);
-            }
+            AllDebugSections[debugSectionType].UpdateDebugSection(newDebugEntryDataList);
+
+            TogglePrefabs(false);
+
+            return;
         }
 
-        DebugPrefab.SetActive(true);
-        DebugPrefab.SetActive(false);
-    }
-}
+        AllDebugSections[debugSectionType].AllDebugEntries[debugEntryData.DebugEntryKey.GetID()].UpdateDebugEntry(debugEntryData.AllDebugData);
 
-public class DebugPanel : MonoBehaviour
-{
-    TextMeshProUGUI _title;
-    public TextMeshProUGUI Title 
-    {
-        get { return _title ??= (_title = Manager_Game.FindTransformRecursively(transform, "Title").GetComponent<TextMeshProUGUI>()); }
-        set { _title = value; }
+        TogglePrefabs(false);
     }
 
-    public Dictionary<DebugDataType, DebugData> AllData;
-
-    public void InitialiseDebugPanel(string title)
+    public void UpdateDebugData(DebugSectionType debugSectionType, DebugEntryKey debugEntryTitle, DebugData_Data debugData)
     {
-        Title.text = title;
-        name = title;
-    }
+        TogglePrefabs(true);
 
-    public void UpdateData(List<DebugData> data)
-    {
-        foreach (var debugData in data)
+        if (!AllDebugSections.ContainsKey(debugSectionType))
         {
-            if (AllData.ContainsKey(debugData.DebugDataType))
-            {
-                AllData[debugData.DebugDataType].DebugValue = debugData.DebugValue;
-            }
-            else
-            {
-                AllData.Add(debugData.DebugDataType, debugData);
-            }
+            var newDebugDataList = new List<DebugData_Data> { debugData };
+            var newDebugEntry = new DebugEntry_Data(debugEntryTitle, newDebugDataList);
+            var newDebugEntryDataList = new List<DebugEntry_Data> { newDebugEntry };
+            var newDebugSectionData = new DebugSection_Data(debugSectionType, newDebugEntryDataList);
+
+            UpdateDebugSection(newDebugSectionData);
+
+            TogglePrefabs(false);
+
+            return;
         }
+
+        if (!AllDebugSections[debugSectionType].AllDebugEntries.ContainsKey(debugEntryTitle.GetID()))
+        {
+            var newDebugDataList = new List<DebugData_Data> { debugData };
+            var newDebugEntry = new DebugEntry_Data(debugEntryTitle, newDebugDataList);
+
+            UpdateDebugEntry(debugSectionType, newDebugEntry);
+
+            TogglePrefabs(false);
+
+            return;
+        }
+
+        if (!AllDebugSections[debugSectionType].AllDebugEntries[debugEntryTitle.GetID()].AllDebugData.ContainsKey(debugData.DebugDataType))
+        {
+            var newDebugDataList = new List<DebugData_Data> { debugData };
+
+            AllDebugSections[debugSectionType].AllDebugEntries[debugEntryTitle.GetID()].UpdateDebugEntry(newDebugDataList);
+
+            TogglePrefabs(false);
+
+            return;
+        }
+
+        AllDebugSections[debugSectionType].AllDebugEntries[debugEntryTitle.GetID()].AllDebugData[debugData.DebugDataType].DebugValue = debugData.DebugValue;
+
+        TogglePrefabs(false);
     }
 
-    public void RemoveData(DebugDataType debugDataType)
+    public void RemoveDebugSection(DebugSectionType debugSectionType)
     {
-        AllData.Remove(debugDataType);
-    }
-}
+        if (!AllDebugSections.ContainsKey(debugSectionType))
+        {
+            Debug.LogWarning($"Debug Section {debugSectionType} does not exist.");
+            return;
+        }
 
-public enum DebugDataType
-{    Priority_Item,
-    Priority_Distance,
-    Priority_Total,
-}
-
-public class DebugData : MonoBehaviour
-{
-    TextMeshProUGUI _dataTitle;
-    public TextMeshProUGUI DataTitle 
-    {
-        get { return _dataTitle ??= (_dataTitle = Manager_Game.FindTransformRecursively(transform, "DataTitle").GetComponent<TextMeshProUGUI>()); }
-        set { _dataTitle = value; }
-    }
-
-    public DebugDataType DebugDataType;
-    public string _debugValue;
-    public string DebugValue { get { return _debugValue; } set { _debugValue = value; _setName(); } }
-
-    public void InitialiseDebugData(DebugDataType debugDataType, string debugValue)
-    {
-        DebugDataType = debugDataType;
-        DebugValue = debugValue;
-    }
-
-    void _setName()
-    {
-        DataTitle.text = $"{DebugDataType} - {DebugValue}";
-        name = DataTitle.text;
+        Destroy(AllDebugSections[debugSectionType].gameObject);
+        AllDebugSections.Remove(debugSectionType);
     }
 }

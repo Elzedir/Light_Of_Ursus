@@ -45,7 +45,7 @@ public class List_RawMaterial : Manager_Item
         AddToList(new Item_Master(new CommonStats_Item(itemID: 1100, itemType: ItemType.Raw_Material, itemName: $"{RawMaterialName.Log}", maxStackSize: 100, itemWeight: 3, itemValue: 5),
             null, null, null, null, null,
             new PriorityStats_Item(
-                priority_StationsForStorage: new Dictionary<PriorityImportance, List<StationName>>
+                new Dictionary<PriorityImportance, List<StationName>>
                 {
                     { PriorityImportance.High, new() { StationName.Sawmill } },
                     { PriorityImportance.Medium, new() { StationName.Log_Pile } },

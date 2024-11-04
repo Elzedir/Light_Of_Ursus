@@ -367,6 +367,7 @@ public abstract class InventoryData : PriorityData
     };
 
     public abstract List<Item> GetInventoryItemsToFetch();
+    public abstract List<Item> GetInventoryItemsToHold();
     public abstract List<Item> GetInventoryItemsToDeliver(InventoryData inventory);
 }
 
@@ -398,6 +399,12 @@ public class InventoryData_Actor : InventoryData
     }
 
     public override List<Item> GetInventoryItemsToFetch()
+    {
+        Debug.LogError("Not implemented yet.");
+        return null;
+    }
+
+    public override List<Item> GetInventoryItemsToHold()
     {
         Debug.LogError("Not implemented yet.");
         return null;
@@ -460,6 +467,8 @@ public class InventoryData_Station : InventoryData
         }
 
         return itemsToFetch;
-    } 
+    }
+
+    public override List<Item> GetInventoryItemsToHold() => AllInventoryItems.Where(i => _getDesiredItemIDs().Contains(i.ItemID)).ToList();
     public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory) => inventory.AllInventoryItems.Where(i => _getDesiredItemIDs().Contains(i.ItemID)).ToList();
 }

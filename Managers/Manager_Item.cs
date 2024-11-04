@@ -628,30 +628,41 @@ public class ArmourStats_Item
 
 public class PriorityStats_Item
 {
-    public Dictionary<PriorityImportance, List<StationName>> Priority_StationsForStorage;
-    public Dictionary<PriorityImportance, List<StationName>> Priority_StationsForProduction;
+    public Dictionary<PriorityImportance, List<StationName>> Priority_Station;
 
-    public PriorityStats_Item(
-        Dictionary<PriorityImportance, List<StationName>> priority_StationsForStorage = null,
-        Dictionary<PriorityImportance, List<StationName>> priority_StationsForProduction = null)
+    public PriorityStats_Item (Dictionary<PriorityImportance, List<StationName>> priority_Station = null)
     {
-        Priority_StationsForStorage = priority_StationsForStorage != null
-            ? new Dictionary<PriorityImportance, List<StationName>>(priority_StationsForStorage)
-            : new Dictionary<PriorityImportance, List<StationName>>();
-
-        Priority_StationsForProduction = priority_StationsForProduction != null
-            ? new Dictionary<PriorityImportance, List<StationName>>(priority_StationsForProduction)
+        Priority_Station = priority_Station != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(priority_Station)
             : new Dictionary<PriorityImportance, List<StationName>>();
     }
 
-    public PriorityStats_Item(PriorityStats_Item other)
+    public PriorityStats_Item (PriorityStats_Item other)
     {
-        Priority_StationsForStorage = other.Priority_StationsForStorage != null
-            ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_StationsForStorage)
+        Priority_Station = other.Priority_Station != null
+            ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_Station)
             : new Dictionary<PriorityImportance, List<StationName>>();
+    }
 
-        Priority_StationsForProduction = other.Priority_StationsForProduction != null
-            ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_StationsForProduction)
-            : new Dictionary<PriorityImportance, List<StationName>>();
+    
+
+    public PriorityImportance GetHighestStationPriority(List<StationName> allStations)
+    {
+        foreach (var priority in Priority_Station.Keys)
+        {
+            foreach (var station in allStations)
+            {
+                if (Priority_Station[priority].Contains(station))
+                {
+                    return priority;
+                }
+            }
+
+            Debug.Log($"Priority: {priority} not found in Priority_StationsForProduction");
+        }
+
+        Debug.LogError("No priority found for any station in Priority_StationsForProduction");
+
+        return PriorityImportance.None;
     }
 }

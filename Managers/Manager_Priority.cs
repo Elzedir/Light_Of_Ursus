@@ -53,7 +53,6 @@ public class PriorityGenerator
 
     protected static float _moreItemsDesired_Target(List<Item> items, float target, float maxPriority)
     {
-        Debug.Log($"MoreItemsDesired Item Count: {Item.GetItemListTotal_CountAllItems(items)}");
         return _addPriorityIfBelowTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
@@ -67,10 +66,35 @@ public class PriorityGenerator
         return _addPriorityIfNotEqualTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
     }
 
-    protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority)
-    {
-        Debug.Log($"MoreItemsDesired Item Count: {Item.GetItemListTotal_CountAllItems(items)}");
-        return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
+    protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority, HashSet<StationName> allStationTypes = null)
+    {        
+        if (allStationTypes == null)
+        {
+            return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
+        }
+
+        var priority = 0f;
+
+        foreach(var item in items)
+        {
+            var masterItem = Manager_Item.GetMasterItem(item.ItemID);
+
+            var allStationTypesList = allStationTypes.ToList();
+
+            PriorityImportance stationPriority = masterItem.PriorityStats_Item.GetHighestStationPriority(allStationTypesList);
+
+            if (stationPriority == PriorityImportance.None)
+            {
+                Debug.LogError($"StationPriority: {stationPriority} not found.");
+                continue;
+            }
+            
+            priority += _addPriorityIfAbovePercent(item.ItemAmount / (uint)stationPriority, total, 0, maxPriority);
+
+            Debug_Visualiser.Instance.UpdateDebugData(DebugSectionType.Testing, new DebugEntryKey("", item.ItemName, item.ItemID), new DebugData_Data(DebugDataType.Priority_Item, $"Current: {item.ItemAmount} / {(uint)stationPriority} Total: {total}, Redult: {priority}"));
+        }
+
+        return priority;
     }
 
     protected static float _lessItemsDesired_Total(List<Item> items, float total, float maxPriority)
@@ -175,17 +199,24 @@ public class PriorityGenerator
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
+
+        DebugEntry_Data debugDataList = new DebugEntry_Data
+        (
+            new DebugEntryKey
+            (
+                "Fetch",
+                $"{inventory_Target.ComponentType}",
+                inventory_Target.Reference.ComponentID
+            ), 
+            new List<DebugData_Data>
+            { 
+                new DebugData_Data (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()),
+                new DebugData_Data (DebugDataType.Priority_Distance, priority_Distance.ToString()),
+                new DebugData_Data (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString())
+            }
+        );
         
-        List<(DebugDataType, string)> debugData = new List<(DebugDataType, string)>
-        {
-            { (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()) },
-            { (DebugDataType.Priority_Distance, priority_Distance.ToString()) },
-            { (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString()) },
-        };
-
-        (ActionName, object, uint) debugID = (ActionName.Fetch, inventory_Target.ComponentType, inventory_Target.Reference.ComponentID);
-
-        Debug_Visualiser.Instance.UpdateDebugVisualiser(debugID, debugData);
+        Debug_Visualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
         return new List<float>
         {
@@ -193,13 +224,17 @@ public class PriorityGenerator
         };
     }
 
-    static List<float> _generateDeliverPriority(Dictionary<PriorityParameter, object> existingPriorities)
+    static List<float> _generateDeliverPriority(Dictionary<PriorityParameter, object> existingPriorityParameters)
     {
-        float maxPriority = existingPriorities[PriorityParameter.MaxPriority] as float? ?? DefaultMaxPriority;
-        float totalDistance = existingPriorities[PriorityParameter.TotalDistance] as float? ?? 0;
-        float totalItems = existingPriorities[PriorityParameter.TotalItems] as float? ?? 0;
-        InventoryData inventory_Hauler = existingPriorities[PriorityParameter.InventoryHauler] as InventoryData;
-        InventoryData inventory_Target = existingPriorities[PriorityParameter.InventoryTarget] as InventoryData;
+        float maxPriority = existingPriorityParameters[PriorityParameter.MaxPriority] as float? ?? DefaultMaxPriority;
+        float totalDistance = existingPriorityParameters[PriorityParameter.TotalDistance] as float? ?? 0;
+        float totalItems = existingPriorityParameters[PriorityParameter.TotalItems] as float? ?? 0;
+        InventoryData inventory_Hauler = existingPriorityParameters[PriorityParameter.InventoryHauler] as InventoryData;
+        InventoryData inventory_Target = existingPriorityParameters[PriorityParameter.InventoryTarget] as InventoryData;
+
+        HashSet<StationName> allStationTypes = existingPriorityParameters.TryGetValue(PriorityParameter.AllStationTypes, out var stationTypes)
+        ? stationTypes as HashSet<StationName>
+        : null;
 
         if (maxPriority == 0)
         {
@@ -231,21 +266,28 @@ public class PriorityGenerator
         var targetPosition = inventory_Target.Reference.GameObject.transform.position;
 
         var priority_ItemQuantity = allItemsToDeliver.Count != 0
-        ? _moreItemsDesired_Total(allItemsToDeliver, totalItems, maxPriority) : 0;
+        ? _moreItemsDesired_Total(allItemsToDeliver, totalItems, maxPriority, allStationTypes) : 0;
 
         var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
         ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority) : 0;
+        
+        DebugEntry_Data debugDataList = new DebugEntry_Data
+        (
+            new DebugEntryKey
+            (
+                "Deliver",
+                $"{inventory_Target.ComponentType}",
+                inventory_Target.Reference.ComponentID
+            ), 
+            new List<DebugData_Data>
+            { 
+                new DebugData_Data (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()) ,
+                new DebugData_Data (DebugDataType.Priority_Distance, priority_Distance.ToString()) ,
+                new DebugData_Data (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString()) 
+            }
+        );
 
-        List<(DebugDataType, string)> debugData = new List<(DebugDataType, string)>
-        {
-            { (DebugDataType.Priority_Item, priority_ItemQuantity.ToString()) },
-            { (DebugDataType.Priority_Distance, priority_Distance.ToString()) },
-            { (DebugDataType.Priority_Total, (priority_ItemQuantity + priority_Distance).ToString()) },
-        };
-
-        (ActionName, object, uint) debugID = (ActionName.Deliver, inventory_Target.ComponentType, inventory_Target.Reference.ComponentID);
-
-        Debug_Visualiser.Instance.UpdateDebugVisualiser(debugID, debugData);
+        Debug_Visualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
         return new List<float>
         {
@@ -257,10 +299,12 @@ public class PriorityGenerator
 
 public enum PriorityImportance
 {
-    Low,
-    Medium,
-    High,
+    None,
+
     Critical,
+    High,
+    Medium,
+    Low,
 }
 
 public enum PriorityParameter
@@ -273,6 +317,7 @@ public enum PriorityParameter
     TotalDistance,
     InventoryHauler,
     InventoryTarget,
+    AllStationTypes,
     Jobsite,
 }
 
@@ -286,428 +331,6 @@ public class ActionToChange
         ActionName = actionName;
         PriorityImportance = priorityImportance;
     }
-}
-
-public abstract class PriorityComponent
-{
-    public Dictionary<ActionName, Dictionary<PriorityParameter, object>> _actionPriorityParameters = new()
-    {
-        { ActionName.Deliver, new Dictionary<PriorityParameter, object>
-        {
-            { PriorityParameter.MaxPriority, null },
-            { PriorityParameter.TotalItems, null },
-            { PriorityParameter.TotalDistance, null },
-            { PriorityParameter.InventoryHauler, null },
-            { PriorityParameter.InventoryTarget, null },
-        }},
-
-        { ActionName.Fetch, new Dictionary<PriorityParameter, object>
-        {
-            { PriorityParameter.MaxPriority, null },
-            { PriorityParameter.TotalItems, null },
-            { PriorityParameter.TotalDistance, null },
-            { PriorityParameter.InventoryHauler, null },
-            { PriorityParameter.InventoryTarget, null },
-        }},
-    };
-
-    public Dictionary<ActionName, PriorityQueue> AllPriorityQueues = new()
-    {
-        { ActionName.Fetch, new PriorityQueue(1) },
-        { ActionName.Deliver, new PriorityQueue(1) },
-        { ActionName.Scavenge, new PriorityQueue(1) },
-    };
-
-    public Dictionary<PriorityImportance, List<Priority>> CachedPriorityQueue;
-    protected abstract Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; }
-
-    protected bool _syncingCachedQueue = false;
-    protected float _timeDeferment = 1f;
-
-    public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameter, object> changedParameters)
-    {
-        if (!_actionsToChange.TryGetValue(dataChanged, out var actionsToChange))
-        {
-            Debug.Log($"DataChanged: {dataChanged} not found in _actionsToChange for {this}.");
-            return;
-        }
-
-        foreach (var action in actionsToChange)
-        {
-            var parameters = UpdateExistingPriorityParameters(action.ActionName, changedParameters);
-
-            var priorities = PriorityGenerator.GeneratePriorities(action.ActionName, parameters);
-
-            switch (action.PriorityImportance)
-            {
-                case PriorityImportance.Critical:
-                    if (!AllPriorityQueues[action.ActionName].Update((uint)action.ActionName, priorities))
-                    {
-                        Debug.LogError($"Action: {action} unable to be updated in PriorityQueue.");
-                    };
-                    break;
-                case PriorityImportance.High:
-                    AddToCachedPriorityQueue(new Priority((uint)action.ActionName, priorities), PriorityImportance.High);
-                    break;
-                case PriorityImportance.Medium:
-                    AddToCachedPriorityQueue(new Priority((uint)action.ActionName, priorities), PriorityImportance.Medium);
-                    break;
-                case PriorityImportance.Low:
-                    AddToCachedPriorityQueue(new Priority((uint)action.ActionName, priorities), PriorityImportance.Low);
-                    break;
-                default:
-                    Debug.LogError($"PriorityImportance: {action.PriorityImportance} not found.");
-                    break;
-            }
-        }
-    }
-
-    public void FullPriorityUpdate(List<object> allData)
-    {
-        SyncCachedPriorityQueueHigh();
-        //SyncCachedPriorityQueueMedium();
-        //SyncCachedPriorityQueueLow();
-    }
-
-    public void SyncCachedPriorityQueueHigh(bool syncing = false)
-    {
-        foreach (PriorityQueue priorityQueue in AllPriorityQueues.Values)
-        {
-            foreach (var priority in CachedPriorityQueue[PriorityImportance.High])
-            {
-                if (!priorityQueue.Update(priority.PriorityID, priority.AllPriorities))
-                {
-                    Debug.LogError($"PriorityID: {priority.PriorityID} unable to be added to PriorityQueue.");
-                }
-            }
-        }
-
-        CachedPriorityQueue[PriorityImportance.Low].Clear();
-        if (syncing) _syncingCachedQueue = false;
-    }
-
-    void _syncCachedPriorityQueueHigh_DeferredUpdate()
-    {
-        _syncingCachedQueue = true;
-        Manager_DeferredActions.AddDeferredAction(() => SyncCachedPriorityQueueHigh(true), _timeDeferment);
-    }
-
-    public void AddToCachedPriorityQueue(Priority priority, PriorityImportance priorityImportance)
-    {
-        if (CachedPriorityQueue == null) CachedPriorityQueue = new Dictionary<PriorityImportance, List<Priority>>();
-
-        if (!CachedPriorityQueue.ContainsKey(priorityImportance)) CachedPriorityQueue.Add(priorityImportance, new List<Priority>());
-
-        CachedPriorityQueue[priorityImportance].Add(priority);
-
-        if (!_syncingCachedQueue) _syncCachedPriorityQueueHigh_DeferredUpdate();
-    }
-
-    public void UpdateAction(ActionName actionName, List<float> priorities)
-    {
-        if (!AllPriorityQueues[actionName].Update((uint)actionName, priorities))
-        {
-            Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
-        }
-    }
-
-    public void RemoveAction(ActionName actionName)
-    {
-        if (!AllPriorityQueues[actionName].Remove((uint)actionName))
-        {
-            Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
-        }
-    }
-
-    public Priority CheckHighestPriority(ActionName actionName)
-    {
-        return AllPriorityQueues[actionName].Peek();
-    }
-
-    public Priority GetHighestPriority(ActionName actionName)
-    {
-        return AllPriorityQueues[actionName].Dequeue();
-    }
-
-    public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
-    {
-        if (!_actionPriorityParameters.TryGetValue(actionName, out var existingPriorityParameters))
-        {
-            Debug.LogError($"ActionName: {actionName} not found in _existingParameters.");
-            return null;
-        }
-
-        foreach (var parameter in parameters)
-        {
-            if (!existingPriorityParameters.ContainsKey(parameter.Key))
-            {
-                Debug.LogError($"Parameter: {parameter.Key} not found.");
-                continue;
-            }
-
-            existingPriorityParameters[parameter.Key] = parameter.Value;
-        }
-
-        return existingPriorityParameters;
-    }    
-}
-
-public class PriorityComponent_Actor : PriorityComponent
-{
-    readonly ComponentReference_Actor _actorReferences;
-
-    public uint ActorID { get { return _actorReferences.ActorID; } }
-    protected ActorComponent Actor { get { return _actorReferences.Actor; } }
-
-    public PriorityComponent_Actor(uint actorID)
-    {
-        _actorReferences = new ComponentReference_Actor(actorID);
-    }
-
-    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
-    {
-        { DataChanged.ChangedInventory, new List<ActionToChange>
-        {
-            new ActionToChange(ActionName.Deliver, PriorityImportance.High),
-        }},
-
-        { DataChanged.DroppedItems, new List<ActionToChange>
-        {
-            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
-            new ActionToChange(ActionName.Scavenge, PriorityImportance.Medium),
-        }},
-    };
-}
-
-public class PriorityComponent_Station : PriorityComponent
-{
-    public PriorityComponent_Station(uint stationID) 
-    {
-        _stationReferences = new ComponentReference_Station(stationID);
-    } 
-
-    readonly ComponentReference_Station _stationReferences;
-
-    public uint JobsiteID { get { return _stationReferences.StationID; } }
-    protected StationComponent Jobsite { get { return _stationReferences.Station; } }
-
-    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
-    {
-        { DataChanged.ChangedInventory, new List<ActionToChange>
-        {
-            new ActionToChange(ActionName.Deliver, PriorityImportance.High),
-            new ActionToChange(ActionName.Fetch, PriorityImportance.High),
-        }},
-    };
-}
-
-public class PriorityComponent_Jobsite : PriorityComponent
-{
-    public PriorityComponent_Jobsite(uint jobsiteID) 
-    {
-        _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
-    } 
-
-    readonly ComponentReference_Jobsite _jobsiteReferences;
-
-    public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
-    protected JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
-
-    public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
-    {
-        List<StationComponent> allRelevantStations = Jobsite.AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
-
-        if (allRelevantStations.Count == 0)
-        {
-            Debug.Log("No stations to fetch from.");
-            return (null, null);
-        }
-
-        float totalItemsToFetch = allRelevantStations.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
-        float totalDistance = allRelevantStations.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
-
-        foreach (var station in Jobsite.AllStationsInJobsite)
-        {
-            var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Fetch, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.TotalItems, totalItemsToFetch },
-                { PriorityParameter.TotalDistance, totalDistance },
-                { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
-                { PriorityParameter.InventoryTarget, station.StationData.InventoryData },
-            });
-
-            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Fetch, priorityParameters);
-
-            if (newPriorities == null || newPriorities.Count == 0) continue;
-
-            AllPriorityQueues[ActionName.Fetch].Update(station.StationID, newPriorities);
-        }
-
-        StationComponent peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Fetch].Peek().PriorityID);
-        
-        if (peekedStation == null) return (null, null);
-
-        var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
-
-        if (allItemsInStation.Count == 0) return (null, null);
-
-        float availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
-
-        List<Item> itemsToHaul = new List<Item>();
-
-        while (allItemsInStation.Count > 0 && availableCarryWeight > 0)
-        {
-            Debug.Log($"AllItemsInStation: {allItemsInStation.Count}, AvailableCarryWeight: {availableCarryWeight}");
-
-            Item item = allItemsInStation[0];
-            Item_Master itemMaster = Manager_Item.GetMasterItem(item.ItemID);
-            float itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
-
-            if (itemWeight > availableCarryWeight) break;
-
-            itemsToHaul.Add(item);
-            allItemsInStation.Remove(item);
-            availableCarryWeight -= itemWeight;
-        }
-
-        if (itemsToHaul.Count == 0) return (null, null);
-
-        AllPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
-
-        return (peekedStation, itemsToHaul);
-    }
-
-    public (StationComponent Station, List<Item> Items) GetStationToDeliverTo(ActorComponent hauler)
-    {
-        List<StationComponent> allRelevantStations = Jobsite.GetRelevantStations(ActionName.Deliver, hauler.ActorData.InventoryData);
-
-        if (allRelevantStations.Count == 0)
-        {
-            Debug.Log("No stations to fetch from.");
-            return (null, null);
-        }
-        
-        float totalItems = Jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
-        float totalDistance = Jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
-
-        foreach (var station in Jobsite.AllStationsInJobsite)
-        {
-            var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Deliver, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.TotalItems, totalItems },
-                { PriorityParameter.TotalDistance, totalDistance },
-                { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
-                { PriorityParameter.InventoryTarget, station.StationData.InventoryData }, 
-            });
-
-            List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, priorityParameters);
-
-            if (newPriorities == null || newPriorities.Count == 0) continue;
-
-            AllPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
-        }
-
-        StationComponent peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Deliver].Peek().PriorityID);
-        
-        if (peekedStation == null) return (null, null);
-
-        var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
-
-        if (allItemsInStation.Count == 0) return (null, null);
-
-        float availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
-
-        List<Item> itemsToHaul = new List<Item>();
-
-        while (allItemsInStation.Count > 0 && availableCarryWeight > 0)
-        {
-            Debug.Log($"AllItemsInStation: {allItemsInStation.Count}, AvailableCarryWeight: {availableCarryWeight}");
-
-            Item item = allItemsInStation[0];
-            Item_Master itemMaster = Manager_Item.GetMasterItem(item.ItemID);
-            float itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
-
-            if (itemWeight > availableCarryWeight) break;
-
-            itemsToHaul.Add(item);
-            allItemsInStation.Remove(item);
-            availableCarryWeight -= itemWeight;
-        }
-
-        if (itemsToHaul.Count == 0) return (null, null);
-
-        AllPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
-
-        return (peekedStation, itemsToHaul);
-    }
-
-    protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
-    {
-        
-    };
-}
-
-public abstract class PriorityData
-{
-    public ComponentReference Reference { get; private set; }
-
-    public PriorityData (uint componentID, ComponentType componentType)
-    {
-        switch(componentType)
-        {
-            case ComponentType.Actor:
-                Reference = new ComponentReference_Actor(componentID);
-                break;
-            case ComponentType.Station:
-                Reference = new ComponentReference_Station(componentID);
-                break;
-            default:
-                Debug.LogError($"ComponentType: {componentType} not found.");
-                break;
-        }
-    }
-    
-    protected PriorityComponent _priorityComponent;
-    public abstract PriorityComponent PriorityComponent { get; }
-    
-    public Action<DataChanged, Dictionary<PriorityParameter, object>> OnDataChange { get; set; }
-    
-    protected void _priorityChangeCheck(DataChanged dataChanged, bool forceChange = false)
-    {
-        if (!_priorityChangeNeeded(dataChanged) && !forceChange) return;
-
-        if (OnDataChange == null) _setOnDataChange();
-
-        if (OnDataChange == null) 
-        {
-            Debug.LogError("OnDataChange is still null after resetting data change notifications.");
-            return;
-        }
-
-        OnDataChange(dataChanged, _getActionsToChange(dataChanged));
-    }
-    
-    protected abstract bool _priorityChangeNeeded(object dataChanged);
-    protected void _setOnDataChange() => OnDataChange = (DataChanged, changedParameters)
-    => PriorityComponent.OnDataChanged(DataChanged, changedParameters);
-    protected Dictionary<PriorityParameter, object> _getActionsToChange(DataChanged dataChanged)
-    {
-        if (_priorityParameterList.Count == 0)
-        {
-            Debug.LogError("ActionsAndParameters is empty.");
-            return null;
-        }
-
-        if (!_priorityParameterList.TryGetValue(dataChanged, out var priorityParameters))
-        {
-            Debug.LogError($"DataChanged: {dataChanged} is not in ActionsAndParameters list");
-            return null;
-        }
-
-        return priorityParameters;
-    }
-
-    protected abstract Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; }
 }
 
 public abstract class ComponentReference

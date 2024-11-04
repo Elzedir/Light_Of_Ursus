@@ -277,6 +277,11 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
         return StationData.InventoryData.GetInventoryItemsToFetch();
     }
 
+    public List<Item> GetInventoryItemsToHold()
+    {
+        return StationData.InventoryData.GetInventoryItemsToHold();
+    }
+
     public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
     {
         return StationData.InventoryData.GetInventoryItemsToDeliver(inventory);
@@ -297,8 +302,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
     public abstract IEnumerator Interact(ActorComponent actor);
 
     public abstract void CraftItem(RecipeName recipeName, ActorComponent actor);
-
-    public abstract List<Item> GetItemsToDeliver(InventoryData inventoryOwner);
 
     protected abstract List<Item> _getCost(List<Item> ingredients, ActorComponent actor);
 

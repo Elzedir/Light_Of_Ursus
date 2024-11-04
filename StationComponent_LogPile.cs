@@ -59,12 +59,6 @@ public class StationComponent_LogPile : StationComponent
         AllowedEmployeePositions = new() { EmployeePosition.None };
     }
 
-    public override List<Item> GetItemsToDeliver(InventoryData inventoryOwner)
-    {
-        return null;//inventoryOwner.GetInventoryData().AllInventoryItems.Where(i => i.ItemID == 2300 || i.ItemID == 1100)
-        //.Select(i => new Item(i.ItemID, i.ItemAmount)).ToList();
-    }
-
     protected override void _operateStation()
     {
         foreach (var operatingArea in AllOperatingAreasInStation)
