@@ -49,13 +49,21 @@ public class Debug_Visualiser : MonoBehaviour
         TogglePrefabs(false);
     }
 
+    public void Initialise()
+    {
+        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneTenthSecond);
+    }
+
+    public void OnTick()
+    {
+        LayoutRebuilder.ForceRebuildLayoutImmediate(DebugPanelParent.GetComponent<RectTransform>());
+    }
+
     public void TogglePrefabs(bool toggle)
     {
         DebugSectionPrefab.SetActive(toggle);
         DebugEntryPrefab.SetActive(toggle);
         DebugDataPrefab.SetActive(toggle);
-
-        
     }
 
     public void ClosePanel()
@@ -78,7 +86,7 @@ public class Debug_Visualiser : MonoBehaviour
             Destroy(Manager_Game.FindTransformRecursively(newDebugSection.transform, "DebugEntryPrefab").gameObject);
             newDebugSection.InitialiseDebugSection(new DebugSection_Data(debugSectionData));
             AllDebugSections.Add(debugSectionData.DebugSectionType, newDebugSection);
-
+            
             TogglePrefabs(false);
             
             return;

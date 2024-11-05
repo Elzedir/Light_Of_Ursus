@@ -644,8 +644,6 @@ public class PriorityStats_Item
             : new Dictionary<PriorityImportance, List<StationName>>();
     }
 
-    
-
     public PriorityImportance GetHighestStationPriority(List<StationName> allStations)
     {
         foreach (var priority in Priority_Station.Keys)
@@ -664,5 +662,12 @@ public class PriorityStats_Item
         Debug.LogError("No priority found for any station in Priority_StationsForProduction");
 
         return PriorityImportance.None;
+    }
+
+    public bool IsHighestPriorityStation(StationName currentStation, List<StationName> allStations)
+    {
+        PriorityImportance highestPriority = GetHighestStationPriority(allStations);
+
+        return Priority_Station[highestPriority].Contains(currentStation);
     }
 }

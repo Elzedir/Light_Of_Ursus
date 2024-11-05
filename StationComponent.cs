@@ -14,7 +14,7 @@ public enum StationType
 }
 
 [RequireComponent(typeof(BoxCollider))]
-public abstract class StationComponent : MonoBehaviour, IInteractable, ITickable
+public abstract class StationComponent : MonoBehaviour, IInteractable
 {
     public uint StationID { get { return StationData.StationID; } }
     public JobsiteComponent Jobsite { get { return StationData.Jobsite; } }

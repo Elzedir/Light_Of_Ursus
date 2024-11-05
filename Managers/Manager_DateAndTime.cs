@@ -154,7 +154,7 @@ public class Time
     }
 }
 
-public class CurrentTime : ITickable
+public class CurrentTime
 {
     bool _halfTime = false;
     public static int CurrentMinute;

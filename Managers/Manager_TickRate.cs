@@ -110,20 +110,10 @@ public class Manager_TickRate : MonoBehaviour
     }
 }
 
-public interface ITickable
-{
-    void OnTick();
-}
-
-public class Manager_DeferredActions : ITickable
+public class Manager_DeferredActions
 {
     static bool _initialised;
     static Dictionary<Action, float> _deferredActions;
-
-    public void OnTick()
-    {
-        
-    }
 
     static void _initialise()
     {

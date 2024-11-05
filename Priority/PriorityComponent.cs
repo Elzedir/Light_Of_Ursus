@@ -6,16 +6,6 @@ public abstract class PriorityComponent
 {
     public Dictionary<ActionName, Dictionary<PriorityParameter, object>> _actionPriorityParameters = new()
     {
-        { ActionName.Deliver, new Dictionary<PriorityParameter, object>
-        {
-            { PriorityParameter.MaxPriority, null },
-            { PriorityParameter.TotalItems, null },
-            { PriorityParameter.TotalDistance, null },
-            { PriorityParameter.InventoryHauler, null },
-            { PriorityParameter.InventoryTarget, null },
-            { PriorityParameter.AllStationTypes, null },
-        }},
-
         { ActionName.Fetch, new Dictionary<PriorityParameter, object>
         {
             { PriorityParameter.MaxPriority, null },
@@ -23,6 +13,17 @@ public abstract class PriorityComponent
             { PriorityParameter.TotalDistance, null },
             { PriorityParameter.InventoryHauler, null },
             { PriorityParameter.InventoryTarget, null },
+        }},
+
+        { ActionName.Deliver, new Dictionary<PriorityParameter, object>
+        {
+            { PriorityParameter.MaxPriority, null },
+            { PriorityParameter.TotalItems, null },
+            { PriorityParameter.TotalDistance, null },
+            { PriorityParameter.InventoryHauler, null },
+            { PriorityParameter.InventoryTarget, null },
+            { PriorityParameter.CurrentStationType, null },
+            { PriorityParameter.AllStationTypes, null },
         }},
     };
 
@@ -314,6 +315,7 @@ public class PriorityComponent_Jobsite : PriorityComponent
                 { PriorityParameter.TotalDistance, totalDistance },
                 { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
                 { PriorityParameter.InventoryTarget, station.StationData.InventoryData }, 
+                { PriorityParameter.CurrentStationType, station.StationName },
                 { PriorityParameter.AllStationTypes, allStationTypes },
             });
 

@@ -57,7 +57,7 @@ public class Manager_StateAndCondition
     }
 }
 
-public class StateAndConditionComponent : ITickable
+public class StateAndConditionComponent
 {
     public uint ActorID;
     ActorComponent _actor;

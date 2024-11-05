@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-public abstract class JobsiteComponent : MonoBehaviour, ITickable
+public abstract class JobsiteComponent : MonoBehaviour
 {
     public uint JobsiteID { get { return JobsiteData.JobsiteID; } }
     public JobsiteData JobsiteData;

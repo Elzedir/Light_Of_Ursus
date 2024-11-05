@@ -118,6 +118,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseJobsites();
 
+        Debug_Visualiser.Instance.Initialise();
+
         if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
         _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
 

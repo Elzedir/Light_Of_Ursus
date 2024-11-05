@@ -9,7 +9,7 @@ public class Manager_Prosperity
 }
 
 [Serializable]
-public class ProsperityData : ITickable
+public class ProsperityData
 {
     public GameObject GameObject;
     public float CurrentProsperity;
