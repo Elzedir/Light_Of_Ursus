@@ -371,6 +371,7 @@ public abstract class InventoryData : PriorityData
     public abstract List<Item> GetInventoryItemsToDeliver(InventoryData inventory);
 }
 
+[Serializable]
 public class InventoryData_Actor : InventoryData
 {
     public InventoryData_Actor(uint actorID) : base(actorID, ComponentType.Actor) { }
@@ -417,6 +418,7 @@ public class InventoryData_Actor : InventoryData
     }
 }
 
+[Serializable]
 public class InventoryData_Station : InventoryData
 {
     public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station) { }

@@ -54,6 +54,21 @@ public class Debug_Visualiser : MonoBehaviour
         Manager_TickRate.RegisterTickable(OnTick, TickRate.OneTenthSecond);
     }
 
+    public void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F1))
+        {
+            if (gameObject.activeSelf)
+            {
+                ClosePanel();
+            }
+            else
+            {
+                OpenPanel();
+            }
+        }
+    }
+
     public void OnTick()
     {
         LayoutRebuilder.ForceRebuildLayoutImmediate(DebugPanelParent.GetComponent<RectTransform>());
