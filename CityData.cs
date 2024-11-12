@@ -38,7 +38,7 @@ public class CityData
         {
             if (!AllJobsiteIDs.Contains(jobsite.JobsiteData.JobsiteID))
             {
-                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteIDs");
+                //Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteIDs");
                 AllJobsiteIDs.Add(jobsite.JobsiteData.JobsiteID);
             }
         }

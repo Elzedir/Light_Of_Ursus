@@ -20,22 +20,22 @@ public class Manager_City : MonoBehaviour, IDataPersistence
     {
         if (data == null)
         {
-            Debug.Log("No SaveData found in LoadData.");
+            //Debug.Log("No SaveData found in LoadData.");
             return;
         }
         if (data.SavedCityData == null)
         {
-            Debug.Log("No SavedCityData found in SaveData.");
+            //Debug.Log("No SavedCityData found in SaveData.");
             return;
         }
         if (data.SavedCityData.AllCityData == null)
         {
-            Debug.Log("No AllCityData found in SavedCityData.");
+            //Debug.Log("No AllCityData found in SavedCityData.");
             return;
         }
         if (data.SavedCityData.AllCityData.Count == 0)
         {
-            Debug.Log("AllCityData count is 0.");
+            //Debug.Log("AllCityData count is 0.");
             return;
         }
         
@@ -80,7 +80,7 @@ public class Manager_City : MonoBehaviour, IDataPersistence
 
             if (!AllCityData.ContainsKey(city.CityData.CityID))
             {
-                Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
+                //Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
                 AddToAllCityData(city.CityData);
             }
 

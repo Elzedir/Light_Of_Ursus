@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.IO;
+using Actors;
 using UnityEngine.SceneManagement;
 using UnityEditor;
 
@@ -132,7 +133,7 @@ public class DataPersistence_SO : ScriptableObject
             }
             else
             {
-                Debug.Log("ProfileData File didn't exist, created");
+                //Debug.Log("ProfileData File didn't exist, created");
 
                 var newProfileData = new ProfileData(1, directoryInfo.Name, 0, _useEncryption);
                 string newProfileDataJson = JsonUtility.ToJson(newProfileData);

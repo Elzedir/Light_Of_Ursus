@@ -65,7 +65,7 @@ public class JobsiteData
         {
             if (!AllStationIDs.Contains(station.StationData.StationID))
             {
-                Debug.Log($"Station: {station.StationData.StationID}: {station.StationName}  was not in AllStationIDs");
+                //Debug.Log($"Station: {station.StationData.StationID}: {station.StationName}  was not in AllStationIDs");
                 AllStationIDs.Add(station.StationData.StationID);
             }
         }
@@ -141,25 +141,25 @@ public class JobsiteData
     {
         if (AllEmployeeIDs == null || !AllEmployeeIDs.Any())
         {
-            Debug.Log("No employees found in the jobsite.");
+            //Debug.Log("No employees found in the jobsite.");
             return 0;
         }
 
         uint employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
         if (employeeID == 0)
         {
-            Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
+            //Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
             return 0;
         }
 
         var actor = Manager_Actor.GetActor(actorID: employeeID, generateActorIfNotFound: true);
         if (actor == null || actor.ActorData == null)
         {
-            Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
+            //Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
             return 0;
         }
 
-        Debug.Log($"Found employee: {employeeID} for position: {position}");
+        //Debug.Log($"Found employee: {employeeID} for position: {position}");
         return actor.ActorData.ActorID;
     }
 
@@ -168,27 +168,27 @@ public class JobsiteData
         var city = Manager_City.GetCity(CityID);
         if (city == null)
         {
-            Debug.Log($"City with ID {CityID} not found.");
+            //Debug.Log($"City with ID {CityID} not found.");
             return 0;
         }
 
         var cityData = city.CityData;
         if (cityData == null)
         {
-            Debug.Log($"CityData for city with ID {CityID} is null.");
+            //Debug.Log($"CityData for city with ID {CityID} is null.");
             return 0;
         }
 
         var population = cityData.Population;
         if (population == null)
         {
-            Debug.Log($"Population data for city with ID {CityID} is null.");
+            //Debug.Log($"Population data for city with ID {CityID} is null.");
             return 0;
         }
 
         if (population.AllCitizenIDs == null || !population.AllCitizenIDs.Any())
         {
-            Debug.Log("No citizens found in the city.");
+            //Debug.Log("No citizens found in the city.");
             return 0;
         }
 
@@ -200,18 +200,18 @@ public class JobsiteData
 
         if (citizenID == 0)
         {
-            Debug.LogWarning($"No suitable citizen found for position: {position} in city with ID {CityID}.");
+            //Debug.LogWarning($"No suitable citizen found for position: {position} in city with ID {CityID}.");
             return 0;
         }
 
         var actor = Manager_Actor.GetActor(actorID: citizenID, generateActorIfNotFound: true);
         if (actor == null || actor.ActorData == null)
         {
-            Debug.Log($"Failed to get or generate actor for citizen ID {citizenID}.");
+            //Debug.Log($"Failed to get or generate actor for citizen ID {citizenID}.");
             return 0;
         }
 
-        Debug.Log($"Found citizen: {citizenID} for position: {position}");
+        //Debug.Log($"Found citizen: {citizenID} for position: {position}");
         return actor.ActorData.ActorID;
     }
 
@@ -359,13 +359,13 @@ public class JobsiteData
 
         if (stationID == null)
         {
-            Debug.Log($"Employee has not been assigned a station.");
+            //Debug.Log($"Employee has not been assigned a station.");
             return false;
         }
 
         if (!AllStationIDs.Contains(stationID.Value))
         {
-            Debug.Log($"StationID: {stationID} does not exist in AllStationIDs");
+            //Debug.Log($"StationID: {stationID} does not exist in AllStationIDs");
             return false;
         }
 
@@ -373,19 +373,19 @@ public class JobsiteData
 
         if (station == null)
         {
-            Debug.Log($"Station does not exist.");
+            //Debug.Log($"Station does not exist.");
             return false;
         }
 
         if (!station.CurrentOperatorIDs.Contains(employeeID))
         {
-            Debug.Log($"EmployeeID: {employeeID} is not an operator at StationID: {station.StationID}");
+            //Debug.Log($"EmployeeID: {employeeID} is not an operator at StationID: {station.StationID}");
             return false;
         }
 
         if (!station.RemoveOperatorFromStation(employeeID))
         {
-            Debug.Log($"Couldn't remove employee from station: {station.StationID}");
+            //Debug.Log($"Couldn't remove employee from station: {station.StationID}");
             return false;
         }
 
@@ -433,19 +433,19 @@ public class JobsiteData
 
         if (currentOperatorCount >= maxOperatorCount)
         {
-            Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than MaxOperatorCount: {maxOperatorCount}.");
+            //Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than MaxOperatorCount: {maxOperatorCount}.");
             return;
         }
 
         if (currentOperatorCount >= desiredOperatorCount)
         {
-            Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than DesiredOperatorCount: {desiredOperatorCount}.");
+            //Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than DesiredOperatorCount: {desiredOperatorCount}.");
             return;
         }
 
         int iteration = 0;
 
-        Debug.Log($"Trying to hire {desiredOperatorCount - currentOperatorCount} employees, curr: {currentOperatorCount} des: {desiredOperatorCount} max: {maxOperatorCount}");
+        //Debug.Log($"Trying to hire {desiredOperatorCount - currentOperatorCount} employees, curr: {currentOperatorCount} des: {desiredOperatorCount} max: {maxOperatorCount}");
 
         while (iteration < desiredOperatorCount - currentOperatorCount)
         {
@@ -462,13 +462,13 @@ public class JobsiteData
 
                 if (station == null)
                 {
-                    Debug.Log($"StationID: {stationID} does not exist in Manager_Station.");
+                    //Debug.Log($"StationID: {stationID} does not exist in Manager_Station.");
                     continue;
                 }
 
                 if (Manager_Station.GetStationData(stationID).CurrentOperatorIDs.Count >= station.AllOperatingAreasInStation.Count)
                 {
-                    Debug.Log($"All operating areas are already filled for StationID: {stationID}");
+                    //Debug.Log($"All operating areas are already filled for StationID: {stationID}");
                     continue;
                 }
                 else
@@ -479,14 +479,14 @@ public class JobsiteData
 
                     if (newEmployeeID == 0)
                     {
-                        Debug.Log($"Couldn't find employee from Jobsite for position: {station.CoreEmployeePosition}");
+                        //Debug.Log($"Couldn't find employee from Jobsite for position: {station.CoreEmployeePosition}");
                     }
 
                     newEmployeeID = _findEmployeeFromCity(station.CoreEmployeePosition);
 
                     if (newEmployeeID == 0)
                     {
-                        Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
+                        //Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
                         newEmployeeID = _generateNewEmployee(station.CoreEmployeePosition);
                     }
 
@@ -494,7 +494,7 @@ public class JobsiteData
 
                     if (!AddEmployeeToStation(actorData.ActorID, stationID))
                     {
-                        Debug.Log($"Couldn't add employee to station: {stationID}");
+                        //Debug.Log($"Couldn't add employee to station: {stationID}");
                         continue;
                     }
 
@@ -506,7 +506,7 @@ public class JobsiteData
 
             if (allPositionsFilled)
             {
-                Debug.Log("All necessary positions are filled.");
+                //Debug.Log("All necessary positions are filled.");
                 break;
             }
         }

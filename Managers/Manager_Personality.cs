@@ -121,7 +121,7 @@ public class PersonalityComponent : ComponentReference_Actor
     {
         (PersonalityTitle, PersonalityDescription) = Manager_Personality.GetPersonalityTitleAndDescription(this);
 
-        Debug.Log(ActorID);
+        //Debug.Log(ActorID);
 
         Actor.ActorData.SpeciesAndPersonality.ActorPersonality.SetPersonalityTitle(PersonalityTitle, PersonalityDescription);
     }

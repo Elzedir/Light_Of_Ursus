@@ -18,22 +18,22 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
     {
         if (saveData == null)
         {
-            Debug.Log("No SaveData found in LoadData.");
+            //Debug.Log("No SaveData found in LoadData.");
             return;
         }
         if (saveData.SavedRegionData == null)
         {
-            Debug.Log("No SavedRegionData found in SaveData.");
+            //Debug.Log("No SavedRegionData found in SaveData.");
             return;
         }
         if (saveData.SavedRegionData.AllRegionData == null)
         {
-            Debug.Log("No AllRegionData found in SavedRegionData.");
+            //Debug.Log("No AllRegionData found in SavedRegionData.");
             return;
         }
         if (saveData.SavedRegionData.AllRegionData.Count == 0)
         {
-            Debug.Log("AllRegionData count is 0.");
+            //Debug.Log("AllRegionData count is 0.");
             return;
         }
         
@@ -70,7 +70,7 @@ public class Manager_Region : MonoBehaviour, IDataPersistence
 
             if (!AllRegionData.ContainsKey(region.RegionData.RegionID))
             {
-                Debug.Log($"Region: {region.RegionData.RegionID}: {region.RegionData.RegionName} was not in AllRegionData");
+                //Debug.Log($"Region: {region.RegionData.RegionID}: {region.RegionData.RegionName} was not in AllRegionData");
                 AddToAllRegionData(region.RegionData);
             }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 using UnityEditor;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ public class RegionData
         {
             if (!AllCityIDs.Contains(city.CityData.CityID))
             {
-                Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
+                //Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
                 AllCityIDs.Add(city.CityData.CityID);
             }
         }

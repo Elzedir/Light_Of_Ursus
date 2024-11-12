@@ -3,6 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Debuggers;
+using Managers;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
@@ -24,11 +26,15 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
 {
     public static Manager_Game Instance;
     Manager_Audio _manager_Audio;
-    public Manager_Audio Manager_Audio { get { return _getManager_Audio(); } private set { _manager_Audio = value; } }
+    public Manager_Audio Manager_Audio { get => _getManager_Audio();
+        private set => _manager_Audio = value;
+    }
     Manager_Audio _getManager_Audio() { if (_manager_Audio) return _manager_Audio; else return GameObject.Find("Main Camera").GetComponentInChildren<Manager_Audio>(); }
 
     Window_Text _window_Text;
-    public Window_Text Window_Text { get { return _getWindow_Text(); } private set { _window_Text = value; } }
+    public Window_Text Window_Text { get => _getWindow_Text();
+        private set => _window_Text = value;
+    }
     Window_Text _getWindow_Text() { if (_window_Text) return _window_Text; else return FindTransformRecursively(GameObject.Find("UI").transform, "Window_Text").GetComponentInChildren<Window_Text>(); }
 
     [SerializeField] public GameState CurrentState;
@@ -118,7 +124,8 @@ public class Manager_Game : MonoBehaviour, IDataPersistence
         Manager_Initialisation.InitialiseActors();
         Manager_Initialisation.InitialiseJobsites();
 
-        Debug_Visualiser.Instance.Initialise();
+        DebugVisualiser.Instance.Initialise();
+        ObjectVisualiser.Instance.Initialise();
 
         if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
         _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         catch
         {
             AllFactionData = new();
-            Debug.Log("No Faction Data found in SaveData.");
+            //Debug.Log("No Faction Data found in SaveData.");
         }
         
         AllFactions_SO.AllFactionData = AllFactionData.Values.ToList();

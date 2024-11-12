@@ -10,9 +10,9 @@ public class StationComponent_Tree : StationComponent
     public override EmployeePosition CoreEmployeePosition => EmployeePosition.Logger;
 
     public override RecipeName DefaultProduct => RecipeName.Log;
-    public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Log };
-    public override List<uint> AllowedStoredItemIDs => new List<uint>();
-    public override List<uint> DesiredStoredItemIDs => new List<uint>();
+    public override HashSet<RecipeName> AllowedRecipes => new() { RecipeName.Log };
+    public override HashSet<uint> AllowedStoredItemIDs => new();
+    public override HashSet<uint> DesiredStoredItemIDs => new();
     public override uint OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -72,11 +72,14 @@ public class StationComponent_Tree : StationComponent
 
         var cost = _getCost(recipe.RequiredIngredients, actor);
         var yield = _getYield(recipe.RecipeProducts, actor);
+        
+        if (!StationData.InventoryData.InventoryContainsAllItems(cost)) { Debug.Log($"Inventory does not contain cost items."); return; }
+        if (!StationData.InventoryData.HasSpaceForItems(yield)) { Debug.Log($"Inventory does not have space for yield items."); return; }
 
-        if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }
+        StationData.InventoryData.RemoveFromInventory(cost);
         // Have another system where the tree loses durability instead or something.
         // Later allow it to partially remove logs to chop the tree down completely.
-        if (!StationData.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
+        StationData.InventoryData.AddToInventory(yield);
 
         _onCraftItem(yield);
     }

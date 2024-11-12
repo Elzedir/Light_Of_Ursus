@@ -323,114 +323,114 @@ public class Order_Base
 
     public void ExecuteOrder()
     {
-        if (OrderStatus == OrderStatus.Pending)
-        {
-            HaltCurrentOrder();
-
-            _orderCoroutine = Actor.StartCoroutine(_executeOrder());
-        }
+        // if (OrderStatus == OrderStatus.Pending)
+        // {
+        //     HaltCurrentOrder();
+        //
+        //     _orderCoroutine = Actor.StartCoroutine(_executeOrder());
+        // }
     }
-    public IEnumerator _executeOrder()
-    {
-        OrderStatus = OrderStatus.Active;
-        bool orderSuccess = false;
-
-        if (ActorID == 0 || StationID_Destination == 0 || OrderItems.Count <= 0)
-        {
-            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination}, or OrderItemIDs {OrderItems.Count} is invalid.");
-            HaltCurrentOrder();
-            throw new Exception("Invalid Order.");
-        }
-
-        if (Actor.transform.position == null)
-        {
-            Debug.Log("Actor position is null.");
-            HaltCurrentOrder();
-            throw new Exception("Invalid Actor Position.");
-        }
-
-        // Eventually put in a check to see if the station still has the resources. If not, then return.
-
-        if (Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
-        {
-            HaltCurrentMoveOrder();
-
-            yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.CollectionPoint.position));
-
-            if (_transferItems()) orderSuccess = true;
-        }
-
-        OrderStatus = OrderStatus.Complete;
-
-        if (OrderType == OrderType.Haul_Fetch && orderSuccess)
-        {
-            //Actor.ActorData.OrderData.CompleteOrder(OrderID);
-            Actor.ActorData.CurrentOrder = null;
-            AddReturnOrder(_createReturnDeliverOrder());
-            ReturnOrder.ExecuteOrder();
-        }
-        else
-        {
-            //Actor.ActorData.OrderData.CompleteOrder(OrderID);
-            Actor.ActorData.CurrentOrder = null;
-        }
-    }
-
-    protected bool _transferItems()
-    {
-        if (OrderType == OrderType.Haul_Fetch)
-        {
-            if (!Station_Destination.StationData.InventoryData.RemoveFromInventory(OrderItems))
-            {
-                Debug.Log($"Failed to remove items from Station: {Station_Destination.StationData.StationID} inventory.");
-                return false;
-            }
-
-            if (!Actor.ActorData.InventoryData.AddToInventory(OrderItems))
-            {
-                Debug.Log("Failed to add items to Actor inventory.");
-
-                if (Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
-                {
-                    Debug.Log("Failed to add items back to Station inventory.");
-                    return false;
-                }
-
-                return false;
-            }
-
-            Debug.Log($"Actor: {ActorID} successfully fetched items from Station: {StationID_Destination}.");
-
-            return true;
-        }
-
-        if (OrderType == OrderType.Haul_Deliver)
-        {
-            if (!Actor.ActorData.InventoryData.RemoveFromInventory(OrderItems))
-            {
-                Debug.Log("Failed to remove items from Actor inventory.");
-                return false;
-            }
-
-            if (!Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
-            {
-                Debug.Log("Failed to add items to Station inventory.");
-
-                if (Actor.ActorData.InventoryData.AddToInventory(OrderItems))
-                {
-                    Debug.Log("Failed to add items back to Actor inventory.");
-                    return false;
-                }
-
-                return false;
-            }
-
-            return true;
-        }
-
-        Debug.Log("Invalid OrderType.");
-        return false;
-    }
+    // public IEnumerator _executeOrder()
+    // {
+    //     OrderStatus = OrderStatus.Active;
+    //     bool orderSuccess = false;
+    //
+    //     if (ActorID == 0 || StationID_Destination == 0 || OrderItems.Count <= 0)
+    //     {
+    //         Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination}, or OrderItemIDs {OrderItems.Count} is invalid.");
+    //         HaltCurrentOrder();
+    //         throw new Exception("Invalid Order.");
+    //     }
+    //
+    //     if (Actor.transform.position == null)
+    //     {
+    //         Debug.Log("Actor position is null.");
+    //         HaltCurrentOrder();
+    //         throw new Exception("Invalid Actor Position.");
+    //     }
+    //
+    //     // Eventually put in a check to see if the station still has the resources. If not, then return.
+    //
+    //     if (Vector3.Distance(Actor.transform.position, Station_Destination.transform.position) > (Station_Destination.BoxCollider.bounds.extents.magnitude + Actor.Collider.bounds.extents.magnitude * 1.1f))
+    //     {
+    //         HaltCurrentMoveOrder();
+    //
+    //         yield return _actorMoveCoroutine = Actor.StartCoroutine(_moveOperatorToOperatingArea(Station_Destination.CollectionPoint.position));
+    //
+    //         if (_transferItems()) orderSuccess = true;
+    //     }
+    //
+    //     OrderStatus = OrderStatus.Complete;
+    //
+    //     if (OrderType == OrderType.Haul_Fetch && orderSuccess)
+    //     {
+    //         //Actor.ActorData.OrderData.CompleteOrder(OrderID);
+    //         Actor.ActorData.CurrentOrder = null;
+    //         AddReturnOrder(_createReturnDeliverOrder());
+    //         ReturnOrder.ExecuteOrder();
+    //     }
+    //     else
+    //     {
+    //         //Actor.ActorData.OrderData.CompleteOrder(OrderID);
+    //         Actor.ActorData.CurrentOrder = null;
+    //     }
+    // }
+    //
+    // protected bool _transferItems()
+    // {
+    //     if (OrderType == OrderType.Haul_Fetch)
+    //     {
+    //         if (!Station_Destination.StationData.InventoryData.RemoveFromInventory(OrderItems))
+    //         {
+    //             Debug.Log($"Failed to remove items from Station: {Station_Destination.StationData.StationID} inventory.");
+    //             return false;
+    //         }
+    //
+    //         if (!Actor.ActorData.InventoryData.AddToInventory(OrderItems))
+    //         {
+    //             Debug.Log("Failed to add items to Actor inventory.");
+    //
+    //             if (Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
+    //             {
+    //                 Debug.Log("Failed to add items back to Station inventory.");
+    //                 return false;
+    //             }
+    //
+    //             return false;
+    //         }
+    //
+    //         Debug.Log($"Actor: {ActorID} successfully fetched items from Station: {StationID_Destination}.");
+    //
+    //         return true;
+    //     }
+    //
+    //     if (OrderType == OrderType.Haul_Deliver)
+    //     {
+    //         if (!Actor.ActorData.InventoryData.RemoveFromInventory(OrderItems))
+    //         {
+    //             Debug.Log("Failed to remove items from Actor inventory.");
+    //             return false;
+    //         }
+    //
+    //         if (!Station_Destination.StationData.InventoryData.AddToInventory(OrderItems))
+    //         {
+    //             Debug.Log("Failed to add items to Station inventory.");
+    //
+    //             if (Actor.ActorData.InventoryData.AddToInventory(OrderItems))
+    //             {
+    //                 Debug.Log("Failed to add items back to Actor inventory.");
+    //                 return false;
+    //             }
+    //
+    //             return false;
+    //         }
+    //
+    //         return true;
+    //     }
+    //
+    //     Debug.Log("Invalid OrderType.");
+    //     return false;
+    // }
     protected Order_Base _createReturnDeliverOrder()
     {
         var stationsToHaulTo = _getAlLStationsToHaulTo();

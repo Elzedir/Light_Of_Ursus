@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
+using ScriptableObjects;
 using UnityEngine;
 
 public class Manager_Actor : MonoBehaviour, IDataPersistence
@@ -27,7 +29,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         catch
         {
             AllActorData = new();
-            Debug.Log("No Actor Data found in SaveData.");
+            //Debug.Log("No Actor Data found in SaveData.");
         }
 
         AllActors.AllActorData = AllActorData.Values.ToList();
@@ -223,14 +225,14 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
 
         foreach (var recipe in actorGenerationParameters.InitialRecipes)
         {
-            Debug.Log($"Adding recipe: {recipe}");
+            //Debug.Log($"Adding recipe: {recipe}");
             actor.ActorData.CraftingData.AddRecipe(recipe);
         }
 
         // Add initial vocations
         foreach (var vocation in actorGenerationParameters.InitialVocations)
         {
-            Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
+            //Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
             actor.ActorData.VocationData.AddVocation(vocation.VocationName, vocation.VocationExperience);
         }
 
@@ -238,7 +240,7 @@ public class Manager_Actor : MonoBehaviour, IDataPersistence
         actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
 
         //Find a better way to put into groups.
-        actor.ActorData.InventoryData.SetInventory(new List<Item>(), true);
+        actor.ActorData.InventoryData.SetInventory(new Dictionary<uint, Item>(), true);
         actor.ActorData.EquipmentData.SetEquipment(null, null, null, null, null, null, null, null, null);
 
         actor.ActorData.SpeciesAndPersonality.SetSpecies(GetRandomSpecies());

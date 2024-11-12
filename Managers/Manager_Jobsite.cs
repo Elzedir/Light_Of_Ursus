@@ -18,22 +18,22 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
     {
         if (data == null)
         {
-            Debug.Log("No SaveData found in LoadData.");
+            //Debug.Log("No SaveData found in LoadData.");
             return;
         }
         if (data.SavedJobsiteData == null)
         {
-            Debug.Log("No SavedJobsiteData found in SaveData.");
+            //Debug.Log("No SavedJobsiteData found in SaveData.");
             return;
         }
         if (data.SavedJobsiteData.AllJobsiteData == null)
         {
-            Debug.Log("No AllJobsiteData found in SavedJobsiteData.");
+            //Debug.Log("No AllJobsiteData found in SavedJobsiteData.");
             return;
         }
         if (data.SavedJobsiteData.AllJobsiteData.Count == 0)
         {
-            Debug.Log("AllJobsiteData count is 0.");
+            //Debug.Log("AllJobsiteData count is 0.");
             return;
         }
         
@@ -63,7 +63,7 @@ public class Manager_Jobsite : MonoBehaviour, IDataPersistence
 
             if (!AllJobsiteData.ContainsKey(jobsite.JobsiteData.JobsiteID))
             {
-                Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteData");
+                //Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteData");
                 AddToAllJobsiteData(jobsite.JobsiteData);
             }
 

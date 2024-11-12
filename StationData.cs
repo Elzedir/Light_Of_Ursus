@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Managers;
 using UnityEditor;
 using UnityEngine;
 
@@ -56,7 +57,7 @@ public class StationData
         {
             if (!AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID))
             {
-                Debug.Log($"OperatingArea: {operatingArea.OperatingAreaData.OperatingAreaID}: {operatingArea.name}  was not in AllOperatingAreaIDs");
+                //Debug.Log($"OperatingArea: {operatingArea.OperatingAreaData.OperatingAreaID}: {operatingArea.name}  was not in AllOperatingAreaIDs");
                 AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
             }
         }

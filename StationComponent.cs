@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
+using Priority;
 using UnityEditor;
 using UnityEngine;
 
@@ -32,9 +34,9 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public List<EmployeePosition> AllowedEmployeePositions;
     public abstract EmployeePosition CoreEmployeePosition { get; }
     public abstract RecipeName DefaultProduct { get; }
-    public abstract  List<RecipeName> AllowedRecipes { get; }
-    public abstract List<uint> AllowedStoredItemIDs { get; }
-    public abstract List<uint> DesiredStoredItemIDs { get; }
+    public abstract  HashSet<RecipeName> AllowedRecipes { get; }
+    public abstract HashSet<uint> AllowedStoredItemIDs { get; }
+    public abstract HashSet<uint> DesiredStoredItemIDs { get; }
     public abstract uint OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
@@ -187,11 +189,11 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     {
         if (StationData.StationProgressData.CurrentProduct.RecipeName == RecipeName.None && DefaultProduct != RecipeName.None)
         {
-            Debug.Log($"CurrentProduct is None: {StationData.StationProgressData.CurrentProduct}");
+            //Debug.Log($"CurrentProduct is None: {StationData.StationProgressData.CurrentProduct}");
 
             if (Jobsite.JobsiteData.JobsiteFactionID != 1)
             {
-                Debug.Log($"Setting CurrentProduct to DefaultProduct: {DefaultProduct}");
+                //Debug.Log($"Setting CurrentProduct to DefaultProduct: {DefaultProduct}");
 
                 StationData.StationProgressData.CurrentProduct = Manager_Recipe.GetRecipe(DefaultProduct);
             }
@@ -277,11 +279,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         return StationData.InventoryData.GetInventoryItemsToFetch();
     }
 
-    public List<Item> GetInventoryItemsToHold()
-    {
-        return StationData.InventoryData.GetInventoryItemsToHold();
-    }
-
     public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
     {
         return StationData.InventoryData.GetInventoryItemsToDeliver(inventory);
@@ -306,18 +303,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     protected abstract List<Item> _getCost(List<Item> ingredients, ActorComponent actor);
 
     protected abstract List<Item> _getYield(List<Item> ingredients, ActorComponent actor);
-
-    public virtual bool AddItemsToStation(List<Item> items)
-    {
-        var added = StationData.InventoryData.AddToInventory(items);
-        return added;
-    }
-
-    public virtual bool RemoveItemsFromStation(List<Item> items)
-    {
-        var removed = StationData.InventoryData.RemoveFromInventory(items);
-        return removed;
-    }
 
     protected virtual void _onCraftItem(List<Item> craftedItems)
     {
@@ -425,7 +410,7 @@ public class StationComponent_Editor : Editor
             {
                 _inventoryItemScrollPos = EditorGUILayout.BeginScrollView(_inventoryItemScrollPos);
 
-                foreach (var item in stationData.InventoryData.AllInventoryItems)
+                foreach (var item in stationData.InventoryData.AllInventoryItems.Values)
                 {
                     EditorGUILayout.LabelField($"{item.ItemID}: {item.ItemName} Qty: {item.ItemAmount}");
                 }

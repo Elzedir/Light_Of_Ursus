@@ -12,9 +12,9 @@ public class StationComponent_Sawmill : StationComponent
     public float PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
 
     public override RecipeName DefaultProduct => RecipeName.Plank;
-    public override List<RecipeName> AllowedRecipes => new List<RecipeName> { RecipeName.Plank };
-    public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
-    public override List<uint> DesiredStoredItemIDs => new List<uint> { 1100 };
+    public override HashSet<RecipeName> AllowedRecipes => new() { RecipeName.Plank };
+    public override HashSet<uint> AllowedStoredItemIDs => new() { 1100, 2300 };
+    public override HashSet<uint> DesiredStoredItemIDs => new() { 1100 };
     public override uint OperatingAreaCount => 4;
 
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -74,9 +74,12 @@ public class StationComponent_Sawmill : StationComponent
 
         var cost = _getCost(recipe.RequiredIngredients, actor);
         var yield = _getYield(recipe.RecipeProducts, actor);
+        
+        if (!StationData.InventoryData.InventoryContainsAllItems(cost)) { Debug.Log("Station does not have required items."); return; }
+        if (!StationData.InventoryData.HasSpaceForItems(yield)) { Debug.Log("Station does not have space for yield items."); return; }
 
-        if (!StationData.InventoryData.RemoveFromInventory(cost)) { Debug.Log($"Crafter does not have all required ingredients"); return; }
-        if (!StationData.InventoryData.AddToInventory(yield)) { Debug.Log($"Cannot add products back into inventory"); return; }
+        StationData.InventoryData.RemoveFromInventory(cost);
+        StationData.InventoryData.AddToInventory(yield);
 
         _onCraftItem(yield);
     }

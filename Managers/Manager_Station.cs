@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects;
 using UnityEngine;
 using UnityEditor.SceneManagement;
 
@@ -22,22 +23,22 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
     {
         if (saveData == null)
         {
-            Debug.Log("No SaveData found in LoadData.");
+            //Debug.Log("No SaveData found in LoadData.");
             return;
         }
         if (saveData.SavedStationData == null)
         {
-            Debug.Log("No SavedStationData found in SaveData.");
+            //Debug.Log("No SavedStationData found in SaveData.");
             return;
         }
         if (saveData.SavedStationData.AllStationData == null)
         {
-            Debug.Log("No AllStationData found in SavedStationData.");
+            //Debug.Log("No AllStationData found in SavedStationData.");
             return;
         }
         if (saveData.SavedStationData.AllStationData.Count == 0)
         {
-            Debug.Log("AllStationData count is 0.");
+            //Debug.Log("AllStationData count is 0.");
             return;
         }
 
@@ -69,7 +70,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
 
             if (!AllStationData.ContainsKey(station.StationData.StationID))
             {
-                Debug.Log($"Station: {station.StationData.StationID}: {station.StationName} was not in AllStationData");
+                //Debug.Log($"Station: {station.StationData.StationID}: {station.StationName} was not in AllStationData");
                 AddToAllStationData(station.StationData);
             }
 

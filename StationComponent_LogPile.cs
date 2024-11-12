@@ -11,9 +11,9 @@ public class StationComponent_LogPile : StationComponent
     public override EmployeePosition CoreEmployeePosition => EmployeePosition.Hauler;
 
     public override RecipeName DefaultProduct => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
-    public override List<RecipeName> AllowedRecipes => new List<RecipeName>();
-    public override List<uint> AllowedStoredItemIDs => new List<uint> { 1100, 2300 };
-    public override List<uint> DesiredStoredItemIDs => new List<uint> { 1100, 2300 };
+    public override HashSet<RecipeName> AllowedRecipes => new();
+    public override HashSet<uint> AllowedStoredItemIDs => new() { 1100, 2300 };
+    public override HashSet<uint> DesiredStoredItemIDs => new() { 1100, 2300 };
 
     public override uint OperatingAreaCount => 4;
     protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
@@ -74,7 +74,7 @@ public class StationComponent_LogPile : StationComponent
             //     return;
             // }
 
-            if (actorCanHaul())
+            if (_actorCanHaul(actor))
             {
                 // Deliver resources first before hauling more
 
@@ -110,21 +110,21 @@ public class StationComponent_LogPile : StationComponent
             //     if (actor.ActorData.CurrentOrder != null) return true;
             //     return false;
             // }
-
-            bool actorCanHaul()
-            {
-                // Check if the actor has sufficient space, weight, combat situation, etc.
-
-                if (actor.ActorHaulCoroutine != null) return false;
-
-                return true;
-            }
         }
+    }
+    
+    bool _actorCanHaul(ActorComponent actor)
+    {
+        // Check if the actor has sufficient space, weight, combat situation, etc.
+
+        if (actor.ActorHaulCoroutine != null) return false;
+
+        return true;
     }
 
     protected bool _canDeliverItems(ActorComponent actor)
     {
-        if (Jobsite == null)
+        if (Jobsite is null)
         {
             Debug.Log($"Jobsite: {StationData.JobsiteID} is null.");
             return false;
@@ -132,13 +132,15 @@ public class StationComponent_LogPile : StationComponent
 
         var stationAndItems = Jobsite.GetStationToHaulTo(actor);
 
-        if (stationAndItems.Station == null)
+        if (stationAndItems.Station is null)
         {
-            Debug.Log($"No stations to haul to.");
+            //Debug.Log($"No stations to haul to.");
             return false;
         }
+        
+        Debug.LogWarning($"StationAndItems: {stationAndItems.Station.StationName} - {stationAndItems.Items.Count}");
 
-        if (stationAndItems.Items.Count == 0)
+        if (stationAndItems.Items.Count is 0)
         {
             Debug.Log($"No items to haul to {stationAndItems.Station.StationName}.");
             return false;
@@ -158,19 +160,19 @@ public class StationComponent_LogPile : StationComponent
     {
         bool orderSuccess = false;
 
-        var ActorID = actor.ActorData.ActorID;
-        var StationID_Destination = station.StationData.StationID;
+        var actorID = actor.ActorData.ActorID;
+        var stationID_Destination = station.StationData.StationID;
 
-        if (ActorID == 0 || StationID_Destination == 0)
+        if (actorID is 0 || stationID_Destination is 0)
         {
-            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination} is invalid.");
+            Debug.Log($"HaulerID: {actorID}, StationID: {stationID_Destination} is invalid.");
             throw new Exception("Invalid Order.");
         }
 
-        if (actor.transform.position == null)
+        if (actor is null)
         {
-            Debug.Log("Actor position is null.");
-            throw new Exception("Invalid Actor Position.");
+            Debug.Log("Actor is null.");
+            throw new Exception("Invalid Actor.");
         }
 
         // Eventually put in a check to see if the station still has the resources. If not, then return.
@@ -178,11 +180,11 @@ public class StationComponent_LogPile : StationComponent
         if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
         {
             yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
-
-            if (_deliver(actor, station, itemsToDeliver)) orderSuccess = true;
-
-            actor.ActorHaulCoroutine = null;
         }
+        
+        if (_deliver(actor, station, itemsToDeliver)) orderSuccess = true;
+        
+        actor.ActorHaulCoroutine = null;
 
         if (orderSuccess)
         {
@@ -192,24 +194,8 @@ public class StationComponent_LogPile : StationComponent
 
     bool _deliver(ActorComponent actor, StationComponent station, List<Item> orderItems)
     {
-        if (!actor.ActorData.InventoryData.RemoveFromInventory(orderItems))
-        {
-            Debug.Log("Failed to remove items from Actor inventory.");
-            return false;
-        }
-
-        if (!station.StationData.InventoryData.AddToInventory(orderItems))
-        {
-            Debug.Log("Failed to add items to Station inventory.");
-
-            if (actor.ActorData.InventoryData.AddToInventory(orderItems))
-            {
-                Debug.Log("Failed to add items back to Actor inventory.");
-                return false;
-            }
-
-            return false;
-        }
+        actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
+        station.StationData.InventoryData.AddToInventory(orderItems);
 
         //Debug.Log($"Actor: {actor.ActorData.ActorID} successfully delivered items to Station: {station.StationData.StationID}.");
 
@@ -218,7 +204,7 @@ public class StationComponent_LogPile : StationComponent
 
     bool _fetchItemsCheck(ActorComponent actor)
     {
-        if (Jobsite == null)
+        if (Jobsite is null)
         {
             Debug.Log($"Jobsite: {StationData.JobsiteID} is null.");
             return false;
@@ -226,19 +212,25 @@ public class StationComponent_LogPile : StationComponent
 
         var stationAndItems = Jobsite.GetStationToHaulFrom(actor);
 
-        if (stationAndItems.Station == null)
+        if (stationAndItems.Station is null)
         {
-            Debug.Log($"No stations to haul from.");
+            //Debug.Log($"No stations to haul from.");
             return false;
         }
 
         if (stationAndItems.Items.Count == 0)
         {
-            Debug.Log($"No items to haul from {stationAndItems.Station.StationName}.");
+            //Debug.Log($"No items to haul from {stationAndItems.Station.StationName}.");
             return false;
         }
 
         Debug.Log($"Actor: {actor.ActorData.ActorID} is fetching items from {stationAndItems.Station.StationName}.");
+        
+        a
+            
+            // Move the putting items on hold to earlier in the code so that everything is taken care of in the beginning
+            // and then things are only updated from there, instead of constanslty rechecking in many different ways,
+            // Just put in a single checker to see if the invenotry changes, like the priority change check system.
 
         StationData.InventoryData.AddToInventoryItemsOnHold(stationAndItems.Items);
 
@@ -249,36 +241,44 @@ public class StationComponent_LogPile : StationComponent
 
     IEnumerator _fetchItems( ActorComponent actor, StationComponent stationDestination, List<Item> itemsToFetch)
     {
-        bool orderSuccess = false;
+        var orderSuccess = false;
 
-        var ActorID = actor.ActorData.ActorID;
-        var StationID_Destination = stationDestination.StationData.StationID;
+        var actorID = actor.ActorData.ActorID;
+        var stationID_Destination = stationDestination.StationData.StationID;
 
-        if (ActorID == 0 || StationID_Destination == 0)
+        if (actorID is 0 || stationID_Destination is 0)
         {
-            Debug.Log($"HaulerID: {ActorID}, StationID: {StationID_Destination} is invalid.");
+            Debug.Log($"HaulerID: {actorID}, StationID: {stationID_Destination} is invalid.");
             StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
             throw new Exception("Invalid Order.");
         }
 
-        if (actor.transform.position == null)
+        if (actor is null)
         {
-            Debug.Log("Actor position is null.");
+            Debug.Log("Actor is null.");
             StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
-            throw new Exception("Invalid Actor Position.");
+            throw new Exception("Invalid Actor.");
         }
-        // Eventually put in a check to see if the station still has the resources. If not, then return.
+
+        if (!stationDestination.StationData.InventoryData.InventoryContainsAnyItems(itemsToFetch))
+        {
+            Debug.Log($"Station: {stationDestination.StationData.StationID} does not have the items to fetch.");
+            yield break;
+        }
 
         if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
         {
             yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
-
-            if (_fetch(stationDestination, actor, itemsToFetch)) orderSuccess = true;
-
-            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
-
-            actor.ActorHaulCoroutine = null;
         }
+
+        if (_fetch(stationDestination, actor, itemsToFetch))
+        {
+            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
+            
+            orderSuccess = true;
+        }
+        
+        actor.ActorHaulCoroutine = null;
 
         if (orderSuccess)
         {
@@ -292,27 +292,10 @@ public class StationComponent_LogPile : StationComponent
 
     protected bool _fetch(StationComponent station, ActorComponent actor, List<Item> orderItems)
     {
-        if (!station.StationData.InventoryData.RemoveFromInventory(orderItems))
-        {
-            Debug.Log($"Failed to remove items from Station: {station.StationData.StationID} inventory.");
-            return false;
-        }
+        station.StationData.InventoryData.RemoveFromInventory(orderItems);
 
-        if (!actor.ActorData.InventoryData.AddToInventory(orderItems))
-        {
-            Debug.Log("Failed to add items to Actor inventory.");
-
-            if (station.StationData.InventoryData.AddToInventory(orderItems))
-            {
-                Debug.Log("Failed to add items back to Station inventory.");
-                return false;
-            }
-
-            return false;
-        }
-
-        //Debug.Log($"Actor: {actor.ActorData.ActorID} successfully fetched items from Station: {station.StationData.StationID}.");
-
+        actor.ActorData.InventoryData.AddToInventory(orderItems);
+        
         return true;
     }
 

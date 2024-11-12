@@ -23,12 +23,14 @@ public class Interactable_Item : MonoBehaviour, IInteractable
     {
         if (Item == null) throw new ArgumentException("Item has not been initialised");
 
-        if (!actor.ActorData.InventoryData.AddToInventory(new List<Item> { Item }))
-        {
-            Debug.Log("Couldn't pick up item.");
-
-            yield break;
-        }
+        // Change to be a pickup function which will call the add to inventory when successful.
+        
+        // if (!actor.ActorData.InventoryData.AddToInventory(new List<Item> { Item }))
+        // {
+        //     Debug.Log("Couldn't pick up item.");
+        //
+             yield break;
+        // }
 
         //Destroy(this);
     }
