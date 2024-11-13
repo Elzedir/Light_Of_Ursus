@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Managers;
 using UnityEngine;
 
 namespace Priority
@@ -233,9 +234,9 @@ namespace Priority
 
         public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
         {
-            var allRelevantStations = _jobsite.AllStationsInJobsite
-                                              .Where(station => station.GetInventoryItemsToFetch().Count > 0)
-                                              .ToList();
+            // Reduce the redundancy of the constant GetItemsToFetch in relevant stations and here.
+            
+            var allRelevantStations = _jobsite.GetRelevantStations(ActionName.Fetch, hauler.ActorData.InventoryData);
 
             if (allRelevantStations.Count is 0)
             {
@@ -267,84 +268,73 @@ namespace Priority
         
             if (peekedStation is null) return (null, null);
 
-            var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
+            var allItemsToFetch = peekedStation.GetInventoryItemsToFetch();
 
-            if (allItemsInStation.Count is 0) return (null, null);
+            if (allItemsToFetch.Count is 0) return (null, null);
 
-            var availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+            var availableSpace = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
 
-            var itemsToHaul = new List<Item>();
-            
-            Debug.Log($""                                                                  +
-                      $"Items: {Item.GetItemListTotal_CountAllItems(allItemsInStation)}, " +
-                      $"TotalWeight: {Item.GetItemListTotal_Weight(allItemsInStation)} "   +
-                      $"AvailableCarryWeight: {availableCarryWeight}");
+            var itemsToFetch = new List<Item>();
 
-            for (var i = 0; i < allItemsInStation.Count; i++)
+            for (var i = 0; i < allItemsToFetch.Count; i++)
             {
-                Debug.LogWarning(availableCarryWeight);
-                
-                if (availableCarryWeight <= 0) break;
+                if (availableSpace <= 0) break;
                     
-                var item       = allItemsInStation[i];
+                var item       = new Item(allItemsToFetch[i]);
+                
+                // Find out how to remove items with 0 amount rather than skip them.
+                if (item.ItemAmount <= 0) continue;
+                
                 var itemMaster = Manager_Item.GetMasterItem(item.ItemID);
                 var itemWeight = itemMaster.CommonStats_Item.ItemWeight;
                 
-                Debug.LogWarning($"{itemWeight}: {availableCarryWeight}");
-                
-                if (itemWeight > availableCarryWeight) continue;
+                if (itemWeight > availableSpace) continue;
                 
                 var totalItemWeight =  itemWeight * item.ItemAmount;
                 
-                Debug.LogWarning(totalItemWeight);
-                
-                if (totalItemWeight < availableCarryWeight)
+                if (totalItemWeight < availableSpace)
                 {
-                    itemsToHaul.Add(item);
-                    allItemsInStation.Remove(item);
-                    availableCarryWeight -= totalItemWeight;
+                    itemsToFetch.Add(item);
+                    allItemsToFetch.Remove(item);
+                    availableSpace -= totalItemWeight;
+                    
                     continue;
                 }
 
-                var unitsAbleToCarry = (uint)(availableCarryWeight / itemWeight);
+                var unitsAbleToCarry = (uint)(availableSpace / itemWeight);
                 
-                Debug.LogWarning(unitsAbleToCarry);
-                
-                itemsToHaul.Add(new Item(item.ItemID, unitsAbleToCarry));
+                itemsToFetch.Add(item);
                 item.ItemAmount -= unitsAbleToCarry;
-                availableCarryWeight -= unitsAbleToCarry * itemWeight;
+                availableSpace -= unitsAbleToCarry * itemWeight;
             }
-            
-            Debug.LogWarning(itemsToHaul.Count);
 
-            if (itemsToHaul.Count == 0) return (null, null);
+            if (itemsToFetch.Count is 0) return (null, null);
 
             _allPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
-            
-            Debug.LogWarning($"{peekedStation.StationName} - {itemsToHaul.Count}");
 
-            return (peekedStation, itemsToHaul);
+            return (peekedStation, itemsToFetch);
         }
 
         public (StationComponent Station, List<Item> Items) GetStationToDeliverTo(ActorComponent hauler)
         {
+            // Reduce the redundancy of the constant GetItemsToDeliver in relevant stations and here.
             var allRelevantStations = _jobsite.GetRelevantStations(ActionName.Deliver, hauler.ActorData.InventoryData);
 
             if (allRelevantStations.Count is 0)
             {
-                //Debug.Log("No stations to fetch from.");
+                //Debug.Log("No stations to deliver to.");
                 return (null, null);
             }
         
-            var                totalItems      = _jobsite.AllStationsInJobsite.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
-            var                totalDistance   = _jobsite.AllStationsInJobsite.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
+            var                totalItemsToDeliver      = allRelevantStations.Sum(station => Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToDeliver(hauler.ActorData.InventoryData)));
+            var                totalDistance   = allRelevantStations.Sum(station => Vector3.Distance(hauler.transform.position, station.transform.position));
             var allStationTypes = new HashSet<StationName>(allRelevantStations.Select(station => station.StationName));
 
             foreach (var station in allRelevantStations)
             {
                 var priorityParameters = station.PriorityComponent.UpdateExistingPriorityParameters(ActionName.Deliver, new Dictionary<PriorityParameter, object>
                 {
-                    { PriorityParameter.TotalItems, totalItems },
+                    { PriorityParameter.TotalItems, totalItemsToDeliver },
                     { PriorityParameter.TotalDistance, totalDistance },
                     { PriorityParameter.InventoryHauler, hauler.ActorData.InventoryData },
                     { PriorityParameter.InventoryTarget, station.StationData.InventoryData }, 
@@ -352,45 +342,24 @@ namespace Priority
                     { PriorityParameter.AllStationTypes, allStationTypes },
                 });
 
-                List<float> newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, priorityParameters);
+                var newPriorities = PriorityGenerator.GeneratePriorities(ActionName.Deliver, priorityParameters);
 
-                if (newPriorities == null || newPriorities.Count == 0) continue;
+                if (newPriorities is null || newPriorities.Count is 0) continue;
 
                 _allPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
             }
 
-            StationComponent peekedStation = Manager_Station.GetStation(_allPriorityQueues[ActionName.Deliver].Peek().PriorityID);
+            var peekedStation = Manager_Station.GetStation(_allPriorityQueues[ActionName.Deliver].Peek().PriorityID);
         
-            if (peekedStation == null) return (null, null);
+            if (peekedStation is null) return (null, null);
 
-            var allItemsInStation = peekedStation.GetInventoryItemsToFetch();
+            var itemsToDeliver = peekedStation.GetInventoryItemsToDeliver(hauler.ActorData.InventoryData);
 
-            if (allItemsInStation.Count == 0) return (null, null);
-
-            float availableCarryWeight = hauler.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
-
-            List<Item> itemsToHaul = new List<Item>();
-
-            while (allItemsInStation.Count > 0 && availableCarryWeight > 0)
-            {
-                Debug.Log($"AllItemsInStation: {allItemsInStation.Count}, AvailableCarryWeight: {availableCarryWeight}");
-
-                Item        item       = allItemsInStation[0];
-                Item_Master itemMaster = Manager_Item.GetMasterItem(item.ItemID);
-                float       itemWeight = itemMaster.CommonStats_Item.ItemWeight * item.ItemAmount;
-
-                if (itemWeight > availableCarryWeight) break;
-
-                itemsToHaul.Add(item);
-                allItemsInStation.Remove(item);
-                availableCarryWeight -= itemWeight;
-            }
-
-            if (itemsToHaul.Count == 0) return (null, null);
+            if (itemsToDeliver.Count is 0) return (null, null);
 
             _allPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
 
-            return (peekedStation, itemsToHaul);
+            return (peekedStation, itemsToDeliver);
         }
 
         protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new();

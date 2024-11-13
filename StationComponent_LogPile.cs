@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 using UnityEngine;
 
 public class StationComponent_LogPile : StationComponent
@@ -50,7 +51,6 @@ public class StationComponent_LogPile : StationComponent
 
         return operatingAreaComponent;
     }
-    public bool SalesEnabled = false;
 
     public override void InitialiseStartingInventory() { }
 
@@ -122,7 +122,7 @@ public class StationComponent_LogPile : StationComponent
         return true;
     }
 
-    protected bool _canDeliverItems(ActorComponent actor)
+    bool _canDeliverItems(ActorComponent actor)
     {
         if (Jobsite is null)
         {
@@ -130,7 +130,7 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
-        var stationAndItems = Jobsite.GetStationToHaulTo(actor);
+        var stationAndItems = Jobsite.GetStationToDeliverTo(actor);
 
         if (stationAndItems.Station is null)
         {
@@ -210,7 +210,7 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
-        var stationAndItems = Jobsite.GetStationToHaulFrom(actor);
+        var stationAndItems = Jobsite.GetStationToFetchFrom(actor);
 
         if (stationAndItems.Station is null)
         {
@@ -224,13 +224,13 @@ public class StationComponent_LogPile : StationComponent
             return false;
         }
 
+        foreach (var item in stationAndItems.Items.Where(item => item.ItemAmount == 0))
+        {
+            Debug.LogError($"Item: {item.ItemName} - {item.ItemID} has qty: {item.ItemAmount}.");
+            return false;
+        }
+
         Debug.Log($"Actor: {actor.ActorData.ActorID} is fetching items from {stationAndItems.Station.StationName}.");
-        
-        a
-            
-            // Move the putting items on hold to earlier in the code so that everything is taken care of in the beginning
-            // and then things are only updated from there, instead of constanslty rechecking in many different ways,
-            // Just put in a single checker to see if the invenotry changes, like the priority change check system.
 
         StationData.InventoryData.AddToInventoryItemsOnHold(stationAndItems.Items);
 
@@ -248,21 +248,21 @@ public class StationComponent_LogPile : StationComponent
 
         if (actorID is 0 || stationID_Destination is 0)
         {
-            Debug.Log($"HaulerID: {actorID}, StationID: {stationID_Destination} is invalid.");
-            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
+            Debug.LogError($"HaulerID: {actorID}, StationID: {stationID_Destination} is invalid.");
+            StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
             throw new Exception("Invalid Order.");
         }
 
         if (actor is null)
         {
-            Debug.Log("Actor is null.");
-            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
+            Debug.LogError("Actor is null.");
+            StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
             throw new Exception("Invalid Actor.");
         }
 
         if (!stationDestination.StationData.InventoryData.InventoryContainsAnyItems(itemsToFetch))
         {
-            Debug.Log($"Station: {stationDestination.StationData.StationID} does not have the items to fetch.");
+            Debug.LogError($"Station: {stationDestination.StationData.StationID} does not have the items to fetch.");
             yield break;
         }
 
@@ -271,26 +271,20 @@ public class StationComponent_LogPile : StationComponent
             yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
         }
 
-        if (_fetch(stationDestination, actor, itemsToFetch))
-        {
-            StationData.InventoryData.RemoveFromInventoryItemsOnHold(itemsToFetch);
-            
-            orderSuccess = true;
-        }
+        if (_fetch(stationDestination, actor, itemsToFetch)) orderSuccess = true;
         
-        actor.ActorHaulCoroutine = null;
+        StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
+        
+        actor.ActorHaulCoroutine     = null;
+        actor.ActorData.CurrentOrder = null;
 
-        if (orderSuccess)
-        {
-            actor.ActorData.CurrentOrder = null;
-        }
-        else
+        if (!orderSuccess)
         {
             Debug.LogWarning($"Failed to fetch items from Station: {stationDestination.StationData.StationID}.");
         }
     }
 
-    protected bool _fetch(StationComponent station, ActorComponent actor, List<Item> orderItems)
+    bool _fetch(StationComponent station, ActorComponent actor, List<Item> orderItems)
     {
         station.StationData.InventoryData.RemoveFromInventory(orderItems);
 
@@ -299,7 +293,7 @@ public class StationComponent_LogPile : StationComponent
         return true;
     }
 
-    protected IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
+    IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
     {
         yield return actor.StartCoroutine(actor.BasicMove(position));
 

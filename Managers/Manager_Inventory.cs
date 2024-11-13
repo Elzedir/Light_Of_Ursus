@@ -21,7 +21,7 @@ namespace Managers
     [Serializable]
     public abstract class InventoryData : PriorityData
     {
-        public InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType) { }
+        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType) { }
 
         public abstract ComponentType ComponentType { get; }
 
@@ -32,7 +32,7 @@ namespace Managers
         Dictionary<uint, Item> _allInventoryItems;
         public Dictionary<uint, Item> AllInventoryItems
         {
-            get { return _allInventoryItems ??= new(); }
+            get => _allInventoryItems ??= new Dictionary<uint, Item>();
             set 
             { 
                 _allInventoryItems = value; 
@@ -46,35 +46,53 @@ namespace Managers
                 _priorityChangeCheck(DataChanged.ChangedInventory, true); 
             }
         }
-
-        public Dictionary<uint, Item> InventoryItemsOnHold = new();
-        public void AddToInventoryItemsOnHold(List<Item> items)
+        
+        public Dictionary<uint, Item> GetAllInventoryItemsClone() => AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
+        
+        public Dictionary<uint, Item> FetchItemsOnHold   = new();
+        public Dictionary<uint, Item> DeliverItemsOnHold = new();
+        public void AddToInventoryItemsOnHold(List<Item> itemsToAdd)
         {
-            if (items == null) return;
+            if (itemsToAdd == null) return;
 
-            foreach (var item in items)
+            foreach (var itemToAdd in itemsToAdd)
             {
-                if (InventoryItemsOnHold.TryGetValue(item.ItemID, out var value))
+                if (FetchItemsOnHold.TryGetValue(itemToAdd.ItemID, out var itemOnHold))
                 {
-                    value.ItemAmount += item.ItemAmount;
+                    itemOnHold.ItemAmount += itemToAdd.ItemAmount;
                 }
                 else
                 {
-                    InventoryItemsOnHold.Add(item.ItemID, item);
+                    FetchItemsOnHold.Add(itemToAdd.ItemID, new Item(itemToAdd));
                 }
             }
         }
 
-        public void RemoveFromInventoryItemsOnHold(List<Item> itemsToRemove)
+        public void RemoveFromFetchItemsOnHold(List<Item> itemsToRemove)
         {
             if (itemsToRemove is null) return;
 
             foreach (var itemToRemove in itemsToRemove)
             {
-                if (!InventoryItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
+                if (!FetchItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
 
                 if (itemOnHold.ItemAmount <= itemToRemove.ItemAmount)
-                    InventoryItemsOnHold.Remove(itemToRemove.ItemID);
+                    FetchItemsOnHold.Remove(itemToRemove.ItemID);
+                else
+                    itemOnHold.ItemAmount -= itemToRemove.ItemAmount;
+            }
+        }
+
+        public void RemoveFromDeliverItemsOnHold(List<Item> itemsToRemove)
+        {
+            if (itemsToRemove is null) return;
+            
+            foreach (var itemToRemove in itemsToRemove)
+            {
+                if (!DeliverItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
+
+                if (itemOnHold.ItemAmount <= itemToRemove.ItemAmount)
+                    DeliverItemsOnHold.Remove(itemToRemove.ItemID);
                 else
                     itemOnHold.ItemAmount -= itemToRemove.ItemAmount;
             }
@@ -86,7 +104,7 @@ namespace Managers
             AllInventoryItems = allInventoryItems;
         }
 
-        public          Item GetItemFromInventory(uint   itemID) => AllInventoryItems.GetValueOrDefault(itemID);
+        public          Item GetItemFromInventory(uint   itemID) => new(AllInventoryItems.GetValueOrDefault(itemID));
         public abstract bool HasSpaceForItems(List<Item> items);
 
         public void AddToInventory(List<Item> items)
@@ -172,7 +190,7 @@ namespace Managers
             {
                 if (dropAsGroup)
                 {
-                    Interactable_Item.CreateNewItem(item, dropPosition);
+                    Interactable_Item.CreateNewItem(new Item(item), dropPosition);
                 }
                 else
                 {
@@ -196,7 +214,7 @@ namespace Managers
             {
                 if (AllInventoryItems.TryGetValue(itemID, out var item))
                 {
-                    returnedItems.Add(item);
+                    returnedItems.Add(new Item(item));
                 }
             }
 
@@ -211,7 +229,7 @@ namespace Managers
             {
                 if (AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) && existingItem.ItemAmount >= item.ItemAmount)
                 {
-                    returnedItems.Add(item);
+                    returnedItems.Add(new Item(item));
                 }
             }
 
@@ -226,7 +244,7 @@ namespace Managers
             {
                 if (!AllInventoryItems.TryGetValue(itemToCheck.ItemID, out var existingItem))
                 {
-                    missingItems.Add(itemToCheck);
+                    missingItems.Add(new Item(itemToCheck));
                 }
                 else if (existingItem.ItemAmount < itemToCheck.ItemAmount)
                 {
@@ -272,7 +290,7 @@ namespace Managers
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public override PriorityComponent PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
+        public override PriorityComponent PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
 
@@ -328,27 +346,28 @@ namespace Managers
 
         public override List<Item> GetInventoryItemsToFetch()
         {
-            var itemsToFetch = new Dictionary<uint, Item> ( AllInventoryItems );
-            
-            foreach (var itemID in _getDesiredItemIDs())
-            {
-                itemsToFetch.Remove(itemID);
-            }
+            var itemsToFetch = GetAllInventoryItemsClone();
 
-            foreach (var itemOnHold in InventoryItemsOnHold.Values)
+            foreach (var itemID in _getDesiredItemIDs()) itemsToFetch.Remove(itemID);
+
+            if (itemsToFetch.Count     == 0) return new List<Item>();
+            if (FetchItemsOnHold.Count == 0) return itemsToFetch.Values.ToList();
+
+            foreach (var itemOnHold in FetchItemsOnHold.Values)
             {
                 if (!itemsToFetch.TryGetValue(itemOnHold.ItemID, out var itemToFetch))
                 {
-                    Debug.LogError($"Item on hold - ID: {itemOnHold.ItemID} Qty: {itemOnHold.ItemAmount} not found in ItemToFetch list.");
+                    Debug.LogError(
+                        $"Item on hold - ID: {itemOnHold.ItemID} Qty: {itemOnHold.ItemAmount} not found in ItemToFetch list.");
                     continue;
                 }
-                
+
                 if (itemOnHold.ItemAmount > itemToFetch.ItemAmount)
                 {
                     Debug.LogError($"Item quantity on hold - ID: {itemOnHold.ItemID} Qty: {itemOnHold.ItemAmount} " +
-                                   $"is somehow greater than "                                                      +
+                                   "is somehow greater than "                                                       +
                                    $"item quantity in inventory - ID: {itemToFetch.ItemID} Qty: {itemToFetch.ItemAmount}.");
-                    
+
                     itemsToFetch.Remove(itemToFetch.ItemID);
                     continue;
                 }
@@ -365,6 +384,26 @@ namespace Managers
             return itemsToFetch.Values.ToList();
         }
 
-        public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory) => inventory.InventoryContainsReturnedItems(_getDesiredItemIDs());
+        // We should be factoring in space in this function, not in the priority generator. Here we should see how much space we have and then decide what to deliver.
+        public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+        {
+            var itemsToDeliver = new List<Item>();
+
+            foreach (var itemID in _getDesiredItemIDs()
+                         .Where(itemID => inventory.AllInventoryItems.ContainsKey(itemID)))
+            {
+                var item = inventory.AllInventoryItems[itemID];
+
+                itemsToDeliver.Add(new Item(item));
+            }
+
+            if (itemsToDeliver.Count == 0) return new List<Item>();
+
+            for (var i = 0; i < itemsToDeliver.Count; i++)
+                if (!HasSpaceForItems(new List<Item> { itemsToDeliver[i] }))
+                    itemsToDeliver.RemoveAt(i);
+
+            return itemsToDeliver;
+        }
     }
 }

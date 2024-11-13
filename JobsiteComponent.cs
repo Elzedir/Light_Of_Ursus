@@ -135,12 +135,12 @@ public abstract class JobsiteComponent : MonoBehaviour
 
     protected void _prioritiseAllStationsToHaulFrom() => PriorityComponent.FullPriorityUpdate(AllStationsInJobsite.Cast<object>().ToList());
 
-    public (StationComponent Station, List<Item> Items) GetStationToHaulFrom(ActorComponent hauler)
+    public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
     {
         return PriorityComponent.GetStationToFetchFrom(hauler);
     }
 
-    public (StationComponent Station, List<Item> Items) GetStationToHaulTo(ActorComponent hauler)
+    public (StationComponent Station, List<Item> Items) GetStationToDeliverTo(ActorComponent hauler)
     {
         return PriorityComponent.GetStationToDeliverTo(hauler);
     }

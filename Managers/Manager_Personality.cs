@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 using UnityEngine;
 
 // Personae score adds up the score of all decisions you have made, and gives you a personae title from it.

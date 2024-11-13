@@ -411,7 +411,7 @@ namespace Actors
         public CombatStats    CombatStats;
 
         public float TotalCarryWeight     => 100; // For now. Eventually. ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
-        public float AvailableCarryWeight => TotalCarryWeight - Item.GetItemListTotal_Weight(ActorReference.Actor.ActorData.InventoryData.AllInventoryItems.Values.ToList());
+        public float AvailableCarryWeight => TotalCarryWeight - Item.GetItemListTotal_Weight(ActorReference.Actor.ActorData.InventoryData.GetAllInventoryItemsClone().Values.ToList());
 
         protected override bool _priorityChangeNeeded(object dataChanged)
         {

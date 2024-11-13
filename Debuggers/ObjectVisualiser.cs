@@ -54,17 +54,19 @@ namespace Debuggers
         void _onTick()
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(ObjectPanelParent.GetComponent<RectTransform>());
+            
+            _refreshDisplay();
         }
 
         public void Update()
         {
-            List<Transform> hitTransforms = new();
-
             if (!Input.GetKeyDown(KeyCode.Mouse0)) return;
 
             if (Camera.main is null) return;
             
-            var ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            var             ray           = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+            List<Transform> hitTransforms = new();
 
             while (Physics.Raycast(ray, out var hit, 20f))
             {
@@ -80,36 +82,60 @@ namespace Debuggers
                 }
 
                 hitTransforms.Add(hit.transform);
-                
-                _displayObject(hit.transform.gameObject);
+
+                if (_displayObject(hit.transform.gameObject))
+                {
+                    break;
+                }
 
                 ray.origin = hit.point + ray.direction * 0.01f;
             }
         }
 
-        void _displayObject(GameObject hitGO)
+        GameObject _currentDisplayedObject;
+
+        void _refreshDisplay()
+        {
+            if (_currentDisplayedObject is null) return;
+            
+            _displayObject(_currentDisplayedObject);
+        }
+
+        bool _displayObject(GameObject hitGO)
         {
             if (hitGO is null)
             {
-                return;
+                return false;
             }
 
             if (hitGO.TryGetComponent(out ActorComponent actor))
             {
-                _resetEntries();
+                if (hitGO != _currentDisplayedObject)
+                {
+                    _resetEntries();
+                    _currentDisplayedObject = hitGO;
+                }
                 
                 _displayActor(actor);
+                return true;
             }
             else if (hitGO.TryGetComponent(out StationComponent station))
             {
-                _resetEntries();
+                if (hitGO != _currentDisplayedObject)
+                {
+                    _resetEntries();
+                    _currentDisplayedObject = hitGO;
+                }
                 
                 _displayStation(station);
+                return true;
             }
             else
             {
-                //Debug.LogWarning($"Object {hitGO.name} does not have a valid component.");
+                _currentDisplayedObject = null;
             }
+
+            return false;
         }
 
         void _displayActor(ActorComponent actor)
@@ -144,8 +170,6 @@ namespace Debuggers
                 var objectEntryData = new ObjectEntryData(
                     new ObjectEntryKey("InventoryData", actorFullIdentification?.ActorName.GetName(), actor.ActorData.ActorID), 
                     allInventoryData);
-                
-                Debug.Log(allInventoryData.Count);
             
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
             }
@@ -164,8 +188,6 @@ namespace Debuggers
                 var allInventoryData = stationInventory.AllInventoryItems
                                                        .Select(inventoryItem => new ObjectData_Data(ObjectDataType.InventoryData, $"Name: {inventoryItem.Value.ItemName} Amount: {inventoryItem.Value.ItemAmount}"))
                                                        .ToList();
-
-                Debug.Log(allInventoryData.Count);
 
                 var objectEntryData = new ObjectEntryData(
                     new ObjectEntryKey("InventoryData", station.StationName.ToString(), station.StationData.StationID), 

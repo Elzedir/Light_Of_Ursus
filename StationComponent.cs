@@ -69,7 +69,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
         
-        if (openOperatingArea != null)
+        if (openOperatingArea is not null)
         {
             openOperatingArea.OperatingAreaData.AddOperatorToOperatingArea(operatorData);
         }
@@ -83,7 +83,8 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     {
         if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorID))
         {
-            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorID).OperatingAreaData.RemoveOperatorFromOperatingArea();
+            AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorID)?
+                .OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
         else
         {
