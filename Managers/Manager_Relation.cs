@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using Actors;
+using Managers;
 
 public class Manager_Relation
 {

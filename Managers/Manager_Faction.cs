@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;

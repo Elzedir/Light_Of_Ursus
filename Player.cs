@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Actors;
 using Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -236,28 +237,6 @@ public class Player : Controller, IDataPersistence
     public void DisableRootMotionForBody()
     {
         _animator.applyRootMotion = false;
-    }
-
-    public void SetTime(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            switch (context.control.name)
-            {
-                case "numpadMinus":
-                    Manager_DateAndTime.DecreaseTimeScale();
-                    break;
-                case "numpadPlus":
-                    Manager_DateAndTime.IncreaseTimeScale();
-                    break;
-                case "numpad0":
-                    Manager_DateAndTime.ResetTimeScale();
-                    break;
-                default:
-                    Debug.LogWarning($"{context.control.name} key pressed");
-                    break;
-            }
-        }
     }
 
     public void Aim(InputAction.CallbackContext context)

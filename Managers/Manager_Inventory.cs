@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Priority;
+using Tools;
 using UnityEngine;
 
 namespace Managers
@@ -21,32 +22,31 @@ namespace Managers
     [Serializable]
     public abstract class InventoryData : PriorityData
     {
-        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType) { }
+        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType)
+        {
+            AllInventoryItems                   =  new ObservableDictionary<uint, Item>();
+            AllInventoryItems.DictionaryChanged += OnInventoryChanged;
+        }
 
         public abstract ComponentType ComponentType { get; }
 
-        public int             Gold;
-        bool                   _skipNextPriorityCheck;
-        public void            SkipNextPriorityCheck()           => _skipNextPriorityCheck = true;
-        public List<Item>      AllInventoryItems_DataPersistence => AllInventoryItems.Values.ToList(); 
-        Dictionary<uint, Item> _allInventoryItems;
-        public Dictionary<uint, Item> AllInventoryItems
+        public int                       Gold;
+        bool                             _skipNextPriorityCheck;
+        public void                      SkipNextPriorityCheck()           => _skipNextPriorityCheck = true;
+        public List<Item>                AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList(); 
+        public ObservableDictionary<uint, Item> AllInventoryItems;
+
+        void OnInventoryChanged()
         {
-            get => _allInventoryItems ??= new Dictionary<uint, Item>();
-            set 
-            { 
-                _allInventoryItems = value; 
-            
-                if (_skipNextPriorityCheck)
-                {
-                    _skipNextPriorityCheck = false;
-                    return;
-                } 
-            
-                _priorityChangeCheck(DataChanged.ChangedInventory, true); 
+            if (_skipNextPriorityCheck)
+            {
+                _skipNextPriorityCheck = false;
+                return;
             }
+
+            _priorityChangeCheck(DataChanged.ChangedInventory, true);
         }
-        
+
         public Dictionary<uint, Item> GetAllInventoryItemsClone() => AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
         
         public Dictionary<uint, Item> FetchItemsOnHold   = new();
@@ -98,7 +98,7 @@ namespace Managers
             }
         }
 
-        public void SetInventory(Dictionary<uint, Item> allInventoryItems, bool skipPriorityCheck = false)
+        public void SetInventory(ObservableDictionary<uint, Item> allInventoryItems, bool skipPriorityCheck = false)
         {
             if (skipPriorityCheck) SkipNextPriorityCheck();
             AllInventoryItems = allInventoryItems;
@@ -117,6 +117,12 @@ namespace Managers
     
         bool _addItem(Item item)
         {
+            if (item.ItemAmount == 0)
+            {
+                Debug.LogError("Trying to add item with 0 quantity.");
+                return false;    
+            }
+            
             if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
             {
                 AllInventoryItems.Add(item.ItemID, item);
@@ -141,7 +147,7 @@ namespace Managers
         {
             if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
             {
-                Debug.LogWarning("Item not in inventory.");
+                //Debug.LogWarning($"Item {item.ItemID} - {item.ItemAmount} not found in inventory.");
 
                 return false;
             }
@@ -164,13 +170,11 @@ namespace Managers
         {
             if (itemsNotInInventory)
             {
-                if (!_dropItems(items, dropPosition, dropAsGroup))
-                {
-                    Debug.Log("Can't drop items.");
-                    return false;
-                }
+                if (_dropItems(items, dropPosition, dropAsGroup)) return true;
+                
+                Debug.Log("Can't drop items.");
+                return false;
 
-                return true;
             }
         
             if (!_dropItems(items, dropPosition, dropAsGroup))
@@ -340,12 +344,22 @@ namespace Managers
         {
             if (Item.GetItemListTotal_CountAllItems(items) <= MaxInventorySpace) return true;
         
-            Debug.Log("Not enough space in inventory.");
+            //Debug.Log("Not enough space in inventory.");
             return false;
         }
 
         public override List<Item> GetInventoryItemsToFetch()
         {
+            for (var i = 0; i < AllInventoryItems.Count; i++)
+            {
+                var item = AllInventoryItems.ElementAt(i);
+
+                if (item.Value.ItemAmount >= 1) continue;
+                
+                //Debug.LogError($"Item in inventory - ID: {item.Value.ItemID} Qty: {item.Value.ItemAmount} is somehow less than 1.");
+                AllInventoryItems.Remove(item.Key);
+            }
+            
             var itemsToFetch = GetAllInventoryItemsClone();
 
             foreach (var itemID in _getDesiredItemIDs()) itemsToFetch.Remove(itemID);
@@ -383,8 +397,7 @@ namespace Managers
 
             return itemsToFetch.Values.ToList();
         }
-
-        // We should be factoring in space in this function, not in the priority generator. Here we should see how much space we have and then decide what to deliver.
+        
         public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
         {
             var itemsToDeliver = new List<Item>();

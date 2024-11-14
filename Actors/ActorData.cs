@@ -146,6 +146,7 @@ namespace Actors
         ChangedSpecies,
         ChangedInventory,
         DroppedItems,
+        PriorityCompleted,
 
         #region States And Conditions
         ChangedState,

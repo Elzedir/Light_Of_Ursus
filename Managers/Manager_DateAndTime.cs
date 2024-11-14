@@ -2,33 +2,40 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Managers
 {
     public class Manager_DateAndTime : MonoBehaviour
     {
         static TextMeshProUGUI _dateText;
+        public static TextMeshProUGUI DateText => _dateText ??= GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
         static TextMeshProUGUI _timeText;
+        public static TextMeshProUGUI TimeText => _timeText ??= GameObject.Find("Time").GetComponent<TextMeshProUGUI>();
+        static TextMeshProUGUI _timeScaleText;
+        public static TextMeshProUGUI TimeScaleText => _timeScaleText ??= GameObject.Find("TimeScale").GetComponent<TextMeshProUGUI>();
 
         static float _currentTimeScale = 1f;
 
         public static void Initialise()
         {
-            _dateText = GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
-            _timeText = GameObject.Find("Time").GetComponent<TextMeshProUGUI>();
-
             CurrentDate.Initialise();
             Time.Initialise();
         }
 
         public static void SetCurrentDate(string date)
         {
-            _dateText.text = date;
+            DateText.text = date;
         }
 
         public static void SetCurrentTime(string time)
         {
-            _timeText.text = time;
+            TimeText.text = time;
+        }
+        
+        public static void SetCurrentTimeScale(string timeScale)
+        {
+            TimeScaleText.text = timeScale;
         }
 
         public float GetTimeScale()
@@ -36,43 +43,51 @@ namespace Managers
             return _currentTimeScale;
         }
 
-        public static void SetTimeScale(float timeScale)
+        static void _setTimeScale(float timeScale)
         {
-            if (timeScale < 0) { Debug.LogError($"Timescale: {timeScale} cannot be less than 0."); return; }
-
+            if (timeScale < 0) return;
+            
             _currentTimeScale               = timeScale;
             UnityEngine.Time.timeScale      = _currentTimeScale;
             UnityEngine.Time.fixedDeltaTime = 0.02f * UnityEngine.Time.timeScale;
+            
+            SetCurrentTimeScale($"Time Scale: {timeScale}x");
         }
 
         public static IEnumerator SetTimeScaleGradual(float targetTimeScale, float duration)
         {
-            float start   = _currentTimeScale;
-            float elapsed = 0f;
+            var start   = _currentTimeScale;
+            var elapsed = 0f;
 
             while (elapsed < duration)
             {
                 elapsed += UnityEngine.Time.unscaledDeltaTime;
-                SetTimeScale(Mathf.Lerp(start, targetTimeScale, elapsed / duration));
+                _setTimeScale(Mathf.Lerp(start, targetTimeScale, elapsed / duration));
                 yield return null;
             }
 
-            SetTimeScale(targetTimeScale);
+            _setTimeScale(targetTimeScale);
         }
-
+        
+        const float _maxTimeScale = 10;
+        
         public static void DecreaseTimeScale()
         {
-            if (_currentTimeScale - 0.1f > 0) SetTimeScale(_currentTimeScale - 0.1f);
+            if (_currentTimeScale <= 0.1f) return;
+            
+            _setTimeScale(_currentTimeScale - 0.1f);
         }
 
         public static void IncreaseTimeScale()
         {
-            SetTimeScale(_currentTimeScale + 0.1f);
+            if (_currentTimeScale >= _maxTimeScale) return;
+            
+            _setTimeScale(_currentTimeScale + 0.1f);
         }
 
-        public static void ResetTimeScale()
+        public static void ToggleTimeScale()
         {
-            SetTimeScale(1f);
+            _setTimeScale(_currentTimeScale == 0 ? 1f : 0f);
         }
     }
 
@@ -81,19 +96,19 @@ namespace Managers
 
     public class Date
     {
-        public int TotalDays;
+        readonly int _totalDays;
 
-        public Date(int  totalDays) => TotalDays = totalDays;
-        public Date (int day, int month, int year) => TotalDays = ConvertToTotalDays(day, month, year);
+        public Date(int  totalDays) => _totalDays = totalDays;
+        public Date (int day, int month, int year) => _totalDays = ConvertToTotalDays(day, month, year);
 
-        public float GetAge() => CurrentDate.CurrentTotalDays - TotalDays;
+        public float GetAge() => CurrentDate.CurrentTotalDays - _totalDays;
 
         public static (int day, int month, int year) ConvertFromTotalDays(int totalDays)
         {
-            int year          = totalDays     / 60;
-            int remainingDays = totalDays     % 60;
-            int month         = remainingDays / 14;
-            int day           = remainingDays % 14;
+            var year          = totalDays     / 60;
+            var remainingDays = totalDays     % 60;
+            var month         = remainingDays / 14;
+            var day           = remainingDays % 14;
 
             return (day + 1, month + 1, year);
         }
@@ -104,7 +119,7 @@ namespace Managers
         }
     }
 
-    public class CurrentDate
+    public abstract class CurrentDate
     {
         public static int     CurrentTotalDays { get; private set; }
         public static DayName Day;
@@ -157,7 +172,7 @@ namespace Managers
 
     public class CurrentTime
     {
-        bool              _halfTime = false;
+        bool              _halfTime;
         public static int CurrentMinute;
         public static int CurrentHour;
 

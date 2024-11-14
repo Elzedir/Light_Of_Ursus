@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
 using Managers;
 using Priority;
 using UnityEditor;
@@ -18,14 +19,14 @@ public enum StationType
 [RequireComponent(typeof(BoxCollider))]
 public abstract class StationComponent : MonoBehaviour, IInteractable
 {
-    public uint StationID { get { return StationData.StationID; } }
-    public JobsiteComponent Jobsite { get { return StationData.Jobsite; } }
-    bool _initialised = false;
+    public uint             StationID => StationData.StationID;
+    public JobsiteComponent Jobsite   => StationData.Jobsite;
+    bool                    _initialised;
 
     public StationData StationData;
     public abstract StationName StationName { get; }
     public abstract StationType StationType { get; }
-    public bool IsStationBeingOperated { get { return AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0); } }
+    public bool IsStationBeingOperated => AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0);
 
     public PriorityComponent_Station PriorityComponent;
 
@@ -40,30 +41,14 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public abstract uint OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
-    float _baseProgressRatePerHour = 1;
-    List<Item> _currentProductsCrafted = new();
+    const    float      _baseProgressRatePerHour = 1;
+    readonly List<Item> _currentProductsCrafted  = new();
 
     BoxCollider _boxCollider;
     public BoxCollider BoxCollider { get { return _boxCollider ??= gameObject.GetComponent<BoxCollider>(); } }
 
     // Temporary
     public Transform CollectionPoint;
-
-    public Dictionary<(uint ActorID, int OrderID), Order_Base> CurrentOrders = new();
-    public Dictionary<OrderType, Order_Request> OrderRequests = new();
-    public Order_Request GetOrderRequest(OrderType orderType) => OrderRequests.ContainsKey(orderType) ? OrderRequests[orderType] : null;
-    public void AddOrderRequest(OrderType orderType, Order_Request orderRequest)
-    {
-        if (OrderRequests.ContainsKey(orderType))
-        {
-            OrderRequests[orderType] = orderRequest;
-        }
-        else
-        {
-            OrderRequests.Add(orderType, orderRequest);
-        }
-    }
-    public void RemoveOrderRequest(OrderType orderType) => OrderRequests.Remove(orderType);
 
     public void AddOperatorToArea(uint operatorData)
     {
@@ -75,7 +60,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         }
         else
         {
-            Debug.Log($"No open operating areas found in all operating areas.");
+            Debug.Log("No open operating areas found in all operating areas.");
         }
     }
 
@@ -100,7 +85,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         }
     }
 
-    public virtual void OnTick()
+    protected virtual void OnTick()
     {
         if (!_initialised) return;
 
@@ -236,7 +221,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         InitialiseAllowedEmployeePositions();
         InitialiseStartingInventory();
 
-        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneSecond);
+        Manager_TickRate.RegisterTickable(OnTick, TickRate.TenSeconds);
 
         _initialised = true;
     }
@@ -354,12 +339,12 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
 [CustomEditor(typeof(StationComponent), true)]
 public class StationComponent_Editor : Editor
 {
-    bool _showBasicInfo = false;
-    bool _showProductionItems = false;
-    bool _showInventory = false;
-    bool _showOperators = false;
-    bool _showProgress = false;
-    bool _showRecipe = false;
+    bool    _showBasicInfo;
+    bool    _showProductionItems;
+    bool    _showInventory;
+    bool    _showOperators;
+    bool    _showProgress;
+    bool    _showRecipe;
     Vector2 _productionItemScrollPos;
     Vector2 _inventoryItemScrollPos;
 
@@ -396,7 +381,7 @@ public class StationComponent_Editor : Editor
 
                 foreach (var item in stationData.ProductionData.AllProducedItems)
                 {
-                    EditorGUILayout.LabelField(item.ItemName.ToString());
+                    EditorGUILayout.LabelField(item.ItemName);
                 }
 
                 EditorGUILayout.EndScrollView();

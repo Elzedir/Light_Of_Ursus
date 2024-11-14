@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
-
+using Actors;
+using Managers;
 
 
 #if UNITY_EDITOR

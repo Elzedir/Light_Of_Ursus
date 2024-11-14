@@ -1,4 +1,5 @@
 using System.Collections;
+using Actors;
 using UnityEngine;
 
 public interface IInteractable

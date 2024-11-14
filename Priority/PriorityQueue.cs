@@ -22,9 +22,7 @@ namespace Priority
         {
             if (priorityID == 1)
             {
-                if (_currentPosition == 0) return null;
-
-                return _priorityArray[1];
+                return _currentPosition == 0 ? null : _priorityArray[1];
             }
             else
             {
@@ -36,62 +34,50 @@ namespace Priority
 
         public PriorityValue[] PeekAll()
         {
-            if (_currentPosition == 0) return null;
-
-            return _priorityArray.Skip(1).ToArray();
+            return _currentPosition == 0 ? null : _priorityArray.Skip(1).ToArray();
         }
 
         public PriorityValue Dequeue(uint priorityID = 1)
         {
-            if (priorityID == 1)
+            if (_currentPosition == 0) return null;
+
+            var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
+            if (index == 0) return null;
+
+            var priorityValue = _priorityArray[index];
+            _priorityQueue[priorityValue.PriorityID] = 0;
+
+            if (index != _currentPosition)
             {
-                if (_currentPosition == 0) return null;
-
-                PriorityValue priorityValue = _priorityArray[1];
-                _priorityArray[1]                            = _priorityArray[_currentPosition];
-                _priorityQueue[_priorityArray[1].PriorityID] = 1;
-                _priorityQueue[priorityValue.PriorityID]     = 0;
-                _currentPosition--;
-                _moveDown(1);
-
-                return priorityValue;
+                _priorityArray[index]                            = _priorityArray[_currentPosition];
+                _priorityQueue[_priorityArray[index].PriorityID] = index;
             }
-            else
-            {
-                if (!_priorityQueue.TryGetValue(priorityID, out var index)) return null;
-            
-                if (index == 0) return null;
 
-                PriorityValue priorityValue = _priorityArray[index];
-                _priorityQueue[priorityID]                                  = 0;
-                _priorityArray[index]                                       = _priorityArray[_currentPosition];
-                _priorityQueue[_priorityArray[_currentPosition].PriorityID] = index;
-                _currentPosition--;
-                _moveDown(index);
+            _currentPosition--;
+            _moveDown(index);
 
-                return priorityValue;
-            }
+            return priorityValue;
         }
 
         bool _enqueue(uint priorityID, List<float> priorities)
         {
-            if (_priorityQueue.TryGetValue(priorityID, out int index) && index != 0)
+            if (_priorityQueue.TryGetValue(priorityID, out var index) && index != 0)
             {
                 Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
 
-                if (!Update(priorityID, priorities))
-                {
-                    Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
-                    return false;
-                }
+                if (Update(priorityID, priorities)) 
+                    return true;
+                
+                Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
+                return false;
 
-                return true;
             }
 
-            PriorityValue priorityValue = new PriorityValue(priorityID, priorities);
+            var priorityValue = new PriorityValue(priorityID, priorities);
             _currentPosition++;
             _priorityQueue[priorityID] = _currentPosition;
-            if (_currentPosition == _priorityArray.Length) Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
+            if (_currentPosition == _priorityArray.Length) 
+                Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
             _priorityArray[_currentPosition] = priorityValue;
             _moveUp(_currentPosition);
 
@@ -100,30 +86,14 @@ namespace Priority
 
         public bool Update(uint priorityID, List<float> newPriorities)
         {
-            if (newPriorities.Count == 0)
-            {
-                if (!Remove(priorityID))
-                {
-                    Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
-                    return false;
-                }
-            
-                return true;
-            }
+            if (newPriorities.Count == 0) 
+                return Remove(priorityID);
 
-            if (!_priorityQueue.TryGetValue(priorityID, out int index) || index == 0)
-            {
-                if (!_enqueue(priorityID, newPriorities))
-                {
-                    Debug.LogError($"PriorityID: {priorityID} unable to be enqueued.");
-                    return false;
-                }
-
-                return true;
-            }
+            if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0) 
+                return _enqueue(priorityID, newPriorities);
         
-            PriorityValue priorityValueNew = new PriorityValue(priorityID, newPriorities);
-            PriorityValue priorityValueOld = _priorityArray[index];
+            var priorityValueNew = new PriorityValue(priorityID, newPriorities);
+            var priorityValueOld = _priorityArray[index];
 
             _priorityArray[index] = priorityValueNew;
 
@@ -141,15 +111,15 @@ namespace Priority
 
         public bool Remove(uint priorityID)
         {
-            if (!_priorityQueue.TryGetValue(priorityID, out int index) || index == 0)
-            {
-                Debug.LogError($"PriorityID: {priorityID} not found in PriorityQueue.");
+            if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
                 return false;
+
+            if (index != _currentPosition)
+            {
+                _priorityArray[index]                            = _priorityArray[_currentPosition];
+                _priorityQueue[_priorityArray[index].PriorityID] = index;
             }
 
-            _priorityQueue[priorityID]                       = 0;
-            _priorityArray[index]                            = _priorityArray[_currentPosition];
-            _priorityQueue[_priorityArray[index].PriorityID] = index;
             _currentPosition--;
             _moveDown(index);
 
@@ -158,11 +128,11 @@ namespace Priority
 
         void _moveDown(int index)
         {
-            int childL = index * 2;
+            var childL = index * 2;
 
             if (childL > _currentPosition) return;
 
-            int childR = index * 2 + 1;
+            var childR = index * 2 + 1;
             int largerChild;
 
             if (childR > _currentPosition)
@@ -188,18 +158,17 @@ namespace Priority
         void _moveUp(int index)
         {
             if (index == 1) return;
-            int parent = index / 2;
+            var parent = index / 2;
 
-            if (_priorityArray[parent].CompareTo(_priorityArray[index]) < 0)
-            {
-                _swap(parent, index);
-                _moveUp(parent);
-            }
+            if (_priorityArray[parent].CompareTo(_priorityArray[index]) >= 0) return;
+            
+            _swap(parent, index);
+            _moveUp(parent);
         }
 
         void _swap(int indexA, int indexB)
         {
-            PriorityValue tempPriorityValueA = _priorityArray[indexA];
+            var tempPriorityValueA = _priorityArray[indexA];
             _priorityArray[indexA]                            = _priorityArray[indexB];
             _priorityQueue[_priorityArray[indexB].PriorityID] = indexA;
             _priorityArray[indexB]                            = tempPriorityValueA;
@@ -220,7 +189,7 @@ namespace Priority
 
         public int CompareTo(PriorityValue that)
         {
-            for (int i = 0; i < Math.Min(AllPriorities.Count, that.AllPriorities.Count); i++)
+            for (var i = 0; i < Math.Min(AllPriorities.Count, that.AllPriorities.Count); i++)
             {
                 if (AllPriorities[i]      < that.AllPriorities[i]) return -1;
                 else if (AllPriorities[i] > that.AllPriorities[i]) return 1;

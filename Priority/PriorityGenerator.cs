@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
 using Debuggers;
 using Managers;
 using UnityEngine;
@@ -180,7 +181,7 @@ namespace Priority
 
             var allItemsToFetch = inventory_Target.GetInventoryItemsToFetch();
 
-            if (allItemsToFetch.Count == 0)
+            if (Item.GetItemListTotal_CountAllItems(allItemsToFetch) == 0)
             {
                 Debug.Log("No items to fetch.");
                 return new List<float> { 0 };

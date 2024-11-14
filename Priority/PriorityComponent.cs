@@ -38,11 +38,11 @@ namespace Priority
             { ActionName.Scavenge, new PriorityQueue(1) },
         };
 
-        Dictionary<PriorityImportance, List<PriorityValue>> _cachedPriorityQueue;
-        protected abstract Dictionary<DataChanged, List<ActionToChange>>       _actionsToChange { get; set; }
+        Dictionary<PriorityImportance, List<PriorityValue>>              _cachedPriorityQueue;
+        protected abstract Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; }
 
-        bool           _syncingCachedQueue;
-        readonly float _timeDeferment      = 1f;
+        bool        _syncingCachedQueue;
+        const float _timeDeferment = 1f;
 
         public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameter, object> changedParameters)
         {
@@ -183,18 +183,29 @@ namespace Priority
             _actorReferences = new ComponentReference_Actor(actorID);
         }
 
-        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
+        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new()
         {
-            { DataChanged.ChangedInventory, new List<ActionToChange>
             {
-                new ActionToChange(ActionName.Deliver, PriorityImportance.High),
-            }},
+                DataChanged.ChangedInventory, new List<ActionToChange>
+                {
+                    new(ActionName.Deliver, PriorityImportance.High)
+                }
+            },
 
-            { DataChanged.DroppedItems, new List<ActionToChange>
             {
-                new ActionToChange(ActionName.Fetch,    PriorityImportance.High),
-                new ActionToChange(ActionName.Scavenge, PriorityImportance.Medium),
-            }},
+                DataChanged.DroppedItems, new List<ActionToChange>
+                {
+                    new(ActionName.Fetch, PriorityImportance.High),
+                    new(ActionName.Scavenge, PriorityImportance.Medium),
+                }
+            },
+
+            {
+                DataChanged.PriorityCompleted, new List<ActionToChange>
+                {
+                    new(ActionName.Wander, PriorityImportance.High),
+                }
+            },
         };
     }
 
@@ -210,7 +221,7 @@ namespace Priority
         public    uint             JobsiteID => _stationReferences.StationID;
         protected StationComponent _jobsite  => _stationReferences.Station;
 
-        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new()
+        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new()
         {
             { DataChanged.ChangedInventory, new List<ActionToChange>
             {
@@ -240,7 +251,7 @@ namespace Priority
 
             if (allRelevantStations.Count is 0)
             {
-                //Debug.Log("No stations to fetch from.");
+                //Debug.LogError("No stations to fetch from.");
                 return (null, null);
             }
 
@@ -309,7 +320,7 @@ namespace Priority
             }
 
             if (itemsToFetch.Count is 0) return (null, null);
-
+            
             _allPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
 
             return (peekedStation, itemsToFetch);
@@ -349,7 +360,11 @@ namespace Priority
                 _allPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
             }
 
-            var peekedStation = Manager_Station.GetStation(_allPriorityQueues[ActionName.Deliver].Peek().PriorityID);
+            var peek = _allPriorityQueues[ActionName.Deliver].Peek();
+            
+            if (peek is null) return (null, null);
+
+            var peekedStation = Manager_Station.GetStation(peek.PriorityID);
         
             if (peekedStation is null) return (null, null);
 
@@ -362,6 +377,6 @@ namespace Priority
             return (peekedStation, itemsToDeliver);
         }
 
-        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; set; } = new();
+        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new();
     }
 }

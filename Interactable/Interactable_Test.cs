@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Actors;
+using Managers;
 using UnityEngine;
 
 public class Interactable_Test : MonoBehaviour, IInteractable

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
 using Managers;
 using UnityEngine;
 
@@ -63,9 +64,9 @@ public class StationComponent_LogPile : StationComponent
     {
         foreach (var operatingArea in AllOperatingAreasInStation)
         {
-            if (operatingArea.OperatingAreaData.CurrentOperatorID == 0) continue;
-
-            ActorComponent actor = Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID);
+            var actor = operatingArea.OperatingAreaData.CurrentOperator;
+            
+            if (actor is null) continue;
 
             // if (actorHasHaulOrder())
             // {
@@ -77,7 +78,7 @@ public class StationComponent_LogPile : StationComponent
             if (_actorCanHaul(actor))
             {
                 // Deliver resources first before hauling more
-
+                
                 if (_canDeliverItems(actor)) return;
 
                 if (_fetchItemsCheck(actor)) return;
@@ -137,16 +138,12 @@ public class StationComponent_LogPile : StationComponent
             //Debug.Log($"No stations to haul to.");
             return false;
         }
-        
-        Debug.LogWarning($"StationAndItems: {stationAndItems.Station.StationName} - {stationAndItems.Items.Count}");
 
         if (stationAndItems.Items.Count is 0)
         {
             Debug.Log($"No items to haul to {stationAndItems.Station.StationName}.");
             return false;
         }
-
-        Debug.Log($"Actor: {actor.ActorData.ActorID} is delivering items to {stationAndItems.Station.StationName}.");
 
         StartCoroutine(_deliverItems(actor, stationAndItems.Station, stationAndItems.Items));
 
@@ -229,8 +226,6 @@ public class StationComponent_LogPile : StationComponent
             Debug.LogError($"Item: {item.ItemName} - {item.ItemID} has qty: {item.ItemAmount}.");
             return false;
         }
-
-        Debug.Log($"Actor: {actor.ActorData.ActorID} is fetching items from {stationAndItems.Station.StationName}.");
 
         StationData.InventoryData.AddToInventoryItemsOnHold(stationAndItems.Items);
 

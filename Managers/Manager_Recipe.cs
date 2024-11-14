@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Managers
@@ -81,11 +82,23 @@ namespace Managers
         public string     RecipeDescription;
 
         public int                       RequiredProgress;
-        public List<Item>                RequiredIngredients;
+        List<Item> _requiredIngredients;
+        public List<Item> RequiredIngredients =>
+            (_requiredIngredients ??= new List<Item>()).Count is 0
+                ? new List<Item>()
+                : _requiredIngredients.Select(item => new Item(item)).ToList();   
+            
+        
         public StationName               RequiredStation;
         public List<VocationRequirement> RequiredVocations;
 
-        public List<Item>            RecipeProducts;
+        List<Item> _recipeProducts;
+        public List<Item> RecipeProducts =>
+            (_recipeProducts ??= new List<Item>()).Count is 0
+                ? new List<Item>()
+                : _recipeProducts.Select(item => new Item(item)).ToList();
+            
+        
         public List<CraftingQuality> PossibleQualities;
 
         public Recipe(RecipeName recipeName,       string                recipeDescription,
@@ -95,12 +108,12 @@ namespace Managers
             RecipeName        = recipeName;
             RecipeDescription = recipeDescription;
 
-            RequiredProgress    = requiredProgress;
-            RequiredIngredients = requiredIngredients;
-            RequiredStation     = requiredStation;
-            RequiredVocations   = requiredVocations;
+            RequiredProgress     = requiredProgress;
+            _requiredIngredients = new List<Item>(requiredIngredients);
+            RequiredStation      = requiredStation;
+            RequiredVocations    = requiredVocations;
 
-            RecipeProducts    = recipeProducts;
+            _recipeProducts   = new List<Item>(recipeProducts);
             PossibleQualities = possibleQualities;
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Actors;
 using UnityEngine;
 
 public class Interactable_Item : MonoBehaviour, IInteractable

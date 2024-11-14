@@ -20,9 +20,9 @@ public class Manager_GroundCheck
 
     public static bool IsGrounded(GameObject GO = null)
     {
-        if (GO == null)
+        if (GO is null)
         {
-            foreach (GroundedCheckComponent allGroundedObject in AllGroundedObjects)
+            foreach (var allGroundedObject in AllGroundedObjects)
             {
                 allGroundedObject.IsGrounded();
             }

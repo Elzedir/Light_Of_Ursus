@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Managers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,10 +8,10 @@ namespace Debuggers
     public class DebugVisualiser : MonoBehaviour
     {
         static DebugVisualiser _instance;
-        public static DebugVisualiser Instance
-        {
-            get { return _instance ??= GameObject.Find("Debug_Visualiser").GetComponent<DebugVisualiser>(); }
-        }
+
+        public static DebugVisualiser Instance =>
+            _instance ??= GameObject.Find("Debug_Visualiser").GetComponent<DebugVisualiser>();
+    
 
         GameObject _debugPanelParent;
 

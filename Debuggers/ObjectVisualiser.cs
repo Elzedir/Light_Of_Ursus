@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using Actors;
+using Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -9,10 +11,10 @@ namespace Debuggers
     public class ObjectVisualiser : MonoBehaviour
     {
         static ObjectVisualiser _instance;
-        public static ObjectVisualiser Instance
-        {
-            get { return _instance ??= GameObject.Find("Object_Visualiser").GetComponent<ObjectVisualiser>(); }
-        }
+
+        public static ObjectVisualiser Instance =>
+            _instance ??= GameObject.Find("Object_Visualiser").GetComponent<ObjectVisualiser>();
+    
 
         GameObject _objectPanelParent;
 

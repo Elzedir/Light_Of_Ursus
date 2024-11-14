@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Actors;
+using Managers;
 using UnityEngine;
 
 [Serializable]
@@ -21,7 +23,7 @@ public class OperatingAreaData
     #region Operator
     public uint CurrentOperatorID;
     ActorComponent _currentOperator;
-    public ActorComponent CurrentOperator { get { return _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID); } }
+    public ActorComponent CurrentOperator => _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID);
     public bool HasOperator() => CurrentOperatorID != 0;
     public bool IsOperatorMovingToOperatingArea = false;
     #endregion

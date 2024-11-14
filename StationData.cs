@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Managers;
 using UnityEditor;
 using UnityEngine;
@@ -30,9 +31,9 @@ public class StationData
     public uint StationID;
 
     ComponentReference_Jobsite _jobsiteReferences;
-    public void SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
-    public uint JobsiteID { get { return _jobsiteReferences.JobsiteID; } }
-    public JobsiteComponent Jobsite { get { return _jobsiteReferences.Jobsite; } }
+    public void                SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
+    public uint                JobsiteID                    => _jobsiteReferences.JobsiteID;
+    public JobsiteComponent    Jobsite                      => _jobsiteReferences.Jobsite;
 
     public bool StationIsActive = true;
 
@@ -40,10 +41,11 @@ public class StationData
     public InventoryData _inventoryData;
     public InventoryData InventoryData { get { return _inventoryData ??= new InventoryData_Station(StationID); } }
 
-    public List<uint> CurrentOperatorIDs;
-
-    public StationProgressData StationProgressData;
-    public ProductionData ProductionData;
+    public List<uint>          CurrentOperatorIDs;
+    StationProgressData        _stationProgressData;
+    public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
+    ProductionData             _productionData;
+    public ProductionData      ProductionData => _productionData ??= new ProductionData(new List<Item>(), StationID);
 
     public List<uint> AllOperatingAreaIDs;
 
@@ -53,13 +55,10 @@ public class StationData
 
         station.Initialise();
 
-        foreach (var operatingArea in station.AllOperatingAreasInStation)
+        foreach (var operatingArea in station.AllOperatingAreasInStation
+                                             .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID)))
         {
-            if (!AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID))
-            {
-                //Debug.Log($"OperatingArea: {operatingArea.OperatingAreaData.OperatingAreaID}: {operatingArea.name}  was not in AllOperatingAreaIDs");
-                AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
-            }
+            AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
         }
 
         Manager_Initialisation.OnInitialiseStationDatas += _initialiseStationData;
@@ -67,7 +66,7 @@ public class StationData
 
     void _initialiseStationData()
     {
-        if (StationProgressData == null) StationProgressData = new StationProgressData();
+        
     }
 
     public bool AddOperatorToStation(uint operatorID)
@@ -139,10 +138,7 @@ public class ProductionData
             try { return _station ??= Manager_Station.GetStation(StationID); }
             catch (Exception e) { Debug.LogError(e); return null; }
         }
-        set
-        {
-            _station = value;
-        }
+        set => _station = value;
     }
 
     public ProductionData(List<Item> allProducedItems, uint stationID)
@@ -165,18 +161,10 @@ public class ProductionData
 [Serializable]
 public class StationProgressData
 {
-    public float CurrentProgress;
-    public float CurrentQuality;
+    public float  CurrentProgress;
+    public float  CurrentQuality;
     public Recipe CurrentProduct;
-    public void SetCurrentProduct(Recipe currentProduct) => CurrentProduct = currentProduct;
-
-    public StationProgressData()
-    {
-        CurrentProgress = 0;
-        CurrentQuality = 0;
-
-        CurrentProduct = null;
-    }
+    public void   SetCurrentProduct(Recipe currentProduct) => CurrentProduct = currentProduct;
 
     public bool Progress(float progress)
     {
@@ -191,13 +179,11 @@ public class StationProgressData
         CurrentProgress += progress;
         CurrentQuality += progress;
 
-        if (CurrentProgress >= CurrentProduct.RequiredProgress)
-        {
-            CurrentProgress = 0;
-            CurrentQuality = 0;
-            return true;
-        }
+        if (CurrentProgress < CurrentProduct.RequiredProgress) return false;
+        
+        CurrentProgress = 0;
+        CurrentQuality  = 0;
+        return true;
 
-        return false;
     }
 }
