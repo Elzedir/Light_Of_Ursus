@@ -70,10 +70,10 @@ public class StationComponent_Tree : StationComponent
         if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
         if (!AllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
 
-        Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
+        Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
 
-        var cost = _getCost(recipe.RequiredIngredients, actor);
-        var yield = _getYield(recipe.RecipeProducts, actor);
+        var cost = _getCost(recipeMaster.RequiredIngredients, actor);
+        var yield = _getYield(recipeMaster.RecipeProducts, actor);
         
         if (!StationData.InventoryData.InventoryContainsAllItems(cost)) { Debug.Log($"Inventory does not contain cost items."); return; }
         if (!StationData.InventoryData.HasSpaceForItems(yield)) { Debug.Log($"Inventory does not have space for yield items."); return; }

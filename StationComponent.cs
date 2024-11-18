@@ -41,7 +41,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public abstract uint OperatingAreaCount { get; }
     public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
 
-    const    float      _baseProgressRatePerHour = 1;
+    const    float      _baseProgressRatePerHour = 5;
     readonly List<Item> _currentProductsCrafted  = new();
 
     BoxCollider _boxCollider;
@@ -89,115 +89,62 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     {
         if (!_initialised) return;
 
-        // Change the actor check so that an actor with no knowledge of the recipe cannot operate the station if they are AI.
-        // Change the has materials to instead also include delivering materials, so instead make it part of the operation process.
-        // Change material check to only happen when operator is set or leaves, or when material is used.
-
-        if (!StationData.StationIsActive)
-        {
-            Debug.Log($"StationIsActive: {StationData.StationIsActive}");
-            return;
-        }
-
-        if (!IsStationBeingOperated)
-        {
-            Debug.Log($"IsStationBeingOperated: {IsStationBeingOperated}");
-
-            // Trying a new job system instead
-
-            // if (GetOrderRequest(OrderType.Hire) == null)
-            // {
-            //     //  This won't do anything for now, but we'll use it later on.
-            //     OrderRequests.Add(OrderType.Hire, new Order_Request_Hire(StationData.StationID, new List<EmployeePosition> { CoreEmployeePosition }));
-            // }
-            // else
-            // {
-            //     var orderRequest = GetOrderRequest(OrderType.Hire) as Order_Request_Hire;
-
-            //     if (!orderRequest.DesiredEmployeePositions.Contains(CoreEmployeePosition))
-            //     {
-            //         orderRequest.DesiredEmployeePositions.Add(CoreEmployeePosition);
-            //     }
-            //     else
-            //     {
-            //         Debug.Log($"DesiredEmployeePositions already contains CoreEmployeePosition: {CoreEmployeePosition}");
-            //     }
-            // }
-
-            return;
-        }
-
-        if (!StationData.InventoryData.InventoryContainsAllItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients))
-        {
-            //Debug.Log($"InventoryContainsAllItems: false for station {StationData.StationID}");
-
-            // Trying a new job system instead
-            
-            // if (GetOrderRequest(OrderType.Haul_Deliver) == null)
-            // {
-            //     OrderRequests.Add(OrderType.Haul_Deliver, new Order_Request_Haul_Deliver(StationData.StationID, GetInventoryItemsToHaul()));
-            // }
-            // else
-            // {
-            //     var orderRequest = GetOrderRequest(OrderType.Haul_Deliver) as Order_Request_Haul_Deliver;
-                
-            //     var existingItemIDs = orderRequest.Items.Select(i => i.ItemID).ToList();
-            //     var missingItems = StationData.InventoryData.InventoryMissingItems(StationData.StationProgressData.CurrentProduct.RequiredIngredients);
-
-            //     foreach (var missingItem in missingItems)
-            //     {
-            //         if (!existingItemIDs.Contains(missingItem.ItemID))
-            //         {
-            //             orderRequest.Items.Add(missingItem);
-            //         }
-            //         else
-            //         {
-            //             var existingItem = orderRequest.Items.FirstOrDefault(i => i.ItemID == missingItem.ItemID);
-
-            //             if (existingItem.ItemAmount < missingItem.ItemAmount)
-            //             {
-            //                 existingItem.ItemAmount += missingItem.ItemAmount;
-            //             }
-            //             else
-            //             {
-            //                 Debug.Log($"Items already contains enough of missing item {missingItem.ItemID}. Waiting for hauler to deliver.");
-            //             }
-            //         }
-            //     }
-            // }
-            return;
-        }
-
         _operateStation();
     }
 
     protected virtual void _operateStation()
     {
-        if (StationData.StationProgressData.CurrentProduct.RecipeName == RecipeName.None && DefaultProduct != RecipeName.None)
-        {
-            //Debug.Log($"CurrentProduct is None: {StationData.StationProgressData.CurrentProduct}");
-
-            if (Jobsite.JobsiteData.JobsiteFactionID != 1)
-            {
-                //Debug.Log($"Setting CurrentProduct to DefaultProduct: {DefaultProduct}");
-
-                StationData.StationProgressData.CurrentProduct = Manager_Recipe.GetRecipe(DefaultProduct);
-            }
-        }
+        if (!_passesStationChecks()) return;
 
         foreach (var operatingArea in AllOperatingAreasInStation)
         {
-            var progressMade = operatingArea.Operate(_baseProgressRatePerHour, StationData.StationProgressData.CurrentProduct);
+            var progressMade = operatingArea.Operate(_baseProgressRatePerHour,
+                StationData.StationProgressData.CurrentProduct);
             var itemCrafted = StationData.StationProgressData.Progress(progressMade);
 
             if (!itemCrafted) continue;
 
             // For now is the final person who adds the last progress, but change to a cumulative system later.
             CraftItem(
-                StationData.StationProgressData.CurrentProduct.RecipeName, 
+                StationData.StationProgressData.CurrentProduct.RecipeName,
                 Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID)
-                );
+            );
         }
+    }
+
+    bool _passesStationChecks()
+    {
+        if (!StationData.StationIsActive) 
+            return false;
+        
+        if (!IsStationBeingOperated) 
+            return false;
+
+        var success = false;
+
+        while (!success)
+        {
+            try
+            {
+                success = StationData.InventoryData.InventoryContainsAllItems(
+                    StationData.StationProgressData.CurrentProduct.RequiredIngredients);
+                break;
+            }
+            catch (Exception e)
+            {
+                StationData.StationProgressData.CurrentProduct ??= Manager_Recipe.GetRecipe_Master(DefaultProduct);
+
+                if (StationData.StationProgressData.CurrentProduct.RecipeName != RecipeName.None ||
+                    DefaultProduct                                            == RecipeName.None)
+                {
+                    break;
+                }
+                
+                //Console.WriteLine(e);
+            }    
+        }
+        
+        return success;
     }
 
     public void Initialise()

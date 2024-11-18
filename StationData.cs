@@ -163,8 +163,8 @@ public class StationProgressData
 {
     public float  CurrentProgress;
     public float  CurrentQuality;
-    public Recipe CurrentProduct;
-    public void   SetCurrentProduct(Recipe currentProduct) => CurrentProduct = currentProduct;
+    public Recipe_Master CurrentProduct;
+    public void   SetCurrentProduct(Recipe_Master currentProduct) => CurrentProduct = currentProduct;
 
     public bool Progress(float progress)
     {

@@ -131,6 +131,9 @@ public class Item
     public string ItemName;
     public uint ItemAmount;
     public uint MaxStackSize;
+    
+    Item_Master _masterItem;
+    public Item_Master MasterItem => _masterItem ??= Manager_Item.GetMasterItem(ItemID);
 
     public Item(uint itemID, uint itemAmount)
     {
@@ -156,23 +159,14 @@ public class Item
         MaxStackSize = item.MaxStackSize;
     }
 
-    public static uint GetItemListTotal_CountAllItems(List<Item> items) 
-    => (uint)items.Sum(item => item.ItemAmount);
-    public static uint GetItemListTotal_CountSpecificItem(List<Item> items, uint itemID) 
-    => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
+    public static uint GetItemListTotal_CountAllItems(List<Item> items)
+        => (uint)items.Sum(item => item.ItemAmount);
+
+    public static uint GetItemListTotal_CountSpecificItem(List<Item> items, uint itemID)
+        => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
 
     public static float GetItemListTotal_Weight(List<Item> items)
-    {
-        float totalWeight = 0;
-
-        foreach (Item item in items)
-        {
-            totalWeight += item.ItemAmount * Manager_Item.GetMasterItem(item.ItemID).CommonStats_Item.ItemWeight;
-        }
-
-        return totalWeight;
-    }
-
+        => items.Sum(item => item.ItemAmount * item.MasterItem.CommonStats_Item.ItemWeight);
 }
 
 public class Item_Master

@@ -145,9 +145,6 @@ namespace Managers
             Manager_Initialisation.InitialiseActors();
             Manager_Initialisation.InitialiseJobsites();
 
-            DebugVisualiser.Instance.Initialise();
-            ObjectVisualiser.Instance.Initialise();
-
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
         }

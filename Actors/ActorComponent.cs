@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Managers;
 using Priority;
 using UnityEngine;
@@ -34,11 +35,14 @@ namespace Actors
         public PriorityComponent_Actor PriorityComponent => _priorityComponent ??= new PriorityComponent_Actor(_actorID);
         public Coroutine               ActorHaulCoroutine;
 
+        ActionName _currentAction => PriorityComponent.GetCurrentAction();
+
         void Awake()
         {
             Manager_Initialisation.OnInitialiseActors += Initialise;
         }
 
+        bool _initialised;
         public void Initialise()
         {
             if (ActorData == null) throw new ArgumentException($"Actor: {name} doesn't have ActorData.");
@@ -51,11 +55,20 @@ namespace Actors
             Manager_TickRate.RegisterTickable(_onTick, TickRate.OneSecond);
 
             _updateVisuals();
+            
+            _initialised = true;
         }
 
-        static void _onTick()
-        {   
+        void _onTick()
+        {
+            if (!_initialised) return;
             
+            _makeDecision();
+        }
+
+        void _makeDecision()
+        {
+            PriorityComponent.GetHighestPriority(ActionName.All);
         }
 
         void _updateVisuals()
@@ -83,6 +96,30 @@ namespace Actors
             RigidBody.linearVelocity = Vector3.zero;
             transform.position = targetPosition;
         }
+
+        static readonly Dictionary<ActionName, ActionType> _allActionName = new()
+        {
+            {ActionName.Wander, ActionType.Non_Combat},
+            {ActionName.Deliver, ActionType.Non_Combat},
+            {ActionName.Fetch, ActionType.Non_Combat},
+            {ActionName.Scavenge, ActionType.Non_Combat},
+        };
+
+        static readonly Dictionary<ActionType, List<ActionName>> _allActionTypes = new()
+        {
+            {
+                ActionType.Combat, new List<ActionName>()
+                {
+
+                }
+            },
+            {
+                ActionType.Non_Combat, new List<ActionName>()
+                {
+
+                }
+            },
+        };
     }
 
     public enum ActionName
@@ -95,5 +132,13 @@ namespace Actors
         Deliver,
         Fetch,
         Scavenge,
+    }
+
+    public enum ActionType
+    {
+        None, 
+        
+        Combat,
+        Non_Combat
     }
 }

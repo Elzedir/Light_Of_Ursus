@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Managers;
 using UnityEngine;
 using UnityEngine.UI;
+using Time = UnityEngine.Time;
 
 namespace Debuggers
 {
@@ -14,35 +15,27 @@ namespace Debuggers
     
 
         GameObject _debugPanelParent;
-
-        GameObject DebugPanelParent
-        {
-            get { return _debugPanelParent ??= _debugPanelParent = Manager_Game.FindTransformRecursively(transform, "DebugPanelParent").gameObject; }
-        }
+        GameObject DebugPanelParent => _debugPanelParent ??= _debugPanelParent =
+            Manager_Game.FindTransformRecursively(transform, "DebugPanelParent").gameObject;
+        RectTransform _debugPanelParentRect;
+        RectTransform DebugPanelParentRect => _debugPanelParentRect ??= _debugPanelParentRect =
+            DebugPanelParent.GetComponent<RectTransform>();
 
         Button _xButton;
-        Button XButton
-        {
-            get { return _xButton ??= _xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>(); }
-        }
+        Button XButton => _xButton ??=
+            _xButton = Manager_Game.FindTransformRecursively(transform, "XPanel").GetComponent<Button>();
 
         GameObject _debugSectionPrefab;
-        GameObject DebugSectionPrefab
-        {
-            get { return _debugSectionPrefab ??= _debugSectionPrefab = Manager_Game.FindTransformRecursively(transform, "DebugSectionPrefab").gameObject; }
-        }
+        GameObject DebugSectionPrefab => _debugSectionPrefab ??= _debugSectionPrefab =
+            Manager_Game.FindTransformRecursively(transform, "DebugSectionPrefab").gameObject;
 
         GameObject _debugEntryPrefab;
-        public GameObject DebugEntryPrefab
-        {
-            get { return _debugEntryPrefab ??= _debugEntryPrefab = Manager_Game.FindTransformRecursively(transform, "DebugEntryPrefab").gameObject; }
-        }
+        public GameObject DebugEntryPrefab => _debugEntryPrefab ??= _debugEntryPrefab =
+            Manager_Game.FindTransformRecursively(transform, "DebugEntryPrefab").gameObject;
 
         GameObject _debugDataPrefab;
-        public GameObject DebugDataPrefab
-        {
-            get { return _debugDataPrefab ??= _debugDataPrefab = Manager_Game.FindTransformRecursively(transform, "DebugDataPrefab").gameObject; }
-        }
+        public GameObject DebugDataPrefab => _debugDataPrefab ??= _debugDataPrefab =
+            Manager_Game.FindTransformRecursively(transform, "DebugDataPrefab").gameObject;
 
         readonly Dictionary<DebugSectionType, DebugSection> _allDebugSections = new();
 
@@ -51,11 +44,8 @@ namespace Debuggers
             _togglePrefabs(false);
         }
 
-        public void Initialise()
-        {
-            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneTenthSecond);
-        }
-
+        const float _tickRate = 0.1f;
+        float       _nextTickTime;
         public void Update()
         {
             if (!Input.GetKeyDown(KeyCode.F1)) return;
@@ -68,11 +58,17 @@ namespace Debuggers
             {
                 _openPanel();
             }
+            
+            if (Time.time < _nextTickTime) return;
+            
+            _nextTickTime = Time.time + _tickRate;
+            
+            _onTick();
         }
 
         void _onTick()
         {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(DebugPanelParent.GetComponent<RectTransform>());
+            LayoutRebuilder.ForceRebuildLayoutImmediate(DebugPanelParentRect);
         }
 
         void _togglePrefabs(bool toggle)

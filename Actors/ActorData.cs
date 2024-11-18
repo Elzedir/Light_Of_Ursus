@@ -29,6 +29,7 @@ namespace Actors
         public VocationData          VocationData;
         public SpeciesAndPersonality SpeciesAndPersonality;
         public StatsAndAbilities     StatsAndAbilities;
+        public StatesAndConditions   StatesAndConditions;
         public InventoryData         InventoryData;
         public EquipmentData         EquipmentData;
         public QuestData             ActorQuests;
@@ -44,14 +45,14 @@ namespace Actors
         {
             var actor = Manager_Actor.GetActor(ActorID, true);
 
-            if (actor == null)
+            if (actor is null)
             {
                 Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
             }
         
             var actorFaction = Manager_Faction.GetFaction(ActorFactionID);
 
-            if (actorFaction == null)
+            if (actorFaction is null)
             {
                 Debug.LogError($"Actor {ActorID} cannot find faction {ActorFactionID}.");
                 return;
@@ -59,7 +60,7 @@ namespace Actors
 
             var factionGO = GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
 
-            if (factionGO == null)
+            if (factionGO is null)
             {
                 Debug.LogError($"Actor {ActorID} cannot find faction GameObject {actorFaction.FactionID}: {actorFaction.FactionName}.");
                 return;
@@ -84,11 +85,11 @@ namespace Actors
             VocationData          = new VocationData(ActorID);
             SpeciesAndPersonality = new SpeciesAndPersonality(ActorID);
             StatsAndAbilities     = new StatsAndAbilities(ActorID);
+            StatesAndConditions   = new StatesAndConditions(ActorID);
 
             InventoryData = new InventoryData_Actor(ActorID);
             EquipmentData = new EquipmentData(ActorID);
             ActorQuests   = new QuestData(ActorID);
-            //OrderData = new OrderData(ActorID);
             CurrentOrder = null;
         }
     }
@@ -221,7 +222,7 @@ namespace Actors
         public          Transform ActorTransform { get { return _actorTransform ??= Manager_Actor.GetActor(ActorReference.ActorID)?.transform; } }
         public void SetActorTransformProperties()
         {
-            if (ActorTransform == null)
+            if (ActorTransform is null)
             {
                 Debug.Log($"ActorTransform for actor {ActorReference.ActorID} is null.");
                 return;
@@ -353,20 +354,12 @@ namespace Actors
         {
         
             Actor_Stats      = new Actor_Stats(actorID);
-            Actor_Conditions = new Actor_Conditions(actorID);
-            Actor_States     = new Actor_States(actorID);
             Actor_Aspects    = new Actor_Aspects(actorID);
             Actor_Abilities  = new Actor_Abilities(actorID);
         }
     
         public Actor_Stats Actor_Stats;
         public void        SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
-
-        public Actor_Conditions Actor_Conditions;
-        public void             SetActorStates(Actor_Conditions actorStates) => Actor_Conditions = actorStates;
-
-        public Actor_States Actor_States;
-        public void         SetActorStates(Actor_States actorStates) => Actor_States = actorStates;
 
         public Actor_Aspects Actor_Aspects;
         public void          SetActorAspects(Actor_Aspects actor_Aspects) => Actor_Aspects = actor_Aspects;
@@ -573,7 +566,7 @@ namespace Actors
 
         public IEnumerator CraftItemAll(RecipeName recipeName)
         {
-            var recipe = Manager_Recipe.GetRecipe(recipeName);
+            var recipe = Manager_Recipe.GetRecipe_Master(recipeName);
 
             var actorData = Manager_Actor.GetActorData(ActorReference.ActorID);
 
@@ -602,15 +595,15 @@ namespace Actors
         {
             if (!KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); yield break; }
 
-            Recipe recipe = Manager_Recipe.GetRecipe(recipeName);
+            Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
 
             var actorData = Manager_Actor.GetActorData(ActorReference.ActorID);
             
-            if (!_inventoryContainsAllIngredients(actorData, recipe.RequiredIngredients)) { Debug.Log("Inventory does not contain all ingredients."); yield break; }
-            if (!actorData.InventoryData.HasSpaceForItems(recipe.RecipeProducts)) { Debug.Log("Inventory does not have space for produced items."); yield break; }
+            if (!_inventoryContainsAllIngredients(actorData, recipeMaster.RequiredIngredients)) { Debug.Log("Inventory does not contain all ingredients."); yield break; }
+            if (!actorData.InventoryData.HasSpaceForItems(recipeMaster.RecipeProducts)) { Debug.Log("Inventory does not have space for produced items."); yield break; }
 
-            actorData.InventoryData.RemoveFromInventory(recipe.RequiredIngredients);
-            actorData.InventoryData.AddToInventory(recipe.RecipeProducts);
+            actorData.InventoryData.RemoveFromInventory(recipeMaster.RequiredIngredients);
+            actorData.InventoryData.AddToInventory(recipeMaster.RecipeProducts);
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged)

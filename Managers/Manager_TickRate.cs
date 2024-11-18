@@ -15,6 +15,8 @@ namespace Managers
     {
         static Dictionary<TickRate, float>        _nextTickTimes;
         static Dictionary<TickRate, List<Action>> _tickableGroups;
+        
+        TickableSpreader _tickableSpreader;
 
         public void OnSceneLoaded()
         {
@@ -41,6 +43,8 @@ namespace Managers
                 { TickRate.OneGameMonth, new List<Action>() },
                 { TickRate.OneGameYear, new List<Action>() }
             };
+            
+            _tickableSpreader = new TickableSpreader(new Dictionary<float, SpreadTickables>());
         }
 
         void Update()
@@ -54,6 +58,8 @@ namespace Managers
                 _tick(tickRate);
                 _nextTickTimes[tickRate] = currentTime + _getTickInterval(tickRate);
             }
+            
+            _tickableSpreader.Update();
         }
 
         float _getTickInterval(TickRate tickRate)
@@ -88,7 +94,7 @@ namespace Managers
             }
         }
 
-        void _tick(TickRate tickRate)
+        static void _tick(TickRate tickRate)
         {
             foreach (var tickable in _tickableGroups[tickRate])
             {
@@ -110,7 +116,7 @@ namespace Managers
 
         static void _onTickStatic()
         {
-            if (_deferredActions == null || _deferredActions.Count <= 0) return;
+            if (_deferredActions is not { Count: > 0 }) return;
 
             _tickDeferredActions();
         }
@@ -171,6 +177,71 @@ namespace Managers
             {
                 _executeDeferredAction(t);
             }
+        }
+    }
+}
+
+public abstract class SpreadTickables
+{
+    public readonly Queue<Action> Tickables;
+    public readonly int           MaxExecutionsPerTick;
+    public          float         NextTickTime;
+    
+    public SpreadTickables(float tickInterval, int maxExecutionsPerTick, Queue<Action> tickables)
+    {
+        Tickables     = tickables;
+        MaxExecutionsPerTick = maxExecutionsPerTick;
+        NextTickTime  = Time.time + tickInterval;
+    }
+}
+
+public class TickableSpreader
+{
+    readonly Dictionary<float, SpreadTickables> _spreadTickables;
+    
+    public TickableSpreader(Dictionary<float, SpreadTickables> spreadTickables)
+    {
+        _spreadTickables = spreadTickables;
+    }
+
+    public void RegisterTickable(float tickRate, SpreadTickables tickable)
+    {
+        if (!_spreadTickables.TryAdd(tickRate, tickable))
+        {
+            Debug.LogError($"TickRate: {tickRate} already exists in SpreadTickables.");
+        }
+    }
+
+    public void UnregisterTickable(float tickRate, SpreadTickables tickable)
+    {
+        if (!_spreadTickables.Remove(tickRate, out _))
+        {
+            Debug.LogError($"TickRate: {tickRate} does not exist in SpreadTickables.");
+        }
+    }
+
+    public void Update()
+    {
+        foreach (var spreadTickable in _spreadTickables
+                     .Where(spreadTickable =>
+                         !(Time.time < spreadTickable.Value.NextTickTime)))
+        {
+            _executeTickables(spreadTickable.Value);
+            spreadTickable.Value.NextTickTime =
+                Time.time + (spreadTickable.Key / spreadTickable.Value.MaxExecutionsPerTick);
+        }
+    }
+
+    static void _executeTickables(SpreadTickables spreadTickables)
+    {
+        var tickableQueue = spreadTickables.Tickables;
+        var maxExecutions = spreadTickables.MaxExecutionsPerTick;
+
+        for (var i = 0; i < maxExecutions; i++)
+        {
+            if (tickableQueue.Count <= 0) break;
+
+            tickableQueue.Dequeue().Invoke();
         }
     }
 }

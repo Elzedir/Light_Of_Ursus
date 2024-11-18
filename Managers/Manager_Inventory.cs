@@ -36,7 +36,7 @@ namespace Managers
         public List<Item>                AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList(); 
         public ObservableDictionary<uint, Item> AllInventoryItems;
 
-        void OnInventoryChanged()
+        void OnInventoryChanged(uint componentID)
         {
             if (_skipNextPriorityCheck)
             {

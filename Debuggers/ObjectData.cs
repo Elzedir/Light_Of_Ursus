@@ -10,6 +10,8 @@ namespace Debuggers
 
         FullIdentification,
         InventoryData,
+        PriorityData,
+        ProgressData,
     }
 
     public class ObjectData : MonoBehaviour

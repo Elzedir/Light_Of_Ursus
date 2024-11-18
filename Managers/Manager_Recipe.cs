@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects;
+using UnityEditor;
 using UnityEngine;
 
 namespace Managers
 {
     public class Manager_Recipe : MonoBehaviour
     {
-        static readonly Dictionary<RecipeName, Recipe> _allRecipes = new();
+        const string  _allRecipesSOPath = "ScriptableObjects/AllRecipes_SO";
+        
+        static AllRecipes_SO _allRecipes;
+        static AllRecipes_SO AllRecipes => _allRecipes ??= _getOrCreateAllRecipesSO();
 
         public void OnSceneLoaded()
         {
@@ -16,25 +21,46 @@ namespace Managers
 
         void _initialiseCrafting()
         {
-            _consumableRecipes();
-            _rawMaterialRecipes();
-            _processedMaterialRecipes();
-            _weaponRecipes();
+            var recipeMasterList = new List<Recipe_Master>();
+            
+            _defaultRecipes(ref recipeMasterList);
+            _consumableRecipes(ref recipeMasterList);
+            _rawMaterialRecipes(ref recipeMasterList);
+            _processedMaterialRecipes(ref recipeMasterList);
+            _weaponRecipes(ref recipeMasterList);
+            
+            var allRecipesArray = recipeMasterList.ToArray();
+            
+            AllRecipes.InitialiseAllRecipes(allRecipesArray);
         }
 
-        void _weaponRecipes()
+        void _defaultRecipes(ref List<Recipe_Master> recipeMasterList)
+        {
+            recipeMasterList.Add(new Recipe_Master(
+                recipeName: RecipeName.None,
+                recipeDescription: "Select a recipe",
+                requiredProgress: 0,
+                requiredIngredients: new List<Item>(),
+                requiredStation: StationName.None,
+                requiredVocations: new List<VocationRequirement>(),
+                recipeProducts: new List<Item>(),
+                possibleQualities: new List<CraftingQuality>()
+            ));
+        }
+
+        void _weaponRecipes(ref List<Recipe_Master> recipeMasterList)
         {
 
         }
 
-        void _consumableRecipes()
+        void _consumableRecipes(ref List<Recipe_Master> recipeMasterList)
         {
 
         }
 
-        void _rawMaterialRecipes()
+        void _rawMaterialRecipes(ref List<Recipe_Master> recipeMasterList)
         {
-            _allRecipes.Add(RecipeName.Log, new Recipe(
+            recipeMasterList.Add(new Recipe_Master(
                 recipeName: RecipeName.Log,
                 recipeDescription: "Chop a log",
                 requiredProgress: 10,
@@ -46,9 +72,9 @@ namespace Managers
             ));
         }
 
-        void _processedMaterialRecipes()
+        void _processedMaterialRecipes(ref List<Recipe_Master> recipeMasterList)
         {
-            _allRecipes.Add(RecipeName.Plank, new Recipe(
+            recipeMasterList.Add(new Recipe_Master(
                 recipeName: RecipeName.Plank,
                 recipeDescription: "Craft a plank",
                 requiredProgress: 10,
@@ -60,11 +86,19 @@ namespace Managers
             ));
         }
 
-        public static Recipe GetRecipe(RecipeName recipeName)
+        public static Recipe_Master GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName);
+        
+        static AllRecipes_SO _getOrCreateAllRecipesSO()
         {
-            if (!_allRecipes.TryGetValue(recipeName, out var recipe)) throw new ArgumentException($"RecipeName: {recipeName} is not in recipe list.");
-
-            return recipe;
+            var allRecipesSO = Resources.Load<AllRecipes_SO>(_allRecipesSOPath);
+            
+            if (allRecipesSO is not null) return allRecipesSO;
+            
+            allRecipesSO = ScriptableObject.CreateInstance<AllRecipes_SO>();
+            AssetDatabase.CreateAsset(allRecipesSO, $"Assets/Resources/{_allRecipesSOPath}");
+            AssetDatabase.SaveAssets();
+            
+            return allRecipesSO;
         }
     }
 
@@ -75,8 +109,30 @@ namespace Managers
         Log
     }
 
-    [Serializable]
     public class Recipe
+    {
+        public readonly RecipeName                RecipeName;
+        public          int                       CurrentProgress;
+        
+        public         string                    RecipeDescription    => RecipeMaster.RecipeDescription;
+        public          int                       RequiredProgress    => RecipeMaster.RequiredProgress;
+        public          List<Item>                RequiredIngredients => RecipeMaster.RequiredIngredients;
+        public          StationName               RequiredStation     => RecipeMaster.RequiredStation;
+        public          List<VocationRequirement> RequiredVocations   => RecipeMaster.RequiredVocations;
+        public          List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
+        
+        Recipe_Master _recipeMaster;
+        Recipe_Master RecipeMaster => _recipeMaster ??= Manager_Recipe.GetRecipe_Master(RecipeName);
+        
+        public Recipe (RecipeName recipeName)
+        {
+            RecipeName = recipeName;
+            CurrentProgress = 0;
+        }
+    }
+
+    [Serializable]
+    public class Recipe_Master
     {
         public RecipeName RecipeName;
         public string     RecipeDescription;
@@ -101,7 +157,7 @@ namespace Managers
         
         public List<CraftingQuality> PossibleQualities;
 
-        public Recipe(RecipeName recipeName,       string                recipeDescription,
+        public Recipe_Master(RecipeName recipeName,       string                recipeDescription,
                       int        requiredProgress, List<Item>            requiredIngredients, StationName requiredStation, List<VocationRequirement> requiredVocations, 
                       List<Item> recipeProducts,   List<CraftingQuality> possibleQualities)
         {

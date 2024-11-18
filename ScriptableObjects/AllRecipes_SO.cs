@@ -1,0 +1,332 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Managers;
+using ScriptableObjects;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace ScriptableObjects
+{
+    [CreateAssetMenu(fileName = "AllRecipes_SO", menuName = "SOList/AllRecipes_SO")]
+    [Serializable]
+    public class AllRecipes_SO : ScriptableObject
+    {
+        [SerializeField] Recipe_Master[]   _recipes;
+        public           Recipe_Master[]   Recipes => _recipes;
+        Dictionary<RecipeName, int>        _recipeIndexLookup;
+        public Dictionary<RecipeName, int> RecipeIndexLookup => _recipeIndexLookup ??= _buildIndexLookup();
+        int                                _currentIndex;
+        
+        public void InitialiseAllRecipes(Recipe_Master[] recipes)
+        {
+            _recipes = new Recipe_Master[recipes.Length * 2];
+            Array.Copy(recipes, _recipes, recipes.Length);
+            _currentIndex = recipes.Length;
+            _buildIndexLookup();
+        }
+
+        Dictionary<RecipeName, int> _buildIndexLookup()
+        {
+            var newIndexLookup = new Dictionary<RecipeName, int>();
+            
+            for (var i = 0; i < _recipes.Length; i++)
+            {
+                if (_recipes[i] != null)
+                {
+                    newIndexLookup[_recipes[i].RecipeName] = i;
+                }
+            }
+            
+            return newIndexLookup;
+        }
+
+        public Recipe_Master GetRecipe_Master(RecipeName recipeName)
+        {
+            if (RecipeIndexLookup.TryGetValue(recipeName, out var index))
+            {
+                return _recipes[index];
+            }
+
+            Debug.LogWarning($"Recipe {recipeName} does not exist in Recipes.");
+            return null;
+        }
+
+        public void AddRecipe(RecipeName recipeName, Recipe_Master recipe)
+        {
+            if (RecipeIndexLookup.ContainsKey(recipeName))
+            {
+                Debug.LogWarning($"Recipe {recipeName} already exists in Recipes.");
+                return;
+            }
+
+            if (_currentIndex >= _recipes.Length)
+            {
+                _compactAndResizeArray();
+            }
+
+            _recipes[_currentIndex]       = recipe;
+            RecipeIndexLookup[recipeName] = _currentIndex;
+            _currentIndex++;
+        }
+
+        public void RemoveRecipe(RecipeName recipeName)
+        {
+            if (!RecipeIndexLookup.TryGetValue(recipeName, out var index))
+            {
+                Debug.LogWarning($"Recipe {recipeName} does not exist in Recipes.");
+                return;
+            }
+
+            _recipes[index] = null;
+            RecipeIndexLookup.Remove(recipeName);
+            
+            if (RecipeIndexLookup.Count < _recipes.Length / 4)
+            {
+                _compactAndResizeArray();
+            }
+        }
+        
+        void _compactAndResizeArray()
+        {
+            var newSize = 0;
+            
+            for (var i = 0; i < _recipes.Length; i++)
+            {
+                if (_recipes[i] == null) continue;
+                
+                _recipes[newSize]                         = _recipes[i];
+                RecipeIndexLookup[_recipes[i].RecipeName] = newSize;
+                newSize++;
+            }
+
+            Array.Resize(ref _recipes, Math.Max(newSize * 2, _recipes.Length));
+            _currentIndex = newSize;
+        }
+
+        public void UpdateRecipe(RecipeName recipeName, Recipe_Master recipe)
+        {
+            if (RecipeIndexLookup.TryGetValue(recipeName, out var index))
+            {
+                _recipes[index] = recipe;
+            }
+            else
+            {
+                AddRecipe(recipeName, recipe);
+            }
+        }
+
+        public void ClearRecipeData()
+        {
+            _recipes = Array.Empty<Recipe_Master>();
+            RecipeIndexLookup.Clear();
+            _currentIndex = 0;
+        }
+    }
+}
+
+[CustomEditor(typeof(AllRecipes_SO))]
+public class AllRecipes_SOEditor : Editor
+{
+    int _selectedRecipeIndex = -1;
+
+    Vector2 _recipeScrollPos;
+
+    bool _showIngredients;
+    bool _showProducts;
+    bool _showVocations;
+
+    void _unselectAll()
+    {
+        _showIngredients = false;
+        _showProducts    = false;
+        _showVocations   = false;
+    }
+
+    public override void OnInspectorGUI()
+    {
+        var allRecipeSO = (AllRecipes_SO)target;
+        
+        if (allRecipeSO?.Recipes is null || allRecipeSO.Recipes.Length is 0)
+        {
+            EditorGUILayout.LabelField("No Recipes Found", EditorStyles.boldLabel);
+            return;
+        }
+    
+        if (GUILayout.Button("Clear Recipe Data"))
+        {
+            allRecipeSO.ClearRecipeData();
+            EditorUtility.SetDirty(allRecipeSO);
+        }
+    
+        if (GUILayout.Button("Unselect All")) _unselectAll();
+    
+        EditorGUILayout.LabelField("All Recipes", EditorStyles.boldLabel);
+
+        var nonNullRecipes = allRecipeSO.Recipes.Where(recipe =>
+            recipe            != null &&
+            recipe.RecipeName != RecipeName.None).ToArray();
+
+        _recipeScrollPos = EditorGUILayout.BeginScrollView(_recipeScrollPos,
+            GUILayout.Height(Math.Min(200, nonNullRecipes.Length * 20)));
+        _selectedRecipeIndex = GUILayout.SelectionGrid(_selectedRecipeIndex, _getRecipeNames(nonNullRecipes), 1);
+        EditorGUILayout.EndScrollView();
+
+        if (_selectedRecipeIndex >= 0 && _selectedRecipeIndex < nonNullRecipes.Length)
+        {
+            _drawRecipeData(nonNullRecipes[_selectedRecipeIndex]);
+        }
+    }
+
+    string[] _getRecipeNames(Recipe_Master[] recipes) =>
+        recipes.Select(recipe => recipe.RecipeName.ToString()).ToArray();
+    
+
+    void _drawRecipeData(Recipe_Master recipe)
+    {
+        EditorGUILayout.LabelField("Recipe Data", EditorStyles.boldLabel);
+
+        EditorGUILayout.LabelField("Recipe Name",        $"{recipe.RecipeName}");
+        EditorGUILayout.LabelField("Recipe Description", recipe.RecipeDescription);
+        EditorGUILayout.LabelField("Required Progress",  $"{recipe.RequiredProgress}");
+        EditorGUILayout.LabelField("Required Station",   $"{recipe.RequiredStation}");
+
+        if (recipe.RequiredIngredients != null)
+        {
+            EditorGUILayout.LabelField("RequiredIngredients", EditorStyles.boldLabel);
+
+            var requiredIngredients = recipe.RequiredIngredients;
+
+            _showIngredients = EditorGUILayout.Toggle("Ingredients", _showIngredients);
+
+            if (_showIngredients)
+            {
+                _drawIngredients(requiredIngredients);
+            }
+        }
+
+        if (recipe.RecipeProducts != null)
+        {
+            EditorGUILayout.LabelField("Recipe Products", EditorStyles.boldLabel);
+
+            var recipeProducts = recipe.RecipeProducts;
+
+            _showProducts = EditorGUILayout.Toggle("Products", _showProducts);
+
+            if (_showProducts)
+            {
+                _drawProducts(recipeProducts);
+            }
+        }
+
+        if (recipe.RequiredVocations != null)
+        {
+            EditorGUILayout.LabelField("Required Vocations", EditorStyles.boldLabel);
+
+            var requiredVocations = recipe.RequiredVocations;
+
+            _showVocations = EditorGUILayout.Toggle("Vocations", _showVocations);
+
+            if (_showVocations)
+            {
+                _drawVocations(requiredVocations);
+            }
+        }
+    }
+
+    void _drawIngredients(List<Item> requiredIngredients)
+    {
+        if (requiredIngredients.Count == 1)
+        {
+            EditorGUILayout.LabelField($"{requiredIngredients[0].ItemName}: {requiredIngredients[0].ItemAmount}");
+        }
+        else
+        {
+            _recipeScrollPos = EditorGUILayout.BeginScrollView(_recipeScrollPos,
+                GUILayout.Height(Math.Min(200, requiredIngredients.Count * 20)));
+
+            try
+            {
+                foreach (var item in requiredIngredients)
+                {
+                    EditorGUILayout.LabelField($"{item.ItemName}: {item.ItemAmount}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
+        }
+    }
+
+    void _drawProducts(List<Item> products)
+    {
+        if (products.Count == 1)
+        {
+            EditorGUILayout.LabelField($"{products[0].ItemName}: {products[0].ItemAmount}");
+        }
+        else
+        {
+            _recipeScrollPos = EditorGUILayout.BeginScrollView(_recipeScrollPos,
+                GUILayout.Height(Math.Min(200, products.Count * 20)));
+
+            try
+            {
+                foreach (var item in products)
+                {
+                    EditorGUILayout.LabelField($"{item.ItemName}: {item.ItemAmount}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
+        }
+    }
+
+    void _drawVocations(List<VocationRequirement> requiredVocations)
+    {
+        if (requiredVocations.Count == 1)
+        {
+            EditorGUILayout.LabelField(
+                $"{requiredVocations[0].VocationName} "                     +
+                $"- Min: {requiredVocations[0].ExpectedVocationExperience}" +
+                $"- Expected: {requiredVocations[0].ExpectedVocationExperience}"
+            );
+        }
+        else
+        {
+            _recipeScrollPos = EditorGUILayout.BeginScrollView(_recipeScrollPos,
+                GUILayout.Height(Math.Min(200, requiredVocations.Count * 20)));
+
+            try
+            {
+                foreach (var vocation in requiredVocations)
+                {
+                    EditorGUILayout.LabelField(
+                        $"{vocation.VocationName} "                     +
+                        $"- Min: {vocation.ExpectedVocationExperience}" +
+                        $"- Expected: {vocation.ExpectedVocationExperience}"
+                    );
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
+        }
+    }
+}

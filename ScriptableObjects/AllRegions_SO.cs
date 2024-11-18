@@ -4,103 +4,106 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "AllRegions_SO", menuName = "SOList/AllRegions_SO")]
-[Serializable]
-public class AllRegions_SO : ScriptableObject
+namespace ScriptableObjects
 {
-    public List<RegionData> AllRegionData;
-
-    public void SetAllRegionData(List<RegionData> allRegionData)
+    [CreateAssetMenu(fileName = "AllRegions_SO", menuName = "SOList/AllRegions_SO")]
+    [Serializable]
+    public class AllRegions_SO : ScriptableObject
     {
-        AllRegionData = allRegionData;
-    }
+        public List<RegionData> AllRegionData;
 
-    public void LoadData(SaveData saveData)
-    {
-        AllRegionData = saveData.SavedRegionData.AllRegionData;
-    }
-
-    public void ClearRegionData()
-    {
-        AllRegionData.Clear();
-    }
-}
-
-[CustomEditor(typeof(AllRegions_SO))]
-public class AllRegionsSOEditor : Editor
-{
-    int _selectedRegionIndex = -1;
-
-    bool _showCities = false;
-
-    Vector2 _regionScrollPos;
-    Vector2 _cityScrollPos;
-
-    public override void OnInspectorGUI()
-    {
-        AllRegions_SO allRegionsSO = (AllRegions_SO)target;
-
-        if (GUILayout.Button("Clear Region Data"))
+        public void SetAllRegionData(List<RegionData> allRegionData)
         {
-            allRegionsSO.ClearRegionData();
-            EditorUtility.SetDirty(allRegionsSO);
+            AllRegionData = allRegionData;
         }
 
-        EditorGUILayout.LabelField("All Regions", EditorStyles.boldLabel);
-        _regionScrollPos = EditorGUILayout.BeginScrollView(_regionScrollPos, GUILayout.Height(GetListHeight(allRegionsSO.AllRegionData.Count)));
-        _selectedRegionIndex = GUILayout.SelectionGrid(_selectedRegionIndex, GetRegionNames(allRegionsSO), 1);
-        EditorGUILayout.EndScrollView();
-
-        if (_selectedRegionIndex >= 0 && _selectedRegionIndex < allRegionsSO.AllRegionData.Count)
+        public void LoadData(SaveData saveData)
         {
-            var selectedRegionData = allRegionsSO.AllRegionData[_selectedRegionIndex];
-            DrawRegionAdditionalData(selectedRegionData);
+            AllRegionData = saveData.SavedRegionData.AllRegionData;
+        }
+
+        public void ClearRegionData()
+        {
+            AllRegionData.Clear();
         }
     }
 
-    private string[] GetRegionNames(AllRegions_SO allRegionsSO) => allRegionsSO.AllRegionData.Select(r => r.RegionName).ToArray();
-
-    private float GetListHeight(int itemCount) => Mathf.Min(200, itemCount * 20);
-
-    private void DrawRegionAdditionalData(RegionData selectedRegionData)
+    [CustomEditor(typeof(AllRegions_SO))]
+    public class AllRegionsSOEditor : Editor
     {
-        EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Region Name", selectedRegionData.RegionName);
-        EditorGUILayout.LabelField("Region ID", selectedRegionData.RegionID.ToString());
+        int _selectedRegionIndex = -1;
 
-        EditorGUILayout.LabelField($"All cities in {selectedRegionData.RegionName}", EditorStyles.boldLabel);
+        bool _showCities = false;
 
-        if (selectedRegionData.AllCityIDs != null)
+        Vector2 _regionScrollPos;
+        Vector2 _cityScrollPos;
+
+        public override void OnInspectorGUI()
         {
-            _showCities = EditorGUILayout.Toggle("Cities", _showCities);
+            AllRegions_SO allRegionsSO = (AllRegions_SO)target;
 
-            if (_showCities)
+            if (GUILayout.Button("Clear Region Data"))
             {
-                DrawCityAdditionalData(selectedRegionData.AllCityIDs);
+                allRegionsSO.ClearRegionData();
+                EditorUtility.SetDirty(allRegionsSO);
             }
-        }
-    }
 
-    private void DrawCityAdditionalData(List<uint> allCityIDs)
-    {
-        _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(allCityIDs.Count)));
-
-        try
-        {
-            foreach (var cityID in allCityIDs)
-            {
-                EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-                //EditorGUILayout.LabelField("City Name", city.CityName);
-                EditorGUILayout.LabelField("City ID", cityID.ToString());
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error: {e.Message}");
-        }
-        finally
-        {
+            EditorGUILayout.LabelField("All Regions", EditorStyles.boldLabel);
+            _regionScrollPos     = EditorGUILayout.BeginScrollView(_regionScrollPos, GUILayout.Height(GetListHeight(allRegionsSO.AllRegionData.Count)));
+            _selectedRegionIndex = GUILayout.SelectionGrid(_selectedRegionIndex, GetRegionNames(allRegionsSO), 1);
             EditorGUILayout.EndScrollView();
+
+            if (_selectedRegionIndex >= 0 && _selectedRegionIndex < allRegionsSO.AllRegionData.Count)
+            {
+                var selectedRegionData = allRegionsSO.AllRegionData[_selectedRegionIndex];
+                DrawRegionAdditionalData(selectedRegionData);
+            }
+        }
+
+        private string[] GetRegionNames(AllRegions_SO allRegionsSO) => allRegionsSO.AllRegionData.Select(r => r.RegionName).ToArray();
+
+        private float GetListHeight(int itemCount) => Mathf.Min(200, itemCount * 20);
+
+        private void DrawRegionAdditionalData(RegionData selectedRegionData)
+        {
+            EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Region Name", selectedRegionData.RegionName);
+            EditorGUILayout.LabelField("Region ID",   selectedRegionData.RegionID.ToString());
+
+            EditorGUILayout.LabelField($"All cities in {selectedRegionData.RegionName}", EditorStyles.boldLabel);
+
+            if (selectedRegionData.AllCityIDs != null)
+            {
+                _showCities = EditorGUILayout.Toggle("Cities", _showCities);
+
+                if (_showCities)
+                {
+                    DrawCityAdditionalData(selectedRegionData.AllCityIDs);
+                }
+            }
+        }
+
+        private void DrawCityAdditionalData(List<uint> allCityIDs)
+        {
+            _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(allCityIDs.Count)));
+
+            try
+            {
+                foreach (var cityID in allCityIDs)
+                {
+                    EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
+                    //EditorGUILayout.LabelField("City Name", city.CityName);
+                    EditorGUILayout.LabelField("City ID", cityID.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e.Message}");
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
         }
     }
 }

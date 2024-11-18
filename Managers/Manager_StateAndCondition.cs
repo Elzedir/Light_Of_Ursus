@@ -14,7 +14,18 @@ namespace Managers
 
         public static void Initialise()
         {
+            _initialiseStates();
+            _initialiseConditions();
+        }
 
+        static void _initialiseStates()
+        {
+            _addState(new State { StateName = StateName.Alive });
+        }
+        
+        static void _initialiseConditions()
+        {
+            _addCondition(new Condition_Master(ConditionName.Inspired, 100, 300));   
         }
 
         static void _addState(State state)
@@ -22,7 +33,6 @@ namespace Managers
             if (state != null && _allStates.TryAdd(state.StateName, state)) return;
             
             Debug.LogError($"State: {state} is null or exists in AllStates.");
-            return;
         }
 
         static void _addCondition(Condition_Master condition)
@@ -30,7 +40,6 @@ namespace Managers
             if (condition != null && _allConditions.TryAdd(condition.ConditionName, condition)) return;
             
             Debug.LogError($"Condition: {condition} is null or exists in AllConditions.");
-            return;
         }
 
         public static State GetState(StateName stateName)
@@ -51,22 +60,15 @@ namespace Managers
         }
     }
 
-    public class StateAndConditionComponent
+    public class State_Master
     {
-        readonly uint         _actorID;
-        ActorComponent        _actor;
-        public ActorComponent Actor => _actor ??= Manager_Actor.GetActor(_actorID);
-
-        public StateAndConditionComponent(uint actorID) => _actorID = actorID;
-
-        public void Initialise()
+        public readonly StateName StateName;
+        public readonly bool      DefaultState;
+        
+        public State_Master(StateName stateName, bool defaultState)
         {
-            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneSecond);
-        }
-
-        void _onTick()
-        {
-            Actor.ActorData.StatsAndAbilities.Actor_Conditions.Tick();
+            StateName    = stateName;
+            DefaultState = defaultState;
         }
     }
 
@@ -76,15 +78,17 @@ namespace Managers
         public StateName StateName;
     }
 
-    public abstract class Condition_Master
+    public class Condition_Master
     {
         public readonly ConditionName ConditionName;
         public readonly float         DefaultConditionDuration;
+        public readonly float         MaxConditionDuration;
 
-        protected Condition_Master(ConditionName conditionName, float defaultConditionDuration)
+        public Condition_Master(ConditionName conditionName, float defaultConditionDuration, float maxConditionDuration)
         {
-            ConditionName                 = conditionName;
+            ConditionName            = conditionName;
             DefaultConditionDuration = defaultConditionDuration;
+            MaxConditionDuration     = maxConditionDuration;
         }
     }
 
@@ -134,6 +138,22 @@ namespace Managers
         Dominated,
         Burning,
     }
+    
+    public class StatesAndConditions
+    {
+        public StatesAndConditions(uint actorID)
+        {
+            Actor_States     = new Actor_States(actorID);
+            
+            Actor_Conditions = new Actor_Conditions(actorID);
+        }
+        
+        public Actor_States     Actor_States;
+        public void SetActorStates(Actor_States actorStates) => Actor_States = actorStates;
+        
+        public Actor_Conditions Actor_Conditions;
+        public void SetActorConditions(Actor_Conditions actorConditions) => Actor_Conditions = actorConditions;
+    }
 
     [Serializable]
     public class Actor_Conditions : PriorityData
@@ -142,6 +162,8 @@ namespace Managers
         {
             CurrentConditions                   =  new ObservableDictionary<ConditionName, float>();
             CurrentConditions.DictionaryChanged += OnConditionChanged;
+            
+            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneSecond);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
         public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
@@ -149,12 +171,12 @@ namespace Managers
 
         public ObservableDictionary<ConditionName, float> CurrentConditions;
         
-        void OnConditionChanged()
+        void OnConditionChanged(ConditionName conditionName)
         {
             _priorityChangeCheck(DataChanged.ChangedCondition);
         }
 
-        public void Tick()
+        void _onTick()
         {
             foreach (var condition in CurrentConditions)
             {
@@ -172,7 +194,7 @@ namespace Managers
         {
             if (CurrentConditions.ContainsKey(conditionName))
             {
-                // CurrentConditions[conditionName] = 0; For now do nothing, but later can add to the total condition duration.
+                CurrentConditions[conditionName] += Manager_StateAndCondition.GetCondition_Master(conditionName).DefaultConditionDuration;
                 return;
             }
 
@@ -181,6 +203,21 @@ namespace Managers
             if (condition_Master == null) return;
 
             CurrentConditions[conditionName] = condition_Master.DefaultConditionDuration;
+        }
+        
+        void _updateExistingCondition(ConditionName conditionName)
+        {
+            if (!CurrentConditions.ContainsKey(conditionName))
+            {
+                Debug.LogError($"Cannot call this function for a condition that doesn't exist.");
+                return;
+            }
+            
+            var conditionMaster = Manager_StateAndCondition.GetCondition_Master(conditionName);
+
+            CurrentConditions[conditionName] += Math.Min(
+                CurrentConditions[conditionName] + conditionMaster.DefaultConditionDuration,
+                conditionMaster.MaxConditionDuration);
         }
 
         public void SetConditionTimer(ConditionName conditionName, float timer)
@@ -196,10 +233,11 @@ namespace Managers
         }
         protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new()
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
         {
-        
-        };
+            get;
+            set;
+        } = new();
     }
 
     public enum StateName
@@ -247,24 +285,41 @@ namespace Managers
 
     public class Actor_States : PriorityData
     {
-        public Actor_States(uint actorID) : base(actorID, ComponentType.Actor) { }
-        public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent { get => _priorityComponent ??= ActorReference.Actor.PriorityComponent; }
-
-        public Dictionary<StateName, bool> CurrentStates = new();    
-
-        public void SetState(StateName stateName, bool state)
+        public Actor_States(uint actorID) : base(actorID, ComponentType.Actor)
         {
-            CurrentStates[stateName] = state;
+            _currentStates                   =  new ObservableDictionary<StateName, bool>();
+            _currentStates.DictionaryChanged += OnStateChanged;
+        }
 
+        ComponentReference_Actor _actorReference    => Reference as ComponentReference_Actor;
+        public override PriorityComponent        PriorityComponent => _priorityComponent ??= _actorReference.Actor.PriorityComponent;
+
+        readonly ObservableDictionary<StateName, bool> _currentStates;
+        
+        void OnStateChanged(StateName stateName)
+        {
             _priorityChangeCheck(DataChanged.ChangedState);
         }
 
+        public void SetState(StateName stateName, bool state)
+        {
+            if (!_currentStates.TryAdd(stateName, state)) _currentStates[stateName] = state;
+        }
+        
+        public bool GetState(StateName stateName)
+        {
+            if (_currentStates.TryGetValue(stateName, out var state)) return state;
+            
+            Debug.LogError($"State: {stateName} not found in CurrentStates.");
+            return false;
+        }
+        
         protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new()
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
         {
-        
-        };
+            get;
+            set;
+        } = new();
     }
 }

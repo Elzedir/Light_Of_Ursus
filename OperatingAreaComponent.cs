@@ -26,7 +26,7 @@ public class OperatingAreaComponent : MonoBehaviour
         }
     }
 
-    public float Operate(float baseProgressRate, Recipe recipe)
+    public float Operate(float baseProgressRate, Recipe_Master recipeMaster)
     {
         if (OperatingAreaData.CurrentOperatorID == 0 || OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
@@ -44,7 +44,7 @@ public class OperatingAreaComponent : MonoBehaviour
             float productionRate = baseProgressRate;
             // Then modify production rate by any area modifiers (Land type, events, etc.)
 
-            foreach (var vocation in recipe.RequiredVocations)
+            foreach (var vocation in recipeMaster.RequiredVocations)
             {
                 productionRate *= OperatingAreaData.CurrentOperator.ActorData.VocationData.GetProgress(vocation);
             }

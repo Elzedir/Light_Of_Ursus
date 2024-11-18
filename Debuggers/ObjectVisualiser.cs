@@ -5,6 +5,7 @@ using Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Time = UnityEngine.Time;
 
 namespace Debuggers
 {
@@ -14,32 +15,31 @@ namespace Debuggers
 
         public static ObjectVisualiser Instance =>
             _instance ??= GameObject.Find("Object_Visualiser").GetComponent<ObjectVisualiser>();
-    
 
         GameObject _objectPanelParent;
 
-        GameObject ObjectPanelParent
-        {
-            get { return _objectPanelParent ??= _objectPanelParent = Manager_Game.FindTransformRecursively(transform, "ObjectPanelParent").gameObject; }
-        }
+        GameObject ObjectPanelParent => _objectPanelParent ??= _objectPanelParent =
+            Manager_Game.FindTransformRecursively(transform, "ObjectPanelParent").gameObject;
+
+        RectTransform _objectPanelParentRect;
+
+        RectTransform ObjectPanelParentRect => _objectPanelParentRect ??= _objectPanelParentRect =
+            ObjectPanelParent.GetComponent<RectTransform>();
 
         GameObject _objectSectionPrefab;
-        GameObject ObjectSectionPrefab
-        {
-            get { return _objectSectionPrefab ??= _objectSectionPrefab = Manager_Game.FindTransformRecursively(transform, "ObjectSectionPrefab").gameObject; }
-        }
+
+        GameObject ObjectSectionPrefab => _objectSectionPrefab ??= _objectSectionPrefab =
+            Manager_Game.FindTransformRecursively(transform, "ObjectSectionPrefab").gameObject;
 
         GameObject _objectEntryPrefab;
-        public GameObject ObjectEntryPrefab
-        {
-            get { return _objectEntryPrefab ??= _objectEntryPrefab = Manager_Game.FindTransformRecursively(transform, "ObjectEntryPrefab").gameObject; }
-        }
+
+        public GameObject ObjectEntryPrefab => _objectEntryPrefab ??= _objectEntryPrefab =
+            Manager_Game.FindTransformRecursively(transform, "ObjectEntryPrefab").gameObject;
 
         GameObject _objectDataPrefab;
-        public GameObject ObjectDataPrefab
-        {
-            get { return _objectDataPrefab ??= _objectDataPrefab = Manager_Game.FindTransformRecursively(transform, "ObjectDataPrefab").gameObject; }
-        }
+
+        public GameObject ObjectDataPrefab => _objectDataPrefab ??= _objectDataPrefab =
+            Manager_Game.FindTransformRecursively(transform, "ObjectDataPrefab").gameObject;
 
         readonly Dictionary<ObjectSectionType, ObjectSection> _allObjectSections = new();
 
@@ -48,31 +48,28 @@ namespace Debuggers
             _togglePrefabs(false);
         }
 
-        public void Initialise()
-        {
-            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneTenthSecond);
-        }
-
         void _onTick()
         {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(ObjectPanelParent.GetComponent<RectTransform>());
-            
+            LayoutRebuilder.ForceRebuildLayoutImmediate(ObjectPanelParentRect);
+
             _refreshDisplay();
         }
+
+        const float _tickRate = 0.1f;
+        float       _nextTickTime;
 
         public void Update()
         {
             if (!Input.GetKeyDown(KeyCode.Mouse0)) return;
 
             if (Camera.main is null) return;
-            
-            var             ray           = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+            var ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
 
             List<Transform> hitTransforms = new();
 
             while (Physics.Raycast(ray, out var hit, 20f))
             {
-
                 if (hit.transform is null)
                 {
                     return;
@@ -92,6 +89,12 @@ namespace Debuggers
 
                 ray.origin = hit.point + ray.direction * 0.01f;
             }
+
+            if (Time.time < _nextTickTime) return;
+
+            _nextTickTime = Time.time + _tickRate;
+
+            _onTick();
         }
 
         GameObject _currentDisplayedObject;
@@ -99,7 +102,7 @@ namespace Debuggers
         void _refreshDisplay()
         {
             if (_currentDisplayedObject is null) return;
-            
+
             _displayObject(_currentDisplayedObject);
         }
 
@@ -117,7 +120,7 @@ namespace Debuggers
                     _resetEntries();
                     _currentDisplayedObject = hitGO;
                 }
-                
+
                 _displayActor(actor);
                 return true;
             }
@@ -128,7 +131,7 @@ namespace Debuggers
                     _resetEntries();
                     _currentDisplayedObject = hitGO;
                 }
-                
+
                 _displayStation(station);
                 return true;
             }
@@ -141,21 +144,24 @@ namespace Debuggers
         }
 
         void _displayActor(ActorComponent actor)
-        {   
+        {
             var actorFullIdentification = actor.ActorData.FullIdentification;
             var actorInventory          = actor.ActorData.InventoryData;
+            var actorPriorities         = actor.PriorityComponent.AllPriorityQueues;
 
             if (actorFullIdentification != null)
             {
                 var allIdentificationData = new List<ObjectData_Data>
                 {
-                    new ObjectData_Data(ObjectDataType.FullIdentification, $"Name: {actorFullIdentification.ActorName.GetName()}, ID: {actor.ActorData.ActorID} "),
+                    new ObjectData_Data(ObjectDataType.FullIdentification,
+                        $"Name: {actorFullIdentification.ActorName.GetName()}, ID: {actor.ActorData.ActorID} "),
                 };
 
                 var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("ActorName", actorFullIdentification.ActorName.GetName(), actor.ActorData.ActorID), 
+                    new ObjectEntryKey("ActorName", actorFullIdentification.ActorName.GetName(),
+                        actor.ActorData.ActorID),
                     allIdentificationData);
-            
+
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
             }
             else
@@ -166,40 +172,88 @@ namespace Debuggers
             if (actorInventory != null)
             {
                 var allInventoryData = actorInventory.AllInventoryItems
-                                                     .Select(inventoryItem => new ObjectData_Data(ObjectDataType.InventoryData, $"ItemName: {inventoryItem.Value.ItemName} ItemAmount: {inventoryItem.Value.ItemAmount}"))
+                                                     .Select(inventoryItem =>
+                                                         new ObjectData_Data(ObjectDataType.InventoryData,
+                                                             $"ItemName: {inventoryItem.Value.ItemName} ItemAmount: {inventoryItem.Value.ItemAmount}"))
                                                      .ToList();
 
                 var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("InventoryData", actorFullIdentification?.ActorName.GetName(), actor.ActorData.ActorID), 
+                    new ObjectEntryKey("InventoryData", actorFullIdentification?.ActorName.GetName(),
+                        actor.ActorData.ActorID),
                     allInventoryData);
-            
+
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
             }
             else
             {
                 Debug.LogWarning($"Actor {actor.name} does not have a valid inventory.");
             }
-        }
 
-        void _displayStation(StationComponent station)
-        {
-            var stationInventory = station.StationData.InventoryData;
-
-            if (stationInventory != null)
+            if (actorPriorities != null)
             {
-                var allInventoryData = stationInventory.AllInventoryItems
-                                                       .Select(inventoryItem => new ObjectData_Data(ObjectDataType.InventoryData, $"Name: {inventoryItem.Value.ItemName} Amount: {inventoryItem.Value.ItemAmount}"))
-                                                       .ToList();
+                var allPriorityData = actorPriorities
+                                      .Select(priorityQueue => new ObjectData_Data(ObjectDataType.PriorityData,
+                                          $"HighestPriorityAction: {priorityQueue.Key} Value: {priorityQueue.Value.Peek()}"))
+                                      .ToList();
 
                 var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("InventoryData", station.StationName.ToString(), station.StationData.StationID), 
-                    allInventoryData);
-            
+                    new ObjectEntryKey("PriorityData", actorFullIdentification?.ActorName.GetName(),
+                        actor.ActorData.ActorID),
+                    allPriorityData);
+
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
             }
             else
             {
-                Debug.LogWarning($"Station {station.StationData.StationID}: {station.StationName} does not have a valid inventory.");
+                Debug.LogWarning($"Actor {actor.name} does not have a valid priority component.");
+            }
+        }
+
+        void _displayStation(StationComponent station)
+        {
+            var stationInventory    = station.StationData.InventoryData;
+            var stationProgressData = station.StationData.StationProgressData;
+
+            if (stationInventory != null)
+            {
+                var allInventoryData = stationInventory.AllInventoryItems
+                                                       .Select(inventoryItem =>
+                                                           new ObjectData_Data(ObjectDataType.InventoryData,
+                                                               $"Name: {inventoryItem.Value.ItemName} Amount: {inventoryItem.Value.ItemAmount}"))
+                                                       .ToList();
+
+                var objectEntryData = new ObjectEntryData(
+                    new ObjectEntryKey("InventoryData", station.StationName.ToString(), station.StationData.StationID),
+                    allInventoryData);
+
+                _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"Station {station.StationData.StationID}: {station.StationName} does not have a valid inventory.");
+            }
+
+            if (stationProgressData != null)
+            {
+                var allProgressData = new List<ObjectData_Data>
+                {
+                    new ObjectData_Data(ObjectDataType.ProgressData,
+                        $"CurrentProduct: {stationProgressData.CurrentProduct}"),
+                    new ObjectData_Data(ObjectDataType.ProgressData,
+                        $"CurrentProgress: {stationProgressData.CurrentProgress}"),
+                };
+
+                var objectEntryData = new ObjectEntryData(
+                    new ObjectEntryKey("ProgressData", station.StationName.ToString(), station.StationData.StationID),
+                    allProgressData);
+
+                _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"Station {station.StationData.StationID}: {station.StationName} does not have a valid progress data.");
             }
         }
 
@@ -215,12 +269,12 @@ namespace Debuggers
             for (var i = 0; i < ObjectPanelParent.transform.childCount; i++)
             {
                 if (ObjectPanelParent.transform.GetChild(i).gameObject == ObjectSectionPrefab) continue;
-                
+
                 Destroy(ObjectPanelParent.transform.GetChild(i).gameObject);
                 _allObjectSections.Clear();
             }
         }
-        
+
 
         public void ClosePanel()
         {
@@ -238,13 +292,15 @@ namespace Debuggers
 
             if (!_allObjectSections.TryGetValue(objectSectionData.ObjectSectionType, out var section))
             {
-                var newObjectSection = Instantiate(ObjectSectionPrefab, ObjectPanelParent.transform).AddComponent<ObjectSection>();
-                Destroy(Manager_Game.FindTransformRecursively(newObjectSection.transform, "ObjectEntryPrefab").gameObject);
+                var newObjectSection = Instantiate(ObjectSectionPrefab, ObjectPanelParent.transform)
+                    .AddComponent<ObjectSection>();
+                Destroy(Manager_Game.FindTransformRecursively(newObjectSection.transform, "ObjectEntryPrefab")
+                                    .gameObject);
                 newObjectSection.InitialiseObjectSection(new ObjectSection_Data(objectSectionData));
                 _allObjectSections.Add(objectSectionData.ObjectSectionType, newObjectSection);
-            
+
                 _togglePrefabs(false);
-            
+
                 return;
             }
 
@@ -269,7 +325,8 @@ namespace Debuggers
                 return;
             }
 
-            if (!_allObjectSections[objectSectionType].AllObjectEntries.ContainsKey(objectEntryData.ObjectEntryKey.GetID()))
+            if (!_allObjectSections[objectSectionType].AllObjectEntries
+                                                      .ContainsKey(objectEntryData.ObjectEntryKey.GetID()))
             {
                 var newObjectEntryDataList = new List<ObjectEntryData> { objectEntryData };
 
@@ -280,12 +337,14 @@ namespace Debuggers
                 return;
             }
 
-            _allObjectSections[objectSectionType].AllObjectEntries[objectEntryData.ObjectEntryKey.GetID()].UpdateObjectEntry(objectEntryData.AllObjectData);
+            _allObjectSections[objectSectionType].AllObjectEntries[objectEntryData.ObjectEntryKey.GetID()]
+                                                 .UpdateObjectEntry(objectEntryData.AllObjectData);
 
             _togglePrefabs(false);
         }
 
-        public void UpdateObjectData(ObjectSectionType objectSectionType, ObjectEntryKey objectEntryTitle, ObjectData_Data objectData)
+        public void UpdateObjectData(ObjectSectionType objectSectionType, ObjectEntryKey objectEntryTitle,
+                                     ObjectData_Data   objectData)
         {
             _togglePrefabs(true);
 
@@ -315,18 +374,22 @@ namespace Debuggers
                 return;
             }
 
-            if (!_allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()].AllObjectData.ContainsKey(objectData.ObjectDataType))
+            if (!_allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()].AllObjectData
+                                                      .ContainsKey(objectData.ObjectDataType))
             {
                 var newObjectDataList = new List<ObjectData_Data> { objectData };
 
-                _allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()].UpdateObjectEntry(newObjectDataList);
+                _allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()]
+                                                     .UpdateObjectEntry(newObjectDataList);
 
                 _togglePrefabs(false);
 
                 return;
             }
 
-            _allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()].AllObjectData[objectData.ObjectDataType].ObjectValue = objectData.ObjectValue;
+            _allObjectSections[objectSectionType].AllObjectEntries[objectEntryTitle.GetID()]
+                                                 .AllObjectData[objectData.ObjectDataType].ObjectValue =
+                objectData.ObjectValue;
 
             _togglePrefabs(false);
         }

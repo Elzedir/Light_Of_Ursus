@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Managers;
+using Tools;
 using UnityEngine;
 
 namespace Priority
@@ -31,11 +32,11 @@ namespace Priority
             }},
         };
 
-        protected readonly Dictionary<ActionName, PriorityQueue> _allPriorityQueues = new()
+        public readonly ObservableDictionary<ActionName, PriorityQueue> AllPriorityQueues = new()
         {
             { ActionName.Fetch, new PriorityQueue(1) },
             { ActionName.Deliver, new PriorityQueue(1) },
-            { ActionName.Scavenge, new PriorityQueue(1) },
+            { ActionName.Scavenge, new PriorityQueue(1) }
         };
 
         Dictionary<PriorityImportance, List<PriorityValue>>              _cachedPriorityQueue;
@@ -43,6 +44,11 @@ namespace Priority
 
         bool        _syncingCachedQueue;
         const float _timeDeferment = 1f;
+
+        ActionName _currentAction;
+
+        public ActionName GetCurrentAction()                       => _currentAction;
+        protected void              _setCurrentAction(ActionName actionName) => _currentAction = actionName;
 
         public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameter, object> changedParameters)
         {
@@ -61,7 +67,7 @@ namespace Priority
                 switch (action.PriorityImportance)
                 {
                     case PriorityImportance.Critical:
-                        if (!_allPriorityQueues[action.ActionName].Update((uint)action.ActionName, priorities))
+                        if (!AllPriorityQueues[action.ActionName].Update((uint)action.ActionName, priorities))
                         {
                             Debug.LogError($"Action: {action} unable to be updated in PriorityQueue.");
                         }
@@ -93,7 +99,7 @@ namespace Priority
 
         void _syncCachedPriorityQueueHigh(bool syncing = false)
         {
-            foreach (var priority in from priorityQueue in _allPriorityQueues.Values 
+            foreach (var priority in from priorityQueue in AllPriorityQueues.Values 
                                      from priority in _cachedPriorityQueue[PriorityImportance.High] 
                                      where !priorityQueue.Update(priority.PriorityID, priority.AllPriorities) 
                                      select priority)
@@ -124,7 +130,7 @@ namespace Priority
 
         public void UpdateAction(ActionName actionName, List<float> priorities)
         {
-            if (!_allPriorityQueues[actionName].Update((uint)actionName, priorities))
+            if (!AllPriorityQueues[actionName].Update((uint)actionName, priorities))
             {
                 Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
             }
@@ -132,20 +138,47 @@ namespace Priority
 
         public void RemoveAction(ActionName actionName)
         {
-            if (!_allPriorityQueues[actionName].Remove((uint)actionName))
+            if (!AllPriorityQueues[actionName].Remove((uint)actionName))
             {
                 Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
             }
         }
-
-        public PriorityValue CheckHighestPriority(ActionName actionName)
+        
+        /// <summary>
+        /// ActionName.All peeks the highest priority from all queues.
+        /// </summary>
+        public PriorityValue PeekHighestPriority(ActionName actionName)
         {
-            return _allPriorityQueues[actionName].Peek();
+            if (actionName != ActionName.All) return AllPriorityQueues[actionName].Peek();
+
+            var overallHighestPriority = new PriorityValue((uint)ActionName.None, new List<float>());
+
+            overallHighestPriority = AllPriorityQueues.Aggregate(overallHighestPriority, 
+                (current, priorityQueue) =>
+            {
+                var highestPriority = priorityQueue.Value.Peek();
+
+                if (highestPriority is null) return current;
+
+                return highestPriority.PriorityID != (uint)ActionName.None &&
+                       highestPriority.PriorityID > current.PriorityID
+                    ? highestPriority
+                    : current;
+            });
+
+            return overallHighestPriority.PriorityID != (uint)ActionName.None
+                ? overallHighestPriority
+                : null;
         }
 
+        /// <summary>
+        /// ActionName.All dequeues the highest priority from all queues.
+        /// </summary>
         public PriorityValue GetHighestPriority(ActionName actionName)
         {
-            return _allPriorityQueues[actionName].Dequeue();
+            var highestPriority = PeekHighestPriority(actionName);
+
+            return highestPriority != null ? AllPriorityQueues[actionName].Dequeue(highestPriority.PriorityID) : null;
         }
 
         public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
@@ -181,6 +214,8 @@ namespace Priority
         public PriorityComponent_Actor(uint actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
+            
+            AllPriorityQueues.DictionaryChanged += _setCurrentAction;
         }
 
         protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new()
@@ -235,7 +270,7 @@ namespace Priority
     {
         public PriorityComponent_Jobsite(uint jobsiteID) 
         {
-            _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
+            _jobsiteReferences                  =  new ComponentReference_Jobsite(jobsiteID);
         } 
 
         readonly ComponentReference_Jobsite _jobsiteReferences;
@@ -272,10 +307,10 @@ namespace Priority
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
-                _allPriorityQueues[ActionName.Fetch].Update(station.StationID, newPriorities);
+                AllPriorityQueues[ActionName.Fetch].Update(station.StationID, newPriorities);
             }
 
-            var peekedStation = Manager_Station.GetStation(_allPriorityQueues[ActionName.Fetch].Peek().PriorityID);
+            var peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Fetch].Peek().PriorityID);
         
             if (peekedStation is null) return (null, null);
 
@@ -321,7 +356,7 @@ namespace Priority
 
             if (itemsToFetch.Count is 0) return (null, null);
             
-            _allPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
+            AllPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
 
             return (peekedStation, itemsToFetch);
         }
@@ -357,10 +392,10 @@ namespace Priority
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
-                _allPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
+                AllPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
             }
 
-            var peek = _allPriorityQueues[ActionName.Deliver].Peek();
+            var peek = AllPriorityQueues[ActionName.Deliver].Peek();
             
             if (peek is null) return (null, null);
 
@@ -372,7 +407,7 @@ namespace Priority
 
             if (itemsToDeliver.Count is 0) return (null, null);
 
-            _allPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
+            AllPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
 
             return (peekedStation, itemsToDeliver);
         }
