@@ -7,6 +7,15 @@ using UnityEngine;
 
 namespace Actors
 {
+    public enum PriorityStatus
+    {
+        None = 0,
+            
+        InCombat       = 1 << 0,
+        HasJob         = 1 << 1,
+        NextExampleOne = 1 << 2,
+    }
+    
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
     public class ActorComponent : MonoBehaviour
@@ -68,7 +77,55 @@ namespace Actors
 
         void _makeDecision()
         {
-            PriorityComponent.GetHighestPriority(ActionName.All);
+            // Change tick rate according to number of zones to player.
+            // Local region is same zone.
+            // Regional region is within 1 zone distance.
+            // Distant region is 2+ zones.
+
+            var priorityStatus = _getPriorityStatus();
+            
+            if (!_mustChangeCurrentAction(priorityStatus)) return;
+
+            var highestPriority = PriorityComponent.GetHighestPriority(priorityStatus);
+        }
+        
+        PriorityStatus _getPriorityStatus()
+        {
+            if (ActorData.StatesAndConditions.Actor_States.GetState(StateName.IsInCombat))
+            {
+                return PriorityStatus.InCombat;
+            }
+
+            if (ActorData.CareerAndJobs.HasJob())
+            {
+                return PriorityStatus.HasJob;
+            }
+
+            return PriorityStatus.None;
+        }
+
+        bool _mustChangeCurrentAction(PriorityStatus priorityStatus)
+        {
+            var currentAction       = PriorityComponent.GetCurrentAction();
+            var nextHighestPriorityValue = PriorityComponent.PeekHighestPriority(priorityStatus);
+
+            if (nextHighestPriorityValue == null)
+            {
+                //Debug.LogWarning("Next highest priority is null.");
+                return false;
+            }
+            
+            var nextHighestPriority = (ActionName)nextHighestPriorityValue.PriorityID;
+            
+            Debug.Log($"Current Action: {currentAction}, Next Highest Priority: {nextHighestPriority}");
+
+            if (nextHighestPriority != ActionName.None)
+            {
+                return _isHigherPriorityThan(nextHighestPriority, currentAction);
+            }
+            
+            Debug.LogError("Next highest priority is None.");
+            return false;
         }
 
         void _updateVisuals()
@@ -97,29 +154,43 @@ namespace Actors
             transform.position = targetPosition;
         }
 
-        static readonly Dictionary<ActionName, ActionType> _allActionName = new()
+        static readonly Dictionary<ActionName, PriorityImportance> _allPriorityPerAction = new()
         {
-            {ActionName.Wander, ActionType.Non_Combat},
-            {ActionName.Deliver, ActionType.Non_Combat},
-            {ActionName.Fetch, ActionType.Non_Combat},
-            {ActionName.Scavenge, ActionType.Non_Combat},
+            {ActionName.Wander, PriorityImportance.Low},
+            {ActionName.Deliver, PriorityImportance.Medium},
+            {ActionName.Fetch, PriorityImportance.Medium},
+            {ActionName.Scavenge, PriorityImportance.Medium},
         };
+        
+        static bool _isHigherPriorityThan(ActionName actionName, ActionName otherActionName)
+        {
+            return _allPriorityPerAction[actionName] < _allPriorityPerAction[otherActionName];
+        }
 
-        static readonly Dictionary<ActionType, List<ActionName>> _allActionTypes = new()
+        static readonly Dictionary<PriorityImportance, List<ActionName>> _allActionsPerPriority = new()
         {
             {
-                ActionType.Combat, new List<ActionName>()
+                PriorityImportance.Critical, new List<ActionName>()
                 {
 
                 }
             },
             {
-                ActionType.Non_Combat, new List<ActionName>()
+                PriorityImportance.High, new List<ActionName>()
                 {
 
                 }
             },
         };
+    }
+
+    public enum BehaviourName
+    {
+        None,
+        
+        Hostile,
+        Stealth,
+        Work,
     }
 
     public enum ActionName
@@ -127,18 +198,13 @@ namespace Actors
         None,
         All,
         
-        Wander,
+        Attack,
+        Defend,
 
         Deliver,
         Fetch,
         Scavenge,
-    }
-
-    public enum ActionType
-    {
-        None, 
         
-        Combat,
-        Non_Combat
+        Wander,
     }
 }

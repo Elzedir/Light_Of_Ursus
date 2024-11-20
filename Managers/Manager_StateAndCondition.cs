@@ -245,6 +245,12 @@ namespace Managers
         None, 
 
         Alive,
+        
+        CanIdle,
+        IsIdle,
+        
+        CanCombat,
+        IsInCombat,
 
         CanBeDepressed,
         IsDepressed,

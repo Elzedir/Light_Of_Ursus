@@ -30,13 +30,36 @@ namespace Priority
                 { PriorityParameter.CurrentStationType, null },
                 { PriorityParameter.AllStationTypes, null },
             }},
+            
+            { ActionName.Scavenge, new Dictionary<PriorityParameter, object>
+            {
+                { PriorityParameter.MaxPriority, null },
+                { PriorityParameter.TotalItems, null },
+                { PriorityParameter.TotalDistance, null },
+                { PriorityParameter.InventoryHauler, null },
+                { PriorityParameter.InventoryTarget, null },
+            }},
+            
+            { ActionName.Wander, new Dictionary<PriorityParameter, object>
+            {
+                { PriorityParameter.MaxPriority, null },
+            }},
+        };
+        
+        public readonly ObservableDictionary<BehaviourName, PriorityQueue> AllPriorityBehaviours = new()
+        {
+            { BehaviourName.None, new PriorityQueue(1) },
+            { BehaviourName.Hostile, new PriorityQueue(1) },
+            { BehaviourName.Stealth, new PriorityQueue(1) },
+            { BehaviourName.Work, new PriorityQueue(1) },
         };
 
-        public readonly ObservableDictionary<ActionName, PriorityQueue> AllPriorityQueues = new()
+        public readonly ObservableDictionary<ActionName, PriorityQueue> AllPriorityActions = new()
         {
             { ActionName.Fetch, new PriorityQueue(1) },
             { ActionName.Deliver, new PriorityQueue(1) },
-            { ActionName.Scavenge, new PriorityQueue(1) }
+            { ActionName.Scavenge, new PriorityQueue(1) },
+            { ActionName.Wander, new PriorityQueue(1) },
         };
 
         Dictionary<PriorityImportance, List<PriorityValue>>              _cachedPriorityQueue;
@@ -48,7 +71,11 @@ namespace Priority
         ActionName _currentAction;
 
         public ActionName GetCurrentAction()                       => _currentAction;
-        protected void              _setCurrentAction(ActionName actionName) => _currentAction = actionName;
+        protected void              _setCurrentAction(ActionName actionName)
+        {
+            Debug.Log($"Setting current action to: {actionName}.");
+            _currentAction = actionName;
+        }
 
         public void OnDataChanged(DataChanged dataChanged, Dictionary<PriorityParameter, object> changedParameters)
         {
@@ -67,7 +94,7 @@ namespace Priority
                 switch (action.PriorityImportance)
                 {
                     case PriorityImportance.Critical:
-                        if (!AllPriorityQueues[action.ActionName].Update((uint)action.ActionName, priorities))
+                        if (!AllPriorityActions[action.ActionName].Update((uint)action.ActionName, priorities))
                         {
                             Debug.LogError($"Action: {action} unable to be updated in PriorityQueue.");
                         }
@@ -99,7 +126,7 @@ namespace Priority
 
         void _syncCachedPriorityQueueHigh(bool syncing = false)
         {
-            foreach (var priority in from priorityQueue in AllPriorityQueues.Values 
+            foreach (var priority in from priorityQueue in AllPriorityActions.Values 
                                      from priority in _cachedPriorityQueue[PriorityImportance.High] 
                                      where !priorityQueue.Update(priority.PriorityID, priority.AllPriorities) 
                                      select priority)
@@ -130,7 +157,7 @@ namespace Priority
 
         public void UpdateAction(ActionName actionName, List<float> priorities)
         {
-            if (!AllPriorityQueues[actionName].Update((uint)actionName, priorities))
+            if (!AllPriorityActions[actionName].Update((uint)actionName, priorities))
             {
                 Debug.LogError($"ActionName: {actionName} unable to be updated in PriorityQueue.");
             }
@@ -138,22 +165,34 @@ namespace Priority
 
         public void RemoveAction(ActionName actionName)
         {
-            if (!AllPriorityQueues[actionName].Remove((uint)actionName))
+            if (!AllPriorityActions[actionName].Remove((uint)actionName))
             {
                 Debug.LogError($"ActionName: {actionName} unable to be removed from PriorityQueue.");
             }
         }
-        
-        /// <summary>
-        /// ActionName.All peeks the highest priority from all queues.
-        /// </summary>
-        public PriorityValue PeekHighestPriority(ActionName actionName)
-        {
-            if (actionName != ActionName.All) return AllPriorityQueues[actionName].Peek();
 
+        public PriorityValue PeekHighestSpecificPriority(ActionName actionName)
+        {
+            if (actionName is not (ActionName.All or ActionName.None)) 
+                return AllPriorityActions[actionName].Peek();
+            
+            Debug.LogError($"ActionName: {actionName} not allowed in PeekHighestSpecificPriority.");
+            return null;
+        }
+        
+        public PriorityValue PeekHighestPriority(PriorityStatus priorityStatus)
+        {
             var overallHighestPriority = new PriorityValue((uint)ActionName.None, new List<float>());
 
-            overallHighestPriority = AllPriorityQueues.Aggregate(overallHighestPriority, 
+            if (AllPriorityActions.Count is 0)
+            {
+                Debug.LogWarning("No priority queues found.");
+                return new PriorityValue((uint)ActionName.None, new List<float>());
+            };
+
+            var relevantPriorityQueues = _getRelevantPriorityQueues(priorityStatus);
+
+            overallHighestPriority = relevantPriorityQueues.Aggregate(overallHighestPriority, 
                 (current, priorityQueue) =>
             {
                 var highestPriority = priorityQueue.Value.Peek();
@@ -170,15 +209,40 @@ namespace Priority
                 ? overallHighestPriority
                 : null;
         }
-
-        /// <summary>
-        /// ActionName.All dequeues the highest priority from all queues.
-        /// </summary>
-        public PriorityValue GetHighestPriority(ActionName actionName)
+        
+        ObservableDictionary<ActionName, PriorityQueue> _getRelevantPriorityQueues(PriorityStatus priorityStatus)
         {
-            var highestPriority = PeekHighestPriority(actionName);
+            if (priorityStatus is PriorityStatus.None) return AllPriorityActions;
 
-            return highestPriority != null ? AllPriorityQueues[actionName].Dequeue(highestPriority.PriorityID) : null;
+            var relevantPriorityQueues = new ObservableDictionary<ActionName, PriorityQueue>();
+            
+            switch (priorityStatus)
+            {
+                case PriorityStatus.InCombat:
+                    relevantPriorityQueues.Add(ActionName.Attack, AllPriorityActions[ActionName.Wander]);
+                    break;
+                case PriorityStatus.HasJob:
+                    break;
+                default:
+                    break;
+            }
+
+            return relevantPriorityQueues;
+        }
+
+        public PriorityValue GetHighestSpecificPriority(ActionName actionName)
+        {
+            var highestPriority = PeekHighestSpecificPriority(actionName);
+
+            return highestPriority != null ? AllPriorityActions[actionName].Dequeue(highestPriority.PriorityID) : null;            
+        }
+        
+        public PriorityValue GetHighestPriority(PriorityStatus priorityStatus)
+        {
+            var highestPriority = PeekHighestPriority(priorityStatus);
+
+            return highestPriority != null ? AllPriorityActions[(ActionName)highestPriority.PriorityID]
+                .Dequeue(highestPriority.PriorityID) : null;
         }
 
         public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(ActionName actionName, Dictionary<PriorityParameter, object> parameters)
@@ -215,7 +279,7 @@ namespace Priority
         {
             _actorReferences = new ComponentReference_Actor(actorID);
             
-            AllPriorityQueues.DictionaryChanged += _setCurrentAction;
+            AllPriorityActions.DictionaryChanged += _setCurrentAction;
         }
 
         protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new()
@@ -307,10 +371,10 @@ namespace Priority
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
-                AllPriorityQueues[ActionName.Fetch].Update(station.StationID, newPriorities);
+                AllPriorityActions[ActionName.Fetch].Update(station.StationID, newPriorities);
             }
 
-            var peekedStation = Manager_Station.GetStation(AllPriorityQueues[ActionName.Fetch].Peek().PriorityID);
+            var peekedStation = Manager_Station.GetStation(AllPriorityActions[ActionName.Fetch].Peek().PriorityID);
         
             if (peekedStation is null) return (null, null);
 
@@ -356,7 +420,7 @@ namespace Priority
 
             if (itemsToFetch.Count is 0) return (null, null);
             
-            AllPriorityQueues[ActionName.Fetch].Dequeue(peekedStation.StationID);
+            AllPriorityActions[ActionName.Fetch].Dequeue(peekedStation.StationID);
 
             return (peekedStation, itemsToFetch);
         }
@@ -392,10 +456,10 @@ namespace Priority
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
-                AllPriorityQueues[ActionName.Deliver].Update(station.StationID, newPriorities);
+                AllPriorityActions[ActionName.Deliver].Update(station.StationID, newPriorities);
             }
 
-            var peek = AllPriorityQueues[ActionName.Deliver].Peek();
+            var peek = AllPriorityActions[ActionName.Deliver].Peek();
             
             if (peek is null) return (null, null);
 
@@ -407,7 +471,7 @@ namespace Priority
 
             if (itemsToDeliver.Count is 0) return (null, null);
 
-            AllPriorityQueues[ActionName.Deliver].Dequeue(peekedStation.StationID);
+            AllPriorityActions[ActionName.Deliver].Dequeue(peekedStation.StationID);
 
             return (peekedStation, itemsToDeliver);
         }
