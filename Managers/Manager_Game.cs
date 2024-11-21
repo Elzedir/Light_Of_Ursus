@@ -116,7 +116,6 @@ namespace Managers
 
             _manager_Parent = new GameObject("Manager_Parent").transform;
 
-            Manager_Item.Initialise();
             _createManager("Manager_TickRate",     _manager_Parent).AddComponent<Manager_TickRate>().OnSceneLoaded();
             _createManager("Manager_Dialogue",     _manager_Parent).AddComponent<Manager_Dialogue>().OnSceneLoaded();
             _createManager("Manager_FloatingText", _manager_Parent).AddComponent<Manager_FloatingText>().OnSceneLoaded();
@@ -124,7 +123,6 @@ namespace Managers
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             _createManager("Manager_Ability",      _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
             _createManager("Manager_Job",          _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
-            _createManager("Manager_Recipe",       _manager_Parent).AddComponent<Manager_Recipe>().OnSceneLoaded();
         
             Manager_Career.Initialise();
             Manager_DateAndTime.Initialise();

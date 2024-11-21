@@ -1,29 +1,46 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class List_Consumable : Manager_Item
+namespace Lists
 {
-    public static void InitializeConsumableData()
+    public abstract class List_Consumable : Manager_Item
     {
-        Potions();
-    }
+        public static Dictionary<uint, Item_Master> GetAllConsumables()
+        {
+            var allConsumables = new Dictionary<uint, Item_Master>();
+            
+            foreach (var consumable in _potions)
+            {
+                allConsumables.Add(consumable.Key, consumable.Value);
+            }
+            
+            return allConsumables;
+        }
 
-    static void Potions()
-    {
-        CommonStats_Item commonStats_Item = new CommonStats_Item(
-            itemID: 202,
-            itemType: ItemType.Consumable,
-            itemName: "Small Health Potion",
-            itemEquippable: true,
-            maxStackSize: 99,
-            itemValue: 1
-            );
+        static readonly Dictionary<uint, Item_Master> _potions = new()
+        {
+            {
+                202,
+                new Item_Master(
+                    new CommonStats_Item(
+                        itemID: 202,
+                        itemType: ItemType.Consumable,
+                        itemName: "Small Health Potion",
+                        itemEquippable: true,
+                        maxStackSize: 99,
+                        itemValue: 1
+                    ),
 
-        FixedModifiers_Item fixedModifiers = new FixedModifiers_Item(
-            healthRecovery: 5
-            );
+                    null,
+                    null,
+                    null,
 
-        AddToList(new Item_Master(commonStats_Item: commonStats_Item, null, null, null, fixedModifiers_Item: fixedModifiers, null, null));
+                    new FixedModifiers_Item(
+                        healthRecovery: 5
+                    ),
+                    null,
+                    null
+                )
+            }
+        };
     }
 }

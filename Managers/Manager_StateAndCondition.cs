@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actors;
 using Priority;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Managers
 {
     public abstract class Manager_StateAndCondition
     {
-        static readonly Dictionary<StateName, State>                _allStates     = new();
+        static readonly Dictionary<PrimaryStateName, State>                _allStates     = new();
         static readonly Dictionary<ConditionName, Condition_Master> _allConditions = new();
 
         public static void Initialise()
@@ -20,7 +22,7 @@ namespace Managers
 
         static void _initialiseStates()
         {
-            _addState(new State { StateName = StateName.Alive });
+            _addState(new State { PrimaryStateName = PrimaryStateName.IsAlive });
         }
         
         static void _initialiseConditions()
@@ -30,7 +32,7 @@ namespace Managers
 
         static void _addState(State state)
         {
-            if (state != null && _allStates.TryAdd(state.StateName, state)) return;
+            if (state != null && _allStates.TryAdd(state.PrimaryStateName, state)) return;
             
             Debug.LogError($"State: {state} is null or exists in AllStates.");
         }
@@ -42,11 +44,11 @@ namespace Managers
             Debug.LogError($"Condition: {condition} is null or exists in AllConditions.");
         }
 
-        public static State GetState(StateName stateName)
+        public static State GetState(PrimaryStateName primaryStateName)
         {
-            if (_allStates.TryGetValue(stateName, out var state)) return state;
+            if (_allStates.TryGetValue(primaryStateName, out var state)) return state;
             
-            Debug.LogError($"State: {stateName} is not in AllStates list");
+            Debug.LogError($"State: {primaryStateName} is not in AllStates list");
             return null;
         }
 
@@ -62,12 +64,12 @@ namespace Managers
 
     public class State_Master
     {
-        public readonly StateName StateName;
+        public readonly PrimaryStateName PrimaryStateName;
         public readonly bool      DefaultState;
         
-        public State_Master(StateName stateName, bool defaultState)
+        public State_Master(PrimaryStateName primaryStateName, bool defaultState)
         {
-            StateName    = stateName;
+            PrimaryStateName    = primaryStateName;
             DefaultState = defaultState;
         }
     }
@@ -75,7 +77,7 @@ namespace Managers
     [Serializable]
     public class State // Permanent or Perpetual thing
     {
-        public StateName StateName;
+        [FormerlySerializedAs("StateName")] public PrimaryStateName PrimaryStateName;
     }
 
     public class Condition_Master
@@ -148,11 +150,19 @@ namespace Managers
             Actor_Conditions = new Actor_Conditions(actorID);
         }
         
+        public void SetActorStatesAndConditions (StatesAndConditions statesAndConditions)
+        {
+            SetActorStates(statesAndConditions.Actor_States);
+            SetActorConditions(statesAndConditions.Actor_Conditions);
+        }
+        
         public Actor_States     Actor_States;
         public void SetActorStates(Actor_States actorStates) => Actor_States = actorStates;
         
         public Actor_Conditions Actor_Conditions;
         public void SetActorConditions(Actor_Conditions actorConditions) => Actor_Conditions = actorConditions;
+        
+        
     }
 
     [Serializable]
@@ -240,92 +250,217 @@ namespace Managers
         } = new();
     }
 
-    public enum StateName
+    public enum PrimaryStateName
     {
         None, 
 
-        Alive,
+        IsAlive,
         
         CanIdle,
+        CanCombat,
+        CanMove,
+        CanTalk,
+    }
+
+    public enum SubStateName
+    {
+        None, 
+        
         IsIdle,
         
-        CanCombat,
-        IsInCombat,
-
-        CanBeDepressed,
-        IsDepressed,
-
-        CanDrown,
-        IsDrowning,
-
-        CanSuffocate,
-        IsSuffocating,
-
-        CanReanimate,
-        IsReanimated,
-    
-        Alerted,
-        Hostile,
-
         CanJump,
         IsJumping,
-
-        CanBerserk,
-        IsBerserking, 
-    
-        InFire,
-        OnFire,
-
-        CanTalk,
-        IsTalking,
-
+        
+        Alerted,
+        Hostile,
+        IsInCombat,
         CanDodge,
         IsDodging,
-
         CanBlock,
         IsBlocking,
-
+        CanBerserk,
+        IsBerserking, 
+        
         CanGetPregnant,
         IsPregnant,
+        
+        CanBeDepressed,
+        IsDepressed,
+        
+        CanDrown,
+        IsDrowning,
+        CanSuffocate,
+        IsSuffocating,
+        
+        CanReanimate,
+        IsReanimated,
+        
+        InFire,
+        OnFire,
+        
+        IsTalking,
     }
 
     public class Actor_States : PriorityData
     {
-        public Actor_States(uint actorID) : base(actorID, ComponentType.Actor)
+        public Actor_States(uint actorID, ObservableDictionary<PrimaryStateName, bool> initialisedStates = null) : base(actorID, ComponentType.Actor)
         {
-            _currentStates                   =  new ObservableDictionary<StateName, bool>();
-            _currentStates.DictionaryChanged += OnStateChanged;
+            _currentPrimaryStates                   =  initialisedStates ?? _defaultPrimaryStates;
+            _currentSubStates                       =  new ObservableDictionary<SubStateName, bool>();
+            
+            _setSubStates();
+            
+            _currentPrimaryStates.SetDictionaryChanged(_onPrimaryStateChanged);
+            _currentSubStates.SetDictionaryChanged(_onSubStateChanged);
         }
 
         ComponentReference_Actor _actorReference    => Reference as ComponentReference_Actor;
         public override PriorityComponent        PriorityComponent => _priorityComponent ??= _actorReference.Actor.PriorityComponent;
 
-        readonly ObservableDictionary<StateName, bool> _currentStates;
-        
-        void OnStateChanged(StateName stateName)
+        readonly ObservableDictionary<PrimaryStateName, bool> _currentPrimaryStates;
+        readonly ObservableDictionary<SubStateName, bool>     _currentSubStates;
+
+        void _setSubStates()
         {
-            _priorityChangeCheck(DataChanged.ChangedState);
+            foreach (var primaryState in _currentPrimaryStates)
+            {
+                if (!_defaultSubStates.TryGetValue(primaryState.Key, out var subStates)) continue;
+
+                foreach (var subState in subStates
+                             .Where(subState => !_currentSubStates.TryAdd(subState.Key, subState.Value)))
+                {
+                    SetSubState(subState.Key, subState.Value);
+                }
+            }
+        }
+        
+        void _onPrimaryStateChanged(PrimaryStateName primaryStateName)
+        {
+            _priorityChangeCheck(DataChanged.ChangedPrimaryState);
+        }
+        
+        void _onSubStateChanged(SubStateName subStateName)
+        {
+            _priorityChangeCheck(DataChanged.ChangedSubState);
         }
 
-        public void SetState(StateName stateName, bool state)
+        public void SetPrimaryState(PrimaryStateName primaryStateName, bool actorState)
         {
-            if (!_currentStates.TryAdd(stateName, state)) _currentStates[stateName] = state;
+            if (!_currentPrimaryStates.TryAdd(primaryStateName, actorState)) _currentPrimaryStates[primaryStateName] = actorState;
         }
         
-        public bool GetState(StateName stateName)
+        public void SetSubState(SubStateName subStateName, bool actorState)
         {
-            if (_currentStates.TryGetValue(stateName, out var state)) return state;
+            if (!_currentSubStates.TryAdd(subStateName, actorState)) _currentSubStates[subStateName] = actorState;
+        }
+        
+        public bool GetPrimaryState(PrimaryStateName primaryStateName)
+        {
+            if (_currentPrimaryStates.TryGetValue(primaryStateName, out var state)) return state;
+
+            if (_defaultPrimaryStates.TryGetValue(primaryStateName, out var defaultState))
+            {
+                Debug.LogWarning($"PrimaryState: {primaryStateName} not found in CurrentStates. Setting to default value: {defaultState}");
+                
+                SetPrimaryState(primaryStateName, defaultState);
+
+                if (_currentPrimaryStates.TryGetValue(primaryStateName, out state)) return state;
+                
+                Debug.LogError($"PrimaryState: {primaryStateName} still not found in CurrentPrimaryStates after setting.");
+                return false;
+            }
             
-            Debug.LogError($"State: {stateName} not found in CurrentStates.");
+            Debug.LogError($"PrimaryState: {primaryStateName} not found in DefaultPrimaryStates.");
             return false;
         }
         
-        protected override bool _priorityChangeNeeded(object dataChanged) => (StateName)dataChanged != StateName.None;
+        public bool GetSubState(SubStateName subStateName)
+        {
+            if (_currentSubStates.TryGetValue(subStateName, out var state)) return state;
+
+            if (!_subStatePrimaryStateMap.TryGetValue(subStateName, out var primaryStateName))
+            {
+                Debug.LogError($"SubState: {subStateName} not found in SubStatePrimaryStateMap.");
+                return false;
+            }
+
+            if (!_currentPrimaryStates.ContainsKey(primaryStateName))
+            {
+                if (!_defaultPrimaryStates.TryGetValue(primaryStateName, out var defaultPrimaryState))
+                {
+                    Debug.LogError($"PrimaryState: {primaryStateName} not found in DefaultPrimaryStates.");
+                    return false;
+                }    
+                
+                Debug.LogWarning($"PrimaryState: {primaryStateName} not found in CurrentStates. Setting to default value: {defaultPrimaryState}");
+                
+                SetPrimaryState(primaryStateName, defaultPrimaryState);                
+            }
+            
+            if (!_defaultSubStates.TryGetValue(primaryStateName, out var defaultSubStates))
+            {
+                Debug.LogError($"PrimaryState: {primaryStateName} not found in DefaultSubStates.");
+                return false;
+            }
+
+            if (defaultSubStates.TryGetValue(subStateName, out var defaultState))
+            {
+                SetSubState(subStateName, defaultState);
+
+                if (_currentSubStates.TryGetValue(subStateName, out state)) return state;
+                
+                Debug.LogError($"SubState: {subStateName} still not found in CurrentSubStates after setting.");
+                return false;
+            }
+            
+            Debug.LogError($"State: {subStateName} not found in DefaultSubStates.");
+            return false;
+        }
+        
+        protected override bool _priorityChangeNeeded(object dataChanged) => (PrimaryStateName)dataChanged != PrimaryStateName.None;
 
         protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
         {
             get;
             set;
         } = new();
+
+        static readonly ObservableDictionary<PrimaryStateName, bool> _defaultPrimaryStates = new()
+        {
+            { PrimaryStateName.IsAlive, true},
+            { PrimaryStateName.CanIdle, true},
+            { PrimaryStateName.CanCombat, false},
+        };
+        
+        static readonly ObservableDictionary<PrimaryStateName, Dictionary<SubStateName, bool>> _defaultSubStates = new()
+        {
+            { PrimaryStateName.CanCombat, new Dictionary<SubStateName, bool>()
+            {
+                {SubStateName.IsInCombat, false},
+            }},
+        };
+        
+        static readonly Dictionary<SubStateName, PrimaryStateName> _subStatePrimaryStateMap = new()
+        {
+            {SubStateName.IsInCombat, PrimaryStateName.CanCombat},
+        };
+        
+        static readonly Dictionary<PrimaryStateName, ActionMap> _stateActionMap = new()
+        {
+            {PrimaryStateName.CanCombat, new ActionMap
+            {
+                EnabledGroupActions = new HashSet<ActionGroup> {ActionGroup.Combat},
+                DisabledGroupActions = new HashSet<ActionGroup> { ActionGroup.Work, ActionGroup.Recreation, }
+            }},
+        }; 
+    }
+
+    public class ActionMap
+    {
+        public HashSet<ActionGroup> EnabledGroupActions;
+        public HashSet<ActorActionName>  EnabledIndividualActions;
+        public HashSet<ActionGroup>  DisabledGroupActions;
+        public HashSet<ActorActionName>  DisabledIndividualActions;
     }
 }
+

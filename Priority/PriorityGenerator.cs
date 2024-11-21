@@ -77,7 +77,7 @@ namespace Priority
 
             foreach(var item in items)
             {
-                var masterItem = Manager_Item.GetMasterItem(item.ItemID);
+                var masterItem = Manager_Item.GetItem_Master(item.ItemID);
 
                 var allStationTypesList = allStationTypes.ToList();
 
@@ -133,22 +133,22 @@ namespace Priority
             return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
         }
 
-        public static List<float> GeneratePriorities(ActionName actionName, Dictionary<PriorityParameter, object> existingPriorityParameters)
+        public static List<float> GeneratePriorities(ActorActionName actorActionName, Dictionary<PriorityParameter, object> existingPriorityParameters)
         {
             if (existingPriorityParameters == null)
             {
-                Debug.LogError($"ActionName: {actionName} not found in _actionPriorityParameters.");
+                Debug.LogError($"ActionName: {actorActionName} not found in _actionPriorityParameters.");
                 return null;
             }
 
-            switch (actionName)
+            switch (actorActionName)
             {
-                case ActionName.Fetch:
+                case ActorActionName.Fetch:
                     return _generateFetchPriority(existingPriorityParameters) ?? new List<float>();
-                case ActionName.Deliver:
+                case ActorActionName.Deliver:
                     return _generateDeliverPriority(existingPriorityParameters) ?? new List<float>();
                 default:
-                    Debug.LogError($"ActionName: {actionName} not found.");
+                    Debug.LogError($"ActionName: {actorActionName} not found.");
                     return null;
             }
         }

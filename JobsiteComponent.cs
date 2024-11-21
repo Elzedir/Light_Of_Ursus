@@ -146,13 +146,13 @@ public abstract class JobsiteComponent : MonoBehaviour
         return PriorityComponent.GetStationToDeliverTo(hauler);
     }
 
-    public List<StationComponent> GetRelevantStations(ActionName actionName, InventoryData inventoryData)
+    public List<StationComponent> GetRelevantStations(ActorActionName actorActionName, InventoryData inventoryData)
     {
-        switch(actionName)
+        switch(actorActionName)
         {
-            case ActionName.Fetch:
+            case ActorActionName.Fetch:
                 return _relevantStations_Fetch();
-            case ActionName.Deliver:
+            case ActorActionName.Deliver:
                 return _relevantStations_Deliver(inventoryData);
             default:
                 return new List<StationComponent>();

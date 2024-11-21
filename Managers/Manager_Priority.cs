@@ -36,12 +36,12 @@ namespace Managers
 
     public class ActionToChange
     {
-        public ActionName         ActionName;
+        public ActorActionName         ActorActionName;
         public PriorityImportance PriorityImportance;
 
-        public ActionToChange(ActionName actionName, PriorityImportance priorityImportance)
+        public ActionToChange(ActorActionName actorActionName, PriorityImportance priorityImportance)
         {
-            ActionName         = actionName;
+            ActorActionName         = actorActionName;
             PriorityImportance = priorityImportance;
         }
     }

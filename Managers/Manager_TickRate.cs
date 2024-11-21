@@ -189,9 +189,9 @@ public abstract class SpreadTickables
     
     public SpreadTickables(float tickInterval, int maxExecutionsPerTick, Queue<Action> tickables)
     {
-        Tickables     = tickables;
-        MaxExecutionsPerTick = maxExecutionsPerTick;
-        NextTickTime  = Time.time + tickInterval;
+        Tickables            = tickables;
+        MaxExecutionsPerTick = Mathf.Max(maxExecutionsPerTick, 10000);
+        NextTickTime         = Time.time + tickInterval;
     }
 }
 
@@ -241,6 +241,8 @@ public class TickableSpreader
         {
             if (tickableQueue.Count <= 0) break;
 
+            Debug.Log("Dequeued and invoked");
+            
             tickableQueue.Dequeue().Invoke();
         }
     }

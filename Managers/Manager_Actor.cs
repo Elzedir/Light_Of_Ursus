@@ -230,6 +230,8 @@ namespace Managers
             actor.ActorData.SpeciesAndPersonality.SetSpecies(_getRandomSpecies());
             actor.ActorData.SpeciesAndPersonality.SetPersonality(_getRandomPersonality());
             actor.ActorData.GameObjectProperties.SetGameObjectProperties(actor.transform);
+            
+            // Set ActorStatesAndConditions based on Race, Religion, etc.
 
             _addToAllActorData(actor.ActorData);
 
@@ -274,12 +276,13 @@ namespace Managers
     [Serializable]
     public class ActorGenerationParameters
     {
-        public uint                ActorID          { get; private set; }
-        public ActorName           ActorName        { get; private set; }
-        public uint                FactionID        { get; private set; }
-        public uint                CityID           { get; private set; }
-        public List<RecipeName>    InitialRecipes   { get; private set; } = new();
-        public List<ActorVocation> InitialVocations { get; private set; } = new();
+        public uint                ActorID             { get; private set; }
+        public ActorName           ActorName           { get; private set; }
+        public uint                FactionID           { get; private set; }
+        public uint                CityID              { get; private set; }
+        public List<RecipeName>    InitialRecipes      { get; private set; } = new();
+        public List<ActorVocation> InitialVocations    { get; private set; } = new();
+        public StatesAndConditions StatesAndConditions { get; private set; }
 
         public void SetActorID(uint                         actorID)        => ActorID = actorID;
         public void SetActorName(ActorName                  actorName)      => ActorName = actorName;
@@ -289,5 +292,7 @@ namespace Managers
         public void AddInitialRecipe(RecipeName             recipeName)     => InitialRecipes.Add(recipeName);
         public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;
         public void AddInitialVocation(ActorVocation        actorVocation)  => InitialVocations.Add(actorVocation);
+        
+        public void SetStatesAndConditions(StatesAndConditions statesAndConditions) => StatesAndConditions = statesAndConditions;
     }
 }

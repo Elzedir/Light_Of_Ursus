@@ -150,7 +150,8 @@ namespace Actors
         PriorityCompleted,
 
         #region States And Conditions
-        ChangedState,
+        ChangedPrimaryState,
+        ChangedSubState,
         ChangedCondition,
         #endregion
     }

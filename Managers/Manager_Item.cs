@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Lists;
 using Managers;
+using ScriptableObjects;
 using UnityEngine;
 using UnityEditor;
 
@@ -13,95 +15,24 @@ public enum ItemType {
 
 public class Manager_Item
 {
-    static Item_Master[] _allItems;
-    public static Dictionary<uint, Item_Master> AllItems = new();
-    public static Item_Master GetMasterItem(uint itemID)
+    const string  _allItemsSOPath = "ScriptableObjects/AllItems_SO";
+        
+    static AllItems_SO _allItems;
+    static AllItems_SO AllItems => _allItems ??= _getOrCreateAllRecipesSO();
+
+    public static Item_Master GetItem_Master(uint itemID) => AllItems.GetItem_Master(itemID);
+        
+    static AllItems_SO _getOrCreateAllRecipesSO()
     {
-        if (!AllItems.TryGetValue(itemID, out Item_Master item))
-        {
-            Debug.LogError("Item with ID " + itemID + " not found in AllItems.");
-            return null;
-        }
-
-        return item;
-    }
-
-    static uint _lastUnusedID = 100000;
-
-    public static void Initialise()
-    {
-        List_Weapon.InitializeWeaponData();
-        List_Armour.InitializeArmourData();
-        List_Consumable.InitializeConsumableData();
-        List_RawMaterial.InitializeRawMaterialData();
-        List_ProcessedMaterial.InitializeProcessedMaterialData();
-    }
-
-    public static void AddToList(Item_Master itemData)
-    {
-        if (AllItems.ContainsKey(itemData.CommonStats_Item.ItemID))
-        {
-            uint alreadyUsedID = itemData.CommonStats_Item.ItemID;
-
-            while (AllItems.ContainsKey(_lastUnusedID))
-            {
-                _lastUnusedID++;
-            }
-
-            itemData.CommonStats_Item.ItemID = _lastUnusedID;
-            Debug.Log($"ItemName: {itemData.CommonStats_Item.ItemName} ItemID is now: {itemData.CommonStats_Item.ItemID} as old ItemID: {alreadyUsedID} is used by ItemName: {GetMasterItem(alreadyUsedID).CommonStats_Item.ItemName}");
-            //throw new ArgumentException("Item ID " + item.CommonStats_Item.ItemID + " is already used");
-        }
-
-        AllItems.Add(itemData.CommonStats_Item.ItemID, itemData);
-    }
-
-    public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
-    {
-        //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
-
-        foreach (WeaponType weaponType in item.WeaponStats_Item.WeaponTypeArray)
-        {
-            switch (weaponType)
-            {
-                case WeaponType.OneHandedMelee:
-                case WeaponType.TwoHandedMelee:
-                    foreach (WeaponClass weaponClass in item.WeaponStats_Item.WeaponClassArray)
-                    {
-                        switch (weaponClass)
-                        {
-                            case WeaponClass.Axe:
-                                //equipmentSlot.AddComponent<Weapon_Axe>();
-                                break;
-                            case WeaponClass.ShortSword:
-                                //equipmentSlot.AddComponent<Weapon_ShortSword>();
-                                break;
-                                // Add more cases here
-                        }
-                    }
-                    break;
-                case WeaponType.OneHandedRanged:
-                case WeaponType.TwoHandedRanged:
-                    //equipmentSlot.AddComponent<Weapon_Bow>();
-                    break;
-                case WeaponType.OneHandedMagic:
-                case WeaponType.TwoHandedMagic:
-                    foreach (WeaponClass weaponClass in item.WeaponStats_Item.WeaponClassArray)
-                    {
-                        //switch (weaponClass)
-                        //{
-                        //    case WeaponClass.Staff:
-                        //        equipmentSlot.AddComponent<Weapon_Staff>();
-                        //        break;
-                        //    case WeaponClass.Wand:
-                        //        equipmentSlot.AddComponent<Weapon_Wand>();
-                        //        break;
-                        //         Add more cases here
-                        //}
-                    }
-                    break;
-            }
-        }
+        var allItemsSO = Resources.Load<AllItems_SO>(_allItemsSOPath);
+            
+        if (allItemsSO is not null) return allItemsSO;
+            
+        allItemsSO = ScriptableObject.CreateInstance<AllItems_SO>();
+        AssetDatabase.CreateAsset(allItemsSO, $"Assets/Resources/{_allItemsSOPath}");
+        AssetDatabase.SaveAssets();
+            
+        return allItemsSO;
     }
 }
 
@@ -133,11 +64,11 @@ public class Item
     public uint MaxStackSize;
     
     Item_Master _masterItem;
-    public Item_Master MasterItem => _masterItem ??= Manager_Item.GetMasterItem(ItemID);
+    public Item_Master MasterItem => _masterItem ??= Manager_Item.GetItem_Master(ItemID);
 
     public Item(uint itemID, uint itemAmount)
     {
-        var masterItem = Manager_Item.GetMasterItem(itemID);
+        var masterItem = Manager_Item.GetItem_Master(itemID);
 
         if (masterItem == null) 
         {
@@ -169,8 +100,12 @@ public class Item
         => items.Sum(item => item.ItemAmount * item.MasterItem.CommonStats_Item.ItemWeight);
 }
 
+[Serializable]
 public class Item_Master
 {
+    public uint ItemID => CommonStats_Item.ItemID;
+    public string ItemName => CommonStats_Item.ItemName;
+    
     public CommonStats_Item CommonStats_Item;
     public VisualStats_Item VisualStats_Item;
     public WeaponStats_Item WeaponStats_Item;
@@ -180,18 +115,21 @@ public class Item_Master
     public PriorityStats_Item PriorityStats_Item;
 
     public Item_Master(
-        CommonStats_Item commonStats_Item, 
-        VisualStats_Item visualStats_Item, WeaponStats_Item weaponStats_Item, ArmourStats_Item armourStats_Item, 
-        FixedModifiers_Item fixedModifiers_Item, PercentageModifiers_Item percentageModifiers_Item,
-        PriorityStats_Item priorityStats_Item)
+        CommonStats_Item         commonStats_Item,
+        VisualStats_Item         visualStats_Item,
+        WeaponStats_Item         weaponStats_Item,
+        ArmourStats_Item         armourStats_Item,
+        FixedModifiers_Item      fixedModifiers_Item,
+        PercentageModifiers_Item percentageModifiers_Item,
+        PriorityStats_Item       priorityStats_Item)
     {
-        CommonStats_Item = commonStats_Item ?? new CommonStats_Item();
-        VisualStats_Item = visualStats_Item ?? new VisualStats_Item();
-        WeaponStats_Item = weaponStats_Item ?? new WeaponStats_Item();
-        ArmourStats_Item = armourStats_Item ?? new ArmourStats_Item();
-        FixedModifiers_Item = fixedModifiers_Item ?? new FixedModifiers_Item();
+        CommonStats_Item         = commonStats_Item         ?? new CommonStats_Item();
+        VisualStats_Item         = visualStats_Item         ?? new VisualStats_Item();
+        WeaponStats_Item         = weaponStats_Item         ?? new WeaponStats_Item();
+        ArmourStats_Item         = armourStats_Item         ?? new ArmourStats_Item();
+        FixedModifiers_Item      = fixedModifiers_Item      ?? new FixedModifiers_Item();
         PercentageModifiers_Item = percentageModifiers_Item ?? new PercentageModifiers_Item();
-        PriorityStats_Item = priorityStats_Item ?? new PriorityStats_Item();
+        PriorityStats_Item       = priorityStats_Item       ?? new PriorityStats_Item();
     }
 
     public Item_Master(Item_Master item)

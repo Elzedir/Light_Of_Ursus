@@ -6,6 +6,13 @@ namespace Tools
     public class ObservableDictionary<TKey, TValue> : Dictionary<TKey, TValue>
     {
         public Action<TKey> DictionaryChanged;
+        
+        public void SetDictionaryChanged(Action<TKey> dictionaryChanged) => DictionaryChanged = dictionaryChanged;
+        public void Cleanup()
+        {
+            SetDictionaryChanged(null);
+            SetDictionaryChanged(null);
+        }
 
         public new void Add(TKey key, TValue value)
         {

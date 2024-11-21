@@ -11,9 +11,8 @@ namespace Actors
     {
         None = 0,
             
-        InCombat       = 1 << 0,
-        HasJob         = 1 << 1,
-        NextExampleOne = 1 << 2,
+        InCombat,
+        HasWork,
     }
     
     [RequireComponent(typeof(Rigidbody))]
@@ -44,7 +43,7 @@ namespace Actors
         public PriorityComponent_Actor PriorityComponent => _priorityComponent ??= new PriorityComponent_Actor(_actorID);
         public Coroutine               ActorHaulCoroutine;
 
-        ActionName _currentAction => PriorityComponent.GetCurrentAction();
+        ActorActionName _currentActorAction => PriorityComponent.GetCurrentAction();
 
         void Awake()
         {
@@ -91,14 +90,14 @@ namespace Actors
         
         PriorityStatus _getPriorityStatus()
         {
-            if (ActorData.StatesAndConditions.Actor_States.GetState(StateName.IsInCombat))
+            if (ActorData.StatesAndConditions.Actor_States.GetSubState(SubStateName.IsInCombat))
             {
                 return PriorityStatus.InCombat;
             }
 
             if (ActorData.CareerAndJobs.HasJob())
             {
-                return PriorityStatus.HasJob;
+                return PriorityStatus.HasWork;
             }
 
             return PriorityStatus.None;
@@ -115,11 +114,11 @@ namespace Actors
                 return false;
             }
             
-            var nextHighestPriority = (ActionName)nextHighestPriorityValue.PriorityID;
+            var nextHighestPriority = (ActorActionName)nextHighestPriorityValue.PriorityID;
             
             Debug.Log($"Current Action: {currentAction}, Next Highest Priority: {nextHighestPriority}");
 
-            if (nextHighestPriority != ActionName.None)
+            if (nextHighestPriority != ActorActionName.Idle)
             {
                 return _isHigherPriorityThan(nextHighestPriority, currentAction);
             }
@@ -154,57 +153,17 @@ namespace Actors
             transform.position = targetPosition;
         }
 
-        static readonly Dictionary<ActionName, PriorityImportance> _allPriorityPerAction = new()
+        static readonly Dictionary<ActorActionName, PriorityImportance> _allPriorityPerAction = new()
         {
-            {ActionName.Wander, PriorityImportance.Low},
-            {ActionName.Deliver, PriorityImportance.Medium},
-            {ActionName.Fetch, PriorityImportance.Medium},
-            {ActionName.Scavenge, PriorityImportance.Medium},
+            {ActorActionName.Wander, PriorityImportance.Low},
+            {ActorActionName.Deliver, PriorityImportance.Medium},
+            {ActorActionName.Fetch, PriorityImportance.Medium},
+            {ActorActionName.Scavenge, PriorityImportance.Medium},
         };
         
-        static bool _isHigherPriorityThan(ActionName actionName, ActionName otherActionName)
+        static bool _isHigherPriorityThan(ActorActionName actorActionName, ActorActionName otherActorActionName)
         {
-            return _allPriorityPerAction[actionName] < _allPriorityPerAction[otherActionName];
+            return _allPriorityPerAction[actorActionName] < _allPriorityPerAction[otherActorActionName];
         }
-
-        static readonly Dictionary<PriorityImportance, List<ActionName>> _allActionsPerPriority = new()
-        {
-            {
-                PriorityImportance.Critical, new List<ActionName>()
-                {
-
-                }
-            },
-            {
-                PriorityImportance.High, new List<ActionName>()
-                {
-
-                }
-            },
-        };
-    }
-
-    public enum BehaviourName
-    {
-        None,
-        
-        Hostile,
-        Stealth,
-        Work,
-    }
-
-    public enum ActionName
-    {
-        None,
-        All,
-        
-        Attack,
-        Defend,
-
-        Deliver,
-        Fetch,
-        Scavenge,
-        
-        Wander,
     }
 }
