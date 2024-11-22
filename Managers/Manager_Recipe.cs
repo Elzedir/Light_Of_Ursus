@@ -28,6 +28,12 @@ namespace Managers
             
             return allRecipesSO;
         }
+        
+        public static void PopulateAllRecipes()
+        {
+            AllRecipes.PopulateDefaultRecipes();
+            // Then populate custom recipes.
+        }
     }
 
     public enum RecipeName 

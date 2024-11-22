@@ -42,8 +42,12 @@ namespace Priority
                 Debug.LogError("OnDataChange is still null after resetting data change notifications.");
                 return;
             }
+            
+            var actionsToChange = _getActionsToChange(dataChanged);
+            
+            if (actionsToChange == null) return;
 
-            _onDataChange(dataChanged, _getActionsToChange(dataChanged));
+            _onDataChange(dataChanged, actionsToChange);
         }
     
         protected abstract bool _priorityChangeNeeded(object dataChanged);

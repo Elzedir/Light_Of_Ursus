@@ -85,7 +85,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         }
     }
 
-    protected virtual void OnTick()
+    void _onTick()
     {
         if (!_initialised) return;
 
@@ -168,7 +168,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         InitialiseAllowedEmployeePositions();
         InitialiseStartingInventory();
 
-        Manager_TickRate.RegisterTickable(OnTick, TickRate.TenSeconds);
+        Manager_TickRate.RegisterTickable(_onTick, TickRate.TenSeconds);
 
         _initialised = true;
     }

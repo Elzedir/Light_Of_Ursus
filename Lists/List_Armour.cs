@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Managers;
 using UnityEngine;
 
 namespace Lists
 {
-    public abstract class List_Armour : Manager_Item
+    public abstract class List_Armour
     {
-        public static Dictionary<uint, Item_Master> GetAllArmour()
+        public static Dictionary<uint, Item_Master> GetAllDefaultArmour()
         {
             var allArmour = new Dictionary<uint, Item_Master>();
             

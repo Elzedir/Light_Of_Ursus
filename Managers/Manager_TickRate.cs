@@ -55,6 +55,7 @@ namespace Managers
 
             foreach (var tickRate in keys.Where(tickRate => currentTime >= _nextTickTimes[tickRate]))
             {
+                Debug.Log($"Tick: {tickRate}");
                 _tick(tickRate);
                 _nextTickTimes[tickRate] = currentTime + _getTickInterval(tickRate);
             }

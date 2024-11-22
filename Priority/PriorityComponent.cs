@@ -245,7 +245,8 @@ namespace Priority
                 .Dequeue(highestPriority.PriorityID) : null;
         }
 
-        public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(ActorActionName actorActionName, Dictionary<PriorityParameter, object> parameters)
+        public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(
+            ActorActionName actorActionName, Dictionary<PriorityParameter, object> parameters)
         {
             if (!_actionPriorityParameters.TryGetValue(actorActionName, out var existingPriorityParameters))
             {

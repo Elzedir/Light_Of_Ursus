@@ -10,9 +10,9 @@ namespace Lists
         Plank
     }
 
-    public abstract class List_ProcessedMaterial : Manager_Item
+    public abstract class List_ProcessedMaterial
     {
-        public static Dictionary<uint, Item_Master> GetAllProcessedMaterials()
+        public static Dictionary<uint, Item_Master> GetAllDefaultProcessedMaterials()
         {
             var allProcessedMaterials = new Dictionary<uint, Item_Master>();
 

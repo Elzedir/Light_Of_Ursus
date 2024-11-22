@@ -123,6 +123,8 @@ namespace Managers
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             _createManager("Manager_Ability",      _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
             _createManager("Manager_Job",          _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
+            
+            Manager_Recipe.PopulateAllRecipes();
         
             Manager_Career.Initialise();
             Manager_DateAndTime.Initialise();

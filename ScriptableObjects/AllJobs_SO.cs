@@ -7,106 +7,87 @@ using Managers;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ScriptableObjects
 {
-    [CreateAssetMenu(fileName = "AllItems_SO", menuName = "SOList/AllItems_SO")]
+    [CreateAssetMenu(fileName = "AllJobs_SO", menuName = "SOList/AllJobs_SO")]
     [Serializable]
-    public class AllItems_SO : ScriptableObject
+    public class AllJobs_SO : ScriptableObject
     {
-        [SerializeField] Item_Master[] _items;
-        public           Item_Master[] Items => _items ??= InitialiseAllItems();
-        Dictionary<uint, int>          _itemIndexLookup;
-        public Dictionary<uint, int>   ItemIndexLookup => _itemIndexLookup ??= _buildIndexLookup();
-        int                            _currentIndex;
+        [SerializeField] Job_Master[] _jobs;
+        public           Job_Master[] Jobs => _jobs ??= InitialiseAllJobs();
+        Dictionary<JobName, int>         _JobIndexLookup;
+        public Dictionary<JobName, int>  JobIndexLookup => _JobIndexLookup ??= _buildIndexLookup();
+        int                           _currentIndex;
 
-        public Item_Master[] InitialiseAllItems()
+        public Job_Master[] InitialiseAllJobs()
         {
-            _items = new Item_Master[DefaultItems.Count * 2];
-            Array.Copy(DefaultItems.Values.ToArray(), Items, DefaultItems.Count);
-            _currentIndex = DefaultItems.Count;
+            _jobs = new Job_Master[DefaultJobs.Count * 2];
+            Array.Copy(DefaultJobs.Values.ToArray(), Jobs, DefaultJobs.Count);
+            _currentIndex = DefaultJobs.Count;
             _buildIndexLookup();
-            return Items ?? throw new NullReferenceException("Items is null.");
+            return Jobs ?? throw new NullReferenceException("Jobs is null.");
         }
 
-        Dictionary<uint, int> _buildIndexLookup()
+        Dictionary<JobName, int> _buildIndexLookup()
         {
-            var newIndexLookup = new Dictionary<uint, int>();
+            var newIndexLookup = new Dictionary<JobName, int>();
 
-            for (var i = 0; i < Items.Length; i++)
+            for (var i = 0; i < Jobs.Length; i++)
             {
-                if (Items[i] != null)
+                if (Jobs[i] != null)
                 {
-                    newIndexLookup[Items[i].ItemID] = i;
+                    newIndexLookup[Jobs[i].JobName] = i;
                 }
             }
 
             return newIndexLookup;
         }
 
-        public Item_Master GetItem_Master(uint itemID)
+        public Job_Master GetJob_Master(JobName jobName)
         {
-            if (Items == null || Items.Length is 0) InitialiseAllItems();
+            if (Jobs == null || Jobs.Length is 0) InitialiseAllJobs();
 
-            if (ItemIndexLookup.TryGetValue(itemID, out var index))
+            if (JobIndexLookup.TryGetValue(jobName, out var index))
             {
-                return Items?[index];
+                return Jobs?[index];
             }
 
-            Debug.LogWarning($"Item {itemID} does not exist in Items.");
+            Debug.LogWarning($"Job {jobName} does not exist in Jobs.");
             return null;
         }
 
-        static uint _lastUnusedID = 100000;
-
-        public void AddItem(Item_Master item)
+        public void AddJob(Job_Master job)
         {
-            if (ItemIndexLookup.ContainsKey(item.ItemID))
+            if (JobIndexLookup.ContainsKey(job.JobName))
             {
-                if (Items[ItemIndexLookup[item.ItemID]].ItemName == item.ItemName)
-                {
-                    Debug.LogError($"Item {item.ItemID} already exists in Items with the same name. Returning.");
-                    return;
-                }
-
-                Debug.LogWarning(
-                    $"Item {item.ItemID} already exists in Items with a different name. Continuing with new ID.");
-
-                var alreadyUsedID = item.ItemID;
-
-                while (ItemIndexLookup.ContainsKey(_lastUnusedID))
-                {
-                    _lastUnusedID++;
-                }
-
-                item.CommonStats_Item.ItemID = _lastUnusedID;
-                Debug.Log(
-                    $"ItemName: {item.ItemName} ItemID is now: {item.ItemID} as old ItemID: {alreadyUsedID} " +
-                    $"is used by ItemName: {Items[alreadyUsedID].ItemName}");
+                Debug.LogWarning($"Job {job.JobName} already exists in JobIndex.");
+                return;
             }
 
-            if (_currentIndex >= Items.Length)
+            if (_currentIndex >= Jobs.Length)
             {
                 _compactAndResizeArray();
             }
 
-            Items[_currentIndex]         = item;
-            ItemIndexLookup[item.ItemID] = _currentIndex;
+            Jobs[_currentIndex]         = job;
+            JobIndexLookup[job.JobName] = _currentIndex;
             _currentIndex++;
         }
 
-        public void RemoveItem(uint itemID)
+        public void RemoveJob(JobName jobName)
         {
-            if (!ItemIndexLookup.TryGetValue(itemID, out var index))
+            if (!JobIndexLookup.TryGetValue(jobName, out var index))
             {
-                Debug.LogWarning($"Item {itemID} does not exist in ItemIndex.");
+                Debug.LogWarning($"Job {jobName} does not exist in JobIndex.");
                 return;
             }
 
-            Items[index] = null;
-            ItemIndexLookup.Remove(itemID);
+            Jobs[index] = null;
+            JobIndexLookup.Remove(jobName);
 
-            if (ItemIndexLookup.Count < Items.Length / 4)
+            if (JobIndexLookup.Count < Jobs.Length / 4)
             {
                 _compactAndResizeArray();
             }
@@ -116,84 +97,84 @@ namespace ScriptableObjects
         {
             var newSize = 0;
 
-            for (var i = 0; i < Items.Length; i++)
+            for (var i = 0; i < Jobs.Length; i++)
             {
-                if (Items[i] == null) continue;
+                if (Jobs[i] == null) continue;
 
-                Items[newSize]                   = Items[i];
-                ItemIndexLookup[Items[i].ItemID] = newSize;
+                Jobs[newSize]                   = Jobs[i];
+                JobIndexLookup[Jobs[i].JobName] = newSize;
                 newSize++;
             }
 
-            Array.Resize(ref _items, Math.Max(newSize * 2, Items.Length));
+            Array.Resize(ref _jobs, Math.Max(newSize * 2, Jobs.Length));
             _currentIndex = newSize;
         }
 
-        public void UpdateItem(Item_Master item)
+        public void UpdateJob(Job_Master job)
         {
-            if (ItemIndexLookup.TryGetValue(item.ItemID, out var index))
+            if (JobIndexLookup.TryGetValue(job.JobName, out var index))
             {
-                Items[index] = item;
+                Jobs[index] = job;
             }
             else
             {
-                AddItem(item);
+                AddJob(job);
             }
         }
 
-        public void ClearItemData()
+        public void ClearJobData()
         {
-            _items = Array.Empty<Item_Master>();
-            ItemIndexLookup.Clear();
+            _jobs = Array.Empty<Job_Master>();
+            JobIndexLookup.Clear();
             _currentIndex = 0;
         }
 
-        public Dictionary<uint, Item_Master> PopulateDefaultItems()
+        public Dictionary<uint, Job_Master> PopulateDefaultJobs()
         {
-            var defaultItems = new Dictionary<uint, Item_Master>();
+            var defaultJobs = new Dictionary<uint, Job_Master>();
 
-            foreach (var item in List_Weapon.GetAllDefaultWeapons())
+            foreach (var Job in List_Weapon.GetAllDefaultWeapons())
             {
-                defaultItems.Add(item.Key, item.Value);
+                defaultJobs.Add(Job.Key, Job.Value);
             }
 
-            foreach (var item in List_Armour.GetAllDefaultArmour())
+            foreach (var Job in List_Armour.GetAllDefaultArmour())
             {
-                defaultItems.Add(item.Key, item.Value);
+                defaultJobs.Add(Job.Key, Job.Value);
             }
 
-            foreach (var item in List_Consumable.GetAllDefaultConsumables())
+            foreach (var Job in List_Consumable.GetAllDefaultConsumables())
             {
-                defaultItems.Add(item.Key, item.Value);
+                defaultJobs.Add(Job.Key, Job.Value);
             }
 
             foreach (var rawMaterial in List_RawMaterial.GetAllDefaultRawMaterials())
             {
-                defaultItems.Add(rawMaterial.Key, rawMaterial.Value);
+                defaultJobs.Add(rawMaterial.Key, rawMaterial.Value);
             }
 
             foreach (var processedMaterial in List_ProcessedMaterial.GetAllDefaultProcessedMaterials())
             {
-                defaultItems.Add(processedMaterial.Key, processedMaterial.Value);
+                defaultJobs.Add(processedMaterial.Key, processedMaterial.Value);
             }
 
-            return defaultItems;
+            return defaultJobs;
         }
         
-        Dictionary<uint, Item_Master> _defaultItems;
-        Dictionary<uint, Item_Master> DefaultItems => _defaultItems ??= PopulateDefaultItems();
+        Dictionary<uint, Job_Master> _defaultJobs;
+        Dictionary<uint, Job_Master> DefaultJobs => _defaultJobs ??= PopulateDefaultJobs();
 
-        public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
+        public void AttachWeaponScript(Job_Master Job, Equipment_Base equipmentSlot)
         {
             //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
 
-            foreach (var weaponType in item.WeaponStats_Item.WeaponTypeArray)
+            foreach (var weaponType in Job.WeaponStats_Job.WeaponTypeArray)
             {
                 switch (weaponType)
                 {
                     case WeaponType.OneHandedMelee:
                     case WeaponType.TwoHandedMelee:
-                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
+                        foreach (var weaponClass in Job.WeaponStats_Job.WeaponClassArray)
                         {
                             switch (weaponClass)
                             {
@@ -214,7 +195,7 @@ namespace ScriptableObjects
                         break;
                     case WeaponType.OneHandedMagic:
                     case WeaponType.TwoHandedMagic:
-                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
+                        foreach (var weaponClass in Job.WeaponStats_Job.WeaponClassArray)
                         {
                             //switch (weaponClass)
                             //{
@@ -234,12 +215,12 @@ namespace ScriptableObjects
         }
     }
 
-    [CustomEditor(typeof(AllItems_SO))]
-    public class AllItems_SOEditor : Editor
+    [CustomEditor(typeof(AllJobs_SO))]
+    public class AllJobs_SOEditor : Editor
     {
-        int _selectedItemIndex = -1;
+        int _selectedJobIndex = -1;
 
-        Vector2 _itemScrollPos;
+        Vector2 _JobScrollPos;
 
         bool _showCommonStats;
         bool _showVisualStats;
@@ -262,55 +243,55 @@ namespace ScriptableObjects
 
         public override void OnInspectorGUI()
         {
-            var allItemsSO = (AllItems_SO)target;
+            var allJobsSO = (AllJobs_SO)target;
 
-            if (allItemsSO?.Items is null || allItemsSO.Items.Length is 0)
+            if (allJobsSO?.Jobs is null || allJobsSO.Jobs.Length is 0)
             {
-                EditorGUILayout.LabelField("No Items Found", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("No Jobs Found", EditorStyles.boldLabel);
                 return;
             }
 
-            if (GUILayout.Button("Clear Item Data"))
+            if (GUILayout.Button("Clear Job Data"))
             {
-                allItemsSO.ClearItemData();
-                EditorUtility.SetDirty(allItemsSO);
+                allJobsSO.ClearJobData();
+                EditorUtility.SetDirty(allJobsSO);
             }
 
             if (GUILayout.Button("Unselect All")) _unselectAll();
 
-            EditorGUILayout.LabelField("All Items", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("All Jobs", EditorStyles.boldLabel);
 
-            var nonNullItems = allItemsSO.Items.Where(item =>
-                item        != null &&
-                item.ItemID != 0).ToArray();
+            var nonNullJobs = allJobsSO.Jobs.Where(Job =>
+                Job        != null &&
+                Job.JobID != 0).ToArray();
 
-            _itemScrollPos = EditorGUILayout.BeginScrollView(_itemScrollPos,
-                GUILayout.Height(Math.Min(200, nonNullItems.Length * 20)));
-            _selectedItemIndex = GUILayout.SelectionGrid(_selectedItemIndex, _getItemNames(nonNullItems), 1);
+            _JobScrollPos = EditorGUILayout.BeginScrollView(_JobScrollPos,
+                GUILayout.Height(Math.Min(200, nonNullJobs.Length * 20)));
+            _selectedJobIndex = GUILayout.SelectionGrid(_selectedJobIndex, _getJobNames(nonNullJobs), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedItemIndex >= 0 && _selectedItemIndex < nonNullItems.Length)
+            if (_selectedJobIndex >= 0 && _selectedJobIndex < nonNullJobs.Length)
             {
-                _drawItemData(nonNullItems[_selectedItemIndex]);
+                _drawJobData(nonNullJobs[_selectedJobIndex]);
             }
         }
 
-        string[] _getItemNames(Item_Master[] items) =>
-            items.Select(item => item.CommonStats_Item.ItemName.ToString()).ToArray();
+        string[] _getJobNames(Job_Master[] Jobs) =>
+            Jobs.Select(Job => Job.CommonStats_Job.JobName.ToString()).ToArray();
 
 
-        void _drawItemData(Item_Master item)
+        void _drawJobData(Job_Master Job)
         {
-            EditorGUILayout.LabelField("Item Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Job Data", EditorStyles.boldLabel);
 
-            EditorGUILayout.LabelField("Item ID",   $"{item.ItemID}");
-            EditorGUILayout.LabelField("Item Name", $"{item.CommonStats_Item.ItemName}");
+            EditorGUILayout.LabelField("Job ID",   $"{Job.JobID}");
+            EditorGUILayout.LabelField("Job Name", $"{Job.CommonStats_Job.JobName}");
 
-            if (item.CommonStats_Item != null)
+            if (Job.CommonStats_Job != null)
             {
                 EditorGUILayout.LabelField("CommonStats", EditorStyles.boldLabel);
 
-                var commonStats = item.CommonStats_Item;
+                var commonStats = Job.CommonStats_Job;
 
                 _showCommonStats = EditorGUILayout.Toggle("CommonStats", _showCommonStats);
 
@@ -320,11 +301,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.VisualStats_Item != null)
+            if (Job.VisualStats_Job != null)
             {
                 EditorGUILayout.LabelField("VisualStats", EditorStyles.boldLabel);
 
-                var visualStats = item.VisualStats_Item;
+                var visualStats = Job.VisualStats_Job;
 
                 _showVisualStats = EditorGUILayout.Toggle("VisualStats", _showVisualStats);
 
@@ -334,11 +315,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.WeaponStats_Item != null)
+            if (Job.WeaponStats_Job != null)
             {
                 EditorGUILayout.LabelField("WeaponStats", EditorStyles.boldLabel);
 
-                var weaponStats = item.WeaponStats_Item;
+                var weaponStats = Job.WeaponStats_Job;
 
                 _showWeaponStats = EditorGUILayout.Toggle("WeaponStats", _showWeaponStats);
 
@@ -348,11 +329,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.ArmourStats_Item != null)
+            if (Job.ArmourStats_Job != null)
             {
                 EditorGUILayout.LabelField("ArmourStats", EditorStyles.boldLabel);
 
-                var armourStats = item.ArmourStats_Item;
+                var armourStats = Job.ArmourStats_Job;
 
                 _showArmourStats = EditorGUILayout.Toggle("ArmourStats", _showArmourStats);
 
@@ -362,11 +343,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.FixedModifiers_Item != null)
+            if (Job.FixedModifiers_Job != null)
             {
                 EditorGUILayout.LabelField("FixedModifiers", EditorStyles.boldLabel);
 
-                var fixedModifiers = item.FixedModifiers_Item;
+                var fixedModifiers = Job.FixedModifiers_Job;
 
                 _showFixedModifiers = EditorGUILayout.Toggle("FixedModifiers", _showFixedModifiers);
 
@@ -376,11 +357,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.PercentageModifiers_Item != null)
+            if (Job.PercentageModifiers_Job != null)
             {
                 EditorGUILayout.LabelField("PercentageModifiers", EditorStyles.boldLabel);
 
-                var percentageModifiers = item.PercentageModifiers_Item;
+                var percentageModifiers = Job.PercentageModifiers_Job;
 
                 _showPercentageModifiers = EditorGUILayout.Toggle("PercentageModifiers", _showPercentageModifiers);
 
@@ -390,11 +371,11 @@ namespace ScriptableObjects
                 }
             }
 
-            if (item.PriorityStats_Item != null)
+            if (Job.PriorityStats_Job != null)
             {
                 EditorGUILayout.LabelField("PriorityStats", EditorStyles.boldLabel);
 
-                var priorityStats = item.PriorityStats_Item;
+                var priorityStats = Job.PriorityStats_Job;
 
                 _showPriorityStats = EditorGUILayout.Toggle("PriorityStats", _showPriorityStats);
 
@@ -405,30 +386,30 @@ namespace ScriptableObjects
             }
         }
 
-        void _drawCommonStats(CommonStats_Item commonStats)
+        void _drawCommonStats(CommonStats_Job commonStats)
         {
-            EditorGUILayout.LabelField("Item ID", commonStats.ItemID.ToString());
-            EditorGUILayout.LabelField("Item Name", commonStats.ItemName);
-            EditorGUILayout.LabelField("Item Type", commonStats.ItemType.ToString());
+            EditorGUILayout.LabelField("Job ID", commonStats.JobID.ToString());
+            EditorGUILayout.LabelField("Job Name", commonStats.JobName);
+            EditorGUILayout.LabelField("Job Type", commonStats.JobType.ToString());
             EditorGUILayout.LabelField("Equipment Slots", string.Join(", ", commonStats.EquipmentSlots.ToString()));
             EditorGUILayout.LabelField("Max Stack Size", commonStats.MaxStackSize.ToString());
-            EditorGUILayout.LabelField("Item Level", commonStats.ItemLevel.ToString());
-            EditorGUILayout.LabelField("Item Quality", commonStats.ItemQuality.ToString());
-            EditorGUILayout.LabelField("Item Value", commonStats.ItemValue.ToString());
-            EditorGUILayout.LabelField("Item Weight", commonStats.ItemWeight.ToString(CultureInfo.InvariantCulture));
-            EditorGUILayout.LabelField("Item Equippable", commonStats.ItemEquippable.ToString());
+            EditorGUILayout.LabelField("Job Level", commonStats.JobLevel.ToString());
+            EditorGUILayout.LabelField("Job Quality", commonStats.JobQuality.ToString());
+            EditorGUILayout.LabelField("Job Value", commonStats.JobValue.ToString());
+            EditorGUILayout.LabelField("Job Weight", commonStats.JobWeight.ToString(CultureInfo.InvariantCulture));
+            EditorGUILayout.LabelField("Job Equippable", commonStats.JobEquippable.ToString());
         }
 
-        void _drawVisualStats(VisualStats_Item visualStats)
+        void _drawVisualStats(VisualStats_Job visualStats)
         {
-            EditorGUILayout.LabelField("Item Mesh",     visualStats.ItemMesh.ToString());
-            EditorGUILayout.LabelField("Item Material", visualStats.ItemMaterial.ToString());
-            EditorGUILayout.LabelField("Item Position", visualStats.ItemPosition.ToString());
-            EditorGUILayout.LabelField("Item Rotation", visualStats.ItemRotation.ToString());
-            EditorGUILayout.LabelField("Item Scale",    visualStats.ItemScale.ToString());
+            EditorGUILayout.LabelField("Job Mesh",     visualStats.JobMesh.ToString());
+            EditorGUILayout.LabelField("Job Material", visualStats.JobMaterial.ToString());
+            EditorGUILayout.LabelField("Job Position", visualStats.JobPosition.ToString());
+            EditorGUILayout.LabelField("Job Rotation", visualStats.JobRotation.ToString());
+            EditorGUILayout.LabelField("Job Scale",    visualStats.JobScale.ToString());
         }
 
-        void _drawWeaponStats(WeaponStats_Item weaponStats)
+        void _drawWeaponStats(WeaponStats_Job weaponStats)
         {
             EditorGUILayout.LabelField("Weapon Type",  string.Join(", ", weaponStats.WeaponTypeArray.ToString()));
             EditorGUILayout.LabelField("Weapon Class", string.Join(", ", weaponStats.WeaponClassArray.ToString()));
@@ -436,14 +417,14 @@ namespace ScriptableObjects
                 weaponStats.MaxChargeTime.ToString(CultureInfo.InvariantCulture));
         }
 
-        void _drawArmourStats(ArmourStats_Item armourStats)
+        void _drawArmourStats(ArmourStats_Job armourStats)
         {
             EditorGUILayout.LabelField("Equipment Slots", armourStats.EquipmentSlot.ToString());
             EditorGUILayout.LabelField("Armour Coverage",
-                armourStats.ItemCoverage.ToString(CultureInfo.InvariantCulture));
+                armourStats.JobCoverage.ToString(CultureInfo.InvariantCulture));
         }
 
-        void _drawFixedModifiers(FixedModifiers_Item fixedModifiers)
+        void _drawFixedModifiers(FixedModifiers_Job fixedModifiers)
         {
             EditorGUILayout.LabelField("CurrentHealth",
                 fixedModifiers.CurrentHealth.ToString(CultureInfo.InvariantCulture));
@@ -482,7 +463,7 @@ namespace ScriptableObjects
                 fixedModifiers.DodgeCooldownReduction.ToString(CultureInfo.InvariantCulture));
         }
 
-        void _drawPercentageModifiers(PercentageModifiers_Item percentageModifiers)
+        void _drawPercentageModifiers(PercentageModifiers_Job percentageModifiers)
         {
             EditorGUILayout.LabelField("CurrentHealth",
                 percentageModifiers.CurrentHealth.ToString(CultureInfo.InvariantCulture));
@@ -532,7 +513,7 @@ namespace ScriptableObjects
         Vector2 _mediumPriorityScrollPos;
         Vector2 _lowPriorityScrollPos;
 
-        void _drawPriorityStats(PriorityStats_Item priorityStats)
+        void _drawPriorityStats(PriorityStats_Job priorityStats)
         {
             foreach (var priority in priorityStats.Priority_Stations)
             {

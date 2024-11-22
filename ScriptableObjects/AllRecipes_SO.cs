@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Lists;
 using Managers;
 using ScriptableObjects;
 using UnityEditor;
@@ -20,9 +21,9 @@ namespace ScriptableObjects
         
         public Recipe_Master[] InitialiseAllRecipes()
         {
-            _recipes = new Recipe_Master[_defaultRecipes.Count * 2];
-            Array.Copy(_defaultRecipes.Values.ToArray(), Recipes, _defaultRecipes.Count);
-            _currentIndex = _defaultRecipes.Count;
+            _recipes = new Recipe_Master[DefaultRecipes.Count * 2];
+            Array.Copy(DefaultRecipes.Values.ToArray(), Recipes, DefaultRecipes.Count);
+            _currentIndex = DefaultRecipes.Count;
             _buildIndexLookup();
             return Recipes ?? throw new NullReferenceException("Recipes is null.");
         }
@@ -125,40 +126,16 @@ namespace ScriptableObjects
             RecipeIndexLookup.Clear();
             _currentIndex = 0;
         }
-        
-        static readonly Dictionary<RecipeName, Recipe_Master> _defaultRecipes = new()
+
+        public Dictionary<RecipeName, Recipe_Master> PopulateDefaultRecipes()
         {
-            { RecipeName.None, new Recipe_Master(
-                recipeName: RecipeName.None,
-                recipeDescription: "Select a recipe",
-                requiredProgress: 0,
-                requiredIngredients: new List<Item>(),
-                requiredStation: StationName.None,
-                requiredVocations: new List<VocationRequirement>(),
-                recipeProducts: new List<Item>(),
-                possibleQualities: new List<CraftingQuality>()
-            )},
-            { RecipeName.Log, new Recipe_Master(
-                recipeName: RecipeName.Log,
-                recipeDescription: "Chop a log",
-                requiredProgress: 10,
-                requiredIngredients: new List<Item>(),
-                requiredStation: StationName.Tree,
-                requiredVocations: new List<VocationRequirement> { new(VocationName.Logging, 0) },
-                recipeProducts: new List<Item> { new(1100, 1) },
-                possibleQualities: new List<CraftingQuality> { new(1, ItemQualityName.Common) }
-            )},
-            { RecipeName.Plank, new Recipe_Master(
-                recipeName: RecipeName.Plank,
-                recipeDescription: "Craft a plank",
-                requiredProgress: 10,
-                requiredIngredients: new List<Item> { new(1100, 2) },
-                requiredStation: StationName.Sawmill,
-                requiredVocations: new List<VocationRequirement> { new(VocationName.Sawying, 0) },
-                recipeProducts: new List<Item> { new(2300, 1) },
-                possibleQualities: new List<CraftingQuality> { new(1, ItemQualityName.Common) }
-            )},
-        };
+            return List_Recipe.GetAllDefaultRecipes().ToDictionary(
+                recipe => recipe.Key,
+                recipe => recipe.Value);
+        }
+
+        Dictionary<RecipeName, Recipe_Master> _defaultRecipes;
+        Dictionary<RecipeName, Recipe_Master> DefaultRecipes => _defaultRecipes ??= PopulateDefaultRecipes();
     }
 
     [CustomEditor(typeof(AllRecipes_SO))]

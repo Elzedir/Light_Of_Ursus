@@ -9,9 +9,9 @@ namespace Lists
         Log
     }
 
-    public abstract class List_RawMaterial : Manager_Item
+    public abstract class List_RawMaterial
     {
-        public static Dictionary<uint, Item_Master> GetAllRawMaterials()
+        public static Dictionary<uint, Item_Master> GetAllDefaultRawMaterials()
         {
             var allRawMaterials = new Dictionary<uint, Item_Master>();
 

@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using Managers;
 
 namespace Lists
 {
-    public abstract class List_Consumable : Manager_Item
+    public abstract class List_Consumable
     {
-        public static Dictionary<uint, Item_Master> GetAllConsumables()
+        public static Dictionary<uint, Item_Master> GetAllDefaultConsumables()
         {
             var allConsumables = new Dictionary<uint, Item_Master>();
             

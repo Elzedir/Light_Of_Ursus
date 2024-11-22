@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 using UnityEngine;
 
 namespace Lists
@@ -27,9 +28,9 @@ namespace Lists
         Spear
     }
 
-    public abstract class List_Weapon : Manager_Item
+    public abstract class List_Weapon
     {
-        public static Dictionary<uint, Item_Master> GetAllWeapons()
+        public static Dictionary<uint, Item_Master> GetAllDefaultWeapons()
         {
             var allWeapons = new Dictionary<uint, Item_Master>();
             

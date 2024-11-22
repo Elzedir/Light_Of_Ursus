@@ -316,11 +316,7 @@ namespace Actors
         public uint JobsiteID;
         public void SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
 
-        public uint StationID;
-        public void SetStationID(uint stationID) => StationID = stationID;
-
-        public uint OperatingAreaID;
-        public void SetOperatingAreaID(uint operatingAreaID) => OperatingAreaID = operatingAreaID;
+        
 
         public EmployeePosition EmployeePosition;
         public void             SetEmployeePosition(EmployeePosition employeePosition) => EmployeePosition = employeePosition;

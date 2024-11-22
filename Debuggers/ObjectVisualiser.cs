@@ -153,7 +153,7 @@ namespace Debuggers
             {
                 var allIdentificationData = new List<ObjectData_Data>
                 {
-                    new ObjectData_Data(ObjectDataType.FullIdentification,
+                    new(ObjectDataType.FullIdentification,
                         $"Name: {actorFullIdentification.ActorName.GetName()}, ID: {actor.ActorData.ActorID} "),
                 };
 
@@ -192,8 +192,10 @@ namespace Debuggers
             if (actorPriorities != null)
             {
                 var allPriorityData = actorPriorities
-                                      .Select(priorityQueue => new ObjectData_Data(ObjectDataType.PriorityData,
-                                          $"HighestPriorityAction: {priorityQueue.Key} Value: {priorityQueue.Value.Peek()}"))
+                                      .Select(priorityQueue => 
+                                          new ObjectData_Data(ObjectDataType.PriorityData,
+                                          $"HighestPriorityAction: {priorityQueue.Key} " +
+                                          $"Value: {priorityQueue.Value.Peek()}"))
                                       .ToList();
 
                 var objectEntryData = new ObjectEntryData(
@@ -238,9 +240,9 @@ namespace Debuggers
             {
                 var allProgressData = new List<ObjectData_Data>
                 {
-                    new ObjectData_Data(ObjectDataType.ProgressData,
+                    new(ObjectDataType.ProgressData,
                         $"CurrentProduct: {stationProgressData.CurrentProduct}"),
-                    new ObjectData_Data(ObjectDataType.ProgressData,
+                    new(ObjectDataType.ProgressData,
                         $"CurrentProgress: {stationProgressData.CurrentProgress}"),
                 };
 

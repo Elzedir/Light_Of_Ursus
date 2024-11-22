@@ -82,8 +82,12 @@ namespace Actors
             // Distant region is 2+ zones.
 
             var priorityStatus = _getPriorityStatus();
-            
-            if (!_mustChangeCurrentAction(priorityStatus)) return;
+
+            if (!_mustChangeCurrentAction(priorityStatus))
+            {
+                Debug.Log("No need to change current action.");
+                return;
+            }
 
             var highestPriority = PriorityComponent.GetHighestPriority(priorityStatus);
         }
