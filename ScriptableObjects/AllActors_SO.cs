@@ -216,8 +216,7 @@ namespace ScriptableObjects
         {
             EditorGUILayout.LabelField("JobsActive",        careerAndJobs.JobsActive.ToString());
             EditorGUILayout.LabelField("JobSiteID",         careerAndJobs.JobsiteID.ToString());
-            EditorGUILayout.LabelField("StationID",         careerAndJobs.StationID.ToString());
-            EditorGUILayout.LabelField("OperatingAreaID",   careerAndJobs.OperatingAreaID.ToString());
+            EditorGUILayout.LabelField("JobName",       careerAndJobs.CurrentActorJob.JobName.ToString());
             EditorGUILayout.LabelField("Employee Position", careerAndJobs.EmployeePosition.ToString());
         }
 

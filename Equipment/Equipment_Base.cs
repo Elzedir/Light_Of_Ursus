@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using Items;
 using Managers;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -40,7 +41,7 @@ public class Equipment_Base : MonoBehaviour
             return false;
         }
 
-        var masterItem = Manager_Item.GetItem_Master(item.ItemID);
+        var masterItem = Items.Items.GetItem_Master(item.ItemID);
 
         if (masterItem.CommonStats_Item.EquipmentSlots.Contains(EquipmentSlot))
         {

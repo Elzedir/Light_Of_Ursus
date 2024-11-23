@@ -8,147 +8,18 @@ using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Items
 {
     [CreateAssetMenu(fileName = "AllItems_SO", menuName = "SOList/AllItems_SO")]
     [Serializable]
-    public class AllItems_SO : ScriptableObject
+    public class AllItems_SO : Base_SO<Item_Master>
     {
-        [SerializeField] Item_Master[] _items;
-        public           Item_Master[] Items => _items ??= InitialiseAllItems();
-        Dictionary<uint, int>          _itemIndexLookup;
-        public Dictionary<uint, int>   ItemIndexLookup => _itemIndexLookup ??= _buildIndexLookup();
-        int                            _currentIndex;
+        public Item_Master[] Items                       => Objects;
+        public Item_Master   GetItem_Master(uint itemID) => GetObject_Master(itemID);
+        
+        public override uint GetObjectID(int id) => Items[id].ItemID;
 
-        public Item_Master[] InitialiseAllItems()
-        {
-            _items = new Item_Master[DefaultItems.Count * 2];
-            Array.Copy(DefaultItems.Values.ToArray(), Items, DefaultItems.Count);
-            _currentIndex = DefaultItems.Count;
-            _buildIndexLookup();
-            return Items ?? throw new NullReferenceException("Items is null.");
-        }
-
-        Dictionary<uint, int> _buildIndexLookup()
-        {
-            var newIndexLookup = new Dictionary<uint, int>();
-
-            for (var i = 0; i < Items.Length; i++)
-            {
-                if (Items[i] != null)
-                {
-                    newIndexLookup[Items[i].ItemID] = i;
-                }
-            }
-
-            return newIndexLookup;
-        }
-
-        public Item_Master GetItem_Master(uint itemID)
-        {
-            if (Items == null || Items.Length is 0) InitialiseAllItems();
-
-            if (ItemIndexLookup.TryGetValue(itemID, out var index))
-            {
-                return Items?[index];
-            }
-
-            Debug.LogWarning($"Item {itemID} does not exist in Items.");
-            return null;
-        }
-
-        static uint _lastUnusedID = 100000;
-
-        public void AddItem(Item_Master item)
-        {
-            if (ItemIndexLookup.ContainsKey(item.ItemID))
-            {
-                if (Items[ItemIndexLookup[item.ItemID]].ItemName == item.ItemName)
-                {
-                    Debug.LogError($"Item {item.ItemID} already exists in Items with the same name. Returning.");
-                    return;
-                }
-
-                Debug.LogWarning(
-                    $"Item {item.ItemID} already exists in Items with a different name. Continuing with new ID.");
-
-                var alreadyUsedID = item.ItemID;
-
-                while (ItemIndexLookup.ContainsKey(_lastUnusedID))
-                {
-                    _lastUnusedID++;
-                }
-
-                item.CommonStats_Item.ItemID = _lastUnusedID;
-                Debug.Log(
-                    $"ItemName: {item.ItemName} ItemID is now: {item.ItemID} as old ItemID: {alreadyUsedID} " +
-                    $"is used by ItemName: {Items[alreadyUsedID].ItemName}");
-            }
-
-            if (_currentIndex >= Items.Length)
-            {
-                _compactAndResizeArray();
-            }
-
-            Items[_currentIndex]         = item;
-            ItemIndexLookup[item.ItemID] = _currentIndex;
-            _currentIndex++;
-        }
-
-        public void RemoveItem(uint itemID)
-        {
-            if (!ItemIndexLookup.TryGetValue(itemID, out var index))
-            {
-                Debug.LogWarning($"Item {itemID} does not exist in ItemIndex.");
-                return;
-            }
-
-            Items[index] = null;
-            ItemIndexLookup.Remove(itemID);
-
-            if (ItemIndexLookup.Count < Items.Length / 4)
-            {
-                _compactAndResizeArray();
-            }
-        }
-
-        void _compactAndResizeArray()
-        {
-            var newSize = 0;
-
-            for (var i = 0; i < Items.Length; i++)
-            {
-                if (Items[i] == null) continue;
-
-                Items[newSize]                   = Items[i];
-                ItemIndexLookup[Items[i].ItemID] = newSize;
-                newSize++;
-            }
-
-            Array.Resize(ref _items, Math.Max(newSize * 2, Items.Length));
-            _currentIndex = newSize;
-        }
-
-        public void UpdateItem(Item_Master item)
-        {
-            if (ItemIndexLookup.TryGetValue(item.ItemID, out var index))
-            {
-                Items[index] = item;
-            }
-            else
-            {
-                AddItem(item);
-            }
-        }
-
-        public void ClearItemData()
-        {
-            _items = Array.Empty<Item_Master>();
-            ItemIndexLookup.Clear();
-            _currentIndex = 0;
-        }
-
-        public Dictionary<uint, Item_Master> PopulateDefaultItems()
+        public override Dictionary<uint, Item_Master> PopulateDefaultObjects()
         {
             var defaultItems = new Dictionary<uint, Item_Master>();
 
@@ -179,59 +50,8 @@ namespace ScriptableObjects
 
             return defaultItems;
         }
-        
-        Dictionary<uint, Item_Master> _defaultItems;
-        Dictionary<uint, Item_Master> DefaultItems => _defaultItems ??= PopulateDefaultItems();
 
-        public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
-        {
-            //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
-
-            foreach (var weaponType in item.WeaponStats_Item.WeaponTypeArray)
-            {
-                switch (weaponType)
-                {
-                    case WeaponType.OneHandedMelee:
-                    case WeaponType.TwoHandedMelee:
-                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
-                        {
-                            switch (weaponClass)
-                            {
-                                case WeaponClass.Axe:
-                                    //equipmentSlot.AddComponent<Weapon_Axe>();
-                                    break;
-                                case WeaponClass.ShortSword:
-                                    //equipmentSlot.AddComponent<Weapon_ShortSword>();
-                                    break;
-                                // Add more cases here
-                            }
-                        }
-
-                        break;
-                    case WeaponType.OneHandedRanged:
-                    case WeaponType.TwoHandedRanged:
-                        //equipmentSlot.AddComponent<Weapon_Bow>();
-                        break;
-                    case WeaponType.OneHandedMagic:
-                    case WeaponType.TwoHandedMagic:
-                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
-                        {
-                            //switch (weaponClass)
-                            //{
-                            //    case WeaponClass.Staff:
-                            //        equipmentSlot.AddComponent<Weapon_Staff>();
-                            //        break;
-                            //    case WeaponClass.Wand:
-                            //        equipmentSlot.AddComponent<Weapon_Wand>();
-                            //        break;
-                            //         Add more cases here
-                            //}
-                        }
-
-                        break;
-                }
-            }
-        }
+        Dictionary<uint, Item_Master> DefaultItems => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllItems_SO))]

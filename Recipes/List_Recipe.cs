@@ -1,30 +1,30 @@
 using System.Collections.Generic;
+using Items;
 using Managers;
-using UnityEngine;
 
-namespace Lists
+namespace Recipes
 {
     public abstract class List_Recipe
     {
         // Don't use initialised lists since it relies on Item, which needs Item_Master to be initialised first.
         
-        public static Dictionary<RecipeName, Recipe_Master> GetAllDefaultRecipes()
+        public static Dictionary<uint, Recipe_Master> GetAllDefaultRecipes()
         {
-            var allRecipes = new Dictionary<RecipeName, Recipe_Master>();
+            var allRecipes = new Dictionary<uint, Recipe_Master>();
 
             foreach (var none in _defaultNone())
             {
-                allRecipes.Add(none.Key, none.Value);
+                allRecipes.Add((uint)none.Key, none.Value);
             }
             
             foreach (var rawMaterial in _defaultRawMaterials())
             {
-                allRecipes.Add(rawMaterial.Key, rawMaterial.Value);
+                allRecipes.Add((uint)rawMaterial.Key, rawMaterial.Value);
             }
 
             foreach (var processedMaterial in _defaultProcessedMaterials())
             {
-                allRecipes.Add(processedMaterial.Key, processedMaterial.Value);
+                allRecipes.Add((uint)processedMaterial.Key, processedMaterial.Value);
             }
             
             return allRecipes;

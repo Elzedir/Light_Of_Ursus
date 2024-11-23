@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Items;
 using Managers;
 using Tools;
 using UnityEngine;
@@ -396,7 +397,7 @@ namespace Priority
                 // Find out how to remove items with 0 amount rather than skip them.
                 if (item.ItemAmount <= 0) continue;
                 
-                var itemMaster = Manager_Item.GetItem_Master(item.ItemID);
+                var itemMaster = Items.Items.GetItem_Master(item.ItemID);
                 var itemWeight = itemMaster.CommonStats_Item.ItemWeight;
                 
                 if (itemWeight > availableSpace) continue;

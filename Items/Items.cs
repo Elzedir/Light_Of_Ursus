@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lists;
+using Managers;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Managers
+namespace Items
 {
     public enum ItemType { 
         Weapon, Armour, Consumable, 
@@ -14,7 +14,7 @@ namespace Managers
         Misc 
     }
 
-    public class Manager_Item
+    public class Items
     {
         const string  _allItemsSOPath = "ScriptableObjects/AllItems_SO";
         
@@ -40,6 +40,56 @@ namespace Managers
             AssetDatabase.SaveAssets();
             
             return allItemsSO;
+        }
+        
+        public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
+        {
+            //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
+
+            foreach (var weaponType in item.WeaponStats_Item.WeaponTypeArray)
+            {
+                switch (weaponType)
+                {
+                    case WeaponType.OneHandedMelee:
+                    case WeaponType.TwoHandedMelee:
+                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
+                        {
+                            switch (weaponClass)
+                            {
+                                case WeaponClass.Axe:
+                                    //equipmentSlot.AddComponent<Weapon_Axe>();
+                                    break;
+                                case WeaponClass.ShortSword:
+                                    //equipmentSlot.AddComponent<Weapon_ShortSword>();
+                                    break;
+                                // Add more cases here
+                            }
+                        }
+
+                        break;
+                    case WeaponType.OneHandedRanged:
+                    case WeaponType.TwoHandedRanged:
+                        //equipmentSlot.AddComponent<Weapon_Bow>();
+                        break;
+                    case WeaponType.OneHandedMagic:
+                    case WeaponType.TwoHandedMagic:
+                        foreach (var weaponClass in item.WeaponStats_Item.WeaponClassArray)
+                        {
+                            //switch (weaponClass)
+                            //{
+                            //    case WeaponClass.Staff:
+                            //        equipmentSlot.AddComponent<Weapon_Staff>();
+                            //        break;
+                            //    case WeaponClass.Wand:
+                            //        equipmentSlot.AddComponent<Weapon_Wand>();
+                            //        break;
+                            //         Add more cases here
+                            //}
+                        }
+
+                        break;
+                }
+            }
         }
     }
 
@@ -71,11 +121,11 @@ namespace Managers
         public uint   MaxStackSize;
     
         Item_Master        _masterItem;
-        public Item_Master MasterItem => _masterItem ??= Manager_Item.GetItem_Master(ItemID);
+        public Item_Master MasterItem => _masterItem ??= Items.GetItem_Master(ItemID);
 
         public Item(uint itemID, uint itemAmount)
         {
-            var masterItem = Manager_Item.GetItem_Master(itemID);
+            var masterItem = Items.GetItem_Master(itemID);
 
             if (masterItem == null) 
             {

@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Items;
+using Jobs;
 using Managers;
 using Priority;
 using UnityEditor;
@@ -305,10 +307,11 @@ namespace Actors
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
         public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
-        public bool HasJob()
-        {
-            return JobsActive && JobsiteID != 0 && StationID != 0 && OperatingAreaID != 0;
-        }
+        
+        public HashSet<JobName> AllActorJobs;
+        public Job              CurrentActorJob;
+        
+        public 
 
         public bool JobsActive;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;

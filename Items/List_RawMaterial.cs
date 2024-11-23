@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Managers;
 
-namespace Lists
+namespace Items
 {
     public enum RawMaterialName
     {

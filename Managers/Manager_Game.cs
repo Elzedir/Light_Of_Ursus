@@ -2,8 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Careers;
 using Debuggers;
 using FMODUnity;
+using Jobs;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
@@ -122,11 +124,11 @@ namespace Managers
             _createManager("Manager_Cutscene",     _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             _createManager("Manager_Ability",      _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
-            _createManager("Manager_Job",          _manager_Parent).AddComponent<Manager_Job>().OnSceneLoaded();
+            _createManager("Manager_Job",          _manager_Parent).AddComponent<Jobs.Jobs>().OnSceneLoaded();
             
             Manager_Recipe.PopulateAllRecipes();
         
-            Manager_Career.Initialise();
+            Careers.Careers.Initialise();
             Manager_DateAndTime.Initialise();
             Manager_Personality.Initialise();
 

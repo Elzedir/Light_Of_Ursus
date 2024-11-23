@@ -1,42 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ScriptableObjects;
+using Items;
+using Managers;
 using UnityEditor;
 using UnityEngine;
 
-namespace Managers
+namespace Recipes
 {
-    public class Manager_Recipe : MonoBehaviour
+    public abstract class Recipes
     {
-        const string  _allRecipesSOPath = "ScriptableObjects/AllRecipes_SO";
-        
+        const string _allRecipesSOPath = "ScriptableObjects/AllRecipes_SO";
+
         static AllRecipes_SO _allRecipes;
         static AllRecipes_SO AllRecipes => _allRecipes ??= _getOrCreateAllRecipesSO();
 
         public static Recipe_Master GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName);
-        
+
         static AllRecipes_SO _getOrCreateAllRecipesSO()
         {
             var allRecipesSO = Resources.Load<AllRecipes_SO>(_allRecipesSOPath);
-            
+
             if (allRecipesSO is not null) return allRecipesSO;
-            
+
             allRecipesSO = ScriptableObject.CreateInstance<AllRecipes_SO>();
             AssetDatabase.CreateAsset(allRecipesSO, $"Assets/Resources/{_allRecipesSOPath}");
             AssetDatabase.SaveAssets();
-            
+
             return allRecipesSO;
         }
-        
+
         public static void PopulateAllRecipes()
         {
-            AllRecipes.PopulateDefaultRecipes();
+            AllRecipes.PopulateDefaultObjects();
             // Then populate custom recipes.
         }
     }
 
-    public enum RecipeName 
+    public enum RecipeName
     {
         None,
         Plank,
@@ -45,22 +46,22 @@ namespace Managers
 
     public class Recipe
     {
-        public readonly RecipeName                RecipeName;
-        public          int                       CurrentProgress;
-        
-        public         string                    RecipeDescription    => RecipeMaster.RecipeDescription;
-        public          int                       RequiredProgress    => RecipeMaster.RequiredProgress;
-        public          List<Item>                RequiredIngredients => RecipeMaster.RequiredIngredients;
-        public          StationName               RequiredStation     => RecipeMaster.RequiredStation;
-        public          List<VocationRequirement> RequiredVocations   => RecipeMaster.RequiredVocations;
-        public          List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
-        
+        public readonly RecipeName RecipeName;
+        public          int        CurrentProgress;
+
+        public string                    RecipeDescription   => RecipeMaster.RecipeDescription;
+        public int                       RequiredProgress    => RecipeMaster.RequiredProgress;
+        public List<Item>                RequiredIngredients => RecipeMaster.RequiredIngredients;
+        public StationName               RequiredStation     => RecipeMaster.RequiredStation;
+        public List<VocationRequirement> RequiredVocations   => RecipeMaster.RequiredVocations;
+        public List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
+
         Recipe_Master _recipeMaster;
-        Recipe_Master RecipeMaster => _recipeMaster ??= Manager_Recipe.GetRecipe_Master(RecipeName);
-        
-        public Recipe (RecipeName recipeName)
+        Recipe_Master RecipeMaster => _recipeMaster ??= Recipes.GetRecipe_Master(RecipeName);
+
+        public Recipe(RecipeName recipeName)
         {
-            RecipeName = recipeName;
+            RecipeName      = recipeName;
             CurrentProgress = 0;
         }
     }
@@ -71,29 +72,32 @@ namespace Managers
         public RecipeName RecipeName;
         public string     RecipeDescription;
 
-        public int                       RequiredProgress;
+        public int RequiredProgress;
         List<Item> _requiredIngredients;
+
         public List<Item> RequiredIngredients =>
             (_requiredIngredients ??= new List<Item>()).Count is 0
                 ? new List<Item>()
-                : _requiredIngredients.Select(item => new Item(item)).ToList();   
-            
-        
+                : _requiredIngredients.Select(item => new Item(item)).ToList();
+
+
         public StationName               RequiredStation;
         public List<VocationRequirement> RequiredVocations;
 
         List<Item> _recipeProducts;
+
         public List<Item> RecipeProducts =>
             (_recipeProducts ??= new List<Item>()).Count is 0
                 ? new List<Item>()
                 : _recipeProducts.Select(item => new Item(item)).ToList();
-            
-        
+
+
         public List<CraftingQuality> PossibleQualities;
 
-        public Recipe_Master(RecipeName recipeName,       string                recipeDescription,
-                      int        requiredProgress, List<Item>            requiredIngredients, StationName requiredStation, List<VocationRequirement> requiredVocations, 
-                      List<Item> recipeProducts,   List<CraftingQuality> possibleQualities)
+        public Recipe_Master(RecipeName recipeName, string recipeDescription,
+                             int requiredProgress, List<Item> requiredIngredients, StationName requiredStation,
+                             List<VocationRequirement> requiredVocations,
+                             List<Item> recipeProducts, List<CraftingQuality> possibleQualities)
         {
             RecipeName        = recipeName;
             RecipeDescription = recipeDescription;
@@ -134,7 +138,8 @@ namespace Managers
         public int          MinimumVocationExperience;
         public int          ExpectedVocationExperience;
 
-        public VocationRequirement(VocationName vocationName, int expectedVocationExperience, int minimumVocationExperience = 0)
+        public VocationRequirement(VocationName vocationName, int expectedVocationExperience,
+                                   int          minimumVocationExperience = 0)
         {
             VocationName               = vocationName;
             MinimumVocationExperience  = minimumVocationExperience;

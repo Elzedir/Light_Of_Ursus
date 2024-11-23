@@ -2,217 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Items;
+using Jobs;
 using Lists;
 using Managers;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace ScriptableObjects
+namespace Jobs
 {
     [CreateAssetMenu(fileName = "AllJobs_SO", menuName = "SOList/AllJobs_SO")]
     [Serializable]
-    public class AllJobs_SO : ScriptableObject
+    public class AllJobs_SO : Base_SO<Job_Master>
     {
-        [SerializeField] Job_Master[] _jobs;
-        public           Job_Master[] Jobs => _jobs ??= InitialiseAllJobs();
-        Dictionary<JobName, int>         _JobIndexLookup;
-        public Dictionary<JobName, int>  JobIndexLookup => _JobIndexLookup ??= _buildIndexLookup();
-        int                           _currentIndex;
+        public Job_Master[] Jobs                           => Objects;
+        public Job_Master   GetJob_Master(JobName jobName) => GetObject_Master((uint)jobName);
 
-        public Job_Master[] InitialiseAllJobs()
-        {
-            _jobs = new Job_Master[DefaultJobs.Count * 2];
-            Array.Copy(DefaultJobs.Values.ToArray(), Jobs, DefaultJobs.Count);
-            _currentIndex = DefaultJobs.Count;
-            _buildIndexLookup();
-            return Jobs ?? throw new NullReferenceException("Jobs is null.");
-        }
+        public override uint GetObjectID(int id) => (uint)Jobs[id].JobName;
 
-        Dictionary<JobName, int> _buildIndexLookup()
-        {
-            var newIndexLookup = new Dictionary<JobName, int>();
-
-            for (var i = 0; i < Jobs.Length; i++)
-            {
-                if (Jobs[i] != null)
-                {
-                    newIndexLookup[Jobs[i].JobName] = i;
-                }
-            }
-
-            return newIndexLookup;
-        }
-
-        public Job_Master GetJob_Master(JobName jobName)
-        {
-            if (Jobs == null || Jobs.Length is 0) InitialiseAllJobs();
-
-            if (JobIndexLookup.TryGetValue(jobName, out var index))
-            {
-                return Jobs?[index];
-            }
-
-            Debug.LogWarning($"Job {jobName} does not exist in Jobs.");
-            return null;
-        }
-
-        public void AddJob(Job_Master job)
-        {
-            if (JobIndexLookup.ContainsKey(job.JobName))
-            {
-                Debug.LogWarning($"Job {job.JobName} already exists in JobIndex.");
-                return;
-            }
-
-            if (_currentIndex >= Jobs.Length)
-            {
-                _compactAndResizeArray();
-            }
-
-            Jobs[_currentIndex]         = job;
-            JobIndexLookup[job.JobName] = _currentIndex;
-            _currentIndex++;
-        }
-
-        public void RemoveJob(JobName jobName)
-        {
-            if (!JobIndexLookup.TryGetValue(jobName, out var index))
-            {
-                Debug.LogWarning($"Job {jobName} does not exist in JobIndex.");
-                return;
-            }
-
-            Jobs[index] = null;
-            JobIndexLookup.Remove(jobName);
-
-            if (JobIndexLookup.Count < Jobs.Length / 4)
-            {
-                _compactAndResizeArray();
-            }
-        }
-
-        void _compactAndResizeArray()
-        {
-            var newSize = 0;
-
-            for (var i = 0; i < Jobs.Length; i++)
-            {
-                if (Jobs[i] == null) continue;
-
-                Jobs[newSize]                   = Jobs[i];
-                JobIndexLookup[Jobs[i].JobName] = newSize;
-                newSize++;
-            }
-
-            Array.Resize(ref _jobs, Math.Max(newSize * 2, Jobs.Length));
-            _currentIndex = newSize;
-        }
-
-        public void UpdateJob(Job_Master job)
-        {
-            if (JobIndexLookup.TryGetValue(job.JobName, out var index))
-            {
-                Jobs[index] = job;
-            }
-            else
-            {
-                AddJob(job);
-            }
-        }
-
-        public void ClearJobData()
-        {
-            _jobs = Array.Empty<Job_Master>();
-            JobIndexLookup.Clear();
-            _currentIndex = 0;
-        }
-
-        public Dictionary<uint, Job_Master> PopulateDefaultJobs()
+        public override Dictionary<uint, Job_Master> PopulateDefaultObjects()
         {
             var defaultJobs = new Dictionary<uint, Job_Master>();
 
-            foreach (var Job in List_Weapon.GetAllDefaultWeapons())
+            foreach (var item in List_Job.GetAllDefaultJobs())
             {
-                defaultJobs.Add(Job.Key, Job.Value);
-            }
-
-            foreach (var Job in List_Armour.GetAllDefaultArmour())
-            {
-                defaultJobs.Add(Job.Key, Job.Value);
-            }
-
-            foreach (var Job in List_Consumable.GetAllDefaultConsumables())
-            {
-                defaultJobs.Add(Job.Key, Job.Value);
-            }
-
-            foreach (var rawMaterial in List_RawMaterial.GetAllDefaultRawMaterials())
-            {
-                defaultJobs.Add(rawMaterial.Key, rawMaterial.Value);
-            }
-
-            foreach (var processedMaterial in List_ProcessedMaterial.GetAllDefaultProcessedMaterials())
-            {
-                defaultJobs.Add(processedMaterial.Key, processedMaterial.Value);
+                defaultJobs.Add(item.Key, item.Value);
             }
 
             return defaultJobs;
         }
         
-        Dictionary<uint, Job_Master> _defaultJobs;
-        Dictionary<uint, Job_Master> DefaultJobs => _defaultJobs ??= PopulateDefaultJobs();
-
-        public void AttachWeaponScript(Job_Master Job, Equipment_Base equipmentSlot)
-        {
-            //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
-
-            foreach (var weaponType in Job.WeaponStats_Job.WeaponTypeArray)
-            {
-                switch (weaponType)
-                {
-                    case WeaponType.OneHandedMelee:
-                    case WeaponType.TwoHandedMelee:
-                        foreach (var weaponClass in Job.WeaponStats_Job.WeaponClassArray)
-                        {
-                            switch (weaponClass)
-                            {
-                                case WeaponClass.Axe:
-                                    //equipmentSlot.AddComponent<Weapon_Axe>();
-                                    break;
-                                case WeaponClass.ShortSword:
-                                    //equipmentSlot.AddComponent<Weapon_ShortSword>();
-                                    break;
-                                // Add more cases here
-                            }
-                        }
-
-                        break;
-                    case WeaponType.OneHandedRanged:
-                    case WeaponType.TwoHandedRanged:
-                        //equipmentSlot.AddComponent<Weapon_Bow>();
-                        break;
-                    case WeaponType.OneHandedMagic:
-                    case WeaponType.TwoHandedMagic:
-                        foreach (var weaponClass in Job.WeaponStats_Job.WeaponClassArray)
-                        {
-                            //switch (weaponClass)
-                            //{
-                            //    case WeaponClass.Staff:
-                            //        equipmentSlot.AddComponent<Weapon_Staff>();
-                            //        break;
-                            //    case WeaponClass.Wand:
-                            //        equipmentSlot.AddComponent<Weapon_Wand>();
-                            //        break;
-                            //         Add more cases here
-                            //}
-                        }
-
-                        break;
-                }
-            }
-        }
+        public Dictionary<uint, Job_Master> DefaultJobs => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllJobs_SO))]

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Managers;
 using UnityEngine;
 
-namespace Lists
+namespace Items
 {
     public enum ProcessedMaterialName
     {

@@ -2,12 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Managers
+namespace Jobs
 {
-    public class Manager_Job : MonoBehaviour
+    public class Jobs : MonoBehaviour
     {
         const string  _allJobsSOPath = "ScriptableObjects/AllJobs_SO";
         
@@ -60,11 +61,28 @@ namespace Managers
 
     public class Job
     {
-        public uint StationID;
-        public void SetStationID(uint stationID) => StationID = stationID;
+        public JobName JobName;
+        public uint    StationID;
+        public uint    OperatingAreaID;
 
-        public uint OperatingAreaID;
-        public void SetOperatingAreaID(uint operatingAreaID) => OperatingAreaID = operatingAreaID;
+        Job_Master _job_Master;
+        Job_Master Job_Master => _job_Master ??= Jobs.GetJob_Master(JobName);
+        public List<Task_Master> JobTasks => Job_Master.JobTasks;
+        
+        public Job(JobName jobName, uint stationID, uint operatingAreaID)
+        {
+            JobName = jobName;
+            StationID = stationID;
+            OperatingAreaID = operatingAreaID;
+        }
+        
+        public IEnumerator PerformJob(ActorComponent actor)
+        {
+            foreach(Task_Master task in JobTasks)
+            {
+                yield return task.GetTaskAction(actor, );
+            }
+        }
     }
 
     [Serializable]
@@ -73,16 +91,14 @@ namespace Managers
     
         public JobName           JobName;
         public string            JobDescription;
-        public int               JobsiteID;
-        public List<Task_Master> JobTasks = new();
+        public Dictionary<TaskName, Task_Master> JobTasks;
 
         public Job_Master(JobName jobName, string jobDescription, List<Task_Master> jobTasks)
         {
-            if (Manager_Job.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
+            if (Jobs.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
 
             JobName        = jobName;
             JobDescription = jobDescription;
-            JobsiteID      = -1;
             JobTasks       = jobTasks;
         }
 
@@ -90,16 +106,7 @@ namespace Managers
         {
             JobName        = jobMaster.JobName;
             JobDescription = jobMaster.JobDescription;
-            JobsiteID      = jobsiteID;
             JobTasks       = jobMaster.JobTasks;
-        }
-
-        public IEnumerator PerformJob(ActorComponent actor)
-        {
-            foreach(Task_Master task in JobTasks)
-            {
-                yield return task.GetTaskAction(actor, JobsiteID);
-            }
         }
     }
 
@@ -123,7 +130,7 @@ namespace Managers
         }
     }
 
-    public enum JobTaskName
+    public enum TaskName
     {
         Beat_Iron,
 
@@ -142,23 +149,15 @@ namespace Managers
     [Serializable]
     public class Task_Master
     {
-        public JobTaskName TaskName;
+        public TaskName TaskName;
         public string      TaskDescription;
-
-        public JobName JobName;
-
-        public List<AnimationClip> TaskAnimationClips;
 
         public Func<ActorComponent, int, IEnumerator> TaskAction;
 
-        public Task_Master(JobTaskName taskName, string taskDescription, JobName jobName, List<AnimationClip> taskAnimationClips, Func<ActorComponent, int, IEnumerator> taskAction)
+        public Task_Master(TaskName taskName, string taskDescription, Func<ActorComponent, int, IEnumerator> taskAction)
         {
             TaskName        = taskName;
             TaskDescription = taskDescription;
-
-            JobName = jobName;
-
-            TaskAnimationClips = taskAnimationClips;
 
             TaskAction = taskAction;
         }

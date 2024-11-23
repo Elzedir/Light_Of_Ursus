@@ -1,141 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lists;
-using Managers;
+using Items;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Recipes
 {
     [CreateAssetMenu(fileName = "AllRecipes_SO", menuName = "SOList/AllRecipes_SO")]
     [Serializable]
-    public class AllRecipes_SO : ScriptableObject
+    public class AllRecipes_SO : Base_SO<Recipe_Master>
     {
-        [SerializeField] Recipe_Master[]   _recipes;
-        public           Recipe_Master[]   Recipes => _recipes ??= InitialiseAllRecipes();
-        Dictionary<RecipeName, int>        _recipeIndexLookup;
-        public Dictionary<RecipeName, int> RecipeIndexLookup => _recipeIndexLookup ??= _buildIndexLookup();
-        int                                _currentIndex;
+        public Recipe_Master[] Recipes => Objects;
+        public Recipe_Master   GetRecipe_Master(RecipeName recipeName) => GetObject_Master((uint)recipeName);
         
-        public Recipe_Master[] InitialiseAllRecipes()
+        public override uint GetObjectID(int id) => (uint)Recipes[id].RecipeName;
+
+        public override Dictionary<uint, Recipe_Master> PopulateDefaultObjects()
         {
-            _recipes = new Recipe_Master[DefaultRecipes.Count * 2];
-            Array.Copy(DefaultRecipes.Values.ToArray(), Recipes, DefaultRecipes.Count);
-            _currentIndex = DefaultRecipes.Count;
-            _buildIndexLookup();
-            return Recipes ?? throw new NullReferenceException("Recipes is null.");
+            return List_Recipe.GetAllDefaultRecipes();
         }
 
-        Dictionary<RecipeName, int> _buildIndexLookup()
-        {
-            var newIndexLookup = new Dictionary<RecipeName, int>();
-            
-            for (var i = 0; i < Recipes.Length; i++)
-            {
-                if (Recipes[i] != null)
-                {
-                    newIndexLookup[Recipes[i].RecipeName] = i;
-                }
-            }
-            
-            return newIndexLookup;
-        }
-
-        public Recipe_Master GetRecipe_Master(RecipeName recipeName)
-        {
-            if (Recipes == null || Recipes.Length is 0) InitialiseAllRecipes();
-                
-            if (RecipeIndexLookup.TryGetValue(recipeName, out var index))
-            {
-                return Recipes?[index];
-            }
-
-            Debug.LogWarning($"Recipe {recipeName} does not exist in Recipes.");
-            return null;
-        }
-
-        public void AddRecipe(RecipeName recipeName, Recipe_Master recipe)
-        {
-            if (RecipeIndexLookup.ContainsKey(recipeName))
-            {
-                Debug.LogWarning($"Recipe {recipeName} already exists in Recipes.");
-                return;
-            }
-
-            if (_currentIndex >= Recipes.Length)
-            {
-                _compactAndResizeArray();
-            }
-
-            Recipes[_currentIndex]       = recipe;
-            RecipeIndexLookup[recipeName] = _currentIndex;
-            _currentIndex++;
-        }
-
-        public void RemoveRecipe(RecipeName recipeName)
-        {
-            if (!RecipeIndexLookup.TryGetValue(recipeName, out var index))
-            {
-                Debug.LogWarning($"Recipe {recipeName} does not exist in Recipes.");
-                return;
-            }
-
-            Recipes[index] = null;
-            RecipeIndexLookup.Remove(recipeName);
-            
-            if (RecipeIndexLookup.Count < Recipes.Length / 4)
-            {
-                _compactAndResizeArray();
-            }
-        }
-        
-        void _compactAndResizeArray()
-        {
-            var newSize = 0;
-            
-            for (var i = 0; i < Recipes.Length; i++)
-            {
-                if (Recipes[i] == null) continue;
-                
-                Recipes[newSize]                         = Recipes[i];
-                RecipeIndexLookup[Recipes[i].RecipeName] = newSize;
-                newSize++;
-            }
-
-            Array.Resize(ref _recipes, Math.Max(newSize * 2, Recipes.Length));
-            _currentIndex = newSize;
-        }
-
-        public void UpdateRecipe(RecipeName recipeName, Recipe_Master recipe)
-        {
-            if (RecipeIndexLookup.TryGetValue(recipeName, out var index))
-            {
-                Recipes[index] = recipe;
-            }
-            else
-            {
-                AddRecipe(recipeName, recipe);
-            }
-        }
-
-        public void ClearRecipeData()
-        {
-            _recipes = Array.Empty<Recipe_Master>();
-            RecipeIndexLookup.Clear();
-            _currentIndex = 0;
-        }
-
-        public Dictionary<RecipeName, Recipe_Master> PopulateDefaultRecipes()
-        {
-            return List_Recipe.GetAllDefaultRecipes().ToDictionary(
-                recipe => recipe.Key,
-                recipe => recipe.Value);
-        }
-
-        Dictionary<RecipeName, Recipe_Master> _defaultRecipes;
-        Dictionary<RecipeName, Recipe_Master> DefaultRecipes => _defaultRecipes ??= PopulateDefaultRecipes();
+        Dictionary<uint, Recipe_Master> DefaultRecipes => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllRecipes_SO))]
@@ -168,7 +55,7 @@ namespace ScriptableObjects
 
             if (GUILayout.Button("Clear Recipe Data"))
             {
-                allRecipeSO.ClearRecipeData();
+                allRecipeSO.ClearObjectData();
                 EditorUtility.SetDirty(allRecipeSO);
             }
 

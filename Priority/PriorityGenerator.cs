@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Debuggers;
+using Items;
 using Managers;
 using UnityEngine;
 
@@ -77,7 +78,7 @@ namespace Priority
 
             foreach(var item in items)
             {
-                var masterItem = Manager_Item.GetItem_Master(item.ItemID);
+                var masterItem = Items.Items.GetItem_Master(item.ItemID);
 
                 var allStationTypesList = allStationTypes.ToList();
 
