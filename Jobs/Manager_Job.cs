@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Jobs
 {
-    public class Jobs : MonoBehaviour
+    public abstract class Jobs
     {
         const string  _allJobsSOPath = "ScriptableObjects/AllJobs_SO";
         
@@ -64,10 +64,12 @@ namespace Jobs
         public JobName JobName;
         public uint    StationID;
         public uint    OperatingAreaID;
+        
+        public ActivityPeriod ActivityPeriod;
 
         Job_Master _job_Master;
         Job_Master Job_Master => _job_Master ??= Jobs.GetJob_Master(JobName);
-        public List<Task_Master> JobTasks => Job_Master.JobTasks;
+        public Dictionary<TaskName, Task_Master> JobTasks => Job_Master.JobTasks;
         
         public Job(JobName jobName, uint stationID, uint operatingAreaID)
         {
@@ -84,25 +86,29 @@ namespace Jobs
             }
         }
     }
+    
+    public enum ActivityPeriodName { Cathemeral, Nocturnal, Diurnal, Crepuscular }
+
+    public class ActivityPeriod
+    {
+        public ActivityPeriodName PeriodName;
+    }
 
     [Serializable]
     public class Job_Master
     {
-    
         public JobName           JobName;
         public string            JobDescription;
         public Dictionary<TaskName, Task_Master> JobTasks;
 
-        public Job_Master(JobName jobName, string jobDescription, List<Task_Master> jobTasks)
+        public Job_Master(JobName jobName, string jobDescription, Dictionary<TaskName, Task_Master> jobTasks)
         {
-            if (Jobs.AllJobs.ContainsKey(jobName)) throw new ArgumentException("JobName already exists.");
-
             JobName        = jobName;
             JobDescription = jobDescription;
             JobTasks       = jobTasks;
         }
 
-        public Job_Master(Job_Master jobMaster, int jobsiteID)
+        public Job_Master(Job_Master jobMaster)
         {
             JobName        = jobMaster.JobName;
             JobDescription = jobMaster.JobDescription;

@@ -32,7 +32,7 @@ namespace Recipes
 
         public static void PopulateAllRecipes()
         {
-            AllRecipes.PopulateDefaultObjects();
+            AllRecipes.PopulateDefaultRecipes();
             // Then populate custom recipes.
         }
     }
