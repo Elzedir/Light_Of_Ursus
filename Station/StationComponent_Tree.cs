@@ -4,6 +4,9 @@ using System.Linq;
 using Actors;
 using Items;
 using Managers;
+using OperatingArea;
+using Recipes;
+using Station;
 using UnityEngine;
 
 public class StationComponent_Tree : StationComponent

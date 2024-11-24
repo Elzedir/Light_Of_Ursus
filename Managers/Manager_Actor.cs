@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using DateAndTime;
 using Items;
+using Recipes;
 using ScriptableObjects;
 using Tools;
 using UnityEngine;
@@ -203,7 +205,8 @@ namespace Managers
                 actorID: actorGenerationParameters.ActorID != 0 ? actorGenerationParameters.ActorID : _getRandomActorID(),
                 actorName: actorGenerationParameters.ActorName ?? _getRandomActorName(),
                 actorFactionID: actorGenerationParameters.FactionID != 0 ? actorGenerationParameters.FactionID : _getRandomFaction(),
-                actorCityID: actorGenerationParameters.CityID
+                actorCityID: actorGenerationParameters.CityID,
+                actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays())
             );
 
             actor.SetActorData(new ActorData(fullIdentification));

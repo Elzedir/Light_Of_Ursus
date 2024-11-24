@@ -4,8 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Items;
+using Jobsite;
 using Managers;
+using OperatingArea;
 using Priority;
+using Recipes;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
@@ -29,8 +33,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public abstract StationType StationType { get; }
     public bool IsStationBeingOperated => AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0);
 
-    public PriorityComponent_Station PriorityComponent;
-
     public float InteractRange { get; protected set; }
 
     public List<EmployeePosition> AllowedEmployeePositions;
@@ -50,7 +52,30 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
 
     // Temporary
     public Transform CollectionPoint;
+    
+    public void Initialise()
+    {
+        AllOperatingAreasInStation = GetAllOperatingAreasInStation();
 
+        var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
+                                         from employeeID in StationData.CurrentOperatorIDs
+                                         let actorData = Manager_Actor.GetActorData(employeeID)
+                                         where actorData.CareerData.CurrentActorJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
+                                         select new { operatingArea, employeeID };
+
+        foreach (var pair in employeeOperatingAreaPairs)
+        {
+            pair.operatingArea.OperatingAreaData.AddOperatorToOperatingArea(pair.employeeID);
+        }
+
+        SetInteractRange();
+        InitialiseAllowedEmployeePositions();
+        InitialiseStartingInventory();
+
+        _setTickRate(TickRate.OneSecond);
+
+        _initialised = true;
+    }
     public void AddOperatorToArea(uint operatorData)
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
@@ -84,6 +109,17 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         {
             operatingArea.OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
+    }
+    
+    TickRate _currentTickRate;
+
+    void _setTickRate(TickRate tickRate)
+    {
+        if (_currentTickRate == tickRate) return;
+            
+        Manager_TickRate.UnregisterTicker(TickerType.Station, _currentTickRate, StationID);
+        Manager_TickRate.RegisterTicker(TickerType.Station, tickRate, StationID, _onTick);
+        _currentTickRate = tickRate;
     }
 
     void _onTick()
@@ -146,32 +182,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         }
         
         return success;
-    }
-
-    public void Initialise()
-    {
-        PriorityComponent = new PriorityComponent_Station(StationID);
-
-        AllOperatingAreasInStation = GetAllOperatingAreasInStation();
-
-        var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
-                                         from employeeID in StationData.CurrentOperatorIDs
-                                         let actorData = Manager_Actor.GetActorData(employeeID)
-                                         where actorData.CareerAndJobs.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
-                                         select new { operatingArea, employeeID };
-
-        foreach (var pair in employeeOperatingAreaPairs)
-        {
-            pair.operatingArea.OperatingAreaData.AddOperatorToOperatingArea(pair.employeeID);
-        }
-
-        SetInteractRange();
-        InitialiseAllowedEmployeePositions();
-        InitialiseStartingInventory();
-
-        Manager_TickRate.RegisterTickable(_onTick, TickRate.TenSeconds);
-
-        _initialised = true;
     }
 
     public OperatingAreaComponent GetOperatingArea(int operatingAreaID)

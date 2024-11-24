@@ -1,18 +1,19 @@
 using System.Collections.Generic;
+using Jobs;
 using UnityEngine;
 
 namespace Careers
 {
     public class List_Career : MonoBehaviour
     {
-        public static Dictionary<CareerName, Career_Master> GetAllDefaultCareers()
+        public static Dictionary<uint, Career_Master> GetAllDefaultCareers()
         {
-            var allCareers = new Dictionary<CareerName, Career_Master>();
+            var allCareers = new Dictionary<uint, Career_Master>();
 
-            // foreach (var none in _defaultNone())
-            // {
-            //     allRecipes.Add(none.Key, none.Value);
-            // }
+            foreach (var wanderer in _wanderer())
+            {
+                allCareers.Add(wanderer.Key, wanderer.Value);
+            }
             
             foreach (var lumberjack in _lumberjack())
             {
@@ -28,28 +29,35 @@ namespace Careers
         }
         
         // Put a priority List in the tasks so you can check which tasks to do.
-
-        static Dictionary<CareerName, Career_Master> _lumberjack()
+        
+        static Dictionary<uint, Career_Master> _wanderer()
         {
-            return new Dictionary<JobName, Job_Master>
+            return new Dictionary<uint, Career_Master>
             {
                 {
-                    JobName.Lumberjack, new Job_Master
+                    (uint)CareerName.Wanderer, new Career_Master
                     (
-                        jobName: JobName.Lumberjack,
-                        jobDescription: "Lumberjack",
-                        new List<Task_Master>
+                        careerName: CareerName.Wanderer,
+                        careerDescription: "A wanderer",
+                        new HashSet<JobName>()
+                    )
+
+                }
+            };
+        }
+
+        static Dictionary<uint, Career_Master> _lumberjack()
+        {
+            return new Dictionary<uint, Career_Master>
+            {
+                {
+                    (uint)CareerName.Lumberjack, new Career_Master
+                    (
+                        careerName: CareerName.Lumberjack,
+                        careerDescription: "A lumberjack",
+                        new HashSet<JobName>
                         {
-                            new(
-                                taskName: TaskName.Chop_Trees,
-                                taskDescription: "Chop trees",
-                                taskAction: null
-                            ),
-                            new(
-                                taskName: TaskName.Sell_Wood,
-                                taskDescription: "Sell wood",
-                                taskAction: null
-                            )
+                            JobName.Lumberjack
                         }
                     )
 
@@ -57,36 +65,21 @@ namespace Careers
             };
         }
 
-        static Dictionary<JobName, Job_Master> _smith()
+        static Dictionary<uint, Career_Master> _smith()
         {
-            return new Dictionary<JobName, Job_Master>()
+            return new Dictionary<uint, Career_Master>()
             {
                 {
-                    JobName.Smith,
-                    new Job_Master(
-                        jobName: JobName.Smith,
-                        jobDescription: "Smith something",
-                        new List<Task_Master>
+                    (uint)CareerName.Smith,
+                    new Career_Master(
+                        careerName: CareerName.Smith,
+                        careerDescription: "A smith",
+                        new HashSet<JobName>
                         {
-                            new(
-                                taskName: TaskName.Beat_Iron,
-                                taskDescription: "Beat iron",
-                                taskAction: _smith
-                            )
+                            JobName.Smith
                         })
                 }
             };
-        }
-        
-        static IEnumerator _smith(ActorComponent actor, int jobsite)
-        {
-            if (actor is null)
-            {
-                Debug.LogWarning("Actor is null");
-                yield break;
-            }
-
-            yield return null;
         }
     }
 }

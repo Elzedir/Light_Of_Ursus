@@ -11,12 +11,24 @@ namespace Managers
         OneGameHour, OneGameDay, OneGameMonth, OneGameYear 
     }
 
+    public enum TickerType
+    {
+        DateAndTime,
+        DeferredTicker,
+        Manager,
+        Actor,
+        Station,
+        Jobsite,
+    }
+
     public class Manager_TickRate : MonoBehaviour
     {
-        static Dictionary<TickRate, float>        _nextTickTimes;
-        static Dictionary<TickRate, List<Action>> _tickableGroups;
+        //Maybe save next tick times since last save and load them on scene load.
         
-        TickableSpreader _tickableSpreader;
+        static Dictionary<TickRate, float>                    _nextTickTimes;
+        static Dictionary<TickerType, Dictionary<TickRate, Dictionary<uint, Action>>> _allTickers;
+        
+        //TickableSpreader _tickableSpreader;
 
         public void OnSceneLoaded()
         {
@@ -31,20 +43,8 @@ namespace Managers
                 { TickRate.OneGameMonth, UnityEngine.Time.time      + 43200f },
                 { TickRate.OneGameYear, UnityEngine.Time.time       + 172800f }
             };
-
-            _tickableGroups = new Dictionary<TickRate, List<Action>>
-            {
-                { TickRate.OneTenthSecond, new List<Action>() },
-                { TickRate.OneSecond, new List<Action>() },
-                { TickRate.TenSeconds, new List<Action>() },
-                { TickRate.OneHundredSeconds, new List<Action>() },
-                { TickRate.OneGameHour, new List<Action>() },
-                { TickRate.OneGameDay, new List<Action>() },
-                { TickRate.OneGameMonth, new List<Action>() },
-                { TickRate.OneGameYear, new List<Action>() }
-            };
             
-            _tickableSpreader = new TickableSpreader(new Dictionary<float, SpreadTickables>());
+            //_tickableSpreader = new TickableSpreader(new Dictionary<float, SpreadTickables>());
         }
 
         void Update()
@@ -55,15 +55,14 @@ namespace Managers
 
             foreach (var tickRate in keys.Where(tickRate => currentTime >= _nextTickTimes[tickRate]))
             {
-                Debug.Log($"Tick: {tickRate}");
                 _tick(tickRate);
                 _nextTickTimes[tickRate] = currentTime + _getTickInterval(tickRate);
             }
             
-            _tickableSpreader.Update();
+            //_tickableSpreader.Update();
         }
 
-        float _getTickInterval(TickRate tickRate)
+        static float _getTickInterval(TickRate tickRate)
         {
             return tickRate switch
             {
@@ -79,27 +78,69 @@ namespace Managers
             };
         }
 
-        public static void RegisterTickable(Action tickable, TickRate tickRate)
+        public static void RegisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID, Action tickerAction)
         {
-            if (_tickableGroups.ContainsKey(tickRate) && !_tickableGroups[tickRate].Contains(tickable))
+            if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
             {
-                _tickableGroups[tickRate].Add(tickable);
+                tickerRate = new Dictionary<TickRate, Dictionary<uint, Action>>();
+                _allTickers.Add(tickerType, tickerRate);
             }
+            
+            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+            {
+                tickerGroup = new Dictionary<uint, Action>();
+                tickerRate.Add(tickRate, tickerGroup);
+            }
+
+            if (tickerGroup.ContainsKey(tickerID))
+            {
+                Debug.LogWarning($"TickerID: {tickerID} already exists in TickerGroups, so replacing ticker action.");
+                tickerGroup[tickerID] = tickerAction;
+            }
+            
+            tickerGroup.Add(tickerID, tickerAction);
         }
 
-        public static void UnregisterTickable(Action tickable, TickRate tickRate)
+        public static void UnregisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID)
         {
-            if (_tickableGroups.ContainsKey(tickRate) && _tickableGroups[tickRate].Contains(tickable))
+            if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
             {
-                _tickableGroups[tickRate].Remove(tickable);
+                Debug.LogError($"TickerType: {tickerType} does not exist in TickerGroups.");
+                return;
             }
+
+            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+            {
+                Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
+                return;
+            }
+
+            if (!tickerGroup.ContainsKey(tickerID))
+            {
+                Debug.LogError($"TickerID: {tickerID} does not exist in TickerGroups.");
+                return;
+            }
+
+            tickerGroup.Remove(tickerID);
         }
 
         static void _tick(TickRate tickRate)
         {
-            foreach (var tickable in _tickableGroups[tickRate])
+            if (!_allTickers.TryGetValue(TickerType.Actor, out var tickerRate))
             {
-                tickable();
+                Debug.LogError($"TickerType: {TickerType.Actor} does not exist in TickerGroups.");
+                return;
+            }
+
+            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+            {
+                Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
+                return;
+            }
+
+            foreach (var tickerAction in tickerGroup.Values)
+            {
+                tickerAction();
             }
         }
     }
@@ -111,7 +152,7 @@ namespace Managers
 
         static void _initialise()
         {
-            Manager_TickRate.RegisterTickable(_onTickStatic, TickRate.OneTenthSecond);
+            Manager_TickRate.RegisterTicker(TickerType.DeferredTicker, TickRate.OneTenthSecond, 1, _onTickStatic);
             _initialised = true;
         }
 

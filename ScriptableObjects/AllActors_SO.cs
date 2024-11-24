@@ -121,13 +121,13 @@ namespace ScriptableObjects
                 }
             }
 
-            if (actorData.CareerAndJobs != null)
+            if (actorData.CareerData != null)
             {
                 _showCareerAndJobs = EditorGUILayout.Toggle("Career and Jobs", _showCareerAndJobs);
 
                 if (_showCareerAndJobs)
                 {
-                    _drawCareerAndJobs(actorData.CareerAndJobs);
+                    _drawCareerAndJobs(actorData.CareerData);
                 }
             }
 
@@ -212,12 +212,12 @@ namespace ScriptableObjects
             // Add more details as needed
         }
 
-        void _drawCareerAndJobs(CareerAndJobs careerAndJobs)
+        void _drawCareerAndJobs(CareerData careerData)
         {
-            EditorGUILayout.LabelField("JobsActive",        careerAndJobs.JobsActive.ToString());
-            EditorGUILayout.LabelField("JobSiteID",         careerAndJobs.JobsiteID.ToString());
-            EditorGUILayout.LabelField("JobName",       careerAndJobs.CurrentActorJob.JobName.ToString());
-            EditorGUILayout.LabelField("Employee Position", careerAndJobs.EmployeePosition.ToString());
+            EditorGUILayout.LabelField("JobsActive",        careerData.JobsActive.ToString());
+            EditorGUILayout.LabelField("JobSiteID",         careerData.JobsiteID.ToString());
+            EditorGUILayout.LabelField("JobName",       careerData.CurrentActorJob.JobName.ToString());
+            EditorGUILayout.LabelField("Employee Position", careerData.EmployeePosition.ToString());
         }
 
         void _drawInventory(InventoryData data)

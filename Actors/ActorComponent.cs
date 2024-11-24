@@ -19,6 +19,7 @@ namespace Actors
     [RequireComponent(typeof(BoxCollider))]
     public class ActorComponent : MonoBehaviour
     {
+        public bool                    IsPlayer => GetComponent<Player>() != null;
         uint                           _actorID => ActorData.ActorID;
         public ActorData               ActorData;
         public void                    SetActorData(ActorData actorData) => ActorData = actorData;
@@ -53,18 +54,33 @@ namespace Actors
         bool _initialised;
         public void Initialise()
         {
-            if (ActorData == null) throw new ArgumentException($"Actor: {name} doesn't have ActorData.");
+            if (ActorData == null)
+            {
+                Debug.LogError($"Actor: {name} doesn't have ActorData.");
+                return;
+            }
 
             transform.parent.name = $"{ActorData.ActorName.Name}Body";
             transform.name        = $"{ActorData.ActorName.Name}";
 
             PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality.GetPersonality());
             
-            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneSecond);
+            _setTickRate(TickRate.OneSecond);
 
             _updateVisuals();
             
             _initialised = true;
+        }
+
+        TickRate _currentTickRate;
+
+        void _setTickRate(TickRate tickRate)
+        {
+            if (_currentTickRate == tickRate) return;
+            
+            Manager_TickRate.UnregisterTicker(TickerType.Actor, _currentTickRate, _actorID);
+            Manager_TickRate.RegisterTicker(TickerType.Actor, tickRate, _actorID, _onTick);
+            _currentTickRate = tickRate;
         }
 
         void _onTick()
@@ -99,7 +115,7 @@ namespace Actors
                 return PriorityStatus.InCombat;
             }
 
-            if (ActorData.CareerAndJobs.HasJob())
+            if (ActorData.CareerData.HasWork())
             {
                 return PriorityStatus.HasWork;
             }

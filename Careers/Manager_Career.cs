@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Jobs;
-using Managers;
 using UnityEditor;
 using UnityEngine;
 
 namespace Careers
 {
-    public abstract class Careers
+    public abstract class Manager_Career
     {
         const string  _allCareersSOPath = "ScriptableObjects/AllCareers_SO";
         
@@ -50,7 +49,7 @@ namespace Careers
         public CareerName CareerName;
         
         Career_Master _career_Master;
-        Career_Master Career_Master => _career_Master ??= Careers.GetCareer_Master(CareerName);
+        Career_Master Career_Master => _career_Master ??= Manager_Career.GetCareer_Master(CareerName);
         
         public List<JobName> CareerJobs => Career_Master.CareerJobs.ToList();
         

@@ -1,60 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Items;
+using Jobs;
+using Jobsite;
 using Managers;
+using Station;
 using Tools;
 using UnityEngine;
 
 namespace Priority
 {
-    public abstract class PriorityComponent
+    public abstract class PriorityComponent<T> where T : Enum
     {
-        readonly Dictionary<ActorActionName, Dictionary<PriorityParameter, object>> _actionPriorityParameters = new()
-        {
-            { ActorActionName.Fetch, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.MaxPriority, null },
-                { PriorityParameter.TotalItems, null },
-                { PriorityParameter.TotalDistance, null },
-                { PriorityParameter.InventoryHauler, null },
-                { PriorityParameter.InventoryTarget, null },
-            }},
+        protected abstract Dictionary<T, Dictionary<PriorityParameter, object>> _priorityParameters { get; }
 
-            { ActorActionName.Deliver, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.MaxPriority, null },
-                { PriorityParameter.TotalItems, null },
-                { PriorityParameter.TotalDistance, null },
-                { PriorityParameter.InventoryHauler, null },
-                { PriorityParameter.InventoryTarget, null },
-                { PriorityParameter.CurrentStationType, null },
-                { PriorityParameter.AllStationTypes, null },
-            }},
-            
-            { ActorActionName.Scavenge, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.MaxPriority, null },
-                { PriorityParameter.TotalItems, null },
-                { PriorityParameter.TotalDistance, null },
-                { PriorityParameter.InventoryHauler, null },
-                { PriorityParameter.InventoryTarget, null },
-            }},
-            
-            { ActorActionName.Wander, new Dictionary<PriorityParameter, object>
-            {
-                { PriorityParameter.MaxPriority, null },
-            }},
-        };
-
-        public readonly ObservableDictionary<ActorActionName, PriorityQueue> AllPriorityActions = new()
-        {
-            { ActorActionName.Fetch, new PriorityQueue(1) },
-            { ActorActionName.Deliver, new PriorityQueue(1) },
-            { ActorActionName.Scavenge, new PriorityQueue(1) },
-            { ActorActionName.Wander, new PriorityQueue(1) },
-        };
-
+        public abstract ObservableDictionary<T, PriorityQueue> AllPriorityActions { get; }
+        
         Dictionary<PriorityImportance, List<PriorityValue>>              _cachedPriorityQueue;
         protected abstract Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; }
 
@@ -87,7 +50,7 @@ namespace Priority
                 switch (action.PriorityImportance)
                 {
                     case PriorityImportance.Critical:
-                        if (!AllPriorityActions[action.ActorActionName].Update((uint)action.ActorActionName, priorities))
+                        if (!AllPriorityActions[T].Update((uint)action.ActorActionName, priorities))
                         {
                             Debug.LogError($"Action: {action} unable to be updated in PriorityQueue.");
                         }
@@ -148,19 +111,19 @@ namespace Priority
             if (!_syncingCachedQueue) _syncCachedPriorityQueueHigh_DeferredUpdate();
         }
 
-        public void UpdateAction(ActorActionName actorActionName, List<float> priorities)
+        public void UpdatePriority(T priorityType, List<float> priorities)
         {
-            if (!AllPriorityActions[actorActionName].Update((uint)actorActionName, priorities))
+            if (!AllPriorityActions[priorityType].Update((uint)priorityType, priorities))
             {
-                Debug.LogError($"ActionName: {actorActionName} unable to be updated in PriorityQueue.");
+                Debug.LogError($"ActionName: {priorityType} unable to be updated in PriorityQueue.");
             }
         }
 
-        public void RemoveAction(ActorActionName actorActionName)
+        public void RemovePriority(T priorityType)
         {
-            if (!AllPriorityActions[actorActionName].Remove((uint)actorActionName))
+            if (!AllPriorityActions[priorityType].Remove((uint)priorityType))
             {
-                Debug.LogError($"ActionName: {actorActionName} unable to be removed from PriorityQueue.");
+                Debug.LogError($"ActionName: {priorityType} unable to be removed from PriorityQueue.");
             }
         }
 
@@ -249,7 +212,7 @@ namespace Priority
         public Dictionary<PriorityParameter, object> UpdateExistingPriorityParameters(
             ActorActionName actorActionName, Dictionary<PriorityParameter, object> parameters)
         {
-            if (!_actionPriorityParameters.TryGetValue(actorActionName, out var existingPriorityParameters))
+            if (!_priorityParameters.TryGetValue(actorActionName, out var existingPriorityParameters))
             {
                 Debug.LogError($"ActionName: {actorActionName} not found in _existingParameters.");
                 return null;
@@ -270,8 +233,64 @@ namespace Priority
         }    
     }
 
-    public class PriorityComponent_Actor : PriorityComponent
+    public class PriorityComponent_Actor : PriorityComponent<ActorActionName>
     {
+        protected override Dictionary<ActorActionName, Dictionary<PriorityParameter, object>> _priorityParameters
+        {
+            get;
+        } = new()
+        {
+            {
+                ActorActionName.Fetch, new Dictionary<PriorityParameter, object>
+                {
+                    { PriorityParameter.MaxPriority, null },
+                    { PriorityParameter.TotalItems, null },
+                    { PriorityParameter.TotalDistance, null },
+                    { PriorityParameter.InventoryHauler, null },
+                    { PriorityParameter.InventoryTarget, null },
+                }
+            },
+
+            {
+                ActorActionName.Deliver, new Dictionary<PriorityParameter, object>
+                {
+                    { PriorityParameter.MaxPriority, null },
+                    { PriorityParameter.TotalItems, null },
+                    { PriorityParameter.TotalDistance, null },
+                    { PriorityParameter.InventoryHauler, null },
+                    { PriorityParameter.InventoryTarget, null },
+                    { PriorityParameter.CurrentStationType, null },
+                    { PriorityParameter.AllStationTypes, null },
+                }
+            },
+
+            {
+                ActorActionName.Scavenge, new Dictionary<PriorityParameter, object>
+                {
+                    { PriorityParameter.MaxPriority, null },
+                    { PriorityParameter.TotalItems, null },
+                    { PriorityParameter.TotalDistance, null },
+                    { PriorityParameter.InventoryHauler, null },
+                    { PriorityParameter.InventoryTarget, null },
+                }
+            },
+
+            {
+                ActorActionName.Wander, new Dictionary<PriorityParameter, object>
+                {
+                    { PriorityParameter.MaxPriority, null },
+                }
+            },
+        };
+
+        public override ObservableDictionary<ActorActionName, PriorityQueue> AllPriorityActions { get; } = new()
+        {
+            { ActorActionName.Fetch, new PriorityQueue(1) },
+            { ActorActionName.Deliver, new PriorityQueue(1) },
+            { ActorActionName.Scavenge, new PriorityQueue(1) },
+            { ActorActionName.Wander, new PriorityQueue(1) },
+        };
+
         readonly ComponentReference_Actor _actorReferences;
 
         public    uint           ActorID => _actorReferences.ActorID;
@@ -280,7 +299,7 @@ namespace Priority
         public PriorityComponent_Actor(uint actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
-            
+
             AllPriorityActions.DictionaryChanged += _setCurrentAction;
         }
 
@@ -310,30 +329,16 @@ namespace Priority
         };
     }
 
-    public class PriorityComponent_Station : PriorityComponent
+    public class PriorityComponent_Jobsite : PriorityComponent<JobName>
     {
-        public PriorityComponent_Station(uint stationID) 
+        protected override Dictionary<JobName, Dictionary<PriorityParameter, object>> _priorityParameters
         {
-            _stationReferences = new ComponentReference_Station(stationID);
-        } 
-
-        readonly ComponentReference_Station _stationReferences;
-
-        public    uint             JobsiteID => _stationReferences.StationID;
-        protected StationComponent _jobsite  => _stationReferences.Station;
-
-        protected override Dictionary<DataChanged, List<ActionToChange>> _actionsToChange { get; } = new()
-        {
-            { DataChanged.ChangedInventory, new List<ActionToChange>
+            get;
+        } =
+            new()
             {
-                new ActionToChange(ActorActionName.Deliver, PriorityImportance.High),
-                new ActionToChange(ActorActionName.Fetch,   PriorityImportance.High),
-            }},
-        };
-    }
-
-    public class PriorityComponent_Jobsite : PriorityComponent
-    {
+                
+            };
         public PriorityComponent_Jobsite(uint jobsiteID) 
         {
             _jobsiteReferences                  =  new ComponentReference_Jobsite(jobsiteID);

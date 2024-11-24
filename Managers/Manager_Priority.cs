@@ -1,4 +1,7 @@
+using System;
 using Actors;
+using Jobsite;
+using Priority;
 using UnityEngine;
 
 namespace Managers
@@ -51,8 +54,9 @@ namespace Managers
         public uint ComponentID { get; private set; }
         public ComponentReference(uint componentID) => ComponentID = componentID;
 
-        protected abstract object     _component { get; }
-        public abstract    GameObject GameObject { get; }
+        protected abstract object               _component { get; }
+        public abstract    GameObject           GameObject { get; }
+        public abstract    PriorityComponent<T> GetPriorityComponent<T>() where T : Enum;
     }
 
     public class ComponentReference_Actor : ComponentReference
@@ -65,6 +69,7 @@ namespace Managers
         public             ActorComponent Actor      => _component as ActorComponent;
 
         public override GameObject GameObject => Actor.gameObject;
+        public override PriorityComponent<T> GetPriorityComponent<T>() => Actor.PriorityComponent as PriorityComponent<T>;
     }
 
     public class ComponentReference_Station : ComponentReference
@@ -76,7 +81,8 @@ namespace Managers
         protected override object           _component => _station ??= Manager_Station.GetStation(StationID);
         public             StationComponent Station    => _component as StationComponent;
 
-        public override GameObject GameObject => Station.gameObject;
+        public override GameObject           GameObject                => Station.gameObject;
+        public override PriorityComponent<T> GetPriorityComponent<T>() => null;
     }
 
     public class ComponentReference_Jobsite : ComponentReference
@@ -88,6 +94,7 @@ namespace Managers
         protected override object           _component => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
         public             JobsiteComponent Jobsite    => _component as JobsiteComponent;
 
-        public override GameObject GameObject => Jobsite.gameObject;
+        public override GameObject           GameObject                => Jobsite.gameObject;
+        public override PriorityComponent<T> GetPriorityComponent<T>() => Jobsite.PriorityComponent as PriorityComponent<T>;
     }
 }

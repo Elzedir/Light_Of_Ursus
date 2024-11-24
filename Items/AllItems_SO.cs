@@ -5,6 +5,7 @@ using System.Linq;
 using Lists;
 using Managers;
 using ScriptableObjects;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,7 +20,15 @@ namespace Items
         
         public override uint GetObjectID(int id) => Items[id].ItemID;
 
-        public override Dictionary<uint, Item_Master> PopulateDefaultObjects()
+        public void PopulateDefaultItems()
+        {
+            if (_defaultItems.Count == 0)
+            {
+                Debug.Log("No Default Items Found");
+            }
+        }    
+        
+        protected override Dictionary<uint, Item_Master> _populateDefaultObjects()
         {
             var defaultItems = new Dictionary<uint, Item_Master>();
 
@@ -51,7 +60,7 @@ namespace Items
             return defaultItems;
         }
 
-        Dictionary<uint, Item_Master> DefaultItems => DefaultObjects;
+        Dictionary<uint, Item_Master> _defaultItems => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllItems_SO))]
@@ -92,7 +101,7 @@ namespace Items
 
             if (GUILayout.Button("Clear Item Data"))
             {
-                allItemsSO.ClearItemData();
+                allItemsSO.ClearObjectData();
                 EditorUtility.SetDirty(allItemsSO);
             }
 
@@ -227,7 +236,7 @@ namespace Items
 
         void _drawCommonStats(CommonStats_Item commonStats)
         {
-            EditorGUILayout.LabelField("Item ID", commonStats.ItemID.ToString());
+            EditorGUILayout.LabelField("Item ID", $"{commonStats.ItemID}");
             EditorGUILayout.LabelField("Item Name", commonStats.ItemName);
             EditorGUILayout.LabelField("Item Type", commonStats.ItemType.ToString());
             EditorGUILayout.LabelField("Equipment Slots", string.Join(", ", commonStats.EquipmentSlots.ToString()));

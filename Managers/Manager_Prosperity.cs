@@ -25,7 +25,7 @@ public class ProsperityData
 
         GameObject = gameObject;
         // Eventually initialise the data based on region, city, jobsite, etc.
-        Manager_TickRate.RegisterTickable(OnTick, TickRate.OneGameDay);
+        Manager_TickRate.RegisterTicker(TickerType.Manager, TickRate.OneGameDay, 1 , OnTick);
     }
 
     public void ChangeProsperity(float prosperityChange)

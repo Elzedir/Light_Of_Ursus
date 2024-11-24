@@ -2,12 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Careers;
+using DateAndTime;
 using Items;
 using Jobs;
 using Managers;
 using Priority;
+using Recipes;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Actors
 {
@@ -25,16 +29,16 @@ namespace Actors
 
         public FullIdentification FullIdentification;
 
-        public GameObjectProperties  GameObjectProperties;
-        public CareerAndJobs         CareerAndJobs;
-        public CraftingData          CraftingData;
-        public VocationData          VocationData;
-        public SpeciesAndPersonality SpeciesAndPersonality;
-        public StatsAndAbilities     StatsAndAbilities;
-        public StatesAndConditions   StatesAndConditions;
-        public InventoryData         InventoryData;
-        public EquipmentData         EquipmentData;
-        public QuestData             ActorQuests;
+        public                                         GameObjectProperties  GameObjectProperties;
+        [FormerlySerializedAs("CareerAndJobs")] public CareerData            CareerData;
+        public                                         CraftingData          CraftingData;
+        public                                         VocationData          VocationData;
+        public                                         SpeciesAndPersonality SpeciesAndPersonality;
+        public                                         StatsAndAbilities     StatsAndAbilities;
+        public                                         StatesAndConditions   StatesAndConditions;
+        public                                         InventoryData         InventoryData;
+        public                                         EquipmentData         EquipmentData;
+        public                                         QuestData             ActorQuests;
         //public OrderData OrderData;
         public Order_Base CurrentOrder;
 
@@ -82,7 +86,7 @@ namespace Actors
             ActorName      = FullIdentification.ActorName;
 
             GameObjectProperties  = new GameObjectProperties(ActorID);
-            CareerAndJobs         = new CareerAndJobs(ActorID);
+            CareerData         = new CareerData(ActorID);
             CraftingData          = new CraftingData(ActorID);
             VocationData          = new VocationData(ActorID);
             SpeciesAndPersonality = new SpeciesAndPersonality(ActorID);
@@ -161,15 +165,15 @@ namespace Actors
     [Serializable]
     public class FullIdentification : PriorityData
     {
-        public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID) : base(actorID, ComponentType.Actor)
+        public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID, Date actorBirthDate) : base(actorID, ComponentType.Actor)
         {
             ActorName      = actorName;
             ActorFactionID = actorFactionID;
             ActorCityID    = actorCityID;
+            ActorBirthDate = actorBirthDate;
         }
 
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public ActorName  ActorName;
         public uint       ActorFactionID;
@@ -193,7 +197,6 @@ namespace Actors
         public Background(uint actorID) : base(actorID, ComponentType.Actor) { }
 
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public string  Birthplace;
         public Date    Birthdate;
@@ -214,7 +217,6 @@ namespace Actors
     {
         public GameObjectProperties(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public void UpdateActorGOProperties()
         {
@@ -274,7 +276,6 @@ namespace Actors
     {
         public WorldStateData(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
@@ -289,7 +290,6 @@ namespace Actors
     {
         public Relationships(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
         public          List<Relation>           AllRelationships;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
@@ -301,17 +301,32 @@ namespace Actors
     }
 
     [Serializable]
-    public class CareerAndJobs : PriorityData
+    public class CareerData : PriorityData
     {
-        public CareerAndJobs(uint actorID) : base(actorID, ComponentType.Actor) { }
+        public CareerData(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
+        public CareerName CareerName;
         
-        public HashSet<JobName> AllActorJobs;
-        public Job              CurrentActorJob;
+        public HashSet<JobName> AllActorJobs = new();
+        public void AddJob(JobName jobName)
+        {
+            if (AllActorJobs.Add(jobName)) return;
+            
+            Debug.LogWarning($"Job {jobName} already exists in AllActorJobs.");
+        }
         
-        public 
+        public void RemoveJob(JobName jobName)
+        {
+            if (AllActorJobs.Remove(jobName)) return;
+            
+            Debug.LogWarning($"Job {jobName} does not exist in AllActorJobs.");
+        }
+        
+        Job                     _currentActorJob;
+        public Job              CurrentActorJob => _currentActorJob;
+        
+        public bool HasWork() => CurrentActorJob != null;
 
         public bool JobsActive;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
@@ -337,7 +352,6 @@ namespace Actors
     {
         public SpeciesAndPersonality(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public SpeciesName      ActorSpecies;
         public void             SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
@@ -403,7 +417,6 @@ namespace Actors
     {
         public Actor_Stats(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public ActorLevelData ActorLevelData;
         public SPECIAL        ActorSpecial;
@@ -425,7 +438,6 @@ namespace Actors
     {
         public Actor_Aspects(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public ClassTitle ActorClassTitle => Manager_Aspect.GetCharacterTitle(ActorAspectList);
 
@@ -488,7 +500,6 @@ namespace Actors
             CanAddNewSkillSet  = canAddNewSkillSet;
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public                                             uint ActorLevel;
         public                                             uint TotalExperience;
@@ -556,7 +567,6 @@ namespace Actors
     {
         public CraftingData(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public List<RecipeName> KnownRecipes = new();
 
@@ -624,7 +634,6 @@ namespace Actors
     {
         public QuestData(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public List<Quest> ActorQuests = new();
         public void SetStage(int questID, int stageID, int stageProgress)
@@ -645,7 +654,6 @@ namespace Actors
     {
         public VocationData(uint actorID) : base(actorID, ComponentType.Actor) { }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
         public List<ActorVocation> ActorVocations = new();
         public void                SetVocations(List<ActorVocation> vocations) => ActorVocations = vocations;

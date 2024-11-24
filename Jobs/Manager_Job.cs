@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using Actors;
 using ScriptableObjects;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
 namespace Jobs
 {
-    public abstract class Jobs
+    public abstract class Manager_Job
     {
         const string  _allJobsSOPath = "ScriptableObjects/AllJobs_SO";
         
@@ -59,37 +60,43 @@ namespace Jobs
     
     }
 
-    public class Job
+    [Serializable]
+    public abstract class Job
     {
-        public JobName JobName;
-        public uint    StationID;
-        public uint    OperatingAreaID;
+        public readonly  JobName JobName;
+        [SerializeField] uint    _stationID;
+        public           uint    StationID                    => _stationID;
+        public           void    SetStationID(uint stationID) => _stationID = stationID;
+        
+        [SerializeField] uint    _operatingAreaID;
+        public           uint    OperatingAreaID => _operatingAreaID;
+        public           void    SetOperatingAreaID(uint operatingAreaID) => _operatingAreaID = operatingAreaID;
         
         public ActivityPeriod ActivityPeriod;
 
         Job_Master _job_Master;
-        Job_Master Job_Master => _job_Master ??= Jobs.GetJob_Master(JobName);
+        Job_Master Job_Master => _job_Master ??= Manager_Job.GetJob_Master(JobName);
         public Dictionary<TaskName, Task_Master> JobTasks => Job_Master.JobTasks;
         
         public Job(JobName jobName, uint stationID, uint operatingAreaID)
         {
             JobName = jobName;
-            StationID = stationID;
-            OperatingAreaID = operatingAreaID;
+            _stationID = stationID;
+            _operatingAreaID = operatingAreaID;
         }
         
-        public IEnumerator PerformJob(ActorComponent actor)
-        {
-            foreach(Task_Master task in JobTasks)
-            {
-                yield return task.GetTaskAction(actor, );
-            }
-        }
+        // public IEnumerator PerformJob(ActorComponent actor)
+        // {
+        //     foreach(Task_Master task in JobTasks)
+        //     {
+        //         yield return task.GetTaskAction(actor, );
+        //     }
+        // }
     }
     
     public enum ActivityPeriodName { Cathemeral, Nocturnal, Diurnal, Crepuscular }
 
-    public class ActivityPeriod
+    public abstract class ActivityPeriod
     {
         public ActivityPeriodName PeriodName;
     }

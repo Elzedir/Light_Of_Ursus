@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Items;
 using Managers;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
 namespace Recipes
 {
-    public abstract class Recipes
+    public abstract class Manager_Recipe
     {
         const string _allRecipesSOPath = "ScriptableObjects/AllRecipes_SO";
 
@@ -57,7 +58,7 @@ namespace Recipes
         public List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
 
         Recipe_Master _recipeMaster;
-        Recipe_Master RecipeMaster => _recipeMaster ??= Recipes.GetRecipe_Master(RecipeName);
+        Recipe_Master RecipeMaster => _recipeMaster ??= Manager_Recipe.GetRecipe_Master(RecipeName);
 
         public Recipe(RecipeName recipeName)
         {

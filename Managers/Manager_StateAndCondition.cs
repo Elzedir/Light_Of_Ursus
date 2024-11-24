@@ -173,10 +173,9 @@ namespace Managers
             CurrentConditions                   =  new ObservableDictionary<ConditionName, float>();
             CurrentConditions.DictionaryChanged += OnConditionChanged;
             
-            Manager_TickRate.RegisterTickable(_onTick, TickRate.OneSecond);
+            Manager_TickRate.RegisterTicker(TickerType.Manager, TickRate.OneSecond, 2, _onTick);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
 
 
         public ObservableDictionary<ConditionName, float> CurrentConditions;
@@ -315,7 +314,6 @@ namespace Managers
         }
 
         ComponentReference_Actor _actorReference    => Reference as ComponentReference_Actor;
-        public override PriorityComponent        PriorityComponent => _priorityComponent ??= _actorReference.Actor.PriorityComponent;
 
         readonly ObservableDictionary<PrimaryStateName, bool> _currentPrimaryStates;
         readonly ObservableDictionary<SubStateName, bool>     _currentSubStates;

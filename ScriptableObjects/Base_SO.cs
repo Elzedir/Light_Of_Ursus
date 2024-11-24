@@ -124,9 +124,9 @@ namespace ScriptableObjects
             _currentIndex = 0;
         }
 
-        public abstract Dictionary<uint, T> PopulateDefaultObjects();
+        protected abstract Dictionary<uint, T> _populateDefaultObjects();
 
-        Dictionary<uint, T> _defaultRecipes;
-        protected Dictionary<uint, T> DefaultObjects => _defaultRecipes ??= PopulateDefaultObjects();
+        Dictionary<uint, T> _defaultObjects;
+        protected Dictionary<uint, T> DefaultObjects => _defaultObjects ??= _populateDefaultObjects();
     }
 }

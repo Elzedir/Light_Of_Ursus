@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DateAndTime;
 using Managers;
 using UnityEditor;
 using UnityEngine;
@@ -22,8 +23,6 @@ public class RegionData
 
     public void InitialiseRegionData()
     {
-        CurrentDate.NewDay += _refreshRegion;
-
         var region = Manager_Region.GetRegion(RegionID);
 
         region.Initialise();
@@ -36,13 +35,6 @@ public class RegionData
                 AllCityIDs.Add(city.CityData.CityID);
             }
         }
-    }
-
-    
-
-    void _refreshRegion()
-    {
-        // Refresh all cities in regiondata
     }
 }
 

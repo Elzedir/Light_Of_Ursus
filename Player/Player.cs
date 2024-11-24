@@ -17,7 +17,7 @@ public class Player : Controller, IDataPersistence
     Animation _animation;
     bool _moved;
     RaycastHit2D _hit;
-    public IInteractable ClosestInteractableObject; //public Interactable ClosestInteractableObject { get { return _closestInteractableObject; } }
+    public IInteractable ClosestInteractableObject;
     List<IInteractable> _interactableObjects = new();
     [SerializeField] bool _hasStaff;
     bool _aim = false;
@@ -31,10 +31,7 @@ public class Player : Controller, IDataPersistence
         _actor = GetComponent<ActorComponent>();
         _coll_Body = GetComponent<Collider>();
         _animator = GetComponent<Animator>();
-        //_animation = GameObject.Find("TestActor").GetComponent<Animation>();
         SceneManager.sceneLoaded += OnSceneLoaded;
-        //_testBody = GameObject.Find("TestBody").GetComponent<Rigidbody>();
-        // _weaponAnimator = Manager_Game.FindTransformRecursively(transform.parent, "Slot_4").GetComponent<Animator>();
 
         _rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
     }

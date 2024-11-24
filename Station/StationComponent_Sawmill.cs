@@ -4,6 +4,9 @@ using System.Linq;
 using Actors;
 using Items;
 using Managers;
+using OperatingArea;
+using Recipes;
+using Station;
 using UnityEngine;
 
 public class StationComponent_Sawmill : StationComponent
@@ -73,7 +76,7 @@ public class StationComponent_Sawmill : StationComponent
         if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
         if (!AllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
 
-        Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
+        var recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
 
         var cost = _getCost(recipeMaster.RequiredIngredients, actor);
         var yield = _getYield(recipeMaster.RecipeProducts, actor);

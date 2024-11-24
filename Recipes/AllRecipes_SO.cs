@@ -16,13 +16,21 @@ namespace Recipes
         public Recipe_Master   GetRecipe_Master(RecipeName recipeName) => GetObject_Master((uint)recipeName);
         
         public override uint GetObjectID(int id) => (uint)Recipes[id].RecipeName;
+        
+        public void PopulateDefaultRecipes()
+        {
+            if (_defaultRecipes.Count == 0)
+            {
+                Debug.Log("No Default Recipes Found");
+            }
+        }
 
-        public override Dictionary<uint, Recipe_Master> PopulateDefaultObjects()
+        protected override Dictionary<uint, Recipe_Master> _populateDefaultObjects()
         {
             return List_Recipe.GetAllDefaultRecipes();
         }
 
-        Dictionary<uint, Recipe_Master> DefaultRecipes => DefaultObjects;
+        Dictionary<uint, Recipe_Master> _defaultRecipes => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllRecipes_SO))]

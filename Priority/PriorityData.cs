@@ -26,8 +26,8 @@ namespace Priority
             }
         }
     
-        protected       PriorityComponent _priorityComponent;
-        public abstract PriorityComponent PriorityComponent { get; }
+        protected       PriorityComponent<Enum> _priorityComponent;
+        public PriorityComponent<Enum> PriorityComponent => _priorityComponent ??= Reference.GetPriorityComponent<Enum>();
 
         Action<DataChanged, Dictionary<PriorityParameter, object>> _onDataChange { get; set; }
     

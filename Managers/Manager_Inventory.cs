@@ -295,8 +295,6 @@ namespace Managers
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public override PriorityComponent PriorityComponent => _priorityComponent ??= ActorReference.Actor.PriorityComponent;
-
         protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
 
         float _availableCarryWeight;
@@ -335,8 +333,7 @@ namespace Managers
         public          InventoryData_Station GetInventoryData() => this;
 
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
-
-        public override PriorityComponent PriorityComponent => _priorityComponent ??= StationReference.Station.PriorityComponent;
+        
         public          uint              MaxInventorySpace = 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
         HashSet<uint>                     _getDesiredItemIDs()                      => StationReference.Station.DesiredStoredItemIDs;
         protected override bool           _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
