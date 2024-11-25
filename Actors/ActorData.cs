@@ -188,7 +188,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -209,7 +209,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -268,7 +268,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -282,7 +282,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -297,7 +297,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -322,9 +322,9 @@ namespace Actors
             
             Debug.LogWarning($"Job {jobName} does not exist in AllActorJobs.");
         }
-        
-        Job                     _currentActorJob;
-        public Job              CurrentActorJob => _currentActorJob;
+
+        public Job CurrentActorJob { get; private set; }
+        public void SetCurrentActorJob(Job job) => CurrentActorJob = job;
         
         public bool HasWork() => CurrentActorJob != null;
 
@@ -344,7 +344,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -363,7 +363,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -430,7 +430,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -485,7 +485,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -559,7 +559,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -626,7 +626,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -646,7 +646,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -725,7 +725,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; } = new();
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]

@@ -36,9 +36,9 @@ namespace Jobs
             return new Dictionary<uint, Job_Master>
             {
                 {
-                    (uint)JobName.Lumberjack, new Job_Master(
-                        jobName: JobName.Lumberjack,
-                        jobDescription: "Lumberjack",
+                    (uint)JobName.Logger, new Job_Master(
+                        jobName: JobName.Logger,
+                        jobDescription: "A logger",
                         new Dictionary<TaskName, Task_Master>
                         {
                             {
@@ -48,14 +48,6 @@ namespace Jobs
                                     taskAction: null
                                 )
                             },
-
-                            {
-                                TaskName.Chop_Trees, new Task_Master(
-                                    taskName: TaskName.Sell_Wood,
-                                    taskDescription: "Sell wood",
-                                    taskAction: null
-                                )
-                            }
                         })
                 }
             };

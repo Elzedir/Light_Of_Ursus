@@ -137,8 +137,6 @@ namespace Jobsite
             return result;
         }
 
-        protected void _prioritiseAllStationsToHaulFrom() => PriorityComponent.FullPriorityUpdate(AllStationsInJobsite.Cast<object>().ToList());
-
         public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
         {
             return PriorityComponent.GetStationToFetchFrom(hauler);

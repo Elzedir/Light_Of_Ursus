@@ -57,7 +57,10 @@ namespace Careers
                         careerDescription: "A lumberjack",
                         new HashSet<JobName>
                         {
-                            JobName.Lumberjack
+                            JobName.Logger,
+                            JobName.Sawmiller,
+                            JobName.Hauler,
+                            JobName.Vendor,
                         }
                     )
 

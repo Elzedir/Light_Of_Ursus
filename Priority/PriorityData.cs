@@ -26,10 +26,10 @@ namespace Priority
             }
         }
     
-        protected       PriorityComponent<Enum> _priorityComponent;
-        public PriorityComponent<Enum> PriorityComponent => _priorityComponent ??= Reference.GetPriorityComponent<Enum>();
+        protected       PriorityComponent _priorityComponent;
+        public PriorityComponent PriorityComponent => _priorityComponent ??= Reference.GetPriorityComponent();
 
-        Action<DataChanged, Dictionary<PriorityParameter, object>> _onDataChange { get; set; }
+        Action<DataChanged, Dictionary<PriorityParameterName, object>> _onDataChange { get; set; }
     
         protected void _priorityChangeCheck(DataChanged dataChanged, bool forceChange = false)
         {
@@ -55,7 +55,7 @@ namespace Priority
         void _setOnDataChange() => _onDataChange = (dataChanged, changedParameters)
             => PriorityComponent.OnDataChanged(dataChanged, changedParameters);
 
-        Dictionary<PriorityParameter, object> _getActionsToChange(DataChanged dataChanged)
+        Dictionary<PriorityParameterName, object> _getActionsToChange(DataChanged dataChanged)
         {
             if (_priorityParameterList.Count == 0)
             {
@@ -70,6 +70,6 @@ namespace Priority
 
         }
 
-        protected abstract Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList { get; set; }
+        protected abstract Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; }
     }
 }

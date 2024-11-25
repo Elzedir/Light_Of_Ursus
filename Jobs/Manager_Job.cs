@@ -40,21 +40,22 @@ namespace Jobs
 
     public enum JobName
     {
-        Patrol,
+        None,
+        
+        Hauler,
+        
+        Vendor,
+        
+        Guard,
 
-        Defend_Ally,
-        Defend_Neutral,
+        Researcher,
 
-        Medic_Self,
-        Medic_Ally,
-        Medic_Neutral,
-        Medic_Enemy,
+        Harvester,
 
-        Research,
-
-        Harvest,
-
-        Lumberjack,
+        Logger,
+        Sawmiller,
+        
+        Carpenter,
 
         Smith,
     
@@ -147,10 +148,19 @@ namespace Jobs
     {
         Beat_Iron,
 
-        Chop_Trees, Process_Trees, Drop_Off_Wood, Sell_Wood,
+        Chop_Trees, Process_Trees, Drop_Off_Wood,
 
         Stand_At_Counter, Restock_Shelves,
+        
+        Defend_Ally,
+        Defend_Neutral,
 
+        Medic_Self,
+        Medic_Ally,
+        Medic_Neutral,
+        Medic_Enemy,
+        
+        
         DefendAllies, DefendNeutral,
 
         HealSelf, SplintSelf,

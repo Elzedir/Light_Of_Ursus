@@ -276,7 +276,7 @@ namespace Managers
                 && existingItem.ItemAmount >= requiredItem.ItemAmount);
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;

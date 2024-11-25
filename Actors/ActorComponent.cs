@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Managers;
@@ -7,9 +6,9 @@ using UnityEngine;
 
 namespace Actors
 {
-    public enum PriorityStatus
+    public enum PriorityState
     {
-        None = 0,
+        None,
             
         InCombat,
         HasWork,
@@ -97,36 +96,36 @@ namespace Actors
             // Regional region is within 1 zone distance.
             // Distant region is 2+ zones.
 
-            var priorityStatus = _getPriorityStatus();
+            var priorityState = _getPriorityState();
 
-            if (!_mustChangeCurrentAction(priorityStatus))
+            if (!_mustChangeCurrentAction(priorityState))
             {
                 Debug.Log("No need to change current action.");
                 return;
             }
 
-            var highestPriority = PriorityComponent.GetHighestPriority(priorityStatus);
+            var highestPriority = PriorityComponent.GetHighestPriority(priorityState);
         }
         
-        PriorityStatus _getPriorityStatus()
+        PriorityState _getPriorityState()
         {
             if (ActorData.StatesAndConditions.Actor_States.GetSubState(SubStateName.IsInCombat))
             {
-                return PriorityStatus.InCombat;
+                return PriorityState.InCombat;
             }
 
             if (ActorData.CareerData.HasWork())
             {
-                return PriorityStatus.HasWork;
+                return PriorityState.HasWork;
             }
 
-            return PriorityStatus.None;
+            return PriorityState.None;
         }
 
-        bool _mustChangeCurrentAction(PriorityStatus priorityStatus)
+        bool _mustChangeCurrentAction(PriorityState priorityState)
         {
             var currentAction       = PriorityComponent.GetCurrentAction();
-            var nextHighestPriorityValue = PriorityComponent.PeekHighestPriority(priorityStatus);
+            var nextHighestPriorityValue = PriorityComponent.PeekHighestPriority(priorityState);
 
             if (nextHighestPriorityValue == null)
             {

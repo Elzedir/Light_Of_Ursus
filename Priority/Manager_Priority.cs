@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Actors;
 using Jobsite;
-using Priority;
+using Managers;
 using UnityEngine;
 
-namespace Managers
+namespace Priority
 {
     public class Manager_Priority : MonoBehaviour
     {
@@ -22,7 +23,7 @@ namespace Managers
         Low,
     }
 
-    public enum PriorityParameter
+    public enum PriorityParameterName
     {
         None,
 
@@ -56,7 +57,7 @@ namespace Managers
 
         protected abstract object               _component { get; }
         public abstract    GameObject           GameObject { get; }
-        public abstract    PriorityComponent<T> GetPriorityComponent<T>() where T : Enum;
+        public abstract    PriorityComponent GetPriorityComponent();
     }
 
     public class ComponentReference_Actor : ComponentReference
@@ -69,7 +70,7 @@ namespace Managers
         public             ActorComponent Actor      => _component as ActorComponent;
 
         public override GameObject GameObject => Actor.gameObject;
-        public override PriorityComponent<T> GetPriorityComponent<T>() => Actor.PriorityComponent as PriorityComponent<T>;
+        public override PriorityComponent GetPriorityComponent() => Actor.PriorityComponent;
     }
 
     public class ComponentReference_Station : ComponentReference
@@ -82,7 +83,8 @@ namespace Managers
         public             StationComponent Station    => _component as StationComponent;
 
         public override GameObject           GameObject                => Station.gameObject;
-        public override PriorityComponent<T> GetPriorityComponent<T>() => null;
+        
+        public override PriorityComponent GetPriorityComponent() => null;
     }
 
     public class ComponentReference_Jobsite : ComponentReference
@@ -95,6 +97,7 @@ namespace Managers
         public             JobsiteComponent Jobsite    => _component as JobsiteComponent;
 
         public override GameObject           GameObject                => Jobsite.gameObject;
-        public override PriorityComponent<T> GetPriorityComponent<T>() => Jobsite.PriorityComponent as PriorityComponent<T>;
+        
+        public override PriorityComponent GetPriorityComponent() => Jobsite.PriorityComponent;
     }
 }

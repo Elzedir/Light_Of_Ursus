@@ -135,7 +135,7 @@ namespace Priority
             return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
         }
 
-        public static List<float> GeneratePriorities(ActorActionName actorActionName, Dictionary<PriorityParameter, object> existingPriorityParameters)
+        public static List<float> GeneratePriorities(ActorActionName actorActionName, Dictionary<PriorityParameterName, object> existingPriorityParameters)
         {
             if (existingPriorityParameters == null)
             {
@@ -155,13 +155,13 @@ namespace Priority
             }
         }
 
-        static List<float> _generateFetchPriority(Dictionary<PriorityParameter, object> existingPriorityParameters)
+        static List<float> _generateFetchPriority(Dictionary<PriorityParameterName, object> existingPriorityParameters)
         {
-            float         maxPriority      = existingPriorityParameters[PriorityParameter.MaxPriority] as float?   ?? _defaultMaxPriority;
-            float         totalDistance    = existingPriorityParameters[PriorityParameter.TotalDistance] as float? ?? 0;
-            float         totalItems       = existingPriorityParameters[PriorityParameter.TotalItems] as float?    ?? 0;
-            InventoryData inventory_Hauler = existingPriorityParameters[PriorityParameter.InventoryHauler] as InventoryData;
-            InventoryData inventory_Target = existingPriorityParameters[PriorityParameter.InventoryTarget] as InventoryData;
+            float         maxPriority      = existingPriorityParameters[PriorityParameterName.MaxPriority] as float?   ?? _defaultMaxPriority;
+            float         totalDistance    = existingPriorityParameters[PriorityParameterName.TotalDistance] as float? ?? 0;
+            float         totalItems       = existingPriorityParameters[PriorityParameterName.TotalItems] as float?    ?? 0;
+            InventoryData inventory_Hauler = existingPriorityParameters[PriorityParameterName.InventoryHauler] as InventoryData;
+            InventoryData inventory_Target = existingPriorityParameters[PriorityParameterName.InventoryTarget] as InventoryData;
 
             if (maxPriority == 0)
             {
@@ -222,19 +222,19 @@ namespace Priority
             };
         }
 
-        static List<float> _generateDeliverPriority(Dictionary<PriorityParameter, object> existingPriorityParameters)
+        static List<float> _generateDeliverPriority(Dictionary<PriorityParameterName, object> existingPriorityParameters)
         {
-            var         maxPriority      = existingPriorityParameters[PriorityParameter.MaxPriority] as float?   ?? _defaultMaxPriority;
-            var         totalDistance    = existingPriorityParameters[PriorityParameter.TotalDistance] as float? ?? 0;
-            var         totalItems       = existingPriorityParameters[PriorityParameter.TotalItems] as float?    ?? 0;
-            var inventory_Hauler = existingPriorityParameters[PriorityParameter.InventoryHauler] as InventoryData;
-            var inventory_Target = existingPriorityParameters[PriorityParameter.InventoryTarget] as InventoryData;
+            var         maxPriority      = existingPriorityParameters[PriorityParameterName.MaxPriority] as float?   ?? _defaultMaxPriority;
+            var         totalDistance    = existingPriorityParameters[PriorityParameterName.TotalDistance] as float? ?? 0;
+            var         totalItems       = existingPriorityParameters[PriorityParameterName.TotalItems] as float?    ?? 0;
+            var inventory_Hauler = existingPriorityParameters[PriorityParameterName.InventoryHauler] as InventoryData;
+            var inventory_Target = existingPriorityParameters[PriorityParameterName.InventoryTarget] as InventoryData;
 
-            StationName currentStationType = existingPriorityParameters.TryGetValue(PriorityParameter.CurrentStationType, out var stationType)
+            StationName currentStationType = existingPriorityParameters.TryGetValue(PriorityParameterName.CurrentStationType, out var stationType)
                 ? stationType as StationName? ?? StationName.None
                 : StationName.None;
 
-            HashSet<StationName> allStationTypes = existingPriorityParameters.TryGetValue(PriorityParameter.AllStationTypes, out var stationTypes)
+            HashSet<StationName> allStationTypes = existingPriorityParameters.TryGetValue(PriorityParameterName.AllStationTypes, out var stationTypes)
                 ? stationTypes as HashSet<StationName>
                 : null;
 

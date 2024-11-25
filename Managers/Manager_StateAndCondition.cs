@@ -242,7 +242,7 @@ namespace Managers
         }
         protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -417,7 +417,7 @@ namespace Managers
         
         protected override bool _priorityChangeNeeded(object dataChanged) => (PrimaryStateName)dataChanged != PrimaryStateName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameter, object>> _priorityParameterList
+        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
