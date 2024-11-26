@@ -13,27 +13,42 @@ namespace Priority
 {
     public class PriorityComponent_Jobsite : PriorityComponent
     {
-        static readonly Dictionary<JobName, Dictionary<PriorityParameterName, object>> _priorityParameters = new()
-        {
-            {
-                JobName.Logger, new Dictionary<PriorityParameterName, object>
-                {
-                    { PriorityParameterName.TotalItems, null },
-                    { PriorityParameterName.TotalDistance, null },
-                    { PriorityParameterName.InventoryHauler, null },
-                    { PriorityParameterName.InventoryTarget, null },
-                    { PriorityParameterName.Jobsite, null },
-                }
-            }
-        };
-
+        PriorityGenerator_Jobsite _priorityGenerator;
+        PriorityGenerator_Jobsite PriorityGenerator => _priorityGenerator ??= new PriorityGenerator_Jobsite(); 
         public override void OnDataChanged(DataChanged                               dataChanged,
                                            Dictionary<PriorityParameterName, object> changedParameters)
         {
             return;
         }
-        
-        protected override bool _canPeek(uint priorityID) => AllPriorities.ContainsKey(priorityID);
+
+        protected override List<uint> _canPeek(List<uint> priorityIDs)
+        {
+            var allowedPriorities = new List<uint>();
+            
+            foreach (var priorityID in priorityIDs)
+            {
+                if (priorityID is (uint)JobTaskName.Idle)
+                {
+                    Debug.LogError($"ActorActionName: {(ActorActionName)priorityID} not allowed in PeekHighestSpecificPriority.");
+                    continue;
+                }
+
+                allowedPriorities.Add(priorityID);
+            }   
+            
+            return allowedPriorities;
+        }
+
+        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID)
+        {
+            if (!_priorityExists(priorityID, out var existingPriorityParameters)) return;
+
+            var newPriorities = PriorityGenerator.GeneratePriority((JobTaskName)priorityID, existingPriorityParameters);
+
+            if (newPriorities is null || newPriorities.Count is 0) return;
+
+            AllPriorities[priorityQueueID].Update(priorityID, newPriorities);
+        }
 
         protected override ObservableDictionary<uint, PriorityQueue> _getRelevantPriorityQueues(
             PriorityState priorityState)
@@ -89,7 +104,7 @@ namespace Priority
                     { PriorityParameterName.InventoryTarget, station.StationData.InventoryData },
                 });
 
-                var newPriorities = PriorityGenerator.GeneratePriorities(ActorActionName.Fetch, priorityParameters);
+                var newPriorities = PriorityGenerator.GeneratePriority(JobTaskName.Fetch_Items, priorityParameters);
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
@@ -174,7 +189,7 @@ namespace Priority
                     { PriorityParameterName.AllStationTypes, allStationTypes },
                 });
 
-                var newPriorities = PriorityGenerator.GeneratePriorities(ActorActionName.Deliver, priorityParameters);
+                var newPriorities = PriorityGenerator.GeneratePriority(JobTaskName.Fetch_Items, priorityParameters);
 
                 if (newPriorities is null || newPriorities.Count is 0) continue;
 
@@ -197,28 +212,28 @@ namespace Priority
 
             return (peekedStation, itemsToDeliver);
         }
-
-        static readonly Dictionary<DataChanged, List<ActionToChange>> _prioritiesToChange = new()
+        
+        static readonly Dictionary<JobName, Dictionary<PriorityParameterName, object>> _priorityParameters = new()
         {
             {
-                DataChanged.ChangedInventory, new List<ActionToChange>
+                JobName.Logger, new Dictionary<PriorityParameterName, object>
                 {
-                    new(ActorActionName.Deliver, PriorityImportance.High)
+                    { PriorityParameterName.TotalItems, null },
+                    { PriorityParameterName.TotalDistance, null },
+                    { PriorityParameterName.InventoryHauler, null },
+                    { PriorityParameterName.InventoryTarget, null },
+                    { PriorityParameterName.Jobsite, null },
                 }
-            },
+            }
+        };
 
+        static readonly Dictionary<DataChanged, List<JobTaskToChange>> _prioritiesToChange = new()
+        {
             {
-                DataChanged.DroppedItems, new List<ActionToChange>
+                DataChanged.ChangedInventory, new List<JobTaskToChange>
                 {
-                    new(ActorActionName.Fetch, PriorityImportance.High),
-                    new(ActorActionName.Scavenge, PriorityImportance.Medium),
-                }
-            },
-
-            {
-                DataChanged.PriorityCompleted, new List<ActionToChange>
-                {
-                    new(ActorActionName.Wander, PriorityImportance.High),
+                    new(JobTaskName.Fetch_Items, PriorityImportance.High),
+                    new(JobTaskName.Deliver_Items, PriorityImportance.High),
                 }
             },
         };

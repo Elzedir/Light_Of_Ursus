@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
 using DateAndTime;
 using Items;
+using Managers;
 using Recipes;
 using ScriptableObjects;
 using Tools;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Managers
+namespace Actors
 {
     public class Manager_Actor : MonoBehaviour, IDataPersistence
     {
@@ -296,7 +296,6 @@ namespace Managers
         public void AddInitialRecipe(RecipeName             recipeName)     => InitialRecipes.Add(recipeName);
         public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;
         public void AddInitialVocation(ActorVocation        actorVocation)  => InitialVocations.Add(actorVocation);
-        
         public void SetStatesAndConditions(StatesAndConditions statesAndConditions) => StatesAndConditions = statesAndConditions;
     }
 }

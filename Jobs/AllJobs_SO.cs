@@ -108,12 +108,12 @@ namespace Jobs
 
                 if (_showJobTasks)
                 {
-                    _drawJobTasks(jobTasks.Values.ToList());
+                    _drawJobTasks(jobTasks.ToList());
                 }
             }
         }
 
-        void _drawJobTasks(List<Task_Master> jobTasks)
+        void _drawJobTasks(List<JobTaskName> jobTasks)
         {
             if (jobTasks.Count == 1)
             {

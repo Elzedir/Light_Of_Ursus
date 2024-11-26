@@ -6,14 +6,6 @@ using UnityEngine;
 
 namespace Actors
 {
-    public enum PriorityState
-    {
-        None,
-            
-        InCombat,
-        HasWork,
-    }
-    
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
     public class ActorComponent : MonoBehaviour
@@ -39,11 +31,8 @@ namespace Actors
         PersonalityComponent           _personalityComponent;
         public PersonalityComponent    PersonalityComponent => _personalityComponent ??= new PersonalityComponent(_actorID);
         public GroundedCheckComponent  GroundCheckComponent;
-        PriorityComponent_Actor        _priorityComponent;
-        public PriorityComponent_Actor PriorityComponent => _priorityComponent ??= new PriorityComponent_Actor(_actorID);
-        public Coroutine               ActorHaulCoroutine;
-
-        ActorActionName _currentActorAction => PriorityComponent.GetCurrentAction();
+        DecisionMakerComponent         _decisionMakerComponent;
+        public DecisionMakerComponent  DecisionMakerComponent => _decisionMakerComponent ??= new DecisionMakerComponent(_actorID);
 
         void Awake()
         {
@@ -86,64 +75,7 @@ namespace Actors
         {
             if (!_initialised) return;
             
-            _makeDecision();
-        }
-
-        void _makeDecision()
-        {
-            // Change tick rate according to number of zones to player.
-            // Local region is same zone.
-            // Regional region is within 1 zone distance.
-            // Distant region is 2+ zones.
-
-            var priorityState = _getPriorityState();
-
-            if (!_mustChangeCurrentAction(priorityState))
-            {
-                Debug.Log("No need to change current action.");
-                return;
-            }
-
-            var highestPriority = PriorityComponent.GetHighestPriority(priorityState);
-        }
-        
-        PriorityState _getPriorityState()
-        {
-            if (ActorData.StatesAndConditions.Actor_States.GetSubState(SubStateName.IsInCombat))
-            {
-                return PriorityState.InCombat;
-            }
-
-            if (ActorData.CareerData.HasWork())
-            {
-                return PriorityState.HasWork;
-            }
-
-            return PriorityState.None;
-        }
-
-        bool _mustChangeCurrentAction(PriorityState priorityState)
-        {
-            var currentAction       = PriorityComponent.GetCurrentAction();
-            var nextHighestPriorityValue = PriorityComponent.PeekHighestPriority(priorityState);
-
-            if (nextHighestPriorityValue == null)
-            {
-                //Debug.LogWarning("Next highest priority is null.");
-                return false;
-            }
-            
-            var nextHighestPriority = (ActorActionName)nextHighestPriorityValue.PriorityID;
-            
-            Debug.Log($"Current Action: {currentAction}, Next Highest Priority: {nextHighestPriority}");
-
-            if (nextHighestPriority != ActorActionName.Idle)
-            {
-                return _isHigherPriorityThan(nextHighestPriority, currentAction);
-            }
-            
-            Debug.LogError("Next highest priority is None.");
-            return false;
+            DecisionMakerComponent.MakeDecision();
         }
 
         void _updateVisuals()
@@ -170,19 +102,6 @@ namespace Actors
 
             RigidBody.linearVelocity = Vector3.zero;
             transform.position = targetPosition;
-        }
-
-        static readonly Dictionary<ActorActionName, PriorityImportance> _allPriorityPerAction = new()
-        {
-            {ActorActionName.Wander, PriorityImportance.Low},
-            {ActorActionName.Deliver, PriorityImportance.Medium},
-            {ActorActionName.Fetch, PriorityImportance.Medium},
-            {ActorActionName.Scavenge, PriorityImportance.Medium},
-        };
-        
-        static bool _isHigherPriorityThan(ActorActionName actorActionName, ActorActionName otherActorActionName)
-        {
-            return _allPriorityPerAction[actorActionName] < _allPriorityPerAction[otherActorActionName];
         }
     }
 }

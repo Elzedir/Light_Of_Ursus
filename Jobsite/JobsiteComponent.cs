@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Items;
+using Jobs;
 using Managers;
 using Priority;
 using Station;
@@ -70,6 +71,43 @@ namespace Jobsite
                .FirstOrDefault();
 
 
+        public bool GetNewCurrentJob(ActorComponent actor)
+        {
+            var highestPriorityJob =
+                PriorityComponent.GetHighestSpecificPriority(actor.ActorData.CareerData.AllJobs.Select(j => (uint)j)
+                                                                   .ToList());
+
+            if (highestPriorityJob == null) return false;
+
+            var jobName = (JobName)highestPriorityJob.PriorityID;
+
+            var relevantStation = _getRelevantStationForJob(jobName, actor);
+            var relevantOperatingArea = relevantStation.GetRelevantOperatingArea(actor);
+            
+            var job = new Job(jobName, relevantStation.StationID, relevantOperatingArea.OperatingAreaID);
+            
+            actor.ActorData.CareerData.SetCurrentJob(job);
+            
+            return true;
+        }
+        
+        StationComponent _getRelevantStationForJob(JobName jobName, ActorComponent actor)
+        {
+            var relevantStations = AllStationsInJobsite
+                .Where(station => station.StationData.AllowedJobs.Contains(jobName))
+                .ToList();
+
+            if (relevantStations.Count == 0)
+            {
+                Debug.LogError($"No relevant stations found for job: {jobName}.");
+                return null;
+            }
+
+            return relevantStations
+                .OrderBy(station => Vector3.Distance(actor.transform.position, station.transform.position))
+                .FirstOrDefault();
+        }
+
         public List<EmployeePosition> GetMinimumEmployeePositions()
         {
             HashSet<EmployeePosition> employeePositions = new();
@@ -116,15 +154,16 @@ namespace Jobsite
             }
         }
 
-        protected virtual List<List<uint>> _getAllCombinations(List<uint> employees)
+        protected List<List<uint>> _getAllCombinations(List<uint> employees)
         {
             var result           = new List<List<uint>>();
-            int combinationCount = (int)Mathf.Pow(2, employees.Count);
+            var combinationCount = (int)Mathf.Pow(2, employees.Count);
 
-            for (int i = 1; i < combinationCount; i++)
+            for (var i = 1; i < combinationCount; i++)
             {
                 var combination = new List<uint>();
-                for (int j = 0; j < employees.Count; j++)
+                
+                for (var j = 0; j < employees.Count; j++)
                 {
                     if ((i & (1 << j)) != 0)
                     {

@@ -11,23 +11,12 @@ namespace Priority
     {
     
     }
-
-
-    public enum PriorityImportance
-    {
-        None,
-
-        Critical,
-        High,
-        Medium,
-        Low,
-    }
-
+    
     public enum PriorityParameterName
     {
         None,
 
-        // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every totalitems, totaldistance, etc has an attached maxPriority.
+        // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every TotalItems, TotalDistance, etc. has an attached maxPriority.
         MaxPriority,
         TotalItems,
         TotalDistance,
@@ -38,16 +27,14 @@ namespace Priority
         Jobsite,
     }
 
-    public class ActionToChange
+    public enum PriorityImportance
     {
-        public ActorActionName         ActorActionName;
-        public PriorityImportance PriorityImportance;
+        None,
 
-        public ActionToChange(ActorActionName actorActionName, PriorityImportance priorityImportance)
-        {
-            ActorActionName         = actorActionName;
-            PriorityImportance = priorityImportance;
-        }
+        Critical,
+        High,
+        Medium,
+        Low,
     }
 
     public abstract class ComponentReference
@@ -70,7 +57,7 @@ namespace Priority
         public             ActorComponent Actor      => _component as ActorComponent;
 
         public override GameObject GameObject => Actor.gameObject;
-        public override PriorityComponent GetPriorityComponent() => Actor.PriorityComponent;
+        public override PriorityComponent GetPriorityComponent() => Actor.DecisionMakerComponent.PriorityComponent;
     }
 
     public class ComponentReference_Station : ComponentReference

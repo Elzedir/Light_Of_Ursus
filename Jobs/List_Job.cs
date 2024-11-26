@@ -39,15 +39,11 @@ namespace Jobs
                     (uint)JobName.Logger, new Job_Master(
                         jobName: JobName.Logger,
                         jobDescription: "A logger",
-                        new Dictionary<TaskName, Task_Master>
+                        new HashSet<JobTaskName>
                         {
-                            {
-                                TaskName.Chop_Trees, new Task_Master(
-                                    taskName: TaskName.Chop_Trees,
-                                    taskDescription: "Chop trees",
-                                    taskAction: null
-                                )
-                            },
+                            JobTaskName.Chop_Wood,
+                            JobTaskName.Process_Logs,
+                            JobTaskName.Drop_Off_Wood
                         })
                 }
             };
@@ -61,15 +57,9 @@ namespace Jobs
                     (uint)JobName.Smith, new Job_Master(
                         jobName: JobName.Smith,
                         jobDescription: "Smith something",
-                        new Dictionary<TaskName, Task_Master>()
+                        new HashSet<JobTaskName>
                         {
-                            {
-                                TaskName.Beat_Iron, new Task_Master(
-                                    taskName: TaskName.Beat_Iron,
-                                    taskDescription: "Beat iron",
-                                    taskAction: _smith)
-                            }
-
+                            JobTaskName.Beat_Metal
                         })
                 }
             };

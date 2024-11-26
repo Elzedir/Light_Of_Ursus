@@ -11,6 +11,8 @@ namespace Priority
         PriorityValue[]                _priorityArray;
         readonly Dictionary<uint, int> _priorityQueue;
 
+        public Action<uint> OnPriorityRemoved;
+        
         public PriorityQueue(int maxPriorities)
         {
             _currentPosition = 0;
@@ -55,7 +57,9 @@ namespace Priority
 
             _currentPosition--;
             _moveDown(index);
-
+            
+            OnPriorityRemoved?.Invoke(priorityID);
+            
             return priorityValue;
         }
 
@@ -122,6 +126,8 @@ namespace Priority
 
             _currentPosition--;
             _moveDown(index);
+            
+            OnPriorityRemoved?.Invoke(priorityID);
 
             return true;
         }

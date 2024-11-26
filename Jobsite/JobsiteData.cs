@@ -353,14 +353,14 @@ namespace Jobsite
                 return false;
             }
 
-            Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentActorJob.SetStationID(stationID);
+            Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentJob.SetStationID(stationID);
 
             return true;
         }
 
         public bool RemoveEmployeeFromStation(uint employeeID)
         {
-            var stationID = Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentActorJob.StationID;
+            var stationID = Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentJob.StationID;
 
             if (stationID == null)
             {
@@ -394,7 +394,7 @@ namespace Jobsite
                 return false;
             }
 
-            Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentActorJob.SetStationID(0);
+            Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentJob.SetStationID(0);
 
             return true;
         }

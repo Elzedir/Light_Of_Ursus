@@ -40,7 +40,9 @@ namespace Jobs
 
     public enum JobName
     {
-        None,
+        Idle, 
+        
+        Wanderer,
         
         Hauler,
         
@@ -62,7 +64,7 @@ namespace Jobs
     }
 
     [Serializable]
-    public abstract class Job
+    public class Job
     {
         public readonly  JobName JobName;
         [SerializeField] uint    _stationID;
@@ -77,7 +79,7 @@ namespace Jobs
 
         Job_Master _job_Master;
         Job_Master Job_Master => _job_Master ??= Manager_Job.GetJob_Master(JobName);
-        public Dictionary<TaskName, Task_Master> JobTasks => Job_Master.JobTasks;
+        public HashSet<JobTaskName> JobTasks => Job_Master.JobTasks;
         
         public Job(JobName jobName, uint stationID, uint operatingAreaID)
         {
@@ -107,9 +109,9 @@ namespace Jobs
     {
         public JobName           JobName;
         public string            JobDescription;
-        public Dictionary<TaskName, Task_Master> JobTasks;
+        public HashSet<JobTaskName> JobTasks;
 
-        public Job_Master(JobName jobName, string jobDescription, Dictionary<TaskName, Task_Master> jobTasks)
+        public Job_Master(JobName jobName, string jobDescription, HashSet<JobTaskName> jobTasks)
         {
             JobName        = jobName;
             JobDescription = jobDescription;
@@ -130,73 +132,6 @@ namespace Jobs
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var    stationNameProp = property.FindPropertyRelative("JobName");
-            string stationName     = ((StationName)stationNameProp.enumValueIndex).ToString();
-
-            label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";
-
-            EditorGUI.PropertyField(position, property, label, true);
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
-
-        }
-    }
-
-    public enum TaskName
-    {
-        Beat_Iron,
-
-        Chop_Trees, Process_Trees, Drop_Off_Wood,
-
-        Stand_At_Counter, Restock_Shelves,
-        
-        Defend_Ally,
-        Defend_Neutral,
-
-        Medic_Self,
-        Medic_Ally,
-        Medic_Neutral,
-        Medic_Enemy,
-        
-        
-        DefendAllies, DefendNeutral,
-
-        HealSelf, SplintSelf,
-        HealAllies, SplintAllies,
-        HealNeutral, SplintNeutral,
-        HealEnemies, SplintEnemies,
-    }
-
-    [Serializable]
-    public class Task_Master
-    {
-        public TaskName TaskName;
-        public string      TaskDescription;
-
-        public Func<ActorComponent, int, IEnumerator> TaskAction;
-
-        public Task_Master(TaskName taskName, string taskDescription, Func<ActorComponent, int, IEnumerator> taskAction)
-        {
-            TaskName        = taskName;
-            TaskDescription = taskDescription;
-
-            TaskAction = taskAction;
-        }
-
-        public IEnumerator GetTaskAction(ActorComponent actor, int jobsiteID)
-        {
-            return TaskAction(actor, jobsiteID);
-        }
-    }
-
-    [CustomPropertyDrawer(typeof(Task_Master))]
-    public class Task_Drawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var    stationNameProp = property.FindPropertyRelative("TaskName");
             string stationName     = ((StationName)stationNameProp.enumValueIndex).ToString();
 
             label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";

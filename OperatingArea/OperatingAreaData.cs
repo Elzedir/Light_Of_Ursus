@@ -40,7 +40,7 @@ namespace OperatingArea
             if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
 
             CurrentOperatorID = operatorID;
-            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentActorJob.SetOperatingAreaID(OperatingAreaID);
+            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentJob.SetOperatingAreaID(OperatingAreaID);
             return true;
         }
 
@@ -52,7 +52,7 @@ namespace OperatingArea
                 return false;
             }
 
-            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentActorJob.SetOperatingAreaID(0);
+            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentJob.SetOperatingAreaID(0);
             CurrentOperatorID                                                           = 0;
             IsOperatorMovingToOperatingArea                                             = false;
             return true;

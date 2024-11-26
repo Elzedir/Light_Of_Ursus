@@ -147,7 +147,7 @@ namespace Debuggers
         {
             var actorFullIdentification = actor.ActorData.FullIdentification;
             var actorInventory          = actor.ActorData.InventoryData;
-            var actorPriorities         = actor.PriorityComponent.AllPriorities;
+            var actorPriorities         = actor.DecisionMakerComponent.PriorityComponent.AllPriorities;
 
             if (actorFullIdentification != null)
             {
@@ -192,10 +192,10 @@ namespace Debuggers
             if (actorPriorities != null)
             {
                 var allPriorityData = actorPriorities
-                                      .Select(priorityQueue => 
+                                      .Select(priorityQueue =>
                                           new ObjectData_Data(ObjectDataType.PriorityData,
-                                          $"HighestPriorityAction: {priorityQueue.Key} " +
-                                          $"Value: {priorityQueue.Value.Peek()}"))
+                                              $"HighestPriorityAction: {priorityQueue.Key} " +
+                                              $"Value: {priorityQueue.Value.Peek()}"))
                                       .ToList();
 
                 var objectEntryData = new ObjectEntryData(

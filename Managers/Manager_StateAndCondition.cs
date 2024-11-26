@@ -77,7 +77,7 @@ namespace Managers
     [Serializable]
     public class State // Permanent or Perpetual thing
     {
-        [FormerlySerializedAs("StateName")] public PrimaryStateName PrimaryStateName;
+        public PrimaryStateName PrimaryStateName;
     }
 
     public class Condition_Master
@@ -447,17 +447,17 @@ namespace Managers
         {
             {PrimaryStateName.CanCombat, new ActionMap
             {
-                EnabledGroupActions = new HashSet<ActionGroup> {ActionGroup.Combat},
-                DisabledGroupActions = new HashSet<ActionGroup> { ActionGroup.Work, ActionGroup.Recreation, }
+                EnabledGroupActions = new HashSet<ActorActionGroup> {ActorActionGroup.Combat},
+                DisabledGroupActions = new HashSet<ActorActionGroup> { ActorActionGroup.Work, ActorActionGroup.Recreation, }
             }},
         }; 
     }
 
     public class ActionMap
     {
-        public HashSet<ActionGroup> EnabledGroupActions;
+        public HashSet<ActorActionGroup> EnabledGroupActions;
         public HashSet<ActorActionName>  EnabledIndividualActions;
-        public HashSet<ActionGroup>  DisabledGroupActions;
+        public HashSet<ActorActionGroup>  DisabledGroupActions;
         public HashSet<ActorActionName>  DisabledIndividualActions;
     }
 }

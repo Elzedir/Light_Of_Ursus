@@ -60,7 +60,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
                                          from employeeID in StationData.CurrentOperatorIDs
                                          let actorData = Manager_Actor.GetActorData(employeeID)
-                                         where actorData.CareerData.CurrentActorJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
+                                         where actorData.CareerData.CurrentJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
                                          select new { operatingArea, employeeID };
 
         foreach (var pair in employeeOperatingAreaPairs)
