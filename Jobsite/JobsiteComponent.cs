@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
-using Items;
 using Jobs;
 using Managers;
 using Priority;
@@ -94,18 +93,17 @@ namespace Jobsite
         StationComponent _getRelevantStationForJob(JobName jobName, ActorComponent actor)
         {
             var relevantStations = AllStationsInJobsite
-                .Where(station => station.StationData.AllowedJobs.Contains(jobName))
+                .Where(station => station.AllowedJobs.Contains(jobName))
                 .ToList();
 
-            if (relevantStations.Count == 0)
-            {
-                Debug.LogError($"No relevant stations found for job: {jobName}.");
-                return null;
-            }
+            if (relevantStations.Count != 0)
+                return relevantStations
+                       .OrderBy(station => Vector3.Distance(actor.transform.position, station.transform.position))
+                       .FirstOrDefault();
+            
+            Debug.LogError($"No relevant stations found for job: {jobName}.");
+            return null;
 
-            return relevantStations
-                .OrderBy(station => Vector3.Distance(actor.transform.position, station.transform.position))
-                .FirstOrDefault();
         }
 
         public List<EmployeePosition> GetMinimumEmployeePositions()
@@ -176,27 +174,14 @@ namespace Jobsite
             return result;
         }
 
-        public (StationComponent Station, List<Item> Items) GetStationToFetchFrom(ActorComponent hauler)
+        public List<StationComponent> GetRelevantStations(JobTaskName jobTaskName, InventoryData inventoryData)
         {
-            return PriorityComponent.GetStationToFetchFrom(hauler);
-        }
-
-        public (StationComponent Station, List<Item> Items) GetStationToDeliverTo(ActorComponent hauler)
-        {
-            return PriorityComponent.GetStationToDeliverTo(hauler);
-        }
-
-        public List<StationComponent> GetRelevantStations(ActorActionName actorActionName, InventoryData inventoryData)
-        {
-            switch(actorActionName)
+            return jobTaskName switch
             {
-                case ActorActionName.Fetch:
-                    return _relevantStations_Fetch();
-                case ActorActionName.Deliver:
-                    return _relevantStations_Deliver(inventoryData);
-                default:
-                    return new List<StationComponent>();
-            }
+                JobTaskName.Fetch_Items   => _relevantStations_Fetch(),
+                JobTaskName.Deliver_Items => _relevantStations_Deliver(inventoryData),
+                _                         => new List<StationComponent>()
+            };
         }
 
         List<StationComponent> _relevantStations_Fetch()

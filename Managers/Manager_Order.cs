@@ -449,7 +449,7 @@ public class Order_Base
 
         foreach (var stationToHaulTo in stationsToHaulTo)
         {
-            var itemsToHaul = Actor.ActorData.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
+            List<Item> itemsToHaul = new();//Actor.ActorData.InventoryData.InventoryContainsReturnedItems(stationToHaulTo.AllowedStoredItemIDs);
 
             if (itemsToHaul.Count == 0)
             {

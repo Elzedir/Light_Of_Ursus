@@ -8,32 +8,32 @@ namespace Priority
 {
     public class PriorityGenerator_Jobsite : PriorityGenerator
     {
-        public List<float> GeneratePriority(JobTaskName                         jobTaskName,
-                                            Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
+        public Dictionary<PriorityParameterName, float> GeneratePriority(JobTaskName                         jobTaskName,
+                                                                         Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
             _generatePriorities((uint)jobTaskName, existingPriorityParameters
                                                        .Select(x => x)
                                                        .ToDictionary(x => 
                                                            (uint)x.Key, x => x.Value));
 
-        protected override List<float> _generatePriority(uint priorityID,
+        protected override Dictionary<PriorityParameterName, float> _generatePriority(uint priorityID,
                                                          Dictionary<uint, object>
                                                              existingPriorityParameters)
         {
             switch (priorityID)
             {
                 case (uint)JobTaskName.Fetch_Items:
-                    return _generateStockpilePriority(existingPriorityParameters) ?? new List<float>();
+                    return _generateStockpilePriority(existingPriorityParameters) ?? new Dictionary<PriorityParameterName, float>();
                 default:
                     Debug.LogError($"ActionName: {priorityID} not found.");
                     return null;
             }
         }
         
-        List<float> _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
+        Dictionary<PriorityParameterName, float> _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
         {
-            return new List<float>
+            return new Dictionary<PriorityParameterName, float>
             {
-                1
+                {PriorityParameterName.DefaultPriority, 1},
             };
         }
     }

@@ -8,6 +8,7 @@ namespace OperatingArea
 {
     public class OperatingAreaComponent : MonoBehaviour
     {
+        public uint OperatingAreaID => OperatingAreaData.OperatingAreaID;
         public OperatingAreaData OperatingAreaData;
         public void              SetOperatingAreaData(OperatingAreaData operatingAreaData) => OperatingAreaData = operatingAreaData;
         public BoxCollider       OperatingArea;
@@ -24,6 +25,9 @@ namespace OperatingArea
                 OperatingArea.isTrigger = true;
             }
         }
+        
+        public bool HasOperator()              => OperatingAreaData.CurrentOperatorID != 0;
+        public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
 
         public float Operate(float baseProgressRate, Recipe_Master recipeMaster)
         {

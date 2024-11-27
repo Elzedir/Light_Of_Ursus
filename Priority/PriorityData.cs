@@ -8,7 +8,7 @@ namespace Priority
 {
     public abstract class PriorityData
     {
-        public ComponentReference Reference { get; private set; }
+        public ComponentReference Reference { get; }
 
         protected PriorityData (uint componentID, ComponentType componentType)
         {
@@ -25,8 +25,8 @@ namespace Priority
                     break;
             }
         }
-    
-        protected       PriorityComponent _priorityComponent;
+
+        PriorityComponent _priorityComponent;
         public PriorityComponent PriorityComponent => _priorityComponent ??= Reference.GetPriorityComponent();
 
         Action<DataChanged, Dictionary<PriorityParameterName, object>> _onDataChange { get; set; }

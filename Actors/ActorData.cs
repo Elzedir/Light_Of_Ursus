@@ -380,7 +380,7 @@ namespace Actors
         {
             // Find a way to use actorData to exclude jobs that are not allowed due to status and conditions like paralyzed, or
             // personalities.
-            
+
             if (AllJobs.Add(jobName)) return;
 
             Debug.LogWarning($"Job {jobName} already exists in AllActorJobs.");
@@ -400,19 +400,16 @@ namespace Actors
 
         public bool GetNewCurrentJob()
         {
-            if (CareerName != CareerName.Wanderer)
-                return Jobsite.GetNewCurrentJob(ActorReference.Actor);
-            
-            return false;
+            return CareerName != CareerName.Wanderer && Jobsite.GetNewCurrentJob(ActorReference.Actor);
         }
 
         public bool JobsActive = true;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
 
-        public uint JobsiteID;
-        JobsiteComponent _jobsite;
-        public JobsiteComponent Jobsite => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
-        public void SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
+        public uint             JobsiteID;
+        JobsiteComponent        _jobsite;
+        public JobsiteComponent Jobsite                      => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
+        public void             SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
 
 
         public EmployeePosition EmployeePosition;

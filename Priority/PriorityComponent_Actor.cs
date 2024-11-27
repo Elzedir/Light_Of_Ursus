@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
-using Priority;
 using Tools;
 using UnityEngine;
 
@@ -13,8 +12,8 @@ namespace Priority
         public Coroutine CurrentActionCoroutine { get; private set; }
         public bool     IsPerformingAction     => CurrentActionCoroutine != null;
         public Dictionary<uint, PriorityQueue> AllActionPriorities => AllPriorities;
-        ActorAction_Master                            _currentActorActionMaster;
-        public ActorAction_Master                     GetCurrentAction() => _currentActorActionMaster;
+        ActorAction                            _currentActorAction;
+        public ActorAction                     GetCurrentAction() => _currentActorAction;
         PriorityGenerator_Actor                _priorityGenerator;
         PriorityGenerator_Actor                PriorityGenerator => _priorityGenerator ??= new PriorityGenerator_Actor();
 
@@ -25,47 +24,46 @@ namespace Priority
             Debug.Log($"Setting current action to: {(ActorActionName)actorActionName}.");
             
             var actorAction = Manager_ActorAction.GetActorAction((ActorActionName)actorActionName);
-            var currentActorAction = Manager_ActorAction.GetActorAction(_currentActorActionMaster.ActionName);
 
-            UpdatePriority((uint)_currentActorActionMaster.ActionName,
-                PriorityGenerator.GeneratePriority(_currentActorActionMaster.ActionName,
-                    currentActorAction.ActionParameters));
-
-            _currentActorActionMaster = actorAction;
+            _currentActorAction = actorAction;
 
             _actor.StartCoroutine(_performCurrentActionFromStart());
         }
 
-        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID)
+        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID = 1)
         {
-            if (!_priorityExists(priorityID, out var existingPriorityParameters)) return;
+            if (!_priorityExists(priorityQueueID, priorityID, out var existingPriorityParameters)) return;
             
-            if (priorityQueueID is (uint)ActorActionName.All or (uint)ActorActionName.Idle)
+            switch (priorityQueueID)
             {
-                Debug.LogError($"PriorityQueueID: {priorityQueueID} not allowed in _regeneratePriority.");
-                return;
+                case (uint)ActorActionName.All:
+                    Debug.LogError($"ActorActionName: {(ActorActionName)priorityQueueID} not allowed in _regeneratePriority.");
+                    return;
+                case (uint)ActorActionName.Idle:
+                    existingPriorityParameters = new Dictionary<PriorityParameterName, object>
+                    {
+                        { PriorityParameterName.DefaultPriority, 1 }
+                    };
+                    break;
             }
-            
-            var newPriorities = PriorityGenerator.GeneratePriority((ActorActionName)priorityID, existingPriorityParameters);
 
-            if (newPriorities is null || newPriorities.Count is 0) return;
+            var newPriorities = _regenerate();
 
             AllPriorities[priorityQueueID].Update(priorityID, newPriorities);
-            
-            var parameters = _updateExistingPriorityParameters(priorityID, actorAction.ActionParameters);
+        }
 
-            UpdatePriority(priorityID, PriorityGenerator.GeneratePriority((ActorActionName)priorityID, parameters));
+        Dictionary<PriorityParameterName, object> _regenerate()
+        {
+            var newPriorities = new Dictionary<PriorityParameterName, object>();
             
             
-
             
-
-            
+            return newPriorities;
         }
 
         IEnumerator _performCurrentActionFromStart()
         {
-            foreach (var action in _currentActorActionMaster.Actions)
+            foreach (var action in _currentActorAction.ActionList)
             {
                 yield return CurrentActionCoroutine = _actor.StartCoroutine(action);
             }
@@ -89,21 +87,12 @@ namespace Priority
             //AllPriorities.DictionaryChanged += SetCurrentAction;
         }
 
-        protected override bool _priorityExists(uint priorityID,
-                                                out Dictionary<PriorityParameterName, object>
-                                                    existingPriorityParameters)
+        protected override PriorityElement _createPriorityElement(uint priorityID,
+                                                                  Dictionary<PriorityParameterName, object>
+                                                                      priorityParameters)
         {
-            var actorAction = Manager_ActorAction.GetActorAction((ActorActionName)priorityID);
-                
-            if (actorAction != null)
-            {
-                existingPriorityParameters = actorAction.ActionParameters;
-                return true;
-            }
-
-            Debug.LogError($"ActionName: {priorityID} not found in _existingParameters.");
-            existingPriorityParameters = null;
-            return false;
+            return new PriorityElement(priorityID,
+                priorityParameters ?? Manager_ActorAction.GetDefaultActionParameters((ActorActionName)priorityID));
         }
 
         protected override List<uint> _canPeek(List<uint> priorityIDs)
@@ -124,74 +113,28 @@ namespace Priority
 
             return allowedPriorities;
         }
-
-        public override void OnDataChanged(DataChanged                               dataChanged,
-                                           Dictionary<PriorityParameterName, object> changedParameters)
-        {
-            if (!_prioritiesToChange.TryGetValue(dataChanged, out var actionsToChange))
-            {
-                Debug.Log($"DataChanged: {dataChanged} not found in _actionsToChange for {this}.");
-                return;
-            }
-
-            foreach (var actionToChange in actionsToChange)
-            {
-                var parameters =
-                    _updateExistingPriorityParameters((uint)actionToChange.ActorActionName, changedParameters);
-
-                var priorities = PriorityGenerator.GeneratePriority(actionToChange.ActorActionName, parameters);
-
-                switch (actionToChange.PriorityImportance)
-                {
-                    case PriorityImportance.Critical:
-                        if (!AllPriorities[(uint)actionToChange.ActorActionName]
-                                .Update((uint)actionToChange.ActorActionName, priorities))
-                        {
-                            Debug.LogError($"Action: {actionToChange} unable to be updated in PriorityQueue.");
-                        }
-
-                        break;
-                    case PriorityImportance.High:
-                        _addToCachedPriorityQueue(new PriorityValue((uint)actionToChange.ActorActionName, priorities),
-                            PriorityImportance.High);
-                        break;
-                    case PriorityImportance.Medium:
-                        _addToCachedPriorityQueue(new PriorityValue((uint)actionToChange.ActorActionName, priorities),
-                            PriorityImportance.Medium);
-                        break;
-                    case PriorityImportance.Low:
-                        _addToCachedPriorityQueue(new PriorityValue((uint)actionToChange.ActorActionName, priorities),
-                            PriorityImportance.Low);
-                        break;
-                    case PriorityImportance.None:
-                    default:
-                        Debug.LogError($"PriorityImportance: {actionToChange} not found.");
-                        break;
-                }
-            }
-        }
         
-        static readonly Dictionary<DataChanged, List<ActorActionToChange>> _prioritiesToChange = new()
+        protected override Dictionary<DataChanged, List<PriorityToChange>> _prioritiesToChange { get; } = new()
         {
             {
-                DataChanged.ChangedInventory, new List<ActorActionToChange>
+                DataChanged.ChangedInventory, new List<PriorityToChange>
                 {
-                    new(ActorActionName.Deliver, PriorityImportance.High)
+                    new((uint)ActorActionName.Deliver, PriorityImportance.High)
                 }
             },
 
             {
-                DataChanged.DroppedItems, new List<ActorActionToChange>
+                DataChanged.DroppedItems, new List<PriorityToChange>
                 {
-                    new(ActorActionName.Fetch, PriorityImportance.High),
-                    new(ActorActionName.Scavenge, PriorityImportance.Medium),
+                    new((uint)ActorActionName.Fetch, PriorityImportance.High),
+                    new((uint)ActorActionName.Scavenge, PriorityImportance.Medium),
                 }
             },
 
             {
-                DataChanged.PriorityCompleted, new List<ActorActionToChange>
+                DataChanged.PriorityCompleted, new List<PriorityToChange>
                 {
-                    new(ActorActionName.Wander, PriorityImportance.High),
+                    new((uint)ActorActionName.Wander, PriorityImportance.High),
                 }
             },
         };

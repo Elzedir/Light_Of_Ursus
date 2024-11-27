@@ -335,7 +335,7 @@ namespace Managers
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
         
         public          uint              MaxInventorySpace = 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
-        HashSet<uint>                     _getDesiredItemIDs()                      => StationReference.Station.DesiredStoredItemIDs;
+        List<uint>                     _getDesiredItemIDs()                      => StationReference.Station.DesiredStoredItemIDs;
         protected override bool           _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
     
         public override bool HasSpaceForItems(List<Item> items)

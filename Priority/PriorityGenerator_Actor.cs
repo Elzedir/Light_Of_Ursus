@@ -12,32 +12,32 @@ namespace Priority
 {
     public class PriorityGenerator_Actor : PriorityGenerator
     {
-        public List<float> GeneratePriority(ActorActionName                     actorActionName,
+        public Dictionary<PriorityParameterName, float> GeneratePriority(ActorActionName                     actorActionName,
                                             Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
             _generatePriorities((uint)actorActionName, existingPriorityParameters
                                                        .Select(x => x)
                                                        .ToDictionary(x => 
                                                            (uint)x.Key, x => x.Value));
 
-        protected override List<float> _generatePriority(uint priorityID,
+        protected override Dictionary<PriorityParameterName, float> _generatePriority(uint priorityID,
                                                          Dictionary<uint, object>
                                                              existingPriorityParameters)
         {
             switch (priorityID)
             {
                 case (uint)ActorActionName.Fetch:
-                    return _generateFetchPriority(existingPriorityParameters) ?? new List<float>();
+                    return _generateFetchPriority(existingPriorityParameters) ?? new Dictionary<PriorityParameterName, float>();
                 case (uint)ActorActionName.Deliver:
-                    return _generateDeliverPriority(existingPriorityParameters) ?? new List<float>();
+                    return _generateDeliverPriority(existingPriorityParameters) ?? new Dictionary<PriorityParameterName, float>();
                 default:
                     Debug.LogError($"ActionName: {priorityID} not found.");
                     return null;
             }
         }
 
-        List<float> _generateFetchPriority(Dictionary<uint, object> existingPriorityParameters)
+        Dictionary<PriorityParameterName, float> _generateFetchPriority(Dictionary<uint, object> existingPriorityParameters)
         {
-            float maxPriority = existingPriorityParameters[(uint)PriorityParameterName.MaxPriority] as float? ??
+            float maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                                 _defaultMaxPriority;
             float totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
             float totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
@@ -55,13 +55,13 @@ namespace Priority
             if (totalItems == 0 && totalDistance == 0)
             {
                 Debug.LogError($"MaxItems and MaxDistance are 0.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             if (inventory_Hauler == null || inventory_Target == null)
             {
                 Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             var allItemsToFetch = inventory_Target.GetInventoryItemsToFetch();
@@ -69,7 +69,7 @@ namespace Priority
             if (Item.GetItemListTotal_CountAllItems(allItemsToFetch) == 0)
             {
                 Debug.Log("No items to fetch.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
@@ -104,15 +104,21 @@ namespace Priority
 
             DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
-            return new List<float>
+            return new Dictionary<PriorityParameterName, float>
             {
-                priority_ItemQuantity + priority_Distance
+                {
+                    PriorityParameterName.TotalItems, priority_ItemQuantity
+                },
+                
+                {
+                    PriorityParameterName.TotalDistance, priority_Distance    
+                }
             };
         }
 
-        List<float> _generateDeliverPriority(Dictionary<uint, object> existingPriorityParameters)
+        Dictionary<PriorityParameterName, float> _generateDeliverPriority(Dictionary<uint, object> existingPriorityParameters)
         {
-            var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.MaxPriority] as float? ??
+            var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                               _defaultMaxPriority;
             var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
             var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
@@ -141,13 +147,13 @@ namespace Priority
             if (totalItems == 0 && totalDistance == 0)
             {
                 Debug.LogError($"MaxItems and MaxDistance are 0.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             if (inventory_Hauler == null || inventory_Target == null)
             {
                 Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             var allItemsToDeliver = inventory_Target.GetInventoryItemsToDeliver(inventory_Hauler);
@@ -155,7 +161,7 @@ namespace Priority
             if (allItemsToDeliver.Count == 0)
             {
                 Debug.Log("No items to fetch.");
-                return new List<float> { 0 };
+                return new Dictionary<PriorityParameterName, float>();
             }
 
             var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
@@ -189,9 +195,15 @@ namespace Priority
 
             DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
-            return new List<float>
+            return new Dictionary<PriorityParameterName, float>
             {
-                priority_ItemQuantity + priority_Distance
+                {
+                    PriorityParameterName.TotalItems, priority_ItemQuantity
+                },
+                
+                {
+                    PriorityParameterName.TotalDistance, priority_Distance    
+                }
             };
         }
     }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Items;
+using Jobs;
 using Jobsite;
 using Managers;
 using OperatingArea;
@@ -34,29 +35,32 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public bool IsStationBeingOperated => AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0);
 
     public float InteractRange { get; protected set; }
-
-    public List<EmployeePosition> AllowedEmployeePositions;
-    public abstract EmployeePosition CoreEmployeePosition { get; }
-    public abstract RecipeName DefaultProduct { get; }
-    public abstract  HashSet<RecipeName> AllowedRecipes { get; }
-    public abstract HashSet<uint> AllowedStoredItemIDs { get; }
-    public abstract HashSet<uint> DesiredStoredItemIDs { get; }
-    public abstract uint OperatingAreaCount { get; }
-    public List<OperatingAreaComponent> AllOperatingAreasInStation = new();
+    
+    public abstract         EmployeePosition             CoreEmployeePosition     { get; }
+    public abstract         RecipeName                   DefaultProduct           { get; }
+    public abstract         List<RecipeName>             AllowedRecipes           { get; }
+    public abstract         List<uint>                   AllowedStoredItemIDs     { get; }
+    public abstract         List<uint>                   DesiredStoredItemIDs     { get; }
+    public abstract         uint                         OperatingAreaCount       { get; }
+    public abstract         List<EmployeePosition>       AllowedEmployeePositions { get; }
+    public         abstract List<JobName>                AllowedJobs              { get; }
+    
+    List<OperatingAreaComponent>     _allOperatingAreasInStation;
+    public PriorityComponent_Station PriorityComponent;
+    public List<OperatingAreaComponent> AllOperatingAreasInStation =>
+        _allOperatingAreasInStation ??= _getAllOperatingAreasInStation();
 
     const    float      _baseProgressRatePerHour = 5;
     readonly List<Item> _currentProductsCrafted  = new();
 
     BoxCollider _boxCollider;
-    public BoxCollider BoxCollider { get { return _boxCollider ??= gameObject.GetComponent<BoxCollider>(); } }
+    public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
 
     // Temporary
     public Transform CollectionPoint;
     
     public void Initialise()
     {
-        AllOperatingAreasInStation = GetAllOperatingAreasInStation();
-
         var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
                                          from employeeID in StationData.CurrentOperatorIDs
                                          let actorData = Manager_Actor.GetActorData(employeeID)
@@ -69,13 +73,26 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         }
 
         SetInteractRange();
-        InitialiseAllowedEmployeePositions();
         InitialiseStartingInventory();
 
         _setTickRate(TickRate.OneSecond);
 
         _initialised = true;
     }
+
+    public OperatingAreaComponent GetRelevantOperatingArea(ActorComponent actor)
+    {
+        var relevantOperatingArea = AllOperatingAreasInStation.FirstOrDefault(oa => !oa.HasOperator());
+
+        if (relevantOperatingArea is not null)
+        {
+            return relevantOperatingArea;
+        }
+
+        Debug.Log("No relevant operating area found for actor.");
+        return null;
+    }
+
     public void AddOperatorToArea(uint operatorData)
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
@@ -189,7 +206,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         return AllOperatingAreasInStation.FirstOrDefault(oa => oa.OperatingAreaData.OperatingAreaID == operatingAreaID);
     }
 
-    public List<OperatingAreaComponent> GetAllOperatingAreasInStation()
+    List<OperatingAreaComponent> _getAllOperatingAreasInStation()
     {
         foreach(Transform child in transform)
         {
@@ -214,8 +231,6 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     }
 
     protected abstract OperatingAreaComponent _createOperatingArea(uint operatingAreaID);
-
-    public abstract void InitialiseAllowedEmployeePositions();
 
     public abstract void InitialiseStartingInventory();
     public List<Item> GetInventoryItemsToFetch()
@@ -427,22 +442,22 @@ public class StationComponent_Editor : Editor
 [Serializable]
 public class Operator
 {
-    public int OperatorID;
-    public string OperatorName;
+    public int              OperatorID;
+    public string           OperatorName;
     public EmployeePosition OperatorPosition;
-    public int OperatingAreaID;
+    public int              OperatingAreaID;
 
     public Operator(int actorID, EmployeePosition careerAndJobs, int operatingAreaID)
     {
-        OperatorID = actorID;
+        OperatorID       = actorID;
         OperatorPosition = careerAndJobs;
-        OperatingAreaID = operatingAreaID;
+        OperatingAreaID  = operatingAreaID;
     }
 
     public Operator(Operator other)
     {
-        OperatorID = other.OperatorID;
+        OperatorID       = other.OperatorID;
         OperatorPosition = other.OperatorPosition;
-        OperatingAreaID = other.OperatingAreaID;
+        OperatingAreaID  = other.OperatingAreaID;
     }
 }

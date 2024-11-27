@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Actors;
 using Priority;
 using Station;
@@ -11,95 +12,160 @@ namespace Jobs
 {
     public abstract class Manager_JobTask
     {
-        public static JobTask_Master GetJobTask(JobTaskName jobTaskName) =>
-            _allJobTasks[jobTaskName];
+        public static JobTask GetJobTask(JobTaskName jobTaskName) =>
+            new(jobTaskName, GetDefaultTaskParameters(jobTaskName));
 
-        static readonly Dictionary<JobTaskName, JobTask_Master> _allJobTasks =
+        public static JobTask_Master GetJobTask_Master(JobTaskName jobTaskName)
+        {
+            if (_allJobTask_Masters.TryGetValue(jobTaskName, out var jobTaskMaster))
+            {
+                return jobTaskMaster;
+            }
+            
+            Debug.LogError($"No JobTaskMaster found for {jobTaskName}. Returning null.");
+            return null;
+        }
+        
+        static readonly Dictionary<JobTaskName, JobTask_Master> _allJobTask_Masters =
             new()
             {
                 {
                     JobTaskName.Beat_Metal, new JobTask_Master(
-                        JobTaskName.Beat_Metal, "Beat Iron into Shape",
-                        (actor, jobsiteID) => actor.StartCoroutine(_beatIron(actor, jobsiteID)))
+                        JobTaskName.Beat_Metal, 
+                        "Beat Iron into Shape",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _beatIron
+                        })
                 },
                 {
                     JobTaskName.Chop_Wood, new JobTask_Master(
-                        JobTaskName.Chop_Wood, "Chop Wood",
-                        (actor, jobsiteID) => actor.StartCoroutine(_chopWood(actor, jobsiteID)))
+                        JobTaskName.Chop_Wood, 
+                        "Chop Wood",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _chopWood
+                        })
                 },
                 {
                     JobTaskName.Process_Logs, new JobTask_Master(
-                        JobTaskName.Process_Logs, "Process Logs",
-                        (actor, jobsiteID) => actor.StartCoroutine(_processLogs(actor, jobsiteID)))
+                        JobTaskName.Process_Logs, 
+                        "Process Logs",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _processLogs
+                        })
                 },
                 {
                     JobTaskName.Drop_Off_Wood, new JobTask_Master(
-                        JobTaskName.Drop_Off_Wood, "Drop Off Wood",
-                        (actor, jobsiteID) => actor.StartCoroutine(_dropOffWood(actor, jobsiteID)))
+                        JobTaskName.Drop_Off_Wood, 
+                        "Drop Off Wood",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _dropOffWood
+                        })
                 },
                 {
                     JobTaskName.Stand_At_Counter, new JobTask_Master(
-                        JobTaskName.Stand_At_Counter, "Stand at Counter",
-                        (actor, jobsiteID) => actor.StartCoroutine(_standAtCounter(actor, jobsiteID)))
+                        JobTaskName.Stand_At_Counter, 
+                        "Stand at Counter",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _standAtCounter
+                        })
                 },
                 {
                     JobTaskName.Restock_Shelves, new JobTask_Master(
-                        JobTaskName.Restock_Shelves, "Restock Shelves",
-                        (actor, jobsiteID) => actor.StartCoroutine(_restockShelves(actor, jobsiteID)))
+                        JobTaskName.Restock_Shelves, 
+                        "Restock Shelves",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _restockShelves
+                        })
                 },
                 {
                     JobTaskName.Defend_Ally, new JobTask_Master(
-                        JobTaskName.Defend_Ally, "Defend Ally",
-                        (actor, jobsiteID) => actor.StartCoroutine(_defendAlly(actor, jobsiteID)))
+                        JobTaskName.Defend_Ally, 
+                        "Defend Ally",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _defendAlly
+                        })
                 },
                 {
                     JobTaskName.Defend_Neutral, new JobTask_Master(
-                        JobTaskName.Defend_Neutral, "Defend Neutral",
-                        (actor, jobsiteID) => actor.StartCoroutine(_defendNeutral(actor, jobsiteID)))
+                        JobTaskName.Defend_Neutral, 
+                        "Defend Neutral",
+                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        {
+                            _defendNeutral
+                        })
                 },
             };
 
-        static IEnumerator _beatIron(ActorComponent actor, int jobsiteID)
+        static IEnumerator _beatIron(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _chopWood(ActorComponent actor, int jobsiteID)
+        static IEnumerator _chopWood(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _processLogs(ActorComponent actor, int jobsiteID)
+        static IEnumerator _processLogs(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _dropOffWood(ActorComponent actor, int jobsiteID)
+        static IEnumerator _fetchWood(ActorComponent actor, uint jobsiteID)
+        {
+            if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+            {
+                yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
+            }
+            
+            station.StationData.InventoryData.RemoveFromInventory(orderItems);
+
+            actor.ActorData.InventoryData.AddToInventory(orderItems);
+            
+            StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
+        }
+        
+        IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
+        {
+            yield return actor.StartCoroutine(actor.BasicMove(position));
+
+            if (actor.transform.position != position) actor.transform.position = position;
+        }
+
+        static IEnumerator _dropOffWood(ActorComponent actor, uint jobsiteID)
+        {
+            if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+            {
+                yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
+            }
+            
+            actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
+            station.StationData.InventoryData.AddToInventory(orderItems);
+        }
+
+        static IEnumerator _standAtCounter(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _standAtCounter(ActorComponent actor, int jobsiteID)
+        static IEnumerator _restockShelves(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _restockShelves(ActorComponent actor, int jobsiteID)
+        static IEnumerator _defendAlly(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _defendAlly(ActorComponent actor, int jobsiteID)
-        {
-            yield return null;
-        }
-
-        static IEnumerator _defendNeutral(ActorComponent actor, int jobsiteID)
-        {
-            yield return null;
-        }
-
-        static IEnumerator _defendAllies(ActorComponent actor, int jobsiteID)
+        static IEnumerator _defendNeutral(ActorComponent actor, uint jobsiteID)
         {
             yield return null;
         }
@@ -143,23 +209,102 @@ namespace Jobs
                 }
             },
         };
+
+        public static Dictionary<PriorityParameterName, object> GetDefaultTaskParameters(JobTaskName jobTaskName)
+        {
+            if (_allDefaultTaskParameters.TryGetValue(jobTaskName, out var defaultParameters))
+            {
+                return defaultParameters.ToDictionary<PriorityParameterName, PriorityParameterName, object>(
+                    parameterName => parameterName, _ => null);
+            }
+            
+            Debug.LogWarning($"No default parameters found for {jobTaskName}. Returning empty dictionary.");
+            return new Dictionary<PriorityParameterName, object>();
+        }
+
+        static readonly Dictionary<JobTaskName, List<PriorityParameterName>> _allDefaultTaskParameters = new()
+        {
+            {
+                JobTaskName.Beat_Metal, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Chop_Wood, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Process_Logs, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Drop_Off_Wood, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Stand_At_Counter, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Restock_Shelves, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Defend_Ally, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Defend_Neutral, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            }
+        };
+    }
+
+    public class JobTask
+    {
+        public readonly JobTaskName TaskName;
+        
+        public readonly Dictionary<PriorityParameterName, object>  TaskParameters;
+        
+        JobTask_Master _jobTask_Master;
+        public JobTask_Master JobTask_Master => _jobTask_Master ??= Manager_JobTask.GetJobTask_Master(TaskName);
+        
+        public JobTask(JobTaskName taskName, Dictionary<PriorityParameterName, object> taskParameters)
+        {
+            TaskName        = taskName;
+            TaskParameters  = taskParameters;
+        }
     }
 
     [Serializable]
     public class JobTask_Master
     {
-        public          JobTaskName                               JobTaskName;
-        public          JobTaskGroup                              TaskGroup;
-        public          string                                    TaskDescription;
-        public readonly Dictionary<PriorityParameterName, object> JobTaskParameters;
-        public          Func<ActorComponent, int, Coroutine>      TaskAction;
+        public          JobTaskName                                TaskName;
+        public          JobTaskGroup                               TaskGroup;
+        public          string                                     TaskDescription;
+        public          List<Func<ActorComponent, uint, IEnumerator>> TaskList;
 
-        a
-        // Initialise JobTask_Master here
-
-        public Coroutine GetTaskAction(ActorComponent actor, int jobsiteID)
+        public JobTask_Master(JobTaskName                                   taskName, string taskDescription,
+                              List<Func<ActorComponent, uint, IEnumerator>> taskList)
         {
-            return TaskAction(actor, jobsiteID);
+            TaskName        = taskName;
+            TaskDescription = taskDescription;
+            TaskList        = taskList;
         }
     }
 
@@ -258,17 +403,5 @@ namespace Jobs
         Combat,
         Recreation,
         Work,
-    }
-    
-    public class JobTaskToChange
-    {
-        public JobTaskName    JobTaskName;
-        public PriorityImportance PriorityImportance;
-
-        public JobTaskToChange(JobTaskName jobTaskName, PriorityImportance priorityImportance)
-        {
-            JobTaskName    = jobTaskName;
-            PriorityImportance = priorityImportance;
-        }
     }
 }

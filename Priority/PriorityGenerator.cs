@@ -129,7 +129,7 @@ namespace Priority
             return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
         }
 
-        protected List<float> _generatePriorities(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
+        protected Dictionary<PriorityParameterName, float> _generatePriorities(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
         {
             if (existingPriorityParameters != null) return _generatePriority(priorityID, existingPriorityParameters);
             
@@ -137,7 +137,7 @@ namespace Priority
             return null;
         }
 
-        protected abstract List<float> _generatePriority(uint priorityID,
+        protected abstract Dictionary<PriorityParameterName, float> _generatePriority(uint priorityID,
                                                          Dictionary<uint, object>
                                                              existingPriorityParameters);
     }

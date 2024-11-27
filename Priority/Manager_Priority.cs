@@ -17,7 +17,7 @@ namespace Priority
         None,
 
         // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every TotalItems, TotalDistance, etc. has an attached maxPriority.
-        MaxPriority,
+        DefaultPriority,
         TotalItems,
         TotalDistance,
         InventoryHauler,
@@ -71,7 +71,7 @@ namespace Priority
 
         public override GameObject           GameObject                => Station.gameObject;
         
-        public override PriorityComponent GetPriorityComponent() => null;
+        public override PriorityComponent GetPriorityComponent() => Station.PriorityComponent;
     }
 
     public class ComponentReference_Jobsite : ComponentReference

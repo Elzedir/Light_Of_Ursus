@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Priority;
 using UnityEngine;
 
@@ -13,22 +14,27 @@ namespace Actors
             return _allPriorityPerAction[actorActionName] < _allPriorityPerAction[otherActorActionName];
         }
 
-        public static ActorAction_Master GetActorAction(ActorActionName actorActionName) =>
-            _allActorActions[actorActionName];
+        public static ActorAction GetActorAction(ActorActionName actorActionName) =>
+            new(actorActionName, GetDefaultActionParameters(actorActionName));
 
-        static readonly Dictionary<ActorActionName, ActorAction_Master> _allActorActions =
+        public static ActorAction_Master GetActorAction_Master(ActorActionName actorActionName)
+        {
+            if (_allActorAction_Masters.TryGetValue(actorActionName, out var actorActionMaster))
+            {
+                return actorActionMaster;
+            }
+
+            Debug.LogError($"ActorActionMaster not found for: {actorActionName}.");
+            return null;
+        }
+
+
+        static readonly Dictionary<ActorActionName, ActorAction_Master> _allActorAction_Masters =
             new()
             {
                 {
                     ActorActionName.Fetch, new ActorAction_Master(
-                        ActorActionName.Fetch, ActorActionGroup.Work, new Dictionary<PriorityParameterName, object>
-                        {
-                            { PriorityParameterName.MaxPriority, null },
-                            { PriorityParameterName.TotalItems, null },
-                            { PriorityParameterName.TotalDistance, null },
-                            { PriorityParameterName.InventoryHauler, null },
-                            { PriorityParameterName.InventoryTarget, null },
-                        },
+                        ActorActionName.Fetch, ActorActionGroup.Work,
                         new List<IEnumerator>
                         {
 
@@ -37,16 +43,7 @@ namespace Actors
 
                 {
                     ActorActionName.Deliver, new ActorAction_Master(
-                        ActorActionName.Deliver, ActorActionGroup.Work, new Dictionary<PriorityParameterName, object>
-                        {
-                            { PriorityParameterName.MaxPriority, null },
-                            { PriorityParameterName.TotalItems, null },
-                            { PriorityParameterName.TotalDistance, null },
-                            { PriorityParameterName.InventoryHauler, null },
-                            { PriorityParameterName.InventoryTarget, null },
-                            { PriorityParameterName.CurrentStationType, null },
-                            { PriorityParameterName.AllStationTypes, null },
-                        },
+                        ActorActionName.Deliver, ActorActionGroup.Work,
                         new List<IEnumerator>
                         {
 
@@ -56,10 +53,6 @@ namespace Actors
                 {
                     ActorActionName.Wander, new ActorAction_Master(
                         ActorActionName.Wander, ActorActionGroup.Recreation,
-                        new Dictionary<PriorityParameterName, object>
-                        {
-                            { PriorityParameterName.MaxPriority, null },
-                        },
                         new List<IEnumerator>
                         {
 
@@ -101,6 +94,51 @@ namespace Actors
             },
         };
 
+        public static Dictionary<PriorityParameterName, object> GetDefaultActionParameters(
+            ActorActionName actorActionName)
+        {
+            if (_allDefaultActionParameters.TryGetValue(actorActionName, out var defaultParameters))
+            {
+                return defaultParameters.ToDictionary<PriorityParameterName, PriorityParameterName, object>(
+                    parameterName => parameterName, _ => null);
+            }
+
+            Debug.LogWarning($"No default parameters found for {actorActionName}. Returning empty dictionary.");
+            return new Dictionary<PriorityParameterName, object>();
+        }
+
+        static readonly Dictionary<ActorActionName, List<PriorityParameterName>> _allDefaultActionParameters = new()
+        {
+            {
+                ActorActionName.Fetch, new List<PriorityParameterName>
+                {
+                    PriorityParameterName.DefaultPriority,
+                    PriorityParameterName.TotalItems,
+                    PriorityParameterName.TotalDistance,
+                    PriorityParameterName.InventoryHauler,
+                    PriorityParameterName.InventoryTarget,
+                }
+            },
+            {
+                ActorActionName.Deliver, new List<PriorityParameterName>
+                {
+                    PriorityParameterName.DefaultPriority,
+                    PriorityParameterName.TotalItems,
+                    PriorityParameterName.TotalDistance,
+                    PriorityParameterName.InventoryHauler,
+                    PriorityParameterName.InventoryTarget,
+                    PriorityParameterName.CurrentStationType,
+                    PriorityParameterName.AllStationTypes,
+                }
+            },
+            {
+                ActorActionName.Wander, new List<PriorityParameterName>
+                {
+                    PriorityParameterName.DefaultPriority,
+                }
+            },
+        };
+
         static readonly Dictionary<ActorActionName, PriorityImportance> _allPriorityPerAction = new()
         {
             { ActorActionName.Wander, PriorityImportance.Low },
@@ -115,21 +153,38 @@ namespace Actors
     // often driven by immediate needs, combat, exploration, or player commands.
     // These actions typically occur in reaction to dynamic game states.
 
+    public class ActorAction
+    {
+        public readonly ActorActionName ActionName;
+        ActorAction_Master              _actionMaster;
+
+        public ActorAction_Master ActionMaster =>
+            _actionMaster ??= Manager_ActorAction.GetActorAction_Master(ActionName);
+
+        public Dictionary<PriorityParameterName, object> ActionParameters;
+        
+        public List<IEnumerator> ActionList => ActionMaster.ActionList;
+
+        public ActorAction(ActorActionName actionName, Dictionary<PriorityParameterName, object> actionParameters)
+        {
+            ActionName       = actionName;
+            ActionParameters = actionParameters;
+        }
+    }
+
     [Serializable]
     public class ActorAction_Master
     {
-        public readonly ActorActionName                           ActionName;
-        public readonly ActorActionGroup                          ActorActionGroup;
-        public readonly Dictionary<PriorityParameterName, object> ActionParameters;
-        public readonly List<IEnumerator>                         Actions;
+        public readonly ActorActionName   ActionName;
+        public readonly ActorActionGroup  ActionGroup;
+        public readonly List<IEnumerator> ActionList;
 
-        public ActorAction_Master(ActorActionName actionName, ActorActionGroup actorActionGroup,
-                                  Dictionary<PriorityParameterName, object> actionParameters, List<IEnumerator> actions)
+        public ActorAction_Master(ActorActionName   actionName, ActorActionGroup actionGroup,
+                                  List<IEnumerator> actionList)
         {
-            ActionName       = actionName;
-            ActorActionGroup = actorActionGroup;
-            ActionParameters = actionParameters;
-            Actions          = actions;
+            ActionName  = actionName;
+            ActionGroup = actionGroup;
+            ActionList  = actionList;
         }
     }
 
@@ -171,17 +226,5 @@ namespace Actors
         Combat,
         Recreation,
         Work,
-    }
-    
-    public class ActorActionToChange
-    {
-        public ActorActionName    ActorActionName;
-        public PriorityImportance PriorityImportance;
-
-        public ActorActionToChange(ActorActionName actorActionName, PriorityImportance priorityImportance)
-        {
-            ActorActionName    = actorActionName;
-            PriorityImportance = priorityImportance;
-        }
     }
 }

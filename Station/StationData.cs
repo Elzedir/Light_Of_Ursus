@@ -44,7 +44,7 @@ namespace Station
         public bool StationIsActive = true;
 
         public string        StationDescription;
-        public InventoryData _inventoryData;
+        InventoryData _inventoryData;
         public InventoryData InventoryData { get { return _inventoryData ??= new InventoryData_Station(StationID); } }
 
         public List<uint>          CurrentOperatorIDs;

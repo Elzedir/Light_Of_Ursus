@@ -19,7 +19,7 @@ namespace Actors
         PriorityComponent_Actor        _priorityComponent;
         public PriorityComponent_Actor PriorityComponent => _priorityComponent ??= new PriorityComponent_Actor(_actorID);
         
-        ActorAction_Master _currentActorActionMaster => PriorityComponent.GetCurrentAction();
+        ActorAction _currentActorActionMaster => PriorityComponent.GetCurrentAction();
         
         public void MakeDecision()
         {
@@ -60,19 +60,19 @@ namespace Actors
             return PriorityState.None;
         }
 
-        bool _mustChangeCurrentAction(PriorityState priorityState, out PriorityValue nextHighestPriorityValue)
+        bool _mustChangeCurrentAction(PriorityState priorityState, out Priority.PriorityElement nextHighestPriorityElement)
         {
             var currentAction            = PriorityComponent.GetCurrentAction();
-            nextHighestPriorityValue = PriorityComponent.PeekHighestPriority(priorityState);
+            nextHighestPriorityElement = PriorityComponent.PeekHighestPriority(priorityState);
             
-            if (nextHighestPriorityValue is null)
+            if (nextHighestPriorityElement is null)
             {
                 Debug.LogWarning("There is no next highest priority.");
                 return false;
             }
 
             var nextHighestPriority =
-                Manager_ActorAction.GetActorAction((ActorActionName)nextHighestPriorityValue.PriorityID);
+                Manager_ActorAction.GetActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
 
             Debug.Log($"Current Action: {currentAction.ActionName}, Next Highest Priority: {nextHighestPriority}");
 
