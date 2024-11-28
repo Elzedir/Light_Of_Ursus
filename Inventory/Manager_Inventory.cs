@@ -287,45 +287,6 @@ namespace Managers
     }
 
     [Serializable]
-    public class InventoryData_Actor : InventoryData
-    {
-        public InventoryData_Actor(uint actorID) : base(actorID, ComponentType.Actor) { }
-        public override ComponentType       ComponentType      => ComponentType.Actor;
-        public          InventoryData_Actor GetInventoryData() => this;
-
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
-        protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
-
-        float _availableCarryWeight;
-        public float AvailableCarryWeight => _availableCarryWeight != 0 
-            ? _availableCarryWeight 
-            : ActorReference.Actor.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
-        public override bool HasSpaceForItems(List<Item> items)
-        {
-            if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)
-            {
-                Debug.Log("Too heavy for inventory.");
-                return false;
-            }
-
-            return true;
-        }
-
-        public override List<Item> GetInventoryItemsToFetch()
-        {
-            Debug.LogError("Not implemented yet.");
-            return null;
-        }
-
-        public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
-        {
-            Debug.LogError("Not implemented yet.");
-            return null;
-        }
-    }
-
-    [Serializable]
     public class InventoryData_Station : InventoryData
     {
         public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station) { }
