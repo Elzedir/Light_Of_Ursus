@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Actors;
+using Inventory;
 using Managers;
 using UnityEngine;
 
@@ -43,11 +44,11 @@ namespace Priority
                 return;
             }
             
-            var actionsToChange = _getActionsToChange(dataChanged);
+            var newPriorityParameters = _getNewPriorityParameters(dataChanged);
             
-            if (actionsToChange == null) return;
+            if (newPriorityParameters == null) return;
 
-            _onDataChange(dataChanged, actionsToChange);
+            _onDataChange(dataChanged, newPriorityParameters);
         }
     
         protected abstract bool _priorityChangeNeeded(object dataChanged);
@@ -55,7 +56,7 @@ namespace Priority
         void _setOnDataChange() => _onDataChange = (dataChanged, changedParameters)
             => PriorityComponent.OnDataChanged(dataChanged, changedParameters);
 
-        Dictionary<PriorityParameterName, object> _getActionsToChange(DataChanged dataChanged)
+        Dictionary<PriorityParameterName, object> _getNewPriorityParameters(DataChanged dataChanged)
         {
             if (_priorityParameterList.Count == 0)
             {

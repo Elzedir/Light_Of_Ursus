@@ -9,9 +9,6 @@ namespace Priority
 {
     public class PriorityComponent_Jobsite : PriorityComponent
     {
-        PriorityGenerator_Jobsite _priorityGenerator;
-        PriorityGenerator_Jobsite PriorityGenerator => _priorityGenerator ??= new PriorityGenerator_Jobsite();
-
         protected override List<uint> _canPeek(List<uint> priorityIDs)
         {
             var allowedPriorities = new List<uint>();
@@ -31,18 +28,26 @@ namespace Priority
             return allowedPriorities;
         }
         
-        protected override PriorityElement _createPriorityElement(uint priorityID,
+        protected override PriorityElement _createPriorityElement(uint priorityQueueID, uint priorityID,
                                                                   Dictionary<PriorityParameterName, object>
                                                                       priorityParameters)
         {
-            return new PriorityElement(priorityID,
+            return new PriorityElement(PriorityType.JobTask, priorityQueueID, priorityID, 
                 priorityParameters ?? Manager_JobTask.GetDefaultTaskParameters((JobTaskName)priorityID));
+        }
+        
+        protected override PriorityQueue _createPriorityQueue(uint priorityQueueID)
+        {
+            return new PriorityQueue(1, PriorityType.JobTask, priorityQueueID);
         }
 
         protected override void _regeneratePriority(uint priorityQueueID, uint priorityID)
         {
             if (!_priorityExists(priorityQueueID, priorityID, out var existingPriorityParameters)) return;
 
+            // We need a get all parameters function to fill the priority again. Or maybe just complete the action and then recalculate the
+            // priorities rather than clearing them.
+            
             var newPriorities = ;
 
             AllPriorities[priorityQueueID].Update(priorityID, newPriorities);

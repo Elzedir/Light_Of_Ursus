@@ -14,8 +14,6 @@ namespace Priority
         public Dictionary<uint, PriorityQueue> AllActionPriorities => AllPriorities;
         ActorAction                            _currentActorAction;
         public ActorAction                     GetCurrentAction() => _currentActorAction;
-        PriorityGenerator_Actor                _priorityGenerator;
-        PriorityGenerator_Actor                PriorityGenerator => _priorityGenerator ??= new PriorityGenerator_Actor();
 
         public void SetCurrentAction(uint actorActionName)
         {
@@ -30,7 +28,12 @@ namespace Priority
             _actor.StartCoroutine(_performCurrentActionFromStart());
         }
 
-        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID = 1)
+        protected override PriorityQueue _createPriorityQueue(uint priorityQueueID)
+        {
+            return new PriorityQueue(1, PriorityType.ActorAction, priorityQueueID);
+        }
+        
+        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID)
         {
             if (!_priorityExists(priorityQueueID, priorityID, out var existingPriorityParameters)) return;
             
@@ -87,11 +90,11 @@ namespace Priority
             //AllPriorities.DictionaryChanged += SetCurrentAction;
         }
 
-        protected override PriorityElement _createPriorityElement(uint priorityID,
+        protected override PriorityElement _createPriorityElement(uint priorityQueueID, uint priorityID,
                                                                   Dictionary<PriorityParameterName, object>
                                                                       priorityParameters)
         {
-            return new PriorityElement(priorityID,
+            return new PriorityElement(PriorityType.ActorAction, priorityQueueID ,priorityID,
                 priorityParameters ?? Manager_ActorAction.GetDefaultActionParameters((ActorActionName)priorityID));
         }
 

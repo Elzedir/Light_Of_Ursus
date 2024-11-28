@@ -190,28 +190,35 @@ namespace Actors
 
     public enum ActorActionName
     {
+        // PriorityState None
         Idle,
         All,
+        
+        Wander,
 
+        // PriorityState Combat
+        
         Attack,
         Defend,
+        Cast_Spell,
+        Parry_Attack,
 
+        // PriorityState Job
+        
         Deliver,
         Fetch,
         Scavenge,
 
-        Wander,
+        // PriorityState_All
 
         Drink_Health_Potion,
         Flee,
+        Heal_Ally,
         Explore_Area,
         Loot_Chest,
         Interact_With_Object,
-        Heal_Ally,
         Equip_Armor,
         Inspect_Tool,
-        Cast_Spell,
-        Parry_Attack,
         Open_Door,
         Climb_Wall,
         Eat_Fruit,

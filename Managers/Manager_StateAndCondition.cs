@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Inventory;
 using Priority;
 using Tools;
 using UnityEngine;

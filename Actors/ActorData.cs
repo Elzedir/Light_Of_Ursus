@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Careers;
 using DateAndTime;
+using Inventory;
 using Items;
 using Jobs;
 using Jobsite;

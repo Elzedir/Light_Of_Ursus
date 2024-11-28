@@ -7,14 +7,19 @@ namespace Priority
 {
     public class PriorityQueue
     {
+        readonly PriorityType          _priorityType;
+        readonly uint                 _priorityQueueID;
+        
         int                            _currentPosition;
         PriorityElement[]              _priorityArray;
         readonly Dictionary<uint, int> _priorityQueue;
 
         public Action<uint> OnPriorityRemoved;
 
-        public PriorityQueue(int maxPriorities)
+        public PriorityQueue(int maxPriorities, PriorityType priorityType, uint priorityQueueID)
         {
+            _priorityType    = priorityType;
+            _priorityQueueID = priorityQueueID;
             _currentPosition = 0;
             _priorityArray   = new PriorityElement[maxPriorities];
             _priorityQueue   = new Dictionary<uint, int>();
@@ -77,7 +82,7 @@ namespace Priority
 
             }
 
-            var priorityValue = new PriorityElement(priorityID, priorities);
+            var priorityValue = new PriorityElement(_priorityType, _priorityQueueID, priorityID, priorities);
             _currentPosition++;
             _priorityQueue[priorityID] = _currentPosition;
             if (_currentPosition == _priorityArray.Length)
@@ -136,7 +141,7 @@ namespace Priority
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
                 return _enqueue(priorityID, newPriorities);
 
-            var priorityValueNew = new PriorityElement(priorityID, newPriorities);
+            var priorityValueNew = new PriorityElement(_priorityType, _priorityQueueID, priorityID, newPriorities);
             var priorityValueOld = _priorityArray[index];
 
             _priorityArray[index] = priorityValueNew;
@@ -227,32 +232,52 @@ namespace Priority
 
     public class PriorityElement
     {
-        public readonly uint PriorityID;
-        bool _allPrioritiesChanged;
+        public readonly PriorityType PriorityType;
+        public readonly uint         PriorityID;
+        readonly        uint         _priorityQueueID;
+        bool                         _prioritiesChanged;
 
         float _priorityValue;
         public float PriorityValue
         {
             get
             {
-                if (!_allPrioritiesChanged) return _priorityValue;
+                if (!_prioritiesChanged) return _priorityValue;
                 
-                _allPrioritiesChanged = false;
-                return _priorityValue  = AllPriorities.Values.Sum(x => (float)x);
+                return _priorityValue  = AllPriorityValues.Values.Sum();
             }
         }
-        public readonly Dictionary<PriorityParameterName, object> AllPriorities;
+        
+        public readonly Dictionary<PriorityParameterName, object> PriorityParameters;
 
-        public PriorityElement(uint priorityID, Dictionary<PriorityParameterName, object> allPriorities)
+        // We'll save this in case we need to exclude any values. Or Debug anything.
+        Dictionary<PriorityParameterName, float> _allPriorityValues;
+        public Dictionary<PriorityParameterName, float> AllPriorityValues
         {
-            PriorityID    = priorityID;
-            AllPriorities = new Dictionary<PriorityParameterName, object>(allPriorities);
+            get
+            {
+                if (!_prioritiesChanged) return _allPriorityValues;
+
+                _prioritiesChanged = false;
+
+                return _allPriorityValues =
+                    PriorityGenerator.GeneratePriority(PriorityType, _priorityQueueID, PriorityParameters);
+            }
+        }
+
+        public PriorityElement(PriorityType priorityType, uint priorityQueueID, uint priorityID,
+                               Dictionary<PriorityParameterName, object> allPriorities)
+        {
+            PriorityType     = priorityType;
+            _priorityQueueID = priorityQueueID;
+            PriorityID       = priorityID;
+            PriorityParameters = new Dictionary<PriorityParameterName, object>(allPriorities);
         }
 
         public void UpdatePriority(PriorityParameterName priorityParameterName, float value)
         {
-            AllPriorities[priorityParameterName] = value;
-            _allPrioritiesChanged                = true;
+            PriorityParameters[priorityParameterName] = value;
+            _prioritiesChanged                = true;
         }
     }
 }

@@ -25,12 +25,12 @@ namespace Priority
 
             foreach (var priorityToChange in prioritiesToChange)
             {
-                var priorityElement = _createPriorityElement(priorityID, changedParameters);
+                var priorityElement = _createPriorityElement(priorityToChange.PriorityID, priorityID, changedParameters);
                 
                 switch (priorityToChange.PriorityImportance)
                 {
                     case PriorityImportance.Critical:
-                        if (!AllPriorities[(uint)priorityToChange.PriorityID]
+                        if (!AllPriorities[priorityToChange.PriorityID]
                                 .UpdateAll(changedParameters))
                         {
                             Debug.LogError($"Priority: {priorityToChange} unable to be updated in PriorityQueue.");
@@ -52,13 +52,14 @@ namespace Priority
 
         PriorityQueue _createNewPriorityQueue(uint priorityQueueID)
         {
-            var priorityQueue = new PriorityQueue(1);
+            var priorityQueue = _createPriorityQueue(priorityQueueID);
             AllPriorities.Add(priorityQueueID, priorityQueue);
             priorityQueue.OnPriorityRemoved += priorityID => _regeneratePriority(priorityQueueID, priorityID);
             return priorityQueue;
         }
 
-        protected abstract void _regeneratePriority(uint priorityQueueID, uint priorityID);
+        protected abstract PriorityQueue _createPriorityQueue(uint priorityQueueID);
+        protected abstract void _regeneratePriority(uint  priorityQueueID, uint priorityID);
         
         public void OnDestroy()
         {
@@ -68,9 +69,9 @@ namespace Priority
             }
         }
 
-        protected abstract PriorityElement _createPriorityElement(uint priorityID,
+        protected abstract PriorityElement _createPriorityElement(uint priorityQueueID, uint priorityID,
                                                                   Dictionary<PriorityParameterName, object>
-                                                                      priorityParameters = null);
+                                                                      priorityParameters);
 
         public PriorityElement PeekHighestSpecificPriority(List<uint> priorityIDs)
         {
@@ -82,7 +83,7 @@ namespace Priority
                 return null;
             }
 
-            var highestPriority = _createPriorityElement(0); 
+            var highestPriority = _createPriorityElement(0, 0, null); 
 
             foreach (var priority in permittedPriorities)
             {
@@ -99,7 +100,7 @@ namespace Priority
         
         public PriorityElement PeekHighestPriority(PriorityState priorityState)
         {
-            var overallHighestPriority = _createPriorityElement(0);
+            var overallHighestPriority = _createPriorityElement(0, 0, null);
 
             if (AllPriorities.Count is 0)
             {
@@ -162,7 +163,7 @@ namespace Priority
 
             if (priorityQueue.Peek(priorityID) is not null)
             {
-                existingPriorityParameters = priorityQueue.Peek(priorityID).AllPriorities;
+                existingPriorityParameters = priorityQueue.Peek(priorityID).PriorityParameters;
                 return true;
             }
 
@@ -177,7 +178,7 @@ namespace Priority
         void _syncCachedPriorityQueueHigh(bool syncing = false)
         {
             foreach (var priority in from priority in _cachedPriorityQueue[PriorityImportance.High]
-                                     where !AllPriorities[priority.Key].Update(priority.Value.PriorityID, priority.Value.AllPriorities)
+                                     where !AllPriorities[priority.Key].Update(priority.Value.PriorityID, priority.Value.PriorityParameters)
                                      select priority)
             {
                 Debug.LogError($"PriorityID: {priority.Value.PriorityID} unable to be added to PriorityQueue.");

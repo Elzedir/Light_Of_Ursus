@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Inventory;
 using Items;
 using Jobs;
 using Jobsite;
@@ -46,12 +47,14 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     public         abstract List<JobName>                AllowedJobs              { get; }
     
     List<OperatingAreaComponent>     _allOperatingAreasInStation;
-    public PriorityComponent_Station PriorityComponent;
     public List<OperatingAreaComponent> AllOperatingAreasInStation =>
         _allOperatingAreasInStation ??= _getAllOperatingAreasInStation();
 
     const    float      _baseProgressRatePerHour = 5;
     readonly List<Item> _currentProductsCrafted  = new();
+    
+    PriorityComponent_Station _priorityComponent;
+    public PriorityComponent_Station PriorityComponent => _priorityComponent ??= new PriorityComponent_Station(); 
 
     BoxCollider _boxCollider;
     public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
