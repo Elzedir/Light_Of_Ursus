@@ -9,13 +9,9 @@ namespace Actors
 {
     public abstract class Manager_ActorAction : MonoBehaviour
     {
-        public static bool IsHigherPriorityThan(ActorActionName actorActionName, ActorActionName otherActorActionName)
-        {
-            return _allPriorityPerAction[actorActionName] < _allPriorityPerAction[otherActorActionName];
-        }
-
-        public static ActorAction GetActorAction(ActorActionName actorActionName) =>
-            new(actorActionName, GetDefaultActionParameters(actorActionName));
+        public static ActorAction GetNewActorAction(ActorActionName actorActionName) =>
+            new(actorActionName, GetActionParameters(actorActionName, null),
+                GetDefaultActionHighestPriorityState(actorActionName));
 
         public static ActorAction_Master GetActorAction_Master(ActorActionName actorActionName)
         {
@@ -94,8 +90,21 @@ namespace Actors
             },
         };
 
-        public static Dictionary<PriorityParameterName, object> GetDefaultActionParameters(
-            ActorActionName actorActionName)
+        public static Dictionary<PriorityParameterName, object> GetActionParameters(
+            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> requiredParameters)
+        {
+            requiredParameters ??= new Dictionary<PriorityParameterName, object>();
+            
+            var emptyActionParameters = GetEmptyActionParameters(actorActionName);
+
+            return actorActionName switch
+            {
+                ActorActionName.Fetch => _populateFetchActionParameters(emptyActionParameters, requiredParameters),
+                _                     => null
+            };
+        }
+
+        public static Dictionary<PriorityParameterName, object> GetEmptyActionParameters(ActorActionName actorActionName)
         {
             if (_allDefaultActionParameters.TryGetValue(actorActionName, out var defaultParameters))
             {
@@ -139,12 +148,41 @@ namespace Actors
             },
         };
 
-        static readonly Dictionary<ActorActionName, PriorityImportance> _allPriorityPerAction = new()
+        static Dictionary<PriorityParameterName, object> _populateFetchActionParameters(
+            Dictionary<PriorityParameterName, object> actionParameters,
+            Dictionary<PriorityParameterName, object> existingParameters)
         {
-            { ActorActionName.Wander, PriorityImportance.Low },
-            { ActorActionName.Deliver, PriorityImportance.Medium },
-            { ActorActionName.Fetch, PriorityImportance.Medium },
-            { ActorActionName.Scavenge, PriorityImportance.Medium },
+            return new Dictionary<PriorityParameterName, object>(actionParameters)
+            {
+                [PriorityParameterName.DefaultPriority] = 1,
+                [PriorityParameterName.TotalItems]      = 0,
+                [PriorityParameterName.TotalDistance]   = 0,
+                [PriorityParameterName.InventoryHauler] = null,
+                [PriorityParameterName.InventoryTarget] = null,
+            };
+        }
+
+        public static ActorPriorityState GetDefaultActionHighestPriorityState(ActorActionName actorActionName)
+        {
+            if (_allDefaultActionHighestPriorityStates.TryGetValue(actorActionName, out var highestPriorityState))
+            {
+                return highestPriorityState;
+            }
+
+            Debug.LogWarning($"No default highest priority state found for {actorActionName}. Returning None.");
+            return ActorPriorityState.None;
+        }
+
+        static readonly Dictionary<ActorActionName, ActorPriorityState> _allDefaultActionHighestPriorityStates = new()
+        {
+            { ActorActionName.Attack, ActorPriorityState.InCombat },
+            { ActorActionName.Defend, ActorPriorityState.InCombat },
+
+            { ActorActionName.Fetch, ActorPriorityState.HasJob },
+            { ActorActionName.Deliver, ActorPriorityState.HasJob },
+
+            { ActorActionName.Wander, ActorPriorityState.None },
+            { ActorActionName.Idle, ActorPriorityState.None },
         };
     }
 
@@ -157,6 +195,7 @@ namespace Actors
     {
         public readonly ActorActionName ActionName;
         ActorAction_Master              _actionMaster;
+        public ActorPriorityState       HighestPriorityState;
 
         public ActorAction_Master ActionMaster =>
             _actionMaster ??= Manager_ActorAction.GetActorAction_Master(ActionName);
@@ -165,11 +204,38 @@ namespace Actors
         
         public List<IEnumerator> ActionList => ActionMaster.ActionList;
 
-        public ActorAction(ActorActionName actionName, Dictionary<PriorityParameterName, object> actionParameters)
+        public ActorAction(ActorActionName actionName, Dictionary<PriorityParameterName, object> actionParameters, ActorPriorityState highestPriorityState)
         {
-            ActionName       = actionName;
-            ActionParameters = actionParameters;
+            ActionName           = actionName;
+            ActionParameters     = actionParameters;
+            HighestPriorityState = highestPriorityState;
         }
+    }
+
+    public class ActorAction_Target : ActorAction
+    {
+        public ActorAction_Target(ActorActionName actionName,
+                                  Dictionary<PriorityParameterName, object> actionParameters,
+                                  ActorPriorityState highestPriorityState, GameObject target) : base(actionName,
+            actionParameters, highestPriorityState)
+        {
+            Target = target;
+        }
+
+        public GameObject Target;
+    }
+
+    public class ActorAction_Location : ActorAction
+    {
+        public ActorAction_Location(ActorActionName actionName,
+                                    Dictionary<PriorityParameterName, object> actionParameters,
+                                    ActorPriorityState highestPriorityState, Vector3 location) : base(actionName,
+            actionParameters, highestPriorityState)
+        {
+            Location = location;
+        }
+        
+        public Vector3 Location;
     }
 
     [Serializable]
@@ -190,7 +256,7 @@ namespace Actors
 
     public enum ActorActionName
     {
-        // PriorityState None
+        // PriorityState None (Can do in all situations)
         Idle,
         All,
         

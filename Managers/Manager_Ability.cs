@@ -147,5 +147,5 @@ public class Actor_Abilities : PriorityData
 
     public Dictionary<Ability, float> AbilityList = new();
     protected override bool _priorityChangeNeeded(object dataChanged) => false;
-    protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
+    protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
 }

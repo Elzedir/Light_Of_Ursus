@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actors;
 using Jobs;
 using Jobsite;
@@ -9,6 +11,17 @@ namespace Priority
 {
     public class PriorityComponent_Jobsite : PriorityComponent
     {
+        public PriorityComponent_Jobsite(uint jobsiteID)
+        {
+            _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
+        }
+
+        readonly ComponentReference_Jobsite _jobsiteReferences;
+
+        public uint                     JobsiteID     => _jobsiteReferences.JobsiteID;
+        JobsiteComponent                _jobsite      => _jobsiteReferences.Jobsite;
+        protected override PriorityType _priorityType => PriorityType.JobTask;
+
         protected override List<uint> _canPeek(List<uint> priorityIDs)
         {
             var allowedPriorities = new List<uint>();
@@ -27,57 +40,29 @@ namespace Priority
 
             return allowedPriorities;
         }
-        
-        protected override PriorityElement _createPriorityElement(uint priorityQueueID, uint priorityID,
-                                                                  Dictionary<PriorityParameterName, object>
-                                                                      priorityParameters)
+
+        protected override void _regeneratePriority(uint priorityID)
         {
-            return new PriorityElement(PriorityType.JobTask, priorityQueueID, priorityID, 
-                priorityParameters ?? Manager_JobTask.GetDefaultTaskParameters((JobTaskName)priorityID));
-        }
-        
-        protected override PriorityQueue _createPriorityQueue(uint priorityQueueID)
-        {
-            return new PriorityQueue(1, PriorityType.JobTask, priorityQueueID);
+            Debug.LogWarning("Cannot regenerate priority for Jobsite.");
         }
 
-        protected override void _regeneratePriority(uint priorityQueueID, uint priorityID)
+        protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
         {
-            if (!_priorityExists(priorityQueueID, priorityID, out var existingPriorityParameters)) return;
-
-            // We need a get all parameters function to fill the priority again. Or maybe just complete the action and then recalculate the
-            // priorities rather than clearing them.
-            
-            var newPriorities = ;
-
-            AllPriorities[priorityQueueID].Update(priorityID, newPriorities);
+            return priorityIDs.Where(priorityID =>
+                Manager_Station.GetStation(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
         }
 
-        protected override ObservableDictionary<uint, PriorityQueue> _getRelevantPriorityQueues(
-            PriorityState priorityState)
+        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(
+            uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters)
         {
-            return AllPriorities;
+            return Manager_JobTask.GetTaskParameters((JobTaskName)priorityID, requiredParameters);
         }
 
-        public PriorityComponent_Jobsite(uint jobsiteID)
+        protected override Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState)
         {
-            _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
+            return PriorityQueue.PeekAll().ToDictionary(priority => priority.PriorityID);
         }
 
-        readonly ComponentReference_Jobsite _jobsiteReferences;
-
-        public uint      JobsiteID => _jobsiteReferences.JobsiteID;
-        JobsiteComponent _jobsite  => _jobsiteReferences.Jobsite;
-
-        protected override Dictionary<DataChanged, List<PriorityToChange>> _prioritiesToChange { get; } = new()
-        {
-            {
-                DataChanged.ChangedInventory, new List<PriorityToChange>
-                {
-                    new((uint)JobTaskName.Fetch_Items, PriorityImportance.High),
-                    new((uint)JobTaskName.Deliver_Items, PriorityImportance.High),
-                }
-            },
-        };
+        protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
     }
 }

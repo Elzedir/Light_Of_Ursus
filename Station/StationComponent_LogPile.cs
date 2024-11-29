@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using EmployeePositions;
 using Items;
 using Jobs;
 using OperatingArea;
 using Recipes;
+using ScriptableObjects;
 using UnityEngine;
 
 namespace Station
@@ -15,15 +17,15 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;
-        public override EmployeePosition CoreEmployeePosition => EmployeePosition.Hauler;
+        public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Hauler;
 
         public override RecipeName       DefaultProduct       => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
         public override List<RecipeName> AllowedRecipes       { get; } = new();
         public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<EmployeePosition> AllowedEmployeePositions { get; } = new()
+        public override List<EmployeePositionName> AllowedEmployeePositions { get; } = new()
         {
-            EmployeePosition.None
+            EmployeePositionName.Intern
         };
         public override List<JobName> AllowedJobs { get; } = new()
         {

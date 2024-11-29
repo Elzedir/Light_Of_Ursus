@@ -19,30 +19,44 @@ namespace Priority
 
         protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
             => Math.Clamp(current - target, 0, maxPriority);
+
         protected static float _addPriorityIfBelowTarget(float current, float target, float maxPriority)
             => Math.Clamp(target - current, 0, maxPriority);
+
         protected static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority)
             => Math.Clamp(Math.Abs(current - target), 0, maxPriority);
 
         protected static float _addPriorityIfOutsideRange(float current, float min, float max, float maxPriority)
-            => (current < min || current > max) ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
-        protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority)
-            => (current > min || current < max) ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority) : 0;
+            => (current < min || current > max)
+                ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
+                : 0;
 
-        protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage, float maxPriority)
+        protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority)
+            => (current > min || current < max)
+                ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
+                : 0;
+
+        protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage,
+                                                          float maxPriority)
             => Math.Clamp((current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
-        protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage, float maxPriority)
+
+        protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage,
+                                                          float maxPriority)
             => Math.Clamp((targetPercentage / 100 - current / total) * maxPriority, 0, maxPriority);
-        protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage, float maxPriority)
+
+        protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage,
+                                                             float maxPriority)
             => Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
 
-        protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max, float maxPriority)
+        protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max,
+                                                                 float maxPriority)
         {
             current = current / total * 100;
             return (current < min || current > max)
                 ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
                 : 0;
         }
+
         protected static float _addPriorityIfInsidePercentRange
             (float current, float total, float min, float max, float maxPriority)
         {
@@ -68,8 +82,10 @@ namespace Priority
             return _addPriorityIfNotEqualTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
         }
 
-        protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority, StationName currentStationType = StationName.None, HashSet<StationName> allStationTypes = null)
-        {        
+        protected static float _moreItemsDesired_Total(List<Item>           items, float total, float maxPriority,
+                                                       StationName          currentStationType = StationName.None,
+                                                       HashSet<StationName> allStationTypes    = null)
+        {
             if (allStationTypes == null)
             {
                 return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
@@ -77,7 +93,7 @@ namespace Priority
 
             var priority = 0f;
 
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 var masterItem = Items.Items.GetItem_Master(item.ItemID);
 
@@ -88,7 +104,7 @@ namespace Priority
                     // Debug.Log($"StationType: {currentStationType} is not the highest priority station type for item: {item.ItemName}");
                     continue;
                 }
-            
+
                 priority += _addPriorityIfAbovePercent(item.ItemAmount, total, 0, maxPriority);
             }
 
@@ -105,88 +121,103 @@ namespace Priority
             return _addPriorityIfNotEqualPercent(Item.GetItemListTotal_CountAllItems(items), total, 100, maxPriority);
         }
 
-        protected static float _moreDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+        protected static float _moreDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition,
+                                                           float   target,          float   maxPriority)
         {
             return _addPriorityIfBelowTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
         }
 
-        protected static float _lessDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+        protected static float _lessDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition,
+                                                           float   target,          float   maxPriority)
         {
             return _addPriorityIfAboveTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
         }
 
-        protected static float _exactDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition, float target, float maxPriority)
+        protected static float _exactDistanceDesired_Target(Vector3 currentPosition, Vector3 targetPosition,
+                                                            float   target,          float   maxPriority)
         {
             return _addPriorityIfNotEqualTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
         }
 
-        protected static float _moreDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+        protected static float _moreDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+                                                          float   maxPriority)
         {
             return _addPriorityIfAbovePercent(Vector3.Distance(currentPosition, targetPosition), total, 0, maxPriority);
         }
 
-        protected static float _lessDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+        protected static float _lessDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+                                                          float   maxPriority)
         {
-            return _addPriorityIfBelowPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
+            return _addPriorityIfBelowPercent(Vector3.Distance(currentPosition, targetPosition), total, 100,
+                maxPriority);
         }
 
-        protected static float _exactDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total, float maxPriority)
+        protected static float _exactDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+                                                           float   maxPriority)
         {
-            return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100, maxPriority);
+            return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100,
+                maxPriority);
         }
 
-        public static Dictionary<PriorityParameterName, float> GeneratePriority(
-            PriorityType priorityType, uint priorityQueueID,
-            Dictionary<PriorityParameterName, object>
-                existingPriorityParameters) =>
-            _generatePriority(priorityType, priorityQueueID, existingPriorityParameters?
-                                                             .Select(x => x)
-                                                             .ToDictionary(x =>
-                                                                 (uint)x.Key, x => x.Value));
+        public static float GeneratePriority(PriorityType                              priorityType,
+                                             uint priorityID,
+                                             Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
+            _generatePriority(priorityType, priorityID, existingPriorityParameters?
+                                            .Select(x => x)
+                                            .ToDictionary(x =>
+                                                (uint)x.Key, x => x.Value));
 
-        static Dictionary<PriorityParameterName, float> _generatePriority(
-            PriorityType priorityType, uint priorityID,
+        static float _generatePriority(
+            PriorityType priorityType,
+            uint priorityID,
             Dictionary<uint, object>
                 existingPriorityParameters)
         {
             if (existingPriorityParameters == null)
             {
                 Debug.LogError("ExistingPriorityParameters is null.");
-                return null;
+                return 0;
             }
-            
+
             switch (priorityType)
             {
                 case PriorityType.ActorAction:
-                    switch (priorityID)
-                    {
-                        case (uint)ActorActionName.Fetch:
-                            return _generateFetchPriority(existingPriorityParameters) ??
-                                   new Dictionary<PriorityParameterName, float>();
-                        case (uint)ActorActionName.Deliver:
-                            return _generateDeliverPriority(existingPriorityParameters) ??
-                                   new Dictionary<PriorityParameterName, float>();
-                        default:
-                            Debug.LogError($"PriorityID: {priorityID} not found.");
-                            return null;
-                    }
+                    return _generatePriority_Actor(priorityID, existingPriorityParameters);
                 case PriorityType.JobTask:
-                    switch (priorityID)
-                    {
-                        case (uint)JobTaskName.Fetch_Items:
-                            return _generateStockpilePriority(existingPriorityParameters) ??
-                                   new Dictionary<PriorityParameterName, float>();
-                        default:
-                            Debug.LogError($"PriorityID: {priorityID} not found.");
-                            return null;
-                    }
+                    return _generatePriority_Jobsite(priorityID, existingPriorityParameters);
                 default:
                     Debug.LogError($"PriorityType: {priorityType} not found.");
-                    return null;
+                    return 0;
             }
         }
 
-        static Dictionary<PriorityParameterName, float> _generateFetchPriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generatePriority_Actor(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
+        {
+            switch (priorityID)
+            {
+                case (uint)ActorActionName.Fetch:
+                    return _generateFetchPriority(existingPriorityParameters);
+                case (uint)ActorActionName.Deliver:
+                    return _generateDeliverPriority(existingPriorityParameters);
+                default:
+                    Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");
+                    return 0;
+            }
+        }
+        
+        static float _generatePriority_Jobsite(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
+        {
+            switch (priorityID)
+            {
+                case (uint)JobTaskName.Fetch_Items:
+                    return _generateStockpilePriority(existingPriorityParameters);
+                default:
+                    Debug.LogError($"JobTask: {(JobTaskName)priorityID} not found.");
+                    return 0;
+            }
+        }
+
+        static float _generateFetchPriority(Dictionary<uint, object> existingPriorityParameters)
         {
             var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                               _defaultMaxPriority;
@@ -200,19 +231,19 @@ namespace Priority
             if (maxPriority == 0)
             {
                 Debug.LogError("MaxPriority is 0. Default initialiser failed.");
-                return null;
+                return 0;
             }
 
             if (totalItems == 0 && totalDistance == 0)
             {
                 Debug.LogError($"MaxItems and MaxDistance are 0.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             if (inventory_Hauler == null || inventory_Target == null)
             {
                 Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             var allItemsToFetch = inventory_Target.GetInventoryItemsToFetch();
@@ -220,7 +251,7 @@ namespace Priority
             if (Item.GetItemListTotal_CountAllItems(allItemsToFetch) == 0)
             {
                 Debug.Log("No items to fetch.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
@@ -255,19 +286,10 @@ namespace Priority
 
             DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
-            return new Dictionary<PriorityParameterName, float>
-            {
-                {
-                    PriorityParameterName.TotalItems, priority_ItemQuantity
-                },
-                
-                {
-                    PriorityParameterName.TotalDistance, priority_Distance    
-                }
-            };
+            return priority_ItemQuantity + priority_Distance;
         }
 
-        static Dictionary<PriorityParameterName, float> _generateDeliverPriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generateDeliverPriority(Dictionary<uint, object> existingPriorityParameters)
         {
             var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                               _defaultMaxPriority;
@@ -285,26 +307,27 @@ namespace Priority
                     : StationName.None;
 
             var allStationTypes =
-                existingPriorityParameters.TryGetValue((uint)PriorityParameterName.AllStationTypes, out var stationTypes)
+                existingPriorityParameters.TryGetValue((uint)PriorityParameterName.AllStationTypes,
+                    out var stationTypes)
                     ? stationTypes as HashSet<StationName>
                     : null;
 
             if (maxPriority == 0)
             {
                 Debug.LogError("MaxPriority is 0. Default initialiser failed.");
-                return null;
+                return 0;
             }
 
             if (totalItems == 0 && totalDistance == 0)
             {
                 Debug.LogError($"MaxItems and MaxDistance are 0.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             if (inventory_Hauler == null || inventory_Target == null)
             {
                 Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             var allItemsToDeliver = inventory_Target.GetInventoryItemsToDeliver(inventory_Hauler);
@@ -312,7 +335,7 @@ namespace Priority
             if (allItemsToDeliver.Count == 0)
             {
                 Debug.Log("No items to fetch.");
-                return new Dictionary<PriorityParameterName, float>();
+                return 0;
             }
 
             var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
@@ -337,7 +360,7 @@ namespace Priority
                 ),
                 new List<DebugData_Data>
                 {
-                    new(DebugDataType.Priority_Item,     priority_ItemQuantity.ToString(CultureInfo.InvariantCulture)),
+                    new(DebugDataType.Priority_Item, priority_ItemQuantity.ToString(CultureInfo.InvariantCulture)),
                     new(DebugDataType.Priority_Distance, priority_Distance.ToString(CultureInfo.InvariantCulture)),
                     new(DebugDataType.Priority_Total,
                         (priority_ItemQuantity + priority_Distance).ToString(CultureInfo.InvariantCulture))
@@ -346,29 +369,15 @@ namespace Priority
 
             DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
-            return new Dictionary<PriorityParameterName, float>
-            {
-                {
-                    PriorityParameterName.TotalItems, priority_ItemQuantity
-                },
-                
-                {
-                    PriorityParameterName.TotalDistance, priority_Distance    
-                }
-            };
+            return priority_ItemQuantity + priority_Distance;
         }
 
-        static Dictionary<PriorityParameterName, float> _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
         {
-            return new Dictionary<PriorityParameterName, float>()
-            {
-                {
-                    PriorityParameterName.DefaultPriority, 1
-                }
-            };
+            return 1;
         }
     }
-    
+
     public enum PriorityType
     {
         ActorAction,

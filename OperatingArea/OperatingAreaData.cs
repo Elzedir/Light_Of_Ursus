@@ -38,10 +38,15 @@ namespace OperatingArea
         public bool AddOperatorToOperatingArea(uint operatorID)
         {
             if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
+            
+            if (Manager_Actor.GetActorData(operatorID).CareerData.GetNewCurrentJob(StationID))
+            {
+                CurrentOperatorID = operatorID;
+                return true;
+            }
 
-            CurrentOperatorID = operatorID;
-            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentJob.SetOperatingAreaID(OperatingAreaID);
-            return true;
+            Debug.Log($"OperatingArea: {OperatingAreaID} failed to add operator: {operatorID} to Station: {StationID}");
+            return false;
         }
 
         public bool RemoveOperatorFromOperatingArea()
@@ -52,9 +57,9 @@ namespace OperatingArea
                 return false;
             }
 
-            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.CurrentJob.SetOperatingAreaID(0);
-            CurrentOperatorID                                                           = 0;
-            IsOperatorMovingToOperatingArea                                             = false;
+            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.StopCurrentJob();
+            CurrentOperatorID               = 0;
+            IsOperatorMovingToOperatingArea = false;
             return true;
         }
     }

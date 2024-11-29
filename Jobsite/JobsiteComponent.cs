@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using EmployeePositions;
 using Inventory;
 using Jobs;
 using Managers;
 using Priority;
+using ScriptableObjects;
 using Station;
 using UnityEngine;
 
@@ -17,9 +19,12 @@ namespace Jobsite
         public void        SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
         public void        SetCityID(uint             cityID)      => JobsiteData.CityID = cityID;
 
-        List<StationComponent>        _allStationInJobsite;
-        public List<StationComponent> AllStationsInJobsite => _allStationInJobsite ??= _getAllStationsInJobsite();
-        public List<EmployeePosition> AllCoreEmployeePositions;
+        Dictionary<uint, StationComponent> _allStationInJobsite;
+
+        public Dictionary<uint, StationComponent> AllStationsInJobsite =>
+            _allStationInJobsite ??= _getAllStationsInJobsite();
+
+        public List<EmployeePositionName> AllCoreEmployeePositions;
 
         public PriorityComponent_Jobsite PriorityComponent;
 
@@ -31,25 +36,25 @@ namespace Jobsite
         {
             PriorityComponent = new PriorityComponent_Jobsite(JobsiteID);
 
-            AllStationsInJobsite.ForEach(station => station.StationData.SetJobsiteID(JobsiteID));
-            
-            _setTickRate(TickRate.TenSeconds);
+            AllStationsInJobsite.Values.ToList().ForEach(station => station.StationData.SetJobsiteID(JobsiteID));
+
+            _setTickRate(TickRate.TenSeconds, false);
         }
-        
+
         TickRate _currentTickRate;
 
-        void _setTickRate(TickRate tickRate)
+        void _setTickRate(TickRate tickRate, bool unregister = true)
         {
             if (_currentTickRate == tickRate) return;
-            
-            Manager_TickRate.UnregisterTicker(TickerType.Jobsite, _currentTickRate, JobsiteID);
+
+            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Jobsite, _currentTickRate, JobsiteID);
             Manager_TickRate.RegisterTicker(TickerType.Jobsite, tickRate, JobsiteID, _onTick);
             _currentTickRate = tickRate;
         }
-        
+
         void _onTick()
         {
-            foreach (var product in AllStationsInJobsite.Select(s => s.StationData.ProductionData))
+            foreach (var product in AllStationsInJobsite.Values.Select(s => s.StationData.ProductionData))
             {
                 product.GetEstimatedProductionRatePerHour();
                 product.GetActualProductionRatePerHour();
@@ -61,57 +66,67 @@ namespace Jobsite
         protected abstract bool _compareProductionOutput();
 
         protected abstract void         _adjustProduction(float               idealRatio);
-        protected abstract VocationName _getRelevantVocation(EmployeePosition position);
-        List<StationComponent>          _getAllStationsInJobsite() => GetComponentsInChildren<StationComponent>().ToList();
+        protected abstract VocationName _getRelevantVocation(EmployeePositionName positionName);
 
-        public StationComponent GetNearestRelevantStationInJobsite(Vector3 position, StationName stationName)
+        Dictionary<uint, StationComponent> _getAllStationsInJobsite() =>
+            GetComponentsInChildren<StationComponent>().ToDictionary(station => station.StationData.StationID);
+
+        public StationComponent GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
             => AllStationsInJobsite
-               .Where(station => station.StationName == stationName)
-               .OrderBy(station => Vector3.Distance(position, station.transform.position))
-               .FirstOrDefault();
+               .Where(station => stationNames.Contains(station.Value.StationName))
+               .OrderBy(station => Vector3.Distance(position, station.Value.transform.position))
+               .FirstOrDefault().Value;
 
 
-        public bool GetNewCurrentJob(ActorComponent actor)
+        public bool GetNewCurrentJob(ActorComponent actor, uint stationID = 0)
         {
-            var highestPriorityJob =
-                PriorityComponent.GetHighestSpecificPriority(actor.ActorData.CareerData.AllJobs.Select(j => (uint)j)
-                                                                   .ToList());
+            var highestPriorityJob = PriorityComponent.GetHighestSpecificPriority(
+                actor.ActorData.CareerData.AllJobs.Select(j => (uint)j).ToList(), stationID);
 
             if (highestPriorityJob == null) return false;
 
             var jobName = (JobName)highestPriorityJob.PriorityID;
 
-            var relevantStation = _getRelevantStationForJob(jobName, actor);
+            var relevantStations       = _getOrderedRelevantStationsForJob(jobName, actor);
+            
+            var relevantStation = relevantStations.FirstOrDefault();
+            
+            if (relevantStation is null)
+            {
+                Debug.LogError($"No relevant stations found for job: {jobName}.");
+                return false;
+            }
+            
             var relevantOperatingArea = relevantStation.GetRelevantOperatingArea(actor);
-            
+
             var job = new Job(jobName, relevantStation.StationID, relevantOperatingArea.OperatingAreaID);
-            
+
             actor.ActorData.CareerData.SetCurrentJob(job);
-            
+
             return true;
         }
-        
-        StationComponent _getRelevantStationForJob(JobName jobName, ActorComponent actor)
+
+        List<StationComponent> _getOrderedRelevantStationsForJob(JobName jobName, ActorComponent actor)
         {
-            var relevantStations = AllStationsInJobsite
-                .Where(station => station.AllowedJobs.Contains(jobName))
-                .ToList();
+            var relevantStations = AllStationsInJobsite.Values
+                                                       .Where(station => station.AllowedJobs.Contains(jobName))
+                                                       .ToList();
 
             if (relevantStations.Count != 0)
                 return relevantStations
-                       .OrderBy(station => Vector3.Distance(actor.transform.position, station.transform.position))
-                       .FirstOrDefault();
-            
+                       .OrderBy(station =>
+                           Vector3.Distance(actor.transform.position, station.transform.position))
+                       .ToList();
+
             Debug.LogError($"No relevant stations found for job: {jobName}.");
             return null;
-
         }
 
-        public List<EmployeePosition> GetMinimumEmployeePositions()
+        public List<EmployeePositionName> GetMinimumEmployeePositions()
         {
-            HashSet<EmployeePosition> employeePositions = new();
+            HashSet<EmployeePositionName> employeePositions = new();
 
-            foreach (var station in AllStationsInJobsite)
+            foreach (var station in AllStationsInJobsite.Values)
             {
                 foreach (var position in station.AllowedEmployeePositions)
                 {
@@ -124,20 +139,22 @@ namespace Jobsite
 
         protected void _assignAllEmployeesToStations(List<uint> employeeIDs)
         {
-            foreach (var station in AllStationsInJobsite)
+            foreach (var station in AllStationsInJobsite.Values)
             {
-                station.RemoveAllOperators();
+                station.RemoveAllOperatorsFromStation();
             }
 
             var tempEmployees = employeeIDs.Select(employeeID => Manager_Actor.GetActorData(employeeID)).ToList();
 
-            foreach (var station in AllStationsInJobsite)
+            foreach (var station in AllStationsInJobsite.Values)
             {
                 var allowedPositions = station.AllowedEmployeePositions;
                 var employeesForStation = tempEmployees
-                                          .Where(e => allowedPositions.Contains(e.CareerData.EmployeePosition))
-                                          .OrderByDescending(e => e.CareerData.EmployeePosition)
-                                          .ThenByDescending(e => e.VocationData.GetVocationExperience(_getRelevantVocation(e.CareerData.EmployeePosition)))
+                                          .Where(e => allowedPositions.Contains(e.CareerData.EmployeePositionName))
+                                          .OrderByDescending(e => e.CareerData.EmployeePositionName)
+                                          .ThenByDescending(e =>
+                                              e.VocationData.GetVocationExperience(
+                                                  _getRelevantVocation(e.CareerData.EmployeePositionName)))
                                           .ToList();
 
                 foreach (var employee in employeesForStation)
@@ -161,7 +178,7 @@ namespace Jobsite
             for (var i = 1; i < combinationCount; i++)
             {
                 var combination = new List<uint>();
-                
+
                 for (var j = 0; j < employees.Count; j++)
                 {
                     if ((i & (1 << j)) != 0)
@@ -169,6 +186,7 @@ namespace Jobsite
                         combination.Add(employees[j]);
                     }
                 }
+
                 result.Add(combination);
             }
 
@@ -187,12 +205,13 @@ namespace Jobsite
 
         List<StationComponent> _relevantStations_Fetch()
         {
-            return AllStationsInJobsite.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
+            return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
         }
 
         List<StationComponent> _relevantStations_Deliver(InventoryData inventoryData)
         {
-            return AllStationsInJobsite.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0).ToList();
+            return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
+                                       .ToList();
         }
     }
 }

@@ -74,7 +74,8 @@ namespace Careers
             EditorGUILayout.LabelField("All Careers", EditorStyles.boldLabel);
 
             var nonNullCareers = allCareersSO.Careers.Where(career =>
-                career        != null).ToArray();
+                career != null && (!string.IsNullOrEmpty(career.CareerDescription) ||
+                                   career.CareerName != 0)).ToArray();
 
             _careerScrollPos = EditorGUILayout.BeginScrollView(_careerScrollPos,
                 GUILayout.Height(Math.Min(200, nonNullCareers.Length * 20)));

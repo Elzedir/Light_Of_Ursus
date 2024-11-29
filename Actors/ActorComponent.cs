@@ -57,7 +57,7 @@ namespace Actors
             PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality
                                                                .GetPersonality());
 
-            _setTickRate(TickRate.OneSecond);
+            _setTickRate(TickRate.OneSecond, false);
 
             _updateVisuals();
 
@@ -66,11 +66,11 @@ namespace Actors
 
         TickRate _currentTickRate;
 
-        void _setTickRate(TickRate tickRate)
+        void _setTickRate(TickRate tickRate, bool unregister = true)
         {
             if (_currentTickRate == tickRate) return;
 
-            Manager_TickRate.UnregisterTicker(TickerType.Actor, _currentTickRate, ActorID);
+            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Actor, _currentTickRate, ActorID);
             Manager_TickRate.RegisterTicker(TickerType.Actor, tickRate, ActorID, _onTick);
             _currentTickRate = tickRate;
         }

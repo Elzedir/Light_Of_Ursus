@@ -11,16 +11,19 @@ namespace Actors
         uint           _actorID   => _actorReferences.ActorID;
         ActorComponent _actor     => _actorReferences.Actor;
         ActorData      _actorData => _actor.ActorData;
+
         public DecisionMakerComponent(uint actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
         }
-        
-        PriorityComponent_Actor        _priorityComponent;
-        public PriorityComponent_Actor PriorityComponent => _priorityComponent ??= new PriorityComponent_Actor(_actorID);
-        
+
+        PriorityComponent_Actor _priorityComponent;
+
+        public PriorityComponent_Actor PriorityComponent =>
+            _priorityComponent ??= new PriorityComponent_Actor(_actorID);
+
         ActorAction _currentActorActionMaster => PriorityComponent.GetCurrentAction();
-        
+
         public void MakeDecision()
         {
             // Change tick rate according to number of zones to player.
@@ -32,64 +35,62 @@ namespace Actors
 
             if (!_mustChangeCurrentAction(priorityState, out var nextHighestPriorityValue))
             {
-                Debug.Log("No need to change current action.");
+                //Debug.Log("No need to change current action.");
                 return;
             }
 
             PriorityComponent.SetCurrentAction(nextHighestPriorityValue.PriorityID);
         }
-        
-        PriorityState _getPriorityState()
+
+        ActorPriorityState _getPriorityState()
         {
             if (_actorData.StatesAndConditions.Actor_States.GetSubState(SubStateName.IsInCombat))
             {
-                return PriorityState.InCombat;
+                return ActorPriorityState.InCombat;
             }
 
             if (_actorData.CareerData.JobsActive && _actorData.CareerData.HasCurrentJob())
             {
                 Debug.Log("Step 1: Has Job");
-                return PriorityState.HasJob;
+                return ActorPriorityState.HasJob;
             }
-            
+
             if (_actorData.CareerData.GetNewCurrentJob())
             {
-                return PriorityState.HasJob;
+                return ActorPriorityState.HasJob;
             }
 
-            return PriorityState.None;
+            return ActorPriorityState.None;
         }
 
-        bool _mustChangeCurrentAction(PriorityState priorityState, out Priority.PriorityElement nextHighestPriorityElement)
+        bool _mustChangeCurrentAction(ActorPriorityState  actorPriorityState,
+                                      out PriorityElement nextHighestPriorityElement)
         {
-            var currentAction            = PriorityComponent.GetCurrentAction();
-            nextHighestPriorityElement = PriorityComponent.PeekHighestPriority(priorityState);
-            
+            var currentAction = PriorityComponent.GetCurrentAction();
+            nextHighestPriorityElement = PriorityComponent.PeekHighestPriority(actorPriorityState);
+
             if (nextHighestPriorityElement is null)
             {
-                Debug.LogWarning("There is no next highest priority.");
+                //Debug.LogWarning("There is no next highest priority.");
+                return false;
+            }
+
+            if ((uint)currentAction.ActionName == nextHighestPriorityElement.PriorityID)
+            {
+                Debug.Log("Current action is the same as next highest priority.");
                 return false;
             }
 
             var nextHighestPriority =
-                Manager_ActorAction.GetActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
+                Manager_ActorAction.GetNewActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
 
-            Debug.Log($"Current Action: {currentAction.ActionName}, Next Highest Priority: {nextHighestPriority}");
-
-           if (currentAction.ActionName == nextHighestPriority.ActionName)
-           {
-               Debug.Log("Current action is the same as next highest priority.");
-               return false;
-           };
-
-           if (!Manager_ActorAction.IsHigherPriorityThan(nextHighestPriority.ActionName, currentAction.ActionName)) return false;
-           
-           Debug.Log("Next highest priority is higher than current action.");
-           return true;
+            Debug.Log($"Next Highest Priority: {nextHighestPriority} is higher than Current Action: {currentAction.ActionName}");
+            
+            return true;
         }
     }
-    
-    public enum PriorityState
+
+    public enum ActorPriorityState
     {
         None,
             

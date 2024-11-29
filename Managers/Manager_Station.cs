@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EmployeePositions;
 using ScriptableObjects;
 using Station;
 using UnityEngine;
@@ -17,7 +18,7 @@ public class Manager_Station : MonoBehaviour, IDataPersistence
     
     static uint _lastUnusedStationID = 1;
     public static Dictionary<uint, StationComponent> AllStationComponents = new();
-    public static Dictionary<StationComponent, EmployeePosition> EmployeeCanUseList = new();
+    public static Dictionary<StationComponent, EmployeePositionName> EmployeeCanUseList = new();
 
     public void SaveData(SaveData saveData) => saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
     public void LoadData(SaveData saveData)

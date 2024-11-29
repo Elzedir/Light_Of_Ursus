@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using EmployeePositions;
 using Items;
 using Jobs;
 using OperatingArea;
 using Recipes;
+using ScriptableObjects;
 using UnityEngine;
 
 namespace Station
@@ -13,16 +15,16 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Tree;
         public override StationType      StationType          => StationType.Resource;
-        public override EmployeePosition CoreEmployeePosition => EmployeePosition.Logger;
+        public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Logger;
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
         public override List<RecipeName> AllowedRecipes       { get; } = new() { RecipeName.Log };
         public override List<uint>       AllowedStoredItemIDs { get; } = new();
         public override List<uint>       DesiredStoredItemIDs { get; } = new();
 
-        public override List<EmployeePosition> AllowedEmployeePositions { get; } = new()
+        public override List<EmployeePositionName> AllowedEmployeePositions { get; } = new()
         {
-            EmployeePosition.None
+            EmployeePositionName.Intern
         };
 
         public override List<JobName> AllowedJobs { get; } = new()

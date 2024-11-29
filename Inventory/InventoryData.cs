@@ -14,7 +14,7 @@ namespace Inventory
         Actor,
         Station
     }
-    
+
     [Serializable]
     public abstract class InventoryData : PriorityData
     {
@@ -26,10 +26,10 @@ namespace Inventory
 
         public abstract ComponentType ComponentType { get; }
 
-        public int                              Gold;
-        bool                                    _skipNextPriorityCheck;
-        public void                             SkipNextPriorityCheck()             => _skipNextPriorityCheck = true;
-        public List<Item>                       AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList(); 
+        public int Gold;
+        bool _skipNextPriorityCheck;
+        public void SkipNextPriorityCheck() => _skipNextPriorityCheck = true;
+        public List<Item> AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList();
         public ObservableDictionary<uint, Item> AllInventoryItems;
 
         void OnInventoryChanged(uint componentID)
@@ -40,13 +40,15 @@ namespace Inventory
                 return;
             }
 
-            _priorityChangeCheck(DataChanged.ChangedInventory, true);
+            _priorityChangeCheck(PriorityUpdateTrigger.ChangedInventory, true);
         }
 
-        public Dictionary<uint, Item> GetAllInventoryItemsClone() => AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
-        
+        public Dictionary<uint, Item> GetAllInventoryItemsClone() =>
+            AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
+
         public Dictionary<uint, Item> FetchItemsOnHold   = new();
         public Dictionary<uint, Item> DeliverItemsOnHold = new();
+
         public void AddToInventoryItemsOnHold(List<Item> itemsToAdd)
         {
             if (itemsToAdd == null) return;
@@ -82,7 +84,7 @@ namespace Inventory
         public void RemoveFromDeliverItemsOnHold(List<Item> itemsToRemove)
         {
             if (itemsToRemove is null) return;
-            
+
             foreach (var itemToRemove in itemsToRemove)
             {
                 if (!DeliverItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
@@ -110,22 +112,22 @@ namespace Inventory
                 break;
             }
         }
-    
+
         bool _addItem(Item item)
         {
             if (item.ItemAmount == 0)
             {
                 Debug.LogError("Trying to add item with 0 quantity.");
-                return false;    
+                return false;
             }
-            
+
             if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
             {
                 AllInventoryItems.Add(item.ItemID, item);
-            
+
                 return true;
             }
-        
+
             existingItem.ItemAmount += item.ItemAmount;
 
             return true;
@@ -162,28 +164,29 @@ namespace Inventory
             target.AddToInventory(items);
         }
 
-        public bool DropItems(List<Item> items, Vector3 dropPosition, bool itemsNotInInventory = false, bool dropAsGroup = true)
+        public bool DropItems(List<Item> items, Vector3 dropPosition, bool itemsNotInInventory = false,
+                              bool       dropAsGroup = true)
         {
             if (itemsNotInInventory)
             {
                 if (_dropItems(items, dropPosition, dropAsGroup)) return true;
-                
+
                 Debug.Log("Can't drop items.");
                 return false;
 
             }
-        
+
             if (!_dropItems(items, dropPosition, dropAsGroup))
             {
                 Debug.Log("Can't drop items.");
                 return false;
             }
-        
+
             RemoveFromInventory(items);
 
             return true;
         }
-    
+
         bool _dropItems(List<Item> items, Vector3 dropPosition, bool dropAsGroup)
         {
             foreach (Item item in items)
@@ -220,14 +223,15 @@ namespace Inventory
 
             return returnedItems;
         }
-        
+
         public List<Item> InventoryContainsReturnedItems(List<Item> items)
         {
             List<Item> returnedItems = new();
 
             foreach (var item in items)
             {
-                if (AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) && existingItem.ItemAmount >= item.ItemAmount)
+                if (AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) &&
+                    existingItem.ItemAmount >= item.ItemAmount)
                 {
                     returnedItems.Add(new Item(item));
                 }
@@ -239,7 +243,7 @@ namespace Inventory
         public List<Item> InventoryMissingReturnedItems(List<Item> itemsToCheck)
         {
             List<Item> missingItems = new();
-        
+
             foreach (var itemToCheck in itemsToCheck)
             {
                 if (!AllInventoryItems.TryGetValue(itemToCheck.ItemID, out var existingItem))
@@ -256,35 +260,26 @@ namespace Inventory
         }
 
         public bool InventoryContainsAnyItems(List<uint> itemIDs)
-        {  
+        {
             return itemIDs.Any(itemID => AllInventoryItems.ContainsKey(itemID));
         }
-        
+
         public bool InventoryContainsAnyItems(List<Item> items)
         {
-            return items.Any(item => AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) && existingItem.ItemAmount >= item.ItemAmount);
+            return items.Any(item =>
+                AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) &&
+                existingItem.ItemAmount >= item.ItemAmount);
         }
+
         public bool InventoryContainsAllItems(List<Item> requiredItems)
         {
-            return requiredItems.All(requiredItem => 
-                AllInventoryItems.TryGetValue(requiredItem.ItemID, out var existingItem) 
+            return requiredItems.All(requiredItem =>
+                AllInventoryItems.TryGetValue(requiredItem.ItemID, out var existingItem)
                 && existingItem.ItemAmount >= requiredItem.ItemAmount);
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
-        {
-            get;
-            set;
-        } = new()
-        {
-            {
-                DataChanged.ChangedInventory, new Dictionary<PriorityParameterName, object>
-                {
-                    { PriorityParameterName., new List<Item>() },
-                    { PriorityParameterName.InventoryItemsToDeliver, new List<Item>() }
-                }
-            }
-        };
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
+            _priorityParameterList { get; set; } = new();
 
         public abstract List<Item> GetInventoryItemsToFetch();
         public abstract List<Item> GetInventoryItemsToDeliver(InventoryData inventory);

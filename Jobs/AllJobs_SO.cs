@@ -74,7 +74,8 @@ namespace Jobs
             EditorGUILayout.LabelField("All Jobs", EditorStyles.boldLabel);
 
             var nonNullJobs = allJobsSO.Jobs.Where(job =>
-                job        != null).ToArray();
+                job != null && (!string.IsNullOrEmpty(job.JobDescription) ||
+                                job.JobName != 0)).ToArray();
 
             _jobTaskScrollPos = EditorGUILayout.BeginScrollView(_jobTaskScrollPos,
                 GUILayout.Height(Math.Min(200, nonNullJobs.Length * 20)));

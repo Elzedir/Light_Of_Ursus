@@ -11,10 +11,10 @@ namespace Jobs
         {
             var allJobs = new Dictionary<uint, Job_Master>();
 
-            // foreach (var none in _defaultNone())
-            // {
-            //     allRecipes.Add(none.Key, none.Value);
-            // }
+            foreach (var idle in _idle())
+            {
+                allJobs.Add(idle.Key, idle.Value);
+            }
             
             foreach (var lumberjack in _lumberjack())
             {
@@ -28,8 +28,22 @@ namespace Jobs
             
             return allJobs;
         }
-        
-        // Put a priority List in the tasks so you can check which tasks to do.
+
+        static Dictionary<uint, Job_Master> _idle()
+        {
+            return new Dictionary<uint, Job_Master>
+            {
+                {
+                    (uint)JobName.Idle, new Job_Master(
+                        jobName: JobName.Idle,
+                        jobDescription: "An idler",
+                        new HashSet<JobTaskName>
+                        {
+                            JobTaskName.Idle,
+                        })
+                }
+            };
+        }
 
         static Dictionary<uint, Job_Master> _lumberjack()
         {

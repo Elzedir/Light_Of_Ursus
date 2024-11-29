@@ -9,69 +9,46 @@ namespace Priority
 {
     public abstract class PriorityComponent
     {
-        public ObservableDictionary<uint, PriorityQueue> AllPriorities = new();
+        PriorityQueue _priorityQueue;
+        public PriorityQueue PriorityQueue => _priorityQueue ??= _createNewPriorityQueue();
 
-        Dictionary<PriorityImportance, Dictionary<uint, PriorityElement>>      _cachedPriorityQueue;
+        Dictionary<PriorityImportance, Dictionary<uint, PriorityElement>> _cachedPriorityQueue = new();
+        protected          ActorPriorityState                             _currentPriorityState;
+        protected abstract PriorityType                                   _priorityType { get; }
 
-        public void OnDataChanged(DataChanged                               dataChanged,
-                                           Dictionary<PriorityParameterName, object> changedParameters,
-                                           uint                                      priorityID = 1)
+        public void CriticalDataChanged(PriorityUpdateTrigger                               priorityUpdateTrigger,
+                                           Dictionary<PriorityParameterName, object> newParameters)
         {
-            if (!_prioritiesToChange.TryGetValue(dataChanged, out var prioritiesToChange))
+            if (!_priorityIDsToUpdateOnDataChange.TryGetValue(priorityUpdateTrigger, out var priorityIDsToUpdate))
             {
-                Debug.Log($"DataChanged: {dataChanged} not found in _actionsToChange for {this}.");
+                Debug.Log($"DataChanged: {priorityUpdateTrigger} not found in _priorityIDsToUpdateOnDataChange for {this}.");
                 return;
             }
 
-            foreach (var priorityToChange in prioritiesToChange)
+            foreach (var priorityIDToUpdate in priorityIDsToUpdate)
             {
-                var priorityElement = _createPriorityElement(priorityToChange.PriorityID, priorityID, changedParameters);
+                var newPriorityValue = PriorityGenerator.GeneratePriority(_priorityType, priorityIDToUpdate, newParameters);
                 
-                switch (priorityToChange.PriorityImportance)
+                if (!PriorityQueue.Update(priorityIDToUpdate, newPriorityValue))
                 {
-                    case PriorityImportance.Critical:
-                        if (!AllPriorities[priorityToChange.PriorityID]
-                                .UpdateAll(changedParameters))
-                        {
-                            Debug.LogError($"Priority: {priorityToChange} unable to be updated in PriorityQueue.");
-                        }
-
-                        break;
-                    case PriorityImportance.High:
-                    case PriorityImportance.Medium:
-                    case PriorityImportance.Low:
-                        _addToCachedPriorityQueue(priorityElement, priorityToChange.PriorityImportance);
-                        break;
-                    case PriorityImportance.None:
-                    default:
-                        Debug.LogError($"PriorityImportance: {priorityToChange} not found.");
-                        break;
+                    Debug.LogError($"Priority: {priorityIDToUpdate} unable to be updated in PriorityQueue.");
                 }
             }
         }
 
-        PriorityQueue _createNewPriorityQueue(uint priorityQueueID)
+        PriorityQueue _createNewPriorityQueue()
         {
-            var priorityQueue = _createPriorityQueue(priorityQueueID);
-            AllPriorities.Add(priorityQueueID, priorityQueue);
-            priorityQueue.OnPriorityRemoved += priorityID => _regeneratePriority(priorityQueueID, priorityID);
+            var priorityQueue = new PriorityQueue(1);
+            priorityQueue.OnPriorityRemoved += _regeneratePriority;
             return priorityQueue;
         }
-
-        protected abstract PriorityQueue _createPriorityQueue(uint priorityQueueID);
-        protected abstract void _regeneratePriority(uint  priorityQueueID, uint priorityID);
         
         public void OnDestroy()
         {
-            foreach (var priorityQueue in AllPriorities)
-            {
-                priorityQueue.Value.OnPriorityRemoved -= priorityID => _regeneratePriority(priorityQueue.Key, priorityID);
-            }
+            PriorityQueue.OnPriorityRemoved -= _regeneratePriority;
         }
 
-        protected abstract PriorityElement _createPriorityElement(uint priorityQueueID, uint priorityID,
-                                                                  Dictionary<PriorityParameterName, object>
-                                                                      priorityParameters);
+        protected abstract void _regeneratePriority(uint priorityID);
 
         public PriorityElement PeekHighestSpecificPriority(List<uint> priorityIDs)
         {
@@ -83,94 +60,85 @@ namespace Priority
                 return null;
             }
 
-            var highestPriority = _createPriorityElement(0, 0, null); 
+            var highestPriority = new PriorityElement(0, 0); 
 
             foreach (var priority in permittedPriorities)
             {
-                if (AllPriorities[priority].Peek(priority).PriorityValue >= highestPriority.PriorityValue)
+                var priorityElement = PriorityQueue.Peek(priority);
+                
+                if (priorityElement.PriorityValue >= highestPriority.PriorityValue)
                 {
-                    highestPriority = AllPriorities[priority].Peek(priority);
+                    highestPriority = priorityElement;
                 }
             }
             
-            return AllPriorities[highestPriority.PriorityID].Dequeue();
+            return PriorityQueue.Dequeue(highestPriority.PriorityID);
         }
 
         protected abstract List<uint> _canPeek(List<uint> priorityIDs);
-        
-        public PriorityElement PeekHighestPriority(PriorityState priorityState)
-        {
-            var overallHighestPriority = _createPriorityElement(0, 0, null);
 
-            if (AllPriorities.Count is 0)
+        public PriorityElement PeekHighestPriority(ActorPriorityState actorPriorityState)
+        {
+            var overallHighestPriority = new PriorityElement(0, 0);
+
+            var relevantPriorityQueues = _getRelevantPriorities(actorPriorityState);
+            
+            if (relevantPriorityQueues.Count is 0)
             {
-                Debug.LogWarning("No priority queues found.");
-                return overallHighestPriority;
+                //Debug.Log("No relevant priorities found.");
+                return null;
             }
 
-            var relevantPriorityQueues = _getRelevantPriorityQueues(priorityState);
-
-            overallHighestPriority = relevantPriorityQueues.Aggregate(overallHighestPriority, 
-                (current, priorityQueue) =>
+            foreach (var priority in relevantPriorityQueues.Where(priority =>
+                         priority.Value.PriorityValue >= overallHighestPriority.PriorityValue))
             {
-                var highestPriority = priorityQueue.Value.Peek();
-
-                if (highestPriority is null) return current;
-
-                return highestPriority.PriorityID != (uint)ActorActionName.Idle &&
-                       highestPriority.PriorityID > current.PriorityID
-                    ? highestPriority
-                    : current;
-            });
+                overallHighestPriority = priority.Value;
+            }
 
             return overallHighestPriority.PriorityID != (uint)ActorActionName.Idle
                 ? overallHighestPriority
                 : null;
         }
 
-        protected abstract ObservableDictionary<uint, PriorityQueue> _getRelevantPriorityQueues(PriorityState priorityState);
+        protected abstract Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState);
 
-        public PriorityElement GetHighestSpecificPriority(List<uint> priorityIDs)
+        public PriorityElement GetHighestSpecificPriority(List<uint> priorityIDs, uint priorityObjectParameterID = 0)
         {
+            priorityIDs = _getRelevantPriorityIDs(priorityIDs, priorityObjectParameterID); 
+                
             var highestPriority = PeekHighestSpecificPriority(priorityIDs);
 
-            return AllPriorities[highestPriority.PriorityID].Dequeue();
+            return PriorityQueue.Dequeue(highestPriority.PriorityID);
         }
-        
-        public PriorityElement GetHighestPriority(PriorityState priorityState)
-        {
-            var highestPriority = PeekHighestPriority(priorityState);
 
-            return highestPriority != null ? AllPriorities[highestPriority.PriorityID]
-                .Dequeue(highestPriority.PriorityID) : null;
+        protected abstract List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID);
+        
+        public PriorityElement GetHighestPriority(ActorPriorityState actorPriorityState)
+        {
+            var highestPriority = PeekHighestPriority(actorPriorityState);
+
+            return highestPriority != null
+                ? PriorityQueue.Dequeue(highestPriority.PriorityID)
+                : null;
         }
         
         public PriorityElement GetSpecificPriority(uint priorityID)
         {
-            return AllPriorities[priorityID].Dequeue(priorityID);
+            return PriorityQueue.Dequeue(priorityID);
         }
 
-        protected bool _priorityExists(uint priorityQueueID, uint priorityID,
-                                       out Dictionary<PriorityParameterName, object>
-                                           existingPriorityParameters)
+        protected bool _priorityExists(uint priorityID)
         {
-            if (!AllPriorities.TryGetValue(priorityQueueID, out var priorityQueue))
+            if (PriorityQueue.Peek(priorityID) is not null)
             {
-                Debug.LogError($"PriorityQueueID: {priorityQueueID} not found in AllPriorities.");
-                existingPriorityParameters = null;
-                return false;
-            }
-
-            if (priorityQueue.Peek(priorityID) is not null)
-            {
-                existingPriorityParameters = priorityQueue.Peek(priorityID).PriorityParameters;
                 return true;
             }
 
-            Debug.LogError($"ActionName: {priorityID} not found in _existingParameters.");
-            existingPriorityParameters = null;
+            Debug.LogError($"PriorityID: {priorityID} not found in _existingParameters.");
             return false;
         }
+        
+        protected abstract Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters);
 
         bool        _syncingCachedQueue;
         const float _timeDeferment = 1f;
@@ -178,7 +146,7 @@ namespace Priority
         void _syncCachedPriorityQueueHigh(bool syncing = false)
         {
             foreach (var priority in from priority in _cachedPriorityQueue[PriorityImportance.High]
-                                     where !AllPriorities[priority.Key].Update(priority.Value.PriorityID, priority.Value.PriorityParameters)
+                                     where !PriorityQueue.Update(priority.Value.PriorityID, priority.Value.PriorityValue)
                                      select priority)
             {
                 Debug.LogError($"PriorityID: {priority.Value.PriorityID} unable to be added to PriorityQueue.");
@@ -196,28 +164,19 @@ namespace Priority
         
         protected void _addToCachedPriorityQueue(PriorityElement priorityElement, PriorityImportance priorityImportance)
         {
-            _cachedPriorityQueue ??= new Dictionary<PriorityImportance, Dictionary<uint, PriorityElement>>();
-
             if (!_cachedPriorityQueue.ContainsKey(priorityImportance))
                 _cachedPriorityQueue.Add(priorityImportance, new Dictionary<uint, PriorityElement>());
-        
-            _cachedPriorityQueue[priorityImportance].Add(priorityElement.PriorityID, priorityElement);
-        
+
+            var priorityElements = _cachedPriorityQueue[priorityImportance]; 
+            
+            if (!priorityElements.TryAdd(priorityElement.PriorityID, priorityElement))
+            {
+                priorityElements[priorityElement.PriorityID].UpdatePriority(priorityElement.PriorityValue);
+            }
+            
             if (!_syncingCachedQueue) _syncCachedPriorityQueueHigh_DeferredUpdate();
         }
 
-        protected abstract Dictionary<DataChanged, List<PriorityToChange>> _prioritiesToChange { get; }
-    }
-    
-    public class PriorityToChange
-    {
-        public readonly uint               PriorityID;
-        public readonly PriorityImportance PriorityImportance;
-
-        public PriorityToChange(uint priorityID, PriorityImportance priorityImportance)
-        {
-            PriorityID         = priorityID;
-            PriorityImportance = priorityImportance;
-        }
+        protected abstract Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; }
     }
 }

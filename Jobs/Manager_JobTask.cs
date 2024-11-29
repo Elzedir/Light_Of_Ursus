@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Inventory;
+using Items;
+using Jobsite;
 using Priority;
 using Station;
 using UnityEditor;
@@ -13,7 +16,7 @@ namespace Jobs
     public abstract class Manager_JobTask
     {
         public static JobTask GetJobTask(JobTaskName jobTaskName) =>
-            new(jobTaskName, GetDefaultTaskParameters(jobTaskName));
+            new(jobTaskName, GetEmptyTaskParameters(jobTaskName));
 
         public static JobTask_Master GetJobTask_Master(JobTaskName jobTaskName)
         {
@@ -21,17 +24,17 @@ namespace Jobs
             {
                 return jobTaskMaster;
             }
-            
+
             Debug.LogError($"No JobTaskMaster found for {jobTaskName}. Returning null.");
             return null;
         }
-        
+
         static readonly Dictionary<JobTaskName, JobTask_Master> _allJobTask_Masters =
             new()
             {
                 {
                     JobTaskName.Beat_Metal, new JobTask_Master(
-                        JobTaskName.Beat_Metal, 
+                        JobTaskName.Beat_Metal,
                         "Beat Iron into Shape",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -40,7 +43,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Chop_Wood, new JobTask_Master(
-                        JobTaskName.Chop_Wood, 
+                        JobTaskName.Chop_Wood,
                         "Chop Wood",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -49,7 +52,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Process_Logs, new JobTask_Master(
-                        JobTaskName.Process_Logs, 
+                        JobTaskName.Process_Logs,
                         "Process Logs",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -58,7 +61,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Drop_Off_Wood, new JobTask_Master(
-                        JobTaskName.Drop_Off_Wood, 
+                        JobTaskName.Drop_Off_Wood,
                         "Drop Off Wood",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -67,7 +70,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Stand_At_Counter, new JobTask_Master(
-                        JobTaskName.Stand_At_Counter, 
+                        JobTaskName.Stand_At_Counter,
                         "Stand at Counter",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -76,7 +79,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Restock_Shelves, new JobTask_Master(
-                        JobTaskName.Restock_Shelves, 
+                        JobTaskName.Restock_Shelves,
                         "Restock Shelves",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -85,7 +88,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Defend_Ally, new JobTask_Master(
-                        JobTaskName.Defend_Ally, 
+                        JobTaskName.Defend_Ally,
                         "Defend Ally",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -94,7 +97,7 @@ namespace Jobs
                 },
                 {
                     JobTaskName.Defend_Neutral, new JobTask_Master(
-                        JobTaskName.Defend_Neutral, 
+                        JobTaskName.Defend_Neutral,
                         "Defend Neutral",
                         new List<Func<ActorComponent, uint, IEnumerator>>
                         {
@@ -120,18 +123,19 @@ namespace Jobs
 
         static IEnumerator _fetchWood(ActorComponent actor, uint jobsiteID)
         {
-            if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
-            {
-                yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
-            }
-            
-            station.StationData.InventoryData.RemoveFromInventory(orderItems);
-
-            actor.ActorData.InventoryData.AddToInventory(orderItems);
-            
-            StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
+            yield return null;
+            // if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+            // {
+            //     yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, stationDestination.CollectionPoint.position));
+            // }
+            //
+            // station.StationData.InventoryData.RemoveFromInventory(orderItems);
+            //
+            // actor.ActorData.InventoryData.AddToInventory(orderItems);
+            //
+            // StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
         }
-        
+
         IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
         {
             yield return actor.StartCoroutine(actor.BasicMove(position));
@@ -141,13 +145,14 @@ namespace Jobs
 
         static IEnumerator _dropOffWood(ActorComponent actor, uint jobsiteID)
         {
-            if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
-            {
-                yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
-            }
-            
-            actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
-            station.StationData.InventoryData.AddToInventory(orderItems);
+            yield return null;
+            // if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
+            // {
+            //     yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
+            // }
+            //
+            // actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
+            // station.StationData.InventoryData.AddToInventory(orderItems);
         }
 
         static IEnumerator _standAtCounter(ActorComponent actor, uint jobsiteID)
@@ -210,14 +215,26 @@ namespace Jobs
             },
         };
 
-        public static Dictionary<PriorityParameterName, object> GetDefaultTaskParameters(JobTaskName jobTaskName)
+        public static Dictionary<PriorityParameterName, object> GetTaskParameters(
+            JobTaskName jobTaskName, Dictionary<PriorityParameterName, object> existingParameters)
+        {
+            var emptyTaskParameters = GetEmptyTaskParameters(jobTaskName);
+
+            return jobTaskName switch
+            {
+                JobTaskName.Fetch_Items => _populateFetchTaskParameters(emptyTaskParameters, existingParameters),
+                _                       => null
+            };
+        }
+
+        public static Dictionary<PriorityParameterName, object> GetEmptyTaskParameters(JobTaskName jobTaskName)
         {
             if (_allDefaultTaskParameters.TryGetValue(jobTaskName, out var defaultParameters))
             {
                 return defaultParameters.ToDictionary<PriorityParameterName, PriorityParameterName, object>(
                     parameterName => parameterName, _ => null);
             }
-            
+
             Debug.LogWarning($"No default parameters found for {jobTaskName}. Returning empty dictionary.");
             return new Dictionary<PriorityParameterName, object>();
         }
@@ -240,6 +257,15 @@ namespace Jobs
                 JobTaskName.Process_Logs, new List<PriorityParameterName>()
                 {
                     PriorityParameterName.DefaultPriority,
+                }
+            },
+            {
+                JobTaskName.Fetch_Items, new List<PriorityParameterName>()
+                {
+                    PriorityParameterName.TotalItems,
+                    PriorityParameterName.TotalDistance,
+                    PriorityParameterName.InventoryHauler,
+                    PriorityParameterName.InventoryTarget,
                 }
             },
             {
@@ -273,31 +299,103 @@ namespace Jobs
                 }
             }
         };
+
+        static Dictionary<PriorityParameterName, object> _populateFetchTaskParameters(
+            Dictionary<PriorityParameterName, object> emptyTaskParameters,
+            Dictionary<PriorityParameterName, object> existingParameters)
+        {
+            if (!existingParameters.TryGetValue(PriorityParameterName.Jobsite, out var jobsiteObject) ||
+                jobsiteObject is not JobsiteComponent jobsite)
+            {
+                Debug.LogError("No jobsite found in existing parameters.");
+                return null;
+            }
+
+            if (!existingParameters.TryGetValue(PriorityParameterName.InventoryHauler, out var haulerObject) ||
+                haulerObject is not ActorComponent hauler)
+            {
+                Debug.LogError("No hauler found in existing parameters.");
+                return null;
+            }
+
+            var taskParameters = new Dictionary<PriorityParameterName, object>(emptyTaskParameters)
+            {
+                [PriorityParameterName.TotalItems]      = 0,
+                [PriorityParameterName.TotalDistance]   = 0,
+                [PriorityParameterName.InventoryHauler] = null,
+                [PriorityParameterName.InventoryTarget] = null,
+            };
+
+            var allRelevantStations =
+                jobsite.GetRelevantStations(JobTaskName.Fetch_Items, hauler.ActorData.InventoryData);
+
+            if (allRelevantStations.Count is 0)
+            {
+                //Debug.LogError("No stations to fetch from.");
+                return null;
+            }
+
+            var totalItemsToFetch = allRelevantStations.Sum(station =>
+                Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
+            var totalDistance = allRelevantStations.Sum(station =>
+                Vector3.Distance(hauler.transform.position, station.transform.position));
+            var highestFetchPriority = PriorityGenerator.GeneratePriority(PriorityType.JobTask,
+                (uint)JobTaskName.Fetch_Items, taskParameters);
+
+            var stationParameters = new Dictionary<PriorityParameterName, object>(taskParameters)
+            {
+                [PriorityParameterName.TotalItems]      = totalItemsToFetch,
+                [PriorityParameterName.TotalDistance]   = totalDistance,
+                [PriorityParameterName.InventoryHauler] = hauler.ActorData.InventoryData,
+            };
+
+            foreach (var station in allRelevantStations)
+            {
+                stationParameters[PriorityParameterName.InventoryTarget] = station.StationData.InventoryData;
+
+                var stationPriority = PriorityGenerator.GeneratePriority(PriorityType.JobTask,
+                    (uint)JobTaskName.Fetch_Items, stationParameters);
+
+                if (stationPriority is 0 || stationPriority < highestFetchPriority) continue;
+
+                taskParameters[PriorityParameterName.InventoryTarget] = station.StationData.InventoryData;
+            }
+
+            foreach (var parameter in taskParameters)
+            {
+                if (parameter.Value is not null && parameter.Value is not 0) continue;
+
+                Debug.LogError($"Parameter: {parameter.Key} is null or 0.");
+                return null;
+            }
+
+            return taskParameters;
+        }
     }
 
     public class JobTask
     {
         public readonly JobTaskName TaskName;
-        
-        public readonly Dictionary<PriorityParameterName, object>  TaskParameters;
-        
-        JobTask_Master _jobTask_Master;
+
+        public readonly Dictionary<PriorityParameterName, object> TaskParameters;
+
+        JobTask_Master        _jobTask_Master;
         public JobTask_Master JobTask_Master => _jobTask_Master ??= Manager_JobTask.GetJobTask_Master(TaskName);
-        
+
         public JobTask(JobTaskName taskName, Dictionary<PriorityParameterName, object> taskParameters)
         {
-            TaskName        = taskName;
-            TaskParameters  = taskParameters;
+            TaskName       = taskName;
+            TaskParameters = taskParameters;
         }
     }
 
     [Serializable]
     public class JobTask_Master
     {
-        public          JobTaskName                                TaskName;
-        public          JobTaskGroup                               TaskGroup;
-        public          string                                     TaskDescription;
-        public          List<Func<ActorComponent, uint, IEnumerator>> TaskList;
+        public JobTaskName                                   TaskName;
+        public JobTaskGroup                                  TaskGroup;
+        public string                                        TaskDescription;
+        public List<Func<ActorComponent, uint, IEnumerator>> TaskList;
 
         public JobTask_Master(JobTaskName                                   taskName, string taskDescription,
                               List<Func<ActorComponent, uint, IEnumerator>> taskList)
@@ -334,9 +432,9 @@ namespace Jobs
     // Tasks often require specific tools, conditions, or environments.
     public enum JobTaskName
     {
-        // General
+        // General (Can do in all situations)
         Idle,
-        
+
         // Smith
         Beat_Metal,
         Forge_Armor,
@@ -344,7 +442,7 @@ namespace Jobs
         Sharpen_Sword,
         Repair_Armor,
         Repair_Tool,
-        
+
         // Lumberjack
         Chop_Wood,
         Process_Logs,
@@ -371,28 +469,28 @@ namespace Jobs
 
         // Forager
         Gather_Food,
-        
+
         // Minder
         Mine_Ore,
         Refine_Ore,
-        
+
         // Farmer
         Sow_Crops,
         Water_Crops,
         Harvest_Crops,
-        
+
         // Hauler
         Deliver_Items,
         Fetch_Items,
-        
+
         // Cook
         Cook_Food,
-        
+
         // Other
         Tinker_Item,
         Spin_Thread,
         Weave_Cloth,
-        
+
         // Scouts
         Map_Area,
     }

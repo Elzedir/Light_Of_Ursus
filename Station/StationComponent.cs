@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using EmployeePositions;
 using Inventory;
 using Items;
 using Jobs;
@@ -11,9 +12,11 @@ using Managers;
 using OperatingArea;
 using Priority;
 using Recipes;
+using ScriptableObjects;
 using Station;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum StationType
 {
@@ -37,13 +40,13 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
 
     public float InteractRange { get; protected set; }
     
-    public abstract         EmployeePosition             CoreEmployeePosition     { get; }
+    public abstract         EmployeePositionName             CoreEmployeePositionName     { get; }
     public abstract         RecipeName                   DefaultProduct           { get; }
     public abstract         List<RecipeName>             AllowedRecipes           { get; }
     public abstract         List<uint>                   AllowedStoredItemIDs     { get; }
     public abstract         List<uint>                   DesiredStoredItemIDs     { get; }
     public abstract         uint                         OperatingAreaCount       { get; }
-    public abstract         List<EmployeePosition>       AllowedEmployeePositions { get; }
+    public abstract         List<EmployeePositionName>       AllowedEmployeePositions { get; }
     public         abstract List<JobName>                AllowedJobs              { get; }
     
     List<OperatingAreaComponent>     _allOperatingAreasInStation;
@@ -78,7 +81,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         SetInteractRange();
         InitialiseStartingInventory();
 
-        _setTickRate(TickRate.OneSecond);
+        _setTickRate(TickRate.OneSecond, false);
 
         _initialised = true;
     }
@@ -96,17 +99,25 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         return null;
     }
 
-    public void AddOperatorToArea(uint operatorData)
+    public void AddOperatorToArea(uint operatorID)
     {
         var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
         
         if (openOperatingArea is not null)
         {
-            openOperatingArea.OperatingAreaData.AddOperatorToOperatingArea(operatorData);
+            openOperatingArea.OperatingAreaData.AddOperatorToOperatingArea(operatorID);
         }
         else
         {
             Debug.Log("No open operating areas found in all operating areas.");
+        }
+    }
+    
+    public void RemoveAllOperatorsFromStation()
+    {
+        foreach (var operatingArea in AllOperatingAreasInStation)
+        {
+            operatingArea.OperatingAreaData.RemoveOperatorFromOperatingArea();
         }
     }
 
@@ -133,11 +144,11 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     
     TickRate _currentTickRate;
 
-    void _setTickRate(TickRate tickRate)
+    void _setTickRate(TickRate tickRate, bool unregister = true)
     {
         if (_currentTickRate == tickRate) return;
             
-        Manager_TickRate.UnregisterTicker(TickerType.Station, _currentTickRate, StationID);
+        if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Station, _currentTickRate, StationID);
         Manager_TickRate.RegisterTicker(TickerType.Station, tickRate, StationID, _onTick);
         _currentTickRate = tickRate;
     }
@@ -445,22 +456,22 @@ public class StationComponent_Editor : Editor
 [Serializable]
 public class Operator
 {
-    public int              OperatorID;
-    public string           OperatorName;
-    public EmployeePosition OperatorPosition;
-    public int              OperatingAreaID;
+    public                                            int                  OperatorID;
+    public                                            string               OperatorName;
+    [FormerlySerializedAs("OperatorPosition")] public EmployeePositionName OperatorPositionName;
+    public                                            int                  OperatingAreaID;
 
-    public Operator(int actorID, EmployeePosition careerAndJobs, int operatingAreaID)
+    public Operator(int actorID, EmployeePositionName careerAndJobs, int operatingAreaID)
     {
         OperatorID       = actorID;
-        OperatorPosition = careerAndJobs;
+        OperatorPositionName = careerAndJobs;
         OperatingAreaID  = operatingAreaID;
     }
 
     public Operator(Operator other)
     {
         OperatorID       = other.OperatorID;
-        OperatorPosition = other.OperatorPosition;
+        OperatorPositionName = other.OperatorPositionName;
         OperatingAreaID  = other.OperatingAreaID;
     }
 }

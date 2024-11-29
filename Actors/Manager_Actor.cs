@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Careers;
 using DateAndTime;
 using Items;
 using Managers;
@@ -23,7 +24,7 @@ namespace Actors
         {
             _allActorData.Values.ToList().ForEach(actorData => actorData.UpdateActorData());
 
-            data.SavedActorData    = new SavedActorData(_allActorData.Values.ToList());
+            data.SavedActorData     = new SavedActorData(_allActorData.Values.ToList());
             _allActors.AllActorData = _allActorData.Values.ToList();
         }
 
@@ -53,16 +54,22 @@ namespace Actors
         {
             foreach (var actor in _findAllActorComponents())
             {
-                if (actor.ActorData == null) { Debug.Log($"Actor: {actor.name} does not have ActorData."); continue; }
+                if (actor.ActorData == null)
+                {
+                    Debug.Log($"Actor: {actor.name} does not have ActorData.");
+                    continue;
+                }
 
                 if (!_allActorComponents.TryAdd(actor.ActorData.ActorID, actor))
                 {
                     if (_allActorComponents[actor.ActorData.ActorID].gameObject == actor.gameObject) continue;
-                    Debug.LogError($"ActorID {actor.ActorData.ActorID} and name {actor.name} already exists for actor {_allActorComponents[actor.ActorData.ActorID].name}");
+                    Debug.LogError(
+                        $"ActorID {actor.ActorData.ActorID} and name {actor.name} already exists for actor {_allActorComponents[actor.ActorData.ActorID].name}");
                     actor.ActorData.ActorID = _getRandomActorID();
                 }
 
-                if (!_allActorData.ContainsKey(actor.ActorData.ActorID)) Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
+                if (!_allActorData.ContainsKey(actor.ActorData.ActorID))
+                    Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
             }
 
             foreach (var actor in _allActorData)
@@ -81,7 +88,7 @@ namespace Actors
         static void _addToAllActorData(ActorData actorData)
         {
             if (_allActorData.TryAdd(actorData.ActorID, actorData)) return;
-        
+
             Debug.Log($"ActorData: {actorData.ActorID} already exists in AllActorData.");
         }
 
@@ -95,6 +102,7 @@ namespace Actors
 
             _allActorData[actorData.ActorID] = actorData;
         }
+
         public static void RemoveFromAllActorData(uint actorID)
         {
             if (!_allActorData.ContainsKey(actorID))
@@ -109,7 +117,7 @@ namespace Actors
         public static ActorData GetActorData(uint actorID)
         {
             if (_allActorData.TryGetValue(actorID, out var data)) return data;
-        
+
             Debug.Log($"ActorData: {actorID} does not exist in AllActorData.");
             return null;
 
@@ -124,20 +132,22 @@ namespace Actors
 
             if (generateActorIfNotFound)
             {
-                return _allActorComponents[actorID] = _spawnActor(GetActorData(actorID).GameObjectProperties.LastSavedActorPosition, actorID);
+                return _allActorComponents[actorID] =
+                    _spawnActor(GetActorData(actorID).GameObjectProperties.LastSavedActorPosition, actorID);
             }
 
             return null;
         }
 
-        public static ActorComponent SpawnNewActor(Vector3 spawnPoint, ActorGenerationParameters actorGenerationParameters)
+        public static ActorComponent SpawnNewActor(Vector3                   spawnPoint,
+                                                   ActorGenerationParameters actorGenerationParameters)
         {
             ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
-        
+
             actor.SetActorData(_generateNewActorData(actor, actorGenerationParameters));
 
             _allActorComponents[actor.ActorData.ActorID] = actor;
-        
+
             actor.Initialise();
 
             Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
@@ -164,7 +174,7 @@ namespace Actors
         static void _despawnActor(uint actorID)
         {
             if (!_allActorComponents.TryGetValue(actorID, out var component)) return;
-        
+
             Destroy(component.gameObject);
             _allActorComponents.Remove(actorID);
         }
@@ -199,12 +209,17 @@ namespace Actors
             return actorGO;
         }
 
-        static ActorData _generateNewActorData(ActorComponent actor, ActorGenerationParameters actorGenerationParameters)
+        static ActorData _generateNewActorData(ActorComponent            actor,
+                                               ActorGenerationParameters actorGenerationParameters)
         {
             var fullIdentification = new FullIdentification(
-                actorID: actorGenerationParameters.ActorID != 0 ? actorGenerationParameters.ActorID : _getRandomActorID(),
+                actorID: actorGenerationParameters.ActorID != 0
+                    ? actorGenerationParameters.ActorID
+                    : _getRandomActorID(),
                 actorName: actorGenerationParameters.ActorName ?? _getRandomActorName(),
-                actorFactionID: actorGenerationParameters.FactionID != 0 ? actorGenerationParameters.FactionID : _getRandomFaction(),
+                actorFactionID: actorGenerationParameters.FactionID != 0
+                    ? actorGenerationParameters.FactionID
+                    : _getRandomFaction(),
                 actorCityID: actorGenerationParameters.CityID,
                 actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays())
             );
@@ -234,7 +249,7 @@ namespace Actors
             actor.ActorData.SpeciesAndPersonality.SetSpecies(_getRandomSpecies());
             actor.ActorData.SpeciesAndPersonality.SetPersonality(_getRandomPersonality());
             actor.ActorData.GameObjectProperties.SetGameObjectProperties(actor.transform);
-            
+
             // Set ActorStatesAndConditions based on Race, Religion, etc.
 
             _addToAllActorData(actor.ActorData);
@@ -280,22 +295,42 @@ namespace Actors
     [Serializable]
     public class ActorGenerationParameters
     {
+        a
+        // Abstract this and then make individual actorGenerationParameters per type of character desired. Use the SO system.
         public uint                ActorID             { get; private set; }
         public ActorName           ActorName           { get; private set; }
         public uint                FactionID           { get; private set; }
         public uint                CityID              { get; private set; }
-        public List<RecipeName>    InitialRecipes      { get; private set; } = new();
-        public List<ActorVocation> InitialVocations    { get; private set; } = new();
+        public CareerName          CareerName          { get; private set; }
+        public List<RecipeName>    InitialRecipes      { get; private set; }
+        public List<ActorVocation> InitialVocations    { get; private set; }
         public StatesAndConditions StatesAndConditions { get; private set; }
+        
+        public ActorGenerationParameters(uint actorID = 0, ActorName actorName = null, uint factionID = 0, uint cityID = 0, CareerName careerName = CareerName.Wanderer,
+                                         List<RecipeName> initialRecipes = null, List<ActorVocation> initialVocations = null,
+                                         StatesAndConditions statesAndConditions = null)
+        {
+            ActorID             = actorID;
+            ActorName           = actorName;
+            FactionID           = factionID;
+            CityID              = cityID;
+            CareerName          = careerName;
+            InitialRecipes      = initialRecipes;
+            InitialVocations    = initialVocations;
+            StatesAndConditions = statesAndConditions;
+        }
 
         public void SetActorID(uint                         actorID)        => ActorID = actorID;
         public void SetActorName(ActorName                  actorName)      => ActorName = actorName;
         public void SetFactionID(uint                       factionID)      => FactionID = factionID;
         public void SetCityID(uint                          cityID)         => CityID = cityID;
+        public void SetCareerName(CareerName                careerName)     => CareerName = careerName;
         public void SetInitialRecipes(List<RecipeName>      initialRecipes) => InitialRecipes = initialRecipes;
         public void AddInitialRecipe(RecipeName             recipeName)     => InitialRecipes.Add(recipeName);
         public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;
         public void AddInitialVocation(ActorVocation        actorVocation)  => InitialVocations.Add(actorVocation);
-        public void SetStatesAndConditions(StatesAndConditions statesAndConditions) => StatesAndConditions = statesAndConditions;
+
+        public void SetStatesAndConditions(StatesAndConditions statesAndConditions) =>
+            StatesAndConditions = statesAndConditions;
     }
 }

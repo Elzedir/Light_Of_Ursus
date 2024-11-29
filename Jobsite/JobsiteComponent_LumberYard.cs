@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using EmployeePositions;
 using Items;
+using ScriptableObjects;
 using UnityEngine;
 
 namespace Jobsite
@@ -12,7 +14,7 @@ namespace Jobsite
             // Temporary
             SetIdealRatio(3f);
 
-            var producedItems = AllStationsInJobsite
+            var producedItems = AllStationsInJobsite.Values
                                 .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
                                 .ToList();
 
@@ -69,7 +71,7 @@ namespace Jobsite
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = AllStationsInJobsite
+                var estimatedProduction = AllStationsInJobsite.Values
                                           .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
                                           .ToList();
 
@@ -102,16 +104,16 @@ namespace Jobsite
             Debug.Log("Adjusted production to balance the ratio.");
         }
 
-        protected override VocationName _getRelevantVocation(EmployeePosition position)
+        protected override VocationName _getRelevantVocation(EmployeePositionName positionName)
         {
-            switch (position)
+            switch (positionName)
             {
-                case EmployeePosition.Logger:
+                case EmployeePositionName.Logger:
                     return VocationName.Logging;
-                case EmployeePosition.Sawyer:
+                case EmployeePositionName.Sawyer:
                     return VocationName.Sawying;
                 default:
-                    Debug.Log($"EmployeePosition: {position} does not have a relevant vocation.");
+                    Debug.Log($"EmployeePosition: {positionName} does not have a relevant vocation.");
                     return VocationName.None;
             }
         }

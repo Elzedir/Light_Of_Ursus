@@ -19,7 +19,7 @@ namespace Inventory
         
         public          uint    MaxInventorySpace = 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
         List<uint>              _getDesiredItemIDs()                      => StationReference.Station.DesiredStoredItemIDs;
-        protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
+        protected override bool _priorityChangeNeeded(object dataChanged) => (PriorityUpdateTrigger)dataChanged == PriorityUpdateTrigger.ChangedInventory;
     
         public override bool HasSpaceForItems(List<Item> items)
         {

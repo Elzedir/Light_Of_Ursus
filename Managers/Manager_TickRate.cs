@@ -17,6 +17,7 @@ namespace Managers
         DeferredTicker,
         Manager,
         Actor,
+        Actor_StateAndCondition,
         Station,
         Jobsite,
     }
@@ -25,8 +26,8 @@ namespace Managers
     {
         //Maybe save next tick times since last save and load them on scene load.
         
-        static Dictionary<TickRate, float>                    _nextTickTimes;
-        static Dictionary<TickerType, Dictionary<TickRate, Dictionary<uint, Action>>> _allTickers;
+        static          Dictionary<TickRate, float>                                            _nextTickTimes = new();
+        static readonly Dictionary<TickerType, Dictionary<TickRate, Dictionary<uint, Action>>> _allTickers    = new();
         
         //TickableSpreader _tickableSpreader;
 
@@ -34,14 +35,14 @@ namespace Managers
         {
             _nextTickTimes = new Dictionary<TickRate, float>
             {
-                { TickRate.OneTenthSecond, UnityEngine.Time.time    + 0.1f },
-                { TickRate.OneSecond, UnityEngine.Time.time         + 1f },
-                { TickRate.TenSeconds, UnityEngine.Time.time        + 10f },
-                { TickRate.OneHundredSeconds, UnityEngine.Time.time + 100f },
-                { TickRate.OneGameHour, UnityEngine.Time.time       + 120f },
-                { TickRate.OneGameDay, UnityEngine.Time.time        + 2880f },
-                { TickRate.OneGameMonth, UnityEngine.Time.time      + 43200f },
-                { TickRate.OneGameYear, UnityEngine.Time.time       + 172800f }
+                { TickRate.OneTenthSecond, Time.time    + 0.1f },
+                { TickRate.OneSecond, Time.time         + 1f },
+                { TickRate.TenSeconds, Time.time        + 10f },
+                { TickRate.OneHundredSeconds, Time.time + 100f },
+                { TickRate.OneGameHour, Time.time       + 120f },
+                { TickRate.OneGameDay, Time.time        + 2880f },
+                { TickRate.OneGameMonth, Time.time      + 43200f },
+                { TickRate.OneGameYear, Time.time       + 172800f }
             };
             
             //_tickableSpreader = new TickableSpreader(new Dictionary<float, SpreadTickables>());
@@ -49,7 +50,7 @@ namespace Managers
 
         void Update()
         {
-            var currentTime = UnityEngine.Time.time;
+            var currentTime = Time.time;
 
             var keys = new List<TickRate>(_nextTickTimes.Keys);
 
@@ -80,6 +81,33 @@ namespace Managers
 
         public static void RegisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID, Action tickerAction)
         {
+            var tickerGroup = _tickerCheck(tickerType, tickRate);
+            
+            if (!tickerGroup.TryGetValue(tickerID, out _))
+            {
+                tickerGroup.Add(tickerID, tickerAction);
+                return;
+            }
+            
+            Debug.LogWarning($"TickerID: {tickerID} already exists in TickerGroups, so replacing ticker action.");
+            tickerGroup[tickerID] = tickerAction;
+        }
+
+        public static void UnregisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID)
+        {
+            var tickerGroup = _tickerCheck(tickerType, tickRate);
+
+            if (!tickerGroup.ContainsKey(tickerID))
+            {
+                Debug.LogError($"TickerID: {tickerID} does not exist in TickerGroups.");
+                return;
+            }
+
+            tickerGroup.Remove(tickerID);
+        }
+
+        static Dictionary<uint, Action> _tickerCheck(TickerType tickerType, TickRate tickRate)
+        {
             if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
             {
                 tickerRate = new Dictionary<TickRate, Dictionary<uint, Action>>();
@@ -91,37 +119,8 @@ namespace Managers
                 tickerGroup = new Dictionary<uint, Action>();
                 tickerRate.Add(tickRate, tickerGroup);
             }
-
-            if (tickerGroup.ContainsKey(tickerID))
-            {
-                Debug.LogWarning($"TickerID: {tickerID} already exists in TickerGroups, so replacing ticker action.");
-                tickerGroup[tickerID] = tickerAction;
-            }
             
-            tickerGroup.Add(tickerID, tickerAction);
-        }
-
-        public static void UnregisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID)
-        {
-            if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
-            {
-                Debug.LogError($"TickerType: {tickerType} does not exist in TickerGroups.");
-                return;
-            }
-
-            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
-            {
-                Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
-                return;
-            }
-
-            if (!tickerGroup.ContainsKey(tickerID))
-            {
-                Debug.LogError($"TickerID: {tickerID} does not exist in TickerGroups.");
-                return;
-            }
-
-            tickerGroup.Remove(tickerID);
+            return tickerGroup;
         }
 
         static void _tick(TickRate tickRate)
@@ -134,7 +133,7 @@ namespace Managers
 
             if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
             {
-                Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
+                //Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
                 return;
             }
 
@@ -211,7 +210,7 @@ namespace Managers
                 }
                 else
                 {
-                    _deferredActions[deferredAction.Key] -= UnityEngine.Time.deltaTime;
+                    _deferredActions[deferredAction.Key] -= Time.deltaTime;
                 }
             }
 
@@ -223,15 +222,15 @@ namespace Managers
     }
 }
 
-public abstract class SpreadTickables
+public abstract class SpreadTickers
 {
-    public readonly Queue<Action> Tickables;
+    public readonly Queue<Action> Tickers;
     public readonly int           MaxExecutionsPerTick;
     public          float         NextTickTime;
     
-    public SpreadTickables(float tickInterval, int maxExecutionsPerTick, Queue<Action> tickables)
+    public SpreadTickers(float tickInterval, int maxExecutionsPerTick, Queue<Action> tickers)
     {
-        Tickables            = tickables;
+        Tickers            = tickers;
         MaxExecutionsPerTick = Mathf.Max(maxExecutionsPerTick, 10000);
         NextTickTime         = Time.time + tickInterval;
     }
@@ -239,22 +238,22 @@ public abstract class SpreadTickables
 
 public class TickableSpreader
 {
-    readonly Dictionary<float, SpreadTickables> _spreadTickables;
+    readonly Dictionary<float, SpreadTickers> _spreadTickables;
     
-    public TickableSpreader(Dictionary<float, SpreadTickables> spreadTickables)
+    public TickableSpreader(Dictionary<float, SpreadTickers> spreadTickables)
     {
         _spreadTickables = spreadTickables;
     }
 
-    public void RegisterTickable(float tickRate, SpreadTickables tickable)
+    public void RegisterTickable(float tickRate, SpreadTickers ticker)
     {
-        if (!_spreadTickables.TryAdd(tickRate, tickable))
+        if (!_spreadTickables.TryAdd(tickRate, ticker))
         {
             Debug.LogError($"TickRate: {tickRate} already exists in SpreadTickables.");
         }
     }
 
-    public void UnregisterTickable(float tickRate, SpreadTickables tickable)
+    public void UnregisterTickable(float tickRate, SpreadTickers ticker)
     {
         if (!_spreadTickables.Remove(tickRate, out _))
         {
@@ -274,10 +273,10 @@ public class TickableSpreader
         }
     }
 
-    static void _executeTickables(SpreadTickables spreadTickables)
+    static void _executeTickables(SpreadTickers spreadTickers)
     {
-        var tickableQueue = spreadTickables.Tickables;
-        var maxExecutions = spreadTickables.MaxExecutionsPerTick;
+        var tickableQueue = spreadTickers.Tickers;
+        var maxExecutions = spreadTickers.MaxExecutionsPerTick;
 
         for (var i = 0; i < maxExecutions; i++)
         {

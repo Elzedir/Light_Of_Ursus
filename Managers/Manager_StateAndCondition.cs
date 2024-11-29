@@ -174,7 +174,7 @@ namespace Managers
             CurrentConditions                   =  new ObservableDictionary<ConditionName, float>();
             CurrentConditions.DictionaryChanged += OnConditionChanged;
             
-            Manager_TickRate.RegisterTicker(TickerType.Manager, TickRate.OneSecond, 2, _onTick);
+            Manager_TickRate.RegisterTicker(TickerType.Actor_StateAndCondition, TickRate.OneSecond, ActorReference.ActorID, _onTick);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
 
@@ -183,7 +183,7 @@ namespace Managers
         
         void OnConditionChanged(ConditionName conditionName)
         {
-            _priorityChangeCheck(DataChanged.ChangedCondition);
+            _priorityChangeCheck(PriorityUpdateTrigger.ChangedCondition);
         }
 
         void _onTick()
@@ -243,7 +243,7 @@ namespace Managers
         }
         protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -335,12 +335,12 @@ namespace Managers
         
         void _onPrimaryStateChanged(PrimaryStateName primaryStateName)
         {
-            _priorityChangeCheck(DataChanged.ChangedPrimaryState);
+            _priorityChangeCheck(PriorityUpdateTrigger.ChangedPrimaryState);
         }
         
         void _onSubStateChanged(SubStateName subStateName)
         {
-            _priorityChangeCheck(DataChanged.ChangedSubState);
+            _priorityChangeCheck(PriorityUpdateTrigger.ChangedSubState);
         }
 
         public void SetPrimaryState(PrimaryStateName primaryStateName, bool actorState)
@@ -418,7 +418,7 @@ namespace Managers
         
         protected override bool _priorityChangeNeeded(object dataChanged) => (PrimaryStateName)dataChanged != PrimaryStateName.None;
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;

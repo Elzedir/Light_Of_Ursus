@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using EmployeePositions;
 using Items;
 using Jobsite;
 using Managers;
 using NUnit.Framework;
+using ScriptableObjects;
 using UnityEngine;
 
 public class Manager_Order : MonoBehaviour, IDataPersistence
@@ -473,7 +475,7 @@ public class Order_Base
 
         var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
 
-        foreach (var station in jobsite.AllStationsInJobsite)
+        foreach (var station in jobsite.AllStationsInJobsite.Values)
         {
             if (station.AllowedStoredItemIDs.Contains(1100) || station.AllowedStoredItemIDs.Contains(2300))
             {
@@ -622,9 +624,9 @@ public class Order_Request_Haul_Deliver : Order_Request
 public class Order_Request_Hire : Order_Request
 {
     public override OrderType OrderType => OrderType.Hire;
-    public List<EmployeePosition> DesiredEmployeePositions;
+    public List<EmployeePositionName> DesiredEmployeePositions;
 
-    public Order_Request_Hire(int stationID, List<EmployeePosition> desiredEmployeePositions) : base(stationID)
+    public Order_Request_Hire(int stationID, List<EmployeePositionName> desiredEmployeePositions) : base(stationID)
     {
         if (desiredEmployeePositions.Count <= 0)
         {
@@ -635,14 +637,14 @@ public class Order_Request_Hire : Order_Request
         DesiredEmployeePositions = desiredEmployeePositions;
     }
 
-    public void AddDesiredEmployeePosition(EmployeePosition desiredEmployeePosition)
+    public void AddDesiredEmployeePosition(EmployeePositionName desiredEmployeePositionName)
     {
-        DesiredEmployeePositions.Add(desiredEmployeePosition);
+        DesiredEmployeePositions.Add(desiredEmployeePositionName);
     }
 
-    public void RemoveDesiredEmployeePosition(EmployeePosition desiredEmployeePosition)
+    public void RemoveDesiredEmployeePosition(EmployeePositionName desiredEmployeePositionName)
     {
-        DesiredEmployeePositions.Remove(desiredEmployeePosition);
+        DesiredEmployeePositions.Remove(desiredEmployeePositionName);
     }
 
     public void ClearDesiredEmployeePositions()
@@ -650,7 +652,7 @@ public class Order_Request_Hire : Order_Request
         DesiredEmployeePositions.Clear();
     }
 
-    public void ReplaceDesiredEmployeePositions(List<EmployeePosition> desiredEmployeePositions)
+    public void ReplaceDesiredEmployeePositions(List<EmployeePositionName> desiredEmployeePositions)
     {
         DesiredEmployeePositions = desiredEmployeePositions;
     }

@@ -7,19 +7,14 @@ namespace Priority
 {
     public class PriorityQueue
     {
-        readonly PriorityType          _priorityType;
-        readonly uint                 _priorityQueueID;
-        
         int                            _currentPosition;
         PriorityElement[]              _priorityArray;
         readonly Dictionary<uint, int> _priorityQueue;
 
         public Action<uint> OnPriorityRemoved;
 
-        public PriorityQueue(int maxPriorities, PriorityType priorityType, uint priorityQueueID)
+        public PriorityQueue(int maxPriorities)
         {
-            _priorityType    = priorityType;
-            _priorityQueueID = priorityQueueID;
             _currentPosition = 0;
             _priorityArray   = new PriorityElement[maxPriorities];
             _priorityQueue   = new Dictionary<uint, int>();
@@ -68,13 +63,13 @@ namespace Priority
             return priorityValue;
         }
 
-        bool _enqueue(uint priorityID, Dictionary<PriorityParameterName, object> priorities)
+        bool _enqueue(uint priorityID, float priority)
         {
             if (_priorityQueue.TryGetValue(priorityID, out var index) && index != 0)
             {
                 Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
 
-                if (Update(priorityID, priorities))
+                if (Update(priorityID, priority))
                     return true;
 
                 Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
@@ -82,7 +77,7 @@ namespace Priority
 
             }
 
-            var priorityValue = new PriorityElement(_priorityType, _priorityQueueID, priorityID, priorities);
+            var priorityValue = new PriorityElement(priorityID, priority);
             _currentPosition++;
             _priorityQueue[priorityID] = _currentPosition;
             if (_currentPosition == _priorityArray.Length)
@@ -93,60 +88,16 @@ namespace Priority
             return true;
         }
 
-        public bool UpdateAll(Dictionary<PriorityParameterName, object> newPriorities)
+        public bool Update(uint priorityID, float newPriority)
         {
-            foreach(var priority in _priorityQueue)
-            {
-                if (Update(priority.Key, newPriorities)) continue;
-                
-                Debug.LogError($"PriorityID: {priority.Key} unable to be updated.");
-                return false;
-            }
-            
-            return true;
-        }
-
-        public bool Update(uint priorityID, Dictionary<PriorityParameterName, object> newPriorities)
-        {
-            if (newPriorities.Count == 0)
-                return Remove(priorityID);
-
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
-                return _enqueue(priorityID, newPriorities);
+                return _enqueue(priorityID, newPriority);
 
-            foreach (var priority in newPriorities)
-            {
-                _priorityArray[index].UpdatePriority(priority.Key, (float)priority.Value);
-            }
+            _priorityArray[index].UpdatePriority(newPriority);
 
             if (index == _currentPosition) return true;
             
             if (_priorityArray[index].PriorityValue >= _priorityArray[index / 2].PriorityValue)
-            {
-                _moveDown(index);
-            }
-            else
-            {
-                _moveUp(index);
-            }
-
-            return true;
-        }
-
-        public bool Replace(uint priorityID, Dictionary<PriorityParameterName, object> newPriorities)
-        {
-            if (newPriorities.Count == 0)
-                return Remove(priorityID);
-
-            if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
-                return _enqueue(priorityID, newPriorities);
-
-            var priorityValueNew = new PriorityElement(_priorityType, _priorityQueueID, priorityID, newPriorities);
-            var priorityValueOld = _priorityArray[index];
-
-            _priorityArray[index] = priorityValueNew;
-
-            if (priorityValueOld.PriorityValue >= priorityValueNew.PriorityValue)
             {
                 _moveDown(index);
             }
@@ -179,31 +130,33 @@ namespace Priority
 
         void _moveDown(int index)
         {
-            var childL = index * 2;
-
-            if (childL > _currentPosition) return;
-
-            var childR = index * 2 + 1;
-            int largerChild;
-
-            if (childR > _currentPosition)
+            while (true)
             {
-                largerChild = childL;
-            }
-            else if (_priorityArray[childL].PriorityValue >= _priorityArray[childR].PriorityValue)
-            {
-                largerChild = childL;
-            }
-            else
-            {
-                largerChild = childR;
-            }
+                var childL = index * 2;
 
-            if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue) return;
+                if (childL > _currentPosition) return;
 
-            _swap(index, largerChild);
-            _moveDown(largerChild);
+                var childR = index * 2 + 1;
+                int largerChild;
 
+                if (childR > _currentPosition)
+                {
+                    largerChild = childL;
+                }
+                else if (_priorityArray[childL].PriorityValue >= _priorityArray[childR].PriorityValue)
+                {
+                    largerChild = childL;
+                }
+                else
+                {
+                    largerChild = childR;
+                }
+
+                if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue) return;
+
+                _swap(index, largerChild);
+                index = largerChild;
+            }
         }
 
         void _moveUp(int index)
@@ -232,52 +185,20 @@ namespace Priority
 
     public class PriorityElement
     {
-        public readonly PriorityType PriorityType;
         public readonly uint         PriorityID;
-        readonly        uint         _priorityQueueID;
-        bool                         _prioritiesChanged;
-
-        float _priorityValue;
-        public float PriorityValue
-        {
-            get
-            {
-                if (!_prioritiesChanged) return _priorityValue;
-                
-                return _priorityValue  = AllPriorityValues.Values.Sum();
-            }
-        }
-        
-        public readonly Dictionary<PriorityParameterName, object> PriorityParameters;
+        public float PriorityValue { get; private set; }
 
         // We'll save this in case we need to exclude any values. Or Debug anything.
-        Dictionary<PriorityParameterName, float> _allPriorityValues;
-        public Dictionary<PriorityParameterName, float> AllPriorityValues
+
+        public PriorityElement(uint priorityID, float priorityValue)
         {
-            get
-            {
-                if (!_prioritiesChanged) return _allPriorityValues;
-
-                _prioritiesChanged = false;
-
-                return _allPriorityValues =
-                    PriorityGenerator.GeneratePriority(PriorityType, _priorityQueueID, PriorityParameters);
-            }
-        }
-
-        public PriorityElement(PriorityType priorityType, uint priorityQueueID, uint priorityID,
-                               Dictionary<PriorityParameterName, object> allPriorities)
-        {
-            PriorityType     = priorityType;
-            _priorityQueueID = priorityQueueID;
             PriorityID       = priorityID;
-            PriorityParameters = new Dictionary<PriorityParameterName, object>(allPriorities);
+            PriorityValue    = priorityValue;
         }
 
-        public void UpdatePriority(PriorityParameterName priorityParameterName, float value)
+        public void UpdatePriority(float value)
         {
-            PriorityParameters[priorityParameterName] = value;
-            _prioritiesChanged                = true;
+            PriorityValue = value;
         }
     }
 }

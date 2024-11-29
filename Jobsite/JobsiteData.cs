@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using EmployeePositions;
 using Managers;
 using Recipes;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
@@ -66,7 +68,7 @@ namespace Jobsite
 
             jobsite.Initialise();
 
-            foreach (var station in jobsite.AllStationsInJobsite)
+            foreach (var station in jobsite.AllStationsInJobsite.Values)
             {
                 if (!AllStationIDs.Contains(station.StationData.StationID))
                 {
@@ -109,14 +111,14 @@ namespace Jobsite
 
         public uint GetNewOwner()
         {
-            uint newOwnerID = _findEmployeeFromJobsite(EmployeePosition.Owner);
+            uint newOwnerID = _findEmployeeFromJobsite(EmployeePositionName.Owner);
 
             if (newOwnerID != 0)
             {
                 return OwnerID = newOwnerID;
             }
 
-            newOwnerID = _findEmployeeFromCity(EmployeePosition.Owner);
+            newOwnerID = _findEmployeeFromCity(EmployeePositionName.Owner);
 
             if (newOwnerID != 0)
             {
@@ -130,7 +132,7 @@ namespace Jobsite
                     break;
                 }
 
-                OwnerID = _generateNewEmployee(EmployeePosition.Owner);
+                OwnerID = _generateNewEmployee(EmployeePositionName.Owner);
             }
 
             if (OwnerID != 0)
@@ -142,7 +144,7 @@ namespace Jobsite
             return 0;
         }
 
-        protected uint _findEmployeeFromJobsite(EmployeePosition position)
+        protected uint _findEmployeeFromJobsite(EmployeePositionName positionName)
         {
             if (AllEmployeeIDs == null || !AllEmployeeIDs.Any())
             {
@@ -168,7 +170,7 @@ namespace Jobsite
             return actor.ActorData.ActorID;
         }
 
-        protected uint _findEmployeeFromCity(EmployeePosition position)
+        protected uint _findEmployeeFromCity(EmployeePositionName positionName)
         {
             var city = Manager_City.GetCity(CityID);
             if (city == null)
@@ -200,7 +202,7 @@ namespace Jobsite
             var citizenID = population.AllCitizenIDs
                                       .FirstOrDefault(c =>
                                           Manager_Actor.GetActorData(c)?.CareerData.JobsiteID == -1 &&
-                                          _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(position))
+                                          _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                                       );
 
             if (citizenID == 0)
@@ -220,17 +222,17 @@ namespace Jobsite
             return actor.ActorData.ActorID;
         }
 
-        protected uint _generateNewEmployee(EmployeePosition position)
+        protected uint _generateNewEmployee(EmployeePositionName positionName)
         {
-            CityComponent city = Manager_City.GetCity(CityID);
+            var city = Manager_City.GetCity(CityID);
 
-            var employeeMaster = AllEmployeeTypesManager.AllEmployeeTypes_SO.GetEmployeeType(position);
+            var employeeMaster = Manager_EmployeePosition.GetEmployeePosition_Master(positionName);
 
-            if (employeeMaster == null) throw new Exception($"EmployeeMaster for position: {position} is null.");
+            if (employeeMaster == null) throw new Exception($"EmployeeMaster for position: {positionName} is null.");
 
             var actorGenerationParameters = employeeMaster.ActorGenerationParameters;
 
-            if (actorGenerationParameters == null) throw new Exception($"ActorGenerationParameters for position: {position} is null.");
+            if (actorGenerationParameters == null) throw new Exception($"ActorGenerationParameters for position: {positionName} is null.");
 
             var actor = Manager_Actor.SpawnNewActor(city.CitySpawnZone.transform.position, actorGenerationParameters);
 
@@ -257,32 +259,32 @@ namespace Jobsite
             return true;
         }
 
-        protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(EmployeePosition position)
+        protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(EmployeePositionName positionName)
         {
             var vocationRequirements = new List<VocationRequirement>();
 
-            switch(position)
+            switch(positionName)
             {
-                case EmployeePosition.Owner:
+                case EmployeePositionName.Owner:
                     vocationRequirements = new List<VocationRequirement>();
                     break;
-                case EmployeePosition.Logger:
+                case EmployeePositionName.Logger:
                     vocationRequirements = new List<VocationRequirement>
                     {
                         new VocationRequirement(VocationName.Logging, 1000)
                     };
                     break;
-                case EmployeePosition.Sawyer:
+                case EmployeePositionName.Sawyer:
                     vocationRequirements = new List<VocationRequirement>
                     {
                         new VocationRequirement(VocationName.Sawying, 1000)
                     };
                     break;
-                case EmployeePosition.Hauler:
+                case EmployeePositionName.Hauler:
                     vocationRequirements = new List<VocationRequirement>();
                     break;
                 default:
-                    Debug.Log($"EmployeePosition: {position} not recognised.");
+                    Debug.Log($"EmployeePosition: {positionName} not recognised.");
                     break;
             }
 
@@ -360,21 +362,37 @@ namespace Jobsite
 
         public bool RemoveEmployeeFromStation(uint employeeID)
         {
-            var stationID = Manager_Actor.GetActorData(employeeID)?.CareerData.CurrentJob.StationID;
-
-            if (stationID == null)
+            var actorData = Manager_Actor.GetActorData(employeeID);
+            
+            if (actorData == null)
             {
-                //Debug.Log($"Employee has not been assigned a station.");
+                //Debug.Log($"ActorData for employeeID: {employeeID} does not exist.");
                 return false;
             }
+            
+            var actorCareer = actorData.CareerData;
 
-            if (!AllStationIDs.Contains(stationID.Value))
+            if (actorCareer == null)
+            {
+                //Debug.Log($"Employee does not have a career.");
+                return false;
+            }
+            
+            if (actorCareer.CurrentJob == null)
+            {
+                //Debug.Log($"Employee does not have a current job.");
+                return false;
+            }
+            
+            var stationID = actorCareer.CurrentJob.StationID;
+
+            if (!AllStationIDs.Contains(stationID))
             {
                 //Debug.Log($"StationID: {stationID} does not exist in AllStationIDs");
                 return false;
             }
 
-            var station = Manager_Station.GetStationData(stationID.Value);
+            var station = Manager_Station.GetStationData(stationID);
 
             if (station == null)
             {
@@ -480,19 +498,19 @@ namespace Jobsite
                     {
                         allPositionsFilled = false;
 
-                        var newEmployeeID = _findEmployeeFromJobsite(station.CoreEmployeePosition);
+                        var newEmployeeID = _findEmployeeFromJobsite(station.CoreEmployeePositionName);
 
                         if (newEmployeeID == 0)
                         {
                             //Debug.Log($"Couldn't find employee from Jobsite for position: {station.CoreEmployeePosition}");
                         }
 
-                        newEmployeeID = _findEmployeeFromCity(station.CoreEmployeePosition);
+                        newEmployeeID = _findEmployeeFromCity(station.CoreEmployeePositionName);
 
                         if (newEmployeeID == 0)
                         {
                             //Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
-                            newEmployeeID = _generateNewEmployee(station.CoreEmployeePosition);
+                            newEmployeeID = _generateNewEmployee(station.CoreEmployeePositionName);
                         }
 
                         var actorData = Manager_Actor.GetActorData(newEmployeeID);
@@ -503,7 +521,7 @@ namespace Jobsite
                             continue;
                         }
 
-                        actorData.CareerData.SetEmployeePosition(station.CoreEmployeePosition);
+                        actorData.CareerData.SetEmployeePosition(station.CoreEmployeePositionName);
 
                         iteration++;
                     }

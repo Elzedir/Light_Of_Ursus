@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Careers;
 using DateAndTime;
+using EmployeePositions;
 using Inventory;
 using Items;
 using Jobs;
@@ -11,6 +12,7 @@ using Jobsite;
 using Managers;
 using Priority;
 using Recipes;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -130,7 +132,7 @@ namespace Actors
         }
     }
 
-    public enum DataChanged
+    public enum PriorityUpdateTrigger
     {
         None,
 
@@ -200,7 +202,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -227,7 +229,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -298,7 +300,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -319,7 +321,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -341,7 +343,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -353,6 +355,7 @@ namespace Actors
     {
         public CareerData(uint actorID) : base(actorID, ComponentType.Actor)
         {
+            
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -398,10 +401,12 @@ namespace Actors
         public void SetCurrentJob(Job job) => CurrentJob = job;
 
         public bool HasCurrentJob() => CurrentJob != null;
+        
+        public void StopCurrentJob() => CurrentJob = null;
 
-        public bool GetNewCurrentJob()
+        public bool GetNewCurrentJob(uint stationID = 0)
         {
-            return CareerName != CareerName.Wanderer && Jobsite.GetNewCurrentJob(ActorReference.Actor);
+            return CareerName != CareerName.Wanderer && Jobsite.GetNewCurrentJob(ActorReference.Actor, stationID);
         }
 
         public bool JobsActive = true;
@@ -413,15 +418,15 @@ namespace Actors
         public void             SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
 
 
-        public EmployeePosition EmployeePosition;
-        public void SetEmployeePosition(EmployeePosition employeePosition) => EmployeePosition = employeePosition;
+        [FormerlySerializedAs("EmployeePosition")] public EmployeePositionName EmployeePositionName;
+        public  void                 SetEmployeePosition(EmployeePositionName employeePositionName) => EmployeePositionName = employeePositionName;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -447,7 +452,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -529,7 +534,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -591,7 +596,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -672,7 +677,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -759,7 +764,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -787,7 +792,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;
@@ -874,7 +879,7 @@ namespace Actors
             return false;
         }
 
-        protected override Dictionary<DataChanged, Dictionary<PriorityParameterName, object>> _priorityParameterList
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
         {
             get;
             set;

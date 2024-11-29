@@ -147,7 +147,7 @@ namespace Debuggers
         {
             var actorFullIdentification = actor.ActorData.FullIdentification;
             var actorInventory          = actor.ActorData.InventoryData;
-            var actorPriorities         = actor.DecisionMakerComponent.PriorityComponent.AllPriorities;
+            var actorPriorities         = actor.DecisionMakerComponent.PriorityComponent.PriorityQueue;
 
             if (actorFullIdentification != null)
             {
@@ -191,19 +191,21 @@ namespace Debuggers
 
             if (actorPriorities != null)
             {
-                var allPriorityData = actorPriorities
-                                      .Select(priorityQueue =>
-                                          new ObjectData_Data(ObjectDataType.PriorityData,
-                                              $"HighestPriorityAction: {priorityQueue.Key} " +
-                                              $"Value: {priorityQueue.Value.Peek()}"))
-                                      .ToList();
+                foreach (var priority in actorPriorities.PeekAll())
+                {
+                    var allPriorityData = new List<ObjectData_Data>
+                    {
+                        new(ObjectDataType.PriorityData,
+                            $"PriorityID: {priority.PriorityID} PriorityValue: {priority.PriorityValue}"),
+                    };
 
-                var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("PriorityData", actorFullIdentification?.ActorName.GetName(),
-                        actor.ActorData.ActorID),
-                    allPriorityData);
+                    var objectEntryData = new ObjectEntryData(
+                        new ObjectEntryKey("PriorityData", actorFullIdentification?.ActorName.GetName(),
+                            actor.ActorData.ActorID),
+                        allPriorityData);
 
-                _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
+                    _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
+                }
             }
             else
             {

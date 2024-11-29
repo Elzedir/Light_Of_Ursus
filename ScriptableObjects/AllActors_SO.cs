@@ -218,7 +218,7 @@ namespace ScriptableObjects
             EditorGUILayout.LabelField("JobsActive",        careerData.JobsActive.ToString());
             EditorGUILayout.LabelField("JobSiteID",         careerData.JobsiteID.ToString());
             EditorGUILayout.LabelField("JobName",       careerData.CurrentJob.JobName.ToString());
-            EditorGUILayout.LabelField("Employee Position", careerData.EmployeePosition.ToString());
+            EditorGUILayout.LabelField("Employee Position", careerData.EmployeePositionName.ToString());
         }
 
         void _drawInventory(InventoryData data)

@@ -16,7 +16,7 @@ namespace Inventory
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        protected override bool _priorityChangeNeeded(object dataChanged) => (DataChanged)dataChanged == DataChanged.ChangedInventory;
+        protected override bool _priorityChangeNeeded(object dataChanged) => (PriorityUpdateTrigger)dataChanged == PriorityUpdateTrigger.ChangedInventory;
 
         float _availableCarryWeight;
         public float AvailableCarryWeight => _availableCarryWeight != 0 
