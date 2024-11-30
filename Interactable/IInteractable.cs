@@ -1,11 +1,11 @@
 using System.Collections;
-using Actors;
+using Actor;
 using UnityEngine;
 
 public interface IInteractable
 {
     float InteractRange { get; }
     void SetInteractRange(float interactRange);
-    IEnumerator Interact(ActorComponent actor);
-    bool WithinInteractRange(ActorComponent actor);
+    IEnumerator Interact(Actor_Component actor);
+    bool WithinInteractRange(Actor_Component actor);
 }

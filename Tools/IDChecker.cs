@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using Jobsite;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -210,9 +210,9 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixActorIDs()
     {
-        var actors = FindObjectsByType<ActorComponent>(FindObjectsSortMode.None);
+        var actors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateActors = new List<ActorComponent>();
+        var duplicateActors = new List<Actor_Component>();
 
         foreach (var actor in actors)
         {

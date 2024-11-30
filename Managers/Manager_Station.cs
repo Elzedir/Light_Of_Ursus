@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EmployeePositions;
+using EmployeePosition;
 using ScriptableObjects;
 using Station;
 using UnityEngine;

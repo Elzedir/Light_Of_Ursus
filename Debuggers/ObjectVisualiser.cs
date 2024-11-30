@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -113,7 +113,7 @@ namespace Debuggers
                 return false;
             }
 
-            if (hitGO.TryGetComponent(out ActorComponent actor))
+            if (hitGO.TryGetComponent(out Actor_Component actor))
             {
                 if (hitGO != _currentDisplayedObject)
                 {
@@ -143,7 +143,7 @@ namespace Debuggers
             return false;
         }
 
-        void _displayActor(ActorComponent actor)
+        void _displayActor(Actor_Component actor)
         {
             var actorFullIdentification = actor.ActorData.FullIdentification;
             var actorInventory          = actor.ActorData.InventoryData;

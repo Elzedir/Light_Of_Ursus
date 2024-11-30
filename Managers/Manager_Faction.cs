@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
@@ -113,7 +113,7 @@ public class Manager_Faction : MonoBehaviour, IDataPersistence
         return _lastUnusedFactionID;
     }
 
-    public static void AllocateActorToFactionGO(ActorComponent actor, uint factionID)
+    public static void AllocateActorToFactionGO(Actor_Component actor, uint factionID)
     {
         var faction = GetFaction(factionID);
 
@@ -357,7 +357,7 @@ public class FactionGOChecker : EditorWindow
 
     void MoveActorsToFactions()
     {
-        var actors = FindObjectsByType<ActorComponent>(FindObjectsSortMode.None);
+        var actors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
 
         foreach (var actor in actors)
         {

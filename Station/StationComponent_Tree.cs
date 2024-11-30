@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
-using EmployeePositions;
+using Actor;
+using EmployeePosition;
 using Items;
 using Jobs;
 using OperatingArea;
@@ -81,7 +81,7 @@ namespace Station
             }
         }
 
-        public override void CraftItem(RecipeName recipeName, ActorComponent actor)
+        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
             {
@@ -120,20 +120,20 @@ namespace Station
             _onCraftItem(yield);
         }
 
-        protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
+        protected override List<Item> _getCost(List<Item> ingredients, Actor_Component actor)
         {
             return new List<Item>();
 
             // Base resource cost on actor relevant skill
         }
 
-        public override IEnumerator Interact(ActorComponent actor)
+        public override IEnumerator Interact(Actor_Component actor)
         {
             Debug.LogError("No Interact method implemented for Tree.");
             yield return null;
         }
 
-        protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
+        protected override List<Item> _getYield(List<Item> products, Actor_Component actor)
         {
             return new List<Item> { new Item(1100, 1) }; // For now
 

@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using Items;
 using Managers;
 using UnityEditor.Animations;
@@ -12,7 +12,7 @@ public class Equipment_Base : MonoBehaviour
 {
     public int SlotID { get; protected set; }
     public EquipmentSlot EquipmentSlot { get; protected set; }
-    public ActorComponent Actor { get; private set; }
+    public Actor_Component Actor { get; private set; }
     public Item Item;
     public MeshFilter MeshFilter { get; protected set; }
     public MeshRenderer MeshRenderer { get; protected set; }
@@ -21,7 +21,7 @@ public class Equipment_Base : MonoBehaviour
 
     public virtual void Initialise()
     {
-        Actor = GetComponentInParent<ActorComponent>();
+        Actor = GetComponentInParent<Actor_Component>();
         MeshFilter = GetComponent<MeshFilter>();
         MeshRenderer = GetComponent<MeshRenderer>();
         Animator = GetComponent<Animator>();

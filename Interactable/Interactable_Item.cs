@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using Items;
 using Managers;
 using UnityEngine;
@@ -17,12 +17,12 @@ public class Interactable_Item : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(ActorComponent interactor)
+    public bool WithinInteractRange(Actor_Component interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(ActorComponent actor)
+    public IEnumerator Interact(Actor_Component actor)
     {
         if (Item == null) throw new ArgumentException("Item has not been initialised");
 

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using Actors;
-using Careers;
+using Actor;
+using Career;
 using Recipes;
 using UnityEngine;
 
-namespace EmployeePositions
+namespace EmployeePosition
 {
     public class EmployeePosition_List : MonoBehaviour
     {
@@ -39,11 +39,7 @@ namespace EmployeePositions
                     (
                         EmployeePositionName.Logger,
                         new ActorGenerationParameters_Master(
-                            careerName: CareerName.Lumberjack,
-                            initialRecipes: new List<RecipeName>(
-                                new[] { RecipeName.Log }),
-                            initialVocations: new List<ActorVocation>(
-                                new[] { new ActorVocation(VocationName.Logging, 1000) })
+                            
                             )
                     )
 
@@ -58,7 +54,7 @@ namespace EmployeePositions
                 {
                     (uint)EmployeePositionName.Sawyer, new EmployeePosition_Master
                     (
-                        EmployeePositionName.Sawyer, new ActorGenerationParameters_Master(
+                        EmployeePositionName.Sawyer, new Actor_Data(
                             careerName: CareerName.Lumberjack,
                             initialRecipes: new List<RecipeName>(
                                 new[] { RecipeName.Plank }),

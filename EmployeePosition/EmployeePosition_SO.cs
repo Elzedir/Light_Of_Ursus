@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace EmployeePositions
+namespace EmployeePosition
 {
     [CreateAssetMenu(fileName = "AllEmployeePositionTypes_SO", menuName = "SOList/AllEmployeePositionTypes_SO")]
     [Serializable]
@@ -28,7 +28,7 @@ namespace EmployeePositions
         {
             var defaultEmployeePositions = new Dictionary<uint, EmployeePosition_Master>();
 
-            foreach (var defaultEmployeePosition in List_EmployeePosition.GetAllDefaultEmployeePositions())
+            foreach (var defaultEmployeePosition in EmployeePosition_List.GetAllDefaultEmployeePositions())
             {
                 defaultEmployeePositions.Add(defaultEmployeePosition.Key, defaultEmployeePosition.Value);
             }
@@ -79,7 +79,7 @@ namespace EmployeePositions
             EditorGUILayout.LabelField("All EmployeePositions", EditorStyles.boldLabel);
 
             var nonNullEmployeePositions = allEmployeePositionsSO.EmployeePositions.Where(employeePosition =>
-                employeePosition != null && (employeePosition.ActorGenerationParametersMaster == null ||
+                employeePosition != null && (employeePosition.EmployeeDataPreset == null ||
                                    employeePosition.EmployeePositionName != 0)).ToArray();
 
             _employeePositionScrollPos = EditorGUILayout.BeginScrollView(_employeePositionScrollPos,
@@ -103,9 +103,9 @@ namespace EmployeePositions
 
             EditorGUILayout.LabelField("EmployeePosition Name", $"{employeePosition.EmployeePositionName}");
 
-            if (employeePosition.ActorGenerationParametersMaster == null) return;
+            if (employeePosition.EmployeeDataPreset == null) return;
 
-            var actorGenerationParameters = employeePosition.ActorGenerationParametersMaster;
+            var actorGenerationParameters = employeePosition.EmployeeDataPreset;
 
             EditorGUILayout.LabelField("Actor Generation Parameters", EditorStyles.boldLabel);
 

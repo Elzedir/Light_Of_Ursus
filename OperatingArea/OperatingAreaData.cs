@@ -1,5 +1,5 @@
 using System;
-using Actors;
+using Actor;
 using Jobsite;
 using Managers;
 using UnityEngine;
@@ -21,8 +21,8 @@ namespace OperatingArea
 
         #region Operator
         public uint           CurrentOperatorID;
-        ActorComponent        _currentOperator;
-        public ActorComponent CurrentOperator => _currentOperator ??= Manager_Actor.GetActor(CurrentOperatorID);
+        Actor_Component        _currentOperator;
+        public Actor_Component CurrentOperator => _currentOperator ??= Actor_Manager.GetActor(CurrentOperatorID);
         public bool           HasOperator()   => CurrentOperatorID != 0;
         public bool           IsOperatorMovingToOperatingArea;
         #endregion
@@ -39,7 +39,7 @@ namespace OperatingArea
         {
             if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
             
-            if (Manager_Actor.GetActorData(operatorID).CareerData.GetNewCurrentJob(StationID))
+            if (Actor_Manager.GetActorData(operatorID).CareerData.GetNewCurrentJob(StationID))
             {
                 CurrentOperatorID = operatorID;
                 return true;
@@ -57,7 +57,7 @@ namespace OperatingArea
                 return false;
             }
 
-            Manager_Actor.GetActorData(CurrentOperatorID).CareerData.StopCurrentJob();
+            Actor_Manager.GetActorData(CurrentOperatorID).CareerData.StopCurrentJob();
             CurrentOperatorID               = 0;
             IsOperatorMovingToOperatingArea = false;
             return true;

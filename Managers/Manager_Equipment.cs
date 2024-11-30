@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Items;
 using Managers;
 using UnityEditor.Animations;
@@ -16,10 +16,10 @@ public class Manager_Equipment
 public class EquipmentComponent
 {
     Dictionary<int, Equipment_Base> EquipmentSlots = new();
-    ActorComponent _actor;
+    Actor_Component _actor;
     Transform _equipmentParent;
 
-    public EquipmentComponent(ActorComponent actor)
+    public EquipmentComponent(Actor_Component actor)
     {
         _actor = actor;
         _equipmentParent = _actor.transform.parent.GetChild(0);

@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
-using Careers;
+using Actor;
+using Career;
 using DateAndTime;
 using FMODUnity;
 using Jobs;
@@ -129,7 +129,7 @@ namespace Managers
             
             Manager_Recipe.PopulateAllRecipes();
             Manager_Job.PopulateAllJobs();
-            Manager_Career.PopulateAllCareers();
+            Career_Manager.PopulateAllCareers();
             Manager_DateAndTime.Initialise();
             Manager_Personality.Initialise();
 
@@ -138,7 +138,7 @@ namespace Managers
             _createManager("Manager_City",    _manager_Parent).AddComponent<Manager_City>().OnSceneLoaded();
             _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
             _createManager("Manager_Station", _manager_Parent).AddComponent<Manager_Station>().OnSceneLoaded();
-            _createManager("Manager_Actor",   _manager_Parent).AddComponent<Manager_Actor>().OnSceneLoaded();
+            _createManager("Manager_Actor",   _manager_Parent).AddComponent<Actor_Manager>().OnSceneLoaded();
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
             DataPersistenceManager.DataPersistence_SO.LoadGame("");

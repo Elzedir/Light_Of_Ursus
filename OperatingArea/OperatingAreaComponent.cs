@@ -1,5 +1,5 @@
 using System.Collections;
-using Actors;
+using Actor;
 using Managers;
 using Recipes;
 using UnityEngine;
@@ -35,7 +35,7 @@ namespace OperatingArea
 
             if (OperatingAreaData.CurrentOperator.transform.position != null && !OperatingArea.bounds.Contains(OperatingAreaData.CurrentOperator.transform.position))
             {
-                StartCoroutine(MoveOperatorToOperatingArea(Manager_Actor.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
+                StartCoroutine(MoveOperatorToOperatingArea(Actor_Manager.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
 
                 return 0;
             }
@@ -56,7 +56,7 @@ namespace OperatingArea
             }
         }
 
-        protected IEnumerator MoveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
+        protected IEnumerator MoveOperatorToOperatingArea(Actor_Component actor, Vector3 position)
         {
             if (OperatingAreaData.IsOperatorMovingToOperatingArea) yield break;
 
@@ -64,9 +64,9 @@ namespace OperatingArea
 
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
-            if (actor.ActorData.GameObjectProperties.ActorTransform.position != position)
+            if (actor.ActorData.GameObjectData.ActorTransform.position != position)
             {
-                actor.ActorData.GameObjectProperties.ActorTransform.position = position;
+                actor.ActorData.GameObjectData.ActorTransform.position = position;
             }
 
             OperatingAreaData.IsOperatorMovingToOperatingArea = false;

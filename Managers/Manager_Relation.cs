@@ -1,11 +1,11 @@
 using System;
 using System.Linq;
-using Actors;
+using Actor;
 using Managers;
 
 public class Manager_Relation
 {
-    public static float GetRelation(ActorComponent a, ActorComponent b)
+    public static float GetRelation(Actor_Component a, Actor_Component b)
     {
         float relation = 0;
 

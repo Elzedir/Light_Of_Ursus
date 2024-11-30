@@ -1,19 +1,17 @@
 using System.Collections;
-using System.Collections.Generic;
 using Managers;
-using Priority;
 using UnityEngine;
 
-namespace Actors
+namespace Actor
 {
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
-    public class ActorComponent : MonoBehaviour
+    public class Actor_Component : MonoBehaviour
     {
         public bool IsPlayer => GetComponent<Player>() is not null;
         public uint ActorID => ActorData.ActorID;
-        public ActorData ActorData;
-        public void SetActorData(ActorData actorData) => ActorData = actorData;
+        public Actor_Data ActorData;
+        public void SetActorData(Actor_Data actorData) => ActorData = actorData;
         Rigidbody _rigidBody;
         public Rigidbody RigidBody => _rigidBody ??= gameObject.GetComponent<Rigidbody>();
         Collider _collider;
@@ -84,8 +82,8 @@ namespace Actors
 
         void _updateVisuals()
         {
-            ActorMesh.mesh = ActorData.GameObjectProperties.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            ActorMaterial.material = ActorData.GameObjectProperties.ActorMaterial ??
+            ActorMesh.mesh = ActorData.GameObjectData.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            ActorMaterial.material = ActorData.GameObjectData.ActorMaterial ??
                                      Resources.Load<Material>("Materials/Material_Red");
         }
 

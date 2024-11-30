@@ -6,11 +6,11 @@ using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Careers
+namespace Career
 {
     [CreateAssetMenu(fileName = "AllCareers_SO", menuName = "SOList/AllCareers_SO")]
     [Serializable]
-    public class Careers_SO : Base_SO<Career_Master>
+    public class Career_SO : Base_SO<Career_Master>
     {
         public Career_Master[] Careers                           => Objects;
         public Career_Master   GetCareer_Master(CareerName careerName) => GetObject_Master((uint)careerName);
@@ -28,7 +28,7 @@ namespace Careers
         {
             var defaultCareers = new Dictionary<uint, Career_Master>();
 
-            foreach (var item in List_Career.GetAllDefaultCareers())
+            foreach (var item in Career_List.GetAllDefaultCareers())
             {
                 defaultCareers.Add(item.Key, item.Value);
             }
@@ -39,7 +39,7 @@ namespace Careers
         Dictionary<uint, Career_Master> _defaultCareers => DefaultObjects;
     }
     
-    [CustomEditor(typeof(Careers_SO))]
+    [CustomEditor(typeof(Career_SO))]
     public class AllCareers_SOEditor : Editor
     {
         int _selectedCareerIndex = -1;
@@ -55,7 +55,7 @@ namespace Careers
 
         public override void OnInspectorGUI()
         {
-            var allCareersSO = (Careers_SO)target;
+            var allCareersSO = (Career_SO)target;
 
             if (allCareersSO?.Careers is null || allCareersSO.Careers.Length is 0)
             {

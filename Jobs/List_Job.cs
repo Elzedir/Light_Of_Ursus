@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using UnityEngine;
 
 namespace Jobs
@@ -80,7 +80,7 @@ namespace Jobs
         }
 
 
-        static IEnumerator _smith(ActorComponent actor, int jobsite)
+        static IEnumerator _smith(Actor_Component actor, int jobsite)
         {
             if (actor is null)
             {

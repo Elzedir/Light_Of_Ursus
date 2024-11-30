@@ -1,9 +1,9 @@
 using System;
-using Actors;
+using Actor;
 using UnityEditor;
 using UnityEngine;
 
-namespace EmployeePositions
+namespace EmployeePosition
 {
     public abstract class EmployeePosition_Manager : MonoBehaviour
     {
@@ -40,14 +40,14 @@ namespace EmployeePositions
     [Serializable]
     public class EmployeePosition_Master
     {
-        public readonly EmployeePositionName      EmployeePositionName;
-        public readonly ActorGenerationParameters_Master ActorGenerationParametersMaster;
+        public readonly EmployeePositionName EmployeePositionName;
+        public readonly ActorDataPresetName  EmployeeDataPreset;
 
-        public EmployeePosition_Master(EmployeePositionName      employeePositionName,
-                                       ActorGenerationParameters_Master actorGenerationParametersMaster)
+        public EmployeePosition_Master(EmployeePositionName employeePositionName,
+                                       ActorDataPresetName  employeeDataPreset)
         {
-            EmployeePositionName      = employeePositionName;
-            ActorGenerationParametersMaster = actorGenerationParametersMaster;
+            EmployeePositionName = employeePositionName;
+            EmployeeDataPreset   = employeeDataPreset;
         }
     }
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Inventory;
 using Managers;
 using Priority;
@@ -48,7 +48,7 @@ public class Manager_Ability : MonoBehaviour
 
     Ability _eagleStomp()
     {
-        IEnumerator eagleStomp(ActorComponent actor = null)
+        IEnumerator eagleStomp(Actor_Component actor = null)
         {
             if (actor == null) throw new ArgumentException("Actor is null.");
 
@@ -84,7 +84,7 @@ public class Manager_Ability : MonoBehaviour
             UnityEngine.Object.Destroy(reticleGO);
         }
 
-        void stomp(RaycastHit hit, ActorComponent actor)
+        void stomp(RaycastHit hit, Actor_Component actor)
         {
             Vector3 direction = (hit.point - actor.RigidBody.transform.position).normalized;
             actor.RigidBody.AddForce(direction * 50, ForceMode.Impulse);

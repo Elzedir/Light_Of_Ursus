@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
-using EmployeePositions;
+using Actor;
+using EmployeePosition;
 using Items;
 using Jobsite;
 using Managers;
@@ -272,8 +272,8 @@ public class Order_Base
     public uint OrderID;
     public OrderType OrderType;
     public uint ActorID;
-    ActorComponent _actor;
-    public ActorComponent Actor { get { return _actor ??= Manager_Actor.GetActor(ActorID); } }
+    Actor_Component _actor;
+    public Actor_Component Actor { get { return _actor ??= Actor_Manager.GetActor(ActorID); } }
     public uint StationID_Source;
     StationComponent _station_Source;
     public StationComponent Station_Source { get { return _station_Source ??= Manager_Station.GetStation(StationID_Source); } }

@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -9,7 +9,7 @@ using static UnityEditor.Timeline.TimelinePlaybackControls;
 
 public class Player : Controller, IDataPersistence
 {
-    ActorComponent _actor;
+    Actor_Component _actor;
     public float SpeedIncrease;
     Collider _coll_Body;
     Animator _animator;
@@ -28,7 +28,7 @@ public class Player : Controller, IDataPersistence
 
     public void Start()
     {
-        _actor = GetComponent<ActorComponent>();
+        _actor = GetComponent<Actor_Component>();
         _coll_Body = GetComponent<Collider>();
         _animator = GetComponent<Animator>();
         SceneManager.sceneLoaded += OnSceneLoaded;

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
-using EmployeePositions;
+using Actor;
+using EmployeePosition;
 using Inventory;
 using Jobs;
 using Managers;
@@ -78,7 +78,7 @@ namespace Jobsite
                .FirstOrDefault().Value;
 
 
-        public bool GetNewCurrentJob(ActorComponent actor, uint stationID = 0)
+        public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
             var highestPriorityJob = PriorityComponent.GetHighestSpecificPriority(
                 actor.ActorData.CareerData.AllJobs.Select(j => (uint)j).ToList(), stationID);
@@ -106,7 +106,7 @@ namespace Jobsite
             return true;
         }
 
-        List<StationComponent> _getOrderedRelevantStationsForJob(JobName jobName, ActorComponent actor)
+        List<StationComponent> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
         {
             var relevantStations = AllStationsInJobsite.Values
                                                        .Where(station => station.AllowedJobs.Contains(jobName))
@@ -144,7 +144,7 @@ namespace Jobsite
                 station.RemoveAllOperatorsFromStation();
             }
 
-            var tempEmployees = employeeIDs.Select(employeeID => Manager_Actor.GetActorData(employeeID)).ToList();
+            var tempEmployees = employeeIDs.Select(employeeID => Actor_Manager.GetActorData(employeeID)).ToList();
 
             foreach (var station in AllStationsInJobsite.Values)
             {

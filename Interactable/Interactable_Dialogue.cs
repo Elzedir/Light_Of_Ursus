@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using UnityEngine;
 
 public class Interactable_Dialogue : MonoBehaviour, IInteractable
@@ -13,12 +13,12 @@ public class Interactable_Dialogue : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(ActorComponent interactor)
+    public bool WithinInteractRange(Actor_Component interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(ActorComponent actor)
+    public IEnumerator Interact(Actor_Component actor)
     {
         Manager_Dialogue.Instance.OpenDialogue(actor.gameObject, Manager_Dialogue.Instance.GetConversation(name));
 

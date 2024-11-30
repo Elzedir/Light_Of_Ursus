@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Inventory;
 using Managers;
 using UnityEditor;
@@ -13,7 +13,7 @@ namespace ScriptableObjects
     [Serializable]
     public class AllActors_SO : ScriptableObject
     {
-        public List<ActorData> AllActorData;
+        public List<Actor_Data> AllActorData;
 
         public void LoadData(SaveData saveData)
         {
@@ -76,7 +76,7 @@ namespace ScriptableObjects
         bool    _showEquipment;
         Vector2 _inventoryItemScrollPos;
 
-        void _drawActorData(ActorData actorData)
+        void _drawActorData(Actor_Data actorData)
         {
             EditorGUILayout.LabelField("Actor Data", EditorStyles.boldLabel);
 
@@ -112,13 +112,13 @@ namespace ScriptableObjects
                 }
             }
 
-            if (actorData.GameObjectProperties != null)
+            if (actorData.GameObjectData != null)
             {
                 _showGameObjectProperties = EditorGUILayout.Toggle("GameObjectProperties", _showGameObjectProperties);
 
                 if (_showGameObjectProperties)
                 {
-                    _drawGameObjectProperties(actorData.GameObjectProperties);
+                    _drawGameObjectProperties(actorData.GameObjectData);
                 }
             }
 
@@ -192,18 +192,18 @@ namespace ScriptableObjects
             }
         }
 
-        void _drawGameObjectProperties(GameObjectProperties gameObjectProperties)
+        void _drawGameObjectProperties(GameObjectData gameObjectData)
         {
             // Not sure if these are a good idea yet, since they'd just be for the SO.
             // EditorGUILayout.Vector3Field("Current Position", gameObjectProperties.ActorTransform.position);
             // EditorGUILayout.Vector3Field("Current Rotation", gameObjectProperties.ActorTransform.rotation.eulerAngles);
             // EditorGUILayout.Vector3Field("Current Scale", gameObjectProperties.ActorTransform.localScale);
 
-            EditorGUILayout.Vector3Field("Last Saved Position", gameObjectProperties.LastSavedActorPosition);
-            EditorGUILayout.Vector3Field("Last Saved Scale",    gameObjectProperties.LastSavedActorScale);
-            EditorGUILayout.Vector3Field("Last Saved Rotation", gameObjectProperties.LastSavedActorRotation.eulerAngles);
-            EditorGUILayout.ObjectField("Mesh",     gameObjectProperties.ActorMesh,     typeof(Mesh),     allowSceneObjects: true);
-            EditorGUILayout.ObjectField("Material", gameObjectProperties.ActorMaterial, typeof(Material), allowSceneObjects: true);
+            EditorGUILayout.Vector3Field("Last Saved Position", gameObjectData.LastSavedActorPosition);
+            EditorGUILayout.Vector3Field("Last Saved Scale",    gameObjectData.LastSavedActorScale);
+            EditorGUILayout.Vector3Field("Last Saved Rotation", gameObjectData.LastSavedActorRotation.eulerAngles);
+            EditorGUILayout.ObjectField("Mesh",     gameObjectData.ActorMesh,     typeof(Mesh),     allowSceneObjects: true);
+            EditorGUILayout.ObjectField("Material", gameObjectData.ActorMaterial, typeof(Material), allowSceneObjects: true);
         }
 
         void _drawSpeciesAndPersonality(SpeciesAndPersonality speciesAndPersonality)

@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
-using EmployeePositions;
+using Actor;
+using EmployeePosition;
 using Items;
 using Jobs;
 using OperatingArea;
@@ -71,25 +71,25 @@ namespace Station
 
         public override void InitialiseStartingInventory() { }
         
-        public override void CraftItem(RecipeName recipeName, ActorComponent actor)
+        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
             Debug.LogError("Log Pile does not craft items.");
         }
 
-        public override IEnumerator Interact(ActorComponent actor)
+        public override IEnumerator Interact(Actor_Component actor)
         {
             Debug.LogError("No Interact method implemented for Log Pile.");
             yield return null;
         }
 
-        protected override List<Item> _getCost(List<Item> ingredients, ActorComponent actor)
+        protected override List<Item> _getCost(List<Item> ingredients, Actor_Component actor)
         {
             return new List<Item>(); // For now
 
             // Base resource cost on actor relevant skill
         }
 
-        protected override List<Item> _getYield(List<Item> products, ActorComponent actor)
+        protected override List<Item> _getYield(List<Item> products, Actor_Component actor)
         {
             return new List<Item>(); // For now
 

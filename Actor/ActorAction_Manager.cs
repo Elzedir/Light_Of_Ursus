@@ -5,9 +5,9 @@ using System.Linq;
 using Priority;
 using UnityEngine;
 
-namespace Actors
+namespace Actor
 {
-    public abstract class Manager_ActorAction : MonoBehaviour
+    public abstract class ActorAction_Manager : MonoBehaviour
     {
         public static ActorAction GetNewActorAction(ActorActionName actorActionName) =>
             new(actorActionName, GetActionParameters(actorActionName, null),
@@ -198,7 +198,7 @@ namespace Actors
         public ActorPriorityState       HighestPriorityState;
 
         public ActorAction_Master ActionMaster =>
-            _actionMaster ??= Manager_ActorAction.GetActorAction_Master(ActionName);
+            _actionMaster ??= ActorAction_Manager.GetActorAction_Master(ActionName);
 
         public Dictionary<PriorityParameterName, object> ActionParameters;
         

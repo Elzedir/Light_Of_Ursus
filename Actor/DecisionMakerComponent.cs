@@ -2,15 +2,15 @@ using Managers;
 using Priority;
 using UnityEngine;
 
-namespace Actors
+namespace Actor
 {
     public class DecisionMakerComponent
     {
         readonly ComponentReference_Actor _actorReferences;
 
         uint           _actorID   => _actorReferences.ActorID;
-        ActorComponent _actor     => _actorReferences.Actor;
-        ActorData      _actorData => _actor.ActorData;
+        Actor_Component _actor     => _actorReferences.Actor;
+        Actor_Data      _actorData => _actor.ActorData;
 
         public DecisionMakerComponent(uint actorID)
         {
@@ -44,7 +44,7 @@ namespace Actors
 
         ActorPriorityState _getPriorityState()
         {
-            if (_actorData.StatesAndConditions.Actor_States.GetSubState(SubStateName.IsInCombat))
+            if (_actorData.StatesAndConditionsData.Actor_States.GetSubState(SubStateName.IsInCombat))
             {
                 return ActorPriorityState.InCombat;
             }
@@ -82,7 +82,7 @@ namespace Actors
             }
 
             var nextHighestPriority =
-                Manager_ActorAction.GetNewActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
+                ActorAction_Manager.GetNewActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
 
             Debug.Log($"Next Highest Priority: {nextHighestPriority} is higher than Current Action: {currentAction.ActionName}");
             

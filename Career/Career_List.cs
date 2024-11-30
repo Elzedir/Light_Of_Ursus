@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Jobs;
 using UnityEngine;
 
-namespace Careers
+namespace Career
 {
     public class Career_List : MonoBehaviour
     {

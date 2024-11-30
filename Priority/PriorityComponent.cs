@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Managers;
 using Tools;
 using UnityEngine;

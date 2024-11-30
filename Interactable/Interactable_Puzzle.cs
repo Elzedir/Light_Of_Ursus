@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
-using Actors;
+using Actor;
 using Managers;
 
 
@@ -31,12 +31,12 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(ActorComponent interactor)
+    public bool WithinInteractRange(Actor_Component interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public IEnumerator Interact(ActorComponent actor)
+    public IEnumerator Interact(Actor_Component actor)
     {
         if (actor.TryGetComponent(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
         { 

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Actors;
+using Actor;
 using Jobsite;
 using Managers;
 using UnityEngine;
@@ -53,9 +53,9 @@ namespace Priority
         public uint ActorID => ComponentID;
         public ComponentReference_Actor(uint actorID) : base(actorID) { }
 
-        ActorComponent                    _actor;
-        protected override object         _component => _actor ??= Manager_Actor.GetActor(ComponentID);
-        public             ActorComponent Actor      => _component as ActorComponent;
+        Actor_Component                    _actor;
+        protected override object         _component => _actor ??= Actor_Manager.GetActor(ComponentID);
+        public             Actor_Component Actor      => _component as Actor_Component;
 
         public override GameObject GameObject => Actor.gameObject;
         public override PriorityComponent GetPriorityComponent() => Actor.DecisionMakerComponent.PriorityComponent;

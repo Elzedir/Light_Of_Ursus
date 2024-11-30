@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Inventory;
 using Priority;
 using Tools;
@@ -142,19 +142,19 @@ namespace Managers
         Burning,
     }
     
-    public class StatesAndConditions
+    public class StatesAndConditionsData
     {
-        public StatesAndConditions(uint actorID)
+        public StatesAndConditionsData(uint actorID)
         {
             Actor_States     = new Actor_States(actorID);
             
             Actor_Conditions = new Actor_Conditions(actorID);
         }
         
-        public void SetActorStatesAndConditions (StatesAndConditions statesAndConditions)
+        public void SetActorStatesAndConditions (StatesAndConditionsData statesAndConditionsData)
         {
-            SetActorStates(statesAndConditions.Actor_States);
-            SetActorConditions(statesAndConditions.Actor_Conditions);
+            SetActorStates(statesAndConditionsData.Actor_States);
+            SetActorConditions(statesAndConditionsData.Actor_Conditions);
         }
         
         public Actor_States     Actor_States;

@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
-using EmployeePositions;
+using Actor;
+using EmployeePosition;
 using Inventory;
 using Items;
 using Jobs;
@@ -69,7 +69,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
     {
         var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
                                          from employeeID in StationData.CurrentOperatorIDs
-                                         let actorData = Manager_Actor.GetActorData(employeeID)
+                                         let actorData = Actor_Manager.GetActorData(employeeID)
                                          where actorData.CareerData.CurrentJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
                                          select new { operatingArea, employeeID };
 
@@ -86,7 +86,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         _initialised = true;
     }
 
-    public OperatingAreaComponent GetRelevantOperatingArea(ActorComponent actor)
+    public OperatingAreaComponent GetRelevantOperatingArea(Actor_Component actor)
     {
         var relevantOperatingArea = AllOperatingAreasInStation.FirstOrDefault(oa => !oa.HasOperator());
 
@@ -175,7 +175,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
             // For now is the final person who adds the last progress, but change to a cumulative system later.
             CraftItem(
                 StationData.StationProgressData.CurrentProduct.RecipeName,
-                Manager_Actor.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID)
+                Actor_Manager.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID)
             );
         }
     }
@@ -264,18 +264,18 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
         InteractRange = interactRange;
     }
 
-    public bool WithinInteractRange(ActorComponent interactor)
+    public bool WithinInteractRange(Actor_Component interactor)
     {
         return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
     }
 
-    public abstract IEnumerator Interact(ActorComponent actor);
+    public abstract IEnumerator Interact(Actor_Component actor);
 
-    public abstract void CraftItem(RecipeName recipeName, ActorComponent actor);
+    public abstract void CraftItem(RecipeName recipeName, Actor_Component actor);
 
-    protected abstract List<Item> _getCost(List<Item> ingredients, ActorComponent actor);
+    protected abstract List<Item> _getCost(List<Item> ingredients, Actor_Component actor);
 
-    protected abstract List<Item> _getYield(List<Item> ingredients, ActorComponent actor);
+    protected abstract List<Item> _getYield(List<Item> ingredients, Actor_Component actor);
 
     protected virtual void _onCraftItem(List<Item> craftedItems)
     {
@@ -299,7 +299,7 @@ public abstract class StationComponent : MonoBehaviour, IInteractable
 
             foreach(var vocation in StationData.StationProgressData.CurrentProduct.RequiredVocations)
             {
-                individualProductionRate *= Manager_Actor.GetActorData(currentOperatorID).VocationData.GetProgress(vocation);
+                individualProductionRate *= Actor_Manager.GetActorData(currentOperatorID).VocationData.GetProgress(vocation);
             }
 
             totalProductionRate += individualProductionRate;

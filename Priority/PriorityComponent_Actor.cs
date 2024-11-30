@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Tools;
 using UnityEngine;
 
@@ -22,7 +22,7 @@ namespace Priority
             
             Debug.Log($"Setting current action to: {(ActorActionName)actorActionName}.");
             
-            var actorAction = Manager_ActorAction.GetNewActorAction((ActorActionName)actorActionName);
+            var actorAction = ActorAction_Manager.GetNewActorAction((ActorActionName)actorActionName);
 
             _currentActorAction = actorAction;
 
@@ -53,7 +53,7 @@ namespace Priority
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(
             uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters)
         {
-            return Manager_ActorAction.GetActionParameters((ActorActionName)priorityID, requiredParameters);
+            return ActorAction_Manager.GetActionParameters((ActorActionName)priorityID, requiredParameters);
         }
 
         IEnumerator _performCurrentActionFromStart()
@@ -73,7 +73,7 @@ namespace Priority
         readonly ComponentReference_Actor _actorReferences;
 
         public    uint           ActorID => _actorReferences.ActorID;
-        protected ActorComponent _actor  => _actorReferences.Actor;
+        protected Actor_Component _actor  => _actorReferences.Actor;
 
         public PriorityComponent_Actor(uint actorID)
         {
@@ -122,14 +122,14 @@ namespace Priority
             switch (actorPriorityState)
             {
                 case ActorPriorityState.InCombat:
-                    foreach (var actorActionName in Manager_ActorAction.GetActionGroup(ActorActionGroup.Combat))
+                    foreach (var actorActionName in ActorAction_Manager.GetActionGroup(ActorActionGroup.Combat))
                     {
                         relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
                     }
 
                     break;
                 case ActorPriorityState.HasJob:
-                    foreach (var actorActionName in Manager_ActorAction.GetActionGroup(ActorActionGroup.Work))
+                    foreach (var actorActionName in ActorAction_Manager.GetActionGroup(ActorActionGroup.Work))
                     {
                         relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
                     }

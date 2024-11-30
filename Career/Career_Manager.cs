@@ -5,7 +5,7 @@ using Jobs;
 using UnityEditor;
 using UnityEngine;
 
-namespace Careers
+namespace Career
 {
     public abstract class Career_Manager
     {

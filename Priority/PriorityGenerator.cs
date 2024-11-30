@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Actors;
+using Actor;
 using Debuggers;
 using Inventory;
 using Items;

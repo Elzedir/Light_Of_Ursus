@@ -33,7 +33,8 @@ public class Manager_Vocation
                 { 1, VocationTitle.Novice },
                 { 100, VocationTitle.Apprentice },
                 { 1000, VocationTitle.Journeyman },
-                { 10000, VocationTitle.Master },
+                { 10000, VocationTitle.Expert },
+                { 100000, VocationTitle.Master },
             }
             ));
     }
@@ -48,6 +49,7 @@ public class Manager_Vocation
                 { 1, VocationTitle.Novice },
                 { 100, VocationTitle.Apprentice },
                 { 1000, VocationTitle.Journeyman },
+                { 10000, VocationTitle.Expert },
                 { 10000, VocationTitle.Master },
             }
             ));
@@ -61,10 +63,11 @@ public class Manager_Vocation
 
 public enum VocationTitle
 {
-    None,
+    Beginner,
     Novice,
     Apprentice,
     Journeyman,
+    Expert,
     Master,
 }
 

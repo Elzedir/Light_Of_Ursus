@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using DateAndTime;
 using Items;
 using Managers;
@@ -11,9 +9,9 @@ using Tools;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Actors
+namespace Actor
 {
-    public class Manager_Actor : MonoBehaviour, IDataPersistence
+    public class Actor_Manager : MonoBehaviour, IDataPersistence
     {
         static          AllActors_SO                     _allActors;
         static          Dictionary<uint, Actor_Data>      _allActorData       = new();
@@ -133,7 +131,7 @@ namespace Actors
             if (generateActorIfNotFound)
             {
                 return _allActorComponents[actorID] =
-                    _spawnActor(GetActorData(actorID).GameObjectProperties.LastSavedActorPosition, actorID);
+                    _spawnActor(GetActorData(actorID).GameObjectData.LastSavedActorPosition, actorID);
             }
 
             return null;
@@ -212,6 +210,11 @@ namespace Actors
         static Actor_Data _generateNewActorData(Actor_Component            actor,
                                                ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
+            a
+                
+                // Due to optional ActorData, ActorID can be 0, factor this in so that it will change the ID, unless it's 
+                // != 0 since then it would be a set default character, not a random default character.
+            
             var fullIdentification = new FullIdentification(
                 actorID: actorGenerationParametersMaster.ActorID != 0
                     ? actorGenerationParametersMaster.ActorID
@@ -248,7 +251,7 @@ namespace Actors
 
             actor.ActorData.SpeciesAndPersonality.SetSpecies(_getRandomSpecies());
             actor.ActorData.SpeciesAndPersonality.SetPersonality(_getRandomPersonality());
-            actor.ActorData.GameObjectProperties.SetGameObjectProperties(actor.transform);
+            actor.ActorData.GameObjectData.SetGameObjectProperties(actor.transform);
 
             // Set ActorStatesAndConditions based on Race, Religion, etc.
 

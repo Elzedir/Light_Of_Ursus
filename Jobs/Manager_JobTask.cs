@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
+using Actor;
 using Inventory;
 using Items;
 using Jobsite;
@@ -36,7 +36,7 @@ namespace Jobs
                     JobTaskName.Beat_Metal, new JobTask_Master(
                         JobTaskName.Beat_Metal,
                         "Beat Iron into Shape",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _beatIron
                         })
@@ -45,7 +45,7 @@ namespace Jobs
                     JobTaskName.Chop_Wood, new JobTask_Master(
                         JobTaskName.Chop_Wood,
                         "Chop Wood",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _chopWood
                         })
@@ -54,7 +54,7 @@ namespace Jobs
                     JobTaskName.Process_Logs, new JobTask_Master(
                         JobTaskName.Process_Logs,
                         "Process Logs",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _processLogs
                         })
@@ -63,7 +63,7 @@ namespace Jobs
                     JobTaskName.Drop_Off_Wood, new JobTask_Master(
                         JobTaskName.Drop_Off_Wood,
                         "Drop Off Wood",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _dropOffWood
                         })
@@ -72,7 +72,7 @@ namespace Jobs
                     JobTaskName.Stand_At_Counter, new JobTask_Master(
                         JobTaskName.Stand_At_Counter,
                         "Stand at Counter",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _standAtCounter
                         })
@@ -81,7 +81,7 @@ namespace Jobs
                     JobTaskName.Restock_Shelves, new JobTask_Master(
                         JobTaskName.Restock_Shelves,
                         "Restock Shelves",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _restockShelves
                         })
@@ -90,7 +90,7 @@ namespace Jobs
                     JobTaskName.Defend_Ally, new JobTask_Master(
                         JobTaskName.Defend_Ally,
                         "Defend Ally",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendAlly
                         })
@@ -99,29 +99,29 @@ namespace Jobs
                     JobTaskName.Defend_Neutral, new JobTask_Master(
                         JobTaskName.Defend_Neutral,
                         "Defend Neutral",
-                        new List<Func<ActorComponent, uint, IEnumerator>>
+                        new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendNeutral
                         })
                 },
             };
 
-        static IEnumerator _beatIron(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _beatIron(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _chopWood(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _chopWood(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _processLogs(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _processLogs(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _fetchWood(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _fetchWood(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
             // if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
@@ -136,14 +136,14 @@ namespace Jobs
             // StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
         }
 
-        IEnumerator _moveOperatorToOperatingArea(ActorComponent actor, Vector3 position)
+        IEnumerator _moveOperatorToOperatingArea(Actor_Component actor, Vector3 position)
         {
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
             if (actor.transform.position != position) actor.transform.position = position;
         }
 
-        static IEnumerator _dropOffWood(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _dropOffWood(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
             // if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
@@ -155,22 +155,22 @@ namespace Jobs
             // station.StationData.InventoryData.AddToInventory(orderItems);
         }
 
-        static IEnumerator _standAtCounter(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _standAtCounter(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _restockShelves(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _restockShelves(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _defendAlly(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _defendAlly(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _defendNeutral(ActorComponent actor, uint jobsiteID)
+        static IEnumerator _defendNeutral(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
         }
@@ -312,7 +312,7 @@ namespace Jobs
             }
 
             if (!existingParameters.TryGetValue(PriorityParameterName.InventoryHauler, out var haulerObject) ||
-                haulerObject is not ActorComponent hauler)
+                haulerObject is not Actor_Component hauler)
             {
                 Debug.LogError("No hauler found in existing parameters.");
                 return null;
@@ -395,10 +395,10 @@ namespace Jobs
         public JobTaskName                                   TaskName;
         public JobTaskGroup                                  TaskGroup;
         public string                                        TaskDescription;
-        public List<Func<ActorComponent, uint, IEnumerator>> TaskList;
+        public List<Func<Actor_Component, uint, IEnumerator>> TaskList;
 
         public JobTask_Master(JobTaskName                                   taskName, string taskDescription,
-                              List<Func<ActorComponent, uint, IEnumerator>> taskList)
+                              List<Func<Actor_Component, uint, IEnumerator>> taskList)
         {
             TaskName        = taskName;
             TaskDescription = taskDescription;

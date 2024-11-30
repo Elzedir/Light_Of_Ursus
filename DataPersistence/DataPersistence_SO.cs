@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System.IO;
-using Actors;
+using Actor;
 using Jobsite;
 using OperatingArea;
 using Station;
@@ -428,13 +428,13 @@ public class ProfileData
 
             if (Directory.Exists(actorsPath))
             {
-                saveData.SavedActorData = new SavedActorData(new List<ActorData>());
+                saveData.SavedActorData = new SavedActorData(new List<Actor_Data>());
 
                 foreach (var actorFile in Directory.GetFiles(actorsPath, "Actor_*_SaveData.json"))
                 {
                     string actorDataJson = File.ReadAllText(actorFile);
                     if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
-                    var actorData = JsonUtility.FromJson<ActorData>(actorDataJson);
+                    var actorData = JsonUtility.FromJson<Actor_Data>(actorDataJson);
 
                     try { saveData.SavedActorData.AllActorData.Add(actorData); }
                     catch (Exception e) { Debug.LogError($"Error occurred when trying to load actor data: {e}"); }
@@ -761,9 +761,9 @@ public class SavedFactionData
 
 public class SavedActorData
 {
-    public List<ActorData> AllActorData = new();
+    public List<Actor_Data> AllActorData = new();
 
-    public SavedActorData(List<ActorData> allActorData) => AllActorData = allActorData;
+    public SavedActorData(List<Actor_Data> allActorData) => AllActorData = allActorData;
 }
 
 public class SavedOrderData
