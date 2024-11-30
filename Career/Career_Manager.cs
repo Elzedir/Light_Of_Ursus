@@ -7,28 +7,28 @@ using UnityEngine;
 
 namespace Careers
 {
-    public abstract class Manager_Career
+    public abstract class Career_Manager
     {
         const string  _allCareersSOPath = "ScriptableObjects/AllCareers_SO";
         
-        static AllCareers_SO _allCareers;
-        static AllCareers_SO AllCareers => _allCareers ??= _getOrCreateAllCareersSO();
+        static Career_SO _careerSO;
+        static Career_SO Career_SO => _careerSO ??= _getOrCreateAllCareersSO();
 
-        public static Career_Master GetCareer_Master(CareerName careerName) => AllCareers.GetCareer_Master(careerName);
+        public static Career_Master GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName);
         
         public static void PopulateAllCareers()
         {
-            AllCareers.PopulateDefaultCareers();
+            Career_SO.PopulateDefaultCareers();
             // Then populate custom careers.
         }
         
-        static AllCareers_SO _getOrCreateAllCareersSO()
+        static Career_SO _getOrCreateAllCareersSO()
         {
-            var allCareersSO = Resources.Load<AllCareers_SO>(_allCareersSOPath);
+            var allCareersSO = Resources.Load<Career_SO>(_allCareersSOPath);
             
             if (allCareersSO is not null) return allCareersSO;
             
-            allCareersSO = ScriptableObject.CreateInstance<AllCareers_SO>();
+            allCareersSO = ScriptableObject.CreateInstance<Career_SO>();
             AssetDatabase.CreateAsset(allCareersSO, $"Assets/Resources/{_allCareersSOPath}");
             AssetDatabase.SaveAssets();
             
@@ -49,7 +49,7 @@ namespace Careers
         public CareerName CareerName;
         
         Career_Master _career_Master;
-        Career_Master Career_Master => _career_Master ??= Manager_Career.GetCareer_Master(CareerName);
+        Career_Master Career_Master => _career_Master ??= Career_Manager.GetCareer_Master(CareerName);
         
         public List<JobName> CareerJobs => Career_Master.CareerJobs.ToList();
         

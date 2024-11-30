@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Careers;
+using Actor;
 using DateAndTime;
 using Items;
 using Managers;
@@ -16,9 +16,9 @@ namespace Actors
     public class Manager_Actor : MonoBehaviour, IDataPersistence
     {
         static          AllActors_SO                     _allActors;
-        static          Dictionary<uint, ActorData>      _allActorData       = new();
+        static          Dictionary<uint, Actor_Data>      _allActorData       = new();
         static          uint                             _lastUnusedActorID  = 1;
-        static readonly Dictionary<uint, ActorComponent> _allActorComponents = new();
+        static readonly Dictionary<uint, Actor_Component> _allActorComponents = new();
 
         public void SaveData(SaveData data)
         {
@@ -78,21 +78,21 @@ namespace Actors
             }
         }
 
-        static List<ActorComponent> _findAllActorComponents()
+        static List<Actor_Component> _findAllActorComponents()
         {
             return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                   .OfType<ActorComponent>()
+                   .OfType<Actor_Component>()
                    .ToList();
         }
 
-        static void _addToAllActorData(ActorData actorData)
+        static void _addToAllActorData(Actor_Data actorData)
         {
             if (_allActorData.TryAdd(actorData.ActorID, actorData)) return;
 
             Debug.Log($"ActorData: {actorData.ActorID} already exists in AllActorData.");
         }
 
-        public static void UpdateAllActorData(ActorData actorData)
+        public static void UpdateAllActorData(Actor_Data actorData)
         {
             if (!_allActorData.ContainsKey(actorData.ActorID))
             {
@@ -114,7 +114,7 @@ namespace Actors
             _allActorData.Remove(actorID);
         }
 
-        public static ActorData GetActorData(uint actorID)
+        public static Actor_Data GetActorData(uint actorID)
         {
             if (_allActorData.TryGetValue(actorID, out var data)) return data;
 
@@ -123,7 +123,7 @@ namespace Actors
 
         }
 
-        public static ActorComponent GetActor(uint actorID, bool generateActorIfNotFound = false)
+        public static Actor_Component GetActor(uint actorID, bool generateActorIfNotFound = false)
         {
             if (_allActorComponents.TryGetValue(actorID, out var actor))
             {
@@ -139,12 +139,12 @@ namespace Actors
             return null;
         }
 
-        public static ActorComponent SpawnNewActor(Vector3                   spawnPoint,
-                                                   ActorGenerationParameters actorGenerationParameters)
+        public static Actor_Component SpawnNewActor(Vector3                   spawnPoint,
+                                                   ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
-            ActorComponent actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
+            Actor_Component actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
 
-            actor.SetActorData(_generateNewActorData(actor, actorGenerationParameters));
+            actor.SetActorData(_generateNewActorData(actor, actorGenerationParametersMaster));
 
             _allActorComponents[actor.ActorData.ActorID] = actor;
 
@@ -156,12 +156,12 @@ namespace Actors
         }
 
         // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-        static ActorComponent _spawnActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
+        static Actor_Component _spawnActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
         {
             if (despawnActorIfExists) _despawnActor(actorID);
             else if (_allActorComponents.TryGetValue(actorID, out var existingActor)) return existingActor;
 
-            var actor = _createNewActorGO(spawnPoint).AddComponent<ActorComponent>();
+            var actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
 
             actor.SetActorData(GetActorData(actorID));
             actor.Initialise();
@@ -209,31 +209,31 @@ namespace Actors
             return actorGO;
         }
 
-        static ActorData _generateNewActorData(ActorComponent            actor,
-                                               ActorGenerationParameters actorGenerationParameters)
+        static Actor_Data _generateNewActorData(Actor_Component            actor,
+                                               ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
             var fullIdentification = new FullIdentification(
-                actorID: actorGenerationParameters.ActorID != 0
-                    ? actorGenerationParameters.ActorID
+                actorID: actorGenerationParametersMaster.ActorID != 0
+                    ? actorGenerationParametersMaster.ActorID
                     : _getRandomActorID(),
-                actorName: actorGenerationParameters.ActorName ?? _getRandomActorName(),
-                actorFactionID: actorGenerationParameters.FactionID != 0
-                    ? actorGenerationParameters.FactionID
+                actorName: actorGenerationParametersMaster.ActorName ?? _getRandomActorName(),
+                actorFactionID: actorGenerationParametersMaster.FactionID != 0
+                    ? actorGenerationParametersMaster.FactionID
                     : _getRandomFaction(),
-                actorCityID: actorGenerationParameters.CityID,
+                actorCityID: actorGenerationParametersMaster.CityID,
                 actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays())
             );
 
-            actor.SetActorData(new ActorData(fullIdentification));
+            actor.SetActorData(new Actor_Data(fullIdentification));
 
-            foreach (var recipe in actorGenerationParameters.InitialRecipes)
+            foreach (var recipe in actorGenerationParametersMaster.InitialRecipes)
             {
                 //Debug.Log($"Adding recipe: {recipe}");
                 actor.ActorData.CraftingData.AddRecipe(recipe);
             }
 
             // Add initial vocations
-            foreach (var vocation in actorGenerationParameters.InitialVocations)
+            foreach (var vocation in actorGenerationParametersMaster.InitialVocations)
             {
                 //Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
                 actor.ActorData.VocationData.AddVocation(vocation.VocationName, vocation.VocationExperience);
@@ -290,47 +290,5 @@ namespace Actors
         {
             return new ActorPersonality(Manager_Personality.GetRandomPersonalityTraits(null, 3));
         }
-    }
-
-    [Serializable]
-    public class ActorGenerationParameters
-    {
-        a
-        // Abstract this and then make individual actorGenerationParameters per type of character desired. Use the SO system.
-        public uint                ActorID             { get; private set; }
-        public ActorName           ActorName           { get; private set; }
-        public uint                FactionID           { get; private set; }
-        public uint                CityID              { get; private set; }
-        public CareerName          CareerName          { get; private set; }
-        public List<RecipeName>    InitialRecipes      { get; private set; }
-        public List<ActorVocation> InitialVocations    { get; private set; }
-        public StatesAndConditions StatesAndConditions { get; private set; }
-        
-        public ActorGenerationParameters(uint actorID = 0, ActorName actorName = null, uint factionID = 0, uint cityID = 0, CareerName careerName = CareerName.Wanderer,
-                                         List<RecipeName> initialRecipes = null, List<ActorVocation> initialVocations = null,
-                                         StatesAndConditions statesAndConditions = null)
-        {
-            ActorID             = actorID;
-            ActorName           = actorName;
-            FactionID           = factionID;
-            CityID              = cityID;
-            CareerName          = careerName;
-            InitialRecipes      = initialRecipes;
-            InitialVocations    = initialVocations;
-            StatesAndConditions = statesAndConditions;
-        }
-
-        public void SetActorID(uint                         actorID)        => ActorID = actorID;
-        public void SetActorName(ActorName                  actorName)      => ActorName = actorName;
-        public void SetFactionID(uint                       factionID)      => FactionID = factionID;
-        public void SetCityID(uint                          cityID)         => CityID = cityID;
-        public void SetCareerName(CareerName                careerName)     => CareerName = careerName;
-        public void SetInitialRecipes(List<RecipeName>      initialRecipes) => InitialRecipes = initialRecipes;
-        public void AddInitialRecipe(RecipeName             recipeName)     => InitialRecipes.Add(recipeName);
-        public void SetInitialVocations(List<ActorVocation> actorVocations) => InitialVocations = actorVocations;
-        public void AddInitialVocation(ActorVocation        actorVocation)  => InitialVocations.Add(actorVocation);
-
-        public void SetStatesAndConditions(StatesAndConditions statesAndConditions) =>
-            StatesAndConditions = statesAndConditions;
     }
 }

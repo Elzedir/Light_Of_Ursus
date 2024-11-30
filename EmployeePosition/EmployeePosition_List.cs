@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EmployeePositions
 {
-    public class List_EmployeePosition : MonoBehaviour
+    public class EmployeePosition_List : MonoBehaviour
     {
         public static Dictionary<uint, EmployeePosition_Master> GetAllDefaultEmployeePositions()
         {
@@ -38,7 +38,7 @@ namespace EmployeePositions
                     (uint)EmployeePositionName.Logger, new EmployeePosition_Master
                     (
                         EmployeePositionName.Logger,
-                        new ActorGenerationParameters(
+                        new ActorGenerationParameters_Master(
                             careerName: CareerName.Lumberjack,
                             initialRecipes: new List<RecipeName>(
                                 new[] { RecipeName.Log }),
@@ -58,7 +58,7 @@ namespace EmployeePositions
                 {
                     (uint)EmployeePositionName.Sawyer, new EmployeePosition_Master
                     (
-                        EmployeePositionName.Sawyer, new ActorGenerationParameters(
+                        EmployeePositionName.Sawyer, new ActorGenerationParameters_Master(
                             careerName: CareerName.Lumberjack,
                             initialRecipes: new List<RecipeName>(
                                 new[] { RecipeName.Plank }),
@@ -77,7 +77,7 @@ namespace EmployeePositions
             {
                 {
                     (uint)EmployeePositionName.Smith, new EmployeePosition_Master
-                    (EmployeePositionName.Smith, new ActorGenerationParameters(
+                    (EmployeePositionName.Smith, new ActorGenerationParameters_Master(
                             careerName: CareerName.Smith,
                             initialRecipes: new List<RecipeName>(
                                 new[] { RecipeName.None }),

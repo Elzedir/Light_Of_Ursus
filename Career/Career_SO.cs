@@ -10,7 +10,7 @@ namespace Careers
 {
     [CreateAssetMenu(fileName = "AllCareers_SO", menuName = "SOList/AllCareers_SO")]
     [Serializable]
-    public class AllCareers_SO : Base_SO<Career_Master>
+    public class Careers_SO : Base_SO<Career_Master>
     {
         public Career_Master[] Careers                           => Objects;
         public Career_Master   GetCareer_Master(CareerName careerName) => GetObject_Master((uint)careerName);
@@ -39,7 +39,7 @@ namespace Careers
         Dictionary<uint, Career_Master> _defaultCareers => DefaultObjects;
     }
     
-    [CustomEditor(typeof(AllCareers_SO))]
+    [CustomEditor(typeof(Careers_SO))]
     public class AllCareers_SOEditor : Editor
     {
         int _selectedCareerIndex = -1;
@@ -55,7 +55,7 @@ namespace Careers
 
         public override void OnInspectorGUI()
         {
-            var allCareersSO = (AllCareers_SO)target;
+            var allCareersSO = (Careers_SO)target;
 
             if (allCareersSO?.Careers is null || allCareersSO.Careers.Length is 0)
             {

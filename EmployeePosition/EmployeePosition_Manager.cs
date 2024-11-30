@@ -5,31 +5,31 @@ using UnityEngine;
 
 namespace EmployeePositions
 {
-    public abstract class Manager_EmployeePosition : MonoBehaviour
+    public abstract class EmployeePosition_Manager : MonoBehaviour
     {
         const string _allEmployeePositionsSOPath = "ScriptableObjects/AllEmployeePositions_SO";
 
-        static AllEmployeePositions_SO _allEmployeePositions;
+        static EmployeePosition_SO _EmployeePositions;
 
-        static AllEmployeePositions_SO AllEmployeePositions =>
-            _allEmployeePositions ??= _getOrCreateAllEmployeePositionsSO();
+        static EmployeePosition_SO EmployeePositions =>
+            _EmployeePositions ??= _getOrCreateAllEmployeePositionsSO();
 
         public static EmployeePosition_Master GetEmployeePosition_Master(EmployeePositionName employeePositionName) =>
-            AllEmployeePositions.GetEmployeePosition_Master(employeePositionName);
+            EmployeePositions.GetEmployeePosition_Master(employeePositionName);
 
         public static void PopulateAllEmployeePositions()
         {
-            AllEmployeePositions.PopulateDefaultEmployeePositions();
+            EmployeePositions.PopulateDefaultEmployeePositions();
             // Then populate custom EmployeePositions.
         }
 
-        static AllEmployeePositions_SO _getOrCreateAllEmployeePositionsSO()
+        static EmployeePosition_SO _getOrCreateAllEmployeePositionsSO()
         {
-            var allEmployeePositionsSO = Resources.Load<AllEmployeePositions_SO>(_allEmployeePositionsSOPath);
+            var allEmployeePositionsSO = Resources.Load<EmployeePosition_SO>(_allEmployeePositionsSOPath);
 
             if (allEmployeePositionsSO is not null) return allEmployeePositionsSO;
 
-            allEmployeePositionsSO = ScriptableObject.CreateInstance<AllEmployeePositions_SO>();
+            allEmployeePositionsSO = ScriptableObject.CreateInstance<EmployeePosition_SO>();
             AssetDatabase.CreateAsset(allEmployeePositionsSO, $"Assets/Resources/{_allEmployeePositionsSOPath}");
             AssetDatabase.SaveAssets();
 
@@ -41,13 +41,13 @@ namespace EmployeePositions
     public class EmployeePosition_Master
     {
         public readonly EmployeePositionName      EmployeePositionName;
-        public readonly ActorGenerationParameters ActorGenerationParameters;
+        public readonly ActorGenerationParameters_Master ActorGenerationParametersMaster;
 
         public EmployeePosition_Master(EmployeePositionName      employeePositionName,
-                                       ActorGenerationParameters actorGenerationParameters)
+                                       ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
             EmployeePositionName      = employeePositionName;
-            ActorGenerationParameters = actorGenerationParameters;
+            ActorGenerationParametersMaster = actorGenerationParametersMaster;
         }
     }
 

@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Careers;
+using Career;
 using DateAndTime;
-using EmployeePositions;
+using EmployeePosition;
 using Inventory;
 using Items;
 using Jobs;
@@ -370,7 +370,7 @@ namespace Actors
 
             AllJobs.Clear();
 
-            var careerJobs = Manager_Career.GetCareer_Master(careerName).CareerJobs;
+            var careerJobs = Career_Manager.GetCareer_Master(careerName).CareerJobs;
 
             foreach (var job in careerJobs)
             {

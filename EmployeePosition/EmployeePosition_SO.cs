@@ -10,7 +10,7 @@ namespace EmployeePositions
 {
     [CreateAssetMenu(fileName = "AllEmployeePositionTypes_SO", menuName = "SOList/AllEmployeePositionTypes_SO")]
     [Serializable]
-    public class AllEmployeePositions_SO : Base_SO<EmployeePosition_Master>
+    public class EmployeePosition_SO : Base_SO<EmployeePosition_Master>
     {
         public EmployeePosition_Master[] EmployeePositions                           => Objects;
         public EmployeePosition_Master   GetEmployeePosition_Master(EmployeePositionName employeePositionName) => GetObject_Master((uint)employeePositionName);
@@ -39,7 +39,7 @@ namespace EmployeePositions
         Dictionary<uint, EmployeePosition_Master> _defaultEmployeePositions => DefaultObjects;
     }
     
-    [CustomEditor(typeof(AllEmployeePositions_SO))]
+    [CustomEditor(typeof(EmployeePosition_SO))]
     public class AllEmployeePositions_SOEditor : Editor
     {
         int _selectedEmployeePositionIndex = -1;
@@ -60,7 +60,7 @@ namespace EmployeePositions
 
         public override void OnInspectorGUI()
         {
-            var allEmployeePositionsSO = (AllEmployeePositions_SO)target;
+            var allEmployeePositionsSO = (EmployeePosition_SO)target;
 
             if (allEmployeePositionsSO?.EmployeePositions is null || allEmployeePositionsSO.EmployeePositions.Length is 0)
             {
@@ -79,7 +79,7 @@ namespace EmployeePositions
             EditorGUILayout.LabelField("All EmployeePositions", EditorStyles.boldLabel);
 
             var nonNullEmployeePositions = allEmployeePositionsSO.EmployeePositions.Where(employeePosition =>
-                employeePosition != null && (employeePosition.ActorGenerationParameters == null ||
+                employeePosition != null && (employeePosition.ActorGenerationParametersMaster == null ||
                                    employeePosition.EmployeePositionName != 0)).ToArray();
 
             _employeePositionScrollPos = EditorGUILayout.BeginScrollView(_employeePositionScrollPos,
@@ -103,9 +103,9 @@ namespace EmployeePositions
 
             EditorGUILayout.LabelField("EmployeePosition Name", $"{employeePosition.EmployeePositionName}");
 
-            if (employeePosition.ActorGenerationParameters == null) return;
+            if (employeePosition.ActorGenerationParametersMaster == null) return;
 
-            var actorGenerationParameters = employeePosition.ActorGenerationParameters;
+            var actorGenerationParameters = employeePosition.ActorGenerationParametersMaster;
 
             EditorGUILayout.LabelField("Actor Generation Parameters", EditorStyles.boldLabel);
 
@@ -138,11 +138,11 @@ namespace EmployeePositions
             }
         }
 
-        void _drawEmployeeCareerData(ActorGenerationParameters actorGenerationParameters)
+        void _drawEmployeeCareerData(ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
-            EditorGUILayout.LabelField("Career Name",        $"{actorGenerationParameters.CareerName}");
+            EditorGUILayout.LabelField("Career Name",        $"{actorGenerationParametersMaster.CareerName}");
             
-            var initialRecipes = actorGenerationParameters.InitialRecipes;
+            var initialRecipes = actorGenerationParametersMaster.InitialRecipes;
             
             if (initialRecipes.Count == 1)
             {
@@ -170,7 +170,7 @@ namespace EmployeePositions
                 }
             }
             
-            var initialVocations = actorGenerationParameters.InitialVocations;
+            var initialVocations = actorGenerationParametersMaster.InitialVocations;
             
             if (initialVocations.Count == 1)
             {
@@ -199,9 +199,9 @@ namespace EmployeePositions
             }
         }
         
-        void _drawEmployeePositionStateData(ActorGenerationParameters actorGenerationParameters)
+        void _drawEmployeePositionStateData(ActorGenerationParameters_Master actorGenerationParametersMaster)
         {
-            var employeePositionStates = actorGenerationParameters.StatesAndConditions;
+            var employeePositionStates = actorGenerationParametersMaster.StatesAndConditions;
             
             EditorGUILayout.LabelField("Employee Position States Not initialised yet", EditorStyles.boldLabel);
         }
