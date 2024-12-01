@@ -5,32 +5,32 @@ using Recipes;
 
 namespace Actor
 {
-    public class ActorDataPreset_List
+    public abstract class ActorDataPreset_List
     {
         public static Dictionary<uint, Actor_Data> GetAllDefaultActorDataPresets()
         {
-            var allCareers = new Dictionary<uint, Actor_Data>();
+            var allActorDataPresets = new Dictionary<uint, Actor_Data>();
 
             foreach (var wanderer in _wanderer())
             {
-                allCareers.Add(wanderer.Key, wanderer.Value);
+                allActorDataPresets.Add(wanderer.Key, wanderer.Value);
             }
 
             foreach (var lumberjack in _lumberjack())
             {
-                allCareers.Add(lumberjack.Key, lumberjack.Value);
+                allActorDataPresets.Add(lumberjack.Key, lumberjack.Value);
             }
 
             foreach (var smith in _smith())
             {
-                allCareers.Add(smith.Key, smith.Value);
+                allActorDataPresets.Add(smith.Key, smith.Value);
             }
 
-            return allCareers;
+            return allActorDataPresets;
         }
 
         // Put a priority List in the tasks so you can check which tasks to do.
-
+        
         static Dictionary<uint, Actor_Data> _wanderer()
         {
             return new Dictionary<uint, Actor_Data>
@@ -38,14 +38,13 @@ namespace Actor
                 {
                     (uint)ActorDataPresetName.Wanderer_Journeyman, new Actor_Data
                     (
-                        careerName: CareerName.Wanderer,
-                        careerDescription: "A wanderer",
-                        new HashSet<JobName>()
-                        {
-                            JobName.Wanderer
-                        }
+                        careerData: new CareerData
+                        (
+                            actorID: 0,
+                            careerName: CareerName.Wanderer,
+                            jobsNotFromCareer: new HashSet<JobName>()
+                        )
                     )
-
                 }
             };
         }
@@ -59,13 +58,14 @@ namespace Actor
                     (
                         careerData: new CareerData
                         (
+                            actorID: 0,
                             careerName: CareerName.Lumberjack,
-                            allJobs: new HashSet<JobName>()
-                            // Change so that you only add jobs that won't be added by the career default.
+                            jobsNotFromCareer: new HashSet<JobName>()
                         ),
 
                         craftingData: new CraftingData
                         (
+                            actorID: 0,
                             new List<RecipeName>
                             {
                                 RecipeName.Log,
@@ -75,9 +75,17 @@ namespace Actor
 
                         vocationData: new VocationData
                         (
-                            new List<ActorVocation>
+                            actorID: 0,
+                            actorVocations: new Dictionary<VocationName, ActorVocation>
                             {
-                                new(VocationName.Logging, 1000)
+                                {
+                                    VocationName.Logging,
+                                    new ActorVocation(VocationName.Logging, 1000)    
+                                },
+                                {
+                                    VocationName.Sawying,
+                                    new ActorVocation(VocationName.Sawying, 1000)                                    
+                                }
                             }
                         )
                     )
@@ -90,14 +98,36 @@ namespace Actor
             return new Dictionary<uint, Actor_Data>
             {
                 {
-                    (uint)CareerName.Smith,
-                    new Career_Master(
-                        careerName: CareerName.Smith,
-                        careerDescription: "A smith",
-                        new HashSet<JobName>
-                        {
-                            JobName.Smith
-                        })
+                    (uint)ActorDataPresetName.Smith_Journeyman, new Actor_Data
+                    (
+                        careerData: new CareerData
+                        (
+                            actorID: 0,
+                            careerName: CareerName.Smith,
+                            jobsNotFromCareer: new HashSet<JobName>()
+                        ),
+
+                        craftingData: new CraftingData
+                        (
+                            actorID: 0,
+                            new List<RecipeName>
+                            {
+                                RecipeName.Iron_Ingot
+                            }
+                        ),
+
+                        vocationData: new VocationData
+                        (
+                            actorID: 0,
+                            actorVocations: new Dictionary<VocationName, ActorVocation>
+                            {
+                                {
+                                    VocationName.Smithing,
+                                    new ActorVocation(VocationName.Smithing, 1000)    
+                                }
+                            }
+                        )
+                    )
                 }
             };
         }

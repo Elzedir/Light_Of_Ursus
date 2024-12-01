@@ -9,7 +9,7 @@ namespace Actor
         public Actor_Data[] ActorDataPresets                                 => Objects;
         public Actor_Data   GetActorDataPreset(ActorDataPresetName careerName) => GetObject_Master((uint)careerName);
 
-        public override uint GetObjectID(int id) => (uint)ActorDataPresets[id].CareerName; // Use 
+        public override uint GetObjectID(int id) => (uint)ActorDataPresets[id].FullIdentification.ActorDataPresetName; // Use the ActorDataPresetName
 
         public void PopulateDefaultActorDataPresets()
         {

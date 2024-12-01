@@ -83,28 +83,6 @@ namespace Actor
 
         // Make an ability to make a deep copy of every class here and every class that needs to be saved.
 
-        public Actor_Data(FullIdentification fullIdentification)
-        {
-            FullIdentification = fullIdentification;
-
-            ActorID        = FullIdentification.ActorReference.ActorID;
-            ActorFactionID = FullIdentification.ActorFactionID;
-            ActorName      = FullIdentification.ActorName;
-
-            GameObjectData          = new GameObjectData(ActorID);
-            CareerData              = new CareerData(ActorID);
-            CraftingData            = new CraftingData(ActorID);
-            VocationData            = new VocationData(ActorID);
-            SpeciesAndPersonality   = new SpeciesAndPersonality(ActorID);
-            StatsAndAbilities       = new StatsAndAbilities(ActorID);
-            StatesAndConditionsData = new StatesAndConditionsData(ActorID);
-
-            InventoryData = new InventoryData_Actor(ActorID);
-            EquipmentData = new EquipmentData(ActorID);
-            ActorQuests   = new QuestData(ActorID);
-            CurrentOrder  = null;
-        }
-
         public Actor_Data(FullIdentification fullIdentification = null, GameObjectData gameObjectData = null,
                          CareerData careerData = null, CraftingData craftingData = null,
                          VocationData vocationData = null,
@@ -205,23 +183,26 @@ namespace Actor
     public class FullIdentification : PriorityData
     {
         public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
-                                  Date actorBirthDate) : base(actorID, ComponentType.Actor)
+                                  Date actorBirthDate, ActorDataPresetName actorDataPresetName) : base(actorID, ComponentType.Actor)
         {
             ActorName      = actorName;
             ActorFactionID = actorFactionID;
             ActorCityID    = actorCityID;
             ActorBirthDate = actorBirthDate;
+            ActorDataPresetName = actorDataPresetName;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public ActorName  ActorName;
-        public uint       ActorFactionID;
-        public uint       ActorCityID;
-        public Date       ActorBirthDate;
-        public float      ActorAge => ActorBirthDate.GetAge();
-        public Family     ActorFamily;
-        public Background Background;
+        public uint                ActorID;
+        public ActorName           ActorName;
+        public ActorDataPresetName ActorDataPresetName;
+        public uint                ActorFactionID;
+        public uint                ActorCityID;
+        public Date                ActorBirthDate;
+        public float               ActorAge => ActorBirthDate.GetAge();
+        public Family              ActorFamily;
+        public Background          Background;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
@@ -235,8 +216,14 @@ namespace Actor
     [Serializable]
     public class Background : PriorityData
     {
-        public Background(uint actorID) : base(actorID, ComponentType.Actor)
+        public Background(uint actorID, string birthplace, Date birthdate, Family actorFamily, Dynasty actorDynasty,
+                          string religion) : base(actorID, ComponentType.Actor)
         {
+            Birthplace  = birthplace;
+            Birthdate   = birthdate;
+            ActorFamily = actorFamily;
+            ActorDynasty = actorDynasty;
+            Religion    = religion;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -259,8 +246,11 @@ namespace Actor
     [Serializable]
     public class GameObjectData : PriorityData
     {
-        public GameObjectData(uint actorID) : base(actorID, ComponentType.Actor)
+        public GameObjectData(uint actorID, Transform actorTransform, Mesh actorMesh, Material actorMaterial) : base(actorID, ComponentType.Actor)
         {
+            _actorTransform = actorTransform;
+            ActorMesh       = actorMesh;
+            ActorMaterial   = actorMaterial;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -330,7 +320,6 @@ namespace Actor
         public WorldStateData(uint actorID) : base(actorID, ComponentType.Actor)
         {
         }
-
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
@@ -345,10 +334,11 @@ namespace Actor
     [Serializable]
     public class Relationships : PriorityData
     {
-        public Relationships(uint actorID) : base(actorID, ComponentType.Actor)
+        public Relationships(uint actorID, List<Relation> allRelationships) : base(actorID, ComponentType.Actor)
         {
+            AllRelationships = allRelationships;
         }
-
+        
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         public List<Relation>           AllRelationships;
 
@@ -364,16 +354,11 @@ namespace Actor
     [Serializable]
     public class CareerData : PriorityData
     {
-        public CareerData(uint actorID) : base(actorID, ComponentType.Actor)
-        {
-
-        }
-
-        public CareerData(CareerName careerName, HashSet<JobName> allJobs, uint actorID = 0) : base(actorID,
+        public CareerData(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer) : base(actorID,
             ComponentType.Actor)
         {
             CareerName = careerName;
-            AllJobs    = allJobs;
+            AllJobs    = jobsNotFromCareer;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -452,8 +437,11 @@ namespace Actor
     [Serializable]
     public class SpeciesAndPersonality : PriorityData
     {
-        public SpeciesAndPersonality(uint actorID) : base(actorID, ComponentType.Actor)
+        public SpeciesAndPersonality(uint actorID, SpeciesName actorSpecies, ActorPersonality actorPersonality) : base(
+            actorID, ComponentType.Actor)
         {
+            ActorSpecies     = actorSpecies;
+            ActorPersonality = actorPersonality;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -475,22 +463,22 @@ namespace Actor
     [Serializable]
     public class StatsAndAbilities
     {
-        public StatsAndAbilities(uint actorID)
+        public StatsAndAbilities(uint actorID, Actor_Stats actorStats, Actor_Aspects actorAspects,
+                                 Actor_Abilities actorAbilities)
         {
-
-            Actor_Stats     = new Actor_Stats(actorID);
-            Actor_Aspects   = new Actor_Aspects(actorID);
-            Actor_Abilities = new Actor_Abilities(actorID);
+            ActorStats     = actorStats;
+            ActorAspects   = actorAspects;
+            ActorAbilities = actorAbilities;
         }
 
-        public Actor_Stats Actor_Stats;
-        public void        SetActorStats(Actor_Stats actorStats) => Actor_Stats = actorStats;
+        [FormerlySerializedAs("Actor_Stats")] public Actor_Stats ActorStats;
+        public  void        SetActorStats(Actor_Stats actorStats) => ActorStats = actorStats;
 
-        public Actor_Aspects Actor_Aspects;
-        public void          SetActorAspects(Actor_Aspects actor_Aspects) => Actor_Aspects = actor_Aspects;
+        [FormerlySerializedAs("Actor_Aspects")] public Actor_Aspects ActorAspects;
+        public  void          SetActorAspects(Actor_Aspects actor_Aspects) => ActorAspects = actor_Aspects;
 
-        public Actor_Abilities Actor_Abilities;
-        public void            SetActorAbilities(Actor_Abilities actor_Abilities) => Actor_Abilities = actor_Abilities;
+        [FormerlySerializedAs("Actor_Abilities")] public Actor_Abilities ActorAbilities;
+        public  void            SetActorAbilities(Actor_Abilities actor_Abilities) => ActorAbilities = actor_Abilities;
     }
 
     [Serializable]
@@ -525,15 +513,19 @@ namespace Actor
     [Serializable]
     public class Actor_Stats : PriorityData
     {
-        public Actor_Stats(uint actorID) : base(actorID, ComponentType.Actor)
+        public Actor_Stats(uint actorID, ActorLevelData actorLevelData, Special actorSpecial, CombatStats actorCombatStats) :
+            base(actorID, ComponentType.Actor)
         {
+            ActorLevelData   = actorLevelData;
+            ActorSpecial     = actorSpecial;
+            ActorCombatStats = actorCombatStats;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
         public ActorLevelData ActorLevelData;
-        public SPECIAL        ActorSpecial;
-        public CombatStats    CombatStats;
+        public Special        ActorSpecial;
+        public CombatStats    ActorCombatStats;
 
         public float TotalCarryWeight =>
             100; // For now. Eventually. ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
@@ -554,8 +546,9 @@ namespace Actor
     [Serializable]
     public class Actor_Aspects : PriorityData
     {
-        public Actor_Aspects(uint actorID) : base(actorID, ComponentType.Actor)
+        public Actor_Aspects(uint actorID, List<AspectName> actorAspectList) : base(actorID, ComponentType.Actor)
         {
+            ActorAspectList = actorAspectList;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -662,13 +655,13 @@ namespace Actor
             switch (levelData.BonusType)
             {
                 case LevelUpBonusType.Health:
-                    actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxHealth += levelData.BonusStatPoints;
+                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxHealth += levelData.BonusStatPoints;
                     break;
                 case LevelUpBonusType.Mana:
-                    actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxMana += levelData.BonusStatPoints;
+                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxMana += levelData.BonusStatPoints;
                     break;
                 case LevelUpBonusType.Stamina:
-                    actorData.StatsAndAbilities.Actor_Stats.CombatStats.MaxStamina += levelData.BonusStatPoints;
+                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxStamina += levelData.BonusStatPoints;
                     break;
                 case LevelUpBonusType.Skillset:
                     CanAddNewSkillSet = true;
@@ -691,11 +684,7 @@ namespace Actor
     [Serializable]
     public class CraftingData : PriorityData
     {
-        public CraftingData(uint actorID) : base(actorID, ComponentType.Actor)
-        {
-        }
-        
-        public CraftingData(List<RecipeName> knownRecipes, uint actorID = 0) : base(actorID, ComponentType.Actor)
+        public CraftingData(uint actorID, List<RecipeName> knownRecipes) : base(actorID, ComponentType.Actor)
         {
             KnownRecipes = knownRecipes;
         }
@@ -805,63 +794,56 @@ namespace Actor
     [Serializable]
     public class VocationData : PriorityData
     {
-        public VocationData(uint actorID) : base(actorID, ComponentType.Actor)
-        {
-        }
-        
-        public VocationData(List<ActorVocation> actorVocations, uint actorID = 0) : base(actorID, ComponentType.Actor)
+        public VocationData(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations) : base(actorID,
+            ComponentType.Actor)
         {
             ActorVocations = actorVocations;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public List<ActorVocation> ActorVocations = new();
-        public void                SetVocations(List<ActorVocation> vocations) => ActorVocations = vocations;
+        public Dictionary<VocationName, ActorVocation> ActorVocations;
+        public void                SetVocations(Dictionary<VocationName, ActorVocation> vocations) => ActorVocations = vocations;
 
         public void AddVocation(VocationName vocationName, float vocationExperience)
         {
-            if (ActorVocations.All(v => v.VocationName != vocationName))
-            {
-                ActorVocations.Add(new ActorVocation(vocationName, vocationExperience));
-            }
-            else
+            if (ActorVocations.ContainsKey(vocationName))
             {
                 Debug.Log($"Vocation: {vocationName} already exists in Vocations.");
+                return;
             }
+
+            ActorVocations.Add(vocationName, new ActorVocation(vocationName, vocationExperience));
         }
 
         public void RemoveVocation(VocationName vocationName)
         {
-            if (ActorVocations.Any(v => v.VocationName == vocationName))
-            {
-                ActorVocations.Remove(ActorVocations.First(v => v.VocationName == vocationName));
-            }
-            else
+            if (!ActorVocations.ContainsKey(vocationName))
             {
                 Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
+                return;
             }
+            
+            ActorVocations.Remove(vocationName);
         }
 
         public void ChangeVocationExperience(VocationName vocationName, float experienceChange)
         {
-            if (ActorVocations.Any(v => v.VocationName == vocationName))
-            {
-                ActorVocations.First(v => v.VocationName == vocationName).VocationExperience += experienceChange;
-            }
-            else
+            if (!ActorVocations.TryGetValue(vocationName, out var vocation))
             {
                 Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
+                return;
             }
+
+            vocation.VocationExperience += experienceChange;
         }
 
         public float GetVocationExperience(VocationName vocationName)
         {
-            if (ActorVocations.Any(v => v.VocationName == vocationName))
-                return ActorVocations.First(v => v.VocationName == vocationName).VocationExperience;
-
-            Debug.Log($"Vocation: {vocationName} does not exist in Vocations.");
-            return 0;
+            if (ActorVocations.TryGetValue(vocationName, out var vocation)) return vocation.VocationExperience;
+            
+            Debug.LogError($"Vocation: {vocationName} does not exist in Vocations.");
+            return -1;
 
         }
 

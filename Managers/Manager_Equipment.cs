@@ -155,8 +155,20 @@ public class EquipmentData
     public Item Waist;
     public Item Legs;
     public Item Feet;
-
-    public EquipmentData(uint actorID) => ActorID = actorID;
+    
+    public EquipmentData(uint actorID, Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
+    {
+        ActorID = actorID;
+        Head = head;
+        Neck = neck;
+        Chest = chest;
+        LeftHand = leftHand;
+        RightHand = rightHand;
+        Rings = rings;
+        Waist = waist;
+        Legs = legs;
+        Feet = feet;
+    }
 
     public void SetEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)
     {

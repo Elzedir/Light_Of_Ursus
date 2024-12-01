@@ -9,7 +9,7 @@ namespace Career
 {
     public abstract class Career_Manager
     {
-        const string  _allCareersSOPath = "ScriptableObjects/AllCareers_SO";
+        const string  _allCareersSOPath = "ScriptableObjects/Career_SO";
         
         static Career_SO _careerSO;
         static Career_SO Career_SO => _careerSO ??= _getOrCreateAllCareersSO();
@@ -38,6 +38,7 @@ namespace Career
 
     public enum CareerName 
     {
+        None,
         Wanderer,
         Lumberjack,
         Smith

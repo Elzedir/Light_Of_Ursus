@@ -142,10 +142,14 @@ public class Ability
 [Serializable]
 public class Actor_Abilities : PriorityData
 {
-    public Actor_Abilities(uint actorID) : base(actorID, ComponentType.Actor) { }
+    public Actor_Abilities(uint actorID, Dictionary<Ability,float> abilityList) : base(actorID, ComponentType.Actor)
+    {
+        AbilityList = abilityList;
+    }
+    
     public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-    public Dictionary<Ability, float> AbilityList = new();
+    public Dictionary<Ability, float> AbilityList;
     protected override bool _priorityChangeNeeded(object dataChanged) => false;
     protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; } = new();
 }

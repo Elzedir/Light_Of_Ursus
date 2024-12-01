@@ -8,13 +8,19 @@ using UnityEngine;
 
 namespace EmployeePosition
 {
-    [CreateAssetMenu(fileName = "AllEmployeePositionTypes_SO", menuName = "SOList/AllEmployeePositionTypes_SO")]
+    [CreateAssetMenu(fileName = "EmployeePosition_SO", menuName = "SOList/EmployeePosition_SO")]
     [Serializable]
     public class EmployeePosition_SO : Base_SO<EmployeePosition_Master>
     {
         public EmployeePosition_Master[] EmployeePositions                           => Objects;
-        public EmployeePosition_Master   GetEmployeePosition_Master(EmployeePositionName employeePositionName) => GetObject_Master((uint)employeePositionName);
 
+        public EmployeePosition_Master GetEmployeePosition_Master(EmployeePositionName employeePositionName) =>
+            GetObject_Master((uint)employeePositionName);
+
+        public EmployeePosition_Requirements GetEmployeeMinimumRequirements(EmployeePositionName employeePositionName) =>
+            EmployeePosition_List.GetEmployeeMinimumRequirements(employeePositionName);
+        
+        
         public override uint GetObjectID(int id) => (uint)EmployeePositions[id].EmployeePositionName;
 
         public void PopulateDefaultEmployeePositions()
@@ -103,9 +109,7 @@ namespace EmployeePosition
 
             EditorGUILayout.LabelField("EmployeePosition Name", $"{employeePosition.EmployeePositionName}");
 
-            if (employeePosition.EmployeeDataPreset == null) return;
-
-            var actorGenerationParameters = employeePosition.EmployeeDataPreset;
+            var actorDataPreset = ActorDataPreset_Manager.GetActorDataPreset(employeePosition.EmployeeDataPreset);
 
             EditorGUILayout.LabelField("Actor Generation Parameters", EditorStyles.boldLabel);
 
@@ -113,10 +117,10 @@ namespace EmployeePosition
 
             if (_showEmployeeActorData)
             {
-                EditorGUILayout.LabelField("ActorID",        $"{actorGenerationParameters.ActorID}");
-                EditorGUILayout.LabelField("ActorName",      $"{actorGenerationParameters.ActorName}");
-                EditorGUILayout.LabelField("ActorFactionID", $"{actorGenerationParameters.FactionID}");
-                EditorGUILayout.LabelField("ActorCityID",    $"{actorGenerationParameters.CityID}");
+                EditorGUILayout.LabelField("ActorID",        $"{actorDataPreset.ActorID}");
+                EditorGUILayout.LabelField("ActorName",      $"{actorDataPreset.ActorName}");
+                EditorGUILayout.LabelField("ActorFactionID", $"{actorDataPreset.FullIdentification.ActorFactionID}");
+                EditorGUILayout.LabelField("ActorCityID",    $"{actorDataPreset.FullIdentification.ActorCityID}");
             }
             
             EditorGUILayout.LabelField("Employee Position Career Data", EditorStyles.boldLabel);
@@ -125,7 +129,7 @@ namespace EmployeePosition
 
             if (_showEmployeeCareerData)
             {
-                _drawEmployeeCareerData(actorGenerationParameters);
+                _drawEmployeeCareerData(actorDataPreset);
             }
             
             EditorGUILayout.LabelField("Employee Position State Data", EditorStyles.boldLabel);
@@ -134,16 +138,16 @@ namespace EmployeePosition
             
             if (_showEmployeeStatesData)
             {
-                _drawEmployeePositionStateData(actorGenerationParameters);
+                _drawEmployeePositionStateData(actorDataPreset);
             }
         }
 
-        void _drawEmployeeCareerData(ActorGenerationParameters_Master actorGenerationParametersMaster)
+        void _drawEmployeeCareerData(Actor_Data actorDataPreset)
         {
-            EditorGUILayout.LabelField("Career Name",        $"{actorGenerationParametersMaster.CareerName}");
-            
-            var initialRecipes = actorGenerationParametersMaster.InitialRecipes;
-            
+            EditorGUILayout.LabelField("Career Name", $"{actorDataPreset.CareerData.CareerName}");
+
+            var initialRecipes = actorDataPreset.CraftingData.KnownRecipes;
+
             if (initialRecipes.Count == 1)
             {
                 EditorGUILayout.LabelField(initialRecipes[0].ToString());
@@ -169,9 +173,9 @@ namespace EmployeePosition
                     EditorGUILayout.EndScrollView();
                 }
             }
-            
-            var initialVocations = actorGenerationParametersMaster.InitialVocations;
-            
+
+            var initialVocations = actorDataPreset.VocationData.ActorVocations;
+
             if (initialVocations.Count == 1)
             {
                 EditorGUILayout.LabelField(initialVocations[0].ToString());
@@ -198,10 +202,10 @@ namespace EmployeePosition
                 }
             }
         }
-        
-        void _drawEmployeePositionStateData(ActorGenerationParameters_Master actorGenerationParametersMaster)
+
+        void _drawEmployeePositionStateData(Actor_Data actorDataPreset)
         {
-            var employeePositionStates = actorGenerationParametersMaster.StatesAndConditions;
+            var employeePositionStates = actorDataPreset.StatesAndConditionsData;
             
             EditorGUILayout.LabelField("Employee Position States Not initialised yet", EditorStyles.boldLabel);
         }

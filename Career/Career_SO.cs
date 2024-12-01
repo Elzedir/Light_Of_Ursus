@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Career
 {
-    [CreateAssetMenu(fileName = "AllCareers_SO", menuName = "SOList/AllCareers_SO")]
+    [CreateAssetMenu(fileName = "Career_SO", menuName = "SOList/Career_SO")]
     [Serializable]
     public class Career_SO : Base_SO<Career_Master>
     {

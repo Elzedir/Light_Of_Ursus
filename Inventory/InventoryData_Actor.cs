@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Actor;
 using Items;
 using Priority;
+using Tools;
 using UnityEngine;
 
 namespace Inventory
@@ -10,7 +11,11 @@ namespace Inventory
     [Serializable]
     public class InventoryData_Actor : InventoryData
     {
-        public InventoryData_Actor(uint actorID) : base(actorID, ComponentType.Actor) { }
+        public InventoryData_Actor(uint actorID, ObservableDictionary<uint, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
+        {
+            AllInventoryItems = allInventoryItems;
+        }
+        
         public override ComponentType       ComponentType      => ComponentType.Actor;
         public          InventoryData_Actor GetInventoryData() => this;
 
@@ -21,7 +26,7 @@ namespace Inventory
         float _availableCarryWeight;
         public float AvailableCarryWeight => _availableCarryWeight != 0 
             ? _availableCarryWeight 
-            : ActorReference.Actor.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+            : ActorReference.Actor.ActorData.StatsAndAbilities.ActorStats.AvailableCarryWeight;
         public override bool HasSpaceForItems(List<Item> items)
         {
             if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)

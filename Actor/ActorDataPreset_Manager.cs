@@ -31,6 +31,8 @@ namespace Actor
 
     public enum ActorDataPresetName
     {
+        No_Preset,
+        
         Wanderer_Beginner,
         Wanderer_Novice,
         Wanderer_Apprentice,
@@ -44,5 +46,12 @@ namespace Actor
         Lumberjack_Journeyman,
         Lumberjack_Expert,
         Lumberjack_Master,
+        
+        Smith_Beginner,
+        Smith_Novice,
+        Smith_Apprentice,
+        Smith_Journeyman,
+        Smith_Expert,
+        Smith_Master,
     }
 }

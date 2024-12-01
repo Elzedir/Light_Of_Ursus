@@ -42,7 +42,8 @@ namespace Recipes
     {
         None,
         Plank,
-        Log
+        Log,
+        Iron_Ingot,
     }
 
     public class Recipe

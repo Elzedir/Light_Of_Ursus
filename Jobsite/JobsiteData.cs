@@ -93,13 +93,12 @@ namespace Jobsite
         {
             if (OwnerID == 0) GetNewOwner();
 
-            if (OwnerID != 0) 
-            {
-                var ownerData = Actor_Manager.GetActorData(OwnerID);
-                var owner     = Actor_Manager.GetActor(OwnerID);
+            if (OwnerID == 0) return;
             
-                owner.ActorMaterial.material = Resources.Load<Material>("Materials/Material_Yellow");
-            }
+            var ownerData = Actor_Manager.GetActorData(OwnerID);
+            var owner     = Actor_Manager.GetActor(OwnerID);
+            
+            owner.ActorMaterial.material = Resources.Load<Material>("Materials/Material_Yellow");
 
             // And change all affected things, like perks, job settings, etc.
         }
@@ -124,16 +123,10 @@ namespace Jobsite
             {
                 return OwnerID = newOwnerID;
             }
+            
+            FillEmptyJobsitePositions();
 
-            for (int i = 0; i < 3; i++)
-            {
-                if (OwnerID != 0)
-                {
-                    break;
-                }
-
-                OwnerID = _generateNewEmployee(EmployeePositionName.Owner);
-            }
+            GetNewOwner();
 
             if (OwnerID != 0)
             {
@@ -146,60 +139,39 @@ namespace Jobsite
 
         protected uint _findEmployeeFromJobsite(EmployeePositionName positionName)
         {
-            if (AllEmployeeIDs == null || !AllEmployeeIDs.Any())
+            if (AllEmployeeIDs is null || !AllEmployeeIDs.Any())
             {
                 //Debug.Log("No employees found in the jobsite.");
                 return 0;
             }
 
-            uint employeeID = AllEmployeeIDs.FirstOrDefault(); // For now, just get the first. Later, use inheritance or the greatest combined skills or governer approval.
-            if (employeeID == 0)
+            var employeeID = AllEmployeeIDs.FirstOrDefault(); 
+            // For now, just get the first. Later, use inheritance or the greatest combined skills or governor approval.
+            
+            if (employeeID is 0)
             {
                 //Debug.LogWarning($"No suitable employee found for position: {position} in the jobsite.");
                 return 0;
             }
 
             var actor = Actor_Manager.GetActor(actorID: employeeID, generateActorIfNotFound: true);
-            if (actor == null || actor.ActorData == null)
-            {
-                //Debug.Log($"Failed to get or generate actor for employee ID {employeeID}.");
-                return 0;
-            }
-
-            //Debug.Log($"Found employee: {employeeID} for position: {position}");
-            return actor.ActorData.ActorID;
+            
+            return actor?.ActorData?.ActorID ?? 0;
         }
 
         protected uint _findEmployeeFromCity(EmployeePositionName positionName)
         {
             var city = Manager_City.GetCity(CityID);
-            if (city == null)
-            {
-                //Debug.Log($"City with ID {CityID} not found.");
-                return 0;
-            }
 
-            var cityData = city.CityData;
-            if (cityData == null)
-            {
-                //Debug.Log($"CityData for city with ID {CityID} is null.");
-                return 0;
-            }
+            var allCitizenIDs = city?.CityData?.Population?.AllCitizenIDs;
 
-            var population = cityData.Population;
-            if (population == null)
-            {
-                //Debug.Log($"Population data for city with ID {CityID} is null.");
-                return 0;
-            }
-
-            if (population.AllCitizenIDs == null || !population.AllCitizenIDs.Any())
+            if (allCitizenIDs == null || !allCitizenIDs.Any())
             {
                 //Debug.Log("No citizens found in the city.");
                 return 0;
             }
 
-            var citizenID = population.AllCitizenIDs
+            var citizenID = allCitizenIDs
                                       .FirstOrDefault(c =>
                                           Actor_Manager.GetActorData(c)?.CareerData.JobsiteID == -1 &&
                                           _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
@@ -212,14 +184,8 @@ namespace Jobsite
             }
 
             var actor = Actor_Manager.GetActor(actorID: citizenID, generateActorIfNotFound: true);
-            if (actor == null || actor.ActorData == null)
-            {
-                //Debug.Log($"Failed to get or generate actor for citizen ID {citizenID}.");
-                return 0;
-            }
-
-            //Debug.Log($"Found citizen: {citizenID} for position: {position}");
-            return actor.ActorData.ActorID;
+            
+            return actor?.ActorData?.ActorID ?? 0;
         }
 
         protected uint _generateNewEmployee(EmployeePositionName positionName)
@@ -230,11 +196,7 @@ namespace Jobsite
 
             if (employeeMaster == null) throw new Exception($"EmployeeMaster for position: {positionName} is null.");
 
-            var actorGenerationParameters = employeeMaster.EmployeeDataPreset;
-
-            if (actorGenerationParameters == null) throw new Exception($"ActorGenerationParameters for position: {positionName} is null.");
-
-            var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorGenerationParameters);
+            var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, employeeMaster.EmployeeDataPreset);
 
             city.CityData.Population.AddCitizen(actor.ActorData.ActorID);
             AddEmployeeToJobsite(actor.ActorData.ActorID);
@@ -265,9 +227,6 @@ namespace Jobsite
 
             switch(positionName)
             {
-                case EmployeePositionName.Owner:
-                    vocationRequirements = new List<VocationRequirement>();
-                    break;
                 case EmployeePositionName.Logger:
                     vocationRequirements = new List<VocationRequirement>
                     {

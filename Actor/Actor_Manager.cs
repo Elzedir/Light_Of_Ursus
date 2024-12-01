@@ -1,7 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using Career;
 using DateAndTime;
+using Inventory;
 using Items;
+using Jobs;
 using Managers;
 using Recipes;
 using ScriptableObjects;
@@ -13,9 +16,9 @@ namespace Actor
 {
     public class Actor_Manager : MonoBehaviour, IDataPersistence
     {
-        static          AllActors_SO                     _allActors;
+        static          AllActors_SO                      _allActors;
         static          Dictionary<uint, Actor_Data>      _allActorData       = new();
-        static          uint                             _lastUnusedActorID  = 1;
+        static          uint                              _lastUnusedActorID  = 1;
         static readonly Dictionary<uint, Actor_Component> _allActorComponents = new();
 
         public void SaveData(SaveData data)
@@ -137,12 +140,12 @@ namespace Actor
             return null;
         }
 
-        public static Actor_Component SpawnNewActor(Vector3                   spawnPoint,
-                                                   ActorGenerationParameters_Master actorGenerationParametersMaster)
+        public static Actor_Component SpawnNewActor(Vector3             spawnPoint,
+                                                    ActorDataPresetName actorDataPreset)
         {
             Actor_Component actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
 
-            actor.SetActorData(_generateNewActorData(actor, actorGenerationParametersMaster));
+            actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
             _allActorComponents[actor.ActorData.ActorID] = actor;
 
@@ -207,53 +210,95 @@ namespace Actor
             return actorGO;
         }
 
-        static Actor_Data _generateNewActorData(Actor_Component            actor,
-                                               ActorGenerationParameters_Master actorGenerationParametersMaster)
+        static Actor_Data _generateNewActorData(Actor_Component     actor,
+                                                ActorDataPresetName actorDataPresetName)
         {
-            a
-                
-                // Due to optional ActorData, ActorID can be 0, factor this in so that it will change the ID, unless it's 
-                // != 0 since then it would be a set default character, not a random default character.
-            
+            var actorDataPreset = ActorDataPreset_Manager.GetActorDataPreset(actorDataPresetName);
+
             var fullIdentification = new FullIdentification(
-                actorID: actorGenerationParametersMaster.ActorID != 0
-                    ? actorGenerationParametersMaster.ActorID
-                    : _getRandomActorID(),
-                actorName: actorGenerationParametersMaster.ActorName ?? _getRandomActorName(),
-                actorFactionID: actorGenerationParametersMaster.FactionID != 0
-                    ? actorGenerationParametersMaster.FactionID
-                    : _getRandomFaction(),
-                actorCityID: actorGenerationParametersMaster.CityID,
-                actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays())
+                actorID: actorDataPreset?.ActorID               ?? _getRandomActorID(),
+                actorName: actorDataPreset?.ActorName           ?? _getRandomActorName(),
+                actorFactionID: actorDataPreset?.ActorFactionID ?? _getRandomFaction(),
+                actorCityID: actorDataPreset?.FullIdentification.ActorCityID ??
+                             1, // Change this so that it generates cityID
+                actorBirthDate: actorDataPreset?.FullIdentification.ActorBirthDate ??
+                                new Date(Manager_DateAndTime.GetCurrentTotalDays()),
+                actorDataPresetName: actorDataPreset?.FullIdentification.ActorDataPresetName ??
+                                     ActorDataPresetName.No_Preset
             );
 
-            actor.SetActorData(new Actor_Data(fullIdentification));
+            var gameObjectData = new GameObjectData(
+                actorID: fullIdentification.ActorID,
+                actorTransform: actor.transform,
+                actorMesh: null,
+                actorMaterial: null
+            );
 
-            foreach (var recipe in actorGenerationParametersMaster.InitialRecipes)
-            {
-                //Debug.Log($"Adding recipe: {recipe}");
-                actor.ActorData.CraftingData.AddRecipe(recipe);
-            }
+            var careerData = new CareerData(
+                actorID: fullIdentification.ActorID,
+                careerName: actorDataPreset?.CareerData.CareerName     ?? CareerName.Wanderer,
+                jobsNotFromCareer: actorDataPreset?.CareerData.AllJobs ?? new HashSet<JobName>()
+            );
+            
+            var craftingData = new CraftingData(
+                actorID: fullIdentification.ActorID,
+                knownRecipes: actorDataPreset?.CraftingData.KnownRecipes ?? new List<RecipeName>()
+            );
 
-            // Add initial vocations
-            foreach (var vocation in actorGenerationParametersMaster.InitialVocations)
-            {
-                //Debug.Log($"Adding vocation: {vocation.VocationName} with experience: {vocation.VocationExperience}");
-                actor.ActorData.VocationData.AddVocation(vocation.VocationName, vocation.VocationExperience);
-            }
+            var vocationData = new VocationData(
+                actorID: fullIdentification.ActorID,
+                actorVocations: actorDataPreset?.VocationData.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
+                );
+            
+            var speciesAndPersonality = new SpeciesAndPersonality(
+                actorID: fullIdentification.ActorID,
+                actorSpecies: actorDataPreset?.SpeciesAndPersonality.ActorSpecies         ?? _getRandomSpecies(),
+                actorPersonality: actorDataPreset?.SpeciesAndPersonality.ActorPersonality ?? _getRandomPersonality()
+            );
 
-            actor.ActorData.CraftingData.AddRecipe(RecipeName.Log);
-            actor.ActorData.CraftingData.AddRecipe(RecipeName.Plank);
+            var statsAndAbilities = new StatsAndAbilities(
+                actorID: fullIdentification.ActorID,
+                actorStats: actorDataPreset?.StatsAndAbilities.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
+                actorAspects: actorDataPreset?.StatsAndAbilities.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
+                actorAbilities: actorDataPreset?.StatsAndAbilities.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
+                );
 
-            //Find a better way to put into groups.
-            actor.ActorData.InventoryData.SetInventory(new ObservableDictionary<uint, Item>(), true);
-            actor.ActorData.EquipmentData.SetEquipment(null, null, null, null, null, null, null, null, null);
+            var statesAndConditions = new StatesAndConditionsData(
+                actorID: fullIdentification.ActorID,
+                actorStates: actorDataPreset?.StatesAndConditionsData.Actor_States ?? _getNewActorStates(fullIdentification.ActorID),
+                actorConditions: actorDataPreset?.StatesAndConditionsData.Actor_Conditions ?? _getNewActorConditions(fullIdentification.ActorID)
+                );
 
-            actor.ActorData.SpeciesAndPersonality.SetSpecies(_getRandomSpecies());
-            actor.ActorData.SpeciesAndPersonality.SetPersonality(_getRandomPersonality());
-            actor.ActorData.GameObjectData.SetGameObjectProperties(actor.transform);
+            var inventoryData = new InventoryData_Actor(
+                actorID: fullIdentification.ActorID,
+                new ObservableDictionary<uint, Item>()
+            );
 
-            // Set ActorStatesAndConditions based on Race, Religion, etc.
+            var equipmentData = new EquipmentData(
+                actorID: fullIdentification.ActorID,
+                head: null,
+                neck: null,
+                chest: null,
+                leftHand: null,
+                rightHand: null,
+                rings: new Item[2],
+                waist: null,
+                legs: null,
+                feet: null
+            );
+
+            actor.SetActorData(new Actor_Data(
+                fullIdentification,
+                gameObjectData,
+                careerData,
+                craftingData,
+                vocationData,
+                speciesAndPersonality,
+                statsAndAbilities,
+                statesAndConditions,
+                inventoryData,
+                equipmentData
+                ));
 
             _addToAllActorData(actor.ActorData);
 
@@ -277,7 +322,7 @@ namespace Actor
             return new ActorName($"Test_{Random.Range(0, 50000)}", "of Tester");
         }
 
-        private static uint _getRandomFaction()
+        static uint _getRandomFaction()
         {
             // Take race and things into account for faction
 
@@ -292,6 +337,48 @@ namespace Actor
         static ActorPersonality _getRandomPersonality()
         {
             return new ActorPersonality(Manager_Personality.GetRandomPersonalityTraits(null, 3));
+        }
+
+        static Actor_Stats _getNewActorStats(uint actorID)
+        {
+            return new Actor_Stats(
+                actorID: actorID,
+                actorLevelData: new ActorLevelData(actorID),
+                actorSpecial: new Special(),
+                actorCombatStats: new CombatStats()
+                );
+        }
+        
+        static Actor_Aspects _getNewActorAspects(uint actorID)
+        {
+            return new Actor_Aspects(
+                actorID: actorID,
+                actorAspectList: new List<AspectName>()
+                );
+        }
+        
+        static Actor_Abilities _getNewActorAbilities(uint actorID)
+        {
+            return new Actor_Abilities(
+                actorID: actorID,
+                abilityList: new Dictionary<Ability, float>()
+                );
+        }
+        
+        static Actor_States _getNewActorStates(uint actorID)
+        {
+            return new Actor_States(
+                actorID: actorID,
+                initialisedStates: new ObservableDictionary<PrimaryStateName, bool>()
+                );
+        }
+
+        static Actor_Conditions _getNewActorConditions(uint actorID)
+        {
+            return new Actor_Conditions(
+                actorID: actorID,
+                currentConditions: new ObservableDictionary<ConditionName, float>()
+                );
         }
     }
 }

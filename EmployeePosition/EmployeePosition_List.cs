@@ -16,7 +16,7 @@ namespace EmployeePosition
             {
                 allEmployeePositions.Add(logger.Key, logger.Value);
             }
-            
+
             foreach (var sawyer in _sawyer())
             {
                 allEmployeePositions.Add(sawyer.Key, sawyer.Value);
@@ -26,23 +26,30 @@ namespace EmployeePosition
             {
                 allEmployeePositions.Add(smith.Key, smith.Value);
             }
-            
+
             return allEmployeePositions;
         }
-        
+
+        public static EmployeePosition_Requirements GetEmployeeMinimumRequirements(EmployeePositionName employeePositionName)
+        {
+            if (_employeeMinimumRequirements.TryGetValue(employeePositionName, out var employeeMinimumRequirements))
+            {
+                return employeeMinimumRequirements;
+            }
+
+            Debug.LogError($"Employee Position {employeePositionName} not found in EmployeePosition_List");
+            return null;
+        }
+
         static Dictionary<uint, EmployeePosition_Master> _logger()
         {
             return new Dictionary<uint, EmployeePosition_Master>
             {
                 {
-                    (uint)EmployeePositionName.Logger, new EmployeePosition_Master
-                    (
+                    (uint)EmployeePositionName.Logger, new EmployeePosition_Master(
                         EmployeePositionName.Logger,
-                        new ActorGenerationParameters_Master(
-                            
-                            )
+                        ActorDataPresetName.Lumberjack_Journeyman
                     )
-
                 }
             };
         }
@@ -54,35 +61,64 @@ namespace EmployeePosition
                 {
                     (uint)EmployeePositionName.Sawyer, new EmployeePosition_Master
                     (
-                        EmployeePositionName.Sawyer, new Actor_Data(
-                            careerName: CareerName.Lumberjack,
-                            initialRecipes: new List<RecipeName>(
-                                new[] { RecipeName.Plank }),
-                            initialVocations: new List<ActorVocation>(
-                                new[] { new ActorVocation(VocationName.Sawying, 1000) })
-                        )
-                    )
+                        EmployeePositionName.Sawyer,
+                        ActorDataPresetName.Lumberjack_Journeyman
 
+                    )
                 }
             };
         }
 
         static Dictionary<uint, EmployeePosition_Master> _smith()
         {
-            return new Dictionary<uint, EmployeePosition_Master>()
+            return new Dictionary<uint, EmployeePosition_Master>
             {
                 {
                     (uint)EmployeePositionName.Smith, new EmployeePosition_Master
-                    (EmployeePositionName.Smith, new ActorGenerationParameters_Master(
-                            careerName: CareerName.Smith,
-                            initialRecipes: new List<RecipeName>(
-                                new[] { RecipeName.None }),
-                            initialVocations: new List<ActorVocation>(
-                                new[] { new ActorVocation(VocationName.Smithing, 1000) })
-                        )
+                    (
+                        EmployeePositionName.Smith,
+                        ActorDataPresetName.Smith_Journeyman
                     )
                 }
             };
         }
+
+        static readonly Dictionary<EmployeePositionName, EmployeePosition_Requirements> _employeeMinimumRequirements =
+            new()
+            {
+                {
+                    EmployeePositionName.Logger, new EmployeePosition_Requirements(
+                        EmployeePositionName.Logger,
+                        new CareerRequirements(CareerName.Lumberjack),
+                        new CraftingRequirements(new List<RecipeName> { RecipeName.Log }),
+                        new VocationRequirements(new Dictionary<VocationName, float>
+                        {
+                            { VocationName.Logging, 1000 }
+                        })
+                    )
+                },
+                {
+                    EmployeePositionName.Sawyer, new EmployeePosition_Requirements(
+                        EmployeePositionName.Sawyer,
+                        new CareerRequirements(CareerName.Lumberjack),
+                        new CraftingRequirements(new List<RecipeName> { RecipeName.Plank }),
+                        new VocationRequirements(new Dictionary<VocationName, float>
+                        {
+                            { VocationName.Sawying, 1000 }
+                        })
+                    )
+                },
+                {
+                    EmployeePositionName.Smith, new EmployeePosition_Requirements(
+                        EmployeePositionName.Smith,
+                        new CareerRequirements(CareerName.Smith),
+                        new CraftingRequirements(new List<RecipeName> { RecipeName.Iron_Ingot }),
+                        new VocationRequirements(new Dictionary<VocationName, float>
+                        {
+                            { VocationName.Smithing, 1000 }
+                        })
+                    )
+                }
+            };
     }
 }

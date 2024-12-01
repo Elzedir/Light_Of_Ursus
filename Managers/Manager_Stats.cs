@@ -72,7 +72,7 @@ public class CombatStats
 }
 
 [Serializable]
-public class SPECIAL
+public class Special
 {
     public int Agility; // Dexterity
     public int Charisma;
@@ -82,7 +82,7 @@ public class SPECIAL
     public int Perception; // Wisdom
     public int Strength;
 
-    public SPECIAL(int agility = 0, int charisma = 0, int endurance = 0, int intelligence = 0, int luck = 0, int perception = 0, int strength = 0)
+    public Special(int agility = 0, int charisma = 0, int endurance = 0, int intelligence = 0, int luck = 0, int perception = 0, int strength = 0)
     {
         Agility = agility;
         Charisma = charisma;

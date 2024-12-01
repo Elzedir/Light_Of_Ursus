@@ -144,11 +144,10 @@ namespace Managers
     
     public class StatesAndConditionsData
     {
-        public StatesAndConditionsData(uint actorID)
+        public StatesAndConditionsData(uint actorID, Actor_States actorStates, Actor_Conditions actorConditions)
         {
-            Actor_States     = new Actor_States(actorID);
-            
-            Actor_Conditions = new Actor_Conditions(actorID);
+            Actor_States     = actorStates;
+            Actor_Conditions = actorConditions;
         }
         
         public void SetActorStatesAndConditions (StatesAndConditionsData statesAndConditionsData)
@@ -169,9 +168,9 @@ namespace Managers
     [Serializable]
     public class Actor_Conditions : PriorityData
     {
-        public Actor_Conditions(uint actorID) : base(actorID, ComponentType.Actor)
+        public Actor_Conditions(uint actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
         {
-            CurrentConditions                   =  new ObservableDictionary<ConditionName, float>();
+            CurrentConditions                   =  currentConditions;
             CurrentConditions.DictionaryChanged += OnConditionChanged;
             
             Manager_TickRate.RegisterTicker(TickerType.Actor_StateAndCondition, TickRate.OneSecond, ActorReference.ActorID, _onTick);
