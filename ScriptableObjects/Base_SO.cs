@@ -11,6 +11,9 @@ namespace ScriptableObjects
     {
         [SerializeField] T[]   _objects;
         public           T[]   Objects => _objects ??= InitialiseAllObjects();
+
+        public void LoadSO(T[] objects) => _objects = objects;
+        
         Dictionary<uint, int>        _objectIndexLookup;
         public Dictionary<uint, int> ObjectIndexLookup => _objectIndexLookup ??= _buildIndexLookup();
         int                                _currentIndex;
@@ -103,6 +106,16 @@ namespace ScriptableObjects
 
             Array.Resize(ref _objects, Math.Max(newSize * 2, Objects.Length));
             _currentIndex = newSize;
+        }
+        
+        public void UpdateAllObjects(Dictionary<uint, T> newObjects, bool clearDataFirst = false)
+        {
+            if (clearDataFirst) ClearObjectData();
+            
+            foreach (var (key, value) in newObjects)
+            {
+                UpdateObject(key, value);
+            }
         }
 
         public void UpdateObject(uint objectID, T @object)

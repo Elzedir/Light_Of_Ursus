@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using EmployeePosition;
+using Initialisation;
 using Managers;
 using Recipes;
 using ScriptableObjects;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
@@ -300,7 +302,7 @@ namespace Jobsite
                 return false;
             }
 
-            var station = Manager_Station.GetStationData(stationID);
+            var station = Station_Manager.GetStation_Data(stationID);
 
             if (station.CurrentOperatorIDs.Contains(employeeID))
             {
@@ -351,7 +353,7 @@ namespace Jobsite
                 return false;
             }
 
-            var station = Manager_Station.GetStationData(stationID);
+            var station = Station_Manager.GetStation_Data(stationID);
 
             if (station == null)
             {
@@ -376,7 +378,7 @@ namespace Jobsite
             return true;
         }
 
-        public List<uint> GetAllOperators() => AllStationIDs.SelectMany(stationID => Manager_Station.GetStationData(stationID).CurrentOperatorIDs).ToList();
+        public List<uint> GetAllOperators() => AllStationIDs.SelectMany(stationID => Station_Manager.GetStation_Data(stationID).CurrentOperatorIDs).ToList();
 
         // public void AllocateEmployeesToStations()
         // {
@@ -409,8 +411,8 @@ namespace Jobsite
         public void FillEmptyJobsitePositions()
         {
             var prosperityRatio      = ProsperityData.GetProsperityPercentage();
-            var maxOperatorCount     = AllStationIDs.SelectMany(stationID => Manager_Station.GetStation(stationID).AllOperatingAreasInStation).ToList().Count;
-            var currentOperatorCount = AllStationIDs.SelectMany(stationID => Manager_Station.GetStationData(stationID).CurrentOperatorIDs).ToList().Count;
+            var maxOperatorCount     = AllStationIDs.SelectMany(stationID => Station_Manager.GetStation_Component(stationID).AllOperatingAreasInStation).ToList().Count;
+            var currentOperatorCount = AllStationIDs.SelectMany(stationID => Station_Manager.GetStation_Data(stationID).CurrentOperatorIDs).ToList().Count;
             var desiredOperatorCount = Mathf.RoundToInt(maxOperatorCount * prosperityRatio);
 
             if (currentOperatorCount >= maxOperatorCount)
@@ -440,7 +442,7 @@ namespace Jobsite
                         break;
                     }
 
-                    var station = Manager_Station.GetStation(stationID);
+                    var station = Station_Manager.GetStation_Component(stationID);
 
                     if (station == null)
                     {
@@ -448,7 +450,7 @@ namespace Jobsite
                         continue;
                     }
 
-                    if (Manager_Station.GetStationData(stationID).CurrentOperatorIDs.Count >= station.AllOperatingAreasInStation.Count)
+                    if (Station_Manager.GetStation_Data(stationID).CurrentOperatorIDs.Count >= station.AllOperatingAreasInStation.Count)
                     {
                         //Debug.Log($"All operating areas are already filled for StationID: {stationID}");
                         continue;

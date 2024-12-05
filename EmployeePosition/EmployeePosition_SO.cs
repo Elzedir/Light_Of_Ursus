@@ -38,6 +38,11 @@ namespace EmployeePosition
             {
                 defaultEmployeePositions.Add(defaultEmployeePosition.Key, defaultEmployeePosition.Value);
             }
+            
+            foreach (var employee in defaultEmployeePositions)
+            {
+                Debug.Log($"Employee Position: {employee.Value.EmployeePositionName}");
+            }
 
             return defaultEmployeePositions;
         }
@@ -68,6 +73,12 @@ namespace EmployeePosition
         {
             var allEmployeePositionsSO = (EmployeePosition_SO)target;
 
+            if (allEmployeePositionsSO?.EmployeePositions is null ||
+                allEmployeePositionsSO.EmployeePositions.Length is 0)
+            {
+                allEmployeePositionsSO?.PopulateDefaultEmployeePositions();
+            }
+            
             if (allEmployeePositionsSO?.EmployeePositions is null || allEmployeePositionsSO.EmployeePositions.Length is 0)
             {
                 EditorGUILayout.LabelField("No EmployeePositions Found", EditorStyles.boldLabel);
@@ -85,8 +96,7 @@ namespace EmployeePosition
             EditorGUILayout.LabelField("All EmployeePositions", EditorStyles.boldLabel);
 
             var nonNullEmployeePositions = allEmployeePositionsSO.EmployeePositions.Where(employeePosition =>
-                employeePosition != null && (employeePosition.EmployeeDataPreset == null ||
-                                   employeePosition.EmployeePositionName != 0)).ToArray();
+                employeePosition != null && employeePosition.EmployeeDataPreset != ActorDataPresetName.No_Preset).ToArray();
 
             _employeePositionScrollPos = EditorGUILayout.BeginScrollView(_employeePositionScrollPos,
                 GUILayout.Height(Math.Min(200, nonNullEmployeePositions.Length * 20)));

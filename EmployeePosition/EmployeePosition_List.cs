@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EmployeePosition
 {
-    public class EmployeePosition_List : MonoBehaviour
+    public abstract class EmployeePosition_List
     {
         public static Dictionary<uint, EmployeePosition_Master> GetAllDefaultEmployeePositions()
         {
@@ -25,6 +25,11 @@ namespace EmployeePosition
             foreach (var smith in _smith())
             {
                 allEmployeePositions.Add(smith.Key, smith.Value);
+            }
+
+            foreach (var employee in allEmployeePositions)
+            {
+                Debug.Log($"Employee Position: {employee.Value.EmployeePositionName}");
             }
 
             return allEmployeePositions;

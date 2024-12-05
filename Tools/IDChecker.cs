@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Actor;
 using Jobsite;
+using Station;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -70,9 +71,9 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixStationIDs()
     {
-        var stations = FindObjectsByType<StationComponent>(FindObjectsSortMode.None);
+        var stations = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateStations = new List<StationComponent>();
+        var duplicateStations = new List<Station_Component>();
 
         foreach (var station in stations)
         {

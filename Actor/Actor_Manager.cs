@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Career;
 using DateAndTime;
+using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
@@ -222,9 +223,7 @@ namespace Actor
                 actorCityID: actorDataPreset?.FullIdentification.ActorCityID ??
                              1, // Change this so that it generates cityID
                 actorBirthDate: actorDataPreset?.FullIdentification.ActorBirthDate ??
-                                new Date(Manager_DateAndTime.GetCurrentTotalDays()),
-                actorDataPresetName: actorDataPreset?.FullIdentification.ActorDataPresetName ??
-                                     ActorDataPresetName.No_Preset
+                                new Date(Manager_DateAndTime.GetCurrentTotalDays())
             );
 
             var gameObjectData = new GameObjectData(
@@ -288,6 +287,7 @@ namespace Actor
             );
 
             actor.SetActorData(new Actor_Data(
+                actorDataPresetName,
                 fullIdentification,
                 gameObjectData,
                 careerData,

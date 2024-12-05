@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Career
 {
-    public class Career_List : MonoBehaviour
+    public abstract class Career_List
     {
         public static Dictionary<uint, Career_Master> GetAllDefaultCareers()
         {

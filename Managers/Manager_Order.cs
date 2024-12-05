@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using EmployeePosition;
+using Initialisation;
 using Items;
 using Jobsite;
 using Managers;
 using NUnit.Framework;
 using ScriptableObjects;
+using Station;
 using UnityEngine;
 
 public class Manager_Order : MonoBehaviour, IDataPersistence
@@ -275,11 +277,11 @@ public class Order_Base
     Actor_Component _actor;
     public Actor_Component Actor { get { return _actor ??= Actor_Manager.GetActor(ActorID); } }
     public uint StationID_Source;
-    StationComponent _station_Source;
-    public StationComponent Station_Source { get { return _station_Source ??= Manager_Station.GetStation(StationID_Source); } }
+    Station_Component _station_Source;
+    public Station_Component Station_Source { get { return _station_Source ??= Station_Manager.GetStation_Component(StationID_Source); } }
     public uint StationID_Destination;
-    StationComponent _station_Destination;
-    public StationComponent Station_Destination { get { return _station_Destination ??= Manager_Station.GetStation(StationID_Destination); } }
+    Station_Component _station_Destination;
+    public Station_Component Station_Destination { get { return _station_Destination ??= Station_Manager.GetStation_Component(StationID_Destination); } }
     public uint JobsiteID;
     JobsiteComponent _jobsite;
     public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
@@ -469,9 +471,9 @@ public class Order_Base
         return null;
     }
 
-    protected List<StationComponent> _getAlLStationsToHaulTo()
+    protected List<Station_Component> _getAlLStationsToHaulTo()
     {
-        var stationsToHaulTo = new List<StationComponent>();
+        var stationsToHaulTo = new List<Station_Component>();
 
         var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
 

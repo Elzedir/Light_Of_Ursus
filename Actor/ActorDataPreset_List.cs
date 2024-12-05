@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Career;
 using Jobs;
 using Recipes;
+using UnityEngine;
 
 namespace Actor
 {
@@ -25,6 +26,11 @@ namespace Actor
             {
                 allActorDataPresets.Add(smith.Key, smith.Value);
             }
+            
+            foreach (var actorDataPreset in allActorDataPresets)
+            {
+                Debug.Log((ActorDataPresetName)actorDataPreset.Key);
+            }
 
             return allActorDataPresets;
         }
@@ -38,6 +44,7 @@ namespace Actor
                 {
                     (uint)ActorDataPresetName.Wanderer_Journeyman, new Actor_Data
                     (
+                        actorDataPresetName: ActorDataPresetName.Wanderer_Journeyman,
                         careerData: new CareerData
                         (
                             actorID: 0,
@@ -56,6 +63,7 @@ namespace Actor
                 {
                     (uint)ActorDataPresetName.Lumberjack_Journeyman, new Actor_Data
                     (
+                        actorDataPresetName: ActorDataPresetName.Lumberjack_Journeyman,
                         careerData: new CareerData
                         (
                             actorID: 0,
@@ -100,6 +108,7 @@ namespace Actor
                 {
                     (uint)ActorDataPresetName.Smith_Journeyman, new Actor_Data
                     (
+                        actorDataPresetName: ActorDataPresetName.Smith_Journeyman,
                         careerData: new CareerData
                         (
                             actorID: 0,

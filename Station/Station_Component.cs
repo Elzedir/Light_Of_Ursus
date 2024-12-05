@@ -20,7 +20,7 @@ using UnityEngine.Serialization;
 namespace Station
 {
     [RequireComponent(typeof(BoxCollider))]
-    public abstract class StationComponent : MonoBehaviour, IInteractable
+    public abstract class Station_Component : MonoBehaviour, IInteractable
     {
         public uint             StationID => StationData.StationID;
         public JobsiteComponent Jobsite   => StationData.Jobsite;
@@ -323,7 +323,7 @@ namespace Station
         }
     }
 
-    [CustomEditor(typeof(StationComponent), true)]
+    [CustomEditor(typeof(Station_Component), true)]
     public class StationComponent_Editor : Editor
     {
         bool    _showBasicInfo;
@@ -337,9 +337,9 @@ namespace Station
 
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspectorExcept(nameof(StationComponent.StationData), nameof(StationComponent.AllowedEmployeePositions), nameof(StationComponent.AllowedRecipes));
+            DrawDefaultInspectorExcept(nameof(Station_Component.StationData), nameof(Station_Component.AllowedEmployeePositions), nameof(Station_Component.AllowedRecipes));
 
-            StationComponent stationComponent = (StationComponent)target;
+            Station_Component stationComponent = (Station_Component)target;
             Station_Data      stationData      = stationComponent.StationData;
 
             if (stationData == null) return;

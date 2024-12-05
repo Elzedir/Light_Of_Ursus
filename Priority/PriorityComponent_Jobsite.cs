@@ -4,6 +4,8 @@ using System.Linq;
 using Actor;
 using Jobs;
 using Jobsite;
+using Managers;
+using Station;
 using Tools;
 using UnityEngine;
 
@@ -49,7 +51,7 @@ namespace Priority
         protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
         {
             return priorityIDs.Where(priorityID =>
-                Manager_Station.GetStation(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
+                Station_Manager.GetStation_Component(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
         }
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(

@@ -152,16 +152,23 @@ namespace EmployeePosition
         Shopkeeper,
 
         Logger,
-        Logger_Senior,
 
         Sawyer,
-        Sawyer_Senior,
 
         Smith,
-        Smith_Senior,
+        
+        Miner,
 
         Hauler,
         
         Owner,
+        
+        Fisher,
+        
+        Farmer,
+        
+        Cook,
+        
+        Tanner
     }
 }

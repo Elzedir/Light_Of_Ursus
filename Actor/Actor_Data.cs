@@ -5,6 +5,7 @@ using System.Linq;
 using Career;
 using DateAndTime;
 using EmployeePosition;
+using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
@@ -29,6 +30,8 @@ namespace Actor
         public uint      ActorID;
         public uint      ActorFactionID;
         public ActorName ActorName;
+        
+        public ActorDataPresetName ActorDataPresetName;
 
         public FullIdentification FullIdentification;
 
@@ -83,7 +86,7 @@ namespace Actor
 
         // Make an ability to make a deep copy of every class here and every class that needs to be saved.
 
-        public Actor_Data(FullIdentification fullIdentification = null, GameObjectData gameObjectData = null,
+        public Actor_Data(ActorDataPresetName actorDataPresetName, FullIdentification fullIdentification = null, GameObjectData gameObjectData = null,
                          CareerData careerData = null, CraftingData craftingData = null,
                          VocationData vocationData = null,
                          SpeciesAndPersonality speciesAndPersonality = null, StatsAndAbilities statsAndAbilities = null,
@@ -91,11 +94,16 @@ namespace Actor
                          EquipmentData equipmentData = null, QuestData actorQuests = null,
                          Order_Base currentOrder = null)
         {
+            ActorDataPresetName = actorDataPresetName;
+            
             FullIdentification = fullIdentification;
 
-            ActorID        = FullIdentification.ActorReference.ActorID;
-            ActorFactionID = FullIdentification.ActorFactionID;
-            ActorName      = FullIdentification.ActorName;
+            if (FullIdentification != null)
+            {
+                ActorID        = FullIdentification.ActorID;
+                ActorFactionID = FullIdentification.ActorFactionID;
+                ActorName      = FullIdentification.ActorName;    
+            }
 
             GameObjectData          = gameObjectData;
             CareerData              = careerData;
@@ -183,20 +191,18 @@ namespace Actor
     public class FullIdentification : PriorityData
     {
         public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
-                                  Date actorBirthDate, ActorDataPresetName actorDataPresetName) : base(actorID, ComponentType.Actor)
+                                  Date actorBirthDate) : base(actorID, ComponentType.Actor)
         {
             ActorName      = actorName;
             ActorFactionID = actorFactionID;
             ActorCityID    = actorCityID;
             ActorBirthDate = actorBirthDate;
-            ActorDataPresetName = actorDataPresetName;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
         public uint                ActorID;
         public ActorName           ActorName;
-        public ActorDataPresetName ActorDataPresetName;
         public uint                ActorFactionID;
         public uint                ActorCityID;
         public Date                ActorBirthDate;

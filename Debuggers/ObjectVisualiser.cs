@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Managers;
+using Station;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -124,7 +125,7 @@ namespace Debuggers
                 _displayActor(actor);
                 return true;
             }
-            else if (hitGO.TryGetComponent(out StationComponent station))
+            else if (hitGO.TryGetComponent(out Station_Component station))
             {
                 if (hitGO != _currentDisplayedObject)
                 {
@@ -213,7 +214,7 @@ namespace Debuggers
             }
         }
 
-        void _displayStation(StationComponent station)
+        void _displayStation(Station_Component station)
         {
             var stationInventory    = station.StationData.InventoryData;
             var stationProgressData = station.StationData.StationProgressData;

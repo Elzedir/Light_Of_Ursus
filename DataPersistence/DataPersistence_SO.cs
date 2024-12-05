@@ -739,9 +739,9 @@ public class SavedJobsiteData
 [Serializable]
 public class SavedStationData
 {
-    public List<StationData> AllStationData = new();
+    public Station_Data[] AllStationData;
 
-    public SavedStationData(List<StationData> allStationData) => AllStationData = allStationData;
+    public SavedStationData(Station_Data[] allStationData) => AllStationData = allStationData;
 }
 
 [Serializable]

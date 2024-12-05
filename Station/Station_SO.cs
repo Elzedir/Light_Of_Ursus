@@ -10,111 +10,137 @@ namespace Station
 {
     [CreateAssetMenu(fileName = "AllStations_SO", menuName = "SOList/AllStations_SO")]
     [Serializable]
-    public class AllStations_SO : Base_SO<Station_Data>
+    public class Station_SO : Base_SO<Station_Component>
     {
-        public Station_Data[] Stat                                 => Objects;
-        public Station_Component   GetCareer_Master(CareerName careerName) => GetObject_Master((uint)careerName);
+        public Station_Component[] Stations                             => Objects;
+        public Station_Data        GetStation_Data(uint      stationID) => GetObject_Master(stationID).StationData;
+        public Station_Component   GetStation_Component(uint stationID) => GetObject_Master(stationID);
 
-        public override uint GetObjectID(int id) => (uint)Careers[id].CareerName;
-
-        public void PopulateDefaultCareers()
+        public Station_Data[] Save_SO()
         {
-            if (_defaultCareers.Count == 0)
-            {
-                Debug.Log("No Default Careers Found");
-            }
-        }
-        protected override Dictionary<uint, Career_Master> _populateDefaultObjects()
-        {
-            var defaultCareers = new Dictionary<uint, Career_Master>();
-
-            foreach (var item in Career_List.GetAllDefaultCareers())
-            {
-                defaultCareers.Add(item.Key, item.Value);
-            }
-
-            return defaultCareers;
+            return Stations.Select(station => station.StationData).ToArray();
         }
         
-        Dictionary<uint, Career_Master> _defaultCareers => DefaultObjects;
+        public void Load_SO(Station_Data[] stationData)
+        {
+            foreach (var station in stationData)
+            {
+                if (!_station_Components.ContainsKey(station.StationID))
+                {
+                    Debug.LogError($"Station with ID {station.StationID} not found in Station_SO.");
+                    continue;
+                }
+                
+                _station_Components[station.StationID].StationData = station;
+            }
+
+            LoadSO(_station_Components.Values.ToArray());
+        }
+
+        public override uint GetObjectID(int id) => Stations[id].StationID;
+
+        public void UpdateStation(uint stationID, Station_Component station_Component) => UpdateObject(stationID, station_Component);
+        public void UpdateAllStations(Dictionary<uint, Station_Component> allStations) => UpdateAllObjects(allStations);
+
+        public void PopulateSceneStations()
+        {
+            var allStationComponents = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
+            var allStationData =
+                allStationComponents.ToDictionary(station => station.StationID);
+
+            UpdateAllStations(allStationData);
+        }
+
+        protected override Dictionary<uint, Station_Component> _populateDefaultObjects()
+        {
+            return FindObjectsByType<Station_Component>(FindObjectsSortMode.None).ToDictionary(
+                station => station.StationID);
+        }
+        
+        static uint _lastUnusedStationID = 1;
+        
+        public uint GetUnusedStationID()
+        {
+            while (ObjectIndexLookup.ContainsKey(_lastUnusedStationID))
+            {
+                _lastUnusedStationID++;
+            }
+
+            return _lastUnusedStationID;
+        }
+        
+        Dictionary<uint, Station_Component> _station_Components => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllStations_SO))]
+    [CustomEditor(typeof(Station_SO))]
     public class AllStationsSOEditor : Editor
     {
         int  _selectedStationIndex = -1;
+        
         bool _showOperatingAreas;
         bool _showInventory;
+        bool _showPriority; 
 
         Vector2 _stationScrollPos;
         Vector2 _operatingAreaScrollPos;
 
         public override void OnInspectorGUI()
         {
-            AllStations_SO allStationsSO = (AllStations_SO)target;
-
-            if (GUILayout.Button("Clear Station Data"))
-            {
-                allStationsSO.ClearStationData();
-                EditorUtility.SetDirty(allStationsSO);
-            }
+            var stationSO = (Station_SO)target;
 
             EditorGUILayout.LabelField("All Stations", EditorStyles.boldLabel);
-            _stationScrollPos     = EditorGUILayout.BeginScrollView(_stationScrollPos, GUILayout.Height(_getListHeight(allStationsSO.AllStationData.Count)));
-            _selectedStationIndex = GUILayout.SelectionGrid(_selectedStationIndex, _getStationNames(allStationsSO), 1);
+
+            _stationScrollPos = EditorGUILayout.BeginScrollView(_stationScrollPos,
+                GUILayout.Height(Mathf.Min(200, stationSO.Stations.Length * 20)));
+            _selectedStationIndex = GUILayout.SelectionGrid(_selectedStationIndex, _getStationNames(stationSO), 1);
+            
             EditorGUILayout.EndScrollView();
 
-            if (_selectedStationIndex >= 0 && _selectedStationIndex < allStationsSO.AllStationData.Count)
-            {
-                var selectedStationData = allStationsSO.AllStationData[_selectedStationIndex];
-                _drawStationAdditionalData(selectedStationData);
-            }
+            if (_selectedStationIndex < 0 || _selectedStationIndex >= stationSO.Stations.Length) return;
+            
+            var selectedStation = stationSO.Stations[_selectedStationIndex];
+            
+            _drawStationAdditionalData(selectedStation);
         }
 
-        string[] _getStationNames(AllStations_SO allStationsSO)
+        string[] _getStationNames(Station_SO stationSO)
         {
-            return allStationsSO.AllStationData.Select(s => s.StationID.ToString()).ToArray();
+            return stationSO.Stations.Select(s => s.StationID.ToString()).ToArray();
         }
 
-        float _getListHeight(int itemCount)
-        {
-            return Mathf.Min(200, itemCount * 20);
-        }
-
-        void _drawStationAdditionalData(Station_Data selectedStationData)
+        void _drawStationAdditionalData(Station_Component selectedStation)
         {
             EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
-            //EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());
-            EditorGUILayout.LabelField("Station ID", selectedStationData.StationID.ToString());
-            EditorGUILayout.LabelField("JobSite ID", selectedStationData.JobsiteID.ToString());
-
-            if (selectedStationData.AllOperatingAreaIDs == null) return;
             
-            _showOperatingAreas = EditorGUILayout.Toggle("Operating Areas", _showOperatingAreas);
+            EditorGUILayout.LabelField("Station Name", $"{selectedStation.StationName}");
+            EditorGUILayout.LabelField("Station ID",   $"{selectedStation.StationID}");
+            EditorGUILayout.LabelField("JobSite ID",   $"{selectedStation.StationData.JobsiteID}");
 
-            if (_showOperatingAreas)
+            if (selectedStation.StationData.AllOperatingAreaIDs != null)
             {
-                _drawOperatingAreaAdditionalData(selectedStationData.AllOperatingAreaIDs);
+                _showOperatingAreas = EditorGUILayout.Toggle("Operating Areas", _showOperatingAreas);
+
+                if (_showOperatingAreas)
+                {
+                    _drawOperatingAreaAdditionalData(selectedStation.StationData.AllOperatingAreaIDs);
+                }                
             }
-
-            _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
-
-            if (_showInventory)
+            
+            if (selectedStation.StationData.InventoryData != null)
             {
-                _drawInventoryAdditionalData(selectedStationData.InventoryData);
+                _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
+
+                if (_showInventory)
+                {
+                    _drawInventoryAdditionalData(selectedStation.StationData.InventoryData);
+                }
             }
-
-            // _showOrders = EditorGUILayout.Toggle("Orders", _showOrders);
-
-            // if (_showOrders)
-            // {
-            //     DrawOrderAdditionalData(selectedStationData.Orders);
-            // }
         }
 
         void _drawOperatingAreaAdditionalData(List<uint> allOperatingAreaData)
         {
-            _operatingAreaScrollPos = EditorGUILayout.BeginScrollView(_operatingAreaScrollPos, GUILayout.Height(_getListHeight(allOperatingAreaData.Count)));
+            _operatingAreaScrollPos = EditorGUILayout.BeginScrollView(_operatingAreaScrollPos,
+                GUILayout.Height(Mathf.Min(200, allOperatingAreaData.Count * 20)));
 
             try
             {
@@ -135,7 +161,7 @@ namespace Station
             }
         }
 
-        void _drawInventoryAdditionalData(InventoryData inventoryData)
+        static void _drawInventoryAdditionalData(InventoryData inventoryData)
         {
             EditorGUILayout.LabelField("Inventory Data", EditorStyles.boldLabel);
 

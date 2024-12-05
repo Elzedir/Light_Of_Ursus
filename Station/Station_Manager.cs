@@ -1,23 +1,21 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using EmployeePosition;
 using Initialisation;
-using ScriptableObjects;
+using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Station
 {
-    public abstract class Manager_Station : IDataPersistence
+    public abstract class Station_Manager : IDataPersistence
     {
-        public static AllStations_SO                AllStations;
-        public static Dictionary<uint, Station_Data> AllStationData = new();
-
-        static uint _lastUnusedStationID = 1;
+        const  string     _stations_SOPath = "ScriptableObjects/Station_SO";
+        
+        static Station_SO _stationSO;
+        static Station_SO Station_SO => _stationSO ??= _getOrCreateStation_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedStationData = new SavedStationData(AllStationData.Values.ToList());
+            saveData.SavedStationData = new SavedStationData(Station_SO.Save_SO());
 
         public void LoadData(SaveData saveData)
         {
@@ -39,132 +37,70 @@ namespace Station
                 return;
             }
 
-            if (saveData.SavedStationData.AllStationData.Count == 0)
+            if (saveData.SavedStationData.AllStationData.Length == 0)
             {
                 //Debug.Log("AllStationData count is 0.");
                 return;
             }
 
-            AllStationData = saveData.SavedStationData.AllStationData.ToDictionary(x => x.StationID);
+            Station_SO.Load_SO(saveData.SavedStationData.AllStationData);
         }
 
         public void OnSceneLoaded()
         {
-            AllStations = Resources.Load<AllStations_SO>("ScriptableObjects/AllStations_SO");
-
             Manager_Initialisation.OnInitialiseManagerStation += _initialise;
         }
 
-        void _initialise()
+        static void _initialise()
         {
-            foreach (var station in Object.FindObjectsByType(typeof(Station_Component)))
-            {
-                if (station.StationData == null)
-                {
-                    Debug.Log($"Station: {station.name} does not have StationData.");
-                    continue;
-                }
-
-                if (!AllStationComponents.ContainsKey(station.StationData.StationID))
-                    AllStationComponents.Add(station.StationData.StationID, station);
-                else
-                {
-                    if (AllStationComponents[station.StationData.StationID].gameObject == station.gameObject) continue;
-                    else
-                    {
-                        throw new ArgumentException(
-                            $"StationID {station.StationData.StationID} and name {station.name} already exists for station {AllStationComponents[station.StationData.StationID].name}");
-                    }
-                }
-
-                if (!AllStationData.ContainsKey(station.StationData.StationID))
-                {
-                    //Debug.Log($"Station: {station.StationData.StationID}: {station.StationName} was not in AllStationData");
-                    AddToAllStationData(station.StationData);
-                }
-
-                station.SetStationData(GetStationData(station.StationData.StationID));
-            }
-
-            foreach (var stationData in AllStationData.Values)
-            {
-                stationData.InitialiseStationData();
-            }
-
-            AllStations.AllStationData = AllStationData.Values.ToList();
+            Station_SO.PopulateSceneStations();
+        }
+        
+        public static Station_Data GetStation_Data(uint stationID)
+        {
+            return Station_SO.GetStation_Data(stationID);
+        }
+        
+        public static Station_Component GetStation_Component(uint stationID)
+        {
+            return Station_SO.GetStation_Component(stationID);
+        }
+        
+        static Station_SO _getOrCreateStation_SO()
+        {
+            var station_SO = Resources.Load<Station_SO>(_stations_SOPath);
+            
+            if (station_SO is not null) return station_SO;
+            
+            station_SO = ScriptableObject.CreateInstance<Station_SO>();
+            AssetDatabase.CreateAsset(station_SO, $"Assets/Resources/{_stations_SOPath}");
+            AssetDatabase.SaveAssets();
+            
+            return station_SO;
         }
 
-        public void AddToAllStationData(Station_Data stationData)
+        public static Station_Component GetNearestStation(Vector3 position, StationName stationName)
         {
-            if (AllStationData.ContainsKey(stationData.StationID))
+            Station_Component nearestStation = null;
+
+            var nearestDistance = float.MaxValue;
+
+            foreach (var station in Station_SO.Stations.Where(s => s.StationName == stationName))
             {
-                Debug.Log($"AllStationData already contains StationID: {stationData.StationID}");
-                return;
+                var distance = Vector3.Distance(position, station.transform.position);
+
+                if (!(distance < nearestDistance)) continue;
+
+                nearestStation  = station;
+                nearestDistance = distance;
             }
 
-            AllStationData.Add(stationData.StationID, stationData);
+            return nearestStation;
         }
 
-        public void UpdateAllStationData(Station_Data stationData)
+        public static uint GetUnusedStationID()
         {
-            if (!AllStationData.ContainsKey(stationData.StationID))
-            {
-                Debug.Log($"AllStationData does not contain StationID: {stationData.StationID}");
-                return;
-            }
-
-            AllStationData[stationData.StationID] = stationData;
-        }
-
-
-        public static Station_Data GetStationData(uint stationID)
-        {
-            if (!AllStationData.ContainsKey(stationID))
-            {
-                Debug.Log($"Station: {stationID} is not in AllStationData list");
-                return null;
-            }
-
-            return AllStationData[stationID];
-        }
-
-        public static Station_Component GetStation(uint stationID)
-        {
-            if (!AllStationComponents.ContainsKey(stationID))
-            {
-                Debug.Log($"Station: {stationID} is not in AllStationComponents list");
-                return null;
-            }
-
-            return AllStationComponents[stationID];
-        }
-
-        public static void GetNearestStationToPosition(Vector3              position, StationName stationName,
-                                                       out Station_Component nearestStation)
-        {
-            nearestStation = null;
-            float nearestDistance = float.MaxValue;
-
-            foreach (var station in AllStationComponents)
-            {
-                float distance = Vector3.Distance(position, station.Value.transform.position);
-
-                if (distance < nearestDistance)
-                {
-                    nearestStation  = station.Value;
-                    nearestDistance = distance;
-                }
-            }
-        }
-
-        public static uint GetStationID()
-        {
-            while (AllStationData.ContainsKey(_lastUnusedStationID))
-            {
-                _lastUnusedStationID++;
-            }
-
-            return _lastUnusedStationID;
+            return Station_SO.GetUnusedStationID();
         }
 
 

@@ -19,9 +19,9 @@ namespace Jobsite
         public void        SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
         public void        SetCityID(uint             cityID)      => JobsiteData.CityID = cityID;
 
-        Dictionary<uint, StationComponent> _allStationInJobsite;
+        Dictionary<uint, Station_Component> _allStationInJobsite;
 
-        public Dictionary<uint, StationComponent> AllStationsInJobsite =>
+        public Dictionary<uint, Station_Component> AllStationsInJobsite =>
             _allStationInJobsite ??= _getAllStationsInJobsite();
 
         public List<EmployeePositionName> AllCoreEmployeePositions;
@@ -68,10 +68,10 @@ namespace Jobsite
         protected abstract void         _adjustProduction(float               idealRatio);
         protected abstract VocationName _getRelevantVocation(EmployeePositionName positionName);
 
-        Dictionary<uint, StationComponent> _getAllStationsInJobsite() =>
-            GetComponentsInChildren<StationComponent>().ToDictionary(station => station.StationData.StationID);
+        Dictionary<uint, Station_Component> _getAllStationsInJobsite() =>
+            GetComponentsInChildren<Station_Component>().ToDictionary(station => station.StationData.StationID);
 
-        public StationComponent GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
+        public Station_Component GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
             => AllStationsInJobsite
                .Where(station => stationNames.Contains(station.Value.StationName))
                .OrderBy(station => Vector3.Distance(position, station.Value.transform.position))
@@ -106,7 +106,7 @@ namespace Jobsite
             return true;
         }
 
-        List<StationComponent> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
+        List<Station_Component> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
         {
             var relevantStations = AllStationsInJobsite.Values
                                                        .Where(station => station.AllowedJobs.Contains(jobName))
@@ -193,22 +193,22 @@ namespace Jobsite
             return result;
         }
 
-        public List<StationComponent> GetRelevantStations(JobTaskName jobTaskName, InventoryData inventoryData)
+        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName, InventoryData inventoryData)
         {
             return jobTaskName switch
             {
                 JobTaskName.Fetch_Items   => _relevantStations_Fetch(),
                 JobTaskName.Deliver_Items => _relevantStations_Deliver(inventoryData),
-                _                         => new List<StationComponent>()
+                _                         => new List<Station_Component>()
             };
         }
 
-        List<StationComponent> _relevantStations_Fetch()
+        List<Station_Component> _relevantStations_Fetch()
         {
             return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
         }
 
-        List<StationComponent> _relevantStations_Deliver(InventoryData inventoryData)
+        List<Station_Component> _relevantStations_Deliver(InventoryData inventoryData)
         {
             return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
                                        .ToList();

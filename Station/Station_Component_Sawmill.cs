@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Station
 {
-    public class StationComponent_Sawmill : Station_Component
+    public class Station_Component_Sawmill : Station_Component
     {
         public override StationName      StationName          => StationName.Sawmill;
         public override StationType      StationType          => StationType.Crafter;

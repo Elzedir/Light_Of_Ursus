@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Actor;
 using Jobsite;
 using Managers;
+using Station;
 using UnityEngine;
 
 namespace Priority
@@ -66,9 +67,9 @@ namespace Priority
         public uint StationID => ComponentID;
         public ComponentReference_Station(uint stationID) : base(stationID) { }
 
-        StationComponent                    _station;
-        protected override object           _component => _station ??= Manager_Station.GetStation(StationID);
-        public             StationComponent Station    => _component as StationComponent;
+        Station_Component                    _station;
+        protected override object            _component => _station ??= Station_Manager.GetStation_Component(StationID);
+        public             Station_Component Station    => _component as Station_Component;
 
         public override GameObject           GameObject                => Station.gameObject;
         public override PriorityComponent GetPriorityComponent() => Station.Jobsite.PriorityComponent;

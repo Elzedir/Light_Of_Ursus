@@ -14,7 +14,7 @@ using UnityEngine;
 namespace Station
 {
     [Serializable]
-    public class StationData
+    public class Station_Data
     {
         public uint StationID;
 
@@ -39,7 +39,7 @@ namespace Station
 
         public void InitialiseStationData()
         {
-            var station = Manager_Station.GetStation(StationID);
+            var station = Station_Manager.GetStation_Component(StationID);
 
             foreach (var operatingArea in station.AllOperatingAreasInStation
                                                  .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID)))
@@ -57,7 +57,7 @@ namespace Station
             }
 
             CurrentOperatorIDs.Add(operatorID);
-            Manager_Station.GetStation(StationID).AddOperatorToArea(operatorID);
+            Station_Manager.GetStation_Component(StationID).AddOperatorToArea(operatorID);
 
             return true;
         }
@@ -81,7 +81,7 @@ namespace Station
         }
     }
 
-    [CustomPropertyDrawer(typeof(StationData))]
+    [CustomPropertyDrawer(typeof(Station_Data))]
     public class StationData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -108,13 +108,13 @@ namespace Station
         public  List<Item>       EstimatedProductionRatePerHour;
         public  List<Item>       ActualProductionRatePerHour;
         public  uint             StationID;
-        private StationComponent _station;
+        private Station_Component _station;
 
-        public StationComponent Station
+        public Station_Component Station
         {
             get
             {
-                try { return _station ??= Manager_Station.GetStation(StationID); }
+                try { return _station ??= Station_Manager.GetStation_Component(StationID); }
                 catch (Exception e) { Debug.LogError(e); return null; }
             }
             set => _station = value;

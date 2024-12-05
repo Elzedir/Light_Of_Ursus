@@ -2,6 +2,7 @@ using System;
 using Actor;
 using Jobsite;
 using Managers;
+using Station;
 using UnityEngine;
 
 namespace OperatingArea
@@ -10,13 +11,13 @@ namespace OperatingArea
     public class OperatingAreaData
     {
         #region ID Info
-        public uint             OperatingAreaID;
-        public uint             StationID;
-        StationComponent        _station;
-        public StationComponent Station => _station ??= Manager_Station.GetStation(StationID);
-        public uint             JobsiteID;
-        JobsiteComponent        _jobsite;
-        public JobsiteComponent Jobsite => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
+        public uint              OperatingAreaID;
+        public uint              StationID;
+        Station_Component        _station;
+        public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
+        public uint              JobsiteID;
+        JobsiteComponent         _jobsite;
+        public JobsiteComponent  Jobsite => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
         #endregion
 
         #region Operator
