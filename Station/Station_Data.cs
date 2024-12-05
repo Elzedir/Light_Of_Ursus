@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Initialisation;
 using Inventory;
 using Items;
 using Jobsite;
@@ -12,26 +13,6 @@ using UnityEngine;
 
 namespace Station
 {
-    public enum StationName
-    {
-        None,
-
-        Iron_Node,
-
-        Anvil,
-
-        Tree,
-        Sawmill,
-        Log_Pile,
-
-        Fishing_Spot,
-        Farming_Plot,
-
-        Campfire,
-
-        Tanning_Station,
-    }
-
     [Serializable]
     public class StationData
     {
@@ -60,20 +41,11 @@ namespace Station
         {
             var station = Manager_Station.GetStation(StationID);
 
-            station.Initialise();
-
             foreach (var operatingArea in station.AllOperatingAreasInStation
                                                  .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID)))
             {
                 AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
             }
-
-            Manager_Initialisation.OnInitialiseStationDatas += _initialiseStationData;
-        }
-
-        void _initialiseStationData()
-        {
-        
         }
 
         public bool AddOperatorToStation(uint operatorID)

@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace Station
 {
-    public class StationComponent_LogPile : StationComponent
+    public class StationComponent_LogPile : Station_Component
     {
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;

@@ -2,33 +2,41 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Inventory;
-using Managers;
-using Station;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Station
 {
     [CreateAssetMenu(fileName = "AllStations_SO", menuName = "SOList/AllStations_SO")]
     [Serializable]
-    public class AllStations_SO : ScriptableObject
+    public class AllStations_SO : Base_SO<Station_Data>
     {
-        public List<StationData> AllStationData;
+        public Station_Data[] Stat                                 => Objects;
+        public Station_Component   GetCareer_Master(CareerName careerName) => GetObject_Master((uint)careerName);
 
-        public void SetAllStationData(List<StationData> allStationData)
-        {
-            AllStationData = allStationData;
-        }
+        public override uint GetObjectID(int id) => (uint)Careers[id].CareerName;
 
-        public void LoadData(SaveData saveData)
+        public void PopulateDefaultCareers()
         {
-            AllStationData = saveData.SavedStationData.AllStationData;
+            if (_defaultCareers.Count == 0)
+            {
+                Debug.Log("No Default Careers Found");
+            }
         }
+        protected override Dictionary<uint, Career_Master> _populateDefaultObjects()
+        {
+            var defaultCareers = new Dictionary<uint, Career_Master>();
 
-        public void ClearStationData()
-        {
-            AllStationData.Clear();
+            foreach (var item in Career_List.GetAllDefaultCareers())
+            {
+                defaultCareers.Add(item.Key, item.Value);
+            }
+
+            return defaultCareers;
         }
+        
+        Dictionary<uint, Career_Master> _defaultCareers => DefaultObjects;
     }
 
     [CustomEditor(typeof(AllStations_SO))]
@@ -73,7 +81,7 @@ namespace ScriptableObjects
             return Mathf.Min(200, itemCount * 20);
         }
 
-        void _drawStationAdditionalData(StationData selectedStationData)
+        void _drawStationAdditionalData(Station_Data selectedStationData)
         {
             EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
             //EditorGUILayout.LabelField("Station Name", selectedStationData.StationName.ToString());

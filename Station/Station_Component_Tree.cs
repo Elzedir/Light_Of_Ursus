@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Station
 {
-    public class StationComponent_Tree : StationComponent
+    public class StationComponent_Tree : Station_Component
     {
         public override StationName      StationName          => StationName.Tree;
         public override StationType      StationType          => StationType.Resource;
