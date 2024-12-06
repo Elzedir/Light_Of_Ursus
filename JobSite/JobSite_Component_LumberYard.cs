@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Jobsite
 {
-    public class JobsiteComponent_LumberYard : JobsiteComponent
+    public class JobsiteComponent_LumberYard : Jobsite_Component
     {
         protected override bool _compareProductionOutput()
         {
