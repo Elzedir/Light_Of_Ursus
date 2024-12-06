@@ -9,7 +9,7 @@ using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
-using Jobsite;
+using JobSite;
 using Managers;
 using Priority;
 using Recipes;
@@ -415,15 +415,15 @@ namespace Actor
 
         public bool GetNewCurrentJob(uint stationID = 0)
         {
-            return CareerName != CareerName.Wanderer && Jobsite.GetNewCurrentJob(ActorReference.Actor, stationID);
+            return CareerName != CareerName.Wanderer && JobSite.GetNewCurrentJob(ActorReference.Actor, stationID);
         }
 
         public bool JobsActive = true;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
 
         public uint             JobsiteID;
-        JobsiteComponent        _jobsite;
-        public JobsiteComponent Jobsite                      => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
+        JobSite_Component        _jobSite;
+        public JobSite_Component JobSite                      => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
         public void             SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
         
         public EmployeePositionName EmployeePositionName;

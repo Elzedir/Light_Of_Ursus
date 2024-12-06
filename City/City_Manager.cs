@@ -1,178 +1,108 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Initialisation;
+using UnityEditor;
 using UnityEngine;
 
 namespace City
 {
-    public class Manager_City : MonoBehaviour, IDataPersistence
+    public class City_Manager : IDataPersistence
     {
-        public static AllCities_SO                    AllCities;
-        public static Dictionary<uint, City_Data>      AllCityData       = new();
-        static        uint                            _lastUnusedCityID = 1;
-        public static Dictionary<uint, City_Component> AllCityComponents = new();
+        const         string                           _city_SOPath   = "ScriptableObjects/City_SO";
 
-        public void SaveData(SaveData data)
+        public static Dictionary<uint, City_Data>      AllCityData       = new();
+        static        uint                                _lastUnusedCityID = 1;
+        public static Dictionary<uint, City_Component> AllCityComponents = new();
+        
+        static City_SO _city_SO;
+        static City_SO City_SO => _city_SO ??= _getOrCreateCity_SO();
+
+        public void SaveData(SaveData saveData) =>
+            saveData.SavedCityData = new SavedCityData(City_SO.Save_SO());
+
+        public void LoadData(SaveData saveData)
         {
-            AllCityData.Values.ToList().ForEach(cityData => cityData.SaveData());
-            data.SavedCityData = new SavedCityData(AllCityData.Values.ToList());
-        }
-        public void LoadData(SaveData data)
-        {
-            if (data == null)
+            if (saveData is null)
             {
                 //Debug.Log("No SaveData found in LoadData.");
                 return;
             }
-            if (data.SavedCityData == null)
+
+            if (saveData.SavedCityData == null)
             {
                 //Debug.Log("No SavedCityData found in SaveData.");
                 return;
             }
-            if (data.SavedCityData.AllCityData == null)
+
+            if (saveData.SavedCityData.AllCityData == null)
             {
                 //Debug.Log("No AllCityData found in SavedCityData.");
                 return;
             }
-            if (data.SavedCityData.AllCityData.Count == 0)
+
+            if (saveData.SavedCityData.AllCityData.Length == 0)
             {
                 //Debug.Log("AllCityData count is 0.");
                 return;
             }
-        
-            AllCityData = data.SavedCityData?.AllCityData.ToDictionary(x => x.CityID);
-            AllCityData?.Values.ToList().ForEach(cityData => cityData.LoadData());
+
+            City_SO.Load_SO(saveData.SavedCityData.AllCityData);
         }
 
-        public void OnSceneLoaded()
+        public static void OnSceneLoaded()
         {
-            AllCities = Resources.Load<AllCities_SO>("ScriptableObjects/AllCities_SO");
-
             Manager_Initialisation.OnInitialiseManagerCity += _initialise;
         }
 
-        void _initialise()
+        static void _initialise()
         {
-            _initialiseAllCityData();
-
-            // Temporary
-            foreach (var city in AllCityData)
-            {
-                city.Value.ProsperityData.SetProsperity(50);
-                city.Value.ProsperityData.MaxProsperity = 100;
-            }
+            City_SO.PopulateSceneCities();
+        }
+        
+        public static City_Data GetCity_Data(uint cityID)
+        {
+            return City_SO.GetCity_Data(cityID);
+        }
+        
+        public static City_Component GetCity_Component(uint cityID)
+        {
+            return City_SO.GetCity_Component(cityID);
+        }
+        
+        static City_SO _getOrCreateCity_SO()
+        {
+            var city_SO = Resources.Load<City_SO>(_city_SOPath);
+            
+            if (city_SO is not null) return city_SO;
+            
+            city_SO = ScriptableObject.CreateInstance<City_SO>();
+            AssetDatabase.CreateAsset(city_SO, $"Assets/Resources/{_city_SOPath}");
+            AssetDatabase.SaveAssets();
+            
+            return city_SO;
         }
 
-        void _initialiseAllCityData()
+        public static City_Component GetNearestCity(Vector3 position)
         {
-            foreach (var city in _findAllCityComponents())
+            City_Component nearestCity = null;
+
+            var nearestDistance = float.MaxValue;
+
+            foreach (var city in City_SO.Cities)
             {
-                if (city.CityData == null) { Debug.Log($"City: {city.name} does not have CityData."); continue; }
+                var distance = Vector3.Distance(position, city.transform.position);
 
-                if (!AllCityComponents.ContainsKey(city.CityData.CityID)) AllCityComponents.Add(city.CityData.CityID, city);
-                else
-                {
-                    if (AllCityComponents[city.CityData.CityID].gameObject == city.gameObject) continue;
-                    else
-                    {
-                        throw new ArgumentException($"CityID {city.CityData.CityID} and name {city.name} already exists for city {AllCityComponents[city.CityData.CityID].name}");
-                    }
-                }
+                if (!(distance < nearestDistance)) continue;
 
-                if (!AllCityData.ContainsKey(city.CityData.CityID))
-                {
-                    //Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
-                    AddToAllCityData(city.CityData);
-                }
-
-                city.SetCityData(GetCityData(city.CityData.CityID));
+                nearestCity  = city;
+                nearestDistance = distance;
             }
 
-            foreach (var cityData in AllCityData.Values)
-            {
-                cityData.InitialiseCityData();
-            }
-
-            AllCities.AllCityData = AllCityData.Values.ToList();
+            return nearestCity;
         }
 
-        static List<City_Component> _findAllCityComponents()
+        public static uint GetUnusedCityID()
         {
-            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                   .OfType<City_Component>()
-                   .ToList();
-        }
-
-        public static void GetNearestCity(Vector3 position, out City_Component nearestCity)
-        {
-            nearestCity = null;
-            float nearestDistance = float.MaxValue;
-
-            foreach (var city in AllCityComponents)
-            {
-                float distance = Vector3.Distance(position, city.Value.transform.position);
-
-                if (distance < nearestDistance)
-                {
-                    nearestCity     = city.Value;
-                    nearestDistance = distance;
-                }
-            }
-        }
-
-        public void AddToAllCityData(City_Data cityData)
-        {
-            if (AllCityData.ContainsKey(cityData.CityID))
-            {
-                Debug.Log($"AllCityData already contains CityID: {cityData.CityID}");
-                return;
-            }
-
-            AllCityData.Add(cityData.CityID, cityData);
-        }
-
-        public void UpdateCityData(City_Data cityData)
-        {
-            if (!AllCityData.ContainsKey(cityData.CityID))
-            {
-                Debug.LogError($"CityData: {cityData.CityID} does not exist in AllCityData.");
-                return;
-            }
-
-            AllCityData[cityData.CityID] = cityData;
-        }
-
-        public static City_Data GetCityData(uint cityID)
-        {
-            if (!AllCityData.ContainsKey(cityID))
-            {
-                Debug.Log($"CityData: {cityID} does not exist in AllCityData.");
-                return null;
-            }
-
-            return AllCityData[cityID];
-        }
-
-        public static City_Component GetCity(uint cityID)
-        {
-            if (!AllCityComponents.ContainsKey(cityID))
-            {
-                Debug.Log($"CityComponent: {cityID} does not exist in AllCityComponents.");
-                return null;
-            }
-
-            return AllCityComponents[cityID];
-        }
-
-        public uint GetRandomCityID()
-        {
-            while (AllCityData.ContainsKey(_lastUnusedCityID))
-            {
-                _lastUnusedCityID++;
-            }
-
-            return _lastUnusedCityID;
+            return City_SO.GetUnusedCityID();
         }
     }
 }

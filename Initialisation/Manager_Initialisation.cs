@@ -8,7 +8,7 @@ namespace Initialisation
 
         public static event Action OnInitialiseManagerRegion;
         public static event Action OnInitialiseManagerCity;
-        public static event Action OnInitialiseManagerJobsite;
+        public static event Action OnInitialiseManagerJobSite;
         public static event Action OnInitialiseManagerStation;
         public static event Action OnInitialiseManagerOperatingArea;
         public static event Action OnInitialiseManagerOrder;
@@ -31,7 +31,7 @@ namespace Initialisation
         {
             OnInitialiseManagerRegion?.Invoke();
             OnInitialiseManagerCity?.Invoke();
-            OnInitialiseManagerJobsite?.Invoke();
+            OnInitialiseManagerJobSite?.Invoke();
             OnInitialiseManagerStation?.Invoke();
             OnInitialiseManagerOperatingArea?.Invoke();
             OnInitialiseManagerOrder?.Invoke();

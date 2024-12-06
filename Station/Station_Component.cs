@@ -8,7 +8,7 @@ using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
-using Jobsite;
+using JobSite;
 using Managers;
 using OperatingArea;
 using Priority;
@@ -23,7 +23,7 @@ namespace Station
     public abstract class Station_Component : MonoBehaviour, IInteractable
     {
         public uint             StationID => StationData.StationID;
-        public JobsiteComponent Jobsite   => StationData.Jobsite;
+        public JobSite_Component JobSite   => StationData.JobSite;
         bool                    _initialised;
 
         public          Station_Data StationData;

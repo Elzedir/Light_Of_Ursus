@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Career;
+using City;
 using DateAndTime;
 using EmployeePosition;
 using FMODUnity;
 using Initialisation;
 using Jobs;
+using JobSite;
 using Recipes;
 using Station;
 using UnityEngine;
@@ -140,14 +142,15 @@ namespace Managers
 
             _createManager("Manager_Faction", _manager_Parent).AddComponent<Manager_Faction>().OnSceneLoaded();
             _createManager("Manager_Region",  _manager_Parent).AddComponent<Manager_Region>().OnSceneLoaded();
-            _createManager("Manager_City",    _manager_Parent).AddComponent<Manager_City>().OnSceneLoaded();
-            _createManager("Manager_Jobsite", _manager_Parent).AddComponent<Manager_Jobsite>().OnSceneLoaded();
-            _createManager("Manager_Station", _manager_Parent).AddComponent<Station_Manager>().OnSceneLoaded();
+            _createManager("Manager_City",    _manager_Parent).AddComponent<City_Manager>().OnSceneLoaded();
             _createManager("Manager_Actor",   _manager_Parent).AddComponent<Actor_Manager>().OnSceneLoaded();
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
             DataPersistenceManager.DataPersistence_SO.LoadGame("");
 
+            Jobsite_Manager.OnSceneLoaded();
+            Station_Manager.OnSceneLoaded();
+            
             Manager_Initialisation.InitialiseFactions();
             Manager_Initialisation.InitialiseManagers();
             Manager_Initialisation.InitialiseActors();

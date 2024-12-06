@@ -7,7 +7,7 @@ using UnityEngine;
 namespace City
 {
     [Serializable]
-    public class CityData
+    public class City_Data
     {
         public void SaveData()
         {
@@ -32,11 +32,9 @@ namespace City
 
         public void InitialiseCityData()
         {
-            var city = Manager_City.GetCity(CityID);
-            
-            city.Initialise();
+            var city = City_Manager.GetCity_Component(CityID);
 
-            foreach (var jobsite in city.AllJobsitesInCity)
+            foreach (var jobsite in city.AllJobSitesInCity)
             {
                 if (!AllJobsiteIDs.Contains(jobsite.JobSiteData.JobSiteID))
                 {
@@ -48,7 +46,7 @@ namespace City
     }
 
 
-    [CustomPropertyDrawer(typeof(CityData))]
+    [CustomPropertyDrawer(typeof(City_Data))]
     public class CityData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

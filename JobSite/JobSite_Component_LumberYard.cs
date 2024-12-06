@@ -5,16 +5,18 @@ using Items;
 using ScriptableObjects;
 using UnityEngine;
 
-namespace Jobsite
+namespace JobSite
 {
-    public class JobsiteComponent_LumberYard : Jobsite_Component
+    public class JobSite_Component_LumberYard : JobSite_Component
     {
+        public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
+
         protected override bool _compareProductionOutput()
         {
             // Temporary
             SetIdealRatio(3f);
 
-            var producedItems = AllStationsInJobsite.Values
+            var producedItems = AllStationsInJobSite.Values
                                 .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
                                 .ToList();
 
@@ -60,7 +62,7 @@ namespace Jobsite
 
         protected override void _adjustProduction(float idealRatio)
         {
-            var   allEmployees        = new List<uint>(JobsiteData.AllEmployeeIDs);
+            var   allEmployees        = new List<uint>(JobSiteData.AllEmployeeIDs);
             var   bestCombination     = new List<uint>();
             float bestRatioDifference = float.MaxValue;
 
@@ -71,7 +73,7 @@ namespace Jobsite
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = AllStationsInJobsite.Values
+                var estimatedProduction = AllStationsInJobSite.Values
                                           .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
                                           .ToList();
 

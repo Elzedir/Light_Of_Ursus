@@ -1,110 +1,163 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Priority;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Jobsite
+namespace JobSite
 {
-    [CreateAssetMenu(fileName = "AllJobsites_SO", menuName = "SOList/AllJobsites_SO")]
+    [CreateAssetMenu(fileName = "AllJobSites_SO", menuName = "SOList/AllJobSites_SO")]
     [Serializable]
-    public class AllJobsites_SO : ScriptableObject
+    public class JobSite_SO : Base_SO<JobSite_Component>
     {
-        public List<JobsiteData> AllJobsiteData;
+        public JobSite_Component[] JobSites                             => Objects;
+        public JobSite_Data        GetJobSite_Data(uint      jobSiteID) => GetObject_Master(jobSiteID).JobSiteData;
+        public JobSite_Component   GetJobSite_Component(uint jobSiteID) => GetObject_Master(jobSiteID);
 
-        public void SetAllJobsiteData(List<JobsiteData> allJobsiteData)
+        public JobSite_Data[] Save_SO()
         {
-            AllJobsiteData = allJobsiteData;
+            return JobSites.Select(jobSite => jobSite.JobSiteData).ToArray();
+        }
+        
+        public void Load_SO(JobSite_Data[] jobSiteData)
+        {
+            foreach (var jobSite in jobSiteData)
+            {
+                if (!_jobSite_Components.ContainsKey(jobSite.JobSiteID))
+                {
+                    Debug.LogError($"JobSite with ID {jobSite.JobSiteID} not found in JobSite_SO.");
+                    continue;
+                }
+                
+                _jobSite_Components[jobSite.JobSiteID].JobSiteData = jobSite;
+            }
+
+            LoadSO(_jobSite_Components.Values.ToArray());
         }
 
-        public void LoadData(SaveData saveData)
+        public override uint GetObjectID(int id) => JobSites[id].JobSiteID;
+
+        public void UpdateJobSite(uint jobSiteID, JobSite_Component jobSite_Component) => UpdateObject(jobSiteID, jobSite_Component);
+        public void UpdateAllJobSites(Dictionary<uint, JobSite_Component> allJobSites) => UpdateAllObjects(allJobSites);
+
+        public void PopulateSceneJobSites()
         {
-            AllJobsiteData = saveData.SavedJobsiteData.AllJobsiteData;
+            var allJobSiteComponents = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
+            var allJobSiteData =
+                allJobSiteComponents.ToDictionary(jobSite => jobSite.JobSiteID);
+
+            UpdateAllJobSites(allJobSiteData);
+            
+            foreach (var jobSite in JobSites)
+            {
+                jobSite.JobSiteData.ProsperityData.SetProsperity(50);
+                jobSite.JobSiteData.ProsperityData.MaxProsperity = 100;
+            }
         }
 
-        public void ClearJobsiteData()
+        protected override Dictionary<uint, JobSite_Component> _populateDefaultObjects()
         {
-            AllJobsiteData.Clear();
+            return FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None).ToDictionary(
+                jobSite => jobSite.JobSiteID);
         }
+        
+        static uint _lastUnusedJobSiteID = 1;
+        
+        public uint GetUnusedJobSiteID()
+        {
+            while (ObjectIndexLookup.ContainsKey(_lastUnusedJobSiteID))
+            {
+                _lastUnusedJobSiteID++;
+            }
+
+            return _lastUnusedJobSiteID;
+        }
+        
+        Dictionary<uint, JobSite_Component> _jobSite_Components => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllJobsites_SO))]
-    public class AllJobsitesSOEditor : Editor
+    [CustomEditor(typeof(JobSite_SO))]
+    public class JobSites_SOEditor : Editor
     {
-        int  _selectedJobsiteIndex = -1;
-        bool _showStations         = false;
-        bool _showProsperity       = false;
+        int  _selectedJobSiteIndex = -1;
+        
+        bool _showStations;
+        bool _showProsperity;
+        bool _showPriority;
 
-        Vector2 _jobsiteScrollPos;
+        Vector2 _jobSiteScrollPos;
         Vector2 _stationScrollPos;
 
         public override void OnInspectorGUI()
         {
-            AllJobsites_SO allJobsitesSO = (AllJobsites_SO)target;
+            var jobSiteSO = (JobSite_SO)target;
 
-            if (GUILayout.Button("Clear Jobsite Data"))
-            {
-                allJobsitesSO.ClearJobsiteData();
-                EditorUtility.SetDirty(allJobsitesSO);
-            }
+            EditorGUILayout.LabelField("All JobSites", EditorStyles.boldLabel);
 
-            EditorGUILayout.LabelField("All Jobsites", EditorStyles.boldLabel);
-            _jobsiteScrollPos     = EditorGUILayout.BeginScrollView(_jobsiteScrollPos, GUILayout.Height(GetListHeight(allJobsitesSO.AllJobsiteData.Count)));
-            _selectedJobsiteIndex = GUILayout.SelectionGrid(_selectedJobsiteIndex, GetJobsiteNames(allJobsitesSO), 1);
+            _jobSiteScrollPos = EditorGUILayout.BeginScrollView(_jobSiteScrollPos,
+                GUILayout.Height(Mathf.Min(200, jobSiteSO.JobSites.Length * 20)));
+            _selectedJobSiteIndex = GUILayout.SelectionGrid(_selectedJobSiteIndex, _getJobSiteNames(jobSiteSO), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedJobsiteIndex >= 0 && _selectedJobsiteIndex < allJobsitesSO.AllJobsiteData.Count)
+            if (_selectedJobSiteIndex < 0 || _selectedJobSiteIndex >= jobSiteSO.JobSites.Length) return;
+            
+            var selectedJobSiteData = jobSiteSO.JobSites[_selectedJobSiteIndex];
+            _drawJobSiteAdditionalData(selectedJobSiteData);
+        }
+
+        static string[] _getJobSiteNames(JobSite_SO jobSiteSO)
+        {
+            return jobSiteSO.JobSites.Select(j => j.JobSiteName.ToString()).ToArray();
+        }
+
+        void _drawJobSiteAdditionalData(JobSite_Component selectedJobSiteComponent)
+        {
+            EditorGUILayout.LabelField("JobSite Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("JobSite Name", selectedJobSiteComponent.JobSiteName.ToString());
+            EditorGUILayout.LabelField("JobSite ID",   selectedJobSiteComponent.JobSiteID.ToString());
+            EditorGUILayout.LabelField("City ID",      selectedJobSiteComponent.JobSiteData.CityID.ToString());
+
+            if (selectedJobSiteComponent.JobSiteData.AllStationIDs != null)
             {
-                var selectedJobsiteData = allJobsitesSO.AllJobsiteData[_selectedJobsiteIndex];
-                DrawJobsiteAdditionalData(selectedJobsiteData);
-            }
-        }
-
-        private string[] GetJobsiteNames(AllJobsites_SO allJobsitesSO)
-        {
-            return allJobsitesSO.AllJobsiteData.Select(j => j.JobsiteName.ToString()).ToArray();
-        }
-
-        private float GetListHeight(int itemCount)
-        {
-            return Mathf.Min(200, itemCount * 20);
-        }
-
-        private void DrawJobsiteAdditionalData(JobsiteData selectedJobsiteData)
-        {
-            EditorGUILayout.LabelField("Jobsite Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Jobsite Name", selectedJobsiteData.JobsiteName.ToString());
-            EditorGUILayout.LabelField("Jobsite ID",   selectedJobsiteData.JobsiteID.ToString());
-            EditorGUILayout.LabelField("City ID",      selectedJobsiteData.CityID.ToString());
-
-            if (selectedJobsiteData.AllStationIDs != null)
-            {
-                _showStations = EditorGUILayout.Toggle("Stations", _showStations);
+                _showStations = EditorGUILayout.Toggle("JobSites", _showStations);
 
                 if (_showStations)
                 {
-                    DrawStationAdditionalData(selectedJobsiteData.AllStationIDs);
+                    _drawJobSiteAdditionalData(selectedJobSiteComponent.JobSiteData.AllStationIDs);
                 }
             }
 
-            if (selectedJobsiteData.ProsperityData != null)
+            if (selectedJobSiteComponent.JobSiteData.ProsperityData != null)
             {
                 _showProsperity = EditorGUILayout.Toggle("Prosperity", _showProsperity);
 
                 if (_showProsperity)
                 {
-                    DrawProsperityDetails(selectedJobsiteData.ProsperityData);
+                    _drawProsperityDetails(selectedJobSiteComponent.JobSiteData.ProsperityData);
+                }
+            }
+            
+            if (selectedJobSiteComponent.PriorityComponent != null)
+            {
+                _showPriority = EditorGUILayout.Toggle("Priority", _showPriority);
+
+                if (_showPriority)
+                {
+                    _drawPriorityDetails(selectedJobSiteComponent.PriorityComponent);
                 }
             }
         }
 
-        private void DrawStationAdditionalData(List<uint> allStationData)
+        void _drawJobSiteAdditionalData(List<uint> allStationIDs)
         {
-            _stationScrollPos = EditorGUILayout.BeginScrollView(_stationScrollPos, GUILayout.Height(GetListHeight(allStationData.Count)));
+            _stationScrollPos = EditorGUILayout.BeginScrollView(_stationScrollPos,
+                GUILayout.Height(Mathf.Min(200, allStationIDs.Count * 20)));
 
             try
             {
-                foreach (var stationID in allStationData)
+                foreach (var stationID in allStationIDs)
                 {
                     EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
                     //EditorGUILayout.LabelField("Station Name", station.StationName.ToString());
@@ -121,13 +174,41 @@ namespace Jobsite
             }
         }
 
-    
-
-        private void DrawProsperityDetails(ProsperityData prosperityData)
+        static void _drawProsperityDetails(ProsperityData prosperityData)
         {
-            EditorGUILayout.LabelField("Current Prosperity",             prosperityData.CurrentProsperity.ToString());
-            EditorGUILayout.LabelField("Max Prosperity",                 prosperityData.MaxProsperity.ToString());
-            EditorGUILayout.LabelField("Base Prosperity Growth Per Day", prosperityData.BaseProsperityGrowthPerDay.ToString());
+            EditorGUILayout.LabelField("Current Prosperity",             $"{prosperityData.CurrentProsperity}");
+            EditorGUILayout.LabelField("Max Prosperity",                 $"{prosperityData.MaxProsperity}");
+            EditorGUILayout.LabelField("Base Prosperity Growth Per Day", $"{prosperityData.BaseProsperityGrowthPerDay}");
+        }
+        
+        void _drawPriorityDetails(PriorityComponent_JobSite priorityComponent)
+        {
+            EditorGUILayout.LabelField("Priorities", EditorStyles.boldLabel);
+            
+            var allPriorities = priorityComponent.PriorityQueue.PeekAll();
+            
+            _jobSiteScrollPos = EditorGUILayout.BeginScrollView(_jobSiteScrollPos,
+                GUILayout.Height(Mathf.Min(200, allPriorities.Length * 20)));
+
+            try
+            {
+                foreach (var priority in allPriorities)
+                {
+                    EditorGUILayout.LabelField("Priority", EditorStyles.boldLabel);
+                    
+                    //EditorGUILayout.LabelField("Station Name", station.StationName.ToString());
+                    EditorGUILayout.LabelField("PriorityID", $"{priority.PriorityID}");
+                    EditorGUILayout.LabelField("PriorityValue", $"{priority.PriorityValue}");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e.Message}");
+            }
+            finally
+            {
+                EditorGUILayout.EndScrollView();
+            }
         }
     }
 }

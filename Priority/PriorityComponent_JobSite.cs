@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Jobs;
-using Jobsite;
+using JobSite;
 using Managers;
 using Station;
 using Tools;
@@ -11,9 +11,9 @@ using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityComponent_Jobsite : PriorityComponent
+    public class PriorityComponent_JobSite : PriorityComponent
     {
-        public PriorityComponent_Jobsite(uint jobsiteID)
+        public PriorityComponent_JobSite(uint jobsiteID)
         {
             _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
         }
@@ -21,7 +21,7 @@ namespace Priority
         readonly ComponentReference_Jobsite _jobsiteReferences;
 
         public uint                     JobsiteID     => _jobsiteReferences.JobsiteID;
-        JobsiteComponent                _jobsite      => _jobsiteReferences.Jobsite;
+        JobSite_Component                _jobSite      => _jobsiteReferences.JobSite;
         protected override PriorityType _priorityType => PriorityType.JobTask;
 
         protected override List<uint> _canPeek(List<uint> priorityIDs)

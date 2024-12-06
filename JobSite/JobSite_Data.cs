@@ -2,32 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using City;
 using EmployeePosition;
 using Initialisation;
-using Managers;
 using Recipes;
-using ScriptableObjects;
 using Station;
 using UnityEditor;
 using UnityEngine;
 
-namespace Jobsite
+namespace JobSite
 {
-    public enum JobsiteName
-    {
-        None,
-
-        Lumber_Yard,
-        Smithy
-    }
-
     [Serializable]
-    public class JobsiteData
+    public class JobSite_Data
     {
-        public uint        JobsiteID;
-        public JobsiteName JobsiteName;
-        public uint        JobsiteFactionID;
-        public uint        CityID;
+        public uint        JobSiteID;
+        public                                       uint        JobsiteFactionID;
+        public                                       uint        CityID;
 
         public bool   JobsiteIsActive = true;
         public void   SetJobsiteIsActive(bool jobsiteIsActive) => JobsiteIsActive = jobsiteIsActive;
@@ -64,13 +54,11 @@ namespace Jobsite
 
         // Work out how to do quotas and set production rate
 
-        public void InitialiseJobsiteData()
+        public void InitialiseJobSiteData()
         {
-            var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
+            var jobsite = Jobsite_Manager.GetJobSite_Component(JobSiteID);
 
-            jobsite.Initialise();
-
-            foreach (var station in jobsite.AllStationsInJobsite.Values)
+            foreach (var station in jobsite.AllStationsInJobSite.Values)
             {
                 if (!AllStationIDs.Contains(station.StationData.StationID))
                 {
@@ -78,8 +66,8 @@ namespace Jobsite
                     AllStationIDs.Add(station.StationData.StationID);
                 }
             }
-
-            Manager_Initialisation.OnInitialiseJobsiteDatas += _initialiseJobsiteData;
+            
+            _initialiseJobsiteData();
         }
 
         void _initialiseJobsiteData()
@@ -163,7 +151,7 @@ namespace Jobsite
 
         protected uint _findEmployeeFromCity(EmployeePositionName positionName)
         {
-            var city = Manager_City.GetCity(CityID);
+            var city = City_Manager.GetCity(CityID);
 
             var allCitizenIDs = city?.CityData?.Population?.AllCitizenIDs;
 
@@ -192,7 +180,7 @@ namespace Jobsite
 
         protected uint _generateNewEmployee(EmployeePositionName positionName)
         {
-            var city = Manager_City.GetCity(CityID);
+            var city = City_Manager.GetCity(CityID);
 
             var employeeMaster = EmployeePosition_Manager.GetEmployeePosition_Master(positionName);
 
@@ -261,7 +249,7 @@ namespace Jobsite
             }
 
             AllEmployeeIDs.Add(employeeID);
-            Actor_Manager.GetActorData(employeeID).CareerData.SetJobsiteID(JobsiteID);
+            Actor_Manager.GetActorData(employeeID).CareerData.SetJobsiteID(JobSiteID);
         }
 
         public void HireEmployee(uint employeeID)
@@ -497,13 +485,13 @@ namespace Jobsite
         }
     }
 
-    [CustomPropertyDrawer(typeof(JobsiteData))]
+    [CustomPropertyDrawer(typeof(JobSite_Data))]
     public class JobsiteData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var    jobsiteNameProp = property.FindPropertyRelative("JobsiteName");
-            string jobsiteName     = ((JobsiteName)jobsiteNameProp.enumValueIndex).ToString();
+            string jobsiteName     = ((JobSiteName)jobsiteNameProp.enumValueIndex).ToString();
 
             label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
 

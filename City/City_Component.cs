@@ -1,28 +1,39 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Initialisation;
 using JobSite;
 using Managers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace City
 {
-    public class CityComponent : MonoBehaviour
+    public class City_Component : MonoBehaviour
     {
-        public CityData CityData;
+        public uint      CityID => CityData.CityID;
+        public City_Data CityData;
 
         public GameObject CitySpawnZone;
 
-        public List<JobSite_Component> AllJobsitesInCity;
+        List<JobSite_Component> _allJobSitesInCity;
+        public List<JobSite_Component> AllJobSitesInCity => _allJobSitesInCity ??= _getAllJobSitesInCity();
 
-        public void Initialise()
-        {
-            CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
-
-            AllJobsitesInCity = GetAllJobsitesInCity();
-            AllJobsitesInCity.ForEach(jobsite => jobsite.SetCityID(CityData.CityID));
+        void Awake()
+        { 
+            Manager_Initialisation.OnInitialiseCities += _initialise;
         }
 
-        public void SetCityData(CityData cityData) => CityData = cityData;
+        void _initialise()
+        {
+            CityData.InitialiseCityData();
+            
+            CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
+
+            AllJobSitesInCity.ForEach(jobsite => jobsite.SetCityID(CityData.CityID));
+        }
+
+        public void SetCityData(City_Data cityData) => CityData = cityData;
         public void SetRegionID(uint     regionID) => CityData.RegionID = regionID;
 
         public void RefreshCity()
@@ -30,14 +41,6 @@ namespace City
             // Refresh all jobsites in citydata
         }
 
-        public List<JobSite_Component> GetAllJobsitesInCity() => GetComponentsInChildren<JobSite_Component>().ToList();
-
-        public JobSite_Component GetNearestJobsiteInCity(Vector3 position, JobSiteName jobSiteName)
-        {
-            return AllJobsitesInCity
-                   .Where(jobsite => jobsite.JobSiteName == jobSiteName)
-                   .OrderBy(jobsite => Vector3.Distance(position, jobsite.transform.position))
-                   .FirstOrDefault();
-        }
+        List<JobSite_Component> _getAllJobSitesInCity() => GetComponentsInChildren<JobSite_Component>().ToList();
     }
 }

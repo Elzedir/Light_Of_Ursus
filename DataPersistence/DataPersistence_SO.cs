@@ -5,11 +5,13 @@ using UnityEngine;
 using System.Linq;
 using System.IO;
 using Actor;
-using Jobsite;
+using City;
+using JobSite;
 using OperatingArea;
 using Station;
 using UnityEngine.SceneManagement;
 using UnityEditor;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "DataPersistence_SO", menuName = "SOList/DataPersistence_SO")]
 [Serializable]
@@ -379,8 +381,8 @@ public class ProfileData
         saveData.SavedCityData = new SavedCityData(cityDataJSON?.AllCityData);
 
         string jobsitePath = Path.Combine(cityPath, "Jobsites");
-        var jobsiteDataJSON = JsonUtility.FromJson<SavedJobsiteData>(_fromJSON(jobsitePath, "JobsiteSaveData.json"));
-        saveData.SavedJobsiteData = new SavedJobsiteData(jobsiteDataJSON?.AllJobsiteData);
+        var jobsiteDataJSON = JsonUtility.FromJson<SavedJobSiteData>(_fromJSON(jobsitePath, "JobsiteSaveData.json"));
+        saveData.SavedJobSiteData = new SavedJobSiteData(jobsiteDataJSON?.AllJobSiteData);
 
         string stationPath = Path.Combine(jobsitePath, "Stations");
         var stationDataJSON = JsonUtility.FromJson<SavedStationData>(_fromJSON(stationPath, "StationSaveData.json"));
@@ -496,7 +498,7 @@ public class ProfileData
     {
         string regionPath = _toJSON(savePath, "Regions", "RegionSaveData.json", saveData.SavedRegionData);
         string cityPath = _toJSON(regionPath, "Cities", "CitySaveData.json", saveData.SavedCityData);
-        string jobsitePath = _toJSON(cityPath, "Jobsites", "JobsiteSaveData.json", saveData.SavedJobsiteData);
+        string jobsitePath = _toJSON(cityPath, "Jobsites", "JobsiteSaveData.json", saveData.SavedJobSiteData);
         string stationPath = _toJSON(jobsitePath, "Stations", "StationSaveData.json", saveData.SavedStationData);
         _toJSON(stationPath, "OperatingAreas", "OperatingAreaSaveData.json", saveData.SavedOperatingAreaData);
     }
@@ -656,14 +658,14 @@ public class SaveData
     public SavedProfileData SavedProfileData;    
 
     // All Game Info
-    public SavedRegionData SavedRegionData;
-    public SavedCityData SavedCityData;
-    public SavedJobsiteData SavedJobsiteData;
-    public SavedStationData SavedStationData;
-    public SavedOperatingAreaData SavedOperatingAreaData;
-    public SavedFactionData SavedFactionData;
-    public SavedActorData SavedActorData;
-    public SavedOrderData SavedOrderData;
+    public                                            SavedRegionData        SavedRegionData;
+    public                                            SavedCityData          SavedCityData;
+    [FormerlySerializedAs("SavedJobsiteData")] public SavedJobSiteData       SavedJobSiteData;
+    public                                            SavedStationData       SavedStationData;
+    public                                            SavedOperatingAreaData SavedOperatingAreaData;
+    public                                            SavedFactionData       SavedFactionData;
+    public                                            SavedActorData         SavedActorData;
+    public                                            SavedOrderData         SavedOrderData;
 
     // Player info
     public Vector3 PlayerPosition;
@@ -715,25 +717,25 @@ public class SavedProfileData
 public class SavedRegionData
 {
     public uint LastSavedRegionID = 1;
-    public List<RegionData> AllRegionData = new();
+    public RegionData AllRegionData;
 
-    public SavedRegionData(List<RegionData> allRegionData) => AllRegionData = allRegionData;
+    public SavedRegionData(RegionData[] allRegionData) => AllRegionData = allRegionData;
 }
 
 [Serializable]
 public class SavedCityData
 {
-    public List<CityData> AllCityData = new();
+    public City_Data[] AllCityData;
 
-    public SavedCityData(List<CityData> allCityData) => AllCityData = allCityData;
+    public SavedCityData(City_Data[] allCityData) => AllCityData = allCityData;
 }
 
 [Serializable]
-public class SavedJobsiteData
+public class SavedJobSiteData
 {
-    public List<JobsiteData> AllJobsiteData = new();
+    [FormerlySerializedAs("AllJobsiteData")] public JobSite_Data[] AllJobSiteData;
 
-    public SavedJobsiteData(List<JobsiteData> allJobsiteData) => AllJobsiteData = allJobsiteData;
+    public SavedJobSiteData(JobSite_Data[] allJobSiteData) => AllJobSiteData = allJobSiteData;
 }
 
 [Serializable]

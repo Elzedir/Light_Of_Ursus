@@ -6,7 +6,7 @@ using Actor;
 using EmployeePosition;
 using Initialisation;
 using Items;
-using Jobsite;
+using JobSite;
 using Managers;
 using NUnit.Framework;
 using ScriptableObjects;
@@ -283,8 +283,8 @@ public class Order_Base
     Station_Component _station_Destination;
     public Station_Component Station_Destination { get { return _station_Destination ??= Station_Manager.GetStation_Component(StationID_Destination); } }
     public uint JobsiteID;
-    JobsiteComponent _jobsite;
-    public JobsiteComponent Jobsite { get { return _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID); } }
+    JobSite_Component _jobSite;
+    public JobSite_Component JobSite { get { return _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID); } }
     public OrderStatus OrderStatus;
     public List<Item> OrderItems;
 
@@ -475,9 +475,9 @@ public class Order_Base
     {
         var stationsToHaulTo = new List<Station_Component>();
 
-        var jobsite = Manager_Jobsite.GetJobsite(JobsiteID);
+        var jobsite = Jobsite_Manager.GetJobSite_Component(JobsiteID);
 
-        foreach (var station in jobsite.AllStationsInJobsite.Values)
+        foreach (var station in jobsite.AllStationsInJobSite.Values)
         {
             if (station.AllowedStoredItemIDs.Contains(1100) || station.AllowedStoredItemIDs.Contains(2300))
             {

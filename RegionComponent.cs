@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using City;
 using UnityEngine;
 
 public class RegionComponent : MonoBehaviour
 {
     public RegionData RegionData;
 
-    public List<CityComponent> AllCitiesInRegion;
+    public List<City_Component> AllCitiesInRegion;
 
     public void Initialise()
     {
@@ -21,9 +22,9 @@ public class RegionComponent : MonoBehaviour
         RegionData = regionData;
     }
 
-    public List<CityComponent> GetAllCitiesInRegion() => GetComponentsInChildren<CityComponent>().ToList();
+    public List<City_Component> GetAllCitiesInRegion() => GetComponentsInChildren<City_Component>().ToList();
 
-    public CityComponent GetNearestCityInRegion(Vector3 position)
+    public City_Component GetNearestCityInRegion(Vector3 position)
     {
         return AllCitiesInRegion
         .OrderBy(city => Vector3.Distance(position, city.transform.position))

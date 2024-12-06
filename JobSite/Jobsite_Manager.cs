@@ -1,172 +1,132 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EmployeePosition;
 using Initialisation;
+using UnityEditor;
 using UnityEngine;
 
-namespace Jobsite
+namespace JobSite
 {
-    public class Manager_Jobsite : MonoBehaviour, IDataPersistence
+    public abstract class Jobsite_Manager : IDataPersistence
     {
-        static        Jobsite_SO _displayJobsite;
-        public static Jobsite_SO DisplayJobsite { get => _displayJobsite ??= Resources.Load<Jobsite_SO>("ScriptableObjects/AllJobsites_SO"); }
+        const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
 
-        public static Dictionary<uint, Jobsite_Data>      AllJobsiteData       = new();
-        static        uint                               _lastUnusedJobsiteID = 1;
-        public static Dictionary<uint, Jobsite_Component> AllJobsiteComponents = new();
+        public static Dictionary<uint, JobSite_Data>      AllJobsiteData       = new();
+        static        uint                                _lastUnusedJobsiteID = 1;
+        public static Dictionary<uint, JobSite_Component> AllJobsiteComponents = new();
+        
+        static JobSite_SO _jobSite_SO;
+        static JobSite_SO JobSite_SO => _jobSite_SO ??= _getOrCreateJobSite_SO();
 
-        public void SaveData(SaveData data) => data.SavedJobsiteData = new SavedJobsiteData(AllJobsiteData.Values.ToList());
-        public void LoadData(SaveData data)
+        public void SaveData(SaveData saveData) =>
+            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.Save_SO());
+
+        public void LoadData(SaveData saveData)
         {
-            if (data == null)
+            if (saveData is null)
             {
                 //Debug.Log("No SaveData found in LoadData.");
                 return;
             }
-            if (data.SavedJobsiteData == null)
+
+            if (saveData.SavedJobSiteData == null)
             {
-                //Debug.Log("No SavedJobsiteData found in SaveData.");
+                //Debug.Log("No SavedJobSiteData found in SaveData.");
                 return;
             }
-            if (data.SavedJobsiteData.AllJobsiteData == null)
+
+            if (saveData.SavedJobSiteData.AllJobSiteData == null)
             {
-                //Debug.Log("No AllJobsiteData found in SavedJobsiteData.");
+                //Debug.Log("No AllJobSiteData found in SavedJobSiteData.");
                 return;
             }
-            if (data.SavedJobsiteData.AllJobsiteData.Count == 0)
+
+            if (saveData.SavedJobSiteData.AllJobSiteData.Length == 0)
             {
-                //Debug.Log("AllJobsiteData count is 0.");
+                //Debug.Log("AllJobSiteData count is 0.");
                 return;
             }
+
+            JobSite_SO.Load_SO(saveData.SavedJobSiteData.AllJobSiteData);
+        }
+
+        public static void OnSceneLoaded()
+        {
+            Manager_Initialisation.OnInitialiseManagerJobSite += _initialise;
+        }
+
+        static void _initialise()
+        {
+            JobSite_SO.PopulateSceneJobSites();
+        }
         
-            AllJobsiteData = data.SavedJobsiteData.AllJobsiteData.ToDictionary(x => x.JobsiteID);
+        public static JobSite_Data GetJobSite_Data(uint jobSiteID)
+        {
+            return JobSite_SO.GetJobSite_Data(jobSiteID);
+        }
+        
+        public static JobSite_Component GetJobSite_Component(uint jobSiteID)
+        {
+            return JobSite_SO.GetJobSite_Component(jobSiteID);
+        }
+        
+        static JobSite_SO _getOrCreateJobSite_SO()
+        {
+            var jobSite_SO = Resources.Load<JobSite_SO>(_jobSite_SOPath);
+            
+            if (jobSite_SO is not null) return jobSite_SO;
+            
+            jobSite_SO = ScriptableObject.CreateInstance<JobSite_SO>();
+            AssetDatabase.CreateAsset(jobSite_SO, $"Assets/Resources/{_jobSite_SOPath}");
+            AssetDatabase.SaveAssets();
+            
+            return jobSite_SO;
         }
 
-        public void OnSceneLoaded()
+        public static JobSite_Component GetNearestJobSite(Vector3 position, JobSiteName jobSiteName)
         {
-            Manager_Initialisation.OnInitialiseManagerJobsite += _initialise;
-        }
+            JobSite_Component nearestJobSite = null;
 
-        void _initialise()
-        {
-            foreach (var jobsite in _findAllJobsiteComponents())
+            var nearestDistance = float.MaxValue;
+
+            foreach (var jobSite in JobSite_SO.JobSites.Where(j => j.JobSiteName == jobSiteName))
             {
-                if (jobsite.JobsiteData == null) { Debug.Log($"Jobsite: {jobsite.name} does not have JobsiteData."); continue; }
+                var distance = Vector3.Distance(position, jobSite.transform.position);
 
-                if (!AllJobsiteComponents.ContainsKey(jobsite.JobsiteData.JobsiteID)) AllJobsiteComponents.Add(jobsite.JobsiteData.JobsiteID, jobsite);
-                else
-                {
-                    if (AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].gameObject == jobsite.gameObject) continue;
-                    else
-                    {
-                        throw new ArgumentException($"JobsiteID {jobsite.JobsiteData.JobsiteID}: {jobsite.name} already exists for jobsite {AllJobsiteComponents[jobsite.JobsiteData.JobsiteID].name}");
-                    }
-                }
+                if (!(distance < nearestDistance)) continue;
 
-                if (!AllJobsiteData.ContainsKey(jobsite.JobsiteData.JobsiteID))
-                {
-                    //Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteData");
-                    AddToAllJobsiteData(jobsite.JobsiteData);
-                }
-
-                jobsite.SetJobsiteData(GetJobsiteData(jobsite.JobsiteData.JobsiteID));
+                nearestJobSite  = jobSite;
+                nearestDistance = distance;
             }
 
-            foreach (var jobsiteData in AllJobsiteData.Values)
-            {
-                jobsiteData.InitialiseJobsiteData();
-            }
-
-            DisplayJobsite.AllJobsiteData = AllJobsiteData.Values.ToList();
-
-            foreach (var jobsite in AllJobsiteData)
-            {
-                jobsite.Value.ProsperityData.SetProsperity(50);
-                jobsite.Value.ProsperityData.MaxProsperity = 100;
-            }
+            return nearestJobSite;
         }
 
-        static List<Jobsite_Component> _findAllJobsiteComponents()
+        public static uint GetUnusedJobSiteID()
         {
-            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                   .OfType<Jobsite_Component>()
-                   .ToList();
+            return JobSite_SO.GetUnusedJobSiteID();
         }
-
-        public static void GetNearestJobsite(Vector3 position, out Jobsite_Component nearestJobsite)
+        
+        public static Dictionary<JobSiteName, List<EmployeePositionName>> EmployeeCanUseList = new()
         {
-            nearestJobsite = null;
-            float nearestDistance = float.MaxValue;
-
-            foreach (var jobsite in AllJobsiteComponents)
+            {JobSiteName.Lumber_Yard, new List<EmployeePositionName>
             {
-                float distance = Vector3.Distance(position, jobsite.Value.transform.position);
-
-                if (distance < nearestDistance)
-                {
-                    nearestJobsite  = jobsite.Value;
-                    nearestDistance = distance;
-                }
-            }
-        }
-
-        public void AddToAllJobsiteData(Jobsite_Data jobsiteData)
-        {
-            if (AllJobsiteData.ContainsKey(jobsiteData.JobsiteID))
+                EmployeePositionName.Logger,
+                EmployeePositionName.Sawyer,
+                EmployeePositionName.Hauler
+                
+            }},
+            {JobSiteName.Smithy, new List<EmployeePositionName>
             {
-                Debug.Log($"AllJobsiteData already contains JobsiteID: {jobsiteData.JobsiteID}");
-                return;
-            }
-
-            AllJobsiteData.Add(jobsiteData.JobsiteID, jobsiteData);
-        }
-
-        public void UpdateAllJobsiteData(Jobsite_Data jobsiteData)
-        {
-            if (!AllJobsiteData.ContainsKey(jobsiteData.JobsiteID))
-            {
-                Debug.LogError($"JobsiteData: {jobsiteData.JobsiteID} does not exist in AllJobsiteData.");
-                return;
-            }
-
-            AllJobsiteData[jobsiteData.JobsiteID] = jobsiteData;
-        }
-
-        public static Jobsite_Data GetJobsiteData(uint jobsiteID)
-        {
-            if (!AllJobsiteData.ContainsKey(jobsiteID))
-            {
-                Debug.LogError($"JobsiteData: {jobsiteID} does not exist in AllJobsiteData.");
-                return null;
-            }
-
-            return AllJobsiteData[jobsiteID];
-        }
-
-    
-        public static Jobsite_Component GetJobsite(uint jobsiteID)
-        {
-            if (!AllJobsiteComponents.ContainsKey(jobsiteID))
-            {
-                Debug.LogError($"JobsiteComponent: {jobsiteID} does not exist in AllJobsiteComponents.");
-                return null;
-            }
-
-            return AllJobsiteComponents[jobsiteID];
-        }
-
-        public uint GetRandomJobsiteID()
-        {
-            while (AllJobsiteData.ContainsKey(_lastUnusedJobsiteID))
-            {
-                _lastUnusedJobsiteID++;
-            }
-
-            return _lastUnusedJobsiteID;
-        }
+                EmployeePositionName.Miner,
+                EmployeePositionName.Smith,
+                EmployeePositionName.Hauler
+            }}
+        };
     }
     
-    public enum JobsiteName
+    public enum JobSiteName
     {
         None,
 

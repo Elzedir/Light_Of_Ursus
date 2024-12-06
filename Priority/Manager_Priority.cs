@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Actor;
-using Jobsite;
+using JobSite;
 using Managers;
 using Station;
 using UnityEngine;
@@ -72,7 +72,7 @@ namespace Priority
         public             Station_Component Station    => _component as Station_Component;
 
         public override GameObject           GameObject                => Station.gameObject;
-        public override PriorityComponent GetPriorityComponent() => Station.Jobsite.PriorityComponent;
+        public override PriorityComponent GetPriorityComponent() => Station.JobSite.PriorityComponent;
     }
 
     public class ComponentReference_Jobsite : ComponentReference
@@ -80,12 +80,12 @@ namespace Priority
         public uint JobsiteID => ComponentID;
         public ComponentReference_Jobsite(uint jobsiteID) : base(jobsiteID) { }
 
-        JobsiteComponent                    _jobsite;
-        protected override object           _component => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
-        public             JobsiteComponent Jobsite    => _component as JobsiteComponent;
+        JobSite_Component                    _jobSite;
+        protected override object           _component => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
+        public             JobSite_Component JobSite    => _component as JobSite_Component;
 
-        public override GameObject           GameObject                => Jobsite.gameObject;
+        public override GameObject           GameObject                => JobSite.gameObject;
         
-        public override PriorityComponent GetPriorityComponent() => Jobsite.PriorityComponent;
+        public override PriorityComponent GetPriorityComponent() => JobSite.PriorityComponent;
     }
 }

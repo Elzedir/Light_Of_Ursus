@@ -1,6 +1,6 @@
 using System;
 using Actor;
-using Jobsite;
+using JobSite;
 using Managers;
 using Station;
 using UnityEngine;
@@ -16,8 +16,8 @@ namespace OperatingArea
         Station_Component        _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
         public uint              JobsiteID;
-        JobsiteComponent         _jobsite;
-        public JobsiteComponent  Jobsite => _jobsite ??= Manager_Jobsite.GetJobsite(JobsiteID);
+        JobSite_Component         _jobSite;
+        public JobSite_Component  JobSite => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
         #endregion
 
         #region Operator

@@ -11,8 +11,8 @@ namespace Station
     {
         const  string     _stations_SOPath = "ScriptableObjects/Station_SO";
         
-        static Station_SO _stationSO;
-        static Station_SO Station_SO => _stationSO ??= _getOrCreateStation_SO();
+        static Station_SO _station_SO;
+        static Station_SO Station_SO => _station_SO ??= _getOrCreateStation_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedStationData = new SavedStationData(Station_SO.Save_SO());
@@ -46,7 +46,7 @@ namespace Station
             Station_SO.Load_SO(saveData.SavedStationData.AllStationData);
         }
 
-        public void OnSceneLoaded()
+        public static void OnSceneLoaded()
         {
             Manager_Initialisation.OnInitialiseManagerStation += _initialise;
         }

@@ -73,7 +73,7 @@ namespace Station
     }
 
     [CustomEditor(typeof(Station_SO))]
-    public class AllStationsSOEditor : Editor
+    public class Stations_SOEditor : Editor
     {
         int  _selectedStationIndex = -1;
         

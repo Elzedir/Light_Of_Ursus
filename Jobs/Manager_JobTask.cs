@@ -5,7 +5,7 @@ using System.Linq;
 using Actor;
 using Inventory;
 using Items;
-using Jobsite;
+using JobSite;
 using Priority;
 using Station;
 using UnityEditor;
@@ -305,7 +305,7 @@ namespace Jobs
             Dictionary<PriorityParameterName, object> existingParameters)
         {
             if (!existingParameters.TryGetValue(PriorityParameterName.Jobsite, out var jobsiteObject) ||
-                jobsiteObject is not JobsiteComponent jobsite)
+                jobsiteObject is not JobSite_Component jobsite)
             {
                 Debug.LogError("No jobsite found in existing parameters.");
                 return null;

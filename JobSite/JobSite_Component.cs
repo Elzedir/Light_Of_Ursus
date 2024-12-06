@@ -2,43 +2,55 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using EmployeePosition;
+using Initialisation;
 using Inventory;
 using Jobs;
 using Managers;
 using Priority;
-using ScriptableObjects;
 using Station;
 using UnityEngine;
+using Station_Component = Station.Station_Component;
 
-namespace Jobsite
+namespace JobSite
 {
-    public abstract class JobsiteComponent : MonoBehaviour
+    public abstract class JobSite_Component : MonoBehaviour
     {
-        public uint        JobsiteID => JobsiteData.JobsiteID;
-        public JobsiteData JobsiteData;
-        public void        SetJobsiteData(JobsiteData jobsiteData) => JobsiteData = jobsiteData;
-        public void        SetCityID(uint             cityID)      => JobsiteData.CityID = cityID;
+        public abstract JobSiteName  JobSiteName { get; }
+        public          uint         JobSiteID   => JobSiteData.JobSiteID;
+        public          JobSite_Data JobSiteData;
+        bool                         _initialised;
+        public void                  SetJobSiteData(JobSite_Data jobSiteData) => JobSiteData = jobSiteData;
+        public void                  SetCityID(uint              cityID)      => JobSiteData.CityID = cityID;
 
-        Dictionary<uint, Station_Component> _allStationInJobsite;
+        Dictionary<uint, Station_Component> _allStationInJobSite;
 
-        public Dictionary<uint, Station_Component> AllStationsInJobsite =>
-            _allStationInJobsite ??= _getAllStationsInJobsite();
+        public Dictionary<uint, Station_Component> AllStationsInJobSite =>
+            _allStationInJobSite ??= _getAllStationsInJobsite();
 
         public List<EmployeePositionName> AllCoreEmployeePositions;
 
-        public PriorityComponent_Jobsite PriorityComponent;
+        public PriorityComponent_JobSite PriorityComponent;
 
         public float IdealRatio;
         public void  SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
         public int   PermittedProductionInequality = 10;
-
-        public void Initialise()
+        
+        void Awake()
         {
-            PriorityComponent = new PriorityComponent_Jobsite(JobsiteID);
+            Manager_Initialisation.OnInitialiseStations += _initialise;
+        }
 
-            AllStationsInJobsite.Values.ToList().ForEach(station => station.StationData.SetJobsiteID(JobsiteID));
+        void _initialise()
+        {
+            JobSiteData.InitialiseJobSiteData();
+            
+            PriorityComponent = new PriorityComponent_JobSite(JobSiteID);
+
+            AllStationsInJobSite.Values.ToList().ForEach(station => station.StationData.SetJobsiteID(JobSiteID));
 
             _setTickRate(TickRate.TenSeconds, false);
+
+            _initialised = true;
         }
 
         TickRate _currentTickRate;
@@ -47,14 +59,16 @@ namespace Jobsite
         {
             if (_currentTickRate == tickRate) return;
 
-            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Jobsite, _currentTickRate, JobsiteID);
-            Manager_TickRate.RegisterTicker(TickerType.Jobsite, tickRate, JobsiteID, _onTick);
+            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Jobsite, _currentTickRate, JobSiteID);
+            Manager_TickRate.RegisterTicker(TickerType.Jobsite, tickRate, JobSiteID, _onTick);
             _currentTickRate = tickRate;
         }
 
         void _onTick()
         {
-            foreach (var product in AllStationsInJobsite.Values.Select(s => s.StationData.ProductionData))
+            if (!_initialised) return;
+            
+            foreach (var product in AllStationsInJobSite.Values.Select(s => s.StationData.ProductionData))
             {
                 product.GetEstimatedProductionRatePerHour();
                 product.GetActualProductionRatePerHour();
@@ -72,7 +86,7 @@ namespace Jobsite
             GetComponentsInChildren<Station_Component>().ToDictionary(station => station.StationData.StationID);
 
         public Station_Component GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
-            => AllStationsInJobsite
+            => AllStationsInJobSite
                .Where(station => stationNames.Contains(station.Value.StationName))
                .OrderBy(station => Vector3.Distance(position, station.Value.transform.position))
                .FirstOrDefault().Value;
@@ -108,7 +122,7 @@ namespace Jobsite
 
         List<Station_Component> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
         {
-            var relevantStations = AllStationsInJobsite.Values
+            var relevantStations = AllStationsInJobSite.Values
                                                        .Where(station => station.AllowedJobs.Contains(jobName))
                                                        .ToList();
 
@@ -126,7 +140,7 @@ namespace Jobsite
         {
             HashSet<EmployeePositionName> employeePositions = new();
 
-            foreach (var station in AllStationsInJobsite.Values)
+            foreach (var station in AllStationsInJobSite.Values)
             {
                 foreach (var position in station.AllowedEmployeePositions)
                 {
@@ -139,14 +153,14 @@ namespace Jobsite
 
         protected void _assignAllEmployeesToStations(List<uint> employeeIDs)
         {
-            foreach (var station in AllStationsInJobsite.Values)
+            foreach (var station in AllStationsInJobSite.Values)
             {
                 station.RemoveAllOperatorsFromStation();
             }
 
             var tempEmployees = employeeIDs.Select(employeeID => Actor_Manager.GetActorData(employeeID)).ToList();
 
-            foreach (var station in AllStationsInJobsite.Values)
+            foreach (var station in AllStationsInJobSite.Values)
             {
                 var allowedPositions = station.AllowedEmployeePositions;
                 var employeesForStation = tempEmployees
@@ -159,7 +173,7 @@ namespace Jobsite
 
                 foreach (var employee in employeesForStation)
                 {
-                    JobsiteData.AddEmployeeToStation(employee.ActorID, station.StationData.StationID);
+                    JobSiteData.AddEmployeeToStation(employee.ActorID, station.StationData.StationID);
                     tempEmployees.Remove(employee);
                 }
 
@@ -205,12 +219,12 @@ namespace Jobsite
 
         List<Station_Component> _relevantStations_Fetch()
         {
-            return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
+            return AllStationsInJobSite.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
         }
 
         List<Station_Component> _relevantStations_Deliver(InventoryData inventoryData)
         {
-            return AllStationsInJobsite.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
+            return AllStationsInJobSite.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
                                        .ToList();
         }
     }

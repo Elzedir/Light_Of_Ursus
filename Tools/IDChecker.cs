@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Actor;
-using Jobsite;
+using City;
+using JobSite;
 using Station;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -106,19 +107,19 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixJobsiteIDs()
     {
-        var jobsites = FindObjectsByType<JobsiteComponent>(FindObjectsSortMode.None);
+        var jobsites = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateJobsites = new List<JobsiteComponent>();
+        var duplicateJobsites = new List<JobSite_Component>();
 
         foreach (var jobsite in jobsites)
         {
-            if (jobsite.JobsiteData == null)
+            if (jobsite.JobSiteData == null)
             {
                 Debug.LogWarning($"Jobsite: {jobsite.name} does not have JobsiteData.");
                 continue;
             }
 
-            if (!existingIDs.Add(jobsite.JobsiteData.JobsiteID))
+            if (!existingIDs.Add(jobsite.JobSiteData.JobSiteID))
             {
                 duplicateJobsites.Add(jobsite);
             }
@@ -127,7 +128,7 @@ public class IDChecker : EditorWindow
         foreach (var jobsite in duplicateJobsites)
         {
             uint newJobsiteID = GetNewID(existingIDs);
-            jobsite.JobsiteData.JobsiteID = newJobsiteID;
+            jobsite.JobSiteData.JobSiteID = newJobsiteID;
             existingIDs.Add(newJobsiteID);
 
             EditorUtility.SetDirty(jobsite);
@@ -141,9 +142,9 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixCityIDs()
     {
-        var cities = FindObjectsByType<CityComponent>(FindObjectsSortMode.None);
+        var cities = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateCities = new List<CityComponent>();
+        var duplicateCities = new List<City_Component>();
 
         foreach (var city in cities)
         {

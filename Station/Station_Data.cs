@@ -4,7 +4,7 @@ using System.Linq;
 using Initialisation;
 using Inventory;
 using Items;
-using Jobsite;
+using JobSite;
 using Managers;
 using Priority;
 using Recipes;
@@ -21,7 +21,7 @@ namespace Station
         ComponentReference_Jobsite _jobsiteReferences;
         public void                SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
         public uint                JobsiteID                    => _jobsiteReferences.JobsiteID;
-        public JobsiteComponent    Jobsite                      => _jobsiteReferences.Jobsite;
+        public JobSite_Component    JobSite                      => _jobsiteReferences.JobSite;
 
         public bool StationIsActive = true;
 

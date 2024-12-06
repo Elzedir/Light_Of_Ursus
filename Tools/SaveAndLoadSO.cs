@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using City;
+using JobSite;
 using ScriptableObjects;
 using Station;
 using UnityEditor;
@@ -41,8 +43,8 @@ public class SaveAndLoadSO : EditorWindow
         var allFactionsSO = Resources.Load<AllFactions_SO>("ScriptableObjects/AllFactions_SO");
         var allActorsSO = Resources.Load<AllActors_SO>("ScriptableObjects/AllActors_SO");
         var allRegionsSO = Resources.Load<AllRegions_SO>("ScriptableObjects/AllRegions_SO");
-        var allCitiesSO = Resources.Load<AllCities_SO>("ScriptableObjects/AllCities_SO");
-        var allJobsitesSO = Resources.Load<AllJobsites_SO>("ScriptableObjects/AllJobsites_SO");
+        var allCitiesSO = Resources.Load<City_SO>("ScriptableObjects/AllCities_SO");
+        var allJobsitesSO = Resources.Load<JobSite_SO>("ScriptableObjects/AllJobsites_SO");
         var allStationsSO = Resources.Load<Station_SO>("ScriptableObjects/AllStations_SO");
         var allOperatingAreasSO = Resources.Load<AllOperatingAreas_SO>("ScriptableObjects/AllOperatingAreas_SO");
         var allOrdersSO = Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO");
@@ -51,8 +53,6 @@ public class SaveAndLoadSO : EditorWindow
         allActorsSO.ClearActorData();
         allRegionsSO.ClearRegionData();
         allCitiesSO.ClearCityData();
-        allJobsitesSO.ClearJobsiteData();
-        allStationsSO.ClearStationData();
         allOperatingAreasSO.ClearOperatingAreaData();
         allOrdersSO.ClearOrderData();
 
@@ -62,8 +62,6 @@ public class SaveAndLoadSO : EditorWindow
         allActorsSO.LoadData(saveData);
         allRegionsSO.LoadData(saveData);
         allCitiesSO.LoadData(saveData);
-        allJobsitesSO.LoadData(saveData);
-        allStationsSO.LoadData(saveData);
         allOperatingAreasSO.LoadData(saveData);
         //allOrdersSO.LoadData(saveData);
 
