@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Inventory;
-using Managers;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Actor
 {
     [CreateAssetMenu(fileName = "AllActors_SO", menuName = "SOList/AllActors_SO")]
     [Serializable]

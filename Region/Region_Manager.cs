@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Initialisation;
-using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
-namespace Managers
+namespace Region
 {
     public class Manager_Region : MonoBehaviour, IDataPersistence
     {

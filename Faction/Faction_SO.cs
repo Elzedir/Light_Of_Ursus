@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Faction
 {
     [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
     [Serializable]

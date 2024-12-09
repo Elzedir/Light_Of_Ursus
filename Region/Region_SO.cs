@@ -4,15 +4,15 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Region
 {
     [CreateAssetMenu(fileName = "AllRegions_SO", menuName = "SOList/AllRegions_SO")]
     [Serializable]
     public class AllRegions_SO : ScriptableObject
     {
-        public List<RegionData> AllRegionData;
+        public List<Region_Data> AllRegionData;
 
-        public void SetAllRegionData(List<RegionData> allRegionData)
+        public void SetAllRegionData(List<Region_Data> allRegionData)
         {
             AllRegionData = allRegionData;
         }
@@ -64,7 +64,7 @@ namespace ScriptableObjects
 
         private float GetListHeight(int itemCount) => Mathf.Min(200, itemCount * 20);
 
-        private void DrawRegionAdditionalData(RegionData selectedRegionData)
+        private void DrawRegionAdditionalData(Region_Data selectedRegionData)
         {
             EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Region Name", selectedRegionData.RegionName);
