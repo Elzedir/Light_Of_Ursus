@@ -158,7 +158,7 @@ namespace JobSite
                 station.RemoveAllOperatorsFromStation();
             }
 
-            var tempEmployees = employeeIDs.Select(employeeID => Actor_Manager.GetActorData(employeeID)).ToList();
+            var tempEmployees = employeeIDs.Select(Actor_Manager.GetActor_Data).ToList();
 
             foreach (var station in AllStationsInJobSite.Values)
             {

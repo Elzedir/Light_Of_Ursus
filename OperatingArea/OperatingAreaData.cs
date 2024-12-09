@@ -23,7 +23,7 @@ namespace OperatingArea
         #region Operator
         public uint           CurrentOperatorID;
         Actor_Component        _currentOperator;
-        public Actor_Component CurrentOperator => _currentOperator ??= Actor_Manager.GetActor(CurrentOperatorID);
+        public Actor_Component CurrentOperator => _currentOperator ??= Actor_Manager.GetActor_Component(CurrentOperatorID);
         public bool           HasOperator()   => CurrentOperatorID != 0;
         public bool           IsOperatorMovingToOperatingArea;
         #endregion
@@ -40,7 +40,7 @@ namespace OperatingArea
         {
             if (CurrentOperatorID != 0) Debug.Log($"OperatingArea: {OperatingAreaID} replaced operator: {CurrentOperatorID} with new Operator {operatorID}");
             
-            if (Actor_Manager.GetActorData(operatorID).CareerData.GetNewCurrentJob(StationID))
+            if (Actor_Manager.GetActor_Data(operatorID).CareerData.GetNewCurrentJob(StationID))
             {
                 CurrentOperatorID = operatorID;
                 return true;
@@ -58,7 +58,7 @@ namespace OperatingArea
                 return false;
             }
 
-            Actor_Manager.GetActorData(CurrentOperatorID).CareerData.StopCurrentJob();
+            Actor_Manager.GetActor_Data(CurrentOperatorID).CareerData.StopCurrentJob();
             CurrentOperatorID               = 0;
             IsOperatorMovingToOperatingArea = false;
             return true;

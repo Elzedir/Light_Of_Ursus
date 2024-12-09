@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Career;
 using DateAndTime;
+using Faction;
 using Initialisation;
 using Inventory;
 using Items;
@@ -10,6 +11,7 @@ using Managers;
 using Recipes;
 using ScriptableObjects;
 using Tools;
+using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -17,138 +19,110 @@ namespace Actor
 {
     public class Actor_Manager : MonoBehaviour, IDataPersistence
     {
-        static          AllActors_SO                      _allActors;
-        static          Dictionary<uint, Actor_Data>      _allActorData       = new();
-        static          uint                              _lastUnusedActorID  = 1;
-        static readonly Dictionary<uint, Actor_Component> _allActorComponents = new();
+        const string _actor_SOPath = "ScriptableObjects/Actor_SO";
+        
+        static Actor_SO _allActors;
+        static Actor_SO AllActors => _allActors ??= _getOrCreateActor_SO();
 
-        public void SaveData(SaveData data)
+        public void SaveData(SaveData saveData) =>
+            saveData.SavedActorData = new SavedActorData(AllActors.Save_SO());
+
+        public void LoadData(SaveData saveData)
         {
-            _allActorData.Values.ToList().ForEach(actorData => actorData.UpdateActorData());
-
-            data.SavedActorData     = new SavedActorData(_allActorData.Values.ToList());
-            _allActors.AllActorData = _allActorData.Values.ToList();
-        }
-
-        public void LoadData(SaveData data)
-        {
+            // NB: Apply this to all other LoadData functions.
             try
             {
-                _allActorData = data.SavedActorData.AllActorData.ToDictionary(x => x.ActorID);
+                AllActors.Load_SO(saveData.SavedActorData.AllActorData);
             }
             catch
             {
-                _allActorData = new();
-                //Debug.Log("No Actor Data found in SaveData.");
-            }
+                if (saveData is null)
+                {
+                    Debug.LogWarning("No SaveData found in LoadData.");
+                    return;
+                }
 
-            _allActors.AllActorData = _allActorData.Values.ToList();
+                if (saveData.SavedActorData == null)
+                {
+                    Debug.LogWarning("No SavedActorData found in SaveData.");
+                    return;
+                }
+
+                if (saveData.SavedActorData.AllActorData == null)
+                {
+                    Debug.LogWarning("No AllActorData found in SavedActorData.");
+                    return;
+                }
+                
+                Debug.LogWarning("AllActorData count is 0.");
+            }
         }
 
-        public void OnSceneLoaded()
+        public static void OnSceneLoaded()
         {
-            _allActors = Resources.Load<AllActors_SO>("ScriptableObjects/AllActors_SO");
-
             Manager_Initialisation.OnInitialiseManagerActor += _initialise;
         }
 
         static void _initialise()
         {
-            foreach (var actor in _findAllActorComponents())
-            {
-                if (actor.ActorData == null)
-                {
-                    Debug.Log($"Actor: {actor.name} does not have ActorData.");
-                    continue;
-                }
-
-                if (!_allActorComponents.TryAdd(actor.ActorData.ActorID, actor))
-                {
-                    if (_allActorComponents[actor.ActorData.ActorID].gameObject == actor.gameObject) continue;
-                    Debug.LogError(
-                        $"ActorID {actor.ActorData.ActorID} and name {actor.name} already exists for actor {_allActorComponents[actor.ActorData.ActorID].name}");
-                    actor.ActorData.ActorID = _getRandomActorID();
-                }
-
-                if (!_allActorData.ContainsKey(actor.ActorData.ActorID))
-                    Debug.Log($"Actor: {actor.ActorData.ActorID} {actor.name} does not exist in AllActorData.");
-            }
-
-            foreach (var actor in _allActorData)
-            {
-                actor.Value.PrepareForInitialisation();
-            }
+            AllActors.PopulateSceneActors();
+        }
+        
+        public static Actor_Data GetActor_Data(uint actorID)
+        {
+            return AllActors.GetActor_Data(actorID);
+        }
+        
+        public static Actor_Component GetActor_Component(uint actorID)
+        {
+            return AllActors.GetActor_Component(actorID);
+        }
+        
+        static Actor_SO _getOrCreateActor_SO()
+        {
+            var actor_SO = Resources.Load<Actor_SO>(_actor_SOPath);
+            
+            if (actor_SO is not null) return actor_SO;
+            
+            actor_SO = ScriptableObject.CreateInstance<Actor_SO>();
+            AssetDatabase.CreateAsset(actor_SO, $"Assets/Resources/{_actor_SOPath}");
+            AssetDatabase.SaveAssets();
+            
+            return actor_SO;
         }
 
-        static List<Actor_Component> _findAllActorComponents()
+        public static Actor_Component GetNearestActor(Vector3 position)
         {
-            return FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                   .OfType<Actor_Component>()
-                   .ToList();
-        }
+            Actor_Component nearestActor = null;
 
-        static void _addToAllActorData(Actor_Data actorData)
-        {
-            if (_allActorData.TryAdd(actorData.ActorID, actorData)) return;
+            var nearestDistance = float.MaxValue;
 
-            Debug.Log($"ActorData: {actorData.ActorID} already exists in AllActorData.");
-        }
-
-        public static void UpdateAllActorData(Actor_Data actorData)
-        {
-            if (!_allActorData.ContainsKey(actorData.ActorID))
+            foreach (var actor in AllActors.Actors)
             {
-                Debug.Log($"ActorData: {actorData.ActorID} does not exist in AllActorData.");
-                return;
+                var distance = Vector3.Distance(position, actor.transform.position);
+
+                if (!(distance < nearestDistance)) continue;
+
+                nearestActor  = actor;
+                nearestDistance = distance;
             }
 
-            _allActorData[actorData.ActorID] = actorData;
+            return nearestActor;
         }
 
-        public static void RemoveFromAllActorData(uint actorID)
+        public static uint GetUnusedActorID()
         {
-            if (!_allActorData.ContainsKey(actorID))
-            {
-                Debug.Log($"ActorData: {actorID} does not exist in AllActorData.");
-                return;
-            }
-
-            _allActorData.Remove(actorID);
-        }
-
-        public static Actor_Data GetActorData(uint actorID)
-        {
-            if (_allActorData.TryGetValue(actorID, out var data)) return data;
-
-            Debug.Log($"ActorData: {actorID} does not exist in AllActorData.");
-            return null;
-
-        }
-
-        public static Actor_Component GetActor(uint actorID, bool generateActorIfNotFound = false)
-        {
-            if (_allActorComponents.TryGetValue(actorID, out var actor))
-            {
-                return actor;
-            }
-
-            if (generateActorIfNotFound)
-            {
-                return _allActorComponents[actorID] =
-                    _spawnActor(GetActorData(actorID).GameObjectData.LastSavedActorPosition, actorID);
-            }
-
-            return null;
+            return AllActors.GetUnusedActorID();
         }
 
         public static Actor_Component SpawnNewActor(Vector3             spawnPoint,
                                                     ActorDataPresetName actorDataPreset)
         {
-            Actor_Component actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
+            var actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
 
             actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
-            _allActorComponents[actor.ActorData.ActorID] = actor;
+            AllActors.UpdateActor(actor.ActorID, actor);
 
             actor.Initialise();
 
@@ -158,27 +132,38 @@ namespace Actor
         }
 
         // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-        static Actor_Component _spawnActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
+        static Actor_Component _spawnExistingActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
         {
             if (despawnActorIfExists) _despawnActor(actorID);
-            else if (_allActorComponents.TryGetValue(actorID, out var existingActor)) return existingActor;
 
-            var actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
+            var actor = AllActors.GetActor_Component(actorID);
+            
+            if (actor != null && actor.IsSpawned) return actor;
 
-            actor.SetActorData(GetActorData(actorID));
+            actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
+
+            actor.SetActorData(GetActor_Data(actorID));
             actor.Initialise();
 
             Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
+            
+            actor.IsSpawned = true;
 
             return actor;
         }
 
         static void _despawnActor(uint actorID)
         {
-            if (!_allActorComponents.TryGetValue(actorID, out var component)) return;
+            var actor = GetActor_Component(actorID);
 
-            Destroy(component.gameObject);
-            _allActorComponents.Remove(actorID);
+            if (actor is null)
+            {
+                Debug.LogError($"Actor: {actorID} does not exist.");
+                return;
+            }
+
+            actor.IsSpawned = false;
+            Destroy(actor.gameObject);
         }
 
         static GameObject _createNewActorGO(Vector3 spawnPoint)
@@ -217,13 +202,13 @@ namespace Actor
             var actorDataPreset = ActorDataPreset_Manager.GetActorDataPreset(actorDataPresetName);
 
             var fullIdentification = new FullIdentification(
-                actorID: actorDataPreset?.ActorID               ?? _getRandomActorID(),
+                actorID: actorDataPreset?.ActorID               ?? _getUnusedActorID(),
                 actorName: actorDataPreset?.ActorName           ?? _getRandomActorName(),
                 actorFactionID: actorDataPreset?.ActorFactionID ?? _getRandomFaction(),
-                actorCityID: actorDataPreset?.FullIdentification.ActorCityID ??
-                             1, // Change this so that it generates cityID
                 actorBirthDate: actorDataPreset?.FullIdentification.ActorBirthDate ??
-                                new Date(Manager_DateAndTime.GetCurrentTotalDays())
+                                new Date(Manager_DateAndTime.GetCurrentTotalDays()),
+                actorCityID: actorDataPreset?.FullIdentification.ActorCityID ?? 0
+                // Change this so that it generates correct CityID
             );
 
             var gameObjectData = new GameObjectData(
@@ -300,19 +285,14 @@ namespace Actor
                 equipmentData
                 ));
 
-            _addToAllActorData(actor.ActorData);
+            AllActors.UpdateActor(actor.ActorID, actor);
 
             return actor.ActorData;
         }
 
-        static uint _getRandomActorID()
+        static uint _getUnusedActorID()
         {
-            while (_allActorData.ContainsKey(_lastUnusedActorID))
-            {
-                _lastUnusedActorID++;
-            }
-
-            return _lastUnusedActorID;
+            return AllActors.GetUnusedActorID();
         }
 
         static ActorName _getRandomActorName()

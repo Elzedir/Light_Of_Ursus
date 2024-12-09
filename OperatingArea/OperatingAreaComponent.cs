@@ -35,7 +35,7 @@ namespace OperatingArea
 
             if (OperatingAreaData.CurrentOperator.transform.position != null && !OperatingArea.bounds.Contains(OperatingAreaData.CurrentOperator.transform.position))
             {
-                StartCoroutine(MoveOperatorToOperatingArea(Actor_Manager.GetActor(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
+                StartCoroutine(MoveOperatorToOperatingArea(Actor_Manager.GetActor_Component(actorID: OperatingAreaData.CurrentOperatorID), transform.position));
 
                 return 0;
             }

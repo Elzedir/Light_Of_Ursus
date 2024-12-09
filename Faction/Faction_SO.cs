@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,24 +9,80 @@ namespace Faction
 {
     [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
     [Serializable]
-    public class AllFactions_SO : ScriptableObject
+    public class Faction_SO : Base_SO<Faction_Component>
     {
-        public List<FactionData> AllFactionData;
+        public Faction_Component[] Factions                         => Objects;
+        public Faction_Data        GetFaction_Data(uint      factionID) => GetObject_Master(factionID).FactionData;
+        public Faction_Component   GetFaction_Component(uint factionID) => GetObject_Master(factionID);
 
-        public void LoadData(SaveData saveData)
+        public Faction_Data[] Save_SO()
         {
-            AllFactionData = saveData.SavedFactionData.AllFactionData;
+            return Factions.Select(faction => faction.FactionData).ToArray();
         }
 
-        public void ClearFactionData() => AllFactionData.Clear();
+        public void Load_SO(Faction_Data[] factionData)
+        {
+            foreach (var faction in factionData)
+            {
+                if (!_faction_Components.ContainsKey(faction.FactionID))
+                {
+                    Debug.LogError($"Faction with ID {faction.FactionID} not found in Faction_SO.");
+                    continue;
+                }
+
+                _faction_Components[faction.FactionID].FactionData = faction;
+            }
+
+            LoadSO(_faction_Components.Values.ToArray());
+        }
+
+        public override uint GetObjectID(int id) => Factions[id].FactionID;
+
+        public void UpdateFaction(uint factionID, Faction_Component faction_Component) => UpdateObject(factionID, faction_Component);
+        public void UpdateAllFactions(Dictionary<uint, Faction_Component> allFactions) => UpdateAllObjects(allFactions);
+
+        public void PopulateSceneFactions()
+        {
+            var allFactionComponents = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
+            var allFactionData =
+                allFactionComponents.ToDictionary(faction => faction.FactionID);
+
+            UpdateAllFactions(allFactionData);
+        }
+
+        protected override Dictionary<uint, Faction_Component> _populateDefaultObjects()
+        {
+            var defaultFactions = new Dictionary<uint, Faction_Data>();
+
+            foreach (var defaultFaction in Faction_List.DefaultFactions)
+            {
+                defaultFactions.Add(defaultFaction.Key, new Faction_Data(defaultFaction.Value));
+            }
+
+            return defaultFactions;
+        }
+
+        static uint _lastUnusedFactionID = 1;
+
+        public uint GetUnusedFactionID()
+        {
+            while (ObjectIndexLookup.ContainsKey(_lastUnusedFactionID))
+            {
+                _lastUnusedFactionID++;
+            }
+
+            return _lastUnusedFactionID;
+        }
+
+        Dictionary<uint, Faction_Component> _faction_Components => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllFactions_SO))]
+    [CustomEditor(typeof(Faction_SO))]
     public class AllFactions_SOEditor : Editor
     {
         int  _selectedFactionIndex = -1;
-        bool _showFactionRelations = false;
-        bool _showActors           = false;
+        bool _showFactionRelations;
+        bool _showActors;
 
         Vector2 _factionScrollPos;
         Vector2 _actorScrollPos;
@@ -33,63 +90,54 @@ namespace Faction
 
         public override void OnInspectorGUI()
         {
-            AllFactions_SO allFactionSO = (AllFactions_SO)target;
-
-            if (GUILayout.Button("Clear Faction Data"))
-            {
-                allFactionSO.ClearFactionData();
-                EditorUtility.SetDirty(allFactionSO);
-            }
+            var factionSO = (Faction_SO)target;
 
             EditorGUILayout.LabelField("All Factions", EditorStyles.boldLabel);
-            _factionScrollPos     = EditorGUILayout.BeginScrollView(_factionScrollPos, GUILayout.Height(Math.Min(200, allFactionSO.AllFactionData.Count * 20)));
-            _selectedFactionIndex = GUILayout.SelectionGrid(_selectedFactionIndex, GetFactionNames(allFactionSO), 1);
+            _factionScrollPos = EditorGUILayout.BeginScrollView(_factionScrollPos,
+                GUILayout.Height(Mathf.Min(200, factionSO.Factions.Length * 20)));
+            _selectedFactionIndex = GUILayout.SelectionGrid(_selectedFactionIndex, _getFactionNames(factionSO), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedFactionIndex >= 0 && _selectedFactionIndex < allFactionSO.AllFactionData.Count)
-            {
-                DrawFactionData(allFactionSO.AllFactionData[_selectedFactionIndex]);
-            }
+            if (_selectedFactionIndex < 0 || _selectedFactionIndex >= factionSO.Factions.Length) return;
+
+            var selectedFactionData = factionSO.Factions[_selectedFactionIndex];
+            _drawFactionAdditionalData(selectedFactionData);
         }
 
-        private string[] GetFactionNames(AllFactions_SO allFactionsSO)
+        static string[] _getFactionNames(Faction_SO factionSO)
         {
-            return allFactionsSO.AllFactionData.Select(f => $"{f.FactionID}: {f.FactionName}").ToArray();
+            return factionSO.Factions.Select(c => c.FactionData.FactionName).ToArray();
         }
 
-        void DrawFactionData(FactionData factionData)
+        void _drawFactionAdditionalData(Faction_Component selectedFaction)
         {
             EditorGUILayout.LabelField("Faction Data", EditorStyles.boldLabel);
+            
+            EditorGUILayout.LabelField("Faction Name", $"{selectedFaction.FactionData.FactionName}");
+            EditorGUILayout.LabelField("Faction ID",   $"{selectedFaction.FactionID}");
 
-            EditorGUILayout.LabelField("Faction ID",   factionData.FactionID.ToString());
-            EditorGUILayout.LabelField("Faction Name", factionData.FactionName);
-
-            EditorGUILayout.LabelField("All Faction Actors", EditorStyles.boldLabel);
-
-            if (factionData.AllFactionActorIDs != null)
+            if (selectedFaction.FactionData.AllFactionActorIDs != null)
             {
                 _showActors = EditorGUILayout.Toggle("Actors", _showActors);
 
                 if (_showActors)
                 {
-                    DrawActorAdditionalData(factionData.AllFactionActorIDs);
+                    _drawActorAdditionalData(selectedFaction.FactionData.AllFactionActorIDs);
                 }
             }
 
-            EditorGUILayout.LabelField("All Faction Relations", EditorStyles.boldLabel);
-
-            if (factionData.AllFactionRelations != null)
+            if (selectedFaction.FactionData.AllFactionRelations != null)
             {
                 _showFactionRelations = EditorGUILayout.Toggle("Faction Relations", _showFactionRelations);
 
                 if (_showFactionRelations)
                 {
-                    DrawFactionRelationDetails(factionData.AllFactionRelations);
+                    _drawFactionRelationDetails(selectedFaction.FactionData.AllFactionRelations);
                 }
             }
         }
 
-        void DrawFactionRelationDetails(List<FactionRelationData> data)
+        void _drawFactionRelationDetails(List<FactionRelationData> data)
         {
             _factionRelationScrollPos = EditorGUILayout.BeginScrollView(_factionRelationScrollPos, GUILayout.Height(Math.Min(200, data.Count * 20)));
         
@@ -103,7 +151,7 @@ namespace Faction
             EditorGUILayout.EndScrollView();
         }
 
-        void DrawActorAdditionalData(HashSet<uint> actorIDs)
+        void _drawActorAdditionalData(HashSet<uint> actorIDs)
         {
             _actorScrollPos = EditorGUILayout.BeginScrollView(_actorScrollPos, GUILayout.Height(Math.Min(200, actorIDs.Count * 20)));
 

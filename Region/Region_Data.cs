@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Region
 {
     [Serializable]
-    public class RegionData
+    public class Region_Data
     {
         public uint   RegionID;
         public string RegionName;
@@ -22,9 +22,7 @@ namespace Region
 
         public void InitialiseRegionData()
         {
-            var region = Region_Manager.GetRegion(RegionID);
-
-            region.Initialise();
+            var region = Region_Manager.GetRegion_Component(RegionID);
 
             foreach (var city in region.AllCitiesInRegion)
             {
@@ -37,7 +35,7 @@ namespace Region
         }
     }
 
-    [CustomPropertyDrawer(typeof(RegionData))]
+    [CustomPropertyDrawer(typeof(Region_Data))]
     public class RegionData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

@@ -11,6 +11,11 @@ namespace Actor
     {
         public bool IsPlayer => GetComponent<Player>() is not null;
         public uint ActorID => ActorData.ActorID;
+        public bool IsSpawned 
+        { 
+            get => ActorData.IsSpawned;
+            set => ActorData.IsSpawned = value;
+        }
         public Actor_Data ActorData;
         public void SetActorData(Actor_Data actorData) => ActorData = actorData;
         Rigidbody _rigidBody;

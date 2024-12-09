@@ -1,8 +1,23 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
+using Initialisation;
 using UnityEngine;
 
-public class FactionComponent : MonoBehaviour
+namespace Faction
 {
-    public FactionData FactionData;
+    public class Faction_Component : MonoBehaviour
+    {
+        public uint FactionID => FactionData.FactionID;
+        
+        public Faction_Data FactionData;
+
+        void Awake()
+        {
+            Manager_Initialisation.OnInitialiseFactions += _initialise;
+        }
+        
+        void _initialise()
+        {
+            FactionData.InitialiseFactionData();
+        }
+    }
 }

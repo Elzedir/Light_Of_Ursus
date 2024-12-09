@@ -11,10 +11,6 @@ namespace JobSite
     public abstract class Jobsite_Manager : IDataPersistence
     {
         const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
-
-        public static Dictionary<uint, JobSite_Data>      AllJobsiteData       = new();
-        static        uint                                _lastUnusedJobsiteID = 1;
-        public static Dictionary<uint, JobSite_Component> AllJobsiteComponents = new();
         
         static JobSite_SO _jobSite_SO;
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getOrCreateJobSite_SO();

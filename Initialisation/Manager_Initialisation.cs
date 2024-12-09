@@ -5,7 +5,8 @@ namespace Initialisation
     public abstract class Manager_Initialisation
     {
         public static event Action OnInitialiseManagerFaction;
-
+        public static event Action OnInitialiseManagerActor;
+        
         public static event Action OnInitialiseManagerRegion;
         public static event Action OnInitialiseManagerCity;
         public static event Action OnInitialiseManagerJobSite;
@@ -13,8 +14,7 @@ namespace Initialisation
         public static event Action OnInitialiseManagerOperatingArea;
         public static event Action OnInitialiseManagerOrder;
 
-        public static event Action OnInitialiseManagerActor;
-        public static event Action OnInitialiseActorData;
+        public static event Action OnInitialiseFactions;
         public static event Action OnInitialiseActors;
 
         public static event Action OnInitialiseRegions;
@@ -24,11 +24,14 @@ namespace Initialisation
 
         public static void InitialiseFactions()
         {
-            OnInitialiseManagerFaction?.Invoke();
+            
         }
 
         public static void InitialiseManagers() 
         {
+            OnInitialiseManagerFaction?.Invoke();
+            OnInitialiseManagerActor?.Invoke();
+            
             OnInitialiseManagerRegion?.Invoke();
             OnInitialiseManagerCity?.Invoke();
             OnInitialiseManagerJobSite?.Invoke();
@@ -39,8 +42,6 @@ namespace Initialisation
 
         public static void InitialiseActors()
         {
-            OnInitialiseManagerActor?.Invoke();
-            OnInitialiseActorData?.Invoke();
             OnInitialiseActors?.Invoke();
         }
 

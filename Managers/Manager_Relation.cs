@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Actor;
+using Faction;
 using Managers;
 
 public class Manager_Relation
@@ -17,7 +18,7 @@ public class Manager_Relation
 
     static float _compareFaction(uint a, uint b)
     {
-        FactionData factionDataA = Manager_Faction.GetFaction(a);
+        Faction_Data factionDataA = Manager_Faction.GetFaction_Data(a);
 
         if (!factionDataA.AllFactionRelations.Any(r => r.FactionID == b)) return 0;
 

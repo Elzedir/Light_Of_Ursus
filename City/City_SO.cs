@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace City
 {
-    [CreateAssetMenu(fileName = "AllCities_SO", menuName = "SOList/AllCities_SO")]
+    [CreateAssetMenu(fileName = "City_SO", menuName = "SOList/City_SO")]
     [Serializable]
     public class City_SO : Base_SO<City_Component>
     {
@@ -113,9 +113,9 @@ namespace City
         void _drawCityAdditionalData(City_Component selectedCity)
         {
             EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("City Name", selectedCity.CityData.CityName);
-            EditorGUILayout.LabelField("City ID",   selectedCity.CityID.ToString());
-            EditorGUILayout.LabelField("Region ID", selectedCity.CityData.RegionID.ToString());
+            EditorGUILayout.LabelField("City Name", $"{selectedCity.CityData.CityName}");
+            EditorGUILayout.LabelField("City ID",   $"{selectedCity.CityID}");
+            EditorGUILayout.LabelField("Region ID", $"{selectedCity.CityData.RegionID}");
 
             if (selectedCity.CityData.Population != null)
             {
@@ -178,7 +178,7 @@ namespace City
                 {
                     EditorGUILayout.LabelField("JobSite Data", EditorStyles.boldLabel);
                     //EditorGUILayout.LabelField("JobSite", jobSiteID.JobSiteName.ToString());
-                    EditorGUILayout.LabelField("JobSite ID", jobSiteID.ToString());
+                    EditorGUILayout.LabelField("JobSite ID", $"{jobSiteID}");
                 }
             }
             catch (Exception e)

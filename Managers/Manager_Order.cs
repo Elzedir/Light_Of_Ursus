@@ -22,7 +22,7 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
 
     public void SaveData(SaveData data)
     {
-        data.SavedOrderData = new SavedOrderData(AllOrderData.Values.ToList());
+        data.SavedOrderData = new SavedOrderData(AllOrderData.Values.ToArray());
     }
     public void LoadData(SaveData data)
     {
@@ -43,7 +43,7 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
     {
         if (AllOrderData == null) AllOrderData = new();
 
-        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 
     public static void AddOrderData(OrderData orderData)
@@ -55,7 +55,7 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
         }
 
         AllOrderData.Add(orderData.ActorID, orderData);
-        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 
     public static void RemoveOrderData(OrderData orderData)
@@ -67,13 +67,13 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
         }
 
         AllOrderData.Remove(orderData.ActorID);
-        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 
     public static void RemoveAllOrderData()
     {
         AllOrderData.Clear();
-        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 
     public static void GetOrderData(int orderID)
@@ -84,7 +84,7 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
             return;
         }
 
-        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToList();
+        DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 
     public static int GetOrderBaseID()
@@ -275,7 +275,7 @@ public class Order_Base
     public OrderType OrderType;
     public uint ActorID;
     Actor_Component _actor;
-    public Actor_Component Actor { get { return _actor ??= Actor_Manager.GetActor(ActorID); } }
+    public Actor_Component Actor { get { return _actor ??= Actor_Manager.GetActor_Component(ActorID); } }
     public uint StationID_Source;
     Station_Component _station_Source;
     public Station_Component Station_Source { get { return _station_Source ??= Station_Manager.GetStation_Component(StationID_Source); } }

@@ -69,7 +69,7 @@ namespace Station
         
             var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
                                              from employeeID in StationData.CurrentOperatorIDs
-                                             let actorData = Actor_Manager.GetActorData(employeeID)
+                                             let actorData = Actor_Manager.GetActor_Data(employeeID)
                                              where actorData.CareerData.CurrentJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
                                              select new { operatingArea, employeeID };
 
@@ -175,7 +175,7 @@ namespace Station
                 // For now is the final person who adds the last progress, but change to a cumulative system later.
                 CraftItem(
                     StationData.StationProgressData.CurrentProduct.RecipeName,
-                    Actor_Manager.GetActor(operatingArea.OperatingAreaData.CurrentOperatorID)
+                    Actor_Manager.GetActor_Component(operatingArea.OperatingAreaData.CurrentOperatorID)
                 );
             }
         }
@@ -208,7 +208,7 @@ namespace Station
                         break;
                     }
                 
-                    //Console.WriteLine(e);
+                    Console.WriteLine(e);
                 }    
             }
         
@@ -299,7 +299,7 @@ namespace Station
 
                 foreach(var vocation in StationData.StationProgressData.CurrentProduct.RequiredVocations)
                 {
-                    individualProductionRate *= Actor_Manager.GetActorData(currentOperatorID).VocationData.GetProgress(vocation);
+                    individualProductionRate *= Actor_Manager.GetActor_Data(currentOperatorID).VocationData.GetProgress(vocation);
                 }
 
                 totalProductionRate += individualProductionRate;

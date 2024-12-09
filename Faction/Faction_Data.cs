@@ -3,48 +3,51 @@ using System.Collections.Generic;
 using Managers;
 using UnityEngine;
 
-[Serializable]
-public class FactionData
+namespace Faction
 {
-    public uint FactionID;
-    public string FactionName;
-
-    public HashSet<uint> AllFactionActorIDs = new();
-    public List<FactionRelationData> AllFactionRelations;
-
-    public FactionData(uint factionID, string factionName, HashSet<uint> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
+    [Serializable]
+    public class Faction_Data
     {
-        FactionID = factionID;
-        FactionName = factionName;
-        AllFactionActorIDs = allFactionActorIDs;
-        AllFactionRelations = allFactionRelations;
-    }
+        public uint   FactionID;
+        public string FactionName;
 
-    public void InitialiseFaction()
-    {
-        var factionsGO =  GameObject.Find("Factions");
+        public HashSet<uint>             AllFactionActorIDs = new();
+        public List<FactionRelationData> AllFactionRelations;
 
-        if (factionsGO == null) 
+        public Faction_Data(uint factionID, string factionName, HashSet<uint> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
         {
-            Debug.LogError("No Factions GameObject found.");
-            return;
+            FactionID           = factionID;
+            FactionName         = factionName;
+            AllFactionActorIDs  = allFactionActorIDs;
+            AllFactionRelations = allFactionRelations;
         }
 
-        if (Manager_Game.FindTransformRecursively(factionsGO.transform, $"{FactionID}: {FactionName}") == null)
+        public void InitialiseFactionData()
         {
-            var factionGO = new GameObject($"{FactionID}: {FactionName}");
-            factionGO.transform.SetParent(factionsGO.transform);
-            factionGO.transform.position = Vector3.zero;
+            var factionsGO =  GameObject.Find("Factions");
+
+            if (factionsGO == null) 
+            {
+                Debug.LogError("No Factions GameObject found.");
+                return;
+            }
+
+            if (Manager_Game.FindTransformRecursively(factionsGO.transform, $"{FactionID}: {FactionName}") == null)
+            {
+                var factionGO = new GameObject($"{FactionID}: {FactionName}");
+                factionGO.transform.SetParent(factionsGO.transform);
+                factionGO.transform.position = Vector3.zero;
+            }
         }
-    }
 
-    public void AddToFactionActorIDList(uint actorID) => AllFactionActorIDs.Add(actorID);
+        public void AddToFactionActorIDList(uint actorID) => AllFactionActorIDs.Add(actorID);
 
-    public void RemoveFromFactionActorIDList(uint actorID) => AllFactionActorIDs.Remove(actorID);
+        public void RemoveFromFactionActorIDList(uint actorID) => AllFactionActorIDs.Remove(actorID);
 
-    public void ClearActorData()
-    {
-        AllFactionActorIDs.Clear();
+        public void ClearActorData()
+        {
+            AllFactionActorIDs.Clear();
+        }
     }
 }
 

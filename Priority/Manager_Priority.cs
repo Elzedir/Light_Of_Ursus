@@ -55,7 +55,7 @@ namespace Priority
         public ComponentReference_Actor(uint actorID) : base(actorID) { }
 
         Actor_Component                    _actor;
-        protected override object         _component => _actor ??= Actor_Manager.GetActor(ComponentID);
+        protected override object         _component => _actor ??= Actor_Manager.GetActor_Component(ComponentID);
         public             Actor_Component Actor      => _component as Actor_Component;
 
         public override GameObject GameObject => Actor.gameObject;

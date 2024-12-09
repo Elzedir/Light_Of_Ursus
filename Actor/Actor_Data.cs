@@ -5,6 +5,7 @@ using System.Linq;
 using Career;
 using DateAndTime;
 using EmployeePosition;
+using Faction;
 using Initialisation;
 using Inventory;
 using Items;
@@ -27,6 +28,7 @@ namespace Actor
             GameObjectData.UpdateActorGOProperties();
         }
 
+        public bool      IsSpawned;
         public uint      ActorID;
         public uint      ActorFactionID;
         public ActorName ActorName;
@@ -50,21 +52,16 @@ namespace Actor
         //public OrderData OrderData;
         public Order_Base CurrentOrder;
 
-        public void PrepareForInitialisation()
-        {
-            Manager_Initialisation.OnInitialiseActorData += InitialiseActorData;
-        }
-
         public void InitialiseActorData()
         {
-            var actor = Actor_Manager.GetActor(ActorID, true);
+            var actor = Actor_Manager.GetActor_Component(ActorID);
 
             if (actor is null)
             {
                 Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
             }
 
-            var actorFaction = Manager_Faction.GetFaction(ActorFactionID);
+            var actorFaction = Manager_Faction.GetFaction_Data(ActorFactionID);
 
             if (actorFaction is null)
             {
@@ -270,7 +267,7 @@ namespace Actor
 
         public Transform ActorTransform
         {
-            get { return _actorTransform ??= Actor_Manager.GetActor(ActorReference.ActorID)?.transform; }
+            get { return _actorTransform ??= Actor_Manager.GetActor_Component(ActorReference.ActorID)?.transform; }
         }
 
         public void SetActorTransformProperties()
@@ -652,7 +649,7 @@ namespace Actor
 
         void _levelUp(CharacterLevelData levelData)
         {
-            var actorData = Actor_Manager.GetActorData(ActorReference.ActorID);
+            var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
             ActorLevel         =  levelData.Level;
             TotalSkillPoints   += levelData.SkillPoints;
@@ -712,7 +709,7 @@ namespace Actor
         {
             var recipe = Manager_Recipe.GetRecipe_Master(recipeName);
 
-            var actorData = Actor_Manager.GetActorData(ActorReference.ActorID);
+            var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
             while (_inventoryContainsAllIngredients(actorData, recipe.RequiredIngredients))
             {
@@ -745,7 +742,7 @@ namespace Actor
 
             Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
 
-            var actorData = Actor_Manager.GetActorData(ActorReference.ActorID);
+            var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
             if (!_inventoryContainsAllIngredients(actorData, recipeMaster.RequiredIngredients))
             {

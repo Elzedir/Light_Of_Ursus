@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Actor;
 using City;
+using Faction;
 using JobSite;
+using Region;
 using Station;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -177,9 +179,9 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixRegionIDs()
     {
-        var regions = FindObjectsByType<RegionComponent>(FindObjectsSortMode.None);
+        var regions = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateRegions = new List<RegionComponent>();
+        var duplicateRegions = new List<Region_Component>();
 
         foreach (var region in regions)
         {
@@ -247,9 +249,9 @@ public class IDChecker : EditorWindow
 
     private void CheckAndFixFactionIDs()
     {
-        var factions = FindObjectsByType<FactionComponent>(FindObjectsSortMode.None);
+        var factions = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
         var existingIDs = new HashSet<uint>();
-        var duplicateFactions = new List<FactionComponent>();
+        var duplicateFactions = new List<Faction_Component>();
 
         foreach (var faction in factions)
         {

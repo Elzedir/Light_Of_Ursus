@@ -1,98 +1,154 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 
 namespace Region
 {
-    [CreateAssetMenu(fileName = "AllRegions_SO", menuName = "SOList/AllRegions_SO")]
+    [CreateAssetMenu(fileName = "Region_SO", menuName = "SOList/Region_SO")]
     [Serializable]
-    public class AllRegions_SO : ScriptableObject
+    public class Region_SO : Base_SO<Region_Component>
     {
-        public List<Region_Data> AllRegionData;
+        public Region_Component[] Regions                         => Objects;
+        public Region_Data        GetRegion_Data(uint      regionID) => GetObject_Master(regionID).RegionData;
+        public Region_Component   GetRegion_Component(uint regionID) => GetObject_Master(regionID);
 
-        public void SetAllRegionData(List<Region_Data> allRegionData)
+        public Region_Data[] Save_SO()
         {
-            AllRegionData = allRegionData;
+            return Regions.Select(region => region.RegionData).ToArray();
         }
 
-        public void LoadData(SaveData saveData)
+        public void Load_SO(Region_Data[] regionData)
         {
-            AllRegionData = saveData.SavedRegionData.AllRegionData;
+            foreach (var region in regionData)
+            {
+                if (!_region_Components.ContainsKey(region.RegionID))
+                {
+                    Debug.LogError($"Region with ID {region.RegionID} not found in Region_SO.");
+                    continue;
+                }
+
+                _region_Components[region.RegionID].RegionData = region;
+            }
+
+            LoadSO(_region_Components.Values.ToArray());
         }
 
-        public void ClearRegionData()
+        public override uint GetObjectID(int id) => Regions[id].RegionID;
+
+        public void UpdateRegion(uint regionID, Region_Component region_Component) => UpdateObject(regionID, region_Component);
+        public void UpdateAllRegions(Dictionary<uint, Region_Component> allRegions) => UpdateAllObjects(allRegions);
+
+        public void PopulateSceneRegions()
         {
-            AllRegionData.Clear();
+            var allRegionComponents = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
+            var allRegionData =
+                allRegionComponents.ToDictionary(region => region.RegionID);
+
+            UpdateAllRegions(allRegionData);
+            
+            foreach (var region in Regions)
+            {
+                region.RegionData.ProsperityData.SetProsperity(50);
+                region.RegionData.ProsperityData.MaxProsperity = 100;
+            }
         }
+
+        protected override Dictionary<uint, Region_Component> _populateDefaultObjects()
+        {
+            return FindObjectsByType<Region_Component>(FindObjectsSortMode.None).ToDictionary(
+                region => region.RegionID);
+        }
+
+        static uint _lastUnusedRegionID = 1;
+
+        public uint GetUnusedRegionID()
+        {
+            while (ObjectIndexLookup.ContainsKey(_lastUnusedRegionID))
+            {
+                _lastUnusedRegionID++;
+            }
+
+            return _lastUnusedRegionID;
+        }
+
+        Dictionary<uint, Region_Component> _region_Components => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllRegions_SO))]
-    public class AllRegionsSOEditor : Editor
+    [CustomEditor(typeof(Region_SO))]
+    public class Region_SOEditor : Editor
     {
-        int _selectedRegionIndex = -1;
-
-        bool _showCities = false;
+        int  _selectedRegionIndex = -1;
+        bool _showCitys;
+        bool _showPopulation;
+        bool _showProsperity;
 
         Vector2 _regionScrollPos;
         Vector2 _cityScrollPos;
+        Vector2 _populationScrollPos;
 
         public override void OnInspectorGUI()
         {
-            AllRegions_SO allRegionsSO = (AllRegions_SO)target;
-
-            if (GUILayout.Button("Clear Region Data"))
-            {
-                allRegionsSO.ClearRegionData();
-                EditorUtility.SetDirty(allRegionsSO);
-            }
+            var regionSO = (Region_SO)target;
 
             EditorGUILayout.LabelField("All Regions", EditorStyles.boldLabel);
-            _regionScrollPos     = EditorGUILayout.BeginScrollView(_regionScrollPos, GUILayout.Height(GetListHeight(allRegionsSO.AllRegionData.Count)));
-            _selectedRegionIndex = GUILayout.SelectionGrid(_selectedRegionIndex, GetRegionNames(allRegionsSO), 1);
+            _regionScrollPos = EditorGUILayout.BeginScrollView(_regionScrollPos,
+                GUILayout.Height(Mathf.Min(200, regionSO.Regions.Length * 20)));
+            _selectedRegionIndex = GUILayout.SelectionGrid(_selectedRegionIndex, _getRegionNames(regionSO), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedRegionIndex >= 0 && _selectedRegionIndex < allRegionsSO.AllRegionData.Count)
-            {
-                var selectedRegionData = allRegionsSO.AllRegionData[_selectedRegionIndex];
-                DrawRegionAdditionalData(selectedRegionData);
-            }
+            if (_selectedRegionIndex < 0 || _selectedRegionIndex >= regionSO.Regions.Length) return;
+
+            var selectedRegionData = regionSO.Regions[_selectedRegionIndex];
+            _drawRegionAdditionalData(selectedRegionData);
         }
 
-        private string[] GetRegionNames(AllRegions_SO allRegionsSO) => allRegionsSO.AllRegionData.Select(r => r.RegionName).ToArray();
+        static string[] _getRegionNames(Region_SO regionSO)
+        {
+            return regionSO.Regions.Select(c => c.RegionData.RegionName).ToArray();
+        }
 
-        private float GetListHeight(int itemCount) => Mathf.Min(200, itemCount * 20);
-
-        private void DrawRegionAdditionalData(Region_Data selectedRegionData)
+        void _drawRegionAdditionalData(Region_Component selectedRegion)
         {
             EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Region Name", selectedRegionData.RegionName);
-            EditorGUILayout.LabelField("Region ID",   selectedRegionData.RegionID.ToString());
+            EditorGUILayout.LabelField("Region Name", selectedRegion.RegionData.RegionName);
+            EditorGUILayout.LabelField("Region ID",   selectedRegion.RegionID.ToString());
+            EditorGUILayout.LabelField("Region ID", selectedRegion.RegionData.RegionID.ToString());
 
-            EditorGUILayout.LabelField($"All cities in {selectedRegionData.RegionName}", EditorStyles.boldLabel);
-
-            if (selectedRegionData.AllCityIDs != null)
+            if (selectedRegion.RegionData.AllCityIDs != null)
             {
-                _showCities = EditorGUILayout.Toggle("Cities", _showCities);
+                _showCitys = EditorGUILayout.Toggle("Cities", _showCitys);
 
-                if (_showCities)
+                if (_showCitys)
                 {
-                    DrawCityAdditionalData(selectedRegionData.AllCityIDs);
+                    _drawCityAdditionalData(selectedRegion.RegionData.AllCityIDs);
+                }
+            }
+
+            if (selectedRegion.RegionData.ProsperityData != null)
+            {
+                _showProsperity = EditorGUILayout.Toggle("Prosperity", _showProsperity);
+
+                if (_showProsperity)
+                {
+                    _drawProsperityDetails(selectedRegion.RegionData.ProsperityData);
                 }
             }
         }
 
-        private void DrawCityAdditionalData(List<uint> allCityIDs)
+        void _drawCityAdditionalData(List<uint> allCityIDs)
         {
-            _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos, GUILayout.Height(GetListHeight(allCityIDs.Count)));
+            _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos,
+                GUILayout.Height(Mathf.Min(200, allCityIDs.Count * 20)));
 
             try
             {
                 foreach (var cityID in allCityIDs)
                 {
                     EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-                    //EditorGUILayout.LabelField("City Name", city.CityName);
+                    //EditorGUILayout.LabelField("City", CityID.CityName.ToString());
                     EditorGUILayout.LabelField("City ID", cityID.ToString());
                 }
             }
@@ -104,6 +160,14 @@ namespace Region
             {
                 EditorGUILayout.EndScrollView();
             }
+        }
+
+        static void _drawProsperityDetails(ProsperityData prosperityData)
+        {
+            EditorGUILayout.LabelField("Current Prosperity", $"{prosperityData.CurrentProsperity}");
+            EditorGUILayout.LabelField("Max Prosperity",     $"{prosperityData.MaxProsperity}");
+            EditorGUILayout.LabelField("Base Prosperity Growth Per Day",
+                $"{prosperityData.BaseProsperityGrowthPerDay}");
         }
     }
 }

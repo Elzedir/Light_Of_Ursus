@@ -5,47 +5,44 @@ using UnityEngine;
 
 namespace City
 {
-    public class City_Manager : IDataPersistence
+    public abstract class City_Manager : IDataPersistence
     {
-        const         string                           _city_SOPath   = "ScriptableObjects/City_SO";
-
-        public static Dictionary<uint, City_Data>      AllCityData       = new();
-        static        uint                                _lastUnusedCityID = 1;
-        public static Dictionary<uint, City_Component> AllCityComponents = new();
+        const string _city_SOPath = "ScriptableObjects/City_SO";
         
-        static City_SO _city_SO;
-        static City_SO City_SO => _city_SO ??= _getOrCreateCity_SO();
+        static City_SO _allCities;
+        static City_SO AllCities => _allCities ??= _getOrCreateCity_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedCityData = new SavedCityData(City_SO.Save_SO());
+            saveData.SavedCityData = new SavedCityData(AllCities.Save_SO());
 
         public void LoadData(SaveData saveData)
         {
-            if (saveData is null)
+            try
             {
-                //Debug.Log("No SaveData found in LoadData.");
-                return;
+                AllCities.Load_SO(saveData.SavedCityData.AllCityData);
             }
-
-            if (saveData.SavedCityData == null)
+            catch
             {
-                //Debug.Log("No SavedCityData found in SaveData.");
-                return;
-            }
+                if (saveData is null)
+                {
+                    Debug.Log("No SaveData found in LoadData.");
+                    return;
+                }
 
-            if (saveData.SavedCityData.AllCityData == null)
-            {
-                //Debug.Log("No AllCityData found in SavedCityData.");
-                return;
-            }
+                if (saveData.SavedCityData is null)
+                {
+                    Debug.Log("No SavedCityData found in SaveData.");
+                    return;
+                }
 
-            if (saveData.SavedCityData.AllCityData.Length == 0)
-            {
-                //Debug.Log("AllCityData count is 0.");
-                return;
+                if (saveData.SavedCityData.AllCityData is null)
+                {
+                    Debug.Log("No AllCityData found in SavedCityData.");
+                    return;
+                }
+                
+                Debug.Log("AllCityData count is 0.");
             }
-
-            City_SO.Load_SO(saveData.SavedCityData.AllCityData);
         }
 
         public static void OnSceneLoaded()
@@ -55,17 +52,17 @@ namespace City
 
         static void _initialise()
         {
-            City_SO.PopulateSceneCities();
+            AllCities.PopulateSceneCities();
         }
         
         public static City_Data GetCity_Data(uint cityID)
         {
-            return City_SO.GetCity_Data(cityID);
+            return AllCities.GetCity_Data(cityID);
         }
         
         public static City_Component GetCity_Component(uint cityID)
         {
-            return City_SO.GetCity_Component(cityID);
+            return AllCities.GetCity_Component(cityID);
         }
         
         static City_SO _getOrCreateCity_SO()
@@ -87,7 +84,7 @@ namespace City
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var city in City_SO.Cities)
+            foreach (var city in AllCities.Cities)
             {
                 var distance = Vector3.Distance(position, city.transform.position);
 
@@ -102,7 +99,7 @@ namespace City
 
         public static uint GetUnusedCityID()
         {
-            return City_SO.GetUnusedCityID();
+            return AllCities.GetUnusedCityID();
         }
     }
 }

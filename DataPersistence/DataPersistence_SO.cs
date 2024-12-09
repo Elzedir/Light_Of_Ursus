@@ -6,8 +6,10 @@ using System.Linq;
 using System.IO;
 using Actor;
 using City;
+using Faction;
 using JobSite;
 using OperatingArea;
+using Region;
 using Station;
 using UnityEngine.SceneManagement;
 using UnityEditor;
@@ -352,7 +354,7 @@ public class ProfileData
 
         try
         {
-            LoadNestedRegionData(savePath, saveData);
+            _loadNestedRegionData(savePath, saveData);
             LoadNestedFactionData(savePath, saveData);
 
             return saveData;
@@ -370,7 +372,7 @@ public class ProfileData
         }
     }
 
-    private void LoadNestedRegionData(string savePath, SaveData saveData)
+    void _loadNestedRegionData(string savePath, SaveData saveData)
     {
         string regionPath = Path.Combine(savePath, "Regions");
         var regionDataJSON = JsonUtility.FromJson<SavedRegionData>(_fromJSON(regionPath, "RegionSaveData.json"));
@@ -408,16 +410,21 @@ public class ProfileData
             Debug.LogError($"Error occurred when trying to load faction data: {e}");
             return;
         }
+        
+        var allFactionDirectories = Directory.GetDirectories(allFactionsDirectoryPath);
+        var allSavedFactionData   = new Faction_Data[allFactionDirectories.Length];
 
-        foreach (var factionDirectoryPath in Directory.GetDirectories(allFactionsDirectoryPath))
+        for(var i = 0; i < allFactionDirectories.Length; i++)
         {
-            var factionData = JsonUtility.FromJson<FactionData>(_fromJSON(factionDirectoryPath, "FactionSaveData.json"));
+            var factionDirectoryPath = allFactionDirectories[i];
+            
+            var factionData = JsonUtility.FromJson<Faction_Data>(_fromJSON(factionDirectoryPath, "FactionSaveData.json"));
 
-            if (!saveData.SavedFactionData.AllFactionData.Any(f => f.FactionID == factionData.FactionID))
+            if (saveData.SavedFactionData.AllFactionData.All(f => f.FactionID != factionData.FactionID))
             {
                 try
                 {
-                    saveData.SavedFactionData.AllFactionData.Add(factionData);
+                    allSavedFactionData[i] = factionData;
                 }
                 catch (Exception e)
                 {
@@ -426,21 +433,26 @@ public class ProfileData
                 }
             }
 
-            string actorsPath = Path.Combine(factionDirectoryPath, "Actors");
+            var actorsPath = Path.Combine(factionDirectoryPath, "Actors");
 
             if (Directory.Exists(actorsPath))
             {
-                saveData.SavedActorData = new SavedActorData(new List<Actor_Data>());
+                var actorFiles = Directory.GetFiles(actorsPath, "Actor_*_SaveData.json");
+                var allSavedActorData = new Actor_Data[actorFiles.Length];
 
-                foreach (var actorFile in Directory.GetFiles(actorsPath, "Actor_*_SaveData.json"))
+                for (var j = 0; j < actorFiles.Length; j++)
                 {
-                    string actorDataJson = File.ReadAllText(actorFile);
+                    var actorFile     = actorFiles[j];
+                    var actorDataJson = File.ReadAllText(actorFile);
+                    
                     if (_useEncryption) actorDataJson = _encryptDecrypt(actorDataJson);
                     var actorData = JsonUtility.FromJson<Actor_Data>(actorDataJson);
 
-                    try { saveData.SavedActorData.AllActorData.Add(actorData); }
+                    try { allSavedActorData[j] = actorData; }
                     catch (Exception e) { Debug.LogError($"Error occurred when trying to load actor data: {e}"); }
                 }
+
+                saveData.SavedActorData = new SavedActorData(allSavedActorData);
             }
             else
             {
@@ -448,6 +460,8 @@ public class ProfileData
                 Debug.LogWarning($"No actors found for faction: {factionData.FactionName}");
             }
         }
+
+        saveData.SavedFactionData.AllFactionData = allSavedFactionData;
     }
 
     string _fromJSON(string path, string extension)
@@ -716,16 +730,15 @@ public class SavedProfileData
 [Serializable]
 public class SavedRegionData
 {
-    public uint LastSavedRegionID = 1;
-    public RegionData AllRegionData;
+    public readonly Region_Data[] AllRegionData;
 
-    public SavedRegionData(RegionData[] allRegionData) => AllRegionData = allRegionData;
+    public SavedRegionData(Region_Data[] allRegionData) => AllRegionData = allRegionData;
 }
 
 [Serializable]
 public class SavedCityData
 {
-    public City_Data[] AllCityData;
+    public readonly City_Data[] AllCityData;
 
     public SavedCityData(City_Data[] allCityData) => AllCityData = allCityData;
 }
@@ -733,7 +746,7 @@ public class SavedCityData
 [Serializable]
 public class SavedJobSiteData
 {
-    [FormerlySerializedAs("AllJobsiteData")] public JobSite_Data[] AllJobSiteData;
+    public readonly JobSite_Data[] AllJobSiteData;
 
     public SavedJobSiteData(JobSite_Data[] allJobSiteData) => AllJobSiteData = allJobSiteData;
 }
@@ -741,7 +754,7 @@ public class SavedJobSiteData
 [Serializable]
 public class SavedStationData
 {
-    public Station_Data[] AllStationData;
+    public readonly Station_Data[] AllStationData;
 
     public SavedStationData(Station_Data[] allStationData) => AllStationData = allStationData;
 }
@@ -757,22 +770,22 @@ public class SavedOperatingAreaData
 [Serializable]
 public class SavedFactionData
 {
-    public List<FactionData> AllFactionData = new();
-    public SavedFactionData(List<FactionData> allFactionData) => AllFactionData = allFactionData;
+    public Faction_Data[] AllFactionData;
+    public SavedFactionData(Faction_Data[] allFactionData) => AllFactionData = allFactionData;
 }
 
 public class SavedActorData
 {
-    public List<Actor_Data> AllActorData = new();
+    public readonly Actor_Data[] AllActorData;
 
-    public SavedActorData(List<Actor_Data> allActorData) => AllActorData = allActorData;
+    public SavedActorData(Actor_Data[] allActorData) => AllActorData = allActorData;
 }
 
 public class SavedOrderData
 {
-    public List<OrderData> AllOrderData = new();
+    public readonly OrderData[] AllOrderData;
 
-    public SavedOrderData(List<OrderData> allOrderData) => AllOrderData = allOrderData;
+    public SavedOrderData(OrderData[] allOrderData) => AllOrderData = allOrderData;
 }
 
 public class DataPersistenceManager

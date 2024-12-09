@@ -24,16 +24,17 @@ namespace JobSite
         public string JobsiteDescription;
         public uint   OwnerID;
 
-        public List<uint>                       AllEmployeeIDs;
+        public List<uint>                        AllEmployeeIDs;
         Dictionary<uint, Actor_Component>        _allEmployees;
-        public Dictionary<uint, Actor_Component> AllEmployees { get => _allEmployees ??= _populateAllEmployees(); }
+        public Dictionary<uint, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
+
         Dictionary<uint, Actor_Component> _populateAllEmployees()
         {
             var allEmployees = new Dictionary<uint, Actor_Component>();
 
             foreach (var employeeID in AllEmployeeIDs)
             {
-                var employee = Actor_Manager.GetActor(employeeID);
+                var employee = Actor_Manager.GetActor_Component(employeeID);
 
                 if (employee == null)
                 {
@@ -85,8 +86,8 @@ namespace JobSite
 
             if (OwnerID == 0) return;
             
-            var ownerData = Actor_Manager.GetActorData(OwnerID);
-            var owner     = Actor_Manager.GetActor(OwnerID);
+            var ownerData = Actor_Manager.GetActor_Data(OwnerID);
+            var owner     = Actor_Manager.GetActor_Component(OwnerID);
             
             owner.ActorMaterial.material = Resources.Load<Material>("Materials/Material_Yellow");
 
@@ -144,14 +145,14 @@ namespace JobSite
                 return 0;
             }
 
-            var actor = Actor_Manager.GetActor(actorID: employeeID, generateActorIfNotFound: true);
+            var actor = Actor_Manager.GetActor_Component(actorID: employeeID);
             
             return actor?.ActorData?.ActorID ?? 0;
         }
 
         protected uint _findEmployeeFromCity(EmployeePositionName positionName)
         {
-            var city = City_Manager.GetCity(CityID);
+            var city = City_Manager.GetCity_Component(CityID);
 
             var allCitizenIDs = city?.CityData?.Population?.AllCitizenIDs;
 
@@ -163,7 +164,7 @@ namespace JobSite
 
             var citizenID = allCitizenIDs
                                       .FirstOrDefault(c =>
-                                          Actor_Manager.GetActorData(c)?.CareerData.JobsiteID == -1 &&
+                                          Actor_Manager.GetActor_Data(c)?.CareerData.JobsiteID == 0 &&
                                           _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                                       );
 
@@ -173,14 +174,14 @@ namespace JobSite
                 return 0;
             }
 
-            var actor = Actor_Manager.GetActor(actorID: citizenID, generateActorIfNotFound: true);
+            var actor = Actor_Manager.GetActor_Component(actorID: citizenID);
             
             return actor?.ActorData?.ActorID ?? 0;
         }
 
         protected uint _generateNewEmployee(EmployeePositionName positionName)
         {
-            var city = City_Manager.GetCity(CityID);
+            var city = City_Manager.GetCity_Component(CityID);
 
             var employeeMaster = EmployeePosition_Manager.GetEmployeePosition_Master(positionName);
 
@@ -196,7 +197,7 @@ namespace JobSite
 
         protected bool _hasMinimumVocationRequired(uint citizenID, List<VocationRequirement> vocationRequirements)
         {
-            var actorData = Actor_Manager.GetActorData(citizenID);
+            var actorData = Actor_Manager.GetActor_Data(citizenID);
 
             foreach(var vocation in vocationRequirements)
             {
@@ -249,7 +250,7 @@ namespace JobSite
             }
 
             AllEmployeeIDs.Add(employeeID);
-            Actor_Manager.GetActorData(employeeID).CareerData.SetJobsiteID(JobSiteID);
+            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(JobSiteID);
         }
 
         public void HireEmployee(uint employeeID)
@@ -268,7 +269,7 @@ namespace JobSite
             }
 
             AllEmployeeIDs.Remove(employeeID);
-            Actor_Manager.GetActorData(employeeID).CareerData.SetJobsiteID(0);
+            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(0);
 
             // Remove employee job from employee job component.
         }
@@ -304,14 +305,14 @@ namespace JobSite
                 return false;
             }
 
-            Actor_Manager.GetActorData(employeeID)?.CareerData.CurrentJob.SetStationID(stationID);
+            Actor_Manager.GetActor_Data(employeeID)?.CareerData.CurrentJob.SetStationID(stationID);
 
             return true;
         }
 
         public bool RemoveEmployeeFromStation(uint employeeID)
         {
-            var actorData = Actor_Manager.GetActorData(employeeID);
+            var actorData = Actor_Manager.GetActor_Data(employeeID);
             
             if (actorData == null)
             {
@@ -361,7 +362,7 @@ namespace JobSite
                 return false;
             }
 
-            Actor_Manager.GetActorData(employeeID)?.CareerData.CurrentJob.SetStationID(0);
+            Actor_Manager.GetActor_Data(employeeID)?.CareerData.CurrentJob.SetStationID(0);
 
             return true;
         }
@@ -462,7 +463,7 @@ namespace JobSite
                             newEmployeeID = _generateNewEmployee(station.CoreEmployeePositionName);
                         }
 
-                        var actorData = Actor_Manager.GetActorData(newEmployeeID);
+                        var actorData = Actor_Manager.GetActor_Data(newEmployeeID);
 
                         if (!AddEmployeeToStation(actorData.ActorID, stationID))
                         {
@@ -482,26 +483,6 @@ namespace JobSite
                     break;
                 }
             }
-        }
-    }
-
-    [CustomPropertyDrawer(typeof(JobSite_Data))]
-    public class JobsiteData_Drawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var    jobsiteNameProp = property.FindPropertyRelative("JobsiteName");
-            string jobsiteName     = ((JobSiteName)jobsiteNameProp.enumValueIndex).ToString();
-
-            label.text = !string.IsNullOrEmpty(jobsiteName) ? jobsiteName : "Unnamed Jobsite";
-
-            EditorGUI.PropertyField(position, property, label, true);
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
-
         }
     }
 }
