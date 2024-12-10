@@ -9,48 +9,38 @@ namespace Faction
 {
     [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
     [Serializable]
-    public class Faction_SO : Base_SO<Faction_Component>
+    public class Faction_SO : Base_SO<Faction_Data>
     {
-        public Faction_Component[] Factions                         => Objects;
-        public Faction_Data        GetFaction_Data(uint      factionID) => GetObject_Master(factionID).FactionData;
-        public Faction_Component   GetFaction_Component(uint factionID) => GetObject_Master(factionID);
+        public Faction_Data[]                      Factions                             => Objects;
+        public Faction_Data                        GetFaction_Data(uint      factionID) => GetObject_Master(factionID);
+        public Dictionary<uint, Faction_Component> FactionComponents = new();
 
-        public Faction_Data[] Save_SO()
+        public Faction_Component GetFaction_Component(uint factionID)
         {
-            return Factions.Select(faction => faction.FactionData).ToArray();
-        }
-
-        public void Load_SO(Faction_Data[] factionData)
-        {
-            foreach (var faction in factionData)
+            if (FactionComponents.TryGetValue(factionID, out var component))
             {
-                if (!_faction_Components.ContainsKey(faction.FactionID))
-                {
-                    Debug.LogError($"Faction with ID {faction.FactionID} not found in Faction_SO.");
-                    continue;
-                }
-
-                _faction_Components[faction.FactionID].FactionData = faction;
-            }
-
-            LoadSO(_faction_Components.Values.ToArray());
+                return component;
+            }   
+            
+            Debug.LogError($"Faction with ID {factionID} not found in Faction_SO.");
+            return null;
         }
 
         public override uint GetObjectID(int id) => Factions[id].FactionID;
 
-        public void UpdateFaction(uint factionID, Faction_Component faction_Component) => UpdateObject(factionID, faction_Component);
-        public void UpdateAllFactions(Dictionary<uint, Faction_Component> allFactions) => UpdateAllObjects(allFactions);
+        public void UpdateFaction(uint factionID, Faction_Data faction_Data) => UpdateObject(factionID, faction_Data);
+        public void UpdateAllFactions(Dictionary<uint, Faction_Data> allFactions) => UpdateAllObjects(allFactions);
 
         public void PopulateSceneFactions()
         {
             var allFactionComponents = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
             var allFactionData =
-                allFactionComponents.ToDictionary(faction => faction.FactionID);
+                allFactionComponents.ToDictionary(faction => faction.FactionID, faction => faction.FactionData);
 
             UpdateAllFactions(allFactionData);
         }
 
-        protected override Dictionary<uint, Faction_Component> _populateDefaultObjects()
+        protected override Dictionary<uint, Faction_Data> _populateDefaultObjects()
         {
             var defaultFactions = new Dictionary<uint, Faction_Data>();
 
@@ -73,8 +63,6 @@ namespace Faction
 
             return _lastUnusedFactionID;
         }
-
-        Dictionary<uint, Faction_Component> _faction_Components => DefaultObjects;
     }
 
     [CustomEditor(typeof(Faction_SO))]
@@ -106,33 +94,33 @@ namespace Faction
 
         static string[] _getFactionNames(Faction_SO factionSO)
         {
-            return factionSO.Factions.Select(c => c.FactionData.FactionName).ToArray();
+            return factionSO.Factions.Select(f => f.FactionName).ToArray();
         }
 
-        void _drawFactionAdditionalData(Faction_Component selectedFaction)
+        void _drawFactionAdditionalData(Faction_Data selectedFaction)
         {
             EditorGUILayout.LabelField("Faction Data", EditorStyles.boldLabel);
             
-            EditorGUILayout.LabelField("Faction Name", $"{selectedFaction.FactionData.FactionName}");
+            EditorGUILayout.LabelField("Faction Name", $"{selectedFaction.FactionName}");
             EditorGUILayout.LabelField("Faction ID",   $"{selectedFaction.FactionID}");
 
-            if (selectedFaction.FactionData.AllFactionActorIDs != null)
+            if (selectedFaction.AllFactionActorIDs != null)
             {
                 _showActors = EditorGUILayout.Toggle("Actors", _showActors);
 
                 if (_showActors)
                 {
-                    _drawActorAdditionalData(selectedFaction.FactionData.AllFactionActorIDs);
+                    _drawActorAdditionalData(selectedFaction.AllFactionActorIDs);
                 }
             }
 
-            if (selectedFaction.FactionData.AllFactionRelations != null)
+            if (selectedFaction.AllFactionRelations != null)
             {
                 _showFactionRelations = EditorGUILayout.Toggle("Faction Relations", _showFactionRelations);
 
                 if (_showFactionRelations)
                 {
-                    _drawFactionRelationDetails(selectedFaction.FactionData.AllFactionRelations);
+                    _drawFactionRelationDetails(selectedFaction.AllFactionRelations);
                 }
             }
         }

@@ -25,14 +25,14 @@ namespace Actor
         static Actor_SO AllActors => _allActors ??= _getOrCreateActor_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedActorData = new SavedActorData(AllActors.Save_SO());
+            saveData.SavedActorData = new SavedActorData(AllActors.Actors);
 
         public void LoadData(SaveData saveData)
         {
             // NB: Apply this to all other LoadData functions.
             try
             {
-                AllActors.Load_SO(saveData.SavedActorData.AllActorData);
+                AllActors.LoadSO(saveData.SavedActorData.AllActorData);
             }
             catch
             {
@@ -97,7 +97,7 @@ namespace Actor
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var actor in AllActors.Actors)
+            foreach (var actor in AllActors.ActorComponents.Values)
             {
                 var distance = Vector3.Distance(position, actor.transform.position);
 

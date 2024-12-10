@@ -11,7 +11,7 @@ namespace Faction
         public uint   FactionID;
         public string FactionName;
 
-        public HashSet<uint>             AllFactionActorIDs = new();
+        public HashSet<uint>             AllFactionActorIDs;
         public List<FactionRelationData> AllFactionRelations;
 
         public Faction_Data(uint factionID, string factionName, HashSet<uint> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
@@ -20,6 +20,14 @@ namespace Faction
             FactionName         = factionName;
             AllFactionActorIDs  = allFactionActorIDs;
             AllFactionRelations = allFactionRelations;
+        }
+        
+        public Faction_Data(Faction_Data factionData)
+        {
+            FactionID           = factionData.FactionID;
+            FactionName         = factionData.FactionName;
+            AllFactionActorIDs  = factionData.AllFactionActorIDs;
+            AllFactionRelations = factionData.AllFactionRelations;
         }
 
         public void InitialiseFactionData()

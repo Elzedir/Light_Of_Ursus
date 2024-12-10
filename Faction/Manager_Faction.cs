@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Actor;
 using Initialisation;
 using UnityEditor;
@@ -15,13 +13,13 @@ namespace Faction
         static Faction_SO AllFactions => _allFactions ??= _getOrCreateFaction_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedFactionData = new SavedFactionData(AllFactions.Save_SO());
+            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions);
 
         public void LoadData(SaveData saveData)
         {
             try
             {
-                AllFactions.Load_SO(saveData.SavedFactionData.AllFactionData);
+                AllFactions.LoadSO(saveData.SavedFactionData.AllFactionData);
             }
             catch
             {
@@ -78,25 +76,6 @@ namespace Faction
             AssetDatabase.SaveAssets();
             
             return faction_SO;
-        }
-
-        public static Faction_Component GetNearestFaction(Vector3 position)
-        {
-            Faction_Component nearestFaction = null;
-
-            var nearestDistance = float.MaxValue;
-
-            foreach (var Faction in AllFactions.Factions)
-            {
-                var distance = Vector3.Distance(position, Faction.transform.position);
-
-                if (!(distance < nearestDistance)) continue;
-
-                nearestFaction  = Faction;
-                nearestDistance = distance;
-            }
-
-            return nearestFaction;
         }
 
         public static uint GetUnusedFactionID()

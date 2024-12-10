@@ -10,31 +10,21 @@ namespace Actor
 {
     [CreateAssetMenu(fileName = "Actor_SO", menuName = "SOList/Actor_SO")]
     [Serializable]
-    public class Actor_SO : Base_SO<Actor_Component>
+    public class Actor_SO : Base_SO<Actor_Data>
     {
-        public Actor_Component[] Actors                         => Objects;
-        public Actor_Data        GetActor_Data(uint      actorID) => GetObject_Master(actorID).ActorData;
-        public Actor_Component   GetActor_Component(uint actorID) => GetObject_Master(actorID);
+        public Actor_Data[]                        Actors                           => Objects;
+        public Actor_Data                          GetActor_Data(uint      actorID) => GetObject_Master(actorID);
+        public Dictionary<uint, Actor_Component> ActorComponents = new();
 
-        public Actor_Data[] Save_SO()
+        public Actor_Component GetActor_Component(uint actorID)
         {
-            return Actors.Select(actor => actor.ActorData).ToArray();
-        }
-
-        public void Load_SO(Actor_Data[] actorData)
-        {
-            foreach (var actor in actorData)
+            if (ActorComponents.TryGetValue(actorID, out var component))
             {
-                if (!_actor_Components.ContainsKey(actor.ActorID))
-                {
-                    Debug.LogError($"Actor with ID {actor.ActorID} not found in Actor_SO.");
-                    continue;
-                }
-
-                _actor_Components[actor.ActorID].ActorData = actor;
-            }
-
-            LoadSO(_actor_Components.Values.ToArray());
+                return component;
+            }   
+            
+            Debug.LogError($"Actor with ID {actorID} not found in Actor_SO.");
+            return null;
         }
 
         public override uint GetObjectID(int id) => Actors[id].ActorID;
