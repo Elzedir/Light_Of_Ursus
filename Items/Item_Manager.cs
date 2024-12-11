@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Managers;
 using Priority;
-using ScriptableObjects;
 using Station;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +14,7 @@ namespace Items
         Misc 
     }
 
-    public class Items
+    public abstract class Items
     {
         const string  _allItemsSOPath = "ScriptableObjects/AllItems_SO";
         
