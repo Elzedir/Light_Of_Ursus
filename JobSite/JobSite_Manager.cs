@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace JobSite
 {
-    public abstract class Jobsite_Manager : IDataPersistence
+    public abstract class JobSite_Manager : IDataPersistence
     {
         const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
         
@@ -16,7 +16,7 @@ namespace JobSite
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getOrCreateJobSite_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.Save_SO());
+            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites);
 
         public void LoadData(SaveData saveData)
         {
@@ -44,7 +44,7 @@ namespace JobSite
                 return;
             }
 
-            JobSite_SO.Load_SO(saveData.SavedJobSiteData.AllJobSiteData);
+            JobSite_SO.LoadSO(saveData.SavedJobSiteData.AllJobSiteData);
         }
 
         public static void OnSceneLoaded()
@@ -82,11 +82,15 @@ namespace JobSite
 
         public static JobSite_Component GetNearestJobSite(Vector3 position, JobSiteName jobSiteName)
         {
+            // Change so that you either pass through a city, or if not, then it will check nearest region, and give you nearest 
+            // Region => City => Jobsite. Maybe flash a BoxCollider at increasing distances and check if it hits a city or region and
+            // use that to calculate the nearest one.
+            
             JobSite_Component nearestJobSite = null;
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var jobSite in JobSite_SO.JobSites.Where(j => j.JobSiteName == jobSiteName))
+            foreach (var jobSite in JobSite_SO.JobSiteComponents.Values.Where(j => j.JobSiteName == jobSiteName))
             {
                 var distance = Vector3.Distance(position, jobSite.transform.position);
 

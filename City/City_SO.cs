@@ -9,57 +9,47 @@ namespace City
 {
     [CreateAssetMenu(fileName = "City_SO", menuName = "SOList/City_SO")]
     [Serializable]
-    public class City_SO : Base_SO<City_Component>
+    public class City_SO : Base_SO<City_Data>
     {
-        public City_Component[] Cities                         => Objects;
-        public City_Data        GetCity_Data(uint      cityID) => GetObject_Master(cityID).CityData;
-        public City_Component   GetCity_Component(uint cityID) => GetObject_Master(cityID);
+        public City_Data[]                         Cities                         => Objects;
+        public City_Data                           GetCity_Data(uint      cityID) => GetObject_Master(cityID);
+        public Dictionary<uint, City_Component> CityComponents = new();
 
-        public City_Data[] Save_SO()
+        public City_Component GetCity_Component(uint cityID)
         {
-            return Cities.Select(city => city.CityData).ToArray();
-        }
-
-        public void Load_SO(City_Data[] cityData)
-        {
-            foreach (var city in cityData)
+            if (CityComponents.TryGetValue(cityID, out var component))
             {
-                if (!_city_Components.ContainsKey(city.CityID))
-                {
-                    Debug.LogError($"City with ID {city.CityID} not found in City_SO.");
-                    continue;
-                }
-
-                _city_Components[city.CityID].CityData = city;
-            }
-
-            LoadSO(_city_Components.Values.ToArray());
+                return component;
+            }   
+            
+            Debug.LogError($"City with ID {cityID} not found in City_SO.");
+            return null;
         }
 
         public override uint GetObjectID(int id) => Cities[id].CityID;
 
-        public void UpdateCity(uint cityID, City_Component city_Component) => UpdateObject(cityID, city_Component);
-        public void UpdateAllCities(Dictionary<uint, City_Component> allCities) => UpdateAllObjects(allCities);
+        public void UpdateCity(uint cityID, City_Data city_Data) => UpdateObject(cityID, city_Data);
+        public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllObjects(allCities);
 
         public void PopulateSceneCities()
         {
             var allCityComponents = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
             var allCityData =
-                allCityComponents.ToDictionary(city => city.CityID);
+                allCityComponents.ToDictionary(city => city.CityID, city => city.CityData);
 
             UpdateAllCities(allCityData);
             
             foreach (var city in Cities)
             {
-                city.CityData.ProsperityData.SetProsperity(50);
-                city.CityData.ProsperityData.MaxProsperity = 100;
+                city.ProsperityData.SetProsperity(50);
+                city.ProsperityData.MaxProsperity = 100;
             }
         }
 
-        protected override Dictionary<uint, City_Component> _populateDefaultObjects()
+        protected override Dictionary<uint, City_Data> _populateDefaultObjects()
         {
             return FindObjectsByType<City_Component>(FindObjectsSortMode.None).ToDictionary(
-                city => city.CityID);
+                city => city.CityID, city => city.CityData); // Replace with City_List
         }
 
         static uint _lastUnusedCityID = 1;
@@ -73,8 +63,6 @@ namespace City
 
             return _lastUnusedCityID;
         }
-
-        Dictionary<uint, City_Component> _city_Components => DefaultObjects;
     }
 
     [CustomEditor(typeof(City_SO))]
@@ -107,43 +95,43 @@ namespace City
 
         static string[] _getCityNames(City_SO citySO)
         {
-            return citySO.Cities.Select(c => c.CityData.CityName).ToArray();
+            return citySO.Cities.Select(c => c.CityName).ToArray();
         }
 
-        void _drawCityAdditionalData(City_Component selectedCity)
+        void _drawCityAdditionalData(City_Data selectedCityData)
         {
             EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("City Name", $"{selectedCity.CityData.CityName}");
-            EditorGUILayout.LabelField("City ID",   $"{selectedCity.CityID}");
-            EditorGUILayout.LabelField("Region ID", $"{selectedCity.CityData.RegionID}");
+            EditorGUILayout.LabelField("City Name", $"{selectedCityData.CityName}");
+            EditorGUILayout.LabelField("City ID",   $"{selectedCityData.CityID}");
+            EditorGUILayout.LabelField("Region ID", $"{selectedCityData.RegionID}");
 
-            if (selectedCity.CityData.Population != null)
+            if (selectedCityData.Population != null)
             {
                 _showPopulation = EditorGUILayout.Toggle("Population", _showPopulation);
 
                 if (_showPopulation)
                 {
-                    _drawPopulationDetails(selectedCity.CityData.Population);
+                    _drawPopulationDetails(selectedCityData.Population);
                 }
             }
 
-            if (selectedCity.CityData.AllJobsiteIDs != null)
+            if (selectedCityData.AllJobsiteIDs != null)
             {
                 _showJobSites = EditorGUILayout.Toggle("JobSites", _showJobSites);
 
                 if (_showJobSites)
                 {
-                    _drawJobSiteAdditionalData(selectedCity.CityData.AllJobsiteIDs);
+                    _drawJobSiteAdditionalData(selectedCityData.AllJobsiteIDs);
                 }
             }
 
-            if (selectedCity.CityData.ProsperityData != null)
+            if (selectedCityData.ProsperityData != null)
             {
                 _showProsperity = EditorGUILayout.Toggle("Prosperity", _showProsperity);
 
                 if (_showProsperity)
                 {
-                    _drawProsperityDetails(selectedCity.CityData.ProsperityData);
+                    _drawProsperityDetails(selectedCityData.ProsperityData);
                 }
             }
         }

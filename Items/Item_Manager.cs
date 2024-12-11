@@ -14,12 +14,12 @@ namespace Items
         Misc 
     }
 
-    public abstract class Items
+    public abstract class Item_Manager
     {
         const string  _allItemsSOPath = "ScriptableObjects/AllItems_SO";
         
-        static AllItems_SO _allItems;
-        static AllItems_SO AllItems => _allItems ??= _getOrCreateAllJobsSO();
+        static Item_SO _allItems;
+        static Item_SO AllItems => _allItems ??= _getOrCreateAllJobsSO();
 
         public static Item_Master GetItem_Master(uint itemID) => AllItems.GetItem_Master(itemID);
         
@@ -29,13 +29,13 @@ namespace Items
             // Then populate custom items.
         }
         
-        static AllItems_SO _getOrCreateAllJobsSO()
+        static Item_SO _getOrCreateAllJobsSO()
         {
-            var allItemsSO = Resources.Load<AllItems_SO>(_allItemsSOPath);
+            var allItemsSO = Resources.Load<Item_SO>(_allItemsSOPath);
             
             if (allItemsSO is not null) return allItemsSO;
             
-            allItemsSO = ScriptableObject.CreateInstance<AllItems_SO>();
+            allItemsSO = ScriptableObject.CreateInstance<Item_SO>();
             AssetDatabase.CreateAsset(allItemsSO, $"Assets/Resources/{_allItemsSOPath}");
             AssetDatabase.SaveAssets();
             
@@ -121,11 +121,11 @@ namespace Items
         public uint   MaxStackSize;
     
         Item_Master        _masterItem;
-        public Item_Master MasterItem => _masterItem ??= Items.GetItem_Master(ItemID);
+        public Item_Master MasterItem => _masterItem ??= Item_Manager.GetItem_Master(ItemID);
 
         public Item(uint itemID, uint itemAmount)
         {
-            var masterItem = Items.GetItem_Master(itemID);
+            var masterItem = Item_Manager.GetItem_Master(itemID);
 
             if (masterItem == null) 
             {

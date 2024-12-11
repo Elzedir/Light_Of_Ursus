@@ -55,7 +55,7 @@ public class Interactable_Item : MonoBehaviour, IInteractable
 
     public void InitialiseInteractableItem(Item item)
     {
-        var masterItem = Items.Items.GetItem_Master(item.ItemID);
+        var masterItem = Items.Item_Manager.GetItem_Master(item.ItemID);
 
         if (masterItem.VisualStats_Item != null)
         {

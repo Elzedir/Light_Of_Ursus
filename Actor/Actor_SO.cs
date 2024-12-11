@@ -29,22 +29,30 @@ namespace Actor
 
         public override uint GetObjectID(int id) => Actors[id].ActorID;
 
-        public void UpdateActor(uint actorID, Actor_Component actor_Component) => UpdateObject(actorID, actor_Component);
-        public void UpdateAllActors(Dictionary<uint, Actor_Component> allActors) => UpdateAllObjects(allActors);
+        public void UpdateActor(uint actorID, Actor_Data actor_Data) => UpdateObject(actorID, actor_Data);
+        public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllObjects(allActors);
 
         public void PopulateSceneActors()
         {
             var allActorComponents = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
             var allActorData =
-                allActorComponents.ToDictionary(actor => actor.ActorID);
+                allActorComponents.ToDictionary(actor => actor.ActorID, actor => actor.ActorData);
 
+            // Make sure default actors can't be overridden by rewriting save file, or put in a check if it has happened.
+            
             UpdateAllActors(allActorData);
         }
 
-        protected override Dictionary<uint, Actor_Component> _populateDefaultObjects()
+        protected override Dictionary<uint, Actor_Data> _populateDefaultObjects()
         {
-            return FindObjectsByType<Actor_Component>(FindObjectsSortMode.None).ToDictionary(
-                actor => actor.ActorID);
+            var defaultFactions = new Dictionary<uint, Actor_Data>();
+
+            foreach (var defaultActor in Actor_List.DefaultActors)
+            {
+                defaultFactions.Add(defaultActor.Key, new Actor_Data(defaultActor.Value));
+            }
+
+            return defaultFactions;
         }
 
         static uint _lastUnusedActorID = 1;
@@ -58,8 +66,6 @@ namespace Actor
 
             return _lastUnusedActorID;
         }
-
-        Dictionary<uint, Actor_Component> _actor_Components => DefaultObjects;
     }
 
     [CustomEditor(typeof(Actor_SO))]
@@ -109,57 +115,57 @@ namespace Actor
 
         static string[] _getActorNames(Actor_SO actorSO)
         {
-            return actorSO.Actors.Select(c => c.ActorData.ActorName.GetName()).ToArray();
+            return actorSO.Actors.Select(c => c.ActorName.GetName()).ToArray();
         }
 
-        void _drawActorAdditionalData(Actor_Component selectedActor)
+        void _drawActorAdditionalData(Actor_Data selectedActorData)
         {
             EditorGUILayout.LabelField("Actor Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Actor Name", $"{selectedActor.ActorData.ActorName.GetName()}");
-            EditorGUILayout.LabelField("Actor ID",   $"{selectedActor.ActorID}");
-            EditorGUILayout.LabelField("Faction ID",  $"{selectedActor.ActorData.ActorFactionID}");
+            EditorGUILayout.LabelField("Actor Name", $"{selectedActorData.ActorName.GetName()}");
+            EditorGUILayout.LabelField("Actor ID",   $"{selectedActorData.ActorID}");
+            EditorGUILayout.LabelField("Faction ID",  $"{selectedActorData.ActorFactionID}");
 
-            if (selectedActor.ActorData.FullIdentification != null)
+            if (selectedActorData.FullIdentification != null)
             {
                 _showFullIdentification = EditorGUILayout.Toggle("Population", _showFullIdentification);
 
                 if (_showFullIdentification)
                 {
-                    _drawFullIdentificationDetails(selectedActor.ActorData.FullIdentification);
+                    _drawFullIdentificationDetails(selectedActorData.FullIdentification);
                 }
             }
 
-            if (selectedActor.ActorData.GameObjectData != null)
+            if (selectedActorData.GameObjectData != null)
             {
                 _showGameObjectProperties = EditorGUILayout.Toggle("GameObjectProperties", _showGameObjectProperties);
 
                 if (_showGameObjectProperties)
                 {
-                    _drawGameObjectProperties(selectedActor.ActorData.GameObjectData);
+                    _drawGameObjectProperties(selectedActorData.GameObjectData);
                 }
             }
 
-            if (selectedActor.ActorData.CareerData != null)
+            if (selectedActorData.CareerData != null)
             {
                 _showCareerAndJobs = EditorGUILayout.Toggle("Career and Jobs", _showCareerAndJobs);
 
                 if (_showCareerAndJobs)
                 {
-                    _drawCareerAndJobs(selectedActor.ActorData.CareerData);
+                    _drawCareerAndJobs(selectedActorData.CareerData);
                 }
             }
 
-            if (selectedActor.ActorData.SpeciesAndPersonality != null)
+            if (selectedActorData.SpeciesAndPersonality != null)
             {
                 _showSpeciesAndPersonality = EditorGUILayout.Toggle("Species and Personality", _showSpeciesAndPersonality);
 
                 if (_showSpeciesAndPersonality)
                 {
-                    _drawSpeciesAndPersonality(selectedActor.ActorData.SpeciesAndPersonality);
+                    _drawSpeciesAndPersonality(selectedActorData.SpeciesAndPersonality);
                 }
             }
 
-            if (selectedActor.ActorData.StatsAndAbilities != null)
+            if (selectedActorData.StatsAndAbilities != null)
             {
                 EditorGUILayout.LabelField("Stats And Abilities", EditorStyles.boldLabel);
                 
@@ -167,15 +173,15 @@ namespace Actor
                 
                 if (_showStatsAndAbilities)
                 {
-                    _drawStatsAndAbilities(selectedActor.ActorData.StatsAndAbilities);
+                    _drawStatsAndAbilities(selectedActorData.StatsAndAbilities);
                 }
             }
 
-            if (selectedActor.ActorData.InventoryData != null)
+            if (selectedActorData.InventoryData != null)
             {
                 EditorGUILayout.LabelField("Inventory And Equipment", EditorStyles.boldLabel);
 
-                var inventoryData = selectedActor.ActorData.InventoryData;
+                var inventoryData = selectedActorData.InventoryData;
 
                 _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
 
@@ -192,7 +198,7 @@ namespace Actor
                 }
             }
 
-            if (selectedActor.ActorData.ActorQuests != null)
+            if (selectedActorData.ActorQuests != null)
             {
                 //EditorGUILayout.LabelField("Actor Quests", EditorStyles.boldLabel);
                 //EditorGUILayout.IntField("Active Quests", actorData.ActorQuests.ActiveQuests.Count);

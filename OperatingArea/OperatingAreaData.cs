@@ -17,7 +17,7 @@ namespace OperatingArea
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
         public uint              JobsiteID;
         JobSite_Component         _jobSite;
-        public JobSite_Component  JobSite => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
+        public JobSite_Component  JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         #endregion
 
         #region Operator

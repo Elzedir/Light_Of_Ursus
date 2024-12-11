@@ -41,7 +41,7 @@ public class Equipment_Base : MonoBehaviour
             return false;
         }
 
-        var masterItem = Items.Items.GetItem_Master(item.ItemID);
+        var masterItem = Items.Item_Manager.GetItem_Master(item.ItemID);
 
         if (masterItem.CommonStats_Item.EquipmentSlots.Contains(EquipmentSlot))
         {

@@ -15,7 +15,7 @@ namespace Station
         static Station_SO Station_SO => _station_SO ??= _getOrCreateStation_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedStationData = new SavedStationData(Station_SO.Save_SO());
+            saveData.SavedStationData = new SavedStationData(Station_SO.Stations);
 
         public void LoadData(SaveData saveData)
         {
@@ -43,7 +43,7 @@ namespace Station
                 return;
             }
 
-            Station_SO.Load_SO(saveData.SavedStationData.AllStationData);
+            Station_SO.LoadSO(saveData.SavedStationData.AllStationData);
         }
 
         public static void OnSceneLoaded()
@@ -85,7 +85,7 @@ namespace Station
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var station in Station_SO.Stations.Where(s => s.StationName == stationName))
+            foreach (var station in Station_SO.StationComponents.Values.Where(s => s.StationName == stationName))
             {
                 var distance = Vector3.Distance(position, station.transform.position);
 

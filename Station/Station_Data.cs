@@ -16,7 +16,9 @@ namespace Station
     [Serializable]
     public class Station_Data
     {
-        public uint StationID;
+        public uint       StationID;
+        Station_Component _station_Component;
+        public Station_Component StationComponent => _station_Component ??= Station_Manager.GetStation_Component(StationID);
 
         ComponentReference_Jobsite _jobsiteReferences;
         public void                SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);

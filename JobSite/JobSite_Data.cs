@@ -5,6 +5,7 @@ using Actor;
 using City;
 using EmployeePosition;
 using Initialisation;
+using Priority;
 using Recipes;
 using Station;
 using UnityEditor;
@@ -15,9 +16,12 @@ namespace JobSite
     [Serializable]
     public class JobSite_Data
     {
-        public uint        JobSiteID;
-        public                                       uint        JobsiteFactionID;
-        public                                       uint        CityID;
+        public uint   JobSiteID;
+        
+        JobSite_Component _jobSiteComponent;
+        public JobSite_Component JobSite_Component => _jobSiteComponent ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        public uint   JobsiteFactionID;
+        public uint   CityID;
 
         public bool   JobsiteIsActive = true;
         public void   SetJobsiteIsActive(bool jobsiteIsActive) => JobsiteIsActive = jobsiteIsActive;
@@ -57,7 +61,7 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
-            var jobsite = Jobsite_Manager.GetJobSite_Component(JobSiteID);
+            var jobsite = JobSite_Manager.GetJobSite_Component(JobSiteID);
 
             foreach (var station in jobsite.AllStationsInJobSite.Values)
             {

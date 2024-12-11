@@ -2,16 +2,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Ability;
 using Career;
 using DateAndTime;
 using EmployeePosition;
 using Faction;
-using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
 using JobSite;
 using Managers;
+using Personality;
 using Priority;
 using Recipes;
 using UnityEditor;
@@ -33,6 +34,9 @@ namespace Actor
         public uint      ActorFactionID;
         public ActorName ActorName;
         
+        Actor_Component _actor;
+        public Actor_Component Actor => _actor ??= Actor_Manager.GetActor_Component(ActorID);
+        
         public ActorDataPresetName ActorDataPresetName;
 
         public FullIdentification FullIdentification;
@@ -48,9 +52,6 @@ namespace Actor
         public EquipmentData           EquipmentData;
 
         public QuestData ActorQuests;
-
-        //public OrderData OrderData;
-        public Order_Base CurrentOrder;
 
         public void InitialiseActorData()
         {
@@ -88,8 +89,7 @@ namespace Actor
                          VocationData vocationData = null,
                          SpeciesAndPersonality speciesAndPersonality = null, StatsAndAbilities statsAndAbilities = null,
                          StatesAndConditionsData statesAndConditionsData = null, InventoryData inventoryData = null,
-                         EquipmentData equipmentData = null, QuestData actorQuests = null,
-                         Order_Base currentOrder = null)
+                         EquipmentData equipmentData = null, QuestData actorQuests = null)
         {
             ActorDataPresetName = actorDataPresetName;
             
@@ -112,7 +112,25 @@ namespace Actor
             InventoryData           = inventoryData;
             EquipmentData           = equipmentData;
             ActorQuests             = actorQuests;
-            CurrentOrder            = currentOrder;
+        }
+
+        public Actor_Data(Actor_Data actor_Data)
+        {
+            ActorDataPresetName     = actor_Data.ActorDataPresetName;
+            ActorID                 = actor_Data.ActorID;
+            ActorFactionID          = actor_Data.ActorFactionID;
+            ActorName               = actor_Data.ActorName;
+            FullIdentification      = new FullIdentification(actor_Data.FullIdentification);
+            GameObjectData          = new GameObjectData(actor_Data.GameObjectData);
+            CareerData              = new CareerData(actor_Data.CareerData);
+            CraftingData            = new CraftingData(actor_Data.CraftingData);
+            VocationData            = new VocationData(actor_Data.VocationData);
+            SpeciesAndPersonality   = new SpeciesAndPersonality(actor_Data.SpeciesAndPersonality);
+            StatsAndAbilities       = new StatsAndAbilities(actor_Data.StatsAndAbilities);
+            StatesAndConditionsData = new StatesAndConditionsData(actor_Data.StatesAndConditionsData);
+            InventoryData           = new InventoryData_Actor(actor_Data.InventoryData);
+            EquipmentData           = new EquipmentData(actor_Data.EquipmentData);
+            ActorQuests             = new QuestData(actor_Data.ActorQuests);
         }
     }
 
@@ -188,12 +206,20 @@ namespace Actor
     public class FullIdentification : PriorityData
     {
         public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
-                                  Date actorBirthDate) : base(actorID, ComponentType.Actor)
+                                  Date actorBirthDate = null) : base(actorID, ComponentType.Actor)
         {
             ActorName      = actorName;
             ActorFactionID = actorFactionID;
             ActorCityID    = actorCityID;
-            ActorBirthDate = actorBirthDate;
+            ActorBirthDate = actorBirthDate ?? new Date(Manager_DateAndTime.GetCurrentTotalDays());
+        }
+        
+        public FullIdentification(FullIdentification fullIdentification) : base(fullIdentification.ActorID, ComponentType.Actor)
+        {
+            ActorName      = new ActorName(fullIdentification.ActorName.Name, fullIdentification.ActorName.Surname);
+            ActorFactionID = fullIdentification.ActorFactionID;
+            ActorCityID    = fullIdentification.ActorCityID;
+            ActorBirthDate = new Date(fullIdentification.ActorBirthDate);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -249,11 +275,18 @@ namespace Actor
     [Serializable]
     public class GameObjectData : PriorityData
     {
-        public GameObjectData(uint actorID, Transform actorTransform, Mesh actorMesh, Material actorMaterial) : base(actorID, ComponentType.Actor)
+        public GameObjectData(uint actorID, Transform actorTransform = null, Mesh actorMesh = null, Material actorMaterial = null) : base(actorID, ComponentType.Actor)
         {
             _actorTransform = actorTransform;
-            ActorMesh       = actorMesh;
-            ActorMaterial   = actorMaterial;
+            ActorMesh       = actorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            ActorMaterial   = actorMaterial ?? Resources.Load<Material>("Materials/Material_Red");
+        }
+        
+        public GameObjectData(GameObjectData gameObjectData) : base(gameObjectData.ActorReference.ActorID, ComponentType.Actor)
+        {
+            _actorTransform = gameObjectData.ActorTransform;
+            ActorMesh       = gameObjectData.ActorMesh;
+            ActorMaterial   = gameObjectData.ActorMaterial;
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -357,11 +390,17 @@ namespace Actor
     [Serializable]
     public class CareerData : PriorityData
     {
-        public CareerData(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer) : base(actorID,
+        public CareerData(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(actorID,
             ComponentType.Actor)
         {
             CareerName = careerName;
-            AllJobs    = jobsNotFromCareer;
+            AllJobs    = jobsNotFromCareer ?? new HashSet<JobName>();
+        }
+        
+        public CareerData(CareerData careerData) : base(careerData.ActorReference.ActorID, ComponentType.Actor)
+        {
+            CareerName = careerData.CareerName;
+            AllJobs    = new HashSet<JobName>(careerData.AllJobs);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -420,7 +459,7 @@ namespace Actor
 
         public uint             JobsiteID;
         JobSite_Component        _jobSite;
-        public JobSite_Component JobSite                      => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
+        public JobSite_Component JobSite                      => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         public void             SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
         
         public EmployeePositionName EmployeePositionName;
@@ -444,7 +483,13 @@ namespace Actor
             actorID, ComponentType.Actor)
         {
             ActorSpecies     = actorSpecies;
-            ActorPersonality = actorPersonality;
+            ActorPersonality = actorPersonality ?? new ActorPersonality(Personality_Manager.GetRandomPersonalityTraits(null, 3, ActorSpecies));
+        }
+        
+        public SpeciesAndPersonality(SpeciesAndPersonality speciesAndPersonality) : base(speciesAndPersonality.ActorReference.ActorID, ComponentType.Actor)
+        {
+            ActorSpecies     = speciesAndPersonality.ActorSpecies;
+            ActorPersonality = new ActorPersonality(speciesAndPersonality.ActorPersonality);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -466,12 +511,18 @@ namespace Actor
     [Serializable]
     public class StatsAndAbilities
     {
-        public StatsAndAbilities(uint actorID, Actor_Stats actorStats, Actor_Aspects actorAspects,
-                                 Actor_Abilities actorAbilities)
+        public StatsAndAbilities(Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities)
         {
-            ActorStats     = actorStats;
-            ActorAspects   = actorAspects;
-            ActorAbilities = actorAbilities;
+            ActorStats     = actorStats ?? new Actor_Stats(0, new ActorLevelData(), new Special(), new CombatStats());
+            ActorAspects   = actorAspects ?? new Actor_Aspects(0);
+            ActorAbilities = actorAbilities ?? new Actor_Abilities(0);
+        }
+        
+        public StatsAndAbilities(StatsAndAbilities statsAndAbilities)
+        {
+            ActorStats     = new Actor_Stats(statsAndAbilities.ActorStats);
+            ActorAspects   = new Actor_Aspects(statsAndAbilities.ActorAspects);
+            ActorAbilities = new Actor_Abilities(statsAndAbilities.ActorAbilities);
         }
 
         [FormerlySerializedAs("Actor_Stats")] public Actor_Stats ActorStats;
@@ -523,6 +574,13 @@ namespace Actor
             ActorSpecial     = actorSpecial;
             ActorCombatStats = actorCombatStats;
         }
+        
+        public Actor_Stats(Actor_Stats actorStats) : base(actorStats.ActorReference.ActorID, ComponentType.Actor)
+        {
+            ActorLevelData   = new ActorLevelData(actorStats.ActorLevelData);
+            ActorSpecial     = new Special(actorStats.ActorSpecial);
+            ActorCombatStats = new CombatStats(actorStats.ActorCombatStats);
+        }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
@@ -537,6 +595,46 @@ namespace Actor
                                              Item.GetItemListTotal_Weight(ActorReference.Actor.ActorData.InventoryData
                                                  .GetAllInventoryItemsClone().Values.ToList());
 
+        public void AddExperience(uint experience)
+        {
+            ActorLevelData.TotalExperience += experience;
+
+            LevelUpCheck();
+        }
+
+        public void LevelUpCheck()
+        {
+            var levelData = Manager_CharacterLevels.GetLevelUpData(ActorLevelData.ActorLevel);
+
+            if (ActorLevelData.TotalExperience < levelData.TotalExperienceRequired) return;
+
+            _levelUp(levelData);
+        }
+
+        void _levelUp(CharacterLevelData levelData)
+        {
+            switch (levelData.BonusType)
+            {
+                case LevelUpBonusType.Health:
+                    ActorCombatStats.BaseMaxHealth += levelData.BonusStatPoints;
+                    break;
+                case LevelUpBonusType.Mana:
+                    ActorCombatStats.BaseMaxMana += levelData.BonusStatPoints;
+                    break;
+                case LevelUpBonusType.Stamina:
+                    ActorCombatStats.BaseMaxStamina += levelData.BonusStatPoints;
+                    break;
+                case LevelUpBonusType.SkillSet:
+                    //ActorLevelData.CanAddNewSkillSet = true;
+                    // Change it so that instead of a bool it just checks against the level to return the bool.
+                    break;
+                case LevelUpBonusType.Ultimate:
+                default:
+                    Debug.Log("LevelData Bonus Type was none.");
+                    break;
+            }
+        }
+        
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
             return false;
@@ -549,9 +647,14 @@ namespace Actor
     [Serializable]
     public class Actor_Aspects : PriorityData
     {
-        public Actor_Aspects(uint actorID, List<AspectName> actorAspectList) : base(actorID, ComponentType.Actor)
+        public Actor_Aspects(uint actorID, List<AspectName> actorAspectList = null) : base(actorID, ComponentType.Actor)
         {
-            ActorAspectList = actorAspectList;
+            ActorAspectList = actorAspectList ?? new List<AspectName> {AspectName.None, AspectName.None, AspectName.None};
+        }
+        
+        public Actor_Aspects(Actor_Aspects actorAspects) : base(actorAspects.ActorReference.ActorID, ComponentType.Actor)
+        {
+            ActorAspectList = new List<AspectName>(actorAspects.ActorAspectList);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -607,94 +710,44 @@ namespace Actor
     }
 
     [Serializable]
-    public class ActorLevelData : PriorityData
+    public class ActorLevelData
     {
-        public ActorLevelData(uint actorID, uint level = 1, uint totalExperience = 0, uint totalSkillPoints = 0,
-                              uint totalSpecialPoints = 0, bool canAddNewSkillSet = false) : base(actorID,
-            ComponentType.Actor)
+        public ActorLevelData(uint totalExperience = 0)
         {
-            ActorLevel         = level;
             TotalExperience    = totalExperience;
-            TotalSkillPoints   = totalSkillPoints;
-            TotalSpecialPoints = totalSpecialPoints;
-            CanAddNewSkillSet  = canAddNewSkillSet;
+        }
+        
+        public ActorLevelData(ActorLevelData actorLevelData)
+        {
+            TotalExperience    = actorLevelData.TotalExperience;
+            UsedSkillPoints    = actorLevelData.UsedSkillPoints;
+            UsedSpecialPoints  = actorLevelData.UsedSpecialPoints;
         }
 
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
-        public uint ActorLevel;
+        public uint ActorLevel => Manager_CharacterLevels.GetLevelFromExperience(TotalExperience);
         public uint TotalExperience;
-        public uint TotalSkillPoints;
-        public uint UsedSkillPoints;
-        public uint TotalSpecialPoints;
-        public uint UsedSpecialPoints;
-        public bool CanAddNewSkillSet;
-
-        public void AddExperience(uint experience)
-        {
-            TotalExperience += experience;
-
-            LevelUpCheck();
-        }
-
-        public void LevelUpCheck()
-        {
-            var levelData = Manager_CharacterLevels.AllLevelUpData[(int)ActorLevel];
-
-            if (TotalExperience >= levelData.TotalExperienceRequired)
-            {
-                _levelUp(levelData);
-            }
-        }
-
-        void _levelUp(CharacterLevelData levelData)
-        {
-            var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
-
-            ActorLevel         =  levelData.Level;
-            TotalSkillPoints   += levelData.SkillPoints;
-            TotalSpecialPoints += levelData.SPECIALPoints;
-
-            switch (levelData.BonusType)
-            {
-                case LevelUpBonusType.Health:
-                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxHealth += levelData.BonusStatPoints;
-                    break;
-                case LevelUpBonusType.Mana:
-                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxMana += levelData.BonusStatPoints;
-                    break;
-                case LevelUpBonusType.Stamina:
-                    actorData.StatsAndAbilities.ActorStats.ActorCombatStats.MaxStamina += levelData.BonusStatPoints;
-                    break;
-                case LevelUpBonusType.Skillset:
-                    CanAddNewSkillSet = true;
-                    break;
-                default:
-                    Debug.Log("LevelData Bonus Type was none.");
-                    break;
-            }
-        }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
+        public uint TotalSkillPoints => Manager_CharacterLevels.GetTotalSkillPointsFromExperience(TotalExperience);
+        public uint UsedSkillPoints; // Can change this to be calculated by used skill points from the other class.
+        public uint TotalSpecialPoints => Manager_CharacterLevels.GetTotalSpecialPointsFromExperience(TotalExperience);
+        public uint UsedSpecialPoints; // Can change this to be calculated by used skill points from the other class.
     }
 
     [Serializable]
     public class CraftingData : PriorityData
     {
-        public CraftingData(uint actorID, List<RecipeName> knownRecipes) : base(actorID, ComponentType.Actor)
+        public CraftingData(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
         {
-            KnownRecipes = knownRecipes;
+            KnownRecipes = knownRecipes ?? new List<RecipeName>();
+        }
+        
+        public CraftingData(CraftingData craftingData) : base(craftingData.ActorReference.ActorID, ComponentType.Actor)
+        {
+            KnownRecipes = new List<RecipeName>(craftingData.KnownRecipes);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public List<RecipeName> KnownRecipes = new();
+        public List<RecipeName> KnownRecipes;
 
         public bool AddRecipe(RecipeName recipeName)
         {
@@ -775,6 +828,11 @@ namespace Actor
         public QuestData(uint actorID) : base(actorID, ComponentType.Actor)
         {
         }
+        
+        public QuestData(QuestData questData) : base(questData.ActorReference.ActorID, ComponentType.Actor)
+        {
+            ActorQuests = new List<Quest>(questData.ActorQuests);
+        }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
@@ -797,10 +855,15 @@ namespace Actor
     [Serializable]
     public class VocationData : PriorityData
     {
-        public VocationData(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations) : base(actorID,
+        public VocationData(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(actorID,
             ComponentType.Actor)
         {
-            ActorVocations = actorVocations;
+            ActorVocations = actorVocations ?? new Dictionary<VocationName, ActorVocation>();
+        }
+        
+        public VocationData(VocationData vocationData) : base(vocationData.ActorReference.ActorID, ComponentType.Actor)
+        {
+            ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationData.ActorVocations);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;

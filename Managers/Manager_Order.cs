@@ -284,7 +284,7 @@ public class Order_Base
     public Station_Component Station_Destination { get { return _station_Destination ??= Station_Manager.GetStation_Component(StationID_Destination); } }
     public uint JobsiteID;
     JobSite_Component _jobSite;
-    public JobSite_Component JobSite { get { return _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID); } }
+    public JobSite_Component JobSite { get { return _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID); } }
     public OrderStatus OrderStatus;
     public List<Item> OrderItems;
 
@@ -475,7 +475,7 @@ public class Order_Base
     {
         var stationsToHaulTo = new List<Station_Component>();
 
-        var jobsite = Jobsite_Manager.GetJobSite_Component(JobsiteID);
+        var jobsite = JobSite_Manager.GetJobSite_Component(JobsiteID);
 
         foreach (var station in jobsite.AllStationsInJobSite.Values)
         {

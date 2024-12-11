@@ -95,7 +95,7 @@ namespace Priority
 
             foreach (var item in items)
             {
-                var masterItem = Items.Items.GetItem_Master(item.ItemID);
+                var masterItem = Items.Item_Manager.GetItem_Master(item.ItemID);
 
                 var allStationTypesList = allStationTypes.ToList();
 

@@ -81,7 +81,7 @@ namespace Priority
         public ComponentReference_Jobsite(uint jobsiteID) : base(jobsiteID) { }
 
         JobSite_Component                    _jobSite;
-        protected override object           _component => _jobSite ??= Jobsite_Manager.GetJobSite_Component(JobsiteID);
+        protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         public             JobSite_Component JobSite    => _component as JobSite_Component;
 
         public override GameObject           GameObject                => JobSite.gameObject;

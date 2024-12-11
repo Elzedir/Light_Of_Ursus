@@ -160,6 +160,13 @@ namespace DateAndTime
             _day = day;
         }
 
+        public Date(Date date)
+        {
+            _year = date._year;
+            _month = date._month;
+            _day = date._day;
+        }
+
         public float GetAge() => Manager_DateAndTime.GetCurrentTotalDays() - _totalDays;
     }
 

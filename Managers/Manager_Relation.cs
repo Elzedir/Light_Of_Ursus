@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Actor;
 using Faction;
-using Managers;
+using Personality;
 
 public class Manager_Relation
 {
@@ -11,7 +11,7 @@ public class Manager_Relation
         float relation = 0;
 
         relation += _compareFaction(a.ActorData.ActorFactionID, b.ActorData.ActorFactionID);
-        relation += _comparePersonality(a.PersonalityComponent, b.PersonalityComponent);
+        relation += _comparePersonality(a.ActorData.SpeciesAndPersonality.ActorPersonality, b.ActorData.SpeciesAndPersonality.ActorPersonality);
 
         return relation;
     }
@@ -25,19 +25,9 @@ public class Manager_Relation
         return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID == b).FactionRelation;
     }
 
-    static float _comparePersonality(PersonalityComponent a, PersonalityComponent b)
+    static float _comparePersonality(ActorPersonality a, ActorPersonality b)
     {
-        float personalityRelation = 0;
-
-        foreach (PersonalityTrait traitA in a.PersonalityTraits)
-        {
-            foreach(PersonalityTrait traitB in b.PersonalityTraits)
-            {
-                personalityRelation += Manager_Personality.ComparePersonalityRelations(traitA.TraitName, traitB.TraitName);
-            }
-        }
-
-        return personalityRelation;
+        return Personality_List.GetPersonalityRelation(a.PersonalityTraits, b.PersonalityTraits);
     }
 }
 

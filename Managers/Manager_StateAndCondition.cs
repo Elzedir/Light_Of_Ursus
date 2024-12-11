@@ -144,10 +144,16 @@ namespace Managers
     
     public class StatesAndConditionsData
     {
-        public StatesAndConditionsData(uint actorID, Actor_States actorStates, Actor_Conditions actorConditions)
+        public StatesAndConditionsData(Actor_States actorStates, Actor_Conditions actorConditions)
         {
             Actor_States     = actorStates;
             Actor_Conditions = actorConditions;
+        }
+        
+        public StatesAndConditionsData(StatesAndConditionsData statesAndConditionsData)
+        {
+            Actor_States     = statesAndConditionsData.Actor_States;
+            Actor_Conditions = statesAndConditionsData.Actor_Conditions;
         }
         
         public void SetActorStatesAndConditions (StatesAndConditionsData statesAndConditionsData)

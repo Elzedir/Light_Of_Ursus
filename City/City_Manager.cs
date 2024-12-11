@@ -13,13 +13,13 @@ namespace City
         static City_SO AllCities => _allCities ??= _getOrCreateCity_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedCityData = new SavedCityData(AllCities.Save_SO());
+            saveData.SavedCityData = new SavedCityData(AllCities.Cities);
 
         public void LoadData(SaveData saveData)
         {
             try
             {
-                AllCities.Load_SO(saveData.SavedCityData.AllCityData);
+                AllCities.LoadSO(saveData.SavedCityData.AllCityData);
             }
             catch
             {
@@ -84,7 +84,7 @@ namespace City
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var city in AllCities.Cities)
+            foreach (var city in AllCities.CityComponents.Values)
             {
                 var distance = Vector3.Distance(position, city.transform.position);
 

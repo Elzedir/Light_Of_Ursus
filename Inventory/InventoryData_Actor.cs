@@ -16,6 +16,11 @@ namespace Inventory
             AllInventoryItems = allInventoryItems;
         }
         
+        public InventoryData_Actor(InventoryData inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)
+        {
+            AllInventoryItems = inventoryData_Actor.GetAllObservableInventoryItemsClone();
+        }
+        
         public override ComponentType       ComponentType      => ComponentType.Actor;
         public          InventoryData_Actor GetInventoryData() => this;
 

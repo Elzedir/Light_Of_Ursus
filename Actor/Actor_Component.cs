@@ -1,6 +1,7 @@
 using System.Collections;
 using Initialisation;
 using Managers;
+using Personality;
 using UnityEngine;
 
 namespace Actor
@@ -32,8 +33,6 @@ namespace Actor
         public Animation ActorAnimation => _actorAnimation ??= gameObject.GetComponent<Animation>();
         EquipmentComponent _equipmentComponent;
         public EquipmentComponent EquipmentComponent => _equipmentComponent ??= new EquipmentComponent(this);
-        PersonalityComponent _personalityComponent;
-        public PersonalityComponent PersonalityComponent => _personalityComponent ??= new PersonalityComponent(ActorID);
         public GroundedCheckComponent GroundCheckComponent;
         DecisionMakerComponent _decisionMakerComponent;
 
@@ -57,9 +56,6 @@ namespace Actor
 
             transform.parent.name = $"{ActorData.ActorName.Name}Body";
             transform.name        = $"{ActorData.ActorName.Name}";
-
-            PersonalityComponent.SetPersonalityTraits(ActorData.SpeciesAndPersonality.ActorPersonality
-                                                               .GetPersonality());
 
             _setTickRate(TickRate.OneSecond, false);
 

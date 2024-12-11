@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Manager_Stats : MonoBehaviour
 {
@@ -10,64 +11,88 @@ public class Manager_Stats : MonoBehaviour
 public class CombatStats
 {
     #region Basic
-    public float CurrentHealth = 1;
-    public float MaxHealth = 1;
-    public float CurrentMana = 1;
-    public float MaxMana = 1;
-    public float CurrentStamina = 1;
-    public float MaxStamina = 1;
+    public                                      float CurrentHealth  = 1;
+    [FormerlySerializedAs("MaxHealth")] public  float BaseMaxHealth  = 1;
+    public                                      float CurrentMana    = 1;
+    [FormerlySerializedAs("MaxMana")] public    float BaseMaxMana    = 1;
+    public                                      float CurrentStamina = 1;
+    [FormerlySerializedAs("MaxStamina")] public float BaseMaxStamina = 1;
     #endregion
 
     #region Attack
-    public float AttackDamage = 1;
-    public float AttackSpeed = 1;
-    public float AttackSwingTime = 1;
-    public float AttackRange = 1;
-    public float AttackPushForce = 1;
-    public float AttackCooldown = 1;
+    [FormerlySerializedAs("AttackDamage")]    public float BaseAttackDamage    = 1;
+    [FormerlySerializedAs("AttackSpeed")]     public float BaseAttackSpeed     = 1;
+    [FormerlySerializedAs("AttackSwingTime")] public float BaseAttackSwingTime = 1;
+    [FormerlySerializedAs("AttackRange")]     public float BaseAttackRange     = 1;
+    [FormerlySerializedAs("AttackPushForce")] public float BaseAttackPushForce = 1;
+    [FormerlySerializedAs("AttackCooldown")]                                          public float BaseAttackCooldown  = 1;
     #endregion
 
     #region Defence
-    public float PhysicalDefence = 0;
-    public float MagicalDefence = 0;
+    [FormerlySerializedAs("PhysicalDefence")] public float BasePhysicalDefence = 0;
+    [FormerlySerializedAs("MagicalDefence")]                                          public float BaseMagicalDefence  = 0;
     #endregion
 
     #region Movement
-    public float MoveSpeed = 1;
-    public float DodgeCooldownReduction = 0;
+    [FormerlySerializedAs("MoveSpeed")] public float BaseMoveSpeed              = 1;
+    [FormerlySerializedAs("DodgeCooldownReduction")]                                    public float BaseDodgeCooldownReduction = 0;
     #endregion
 
     public CombatStats(
-        float currentHealth = 1, float maxHealth = 1, 
-        float currentMana = 1, float maxMana = 1,
-        float currentStamina = 1, float maxStamina = 1,
+        float currentHealth = -1, float baseMaxHealth = 1, 
+        float currentMana = -1, float baseMaxMana = 1,
+        float currentStamina = -1, float baseMaxStamina = 1,
 
-        float attackDamage = 1, float attackSpeed = 1, float attackSwingTime = 1, float attackRange = 1, float attackPushForce = 1, float attackCooldown = 1,
+        float baseAttackDamage = 1, float baseAttackSpeed = 1, float baseAttackSwingTime = 1, 
+        float baseAttackRange = 1, float baseAttackPushForce = 1, float baseAttackCooldown = 1,
 
-        float physicalDefence = 0, float magicalDefence = 0,
+        float basePhysicalDefence = 0, float baseMagicalDefence = 0,
 
-        float moveSpeed = 1,
-        float dodgeCooldownReduction = 0)
+        float baseMoveSpeed = 1,
+        float baseDodgeCooldownReduction = 0)
     {
-        CurrentHealth = currentHealth;
-        MaxHealth = maxHealth;
-        CurrentMana = currentMana; 
-        MaxMana = maxMana;
-        CurrentStamina = currentStamina;
-        MaxStamina = maxStamina;
+        CurrentHealth = currentHealth > 0 ? currentHealth : baseMaxHealth;
+        BaseMaxHealth = baseMaxHealth;
+        CurrentMana = currentMana > 0 ? currentMana : baseMaxMana;
+        BaseMaxMana = baseMaxMana;
+        CurrentStamina = currentStamina > 0 ? currentStamina : baseMaxStamina;
+        BaseMaxStamina = baseMaxStamina;
 
-        AttackDamage = attackDamage;
-        AttackSpeed = attackSpeed;
-        AttackSwingTime = attackSwingTime;
-        AttackRange = attackRange;
-        AttackPushForce = attackPushForce;
-        AttackCooldown = attackCooldown;
+        BaseAttackDamage = baseAttackDamage;
+        BaseAttackSpeed = baseAttackSpeed;
+        BaseAttackSwingTime = baseAttackSwingTime;
+        BaseAttackRange = baseAttackRange;
+        BaseAttackPushForce = baseAttackPushForce;
+        BaseAttackCooldown = baseAttackCooldown;
 
-        PhysicalDefence = physicalDefence;
-        MagicalDefence = magicalDefence;
+        BasePhysicalDefence = basePhysicalDefence;
+        BaseMagicalDefence = baseMagicalDefence;
 
-        MoveSpeed = moveSpeed;
-        DodgeCooldownReduction = dodgeCooldownReduction;
+        BaseMoveSpeed = baseMoveSpeed;
+        BaseDodgeCooldownReduction = baseDodgeCooldownReduction;
+    }
+    
+    public CombatStats(CombatStats combatStats)
+    {
+        CurrentHealth = combatStats.CurrentHealth;
+        BaseMaxHealth = combatStats.BaseMaxHealth;
+        CurrentMana = combatStats.CurrentMana;
+        BaseMaxMana = combatStats.BaseMaxMana;
+        CurrentStamina = combatStats.CurrentStamina;
+        BaseMaxStamina = combatStats.BaseMaxStamina;
+
+        BaseAttackDamage = combatStats.BaseAttackDamage;
+        BaseAttackSpeed = combatStats.BaseAttackSpeed;
+        BaseAttackSwingTime = combatStats.BaseAttackSwingTime;
+        BaseAttackRange = combatStats.BaseAttackRange;
+        BaseAttackPushForce = combatStats.BaseAttackPushForce;
+        BaseAttackCooldown = combatStats.BaseAttackCooldown;
+
+        BasePhysicalDefence = combatStats.BasePhysicalDefence;
+        BaseMagicalDefence = combatStats.BaseMagicalDefence;
+
+        BaseMoveSpeed = combatStats.BaseMoveSpeed;
+        BaseDodgeCooldownReduction = combatStats.BaseDodgeCooldownReduction;
     }
 }
 
@@ -82,14 +107,26 @@ public class Special
     public int Perception; // Wisdom
     public int Strength;
 
-    public Special(int agility = 0, int charisma = 0, int endurance = 0, int intelligence = 0, int luck = 0, int perception = 0, int strength = 0)
+    public Special(int agility    = 0, int charisma = 0, int endurance = 0, int intelligence = 0, int luck = 0,
+                   int perception = 0, int strength = 0)
     {
-        Agility = agility;
-        Charisma = charisma;
-        Endurance = endurance;
+        Agility      = agility;
+        Charisma     = charisma;
+        Endurance    = endurance;
         Intelligence = intelligence;
-        Luck = luck;
-        Perception = perception;
-        Strength = strength;
+        Luck         = luck;
+        Perception   = perception;
+        Strength     = strength;
+    }
+
+    public Special(Special special)
+    {
+        Agility      = special.Agility;
+        Charisma     = special.Charisma;
+        Endurance    = special.Endurance;
+        Intelligence = special.Intelligence;
+        Luck         = special.Luck;
+        Perception   = special.Perception;
+        Strength     = special.Strength;
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Ability;
 using Actor;
 using Managers;
 using UnityEngine;
@@ -174,57 +175,57 @@ public class Player : Controller, IDataPersistence
         _movementLocked = false;
     }
 
-    public void Jump(InputAction.CallbackContext context)
-    {
-        if (context.performed && !_eagleStompActive && _actor.IsGrounded())
-        {
-            StartCoroutine(_testAbility("Eagle Stomp"));
-        }
-    }
+    // public void Jump(InputAction.CallbackContext context)
+    // {
+    //     if (context.performed && !_eagleStompActive && _actor.IsGrounded())
+    //     {
+    //         StartCoroutine(_testAbility("Eagle Stomp"));
+    //     }
+    // }
 
-    IEnumerator _testAbility(string abilityName)
-    {
-        var ability = Manager_Ability.GetAbility(abilityName);
-
-        if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
-
-        Debug.Log($"{ability} performed.");
-
-        _movementLocked = true;
-
-        yield return StartCoroutine(ability.GetAction("Eagle Stomp"));
-
-        _eagleStompActive = true;
-
-        Cursor.lockState = CursorLockMode.None;
-
-        float elapsedTime = 0;
-
-        while (elapsedTime < 3)
-        {
-            elapsedTime += UnityEngine.Time.deltaTime;
-
-            if (elapsedTime > 0.25 && _actor.IsGrounded())
-            {
-                break;
-            }
-
-            yield return null;
-        }
-
-        Cursor.lockState = CursorLockMode.Locked;
-
-        _movementLocked = false;
-
-        _eagleStompActive = false;
-
-        if (ability.AnimationClip != null)
-        {
-            ability.AnimationClip.legacy = true;
-            yield return StartCoroutine(PlayAnimation(ability.AnimationClip));
-            ability.AnimationClip.legacy = false;
-        }
-    }
+    // IEnumerator _testAbility(string abilityName)
+    // {
+    //     var ability = Ability_Manager.GetAbility(abilityName);
+    //
+    //     if (ability == null) { Debug.Log($"Ability: {abilityName} is null"); yield break; }
+    //
+    //     Debug.Log($"{ability} performed.");
+    //
+    //     _movementLocked = true;
+    //
+    //     yield return StartCoroutine(ability.GetAction("Eagle Stomp"));
+    //
+    //     _eagleStompActive = true;
+    //
+    //     Cursor.lockState = CursorLockMode.None;
+    //
+    //     float elapsedTime = 0;
+    //
+    //     while (elapsedTime < 3)
+    //     {
+    //         elapsedTime += UnityEngine.Time.deltaTime;
+    //
+    //         if (elapsedTime > 0.25 && _actor.IsGrounded())
+    //         {
+    //             break;
+    //         }
+    //
+    //         yield return null;
+    //     }
+    //
+    //     Cursor.lockState = CursorLockMode.Locked;
+    //
+    //     _movementLocked = false;
+    //
+    //     _eagleStompActive = false;
+    //
+    //     if (ability.AnimationClip != null)
+    //     {
+    //         ability.AnimationClip.legacy = true;
+    //         yield return StartCoroutine(PlayAnimation(ability.AnimationClip));
+    //         ability.AnimationClip.legacy = false;
+    //     }
+    // }
 
     public void EnableRootMotionForBody()
     {

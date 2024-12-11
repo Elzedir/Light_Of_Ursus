@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
+using Ability;
 using Career;
 using DateAndTime;
 using Faction;
@@ -8,8 +8,8 @@ using Inventory;
 using Items;
 using Jobs;
 using Managers;
+using Personality;
 using Recipes;
-using ScriptableObjects;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -122,7 +122,7 @@ namespace Actor
 
             actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
-            AllActors.UpdateActor(actor.ActorID, actor);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             actor.Initialise();
 
@@ -241,14 +241,12 @@ namespace Actor
             );
 
             var statsAndAbilities = new StatsAndAbilities(
-                actorID: fullIdentification.ActorID,
                 actorStats: actorDataPreset?.StatsAndAbilities.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
                 actorAspects: actorDataPreset?.StatsAndAbilities.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
                 actorAbilities: actorDataPreset?.StatsAndAbilities.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
                 );
 
             var statesAndConditions = new StatesAndConditionsData(
-                actorID: fullIdentification.ActorID,
                 actorStates: actorDataPreset?.StatesAndConditionsData.Actor_States ?? _getNewActorStates(fullIdentification.ActorID),
                 actorConditions: actorDataPreset?.StatesAndConditionsData.Actor_Conditions ?? _getNewActorConditions(fullIdentification.ActorID)
                 );
@@ -285,7 +283,7 @@ namespace Actor
                 equipmentData
                 ));
 
-            AllActors.UpdateActor(actor.ActorID, actor);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             return actor.ActorData;
         }
@@ -316,7 +314,7 @@ namespace Actor
 
         static ActorPersonality _getRandomPersonality()
         {
-            return new ActorPersonality(Manager_Personality.GetRandomPersonalityTraits(null, 3));
+            return new ActorPersonality(Personality_Manager.GetRandomPersonalityTraits(null, 3));
         }
 
         static Actor_Stats _getNewActorStats(uint actorID)
@@ -341,7 +339,7 @@ namespace Actor
         {
             return new Actor_Abilities(
                 actorID: actorID,
-                abilityList: new Dictionary<Ability, float>()
+                abilityList: new Dictionary<AbilityName, float>()
                 );
         }
         

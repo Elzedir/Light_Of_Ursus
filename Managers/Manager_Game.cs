@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Ability;
 using Actor;
 using Career;
 using City;
@@ -12,6 +13,7 @@ using FMODUnity;
 using Initialisation;
 using Jobs;
 using JobSite;
+using Personality;
 using Recipes;
 using Region;
 using Station;
@@ -132,7 +134,6 @@ namespace Managers
             _createManager("Manager_FloatingText", _manager_Parent).AddComponent<Manager_FloatingText>().OnSceneLoaded();
             _createManager("Manager_Cutscene",     _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
-            _createManager("Manager_Ability",      _manager_Parent).AddComponent<Manager_Ability>().OnSceneLoaded();
             
             Manager_Recipe.PopulateAllRecipes();
             Manager_Job.PopulateAllJobs();
@@ -140,7 +141,6 @@ namespace Managers
             EmployeePosition_Manager.PopulateAllEmployeePositions();
             Career_Manager.PopulateAllCareers();
             Manager_DateAndTime.Initialise();
-            Manager_Personality.Initialise();
             
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
@@ -151,7 +151,7 @@ namespace Managers
 
             Region_Manager.OnSceneLoaded();
             City_Manager.OnSceneLoaded();
-            Jobsite_Manager.OnSceneLoaded();
+            JobSite_Manager.OnSceneLoaded();
             Station_Manager.OnSceneLoaded();
             
             Manager_Initialisation.InitialiseFactions();

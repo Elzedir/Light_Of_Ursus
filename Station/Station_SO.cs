@@ -10,51 +10,41 @@ namespace Station
 {
     [CreateAssetMenu(fileName = "AllStations_SO", menuName = "SOList/AllStations_SO")]
     [Serializable]
-    public class Station_SO : Base_SO<Station_Component>
+    public class Station_SO : Base_SO<Station_Data>
     {
-        public Station_Component[] Stations                             => Objects;
-        public Station_Data        GetStation_Data(uint      stationID) => GetObject_Master(stationID).StationData;
-        public Station_Component   GetStation_Component(uint stationID) => GetObject_Master(stationID);
+        public Station_Data[] Stations                             => Objects;
+        public Station_Data        GetStation_Data(uint      stationID) => GetObject_Master(stationID);
+        public Dictionary<uint, Station_Component> StationComponents = new();
 
-        public Station_Data[] Save_SO()
+        public Station_Component GetStation_Component(uint stationID)
         {
-            return Stations.Select(station => station.StationData).ToArray();
-        }
-        
-        public void Load_SO(Station_Data[] stationData)
-        {
-            foreach (var station in stationData)
+            if (StationComponents.TryGetValue(stationID, out var component))
             {
-                if (!_station_Components.ContainsKey(station.StationID))
-                {
-                    Debug.LogError($"Station with ID {station.StationID} not found in Station_SO.");
-                    continue;
-                }
-                
-                _station_Components[station.StationID].StationData = station;
-            }
-
-            LoadSO(_station_Components.Values.ToArray());
+                return component;
+            }   
+            
+            Debug.LogError($"Station with ID {stationID} not found in Station_SO.");
+            return null;
         }
 
         public override uint GetObjectID(int id) => Stations[id].StationID;
 
-        public void UpdateStation(uint stationID, Station_Component station_Component) => UpdateObject(stationID, station_Component);
-        public void UpdateAllStations(Dictionary<uint, Station_Component> allStations) => UpdateAllObjects(allStations);
+        public void UpdateStation(uint stationID, Station_Data station_Data) => UpdateObject(stationID, station_Data);
+        public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllObjects(allStations);
 
         public void PopulateSceneStations()
         {
             var allStationComponents = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
             var allStationData =
-                allStationComponents.ToDictionary(station => station.StationID);
+                allStationComponents.ToDictionary(station => station.StationID, station => station.StationData);
 
             UpdateAllStations(allStationData);
         }
 
-        protected override Dictionary<uint, Station_Component> _populateDefaultObjects()
+        protected override Dictionary<uint, Station_Data> _populateDefaultObjects()
         {
             return FindObjectsByType<Station_Component>(FindObjectsSortMode.None).ToDictionary(
-                station => station.StationID);
+                station => station.StationID, station => station.StationData);
         }
         
         static uint _lastUnusedStationID = 1;
@@ -68,8 +58,6 @@ namespace Station
 
             return _lastUnusedStationID;
         }
-        
-        Dictionary<uint, Station_Component> _station_Components => DefaultObjects;
     }
 
     [CustomEditor(typeof(Station_SO))]
@@ -105,34 +93,34 @@ namespace Station
 
         string[] _getStationNames(Station_SO stationSO)
         {
-            return stationSO.Stations.Select(s => s.StationID.ToString()).ToArray();
+            return stationSO.Stations.Select(s => $"{s.StationID}: {s.StationComponent.StationName}").ToArray();
         }
 
-        void _drawStationAdditionalData(Station_Component selectedStation)
+        void _drawStationAdditionalData(Station_Data selectedStation)
         {
             EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
             
-            EditorGUILayout.LabelField("Station Name", $"{selectedStation.StationName}");
+            EditorGUILayout.LabelField("Station Name", $"{selectedStation.StationComponent.StationName}");
             EditorGUILayout.LabelField("Station ID",   $"{selectedStation.StationID}");
-            EditorGUILayout.LabelField("JobSite ID",   $"{selectedStation.StationData.JobsiteID}");
+            EditorGUILayout.LabelField("JobSite ID",   $"{selectedStation.JobsiteID}");
 
-            if (selectedStation.StationData.AllOperatingAreaIDs != null)
+            if (selectedStation.AllOperatingAreaIDs != null)
             {
                 _showOperatingAreas = EditorGUILayout.Toggle("Operating Areas", _showOperatingAreas);
 
                 if (_showOperatingAreas)
                 {
-                    _drawOperatingAreaAdditionalData(selectedStation.StationData.AllOperatingAreaIDs);
+                    _drawOperatingAreaAdditionalData(selectedStation.AllOperatingAreaIDs);
                 }                
             }
             
-            if (selectedStation.StationData.InventoryData != null)
+            if (selectedStation.InventoryData != null)
             {
                 _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
 
                 if (_showInventory)
                 {
-                    _drawInventoryAdditionalData(selectedStation.StationData.InventoryData);
+                    _drawInventoryAdditionalData(selectedStation.InventoryData);
                 }
             }
         }

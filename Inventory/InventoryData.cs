@@ -46,6 +46,19 @@ namespace Inventory
         public Dictionary<uint, Item> GetAllInventoryItemsClone() =>
             AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
 
+        public ObservableDictionary<uint, Item> GetAllObservableInventoryItemsClone()
+        {
+            var inventoryClone = GetAllInventoryItemsClone();
+            var observableInventoryClone = new ObservableDictionary<uint, Item>();
+            
+            foreach (var (key, value) in inventoryClone)
+            {
+                observableInventoryClone.Add(key, value);
+            }
+            
+            return observableInventoryClone;
+        }
+
         public Dictionary<uint, Item> FetchItemsOnHold   = new();
         public Dictionary<uint, Item> DeliverItemsOnHold = new();
 

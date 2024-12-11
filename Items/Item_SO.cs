@@ -13,7 +13,7 @@ namespace Items
 {
     [CreateAssetMenu(fileName = "AllItems_SO", menuName = "SOList/AllItems_SO")]
     [Serializable]
-    public class AllItems_SO : Base_SO<Item_Master>
+    public class Item_SO : Base_SO<Item_Master>
     {
         public Item_Master[] Items                       => Objects;
         public Item_Master   GetItem_Master(uint itemID) => GetObject_Master(itemID);
@@ -63,7 +63,7 @@ namespace Items
         Dictionary<uint, Item_Master> _defaultItems => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllItems_SO))]
+    [CustomEditor(typeof(Item_SO))]
     public class AllItems_SOEditor : Editor
     {
         int _selectedItemIndex = -1;
@@ -91,7 +91,7 @@ namespace Items
 
         public override void OnInspectorGUI()
         {
-            var allItemsSO = (AllItems_SO)target;
+            var allItemsSO = (Item_SO)target;
 
             if (allItemsSO?.Items is null || allItemsSO.Items.Length is 0)
             {
