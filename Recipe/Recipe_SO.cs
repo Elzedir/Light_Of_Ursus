@@ -8,9 +8,9 @@ using UnityEngine;
 
 namespace Recipes
 {
-    [CreateAssetMenu(fileName = "AllRecipes_SO", menuName = "SOList/AllRecipes_SO")]
+    [CreateAssetMenu(fileName = "Recipe_SO", menuName = "SOList/Recipe_SO")]
     [Serializable]
-    public class AllRecipes_SO : Base_SO<Recipe_Master>
+    public class Recipe_SO : Base_SO<Recipe_Master>
     {
         public Recipe_Master[] Recipes => Objects;
         public Recipe_Master   GetRecipe_Master(RecipeName recipeName) => GetObject_Master((uint)recipeName);
@@ -27,13 +27,13 @@ namespace Recipes
 
         protected override Dictionary<uint, Recipe_Master> _populateDefaultObjects()
         {
-            return List_Recipe.GetAllDefaultRecipes();
+            return Recipe_List.GetAllDefaultRecipes();
         }
 
         Dictionary<uint, Recipe_Master> _defaultRecipes => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllRecipes_SO))]
+    [CustomEditor(typeof(Recipe_SO))]
     public class AllRecipes_SOEditor : Editor
     {
         int _selectedRecipeIndex = -1;
@@ -53,7 +53,7 @@ namespace Recipes
 
         public override void OnInspectorGUI()
         {
-            var allRecipeSO = (AllRecipes_SO)target;
+            var allRecipeSO = (Recipe_SO)target;
 
             if (allRecipeSO?.Recipes is null || allRecipeSO.Recipes.Length is 0)
             {

@@ -5,7 +5,7 @@ using Station;
 
 namespace Recipes
 {
-    public abstract class List_Recipe
+    public abstract class Recipe_List
     {
         // Don't use initialised lists since it relies on Item, which needs Item_Master to be initialised first.
         

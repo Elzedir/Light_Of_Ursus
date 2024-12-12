@@ -2,33 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Items;
-using Managers;
 using Station;
-using UnityEditor;
 using UnityEngine;
 
 namespace Recipes
 {
-    public abstract class Manager_Recipe
+    public abstract class Recipe_Manager
     {
-        const string _allRecipesSOPath = "ScriptableObjects/AllRecipes_SO";
+        const string _recipe_SOPath = "ScriptableObjects/Recipe_SO";
 
-        static AllRecipes_SO _allRecipes;
-        static AllRecipes_SO AllRecipes => _allRecipes ??= _getOrCreateAllRecipesSO();
+        static Recipe_SO _allRecipes;
+        static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
 
         public static Recipe_Master GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName);
 
-        static AllRecipes_SO _getOrCreateAllRecipesSO()
+        static Recipe_SO _getRecipe_SO()
         {
-            var allRecipesSO = Resources.Load<AllRecipes_SO>(_allRecipesSOPath);
+            var recipe_SO = Resources.Load<Recipe_SO>(_recipe_SOPath);
 
-            if (allRecipesSO is not null) return allRecipesSO;
+            if (recipe_SO is not null) return recipe_SO;
 
-            allRecipesSO = ScriptableObject.CreateInstance<AllRecipes_SO>();
-            AssetDatabase.CreateAsset(allRecipesSO, $"Assets/Resources/{_allRecipesSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("Recipe_SO not found. Creating temporary Recipe_SO.");
+            recipe_SO = ScriptableObject.CreateInstance<Recipe_SO>();
 
-            return allRecipesSO;
+            return recipe_SO;
         }
 
         public static void PopulateAllRecipes()
@@ -59,7 +56,7 @@ namespace Recipes
         public List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
 
         Recipe_Master _recipeMaster;
-        Recipe_Master RecipeMaster => _recipeMaster ??= Manager_Recipe.GetRecipe_Master(RecipeName);
+        Recipe_Master RecipeMaster => _recipeMaster ??= Recipe_Manager.GetRecipe_Master(RecipeName);
 
         public Recipe(RecipeName recipeName)
         {

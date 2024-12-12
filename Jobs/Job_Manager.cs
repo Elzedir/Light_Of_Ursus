@@ -10,10 +10,10 @@ namespace Jobs
 {
     public abstract class Manager_Job
     {
-        const string  _allJobsSOPath = "ScriptableObjects/AllJobs_SO";
+        const string  _job_SOPath = "ScriptableObjects/Job_SO";
         
-        static AllJobs_SO _allJobs;
-        static AllJobs_SO AllJobs => _allJobs ??= _getOrCreateAllJobsSO();
+        static Job_SO _allJobs;
+        static Job_SO AllJobs => _allJobs ??= _getJob_SO();
 
         public static Job_Master GetJob_Master(JobName jobName) => AllJobs.GetJob_Master(jobName);
         
@@ -23,17 +23,16 @@ namespace Jobs
             // Then populate custom jobs.
         }
         
-        static AllJobs_SO _getOrCreateAllJobsSO()
+        static Job_SO _getJob_SO()
         {
-            var allJobsSO = Resources.Load<AllJobs_SO>(_allJobsSOPath);
+            var job_SO = Resources.Load<Job_SO>(_job_SOPath);
             
-            if (allJobsSO is not null) return allJobsSO;
+            if (job_SO is not null) return job_SO;
             
-            allJobsSO = ScriptableObject.CreateInstance<AllJobs_SO>();
-            AssetDatabase.CreateAsset(allJobsSO, $"Assets/Resources/{_allJobsSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("Job_SO not found. Creating temporary Job_SO.");
+            job_SO = ScriptableObject.CreateInstance<Job_SO>();
             
-            return allJobsSO;
+            return job_SO;
         }
     }
 
