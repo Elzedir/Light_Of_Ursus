@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Priority;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace JobSite
 {
-    [CreateAssetMenu(fileName = "AllJobSites_SO", menuName = "SOList/AllJobSites_SO")]
+    [CreateAssetMenu(fileName = "JobSite_SO", menuName = "SOList/JobSite_SO")]
     [Serializable]
     public class JobSite_SO : Base_SO<JobSite_Data>
     {

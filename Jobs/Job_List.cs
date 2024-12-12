@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Jobs
 {
-    public abstract class List_Job
+    public abstract class Job_List
     {
         public static Dictionary<uint, Job_Master> GetAllDefaultJobs()
         {

@@ -125,21 +125,24 @@ namespace Managers
 
         static void _tick(TickRate tickRate)
         {
-            if (!_allTickers.TryGetValue(TickerType.Actor, out var tickerRate))
+            foreach (var tickerType in _allTickers.Keys)
             {
-                Debug.LogError($"TickerType: {TickerType.Actor} does not exist in TickerGroups.");
-                return;
-            }
+                if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
+                {
+                    Debug.LogError($"TickerType: {TickerType.Actor} does not exist in TickerGroups.");
+                    return;
+                }
 
-            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
-            {
-                //Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
-                return;
-            }
+                if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+                {
+                    //Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
+                    return;
+                }
 
-            foreach (var tickerAction in tickerGroup.Values)
-            {
-                tickerAction();
+                foreach (var tickerAction in tickerGroup.Values)
+                {
+                    tickerAction();
+                }
             }
         }
     }

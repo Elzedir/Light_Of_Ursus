@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Inventory;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -102,20 +103,25 @@ namespace Actor
             if (GUILayout.Button("Unselect All")) _resetIndexes();
 
             EditorGUILayout.LabelField("All Actors", EditorStyles.boldLabel);
+
+            var nonNullActors = actorSO.Actors.Where(actor =>
+                actor         != null &&
+                actor.ActorID != 0).ToArray();
+            
             _actorScrollPos = EditorGUILayout.BeginScrollView(_actorScrollPos,
-                GUILayout.Height(Mathf.Min(200, actorSO.Actors.Length * 20)));
-            _selectedActorIndex = GUILayout.SelectionGrid(_selectedActorIndex, _getActorNames(actorSO), 1);
+                GUILayout.Height(Mathf.Min(200, nonNullActors.Length * 20)));
+            _selectedActorIndex = GUILayout.SelectionGrid(_selectedActorIndex, _getActorNames(nonNullActors), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedActorIndex < 0 || _selectedActorIndex >= actorSO.Actors.Length) return;
+            if (_selectedActorIndex < 0 || _selectedActorIndex >= nonNullActors.Length) return;
 
             var selectedActorData = actorSO.Actors[_selectedActorIndex];
             _drawActorAdditionalData(selectedActorData);
         }
 
-        static string[] _getActorNames(Actor_SO actorSO)
+        static string[] _getActorNames(Actor_Data[] actors)
         {
-            return actorSO.Actors.Select(c => c.ActorName.GetName()).ToArray();
+            return actors.Select(c => c.ActorName.GetName()).ToArray();
         }
 
         void _drawActorAdditionalData(Actor_Data selectedActorData)

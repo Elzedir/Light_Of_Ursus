@@ -9,10 +9,10 @@ namespace Station
 {
     public abstract class Station_Manager : IDataPersistence
     {
-        const  string     _stations_SOPath = "ScriptableObjects/Station_SO";
+        const  string     _station_SOPath = "ScriptableObjects/Station_SO";
         
         static Station_SO _station_SO;
-        static Station_SO Station_SO => _station_SO ??= _getOrCreateStation_SO();
+        static Station_SO Station_SO => _station_SO ??= _getStation_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedStationData = new SavedStationData(Station_SO.Stations);
@@ -66,15 +66,14 @@ namespace Station
             return Station_SO.GetStation_Component(stationID);
         }
         
-        static Station_SO _getOrCreateStation_SO()
+        static Station_SO _getStation_SO()
         {
-            var station_SO = Resources.Load<Station_SO>(_stations_SOPath);
+            var station_SO = Resources.Load<Station_SO>(_station_SOPath);
             
             if (station_SO is not null) return station_SO;
             
+            Debug.LogError("Station_SO not found. Creating temporary Station_SO.");
             station_SO = ScriptableObject.CreateInstance<Station_SO>();
-            AssetDatabase.CreateAsset(station_SO, $"Assets/Resources/{_stations_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return station_SO;
         }

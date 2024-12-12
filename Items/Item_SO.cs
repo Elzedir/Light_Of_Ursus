@@ -6,12 +6,13 @@ using Lists;
 using Priority;
 using ScriptableObjects;
 using Station;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Items
 {
-    [CreateAssetMenu(fileName = "AllItems_SO", menuName = "SOList/AllItems_SO")]
+    [CreateAssetMenu(fileName = "Item_SO", menuName = "SOList/Item_SO")]
     [Serializable]
     public class Item_SO : Base_SO<Item_Master>
     {
@@ -91,9 +92,9 @@ namespace Items
 
         public override void OnInspectorGUI()
         {
-            var allItemsSO = (Item_SO)target;
+            var item_SO = (Item_SO)target;
 
-            if (allItemsSO?.Items is null || allItemsSO.Items.Length is 0)
+            if (item_SO?.Items is null || item_SO.Items.Length is 0)
             {
                 EditorGUILayout.LabelField("No Items Found", EditorStyles.boldLabel);
                 return;
@@ -101,15 +102,15 @@ namespace Items
 
             if (GUILayout.Button("Clear Item Data"))
             {
-                allItemsSO.ClearObjectData();
-                EditorUtility.SetDirty(allItemsSO);
+                item_SO.ClearObjectData();
+                EditorUtility.SetDirty(item_SO);
             }
 
             if (GUILayout.Button("Unselect All")) _unselectAll();
 
             EditorGUILayout.LabelField("All Items", EditorStyles.boldLabel);
 
-            var nonNullItems = allItemsSO.Items.Where(item =>
+            var nonNullItems = item_SO.Items.Where(item =>
                 item        != null &&
                 item.ItemID != 0).ToArray();
 

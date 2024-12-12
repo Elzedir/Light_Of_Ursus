@@ -57,7 +57,7 @@ namespace Priority
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(
             uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters)
         {
-            return Manager_JobTask.GetTaskParameters((JobTaskName)priorityID, requiredParameters);
+            return JobTask_Manager.GetTaskParameters((JobTaskName)priorityID, requiredParameters);
         }
 
         protected override Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState)

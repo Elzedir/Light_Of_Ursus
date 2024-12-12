@@ -10,7 +10,7 @@ namespace City
         const string _city_SOPath = "ScriptableObjects/City_SO";
         
         static City_SO _allCities;
-        static City_SO AllCities => _allCities ??= _getOrCreateCity_SO();
+        static City_SO AllCities => _allCities ??= _getCity_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedCityData = new SavedCityData(AllCities.Cities);
@@ -25,23 +25,23 @@ namespace City
             {
                 if (saveData is null)
                 {
-                    Debug.Log("No SaveData found in LoadData.");
+                    Debug.LogError("No SaveData found in LoadData.");
                     return;
                 }
 
                 if (saveData.SavedCityData is null)
                 {
-                    Debug.Log("No SavedCityData found in SaveData.");
+                    Debug.LogError("No SavedCityData found in SaveData.");
                     return;
                 }
 
                 if (saveData.SavedCityData.AllCityData is null)
                 {
-                    Debug.Log("No AllCityData found in SavedCityData.");
+                    Debug.LogError("No AllCityData found in SavedCityData.");
                     return;
                 }
                 
-                Debug.Log("AllCityData count is 0.");
+                Debug.LogError("AllCityData count is 0.");
             }
         }
 
@@ -65,15 +65,14 @@ namespace City
             return AllCities.GetCity_Component(cityID);
         }
         
-        static City_SO _getOrCreateCity_SO()
+        static City_SO _getCity_SO()
         {
             var city_SO = Resources.Load<City_SO>(_city_SOPath);
             
             if (city_SO is not null) return city_SO;
             
+            Debug.LogError("City_SO not found. Creating temporary City_SO.");
             city_SO = ScriptableObject.CreateInstance<City_SO>();
-            AssetDatabase.CreateAsset(city_SO, $"Assets/Resources/{_city_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return city_SO;
         }

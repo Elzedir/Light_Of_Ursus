@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Items;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Recipes
+namespace Recipe
 {
     [CreateAssetMenu(fileName = "Recipe_SO", menuName = "SOList/Recipe_SO")]
     [Serializable]

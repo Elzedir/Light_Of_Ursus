@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Jobs
 {
-    [CreateAssetMenu(fileName = "AllJobs_SO", menuName = "SOList/AllJobs_SO")]
+    [CreateAssetMenu(fileName = "Job_SO", menuName = "SOList/Job_SO")]
     [Serializable]
-    public class AllJobs_SO : Base_SO<Job_Master>
+    public class Job_SO : Base_SO<Job_Master>
     {
         public Job_Master[] Jobs                           => Objects;
         public Job_Master   GetJob_Master(JobName jobName) => GetObject_Master((uint)jobName);
@@ -28,7 +29,7 @@ namespace Jobs
         {
             var defaultJobs = new Dictionary<uint, Job_Master>();
 
-            foreach (var item in List_Job.GetAllDefaultJobs())
+            foreach (var item in Job_List.GetAllDefaultJobs())
             {
                 defaultJobs.Add(item.Key, item.Value);
             }
@@ -39,7 +40,7 @@ namespace Jobs
         Dictionary<uint, Job_Master> _defaultJobs => DefaultObjects;
     }
 
-    [CustomEditor(typeof(AllJobs_SO))]
+    [CustomEditor(typeof(Job_SO))]
     public class AllJobs_SOEditor : Editor
     {
         int _selectedJobIndex = -1;
@@ -55,7 +56,7 @@ namespace Jobs
 
         public override void OnInspectorGUI()
         {
-            var allJobsSO = (AllJobs_SO)target;
+            var allJobsSO = (Job_SO)target;
 
             if (allJobsSO?.Jobs is null || allJobsSO.Jobs.Length is 0)
             {

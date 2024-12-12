@@ -14,7 +14,7 @@ using JobSite;
 using Managers;
 using Personality;
 using Priority;
-using Recipes;
+using Recipe;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -760,7 +760,7 @@ namespace Actor
 
         public IEnumerator CraftItemAll(RecipeName recipeName)
         {
-            var recipe = Manager_Recipe.GetRecipe_Master(recipeName);
+            var recipe = Recipe_Manager.GetRecipe_Master(recipeName);
 
             var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
@@ -793,7 +793,7 @@ namespace Actor
                 yield break;
             }
 
-            Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
+            Recipe_Master recipeMaster = Recipe_Manager.GetRecipe_Master(recipeName);
 
             var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 

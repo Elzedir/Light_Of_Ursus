@@ -9,10 +9,10 @@ namespace Career
 {
     public abstract class Career_Manager
     {
-        const string  _allCareersSOPath = "ScriptableObjects/Career_SO";
+        const string  _career_SOPath = "ScriptableObjects/Career_SO";
         
         static Career_SO _careerSO;
-        static Career_SO Career_SO => _careerSO ??= _getOrCreateAllCareersSO();
+        static Career_SO Career_SO => _careerSO ??= _getCareer_SO();
 
         public static Career_Master GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName);
         
@@ -22,17 +22,16 @@ namespace Career
             // Then populate custom careers.
         }
         
-        static Career_SO _getOrCreateAllCareersSO()
+        static Career_SO _getCareer_SO()
         {
-            var allCareersSO = Resources.Load<Career_SO>(_allCareersSOPath);
+            var career_SO = Resources.Load<Career_SO>(_career_SOPath);
             
-            if (allCareersSO is not null) return allCareersSO;
+            if (career_SO is not null) return career_SO;
             
-            allCareersSO = ScriptableObject.CreateInstance<Career_SO>();
-            AssetDatabase.CreateAsset(allCareersSO, $"Assets/Resources/{_allCareersSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("Career_SO not found. Creating temporary Career_SO.");
+            career_SO = ScriptableObject.CreateInstance<Career_SO>();
             
-            return allCareersSO;
+            return career_SO;
         }
     }
 

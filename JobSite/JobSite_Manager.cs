@@ -13,7 +13,7 @@ namespace JobSite
         const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
         
         static JobSite_SO _jobSite_SO;
-        static JobSite_SO JobSite_SO => _jobSite_SO ??= _getOrCreateJobSite_SO();
+        static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites);
@@ -67,15 +67,14 @@ namespace JobSite
             return JobSite_SO.GetJobSite_Component(jobSiteID);
         }
         
-        static JobSite_SO _getOrCreateJobSite_SO()
+        static JobSite_SO _getJobSite_SO()
         {
             var jobSite_SO = Resources.Load<JobSite_SO>(_jobSite_SOPath);
             
             if (jobSite_SO is not null) return jobSite_SO;
             
+            Debug.LogError("JobSite_SO not found. Creating temporary JobSite_SO.");
             jobSite_SO = ScriptableObject.CreateInstance<JobSite_SO>();
-            AssetDatabase.CreateAsset(jobSite_SO, $"Assets/Resources/{_jobSite_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return jobSite_SO;
         }

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Initialisation;
 using UnityEditor;
 using UnityEngine;
@@ -12,38 +9,39 @@ namespace Region
         const string _region_SOPath = "ScriptableObjects/Region_SO";
 
         static Region_SO _allRegions;
-        static Region_SO AllRegions => _allRegions ??= _getOrCreateRegion_SO();
+        static Region_SO AllRegions => _allRegions ??= _getRegion_SO();
         
         public void SaveData(SaveData saveData) =>
-            saveData.SavedRegionData = new SavedRegionData(AllRegions.Save_SO());
+            saveData.SavedRegionData = new SavedRegionData(AllRegions.Regions);
 
         public void LoadData(SaveData saveData)
         {
-            if (saveData is null)
+            try
             {
-                //Debug.Log("No SaveData found in LoadData.");
-                return;
+                AllRegions.LoadSO(saveData.SavedRegionData.AllRegionData);
             }
-
-            if (saveData.SavedRegionData == null)
+            catch
             {
-                //Debug.Log("No SavedRegionData found in SaveData.");
-                return;
-            }
+                if (saveData is null)
+                {
+                    Debug.LogError("No SaveData found in LoadData.");
+                    return;
+                }
 
-            if (saveData.SavedRegionData.AllRegionData == null)
-            {
-                //Debug.Log("No AllRegionData found in SavedRegionData.");
-                return;
-            }
+                if (saveData.SavedRegionData is null)
+                {
+                    Debug.LogError("No SavedRegionData found in SaveData.");
+                    return;
+                }
 
-            if (saveData.SavedRegionData.AllRegionData.Length == 0)
-            {
-                //Debug.Log("AllRegionData count is 0.");
-                return;
+                if (saveData.SavedRegionData.AllRegionData is null)
+                {
+                    Debug.LogError("No AllRegionData found in SavedRegionData.");
+                    return;
+                }
+                
+                Debug.LogError("AllRegionData count is 0.");
             }
-
-            AllRegions.Load_SO(saveData.SavedRegionData.AllRegionData);
         }
         
 
@@ -67,15 +65,14 @@ namespace Region
             return AllRegions.GetRegion_Component(regionID);
         }
         
-        static Region_SO _getOrCreateRegion_SO()
+        static Region_SO _getRegion_SO()
         {
             var region_SO = Resources.Load<Region_SO>(_region_SOPath);
             
             if (region_SO is not null) return region_SO;
             
+            Debug.LogError("Region_SO not found. Creating temporary Region_SO.");
             region_SO = ScriptableObject.CreateInstance<Region_SO>();
-            AssetDatabase.CreateAsset(region_SO, $"Assets/Resources/{_region_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return region_SO;
         }
@@ -86,7 +83,7 @@ namespace Region
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var region in AllRegions.Regions)
+            foreach (var region in AllRegions.RegionComponents.Values)
             {
                 var distance = Vector3.Distance(position, region.transform.position);
 

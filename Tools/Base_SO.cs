@@ -3,88 +3,90 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace ScriptableObjects
+namespace Tools
 {
     [Serializable]
     public abstract class Base_SO<T> : ScriptableObject where T : class
     {
-        [SerializeField] T[]   _objects;
-        public           T[]   Objects => _objects ??= InitialiseAllObjects();
-
-        public void LoadSO(T[] objects) => _objects = objects;
+        [SerializeField] Base_Object<T>[] _baseObjects;
+        public           Base_Object<T>[] BaseObjects => _baseObjects ??= InitialiseAllBaseObjects();
         
-        Dictionary<uint, int>        _objectIndexLookup;
-        public Dictionary<uint, int> ObjectIndexLookup => _objectIndexLookup ??= _buildIndexLookup();
+        public readonly Dictionary<int, (bool ShowCategory, Vector2 ScrollPosition)> AllCategories;
+
+        public void LoadSO(Base_Object<T>[] baseObjects) => _baseObjects = baseObjects;
+        
+        Dictionary<uint, int>        _baseObjectIndexLookup;
+        public Dictionary<uint, int> BaseObjectIndexLookup => _baseObjectIndexLookup ??= _buildIndexLookup();
         int                                _currentIndex;
         
-        public T[] InitialiseAllObjects()
+        public Base_Object<T>[] InitialiseAllBaseObjects()
         {
-            _objects = new T[DefaultObjects.Count * 2];
-            Array.Copy(DefaultObjects.Values.ToArray(), Objects, DefaultObjects.Count);
-            _currentIndex = DefaultObjects.Count;
+            _baseObjects = new Base_Object<T>[DefaultBaseObjects.Count * 2];
+            Array.Copy(DefaultBaseObjects.Values.ToArray(), BaseObjects, DefaultBaseObjects.Count);
+            _currentIndex = DefaultBaseObjects.Count;
             _buildIndexLookup();
-            return Objects ?? throw new NullReferenceException("Objects is null.");
+            return BaseObjects ?? throw new NullReferenceException("BaseObjects is null.");
         }
 
         protected Dictionary<uint, int> _buildIndexLookup()
         {
             var newIndexLookup = new Dictionary<uint, int>();
 
-            for (var i = 0; i < Objects.Length; i++)
+            for (var i = 0; i < BaseObjects.Length; i++)
             {
-                if (Objects[i] is null) continue;
+                if (BaseObjects[i] is null) continue;
 
-                newIndexLookup[GetObjectID(i)] = i;
+                newIndexLookup[GetBaseObjectID(i)] = i;
             }
 
             return newIndexLookup;
         }
 
-        public abstract uint GetObjectID(int id);
+        public abstract uint GetBaseObjectID(int id);
 
-        public T GetObject_Master(uint objectID)
+        public Base_Object<T> GetBaseObject_Master(uint baseObjectID)
         {
-            if (Objects is null || Objects.Length is 0) InitialiseAllObjects();
+            if (BaseObjects is null || BaseObjects.Length is 0) InitialiseAllBaseObjects();
                 
-            if (ObjectIndexLookup.TryGetValue(objectID, out var index))
+            if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
             {
-                return Objects?[index];
+                return BaseObjects?[index];
             }
 
-            Debug.LogWarning($"Object {objectID} does not exist in Objects.");
+            Debug.LogWarning($"BaseObject {baseObjectID} does not exist in BaseObjects.");
             return null;
         }
 
-        public void AddObject(uint objectID, T @object)
+        public void AddBaseObject(uint baseObjectID, Base_Object<T> baseObject)
         {
-            if (ObjectIndexLookup.ContainsKey(objectID))
+            if (BaseObjectIndexLookup.ContainsKey(baseObjectID))
             {
-                Debug.LogWarning($"Object {objectID} already exists in Objects.");
+                Debug.LogWarning($"BaseObject {baseObjectID} already exists in BaseObjects.");
                 return;
             }
 
-            if (_currentIndex >= Objects.Length)
+            if (_currentIndex >= BaseObjects.Length)
             {
                 _compactAndResizeArray();
             }
 
-            Objects[_currentIndex]        = @object;
-            ObjectIndexLookup[objectID] = _currentIndex;
+            BaseObjects[_currentIndex]        = baseObject;
+            BaseObjectIndexLookup[baseObjectID] = _currentIndex;
             _currentIndex++;
         }
 
-        public void RemoveObjects(uint objectID)
+        public void RemoveBaseObjects(uint baseObjectID)
         {
-            if (!ObjectIndexLookup.TryGetValue(objectID, out var index))
+            if (!BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
             {
-                Debug.LogWarning($"Object {objectID} does not exist in Objects.");
+                Debug.LogWarning($"BaseObject {baseObjectID} does not exist in BaseObjects.");
                 return;
             }
 
-            Objects[index] = null;
-            ObjectIndexLookup.Remove(objectID);
+            BaseObjects[index] = null;
+            BaseObjectIndexLookup.Remove(baseObjectID);
             
-            if (ObjectIndexLookup.Count < Objects.Length / 4)
+            if (BaseObjectIndexLookup.Count < BaseObjects.Length / 4)
             {
                 _compactAndResizeArray();
             }
@@ -94,51 +96,79 @@ namespace ScriptableObjects
         {
             var newSize = 0;
             
-            for (var i = 0; i < Objects.Length; i++)
+            for (var i = 0; i < BaseObjects.Length; i++)
             {
-                if (Objects[i] is null) continue;
+                if (BaseObjects[i] is null) continue;
                 
-                Objects[newSize]                         = Objects[i];
-                ObjectIndexLookup[GetObjectID(i)] = newSize;
+                BaseObjects[newSize]                         = BaseObjects[i];
+                BaseObjectIndexLookup[GetBaseObjectID(i)] = newSize;
                 newSize++;
             }
 
-            Array.Resize(ref _objects, Math.Max(newSize * 2, Objects.Length));
+            Array.Resize(ref _baseObjects, Math.Max(newSize * 2, BaseObjects.Length));
             _currentIndex = newSize;
         }
         
-        public void UpdateAllObjects(Dictionary<uint, T> newObjects, bool clearDataFirst = false)
+        public void UpdateAllBaseObjects(Dictionary<uint, Base_Object<T>> newBaseObjects, bool clearDataFirst = false)
         {
-            if (clearDataFirst) ClearObjectData();
+            if (clearDataFirst) ClearBaseObjectData();
             
-            foreach (var (key, value) in newObjects)
+            foreach (var (key, value) in newBaseObjects)
             {
-                UpdateObject(key, value);
+                UpdateBaseObject(key, value);
             }
         }
 
-        public void UpdateObject(uint objectID, T @object)
+        public void UpdateBaseObject(uint baseObjectID, Base_Object<T> baseObject)
         {
-            if (ObjectIndexLookup.TryGetValue(objectID, out var index))
+            if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
             {
-                Objects[index] = @object;
+                BaseObjects[index] = baseObject;
             }
             else
             {
-                AddObject(objectID, @object);
+                AddBaseObject(baseObjectID, baseObject);
             }
         }
 
-        public void ClearObjectData()
+        public void ClearBaseObjectData()
         {
-            _objects = Array.Empty<T>();
-            ObjectIndexLookup.Clear();
+            _baseObjects = Array.Empty<Base_Object<T>>();
+            BaseObjectIndexLookup.Clear();
             _currentIndex = 0;
         }
 
-        protected abstract Dictionary<uint, T> _populateDefaultObjects();
+        protected abstract Dictionary<uint, Base_Object<T>> _populateDefaultBaseObjects();
 
-        Dictionary<uint, T> _defaultObjects;
-        protected Dictionary<uint, T> DefaultObjects => _defaultObjects ??= _populateDefaultObjects();
+        Dictionary<uint, Base_Object<T>> _defaultBaseObjects;
+        public Dictionary<uint, Base_Object<T>> DefaultBaseObjects => _defaultBaseObjects ??= _populateDefaultBaseObjects();
+    }
+    
+    public abstract class Base_Object<T> where T : class
+    {
+        public readonly uint                                              BaseObjectID;
+        public readonly Dictionary<int, (DataDisplayType, DataToDisplay)> AllDataCategories;
+
+        protected Base_Object(uint baseObjectID, Dictionary<int, (DataDisplayType, DataToDisplay)> allDataCategories)
+        {
+            BaseObjectID      = baseObjectID;
+            AllDataCategories = allDataCategories;
+        }
+    }
+    
+    public abstract class DataToDisplay
+    {
+        public readonly Dictionary<string, string> Data;
+
+        protected DataToDisplay(Dictionary<string, string> data)
+        {
+            Data = data;
+        }
+    }
+
+    public enum DataDisplayType
+    {
+        Single,
+        ScrollView
     }
 }

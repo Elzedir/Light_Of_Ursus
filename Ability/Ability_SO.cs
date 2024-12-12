@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -73,23 +74,34 @@ namespace Ability
 
         public override void OnInspectorGUI()
         {
-            var abilitySO = (Ability_SO)target;
+            var ability_SO = (Ability_SO)target;
+            
+            if (ability_SO?.Abilities is null || ability_SO.Abilities.Length is 0)
+            {
+                EditorGUILayout.LabelField("No Abilities Found", EditorStyles.boldLabel);
+                return;
+            }
 
             EditorGUILayout.LabelField("All Abilities", EditorStyles.boldLabel);
+            
+            var nonNullAbilities = ability_SO.Abilities.Where(ability =>
+                ability        != null &&
+                ability.AbilityName != 0).ToArray();
+            
             _abilityScrollPos = EditorGUILayout.BeginScrollView(_abilityScrollPos,
-                GUILayout.Height(Mathf.Min(200, abilitySO.Abilities.Length * 20)));
-            _selectedAbilityIndex = GUILayout.SelectionGrid(_selectedAbilityIndex, _getAbilityNames(abilitySO), 1);
+                GUILayout.Height(Mathf.Min(200, nonNullAbilities.Length * 20)));
+            _selectedAbilityIndex = GUILayout.SelectionGrid(_selectedAbilityIndex, _getAbilityNames(nonNullAbilities), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedAbilityIndex < 0 || _selectedAbilityIndex >= abilitySO.Abilities.Length) return;
+            if (_selectedAbilityIndex < 0 || _selectedAbilityIndex >= nonNullAbilities.Length) return;
 
-            var selectedAbilityMaster = abilitySO.Abilities[_selectedAbilityIndex];
+            var selectedAbilityMaster = nonNullAbilities[_selectedAbilityIndex];
             _drawAbilityAdditionalMaster(selectedAbilityMaster);
         }
 
-        static string[] _getAbilityNames(Ability_SO abilitySO)
+        static string[] _getAbilityNames(Ability_Master[] abilities)
         {
-            return abilitySO.Abilities.Select(a => $"{a.AbilityName}").ToArray();
+            return abilities.Select(a => $"{a.AbilityName}").ToArray();
         }
 
         static void _drawAbilityAdditionalMaster(Ability_Master selectedAbility)

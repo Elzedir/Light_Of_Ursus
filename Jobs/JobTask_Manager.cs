@@ -13,7 +13,7 @@ using UnityEngine;
 
 namespace Jobs
 {
-    public abstract class Manager_JobTask
+    public abstract class JobTask_Manager
     {
         public static JobTask GetJobTask(JobTaskName jobTaskName) =>
             new(jobTaskName, GetEmptyTaskParameters(jobTaskName));
@@ -380,7 +380,7 @@ namespace Jobs
         public readonly Dictionary<PriorityParameterName, object> TaskParameters;
 
         JobTask_Master        _jobTask_Master;
-        public JobTask_Master JobTask_Master => _jobTask_Master ??= Manager_JobTask.GetJobTask_Master(TaskName);
+        public JobTask_Master JobTask_Master => _jobTask_Master ??= JobTask_Manager.GetJobTask_Master(TaskName);
 
         public JobTask(JobTaskName taskName, Dictionary<PriorityParameterName, object> taskParameters)
         {

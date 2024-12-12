@@ -16,10 +16,10 @@ namespace Items
 
     public abstract class Item_Manager
     {
-        const string  _allItemsSOPath = "ScriptableObjects/AllItems_SO";
+        const string  _item_SOPath = "ScriptableObjects/Item_SO";
         
         static Item_SO _allItems;
-        static Item_SO AllItems => _allItems ??= _getOrCreateAllJobsSO();
+        static Item_SO AllItems => _allItems ??= _getItem_SO();
 
         public static Item_Master GetItem_Master(uint itemID) => AllItems.GetItem_Master(itemID);
         
@@ -29,17 +29,16 @@ namespace Items
             // Then populate custom items.
         }
         
-        static Item_SO _getOrCreateAllJobsSO()
+        static Item_SO _getItem_SO()
         {
-            var allItemsSO = Resources.Load<Item_SO>(_allItemsSOPath);
+            var item_SO = Resources.Load<Item_SO>(_item_SOPath);
             
-            if (allItemsSO is not null) return allItemsSO;
+            if (item_SO is not null) return item_SO;
             
-            allItemsSO = ScriptableObject.CreateInstance<Item_SO>();
-            AssetDatabase.CreateAsset(allItemsSO, $"Assets/Resources/{_allItemsSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("Item_SO not found. Creating temporary Item_SO.");
+            item_SO = ScriptableObject.CreateInstance<Item_SO>();
             
-            return allItemsSO;
+            return item_SO;
         }
         
         public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)

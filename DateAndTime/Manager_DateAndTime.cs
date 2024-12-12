@@ -9,10 +9,10 @@ namespace DateAndTime
 {
     public abstract class Manager_DateAndTime : MonoBehaviour
     {
-        const string          _dateAndTimeSOPath = "ScriptableObjects/DateAndTime_SO";
+        const string          _dateAndTime_SOPath = "ScriptableObjects/DateAndTime_SO";
         
         static DateAndTime_SO        _dateAndTime;
-        public static DateAndTime_SO DateAndTime => _dateAndTime ??= _getOrCreateAllCareersSO();
+        public static DateAndTime_SO DateAndTime => _dateAndTime ??= _getDateAndTime_SO();
         
         static TextMeshProUGUI _dateText;
         public static TextMeshProUGUI DateText => _dateText ??= GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
@@ -29,17 +29,16 @@ namespace DateAndTime
             CurrentTime.Initialise(totalMinutes);
         }
         
-        static DateAndTime_SO _getOrCreateAllCareersSO()
+        static DateAndTime_SO _getDateAndTime_SO()
         {
-            var dateAndTimeSO = Resources.Load<DateAndTime_SO>(_dateAndTimeSOPath);
+            var dateAndTime_SO = Resources.Load<DateAndTime_SO>(_dateAndTime_SOPath);
             
-            if (dateAndTimeSO is not null) return dateAndTimeSO;
+            if (dateAndTime_SO is not null) return dateAndTime_SO;
             
-            dateAndTimeSO = ScriptableObject.CreateInstance<DateAndTime_SO>();
-            AssetDatabase.CreateAsset(dateAndTimeSO, $"Assets/Resources/{_dateAndTimeSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("DateAndTime_SO not found. Creating temporary DateAndTime_SO.");
+            dateAndTime_SO = ScriptableObject.CreateInstance<DateAndTime_SO>();
             
-            return dateAndTimeSO;
+            return dateAndTime_SO;
         }
         
         public static uint GetCurrentTotalDays()

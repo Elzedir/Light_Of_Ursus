@@ -1,69 +1,105 @@
-using System.Collections;
-using System.Collections.Generic;
+using Ability;
 using Actor;
+using Career;
 using City;
+using DateAndTime;
+using EmployeePosition;
 using Faction;
+using Items;
+using Jobs;
 using JobSite;
+using Recipe;
 using Region;
-using ScriptableObjects;
 using Station;
 using UnityEditor;
 using UnityEngine;
 
-public class SaveAndLoadSO : EditorWindow
+namespace Tools
 {
-    [MenuItem("Tools/Save And Load SO")]
-    public static void ShowWindow()
+    public class SaveAndLoadSO : EditorWindow
     {
-        GetWindow<SaveAndLoadSO>("Save And Load SO");
-    }
-
-    private void OnGUI()
-    {
-        if (GUILayout.Button("Save All SOs"))
+        [MenuItem("Tools/Save And Load SO")]
+        public static void ShowWindow()
         {
-            SaveAllSOs();
+            GetWindow<SaveAndLoadSO>("Save And Load SO");
         }
 
-        if (GUILayout.Button("Load All SOs"))
+        void OnGUI()
         {
-            LoadAllSOs();
+            if (GUILayout.Button("Save All SOs"))
+            {
+                _saveAllSOs();
+            }
+
+            if (GUILayout.Button("Refresh All SOs"))
+            {
+                _refreshAllSOs();
+            }
+
+            if (GUILayout.Button("Delete Test Save File"))
+            {
+                _deleteTestSaveFile();
+            }
         }
 
-        if (GUILayout.Button("Delete Test Save File"))
+        static void _saveAllSOs()
         {
-            _deleteTestSaveFile();
+            DataPersistenceManager.DataPersistence_SO.SaveGame("");
         }
-    }
 
-    void SaveAllSOs()
-    {
-        DataPersistenceManager.DataPersistence_SO.SaveGame("");
-    }
+        static void _refreshAllSOs()
+        {
+            var scriptableObjectsToDestroy = Resources.FindObjectsOfTypeAll<ScriptableObject>();
 
-    void LoadAllSOs()
-    {
-        var allFactionsSO = Resources.Load<Faction_SO>("ScriptableObjects/AllFactions_SO");
-        var allActorsSO = Resources.Load<Actor_SO>("ScriptableObjects/AllActors_SO");
-        var allRegionsSO = Resources.Load<Region_SO>("ScriptableObjects/AllRegions_SO");
-        var allCitiesSO = Resources.Load<City_SO>("ScriptableObjects/AllCities_SO");
-        var allJobsitesSO = Resources.Load<JobSite_SO>("ScriptableObjects/AllJobsites_SO");
-        var allStationsSO = Resources.Load<Station_SO>("ScriptableObjects/AllStations_SO");
-        var allOperatingAreasSO = Resources.Load<AllOperatingAreas_SO>("ScriptableObjects/AllOperatingAreas_SO");
-        var allOrdersSO = Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO");
+            foreach (var scriptableObject in scriptableObjectsToDestroy)
+            {
+                var assetPath = AssetDatabase.GetAssetPath(scriptableObject);
 
-        allOperatingAreasSO.ClearOperatingAreaData();
+                if (!assetPath.Contains("Resources/ScriptableObjects")) continue;
+                
+                DestroyImmediate(scriptableObject, true);
+            }
 
-        var saveData = DataPersistenceManager.DataPersistence_SO.GetLatestSaveData();
+            const string folderPath = "Assets/Resources/ScriptableObjects";
 
-        allOperatingAreasSO.LoadData(saveData);
-        //allOrdersSO.LoadData(saveData);
+            if (!AssetDatabase.IsValidFolder(folderPath))
+            {
+                AssetDatabase.CreateFolder("Assets/Resources", "ScriptableObjects");
+            }
 
-        Debug.Log("All SOs loaded.");
-    }
+            _saveScriptableObject<Ability_SO>("Ability_SO", folderPath);
+            _saveScriptableObject<Actor_SO>("Actor_SO", folderPath);
+            _saveScriptableObject<ActorDataPreset_SO>("ActorDataPreset_SO", folderPath);
+            _saveScriptableObject<Career_SO>("Career_SO", folderPath);
+            _saveScriptableObject<City_SO>("City_SO", folderPath);
+            _saveScriptableObject<DataPersistence_SO>("DataPersistence_SO", folderPath);
+            _saveScriptableObject<DateAndTime_SO>("DateAndTime_SO", folderPath);
+            _saveScriptableObject<EmployeePosition_SO>("EmployeePosition_SO", folderPath);
+            _saveScriptableObject<Faction_SO>("Faction_SO", folderPath);
+            _saveScriptableObject<Item_SO>("Item_SO", folderPath);
+            _saveScriptableObject<Job_SO>("Job_SO", folderPath);
+            _saveScriptableObject<JobSite_SO>("JobSite_SO", folderPath);
+            _saveScriptableObject<Recipe_SO>("Recipe_SO", folderPath);
+            _saveScriptableObject<Region_SO>("Region_SO", folderPath);
+            _saveScriptableObject<Station_SO>("Station_SO", folderPath);
 
-    void _deleteTestSaveFile()
-    {
-        DataPersistenceManager.DataPersistence_SO.DeleteTestSaveFile();
+            // Refresh the AssetDatabase to show the changes
+            AssetDatabase.Refresh();
+
+            Debug.Log("All SOs refreshed.");
+        }
+        
+        static void _saveScriptableObject<T>(string fileName, string folderPath) where T : ScriptableObject
+        {
+            var      instance  = CreateInstance<T>();
+            var assetPath = $"{folderPath}/{fileName}.asset";
+
+            AssetDatabase.CreateAsset(instance, assetPath);
+        }
+
+        void _deleteTestSaveFile()
+        {
+            DataPersistenceManager.DataPersistence_SO.DeleteTestSaveFile();
+        }
     }
 }

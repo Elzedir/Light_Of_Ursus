@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Faction
 {
-    [CreateAssetMenu(fileName = "AllFactions_SO", menuName = "SOList/AllFactions_SO")]
+    [CreateAssetMenu(fileName = "Faction_SO", menuName = "SOList/Faction_SO")]
     [Serializable]
     public class Faction_SO : Base_SO<Faction_Data>
     {
@@ -33,11 +34,11 @@ namespace Faction
 
         public void PopulateSceneFactions()
         {
-            var allFactionComponents = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
-            var allFactionData =
-                allFactionComponents.ToDictionary(faction => faction.FactionID, faction => faction.FactionData);
-
-            UpdateAllFactions(allFactionData);
+            // var allFactionComponents = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
+            // var allFactionData =
+            //     allFactionComponents.ToDictionary(faction => faction.FactionID, faction => faction.FactionData);
+            //
+            // UpdateAllFactions(allFactionData);
         }
 
         protected override Dictionary<uint, Faction_Data> _populateDefaultObjects()

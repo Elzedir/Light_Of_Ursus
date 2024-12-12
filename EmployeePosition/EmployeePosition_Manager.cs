@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using Career;
-using Recipes;
+using Recipe;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,12 +10,12 @@ namespace EmployeePosition
 {
     public abstract class EmployeePosition_Manager : MonoBehaviour
     {
-        const string _allEmployeePositionsSOPath = "ScriptableObjects/EmployeePosition_SO";
+        const string _employeePosition_SOPath = "ScriptableObjects/EmployeePosition_SO";
 
         static EmployeePosition_SO _EmployeePositions;
 
         static EmployeePosition_SO EmployeePositions =>
-            _EmployeePositions ??= _getOrCreateAllEmployeePositionsSO();
+            _EmployeePositions ??= _getEmployeePosition_SO();
 
         public static EmployeePosition_Master GetEmployeePosition_Master(EmployeePositionName employeePositionName) =>
             EmployeePositions.GetEmployeePosition_Master(employeePositionName);
@@ -29,17 +29,16 @@ namespace EmployeePosition
             // Then populate custom EmployeePositions.
         }
 
-        static EmployeePosition_SO _getOrCreateAllEmployeePositionsSO()
+        static EmployeePosition_SO _getEmployeePosition_SO()
         {
-            var allEmployeePositionsSO = Resources.Load<EmployeePosition_SO>(_allEmployeePositionsSOPath);
+            var employeePosition_SO = Resources.Load<EmployeePosition_SO>(_employeePosition_SOPath);
 
-            if (allEmployeePositionsSO is not null) return allEmployeePositionsSO;
+            if (employeePosition_SO is not null) return employeePosition_SO;
 
-            allEmployeePositionsSO = ScriptableObject.CreateInstance<EmployeePosition_SO>();
-            AssetDatabase.CreateAsset(allEmployeePositionsSO, $"Assets/Resources/{_allEmployeePositionsSOPath}");
-            AssetDatabase.SaveAssets();
+            Debug.LogError("EmployeePosition_SO not found. Creating temporary EmployeePosition_SO.");
+            employeePosition_SO = ScriptableObject.CreateInstance<EmployeePosition_SO>();
 
-            return allEmployeePositionsSO;
+            return employeePosition_SO;
         }
     }
 

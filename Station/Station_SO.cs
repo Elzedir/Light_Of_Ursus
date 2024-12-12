@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Inventory;
 using ScriptableObjects;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Station
 {
-    [CreateAssetMenu(fileName = "AllStations_SO", menuName = "SOList/AllStations_SO")]
+    [CreateAssetMenu(fileName = "Station_SO", menuName = "SOList/Station_SO")]
     [Serializable]
     public class Station_SO : Base_SO<Station_Data>
     {

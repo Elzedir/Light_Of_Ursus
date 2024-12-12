@@ -10,7 +10,7 @@ namespace Faction
         const string _faction_SOPath = "ScriptableObjects/Faction_SO";
         
         static Faction_SO _allFactions;
-        static Faction_SO AllFactions => _allFactions ??= _getOrCreateFaction_SO();
+        static Faction_SO AllFactions => _allFactions ??= _getFaction_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions);
@@ -65,15 +65,14 @@ namespace Faction
             return AllFactions.GetFaction_Component(factionID);
         }
         
-        static Faction_SO _getOrCreateFaction_SO()
+        static Faction_SO _getFaction_SO()
         {
             var faction_SO = Resources.Load<Faction_SO>(_faction_SOPath);
             
             if (faction_SO is not null) return faction_SO;
             
+            Debug.LogError("Faction_SO not found. Creating temporary Faction_SO.");
             faction_SO = ScriptableObject.CreateInstance<Faction_SO>();
-            AssetDatabase.CreateAsset(faction_SO, $"Assets/Resources/{_faction_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return faction_SO;
         }

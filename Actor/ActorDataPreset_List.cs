@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Career;
 using Jobs;
-using Recipes;
+using Recipe;
 using UnityEngine;
 
 namespace Actor

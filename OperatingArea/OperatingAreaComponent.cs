@@ -1,7 +1,7 @@
 using System.Collections;
 using Actor;
 using Managers;
-using Recipes;
+using Recipe;
 using UnityEngine;
 
 namespace OperatingArea

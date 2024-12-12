@@ -5,7 +5,7 @@ using Items;
 using Station;
 using UnityEngine;
 
-namespace Recipes
+namespace Recipe
 {
     public abstract class Recipe_Manager
     {

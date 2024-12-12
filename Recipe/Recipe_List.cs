@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using Items;
-using Managers;
 using Station;
 
-namespace Recipes
+namespace Recipe
 {
     public abstract class Recipe_List
     {

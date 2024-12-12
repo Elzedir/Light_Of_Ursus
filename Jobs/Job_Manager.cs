@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Jobs
 {
-    public abstract class Manager_Job
+    public abstract class Job_Manager
     {
         const string  _job_SOPath = "ScriptableObjects/Job_SO";
         
@@ -76,7 +76,7 @@ namespace Jobs
         public ActivityPeriod ActivityPeriod;
 
         Job_Master _job_Master;
-        Job_Master Job_Master => _job_Master ??= Manager_Job.GetJob_Master(JobName);
+        Job_Master Job_Master => _job_Master ??= Job_Manager.GetJob_Master(JobName);
         public HashSet<JobTaskName> JobTasks => Job_Master.JobTasks;
         
         public Job(JobName jobName, uint stationID, uint operatingAreaID)

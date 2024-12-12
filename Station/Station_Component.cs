@@ -12,7 +12,7 @@ using JobSite;
 using Managers;
 using OperatingArea;
 using Priority;
-using Recipes;
+using Recipe;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -200,7 +200,7 @@ namespace Station
                 }
                 catch (Exception e)
                 {
-                    StationData.StationProgressData.CurrentProduct ??= Manager_Recipe.GetRecipe_Master(DefaultProduct);
+                    StationData.StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
 
                     if (StationData.StationProgressData.CurrentProduct.RecipeName != RecipeName.None ||
                         DefaultProduct                                            == RecipeName.None)

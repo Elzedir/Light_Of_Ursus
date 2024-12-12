@@ -14,7 +14,7 @@ using Initialisation;
 using Jobs;
 using JobSite;
 using Personality;
-using Recipes;
+using Recipe;
 using Region;
 using Station;
 using UnityEngine;
@@ -135,8 +135,8 @@ namespace Managers
             _createManager("Manager_Cutscene",     _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             
-            Manager_Recipe.PopulateAllRecipes();
-            Manager_Job.PopulateAllJobs();
+            Recipe_Manager.PopulateAllRecipes();
+            Job_Manager.PopulateAllJobs();
             ActorDataPreset_Manager.PopulateAllActorDataPresets();
             EmployeePosition_Manager.PopulateAllEmployeePositions();
             Career_Manager.PopulateAllCareers();

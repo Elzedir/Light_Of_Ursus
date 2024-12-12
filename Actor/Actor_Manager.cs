@@ -9,7 +9,7 @@ using Items;
 using Jobs;
 using Managers;
 using Personality;
-using Recipes;
+using Recipe;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -22,7 +22,7 @@ namespace Actor
         const string _actor_SOPath = "ScriptableObjects/Actor_SO";
         
         static Actor_SO _allActors;
-        static Actor_SO AllActors => _allActors ??= _getOrCreateActor_SO();
+        static Actor_SO AllActors => _allActors ??= _getActor_SO();
 
         public void SaveData(SaveData saveData) =>
             saveData.SavedActorData = new SavedActorData(AllActors.Actors);
@@ -78,15 +78,14 @@ namespace Actor
             return AllActors.GetActor_Component(actorID);
         }
         
-        static Actor_SO _getOrCreateActor_SO()
+        static Actor_SO _getActor_SO()
         {
             var actor_SO = Resources.Load<Actor_SO>(_actor_SOPath);
             
             if (actor_SO is not null) return actor_SO;
             
+            Debug.LogError("Actor_SO not found. Creating temporary Actor_SO.");
             actor_SO = ScriptableObject.CreateInstance<Actor_SO>();
-            AssetDatabase.CreateAsset(actor_SO, $"Assets/Resources/{_actor_SOPath}");
-            AssetDatabase.SaveAssets();
             
             return actor_SO;
         }

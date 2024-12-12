@@ -5,7 +5,7 @@ using EmployeePosition;
 using Items;
 using Jobs;
 using OperatingArea;
-using Recipes;
+using Recipe;
 using ScriptableObjects;
 using UnityEngine;
 
@@ -95,7 +95,7 @@ namespace Station
                 return;
             }
 
-            Recipe_Master recipeMaster = Manager_Recipe.GetRecipe_Master(recipeName);
+            Recipe_Master recipeMaster = Recipe_Manager.GetRecipe_Master(recipeName);
 
             var cost  = _getCost(recipeMaster.RequiredIngredients, actor);
             var yield = _getYield(recipeMaster.RecipeProducts, actor);

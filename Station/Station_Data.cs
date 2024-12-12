@@ -7,7 +7,7 @@ using Items;
 using JobSite;
 using Managers;
 using Priority;
-using Recipes;
+using Recipe;
 using UnityEditor;
 using UnityEngine;
 
