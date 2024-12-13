@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace DateAndTime
 {
-    public abstract class Manager_DateAndTime : MonoBehaviour
+    public abstract class Manager_DateAndTime
     {
         const string          _dateAndTime_SOPath = "ScriptableObjects/DateAndTime_SO";
         
@@ -131,6 +131,50 @@ namespace DateAndTime
         {
             _setTimeScale(_currentTimeScale == 0 ? 1f : 0f);
         }
+    }
+
+    public class EditorTime
+    {
+        private static float editorDeltaTime = 0f;
+        private static float lastEditorTime  = 0f;
+        private static float timer           = 0f;
+        private static float duration        = 5f; // Timer duration in seconds
+        private static bool  isTimerRunning  = false;
+        
+        // [MenuItem("Tools/Start Editor Timer")]
+        // public static void StartTimer()
+        // {
+        //     if (!isTimerRunning)
+        //     {
+        //         isTimerRunning           =  true;
+        //         timer                    =  0f;
+        //         lastEditorTime           =  (float)EditorApplication.timeSinceStartup;
+        //         EditorApplication.update += UpdateTimer;
+        //     }
+        // }
+        //
+        // private static void UpdateTimer()
+        // {
+        //     float currentTime = (float)EditorApplication.timeSinceStartup;
+        //     editorDeltaTime = currentTime - lastEditorTime;
+        //     lastEditorTime  = currentTime;
+        //
+        //     timer += editorDeltaTime;
+        //
+        //     Debug.Log($"Timer: {timer:F2}, DeltaTime: {editorDeltaTime:F4}");
+        //
+        //     if (timer >= duration)
+        //     {
+        //         Debug.Log("Timer Complete!");
+        //         StopTimer();
+        //     }
+        // }
+        //
+        // public static void StopTimer()
+        // {
+        //     isTimerRunning           =  false;
+        //     EditorApplication.update -= UpdateTimer;
+        // }
     }
 
     public enum DayName { Mon, Tumon, Tu, Wetu, Wed, Thured, Thur, Frith, Fri, Satri, Satu, Sunsa, Sun, Monsun }

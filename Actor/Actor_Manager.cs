@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Ability;
 using Career;
 using DateAndTime;
@@ -25,7 +26,7 @@ namespace Actor
         static Actor_SO AllActors => _allActors ??= _getActor_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedActorData = new SavedActorData(AllActors.Actors);
+            saveData.SavedActorData = new SavedActorData(AllActors.Actors.Select(actor => actor.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -70,7 +71,7 @@ namespace Actor
         
         public static Actor_Data GetActor_Data(uint actorID)
         {
-            return AllActors.GetActor_Data(actorID);
+            return AllActors.GetActor_Data(actorID).DataObject;
         }
         
         public static Actor_Component GetActor_Component(uint actorID)

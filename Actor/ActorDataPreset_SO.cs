@@ -65,7 +65,6 @@ namespace Actor
             
             if (allActorDataPresetsSO?.ActorDataPresets is null || allActorDataPresetsSO.ActorDataPresets.Length is 0)
             {
-                Debug.Log(allActorDataPresetsSO?.ActorDataPresets?.Length);
                 EditorGUILayout.LabelField("No ActorDataPresets Found", EditorStyles.boldLabel);
                 return;
             }

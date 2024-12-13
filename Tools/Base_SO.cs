@@ -24,7 +24,7 @@ namespace Tools
 
         public void RefreshBaseObjects() => _baseObjectLength = 0;
 
-        public void LoadSO(Base_Object<T>[] baseObjects) => _baseObjects = baseObjects;
+        public void LoadSO(T[] baseObjects) => _baseObjects = baseObjects.Select(_convertToBaseObject).ToArray();
 
         Dictionary<uint, int>        _baseObjectIndexLookup;
         public Dictionary<uint, int> BaseObjectIndexLookup => _baseObjectIndexLookup ??= _buildIndexLookup();
@@ -120,7 +120,7 @@ namespace Tools
             _currentIndex = newSize;
         }
 
-        public void UpdateAllBaseObjects(Dictionary<uint, Base_Object<T>> newBaseObjects, bool clearDataFirst = false)
+        public void UpdateAllBaseObjects(Dictionary<uint, T> newBaseObjects, bool clearDataFirst = false)
         {
             if (clearDataFirst) ClearBaseObjectData();
 
@@ -130,24 +130,24 @@ namespace Tools
             }
         }
 
-        public void UpdateBaseObject(uint baseObjectID, Base_Object<T> baseObject)
+        public void UpdateBaseObject(uint baseObjectID, T baseObject)
         {
             if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
             {
-                BaseObjects[index] = baseObject;
+                BaseObjects[index] = _convertToBaseObject(baseObject);
             }
             else
             {
-                AddBaseObject(baseObjectID, baseObject);
+                AddBaseObject(baseObjectID, _convertToBaseObject(baseObject));
             }
         }
 
         public             Vector2                         BaseScrollPosition;
-        public abstract    Dictionary<uint, DataToDisplay> GetDataToDisplay(T     t);
-        protected abstract Base_Object<T>                  _convertToBaseObject(T dataToConvert);
+        public abstract    Dictionary<uint, DataToDisplay> GetDataToDisplay(T     actor_Data);
+        protected abstract Base_Object<T>                  _convertToBaseObject(T ability_Master);
 
         protected abstract Dictionary<uint, Base_Object<T>> _convertDictionaryToBaseObject(
-            Dictionary<uint, T> dataToConvert);
+            Dictionary<uint, T> ability_Masters);
 
         public void ClearBaseObjectData()
         {
@@ -185,28 +185,23 @@ namespace Tools
 
     public class DataToDisplay
     {
-        public bool    ShowCategory;
-        public Vector2 ScrollPosition;
-
         public          int             SelectedIndex = -1;
         public readonly DataDisplayType DataDisplayType;
+        public          Vector2         ScrollPosition;
 
         public readonly List<string> Data;
 
-        public DataToDisplay(List<string> data, DataDisplayType dataDisplayType, bool showCategory,
-                             Vector2      scrollPosition)
+        public DataToDisplay(List<string> data, DataDisplayType dataDisplayType)
         {
             Data            = data;
             DataDisplayType = dataDisplayType;
-            ShowCategory    = showCategory;
-            ScrollPosition  = scrollPosition;
         }
     }
 
     public enum DataDisplayType
     {
-        Single,
-        ScrollView,
-        SelectableScrollView
+        Item,
+        List,
+        SelectableList
     }
 }

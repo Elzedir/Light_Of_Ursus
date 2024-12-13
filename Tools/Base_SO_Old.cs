@@ -6,7 +6,7 @@ using UnityEngine;
 namespace ScriptableObjects
 {
     [Serializable]
-    public abstract class Base_SO_Old<T> : ScriptableObject where T : class
+    public abstract class Base_SO<T> : ScriptableObject where T : class
     {
         [SerializeField] T[]   _objects;
         public           T[]   Objects => _objects ??= InitialiseAllObjects();

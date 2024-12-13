@@ -5,24 +5,24 @@ using UnityEngine;
 
 namespace Tools
 {
-    [CustomEditor(typeof(Base_SO<>), true)]
+    [CustomEditor(typeof(Base_SO_Test<>), true)]
     public abstract class Base_SOEditor<T> : Editor where T : class
     {
         int                             _selectedBaseObjectIndex = -1;
-        protected       Base_SO<T> _so2;
-        public abstract Base_SO<T> SO2 { get; }
+        protected       Base_SO_Test<T> _so;
+        public abstract Base_SO_Test<T> SO { get; }
 
         public override void OnInspectorGUI()
         {
-            if (SO2?.BaseObjects is null)
+            if (SO?.BaseObjects is null)
             {
-                EditorGUILayout.LabelField($"{SO2} is null or {SO2?.BaseObjects} is null", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"{SO} is null or {SO?.BaseObjects} is null", EditorStyles.boldLabel);
                 return;
             }
             
-            if (GUILayout.Button("Refresh All Objects")) SO2.RefreshBaseObjects();
+            if (GUILayout.Button("Refresh All Objects")) SO.RefreshBaseObjects();
 
-            if (SO2.BaseObjects.Length is 0)
+            if (SO.BaseObjects.Length is 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
@@ -30,11 +30,11 @@ namespace Tools
             
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            var nonNullBaseObjects = SO2.BaseObjects.Where(base_Object =>
+            var nonNullBaseObjects = SO.BaseObjects.Where(base_Object =>
                 base_Object              != null &&
                 base_Object.BaseObjectID != 0).ToArray();
             
-            SO2.BaseScrollPosition = EditorGUILayout.BeginScrollView(SO2.BaseScrollPosition,
+            SO.BaseScrollPosition = EditorGUILayout.BeginScrollView(SO.BaseScrollPosition,
                 GUILayout.Height(Mathf.Min(200, nonNullBaseObjects.Length * 20)));
             _selectedBaseObjectIndex = GUILayout.SelectionGrid(_selectedBaseObjectIndex, _getBaseObjectNames(nonNullBaseObjects), 1);
             EditorGUILayout.EndScrollView();
@@ -61,8 +61,6 @@ namespace Tools
 
         void _drawData(DataToDisplay dataToDisplay)
         {
-            if (!dataToDisplay.ShowCategory) return;
-
             switch (dataToDisplay.DataDisplayType)
             {
                 case DataDisplayType.Item:

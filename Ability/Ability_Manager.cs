@@ -29,7 +29,7 @@ namespace Ability
 
         public static Ability_Master GetAbility_Master(AbilityName abilityName)
         {
-            return AllAbilities.GetAbility_Master(abilityName);
+            return AllAbilities.GetAbility_Master(abilityName).DataObject;
         }
 
         public static Ability GetAbility(AbilityName abilityName, uint abilityLevel)
@@ -77,7 +77,7 @@ namespace Ability
         public          uint                                    MaxLevel;
         public          List<(float, DamageType)>               BaseDamage;
         public          AnimationClip                           AnimationClip;
-        readonly        List<(string Name, IEnumerator Action)> _abilityActions;
+        public readonly        List<(string Name, IEnumerator Action)> AbilityActions;
 
         public Ability_Master(AbilityName                 abilityName, string        abilityDescription, uint maxLevel,
                               List<(float, DamageType)>   baseDamage,  AnimationClip animationClip,
@@ -88,15 +88,15 @@ namespace Ability
             MaxLevel           = maxLevel;
             BaseDamage         = baseDamage;
             AnimationClip      = animationClip;
-            _abilityActions    = abilityActions;
+            AbilityActions    = abilityActions;
         }
 
         public IEnumerator GetAction(string actionName)
         {
-            if (_abilityActions.All(a => a.Name != actionName))
+            if (AbilityActions.All(a => a.Name != actionName))
                 throw new ArgumentException($"AbilityActions does not contain ActionName: {actionName}");
 
-            return _abilityActions.FirstOrDefault(a => a.Name == actionName).Action;
+            return AbilityActions.FirstOrDefault(a => a.Name == actionName).Action;
         }
 
         public void DealDamage()

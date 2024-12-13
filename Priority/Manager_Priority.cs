@@ -41,7 +41,7 @@ namespace Priority
 
     public abstract class ComponentReference
     {
-        public uint ComponentID { get; private set; }
+        public uint ComponentID { get; }
         public ComponentReference(uint componentID) => ComponentID = componentID;
 
         protected abstract object               _component { get; }

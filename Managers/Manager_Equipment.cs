@@ -174,15 +174,15 @@ public class EquipmentData
 
     public EquipmentData(EquipmentData equipmentData)// : base (equipmentData.References.ActorID)
     {
-        Head      = new Item(equipmentData.Head);
-        Neck      = new Item(equipmentData.Neck);
-        Chest     = new Item(equipmentData.Chest);
-        LeftHand  = new Item(equipmentData.LeftHand);
-        RightHand = new Item(equipmentData.RightHand);
-        Rings     = equipmentData.Rings.Select(ring => new Item(ring)).ToArray();
-        Waist     = new Item(equipmentData.Waist);
-        Legs      = new Item(equipmentData.Legs);
-        Feet      = new Item(equipmentData.Feet);
+        // Head      = new Item(equipmentData.Head);
+        // Neck      = new Item(equipmentData.Neck);
+        // Chest     = new Item(equipmentData.Chest);
+        // LeftHand  = new Item(equipmentData.LeftHand);
+        // RightHand = new Item(equipmentData.RightHand);
+        // Rings     = equipmentData.Rings.Select(ring => new Item(ring)).ToArray();
+        // Waist     = new Item(equipmentData.Waist);
+        // Legs      = new Item(equipmentData.Legs);
+        // Feet      = new Item(equipmentData.Feet);
     }
 
     public void SetEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)

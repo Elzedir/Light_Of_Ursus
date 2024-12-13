@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ScriptableObjects;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,20 +9,25 @@ namespace Ability
 {
     [CreateAssetMenu(fileName = "Ability_SO", menuName = "SOList/Ability_SO")]
     [Serializable]
-    public class Ability_SO : Base_SO<Ability_Master>
+    public class Ability_SO : Base_SO_Test<Ability_Master>
     {
-        public Ability_Master[] Abilities                         => Objects;
-        public Ability_Master        GetAbility_Master(AbilityName      abilityName) => GetObject_Master((uint)abilityName);
+        public Base_Object<Ability_Master>[] Abilities => BaseObjects;
+
+        public Base_Object<Ability_Master> GetAbility_Master(AbilityName abilityName) =>
+            GetBaseObject_Master((uint)abilityName);
 
         public Ability GetAbility(AbilityName abilityName, uint currentLevel)
         {
             return new Ability(abilityName, currentLevel);
         }
 
-        public override uint GetObjectID(int id) => (uint)Abilities[id].AbilityName;
+        public override uint GetBaseObjectID(int id) => (uint)Abilities[id].DataObject.AbilityName;
 
-        public void UpdateAbility(uint abilityID, Ability_Master ability_Master) => UpdateObject(abilityID, ability_Master);
-        public void UpdateAllAbilities(Dictionary<uint, Ability_Master> allAbilities) => UpdateAllObjects(allAbilities);
+        public void UpdateAbility(uint abilityID, Ability_Master ability_Master) =>
+            UpdateBaseObject(abilityID, ability_Master);
+
+        public void UpdateAllAbilities(Dictionary<uint, Ability_Master> allAbilities) =>
+            UpdateAllBaseObjects(allAbilities);
 
         public void PopulateSceneAbilities()
         {
@@ -33,7 +37,7 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Ability_Master> _populateDefaultObjects()
+        protected override Dictionary<uint, Base_Object<Ability_Master>> _populateDefaultBaseObjects()
         {
             var defaultAbilities = new Dictionary<uint, Ability_Master>();
 
@@ -42,14 +46,30 @@ namespace Ability
                 defaultAbilities.Add((uint)defaultAbility.Key, defaultAbility.Value);
             }
 
-            return defaultAbilities;
+            return _convertDictionaryToBaseObject(defaultAbilities);
+        }
+
+        protected override Dictionary<uint, Base_Object<Ability_Master>> _convertDictionaryToBaseObject(
+            Dictionary<uint, Ability_Master> ability_Masters)
+        {
+            return ability_Masters.ToDictionary(ability_Master => ability_Master.Key,
+                ability_Master => new Base_Object<Ability_Master>(ability_Master.Key,
+                    GetDataToDisplay(ability_Master.Value), ability_Master.Value,
+                    $"{ability_Master.Key}: {ability_Master.Value.AbilityName}"));
+        }
+
+        protected override Base_Object<Ability_Master> _convertToBaseObject(Ability_Master ability_Master)
+        {
+            return new Base_Object<Ability_Master>((uint)ability_Master.AbilityName, GetDataToDisplay(ability_Master),
+                ability_Master,
+                $"{(uint)ability_Master.AbilityName}{ability_Master.AbilityName}");
         }
 
         static uint _lastUnusedAbilityID = 1;
 
         public uint GetUnusedAbilityID()
         {
-            while (ObjectIndexLookup.ContainsKey(_lastUnusedAbilityID))
+            while (BaseObjectIndexLookup.ContainsKey(_lastUnusedAbilityID))
             {
                 _lastUnusedAbilityID++;
             }
@@ -57,57 +77,69 @@ namespace Ability
             return _lastUnusedAbilityID;
         }
 
-        Dictionary<uint, Ability_Master> _defaultAbilities => DefaultObjects;
+        Dictionary<uint, Base_Object<Ability_Master>> _defaultAbilities => DefaultBaseObjects;
+
+        enum AbilityDataCategories
+        {
+            BaseAbilityData,
+            AbilityCombatData,
+            AbilityAnimationData
+        }
+
+        public override Dictionary<uint, DataToDisplay> GetDataToDisplay(Ability_Master actor_Data)
+        {
+            try
+            {
+                return new Dictionary<uint, DataToDisplay>
+                {
+                    {
+                        (uint)AbilityDataCategories.BaseAbilityData, new DataToDisplay(
+                            data: new List<string>
+                            {
+                                $"Ability ID: {(uint)actor_Data.AbilityName}",
+                                $"Ability Name: {actor_Data.AbilityName}",
+                                $"Ability Description: {actor_Data.AbilityDescription}",
+                            },
+                            dataDisplayType: DataDisplayType.Item)
+                    },
+                    {
+
+
+                        (uint)AbilityDataCategories.AbilityCombatData, new DataToDisplay(
+                            data: new List<string>(actor_Data.AbilityActions?.Select(action => $"ActionName: {action.Name}") ?? Array.Empty<string>())
+                            {
+                                $"Ability Max Level: {actor_Data.MaxLevel}",
+                                $"Ability Base Damage: {actor_Data.BaseDamage}"
+                            },
+                            dataDisplayType: DataDisplayType.Item)
+                    },
+                    {
+
+                        (uint)AbilityDataCategories.AbilityAnimationData, new DataToDisplay(
+                            data: new List<string>
+                            {
+                                $"Has Ability Animation: {actor_Data.AnimationClip != null}",
+                            },
+                            dataDisplayType: DataDisplayType.Item)
+                    }
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+
+                Debug.LogWarning(actor_Data);
+                Debug.LogWarning(actor_Data.AbilityActions);
+                Debug.LogWarning(actor_Data.AbilityActions?.Select(action => action.Name));
+                
+                throw;
+            }
+        }
     }
 
     [CustomEditor(typeof(Ability_SO))]
-    public class Ability_SOEditor : Editor
+    public class Ability_SOEditor : Base_SOEditor<Ability_Master>
     {
-        int  _selectedAbilityIndex = -1;
-        bool _showJobSites;
-        bool _showPopulation;
-        bool _showProsperity;
-
-        Vector2 _abilityScrollPos;
-        Vector2 _jobSiteScrollPos;
-        Vector2 _populationScrollPos;
-
-        public override void OnInspectorGUI()
-        {
-            var ability_SO = (Ability_SO)target;
-            
-            if (ability_SO?.Abilities is null || ability_SO.Abilities.Length is 0)
-            {
-                EditorGUILayout.LabelField("No Abilities Found", EditorStyles.boldLabel);
-                return;
-            }
-
-            EditorGUILayout.LabelField("All Abilities", EditorStyles.boldLabel);
-            
-            var nonNullAbilities = ability_SO.Abilities.Where(ability =>
-                ability        != null &&
-                ability.AbilityName != 0).ToArray();
-            
-            _abilityScrollPos = EditorGUILayout.BeginScrollView(_abilityScrollPos,
-                GUILayout.Height(Mathf.Min(200, nonNullAbilities.Length * 20)));
-            _selectedAbilityIndex = GUILayout.SelectionGrid(_selectedAbilityIndex, _getAbilityNames(nonNullAbilities), 1);
-            EditorGUILayout.EndScrollView();
-
-            if (_selectedAbilityIndex < 0 || _selectedAbilityIndex >= nonNullAbilities.Length) return;
-
-            var selectedAbilityMaster = nonNullAbilities[_selectedAbilityIndex];
-            _drawAbilityAdditionalMaster(selectedAbilityMaster);
-        }
-
-        static string[] _getAbilityNames(Ability_Master[] abilities)
-        {
-            return abilities.Select(a => $"{a.AbilityName}").ToArray();
-        }
-
-        static void _drawAbilityAdditionalMaster(Ability_Master selectedAbility)
-        {
-            EditorGUILayout.LabelField("Ability Master", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Ability Name", $"{selectedAbility.AbilityName}");
-        }
+        public override Base_SO_Test<Ability_Master> SO => _so ??= (Ability_SO)target;
     }
 }

@@ -8,15 +8,15 @@ namespace Tools
 {
     [CreateAssetMenu(fileName = "BaseTest_SO", menuName = "SOList/BaseTest_SO")]
     [Serializable]
-    public class Example_SO_Test : Base_SO_Test<Test_Data>
+    public class Example_SO_ : Base_SO_Test<Test_Data>
     {
         public Base_Object<Test_Data>[] Tests                     => BaseObjects;
         public Base_Object<Test_Data>   GetTest_Data(uint testID) => GetBaseObject_Master(testID);
 
         public override uint GetBaseObjectID(int id) => Tests[id].DataObject.TestID;
 
-        public void UpdateTest(uint testID, Base_Object<Test_Data> test_Data) => UpdateBaseObject(testID, test_Data);
-        public void UpdateAllTests(Dictionary<uint, Base_Object<Test_Data>> allTests) => UpdateAllBaseObjects(allTests);
+        public void UpdateTest(uint testID, Test_Data test_Data) => UpdateBaseObject(testID, test_Data);
+        public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllBaseObjects(allTests);
 
         public void PopulateSceneTests()
         {
@@ -63,17 +63,17 @@ namespace Tools
         }
 
         protected override Dictionary<uint, Base_Object<Test_Data>> _convertDictionaryToBaseObject(
-            Dictionary<uint, Test_Data> dataToConvert)
+            Dictionary<uint, Test_Data> ability_Masters)
         {
-            return dataToConvert.ToDictionary(kvp => kvp.Key,
+            return ability_Masters.ToDictionary(kvp => kvp.Key,
                 kvp => new Base_Object<Test_Data>(kvp.Key, GetDataToDisplay(kvp.Value), kvp.Value,
                     $"{kvp.Key}{kvp.Value.TestName}"));
         }
 
-        protected override Base_Object<Test_Data> _convertToBaseObject(Test_Data dataToConvert)
+        protected override Base_Object<Test_Data> _convertToBaseObject(Test_Data ability_Master)
         {
-            return new Base_Object<Test_Data>(dataToConvert.TestID, GetDataToDisplay(dataToConvert), dataToConvert,
-                $"{dataToConvert.TestID}{dataToConvert.TestName}");
+            return new Base_Object<Test_Data>(ability_Master.TestID, GetDataToDisplay(ability_Master), ability_Master,
+                $"{ability_Master.TestID}{ability_Master.TestName}");
         }
 
         static uint _lastUnusedTestID = 1;
@@ -97,7 +97,7 @@ namespace Tools
             Population
         }
 
-        public override Dictionary<uint, DataToDisplay> GetDataToDisplay(Test_Data test_Data)
+        public override Dictionary<uint, DataToDisplay> GetDataToDisplay(Test_Data actor_Data)
         {
             return new Dictionary<uint, DataToDisplay>
             {
@@ -105,32 +105,26 @@ namespace Tools
                     (uint)TestCategories.FullIdentification, new DataToDisplay(
                         data: new List<string>
                         {
-                            $"Test ID: {test_Data.TestID}",
-                            $"Test Name: {test_Data.TestName}"
+                            $"Test ID: {actor_Data.TestID}",
+                            $"Test Name: {actor_Data.TestName}"
                         },
-                        dataDisplayType: DataDisplayType.Single,
-                        showCategory: true,
-                        scrollPosition: new Vector2())
+                        dataDisplayType: DataDisplayType.Item)
                 },
                 {
 
 
                     (uint)TestCategories.ExampleCategory,
                     new DataToDisplay(
-                        data: new List<string>(test_Data.TestList),
-                        dataDisplayType: DataDisplayType.ScrollView,
-                        showCategory: true,
-                        scrollPosition: new Vector2())
+                        data: new List<string>(actor_Data.TestList),
+                        dataDisplayType: DataDisplayType.List)
                 },
                 {
 
                     (uint)TestCategories.AnotherExampleCategory,
                     new DataToDisplay(
-                        data: test_Data.SmallerTestList.Select(smallerTest =>
+                        data: actor_Data.SmallerTestList.Select(smallerTest =>
                             $"{smallerTest.SmallerTestName}, {smallerTest.SmallerTestID}").ToList(),
-                        dataDisplayType: DataDisplayType.SelectableScrollView,
-                        showCategory: true,
-                        scrollPosition: new Vector2())
+                        dataDisplayType: DataDisplayType.SelectableList)
                 },
                 {
 
@@ -141,9 +135,7 @@ namespace Tools
                             $"Prosperity 1: Prosperity1",
                             $"Prosperity 2: Prosperity2"
                         },
-                        dataDisplayType: DataDisplayType.Single,
-                        showCategory: false,
-                        scrollPosition: new Vector2())
+                        dataDisplayType: DataDisplayType.Item)
                 },
                 {
 
@@ -154,18 +146,16 @@ namespace Tools
                             $"Population 1: Population1",
                             $"Population 2: Population2"
                         },
-                        dataDisplayType: DataDisplayType.Single,
-                        showCategory: false,
-                        scrollPosition: new Vector2())
+                        dataDisplayType: DataDisplayType.Item)
                 }
             };
         }
     }
 
-    [CustomEditor(typeof(Example_SO_Test))]
-    public class Stations_SOEditorTest : Base_SOEditor_Test<Test_Data>
+    [CustomEditor(typeof(Example_SO_))]
+    public class _SOEditor : Base_SOEditor<Test_Data>
     {
-        public override Base_SO_Test<Test_Data> SO2 => _so2 ??= (Example_SO_Test)target;
+        public override Base_SO_Test<Test_Data> SO => _so ??= (Example_SO_)target;
     }
 
     [Serializable]

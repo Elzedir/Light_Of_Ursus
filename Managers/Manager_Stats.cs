@@ -129,4 +129,15 @@ public class Special
         Perception   = special.Perception;
         Strength     = special.Strength;
     }
+
+    public string GetStatsToString()
+    {
+        return $"Agility: {Agility}\n" +
+               $"Charisma: {Charisma}\n" +
+               $"Endurance: {Endurance}\n" +
+               $"Intelligence: {Intelligence}\n" +
+               $"Luck: {Luck}\n" +
+               $"Perception: {Perception}\n" +
+               $"Strength: {Strength}";
+    }
 }
