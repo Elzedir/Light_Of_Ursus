@@ -6,19 +6,30 @@ using UnityEngine;
 namespace Tools
 {
     [Serializable]
-    public abstract class Base_SO<T> : ScriptableObject where T : class
+    public abstract class Base_SO_Test<T> : ScriptableObject where T : class
     {
+        int                               _baseObjectLength;
         [SerializeField] Base_Object<T>[] _baseObjects;
-        public           Base_Object<T>[] BaseObjects => _baseObjects ??= InitialiseAllBaseObjects();
-        
-        public readonly Dictionary<int, (bool ShowCategory, Vector2 ScrollPosition)> AllCategories;
+
+        public Base_Object<T>[] BaseObjects
+        {
+            get
+            {
+                if (_baseObjects is not null && _baseObjects.Length != 0 && _baseObjects.Length == _baseObjectLength) return _baseObjects;
+                
+                _baseObjectLength = _baseObjects?.Length ?? 0;
+                return InitialiseAllBaseObjects();
+            }
+        }
+
+        public void RefreshBaseObjects() => _baseObjectLength = 0;
 
         public void LoadSO(Base_Object<T>[] baseObjects) => _baseObjects = baseObjects;
-        
+
         Dictionary<uint, int>        _baseObjectIndexLookup;
         public Dictionary<uint, int> BaseObjectIndexLookup => _baseObjectIndexLookup ??= _buildIndexLookup();
-        int                                _currentIndex;
-        
+        int                          _currentIndex;
+
         public Base_Object<T>[] InitialiseAllBaseObjects()
         {
             _baseObjects = new Base_Object<T>[DefaultBaseObjects.Count * 2];
@@ -47,7 +58,7 @@ namespace Tools
         public Base_Object<T> GetBaseObject_Master(uint baseObjectID)
         {
             if (BaseObjects is null || BaseObjects.Length is 0) InitialiseAllBaseObjects();
-                
+
             if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
             {
                 return BaseObjects?[index];
@@ -70,7 +81,7 @@ namespace Tools
                 _compactAndResizeArray();
             }
 
-            BaseObjects[_currentIndex]        = baseObject;
+            BaseObjects[_currentIndex]          = baseObject;
             BaseObjectIndexLookup[baseObjectID] = _currentIndex;
             _currentIndex++;
         }
@@ -85,22 +96,22 @@ namespace Tools
 
             BaseObjects[index] = null;
             BaseObjectIndexLookup.Remove(baseObjectID);
-            
+
             if (BaseObjectIndexLookup.Count < BaseObjects.Length / 4)
             {
                 _compactAndResizeArray();
             }
         }
-        
+
         void _compactAndResizeArray()
         {
             var newSize = 0;
-            
+
             for (var i = 0; i < BaseObjects.Length; i++)
             {
                 if (BaseObjects[i] is null) continue;
-                
-                BaseObjects[newSize]                         = BaseObjects[i];
+
+                BaseObjects[newSize]                      = BaseObjects[i];
                 BaseObjectIndexLookup[GetBaseObjectID(i)] = newSize;
                 newSize++;
             }
@@ -108,11 +119,11 @@ namespace Tools
             Array.Resize(ref _baseObjects, Math.Max(newSize * 2, BaseObjects.Length));
             _currentIndex = newSize;
         }
-        
+
         public void UpdateAllBaseObjects(Dictionary<uint, Base_Object<T>> newBaseObjects, bool clearDataFirst = false)
         {
             if (clearDataFirst) ClearBaseObjectData();
-            
+
             foreach (var (key, value) in newBaseObjects)
             {
                 UpdateBaseObject(key, value);
@@ -131,6 +142,13 @@ namespace Tools
             }
         }
 
+        public             Vector2                         BaseScrollPosition;
+        public abstract    Dictionary<uint, DataToDisplay> GetDataToDisplay(T     t);
+        protected abstract Base_Object<T>                  _convertToBaseObject(T dataToConvert);
+
+        protected abstract Dictionary<uint, Base_Object<T>> _convertDictionaryToBaseObject(
+            Dictionary<uint, T> dataToConvert);
+
         public void ClearBaseObjectData()
         {
             _baseObjects = Array.Empty<Base_Object<T>>();
@@ -141,34 +159,54 @@ namespace Tools
         protected abstract Dictionary<uint, Base_Object<T>> _populateDefaultBaseObjects();
 
         Dictionary<uint, Base_Object<T>> _defaultBaseObjects;
-        public Dictionary<uint, Base_Object<T>> DefaultBaseObjects => _defaultBaseObjects ??= _populateDefaultBaseObjects();
-    }
-    
-    public abstract class Base_Object<T> where T : class
-    {
-        public readonly uint                                              BaseObjectID;
-        public readonly Dictionary<int, (DataDisplayType, DataToDisplay)> AllDataCategories;
 
-        protected Base_Object(uint baseObjectID, Dictionary<int, (DataDisplayType, DataToDisplay)> allDataCategories)
+        public Dictionary<uint, Base_Object<T>> DefaultBaseObjects =>
+            _defaultBaseObjects ??= _populateDefaultBaseObjects();
+    }
+
+    [Serializable]
+    public class Base_Object<T> where T : class
+    {
+        public readonly uint                            BaseObjectID;
+        public readonly string                          BaseObjectTitle;
+        public readonly Dictionary<uint, DataToDisplay> AllDataToDisplay;
+
+        public T DataObject;
+
+        public Base_Object(uint   baseObjectID, Dictionary<uint, DataToDisplay> allDataToDisplay, T dataObject,
+                           string baseObjectTitle)
         {
-            BaseObjectID      = baseObjectID;
-            AllDataCategories = allDataCategories;
+            BaseObjectID     = baseObjectID;
+            AllDataToDisplay = allDataToDisplay;
+            DataObject       = dataObject;
+            BaseObjectTitle  = baseObjectTitle;
         }
     }
-    
-    public abstract class DataToDisplay
-    {
-        public readonly Dictionary<string, string> Data;
 
-        protected DataToDisplay(Dictionary<string, string> data)
+    public class DataToDisplay
+    {
+        public bool    ShowCategory;
+        public Vector2 ScrollPosition;
+
+        public          int             SelectedIndex = -1;
+        public readonly DataDisplayType DataDisplayType;
+
+        public readonly List<string> Data;
+
+        public DataToDisplay(List<string> data, DataDisplayType dataDisplayType, bool showCategory,
+                             Vector2      scrollPosition)
         {
-            Data = data;
+            Data            = data;
+            DataDisplayType = dataDisplayType;
+            ShowCategory    = showCategory;
+            ScrollPosition  = scrollPosition;
         }
     }
 
     public enum DataDisplayType
     {
         Single,
-        ScrollView
+        ScrollView,
+        SelectableScrollView
     }
 }

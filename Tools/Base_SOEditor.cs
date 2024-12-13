@@ -6,32 +6,38 @@ using UnityEngine;
 namespace Tools
 {
     [CustomEditor(typeof(Base_SO<>), true)]
-    public abstract class Base_SOEditor<T> : Editor where T : ScriptableObject
+    public abstract class Base_SOEditor<T> : Editor where T : class
     {
-        int               _selectedBaseObjectIndex = -1;
-        Base_SO<T>        _so;
-        public Base_SO<T> SO => _so ??= (Base_SO<T>)target;
+        int                             _selectedBaseObjectIndex = -1;
+        protected       Base_SO<T> _so2;
+        public abstract Base_SO<T> SO2 { get; }
 
         public override void OnInspectorGUI()
         {
-            if (SO?.BaseObjects is null || SO.BaseObjects.Length is 0)
+            if (SO2?.BaseObjects is null)
+            {
+                EditorGUILayout.LabelField($"{SO2} is null or {SO2?.BaseObjects} is null", EditorStyles.boldLabel);
+                return;
+            }
+            
+            if (GUILayout.Button("Refresh All Objects")) SO2.RefreshBaseObjects();
+
+            if (SO2.BaseObjects.Length is 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
             }
-
+            
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            var nonNullBaseObjects = SO.BaseObjects.Where(o =>
-                o              != null &&
-                o.BaseObjectID != 0).ToArray();
-
-            var category = SO.AllCategories[0];
-            category.ScrollPosition = EditorGUILayout.BeginScrollView(SO.AllCategories[0].ScrollPosition,
+            var nonNullBaseObjects = SO2.BaseObjects.Where(base_Object =>
+                base_Object              != null &&
+                base_Object.BaseObjectID != 0).ToArray();
+            
+            SO2.BaseScrollPosition = EditorGUILayout.BeginScrollView(SO2.BaseScrollPosition,
                 GUILayout.Height(Mathf.Min(200, nonNullBaseObjects.Length * 20)));
             _selectedBaseObjectIndex = GUILayout.SelectionGrid(_selectedBaseObjectIndex, _getBaseObjectNames(nonNullBaseObjects), 1);
             EditorGUILayout.EndScrollView();
-            SO.AllCategories[0] = category;
 
             if (_selectedBaseObjectIndex < 0 || _selectedBaseObjectIndex >= nonNullBaseObjects.Length) return;
 
@@ -41,45 +47,42 @@ namespace Tools
 
         static string[] _getBaseObjectNames(Base_Object<T>[] baseObjects)
         {
-            return baseObjects.Select(o => $"{o.BaseObjectID}").ToArray();
+            return baseObjects.Select(base_Object => $"{base_Object.BaseObjectTitle}").ToArray();
         }
 
         void _drawBaseObjectData(Base_Object<T> selectedBaseObject)
         {
-            for (var i = 0; i < selectedBaseObject.AllDataCategories.Count; i++)
+            for (uint i = 0; i < selectedBaseObject.AllDataToDisplay.Count; i++)
             {
-                var baseObjectData = selectedBaseObject.AllDataCategories[i];
-                _drawData(baseObjectData, i);
+                var dataToDisplay = selectedBaseObject.AllDataToDisplay[i];
+                _drawData(dataToDisplay);
             }
         }
 
-        void _drawData((DataDisplayType DataDisplayType, DataToDisplay DataToDisplay) baseObjectData, int i)
+        void _drawData(DataToDisplay dataToDisplay)
         {
-            var category = SO.AllCategories[i];
-            var data     = baseObjectData.DataToDisplay.Data;
+            if (!dataToDisplay.ShowCategory) return;
 
-            if (!category.ShowCategory) return;
-
-            switch (baseObjectData.DataDisplayType)
+            switch (dataToDisplay.DataDisplayType)
             {
-                case DataDisplayType.Single:
-                    foreach (var (key, value) in data)
+                case DataDisplayType.Item:
+                    foreach (var data in dataToDisplay.Data)
                     {
-                        EditorGUILayout.LabelField(key, value);
+                        EditorGUILayout.LabelField(data);
                     }
 
                     break;
 
-                case DataDisplayType.ScrollView:
+                case DataDisplayType.List:
 
-                    category.ScrollPosition = EditorGUILayout.BeginScrollView(category.ScrollPosition,
-                        GUILayout.Height(Mathf.Min(200, baseObjectData.DataToDisplay.Data.Count * 20)));
+                    dataToDisplay.ScrollPosition = EditorGUILayout.BeginScrollView(dataToDisplay.ScrollPosition,
+                        GUILayout.Height(Mathf.Min(200, dataToDisplay.Data.Count * 20)));
 
                     try
                     {
-                        foreach (var (key, value) in data)
+                        foreach (var data in dataToDisplay.Data)
                         {
-                            EditorGUILayout.LabelField(key, value);
+                            EditorGUILayout.LabelField(data);
                         }
                     }
                     catch (Exception e)
@@ -89,11 +92,35 @@ namespace Tools
                     finally
                     {
                         EditorGUILayout.EndScrollView();
-
-                        SO.AllCategories[i] = category;
                     }
 
                     break;
+                case DataDisplayType.SelectableList:
+                    
+                    try
+                    {
+                        dataToDisplay.ScrollPosition = EditorGUILayout.BeginScrollView(dataToDisplay.ScrollPosition,
+                            GUILayout.Height(Mathf.Min(200, dataToDisplay.Data.Count * 20)));
+                    
+                        dataToDisplay.SelectedIndex = GUILayout.SelectionGrid(dataToDisplay.SelectedIndex,
+                            dataToDisplay.Data.Select(data => $"{data}").ToArray(), 1);
+                        EditorGUILayout.EndScrollView();
+                        var nonNullData = dataToDisplay.Data.Where(data => !string.IsNullOrEmpty(data)).ToArray();
+                        
+                        if (_selectedBaseObjectIndex < 0 || _selectedBaseObjectIndex >= nonNullData.Length) return;
+
+                        var selectedData = nonNullData[_selectedBaseObjectIndex];
+                        
+                        EditorGUILayout.LabelField(selectedData);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"Error: {e.Message}");
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }
