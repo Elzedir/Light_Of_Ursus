@@ -15,28 +15,28 @@ using Managers;
 using Personality;
 using Priority;
 using Recipe;
-using UnityEditor;
+using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Actor
 {
     [Serializable]
-    public class Actor_Data
+    public class Actor_Data : Data_Class
     {
         public void UpdateActorData()
         {
             GameObjectData.UpdateActorGOProperties();
         }
 
-        public bool      IsSpawned;
-        public uint      ActorID;
-        public uint      ActorFactionID;
-        public ActorName ActorName;
-        
-        Actor_Component _actor;
+        public bool   IsSpawned;
+        public uint   ActorID        => FullIdentification.ActorID;
+        public uint   ActorFactionID => FullIdentification.ActorFactionID;
+        public string ActorName      => FullIdentification.ActorName.GetName();
+
+        Actor_Component        _actor;
         public Actor_Component Actor => _actor ??= Actor_Manager.GetActor_Component(ActorID);
-        
+
         public ActorDataPresetName ActorDataPresetName;
 
         public FullIdentification FullIdentification;
@@ -84,24 +84,18 @@ namespace Actor
 
         // Make an ability to make a deep copy of every class here and every class that needs to be saved.
 
-        public Actor_Data(ActorDataPresetName actorDataPresetName, FullIdentification fullIdentification = null, GameObjectData gameObjectData = null,
-                         CareerData careerData = null, CraftingData craftingData = null,
-                         VocationData vocationData = null,
-                         SpeciesAndPersonality speciesAndPersonality = null, StatsAndAbilities statsAndAbilities = null,
-                         StatesAndConditionsData statesAndConditionsData = null, InventoryData inventoryData = null,
-                         EquipmentData equipmentData = null, QuestData actorQuests = null)
+        public Actor_Data(ActorDataPresetName     actorDataPresetName, FullIdentification fullIdentification = null,
+                          GameObjectData          gameObjectData          = null,
+                          CareerData              careerData              = null, CraftingData craftingData = null,
+                          VocationData            vocationData            = null,
+                          SpeciesAndPersonality   speciesAndPersonality   = null,
+                          StatsAndAbilities       statsAndAbilities       = null,
+                          StatesAndConditionsData statesAndConditionsData = null, InventoryData inventoryData = null,
+                          EquipmentData           equipmentData           = null, QuestData     actorQuests   = null)
         {
             ActorDataPresetName = actorDataPresetName;
-            
-            FullIdentification = fullIdentification;
 
-            if (FullIdentification != null)
-            {
-                ActorID        = FullIdentification.ActorID;
-                ActorFactionID = FullIdentification.ActorFactionID;
-                ActorName      = FullIdentification.ActorName;    
-            }
-
+            FullIdentification      = fullIdentification;
             GameObjectData          = gameObjectData;
             CareerData              = careerData;
             CraftingData            = craftingData;
@@ -116,10 +110,6 @@ namespace Actor
 
         public Actor_Data(Actor_Data actor_Data)
         {
-            ActorDataPresetName     = actor_Data.ActorDataPresetName;
-            ActorID                 = actor_Data.ActorID;
-            ActorFactionID          = actor_Data.ActorFactionID;
-            ActorName               = actor_Data.ActorName;
             FullIdentification      = new FullIdentification(actor_Data.FullIdentification);
             GameObjectData          = new GameObjectData(actor_Data.GameObjectData);
             CareerData              = new CareerData(actor_Data.CareerData);
@@ -132,30 +122,145 @@ namespace Actor
             EquipmentData           = new EquipmentData(actor_Data.EquipmentData);
             ActorQuests             = new QuestData(actor_Data.ActorQuests);
         }
-    }
 
-    [CustomPropertyDrawer(typeof(Actor_Data))]
-    public class ActorData_Drawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override DataSO_Object _getDataSO_Object()
         {
-            var actorIDProp   = property.FindPropertyRelative("ActorID");
-            var actorNameProp = property.FindPropertyRelative("ActorName");
-            var nameProp      = actorNameProp.FindPropertyRelative("Name");
-            var surnameProp   = actorNameProp.FindPropertyRelative("Surname");
+            var dataObjects = new List<DataSO_Object>();
+            
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Full Identification",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Actor ID: {FullIdentification.ActorID}",
+                        $"Actor Name: {FullIdentification.ActorName.GetName()}",
+                        $"ActorFaction: {FullIdentification.ActorFactionID}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogWarning(FullIdentification);
+                Debug.LogWarning(FullIdentification.ActorName);
+            }
 
-            var name = surnameProp != null
-                ? $"{nameProp.stringValue} {surnameProp.stringValue}"
-                : $"{nameProp.stringValue}";
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Game Object Properties",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Actor Last Saved Position: {GameObjectData.LastSavedActorPosition}",
+                        $"Actor Last Saved Scale: {GameObjectData.LastSavedActorScale}",
+                        $"Actor Last Saved Rotation: {GameObjectData.LastSavedActorRotation.eulerAngles}",
+                        $"Actor Mesh: {GameObjectData.ActorMesh}",
+                        $"Actor Material: {GameObjectData.ActorMaterial}"
+                    }
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(GameObjectData);
+                Debug.LogWarning(GameObjectData.ActorMesh);
+                Debug.LogWarning(GameObjectData.ActorMaterial);
+            }
 
-            label.text = $"{actorIDProp.intValue}: {name}";
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Species And Personality",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Actor Species: {SpeciesAndPersonality.ActorSpecies}",
+                        $"Actor Personality: {SpeciesAndPersonality.ActorPersonality?.PersonalityTitle}"
+                    }
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(SpeciesAndPersonality);
+                Debug.LogWarning(SpeciesAndPersonality.ActorSpecies);
+                Debug.LogWarning(SpeciesAndPersonality.ActorPersonality);
+            }
 
-            EditorGUI.PropertyField(position, property, label, true);
-        }
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Stats And Abilities",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Actor Level: {StatsAndAbilities.ActorStats.ActorLevelData.ActorLevel}",
+                        $"Actor Experience: {StatsAndAbilities.ActorStats.ActorLevelData.TotalExperience}",
+                        $"Actor Special: {StatsAndAbilities.ActorStats.ActorSpecial.GetStatsToString()}"
+                    }
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(StatsAndAbilities);
+                Debug.LogWarning(StatsAndAbilities.ActorStats);
+                Debug.LogWarning(StatsAndAbilities.ActorStats.ActorSpecial);
+            }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Career Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Career Name: {CareerData.CareerName}",
+                        $"Jobs Active: {CareerData.JobsActive}",
+                        $"JobSiteID: {CareerData.JobSiteID}",
+                        $"Employee Position: {CareerData.EmployeePositionName}",
+                        $"Current Job: {CareerData.CurrentJob?.JobName}"
+                    }
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(CareerData);
+                Debug.LogWarning(CareerData.CurrentJob);
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Inventory Data",
+                    dataDisplayType: DataDisplayType.SelectableList,
+                    subData: InventoryData.AllInventoryItems.Values.Select(item => item.DataSO_Object_Data).ToList()
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(InventoryData);
+                Debug.LogWarning(InventoryData.AllInventoryItems);
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Equipment Data",
+                    dataDisplayType: DataDisplayType.SelectableList,
+                    data: new List<string>
+                    {
+                        "Equipment Data"
+                    }
+                ));
+            }
+            catch
+            {
+                Debug.LogWarning(EquipmentData);
+            }
+
+            return new DataSO_Object(
+                title: $"{ActorID}: {ActorName}",
+                dataDisplayType: DataDisplayType.List,
+                subData: new List<DataSO_Object>(dataObjects));
         }
     }
 
@@ -208,6 +313,7 @@ namespace Actor
         public FullIdentification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
                                   Date actorBirthDate = null) : base(actorID, ComponentType.Actor)
         {
+            ActorID        = actorID;
             ActorName      = actorName;
             ActorFactionID = actorFactionID;
             ActorCityID    = actorCityID;
@@ -216,6 +322,7 @@ namespace Actor
         
         public FullIdentification(FullIdentification fullIdentification) : base(fullIdentification.ActorID, ComponentType.Actor)
         {
+            ActorID        = fullIdentification.ActorID;
             ActorName      = new ActorName(fullIdentification.ActorName.Name, fullIdentification.ActorName.Surname);
             ActorFactionID = fullIdentification.ActorFactionID;
             ActorCityID    = fullIdentification.ActorCityID;
@@ -423,7 +530,7 @@ namespace Actor
             }
         }
 
-        public HashSet<JobName> AllJobs = new();
+        public HashSet<JobName> AllJobs;
 
         public void AddJob(JobName jobName)
         {
@@ -457,10 +564,10 @@ namespace Actor
         public bool JobsActive = true;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
 
-        public uint             JobsiteID;
+        [FormerlySerializedAs("JobsiteID")] public uint             JobSiteID;
         JobSite_Component        _jobSite;
-        public JobSite_Component JobSite                      => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
-        public void             SetJobsiteID(uint jobsiteID) => JobsiteID = jobsiteID;
+        public JobSite_Component JobSite                      => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        public void              SetJobsiteID(uint jobsiteID) => JobSiteID = jobsiteID;
         
         public EmployeePositionName EmployeePositionName;
 

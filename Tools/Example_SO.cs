@@ -8,22 +8,22 @@ namespace Tools
 {
     [CreateAssetMenu(fileName = "BaseTest_SO", menuName = "SOList/BaseTest_SO")]
     [Serializable]
-    public class Example_SO_ : Base_SO_Test<Test_Data>
+    public class Example_SO : Data_SO<Test_Data>
     {
-        public Base_Object<Test_Data>[] Tests                     => BaseObjects;
-        public Base_Object<Test_Data>   GetTest_Data(uint testID) => GetBaseObject_Master(testID);
+        public Data_Object<Test_Data>[] Tests                     => DataObjects;
+        public Data_Object<Test_Data>   GetTest_Data(uint testID) => GetDataObject_Master(testID);
 
-        public override uint GetBaseObjectID(int id) => Tests[id].DataObject.TestID;
+        public override uint GetDataObjectID(int id) => Tests[id].DataObject.TestID;
 
-        public void UpdateTest(uint testID, Test_Data test_Data) => UpdateBaseObject(testID, test_Data);
-        public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllBaseObjects(allTests);
+        public void UpdateTest(uint testID, Test_Data test_Data) => UpdateDataObject(testID, test_Data);
+        public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllDataObjects(allTests);
 
         public void PopulateSceneTests()
         {
 
         }
 
-        protected override Dictionary<uint, Base_Object<Test_Data>> _populateDefaultBaseObjects()
+        protected override Dictionary<uint, Data_Object<Test_Data>> _populateDefaultDataObjects()
         {
             var tests = new Dictionary<uint, Test_Data>
             {
@@ -59,28 +59,23 @@ namespace Tools
                 }
             };
 
-            return _convertDictionaryToBaseObject(tests);
+            return _convertDictionaryToDataObject(tests);
         }
 
-        protected override Dictionary<uint, Base_Object<Test_Data>> _convertDictionaryToBaseObject(
-            Dictionary<uint, Test_Data> ability_Masters)
+        protected override Data_Object<Test_Data> _convertToDataObject(Test_Data data)
         {
-            return ability_Masters.ToDictionary(kvp => kvp.Key,
-                kvp => new Base_Object<Test_Data>(kvp.Key, GetDataToDisplay(kvp.Value), kvp.Value,
-                    $"{kvp.Key}{kvp.Value.TestName}"));
-        }
-
-        protected override Base_Object<Test_Data> _convertToBaseObject(Test_Data ability_Master)
-        {
-            return new Base_Object<Test_Data>(ability_Master.TestID, GetDataToDisplay(ability_Master), ability_Master,
-                $"{ability_Master.TestID}{ability_Master.TestName}");
+            return new Data_Object<Test_Data>(
+                dataObjectID: data.TestID, 
+                dataObject: data,
+                dataObjectTitle: $"{data.TestID}{data.TestName}",
+                null);
         }
 
         static uint _lastUnusedTestID = 1;
 
         public uint GetUnusedTestID()
         {
-            while (BaseObjectIndexLookup.ContainsKey(_lastUnusedTestID))
+            while (DataObjectIndexLookup.ContainsKey(_lastUnusedTestID))
             {
                 _lastUnusedTestID++;
             }
@@ -88,74 +83,75 @@ namespace Tools
             return _lastUnusedTestID;
         }
 
-        enum TestCategories
-        {
-            FullIdentification,
-            ExampleCategory,
-            AnotherExampleCategory,
-            Prosperity,
-            Population
-        }
+        // enum TestCategories
+        // {
+        //     FullIdentification,
+        //     ExampleCategory,
+        //     AnotherExampleCategory,
+        //     Prosperity,
+        //     Population
+        // }
 
-        public override Dictionary<uint, DataToDisplay> GetDataToDisplay(Test_Data actor_Data)
-        {
-            return new Dictionary<uint, DataToDisplay>
-            {
-                {
-                    (uint)TestCategories.FullIdentification, new DataToDisplay(
-                        data: new List<string>
-                        {
-                            $"Test ID: {actor_Data.TestID}",
-                            $"Test Name: {actor_Data.TestName}"
-                        },
-                        dataDisplayType: DataDisplayType.Item)
-                },
-                {
-
-
-                    (uint)TestCategories.ExampleCategory,
-                    new DataToDisplay(
-                        data: new List<string>(actor_Data.TestList),
-                        dataDisplayType: DataDisplayType.List)
-                },
-                {
-
-                    (uint)TestCategories.AnotherExampleCategory,
-                    new DataToDisplay(
-                        data: actor_Data.SmallerTestList.Select(smallerTest =>
-                            $"{smallerTest.SmallerTestName}, {smallerTest.SmallerTestID}").ToList(),
-                        dataDisplayType: DataDisplayType.SelectableList)
-                },
-                {
-
-                    (uint)TestCategories.Prosperity,
-                    new DataToDisplay(
-                        data: new List<string>
-                        {
-                            $"Prosperity 1: Prosperity1",
-                            $"Prosperity 2: Prosperity2"
-                        },
-                        dataDisplayType: DataDisplayType.Item)
-                },
-                {
-
-                    (uint)TestCategories.Population,
-                    new DataToDisplay(
-                        data: new List<string>
-                        {
-                            $"Population 1: Population1",
-                            $"Population 2: Population2"
-                        },
-                        dataDisplayType: DataDisplayType.Item)
-                }
-            };
-        }
+        // public override Dictionary<uint, DataSO_Object> GetAllDataCategories(Test_Data data)
+        // {
+        //     return new Dictionary<uint, DataSO_Object>
+        //     {
+        //         {
+        //             (uint)TestCategories.FullIdentification, new DataSO_Object(
+        //                 title: "Full Identification",
+        //                 dataDisplay: new Dictionary<string, Action>
+        //                 {
+        //                     $"Test ID: {data.TestID}",
+        //                     $"Test Name: {data.TestName}"
+        //                 },
+        //                 dataDisplayType: DataDisplayType.Item)
+        //         },
+        //         {
+        //
+        //
+        //             (uint)TestCategories.ExampleCategory, new DataSO_Object(
+        //                 title: "Example Category",
+        //                 dataDisplay: new List<string>(data.TestList),
+        //                 dataDisplayType: DataDisplayType.List)
+        //         },
+        //         {
+        //
+        //             (uint)TestCategories.AnotherExampleCategory, new DataSO_Object(
+        //                 title: "Another Example Category",
+        //                 dataDisplay: data.SmallerTestList.Select(smallerTest =>
+        //                     $"{smallerTest.SmallerTestName}, {smallerTest.SmallerTestID}").ToList(),
+        //                 dataDisplayType: DataDisplayType.SelectableList)
+        //         },
+        //         {
+        //
+        //             (uint)TestCategories.Prosperity, new DataSO_Object(
+        //                 title: "Prosperity",
+        //                 dataDisplay: new List<string>
+        //                 {
+        //                     $"Prosperity 1: Prosperity1",
+        //                     $"Prosperity 2: Prosperity2"
+        //                 },
+        //                 dataDisplayType: DataDisplayType.Item)
+        //         },
+        //         {
+        //
+        //             (uint)TestCategories.Population, new DataSO_Object(
+        //                 title: "Population",
+        //                 dataDisplay: new List<string>
+        //                 {
+        //                     $"Population 1: Population1",
+        //                     $"Population 2: Population2"
+        //                 },
+        //                 dataDisplayType: DataDisplayType.Item)
+        //         }
+        //     };
+        //}
     }
 
-    [CustomEditor(typeof(Example_SO_))]
-    public class _SOEditor : Base_SOEditor<Test_Data>
+    [CustomEditor(typeof(Example_SO))]
+    public class Example_SOEditor : Data_SOEditor<Test_Data>
     {
-        public override Base_SO_Test<Test_Data> SO => _so ??= (Example_SO_)target;
+        public override Data_SO<Test_Data> SO => _so ??= (Example_SO)target;
     }
 
     [Serializable]

@@ -54,8 +54,8 @@ namespace Actor
                 return;
             }
 
-            transform.parent.name = $"{ActorData.ActorName.Name}Body";
-            transform.name        = $"{ActorData.ActorName.Name}";
+            transform.parent.name = $"{ActorData.ActorName}Body";
+            transform.name        = $"{ActorData.ActorName}";
 
             _setTickRate(TickRate.OneSecond, false);
 

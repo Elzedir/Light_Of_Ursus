@@ -168,7 +168,7 @@ namespace JobSite
 
             var citizenID = allCitizenIDs
                                       .FirstOrDefault(c =>
-                                          Actor_Manager.GetActor_Data(c)?.CareerData.JobsiteID == 0 &&
+                                          Actor_Manager.GetActor_Data(c)?.CareerData.JobSiteID == 0 &&
                                           _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                                       );
 

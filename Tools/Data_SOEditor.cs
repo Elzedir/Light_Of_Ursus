@@ -5,9 +5,9 @@ using UnityEngine;
 namespace Tools
 {
     [CustomEditor(typeof(Data_SO<>), true)]
-    public abstract class Base_SOEditor<T> : Editor where T : class
+    public abstract class Data_SOEditor<T> : Editor where T : class
     {
-        int                             _selectedBaseObjectIndex = -1;
+        int                        _selectedIndex = -1;
         protected       Data_SO<T> _so;
         public abstract Data_SO<T> SO { get; }
 
@@ -19,7 +19,7 @@ namespace Tools
                 return;
             }
 
-            if (GUILayout.Button("Refresh All Objects")) SO.RefreshBaseObjects();
+            if (GUILayout.Button("Refresh All Objects")) SO.RefreshDataObjects();
 
             if (SO.DataObjects.Length is 0)
             {
@@ -29,23 +29,21 @@ namespace Tools
 
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            var nonNullBaseObjects = SO.DataObjects.Where(data_Object =>
+            var nonNullDataObjects = SO.DataObjects.Where(data_Object =>
                 data_Object              != null &&
                 data_Object.DataObjectID != 0).ToArray();
-                
-                Debug.Log($"{nonNullBaseObjects.Length} non-null BaseObjects found.");
 
-            SO.BaseScrollPosition = EditorGUILayout.BeginScrollView(SO.BaseScrollPosition,
-                GUILayout.Height(Mathf.Min(200, nonNullBaseObjects.Length * 20)));
-            _selectedBaseObjectIndex =
-                GUILayout.SelectionGrid(_selectedBaseObjectIndex, _getBaseObjectNames(nonNullBaseObjects), 1);
+            SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
+                GUILayout.Height(Mathf.Min(200, nonNullDataObjects.Length * 20)));
+            _selectedIndex =
+                GUILayout.SelectionGrid(_selectedIndex, _getBaseObjectNames(nonNullDataObjects), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedBaseObjectIndex < 0 || _selectedBaseObjectIndex >= nonNullBaseObjects.Length) return;
+            if (_selectedIndex < 0 || _selectedIndex >= nonNullDataObjects.Length) return;
 
-            var selectedBaseObject = nonNullBaseObjects[_selectedBaseObjectIndex];
-            
-            selectedBaseObject.DisplayData?.Invoke();
+            var selectedDataObject = nonNullDataObjects[_selectedIndex];
+
+            _drawData_Object(selectedDataObject.DataSO_Object, firstData: true);
         }
 
         static string[] _getBaseObjectNames(Data_Object<T>[] baseObjects)
@@ -53,17 +51,51 @@ namespace Tools
             return baseObjects.Select(base_Object => $"{base_Object.DataObjectTitle}").ToArray();
         }
 
-        public static void DrawData(DataSO_Object dataSO_Object)
+        static void _drawData_Object(DataSO_Object dataSO_Object, bool firstData = false)
         {
-            dataSO_Object.ShowData = EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData);
-
-            if (!dataSO_Object.ShowData) return;
-
-            var nonNullData = dataSO_Object.Data.Where(data => data != null).ToArray();
-
-            foreach (var data in nonNullData)
+            while (true)
             {
-                data.DisplayData?.Invoke();
+                if (!firstData && !(dataSO_Object.ShowData = EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
+                    return;
+
+                if (dataSO_Object.Data is not null)
+                {
+                    foreach (var data in dataSO_Object.Data)
+                        GUILayout.Label(data);
+                    
+                    if (dataSO_Object.DataDisplayType == DataDisplayType.Item) 
+                        return;
+                }
+                
+                if (dataSO_Object.DataDisplayType == DataDisplayType.List && dataSO_Object.SubData is not null)
+                {
+                    foreach (var subData in dataSO_Object.SubData)
+                        _drawData_Object(subData);
+                    
+                    return;
+                }
+                
+                if (dataSO_Object.SubData == null || dataSO_Object.SubData.Count == 0)
+                    return;
+
+                dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
+                    GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
+                dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
+                    dataSO_Object.SubData.Select(subData => subData.Title).ToArray(), 1);
+
+                EditorGUILayout.EndScrollView();
+
+                if (dataSO_Object.SelectedIndex < 0 ||
+                    dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
+
+                var selectedBaseObject = dataSO_Object.SubData[dataSO_Object.SelectedIndex];
+
+                selectedBaseObject.ShowData =
+                    EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData);
+
+                if (!selectedBaseObject.ShowData) return;
+
+                dataSO_Object = selectedBaseObject;
             }
         }
     }

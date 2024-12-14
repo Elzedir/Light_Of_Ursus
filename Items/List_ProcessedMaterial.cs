@@ -14,9 +14,9 @@ namespace Items
 
     public abstract class List_ProcessedMaterial
     {
-        public static Dictionary<uint, Item_Master> GetAllDefaultProcessedMaterials()
+        public static Dictionary<uint, Item_Data> GetAllDefaultProcessedMaterials()
         {
-            var allProcessedMaterials = new Dictionary<uint, Item_Master>();
+            var allProcessedMaterials = new Dictionary<uint, Item_Data>();
 
             foreach (var material in _metals)
             {
@@ -81,11 +81,11 @@ namespace Items
             return allProcessedMaterials;
         }
 
-        static readonly Dictionary<uint, Item_Master> _metals = new()
+        static readonly Dictionary<uint, Item_Data> _metals = new()
         {
             {
                 2200,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2200,
                         itemType: ItemType.Processed_Material,
@@ -103,7 +103,7 @@ namespace Items
 
             {
                 2201,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2201,
                         itemType: ItemType.Processed_Material,
@@ -121,7 +121,7 @@ namespace Items
 
             {
                 2202,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2202,
                         itemType: ItemType.Processed_Material,
@@ -139,7 +139,7 @@ namespace Items
 
             {
                 2203,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2202,
                         itemType: ItemType.Processed_Material,
@@ -157,7 +157,7 @@ namespace Items
 
             {
                 2204,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2204,
                         itemType: ItemType.Processed_Material,
@@ -174,11 +174,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _woods = new()
+        static readonly Dictionary<uint, Item_Data> _woods = new()
         {
             {
                 2300,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2300,
                         itemType: ItemType.Processed_Material,
@@ -187,7 +187,7 @@ namespace Items
                         itemWeight: 3,
                         itemValue: 5),
                     new VisualStats_Item(
-                        itemMesh: GameObject.Find("TestPlank").GetComponent<MeshFilter>().mesh,
+                        //itemMesh: GameObject.Find("TestPlank").GetComponent<MeshFilter>().mesh,
                         itemMaterial: Resources.Load<Material>("Materials/Material_Yellow"),
                         itemScale: new Vector3(0.1f, 1, 0.2f)),
                     null,
@@ -203,7 +203,7 @@ namespace Items
             },
             {
                 2301,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2301,
                         itemType: ItemType.Processed_Material,
@@ -220,7 +220,7 @@ namespace Items
             },
             {
                 2302,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2302,
                         itemType: ItemType.Processed_Material,
@@ -237,11 +237,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _stones = new()
+        static readonly Dictionary<uint, Item_Data> _stones = new()
         {
             {
                 2400,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2400,
                         itemType: ItemType.Processed_Material,
@@ -258,7 +258,7 @@ namespace Items
             },
             {
                 2401,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2401,
                         itemType: ItemType.Processed_Material,
@@ -275,7 +275,7 @@ namespace Items
             },
             {
                 2402,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2402,
                         itemType: ItemType.Processed_Material,
@@ -292,11 +292,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _gems = new()
+        static readonly Dictionary<uint, Item_Data> _gems = new()
         {
             {
                 2500,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2500,
                         itemType: ItemType.Processed_Material,
@@ -313,7 +313,7 @@ namespace Items
             },
             {
                 2501,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2501,
                         itemType: ItemType.Processed_Material,
@@ -330,7 +330,7 @@ namespace Items
             },
             {
                 2502,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2502,
                         itemType: ItemType.Processed_Material,
@@ -347,11 +347,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _herbs = new()
+        static readonly Dictionary<uint, Item_Data> _herbs = new()
         {
             {
                 2600,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2600,
                         itemType: ItemType.Processed_Material,
@@ -368,7 +368,7 @@ namespace Items
             },
             {
                 2601,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2601,
                         itemType: ItemType.Processed_Material,
@@ -385,7 +385,7 @@ namespace Items
             },
             {
                 2602,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2602,
                         itemType: ItemType.Processed_Material,
@@ -402,11 +402,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _fibers = new()
+        static readonly Dictionary<uint, Item_Data> _fibers = new()
         {
             {
                 2700,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2700,
                         itemType: ItemType.Processed_Material,
@@ -423,7 +423,7 @@ namespace Items
             },
             {
                 2701,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2701,
                         itemType: ItemType.Processed_Material,
@@ -440,7 +440,7 @@ namespace Items
             },
             {
                 2702,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2702,
                         itemType: ItemType.Processed_Material,
@@ -457,11 +457,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _leathers = new()
+        static readonly Dictionary<uint, Item_Data> _leathers = new()
         {
             {
                 2800,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2800,
                         itemType: ItemType.Processed_Material,
@@ -478,7 +478,7 @@ namespace Items
             },
             {
                 2801,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2801,
                         itemType: ItemType.Processed_Material,
@@ -495,7 +495,7 @@ namespace Items
             },
             {
                 2802,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2802,
                         itemType: ItemType.Processed_Material,
@@ -512,11 +512,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _ores = new()
+        static readonly Dictionary<uint, Item_Data> _ores = new()
         {
             {
                 2900,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2900,
                         itemType: ItemType.Processed_Material,
@@ -533,7 +533,7 @@ namespace Items
             },
             {
                 2901,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2901,
                         itemType: ItemType.Processed_Material,
@@ -550,7 +550,7 @@ namespace Items
             },
             {
                 2902,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2902,
                         itemType: ItemType.Processed_Material,
@@ -567,11 +567,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _fuels = new()
+        static readonly Dictionary<uint, Item_Data> _fuels = new()
         {
             {
                 3000,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3000,
                         itemType: ItemType.Processed_Material,
@@ -588,7 +588,7 @@ namespace Items
             },
             {
                 3001,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3001,
                         itemType: ItemType.Processed_Material,
@@ -605,7 +605,7 @@ namespace Items
             },
             {
                 3002,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3002,
                         itemType: ItemType.Processed_Material,
@@ -622,11 +622,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _flora = new()
+        static readonly Dictionary<uint, Item_Data> _flora = new()
         {
             {
                 3100,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3100,
                         itemType: ItemType.Processed_Material,
@@ -643,7 +643,7 @@ namespace Items
             },
             {
                 3101,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3101,
                         itemType: ItemType.Processed_Material,
@@ -660,11 +660,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _animalProducts = new()
+        static readonly Dictionary<uint, Item_Data> _animalProducts = new()
         {
             {
                 3200,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3200,
                         itemType: ItemType.Processed_Material,
@@ -681,7 +681,7 @@ namespace Items
             },
             {
                 3201,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3201,
                         itemType: ItemType.Processed_Material,
@@ -698,7 +698,7 @@ namespace Items
             },
             {
                 3202,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3202,
                         itemType: ItemType.Processed_Material,
@@ -715,11 +715,11 @@ namespace Items
             }
         };
 
-        static readonly Dictionary<uint, Item_Master> _liquids = new()
+        static readonly Dictionary<uint, Item_Data> _liquids = new()
         {
             {
                 3300,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3300,
                         itemType: ItemType.Processed_Material,
@@ -736,7 +736,7 @@ namespace Items
             },
             {
                 3301,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3301,
                         itemType: ItemType.Processed_Material,
@@ -753,7 +753,7 @@ namespace Items
             },
             {
                 3302,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3302,
                         itemType: ItemType.Processed_Material,
@@ -770,7 +770,7 @@ namespace Items
             },
             {
                 3303,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3303,
                         itemType: ItemType.Processed_Material,

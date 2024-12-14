@@ -29,9 +29,9 @@ namespace Items
 
     public abstract class List_Weapon
     {
-        public static Dictionary<uint, Item_Master> GetAllDefaultWeapons()
+        public static Dictionary<uint, Item_Data> GetAllDefaultWeapons()
         {
-            var allWeapons = new Dictionary<uint, Item_Master>();
+            var allWeapons = new Dictionary<uint, Item_Data>();
             
             foreach (var weapon in _defaultShortBows)
             {
@@ -51,11 +51,11 @@ namespace Items
             return allWeapons;
         }
         
-        static readonly Dictionary<uint, Item_Master> _defaultShortBows = new()
+        static readonly Dictionary<uint, Item_Data> _defaultShortBows = new()
         {
             {
                 3,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 3,
                         itemType: ItemType.Weapon,
@@ -98,11 +98,11 @@ namespace Items
             },
         };
 
-        static readonly Dictionary<uint, Item_Master> _defaultShortSwords = new()
+        static readonly Dictionary<uint, Item_Data> _defaultShortSwords = new()
         {
             {
                 1,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 1,
                         itemType: ItemType.Weapon,
@@ -116,7 +116,7 @@ namespace Items
 
                     new VisualStats_Item(
                         itemIcon: null,
-                        itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
+                        //itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
                         itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
                         itemAnimatorController: Resources.Load<RuntimeAnimatorController>("Animators/Test_Weapon"),
                         itemCollider: new CapsuleCollider(),
@@ -147,11 +147,11 @@ namespace Items
         };
 
 
-        static readonly Dictionary<uint, Item_Master> _defaultShields = new()
+        static readonly Dictionary<uint, Item_Data> _defaultShields = new()
         {
             {
                 2,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 2,
                         itemType: ItemType.Weapon,

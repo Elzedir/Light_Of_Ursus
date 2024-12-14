@@ -235,7 +235,7 @@ public class IDChecker : EditorWindow
         foreach (var actor in duplicateActors)
         {
             uint newActorID = GetNewID(existingIDs);
-            actor.ActorData.ActorID = newActorID;
+            actor.ActorData.FullIdentification.ActorID = newActorID;
             existingIDs.Add(newActorID);
 
             EditorUtility.SetDirty(actor);

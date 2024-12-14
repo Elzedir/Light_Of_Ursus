@@ -202,8 +202,8 @@ namespace Actor
             var actorDataPreset = ActorDataPreset_Manager.GetActorDataPreset(actorDataPresetName);
 
             var fullIdentification = new FullIdentification(
-                actorID: actorDataPreset?.ActorID               ?? _getUnusedActorID(),
-                actorName: actorDataPreset?.ActorName           ?? _getRandomActorName(),
+                actorID: actorDataPreset?.FullIdentification.ActorID               ?? _getUnusedActorID(),
+                actorName: actorDataPreset?.FullIdentification.ActorName           ?? _getRandomActorName(),
                 actorFactionID: actorDataPreset?.ActorFactionID ?? _getRandomFaction(),
                 actorBirthDate: actorDataPreset?.FullIdentification.ActorBirthDate ??
                                 new Date(Manager_DateAndTime.GetCurrentTotalDays()),

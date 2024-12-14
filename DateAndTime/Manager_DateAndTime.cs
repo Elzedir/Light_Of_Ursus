@@ -135,11 +135,11 @@ namespace DateAndTime
 
     public class EditorTime
     {
-        private static float editorDeltaTime = 0f;
-        private static float lastEditorTime  = 0f;
-        private static float timer           = 0f;
-        private static float duration        = 5f; // Timer duration in seconds
-        private static bool  isTimerRunning  = false;
+        // private static float editorDeltaTime = 0f;
+        // private static float lastEditorTime  = 0f;
+        // private static float timer           = 0f;
+        // private static float duration        = 5f; // Timer duration in seconds
+        // private static bool  isTimerRunning  = false;
         
         // [MenuItem("Tools/Start Editor Timer")]
         // public static void StartTimer()

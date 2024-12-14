@@ -3,45 +3,50 @@ using System.Collections.Generic;
 using System.Linq;
 using Priority;
 using Station;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Items
 {
-    public enum ItemType { 
-        Weapon, Armour, Consumable, 
-        Raw_Material, Processed_Material, 
-        Misc 
+    public enum ItemType
+    {
+        Weapon,
+        Armour,
+        Consumable,
+        Raw_Material,
+        Processed_Material,
+        Misc
     }
 
     public abstract class Item_Manager
     {
-        const string  _item_SOPath = "ScriptableObjects/Item_SO";
-        
+        const string _item_SOPath = "ScriptableObjects/Item_SO";
+
         static Item_SO _allItems;
         static Item_SO AllItems => _allItems ??= _getItem_SO();
 
-        public static Item_Master GetItem_Master(uint itemID) => AllItems.GetItem_Master(itemID);
-        
+        public static Item_Data GetItem_Data(uint itemID) => AllItems.GetItem_Master(itemID).DataObject;
+
         public static void PopulateAllItems()
         {
             AllItems.PopulateDefaultItems();
             // Then populate custom items.
         }
-        
+
         static Item_SO _getItem_SO()
         {
             var item_SO = Resources.Load<Item_SO>(_item_SOPath);
-            
+
             if (item_SO is not null) return item_SO;
-            
+
             Debug.LogError("Item_SO not found. Creating temporary Item_SO.");
             item_SO = ScriptableObject.CreateInstance<Item_SO>();
-            
+
             return item_SO;
         }
-        
-        public void AttachWeaponScript(Item_Master item, Equipment_Base equipmentSlot)
+
+        public void AttachWeaponScript(Item_Data item, Equipment_Base equipmentSlot)
         {
             //GameManager.Destroy(equipmentSlot.GetComponent<Weapon>());
 
@@ -112,33 +117,33 @@ namespace Items
     }
 
     [Serializable]
-    public class Item
+    public class Item : Data_Class
     {
         public uint   ItemID;
         public string ItemName;
         public uint   ItemAmount;
         public uint   MaxStackSize;
-    
-        Item_Master        _masterItem;
-        public Item_Master MasterItem => _masterItem ??= Item_Manager.GetItem_Master(ItemID);
+
+        Item_Data        _dataItem;
+        public Item_Data DataItem => _dataItem ??= Item_Manager.GetItem_Data(ItemID);
 
         public Item(uint itemID, uint itemAmount)
         {
-            var masterItem = Item_Manager.GetItem_Master(itemID);
+            var item_Data = Item_Manager.GetItem_Data(itemID);
 
-            if (masterItem == null) 
+            if (item_Data == null)
             {
                 Debug.LogError("MasterItem for itemID: " + itemID + " is null");
                 return;
             }
 
             ItemID       = itemID;
-            ItemName     = masterItem.CommonStats_Item.ItemName;
+            ItemName     = item_Data.CommonStats_Item.ItemName;
             ItemAmount   = itemAmount;
-            MaxStackSize = masterItem.CommonStats_Item.MaxStackSize;
+            MaxStackSize = item_Data.CommonStats_Item.MaxStackSize;
         }
 
-        public Item (Item item)
+        public Item(Item item)
         {
             ItemID       = item.ItemID;
             ItemName     = item.ItemName;
@@ -153,15 +158,47 @@ namespace Items
             => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
 
         public static float GetItemListTotal_Weight(List<Item> items)
-            => items.Sum(item => item.ItemAmount * item.MasterItem.CommonStats_Item.ItemWeight);
+            => items.Sum(item => item.ItemAmount * item.DataItem.CommonStats_Item.ItemWeight);
+
+        public DataSO_Object DataSO_Object_Data => DataItem.DataSO_Object;
+
+        protected override DataSO_Object _getDataSO_Object()
+        {
+            var dataObjects = new List<DataSO_Object>();
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Common Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"ItemID: {ItemID}",
+                        $"ItemName: {ItemName}",
+                        $"ItemAmount: {ItemAmount}",
+                        $"MaxStackSize: {MaxStackSize}",
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Common Stats");
+            }
+
+            return new DataSO_Object(
+                title: $"{ItemID}: {ItemName}",
+                dataDisplayType: DataDisplayType.List,
+                subData: new List<DataSO_Object>(dataObjects));
+        }
     }
 
     [Serializable]
-    public class Item_Master
+    public class Item_Data : Data_Class
     {
+        a
+        // Move into it's own class, and sort out the double popups when selecting an item, make it a first item when opening
         public uint   ItemID   => CommonStats_Item.ItemID;
         public string ItemName => CommonStats_Item.ItemName;
-    
+
         public CommonStats_Item         CommonStats_Item;
         public VisualStats_Item         VisualStats_Item;
         public WeaponStats_Item         WeaponStats_Item;
@@ -170,7 +207,7 @@ namespace Items
         public PercentageModifiers_Item PercentageModifiers_Item;
         public PriorityStats_Item       PriorityStats_Item;
 
-        public Item_Master(
+        public Item_Data(
             CommonStats_Item         commonStats_Item,
             VisualStats_Item         visualStats_Item,
             WeaponStats_Item         weaponStats_Item,
@@ -188,7 +225,7 @@ namespace Items
             PriorityStats_Item       = priorityStats_Item       ?? new PriorityStats_Item();
         }
 
-        public Item_Master(Item_Master item)
+        public Item_Data(Item_Data item)
         {
             CommonStats_Item         = new CommonStats_Item(item.CommonStats_Item);
             VisualStats_Item         = new VisualStats_Item(item.VisualStats_Item);
@@ -198,9 +235,98 @@ namespace Items
             PercentageModifiers_Item = new PercentageModifiers_Item(item.PercentageModifiers_Item);
             PriorityStats_Item       = new PriorityStats_Item(item.PriorityStats_Item);
         }
+
+        protected override DataSO_Object _getDataSO_Object()
+        {
+            var dataObjects = new List<DataSO_Object>();
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Common Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"ItemID: {CommonStats_Item.ItemID}",
+                        $"ItemName: {CommonStats_Item.ItemName}",
+                        $"ItemType: {CommonStats_Item.ItemType}",
+                        $"EquipmentSlots: {string.Join(", ", CommonStats_Item.EquipmentSlots)}",
+                        $"MaxStackSize: {CommonStats_Item.MaxStackSize}",
+                        $"ItemLevel: {CommonStats_Item.ItemLevel}",
+                        $"ItemQuality: {CommonStats_Item.ItemQuality}",
+                        $"ItemValue: {CommonStats_Item.ItemValue}",
+                        $"ItemWeight: {CommonStats_Item.ItemWeight}",
+                        $"ItemEquippable: {CommonStats_Item.ItemEquippable}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Common Stats");
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Visual Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"ItemIcon: {VisualStats_Item.ItemIcon}",
+                        $"ItemMesh: {VisualStats_Item.ItemMesh}",
+                        $"ItemMaterial: {VisualStats_Item.ItemMaterial}",
+                        $"ItemCollider: {VisualStats_Item.ItemCollider}",
+                        $"ItemAnimatorController: {VisualStats_Item.ItemAnimatorController}",
+                        $"ItemPosition: {VisualStats_Item.ItemPosition}",
+                        $"ItemRotation: {VisualStats_Item.ItemRotation}",
+                        $"ItemScale: {VisualStats_Item.ItemScale}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Visual Stats");
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Weapon Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"WeaponTypeArray: {string.Join(", ",  WeaponStats_Item.WeaponTypeArray)}",
+                        $"WeaponClassArray: {string.Join(", ", WeaponStats_Item.WeaponClassArray)}",
+                        $"MaxChargeTime: {WeaponStats_Item.MaxChargeTime}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Weapon Stats");
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Armour Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"EquipmentSlot: {ArmourStats_Item.EquipmentSlot}",
+                        $"ItemCoverage: {ArmourStats_Item.ItemCoverage}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Armour Stats");
+            }
+
+            return new DataSO_Object(
+                title: $"{ItemID}: {ItemName}",
+                dataDisplayType: DataDisplayType.List,
+                subData: new List<DataSO_Object>(dataObjects));
+        }
     }
 
-    [CustomPropertyDrawer(typeof(Item_Master))]
+    [CustomPropertyDrawer(typeof(Item_Data))]
     public class Item_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -210,7 +336,9 @@ namespace Items
             var itemNameProp        = commonStatsNameProp.FindPropertyRelative("ItemName");
             var itemQuantityProp    = commonStatsNameProp.FindPropertyRelative("CurrentStackSize");
 
-            label.text = !string.IsNullOrEmpty(itemNameProp.ToString()) ? $"{itemIDProp.intValue}: {itemNameProp.stringValue} (Qty: {itemQuantityProp.intValue})" : "Unnamed Jobsite";
+            label.text = !string.IsNullOrEmpty(itemNameProp.ToString())
+                ? $"{itemIDProp.intValue}: {itemNameProp.stringValue} (Qty: {itemQuantityProp.intValue})"
+                : "Unnamed Jobsite";
 
             EditorGUI.PropertyField(position, property, label, true);
         }
@@ -619,14 +747,14 @@ namespace Items
     {
         public readonly Dictionary<PriorityImportance, List<StationName>> Priority_Stations;
 
-        public PriorityStats_Item (Dictionary<PriorityImportance, List<StationName>> priority_Station = null)
+        public PriorityStats_Item(Dictionary<PriorityImportance, List<StationName>> priority_Station = null)
         {
             Priority_Stations = priority_Station != null
                 ? new Dictionary<PriorityImportance, List<StationName>>(priority_Station)
                 : new Dictionary<PriorityImportance, List<StationName>>();
         }
 
-        public PriorityStats_Item (PriorityStats_Item other)
+        public PriorityStats_Item(PriorityStats_Item other)
         {
             Priority_Stations = other.Priority_Stations != null
                 ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_Stations)

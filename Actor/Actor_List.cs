@@ -151,7 +151,10 @@ namespace Actor
                             allInventoryItems: new ObservableDictionary<uint, Item>
                             {
                                 {
-                                    1, new Item(1, 5)
+                                    1, new Item(1, 1)
+                                },
+                                {
+                                    2, new Item(2, 1)
                                 }
                             }
                         ),

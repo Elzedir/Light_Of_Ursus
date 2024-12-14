@@ -2,43 +2,44 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Tools
 {
     [Serializable]
     public abstract class Data_SO<T> : ScriptableObject where T : class
     {
-        int                               _baseObjectLength;
-        [SerializeField] Data_Object<T>[] _baseObjects;
+        int                                                                      _dataObjectLength;
+        [SerializeField] Data_Object<T>[] _dataObjects;
 
         public Data_Object<T>[] DataObjects
         {
             get
             {
-                if (_baseObjects is not null && _baseObjects.Length != 0 && _baseObjects.Length == _baseObjectLength) return _baseObjects;
+                if (_dataObjects is not null && _dataObjects.Length != 0 && _dataObjects.Length == _dataObjectLength) return _dataObjects;
                 
-                _baseObjectLength = _baseObjects?.Length ?? 0;
-                var baseObjects = InitialiseAllBaseObjects();
-                return baseObjects; 
+                _dataObjectLength = _dataObjects?.Length ?? 0;
+                var dataObjects = InitialiseAllDataObjects();
+                return dataObjects; 
             }
         }
 
-        public void RefreshBaseObjects() => _baseObjectLength = 0;
+        public void RefreshDataObjects() => _dataObjectLength = 0;
 
-        public void LoadSO(T[] baseObjects) => _baseObjects = baseObjects.Select(_convertToBaseObject).ToArray();
+        public void LoadSO(T[] dataObjects) => _dataObjects = dataObjects.Select(_convertToDataObject).ToArray();
 
-        Dictionary<uint, int>        _baseObjectIndexLookup;
-        public Dictionary<uint, int> BaseObjectIndexLookup => _baseObjectIndexLookup ??= _buildIndexLookup();
+        Dictionary<uint, int>        _dataObjectIndexLookup;
+        public Dictionary<uint, int> DataObjectIndexLookup => _dataObjectIndexLookup ??= _buildIndexLookup();
         int                          _currentIndex;
 
-        public Data_Object<T>[] InitialiseAllBaseObjects()
+        public Data_Object<T>[] InitialiseAllDataObjects()
         {
-            _baseObjects = new Data_Object<T>[DefaultBaseObjects.Count * 2];
-            Array.Copy(DefaultBaseObjects.Values.ToArray(), DataObjects, DefaultBaseObjects.Count);
-            _currentIndex = DefaultBaseObjects.Count;
+            _dataObjects = new Data_Object<T>[DefaultDataObjects.Count * 2];
+            Array.Copy(DefaultDataObjects.Values.ToArray(), DataObjects, DefaultDataObjects.Count);
+            _currentIndex = DefaultDataObjects.Count;
             _buildIndexLookup();
             
-            return DataObjects ?? throw new NullReferenceException("BaseObjects is null.");
+            return DataObjects ?? throw new NullReferenceException("DataObjects is null.");
         }
 
         protected Dictionary<uint, int> _buildIndexLookup()
@@ -49,32 +50,32 @@ namespace Tools
             {
                 if (DataObjects[i] is null) continue;
 
-                newIndexLookup[GetBaseObjectID(i)] = i;
+                newIndexLookup[GetDataObjectID(i)] = i;
             }
 
             return newIndexLookup;
         }
 
-        public abstract uint GetBaseObjectID(int id);
+        public abstract uint GetDataObjectID(int id);
 
-        public Data_Object<T> GetBaseObject_Master(uint baseObjectID)
+        public Data_Object<T> GetDataObject_Master(uint dataObjectID)
         {
-            if (DataObjects is null || DataObjects.Length is 0) InitialiseAllBaseObjects();
+            if (DataObjects is null || DataObjects.Length is 0) InitialiseAllDataObjects();
 
-            if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
+            if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
                 return DataObjects?[index];
             }
 
-            Debug.LogWarning($"BaseObject {baseObjectID} does not exist in BaseObjects.");
+            Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
             return null;
         }
 
-        public void AddBaseObject(uint baseObjectID, Data_Object<T> dataObject)
+        public void AddDataObject(uint dataObjectID, Data_Object<T> dataObject)
         {
-            if (BaseObjectIndexLookup.ContainsKey(baseObjectID))
+            if (DataObjectIndexLookup.ContainsKey(dataObjectID))
             {
-                Debug.LogWarning($"BaseObject {baseObjectID} already exists in BaseObjects.");
+                Debug.LogWarning($"DataObject {dataObjectID} already exists in DataObjects.");
                 return;
             }
 
@@ -84,22 +85,22 @@ namespace Tools
             }
 
             DataObjects[_currentIndex]          = dataObject;
-            BaseObjectIndexLookup[baseObjectID] = _currentIndex;
+            DataObjectIndexLookup[dataObjectID] = _currentIndex;
             _currentIndex++;
         }
 
-        public void RemoveBaseObjects(uint baseObjectID)
+        public void RemoveDataObjects(uint dataObjectID)
         {
-            if (!BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
+            if (!DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
-                Debug.LogWarning($"BaseObject {baseObjectID} does not exist in BaseObjects.");
+                Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
                 return;
             }
 
             DataObjects[index] = null;
-            BaseObjectIndexLookup.Remove(baseObjectID);
+            DataObjectIndexLookup.Remove(dataObjectID);
 
-            if (BaseObjectIndexLookup.Count < DataObjects.Length / 4)
+            if (DataObjectIndexLookup.Count < DataObjects.Length / 4)
             {
                 _compactAndResizeArray();
             }
@@ -114,58 +115,68 @@ namespace Tools
                 if (DataObjects[i] is null) continue;
 
                 DataObjects[newSize]                      = DataObjects[i];
-                BaseObjectIndexLookup[GetBaseObjectID(i)] = newSize;
+                DataObjectIndexLookup[GetDataObjectID(i)] = newSize;
                 newSize++;
             }
 
-            Array.Resize(ref _baseObjects, Math.Max(newSize * 2, DataObjects.Length));
+            Array.Resize(ref _dataObjects, Math.Max(newSize * 2, DataObjects.Length));
             _currentIndex = newSize;
         }
 
-        public void UpdateAllBaseObjects(Dictionary<uint, T> newBaseObjects, bool clearDataFirst = false)
+        public void UpdateAllDataObjects(Dictionary<uint, T> newDataObjects, bool clearDataFirst = false)
         {
-            if (clearDataFirst) ClearBaseObjectData();
+            if (clearDataFirst) ClearDataObjectData();
 
-            foreach (var (key, value) in newBaseObjects)
+            foreach (var (key, value) in newDataObjects)
             {
-                UpdateBaseObject(key, value);
+                UpdateDataObject(key, value);
             }
         }
 
-        public void UpdateBaseObject(uint baseObjectID, T baseObject)
+        public void UpdateDataObject(uint dataObjectID, T dataObject)
         {
-            if (BaseObjectIndexLookup.TryGetValue(baseObjectID, out var index))
+            if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
-                DataObjects[index] = _convertToBaseObject(baseObject);
+                DataObjects[index] = _convertToDataObject(dataObject);
             }
             else
             {
-                AddBaseObject(baseObjectID, _convertToBaseObject(baseObject));
+                AddDataObject(dataObjectID, _convertToDataObject(dataObject));
             }
         }
         
-        public             Vector2                         BaseScrollPosition;
-        protected abstract Data_Object<T>                  _convertToBaseObject(T data);
+        [FormerlySerializedAs("DataScrollPosition")] public Vector2        ScrollPosition;
+        protected abstract                                  Data_Object<T> _convertToDataObject(T data);
 
-        protected Dictionary<uint, Data_Object<T>> _convertDictionaryToBaseObject(
+        protected Dictionary<uint, Data_Object<T>> _convertDictionaryToDataObject(
             Dictionary<uint, T> dictionary)
         {
-            return dictionary.ToDictionary(key => key.Key, value => _convertToBaseObject(value.Value));
+            return dictionary.ToDictionary(key => key.Key, value => _convertToDataObject(value.Value));
         }
 
-        public void ClearBaseObjectData()
+        public void ClearDataObjectData()
         {
-            _baseObjects = Array.Empty<Data_Object<T>>();
-            BaseObjectIndexLookup.Clear();
+            _dataObjects = Array.Empty<Data_Object<T>>();
+            DataObjectIndexLookup.Clear();
             _currentIndex = 0;
         }
 
-        protected abstract Dictionary<uint, Data_Object<T>> _populateDefaultBaseObjects();
+        protected abstract Dictionary<uint, Data_Object<T>> _populateDefaultDataObjects();
 
-        Dictionary<uint, Data_Object<T>> _defaultBaseObjects;
+        Dictionary<uint, Data_Object<T>> _defaultDataObjects;
 
-        public Dictionary<uint, Data_Object<T>> DefaultBaseObjects =>
-            _defaultBaseObjects ??= _populateDefaultBaseObjects();
+        public Dictionary<uint, Data_Object<T>> DefaultDataObjects =>
+            _defaultDataObjects ??= _populateDefaultDataObjects();
+    }
+
+    [Serializable]
+
+    public abstract class Data_Class
+    {
+        DataSO_Object        _dataSO_Object;
+        public DataSO_Object DataSO_Object => _dataSO_Object ??= _getDataSO_Object();
+
+        protected abstract DataSO_Object _getDataSO_Object();
     }
 
     [Serializable]
@@ -174,50 +185,47 @@ namespace Tools
         public readonly uint                            DataObjectID;
         public readonly string                          DataObjectTitle;
 
-        public T      DataObject;
-        public Action DisplayData;
+        public T             DataObject;
+        public DataSO_Object DataSO_Object;
 
         public Data_Object(uint   dataObjectID,    T      dataObject,
-                           string dataObjectTitle, Action displayData)
+                           string dataObjectTitle, DataSO_Object dataSO_Object)
         {
-            DataObjectID     = dataObjectID;
-            DataObject       = dataObject;
-            DataObjectTitle  = dataObjectTitle;
-            DisplayData = displayData;
+            DataObjectID       = dataObjectID;
+            DataObject         = dataObject;
+            DataObjectTitle    = dataObjectTitle;
+            DataSO_Object = dataSO_Object;
         }
     }
 
+    [Serializable]
     public class DataSO_Object
-    {
-        public          int             SelectedIndex = -1;
-        public          bool            ShowData;
-        public          Vector2         ScrollPosition;
-
-        public readonly string               Title;
-        public readonly List<DataSO_Category> Data;
-
-        public DataSO_Object(string title, List<DataSO_Category> data)
-        {
-            Title     = title;
-            Data = data;
-        }
-    }
-
-    public class DataSO_Category
     {
         public int     SelectedIndex = -1;
         public bool    ShowData;
         public Vector2 ScrollPosition;
 
-        public readonly string                   CategoryTitle;
-        public readonly DataDisplayType          DataDisplayType;
-        public readonly Action DisplayData;
-
-        public DataSO_Category(string categoryTitle, DataDisplayType dataDisplayType, Action displayData)
+        public readonly string              Title;
+        public readonly DataDisplayType     DataDisplayType;
+        public readonly List<string>        Data;
+        public readonly List<DataSO_Object> SubData;
+        
+        public DataSO_Object(string title, DataDisplayType dataDisplayType, List<string> data = null, List<DataSO_Object> subData = null)
         {
-            CategoryTitle           = categoryTitle;
-            DataDisplayType = dataDisplayType;
-            DisplayData     = displayData;
+            switch (dataDisplayType)
+            {
+                case DataDisplayType.List when data is null && subData is null:
+                    throw new NullReferenceException("Data is null.");
+                case DataDisplayType.Item when data is null:
+                    throw new NullReferenceException("Data is null.");
+                case DataDisplayType.SelectableList when subData is null:
+                    throw new NullReferenceException("SubData is null.");
+            }
+
+            Title            = title;
+            DataDisplayType  = dataDisplayType;
+            Data             = data;
+            SubData          = subData;
         }
     }
 

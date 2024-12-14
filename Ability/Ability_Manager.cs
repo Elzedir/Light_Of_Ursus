@@ -5,6 +5,7 @@ using System.Linq;
 using Actor;
 using Inventory;
 using Priority;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -70,7 +71,7 @@ namespace Ability
         }
     }
 
-    public class Ability_Master
+    public class Ability_Master : Data_Class
     {
         public readonly AbilityName                             AbilityName;
         public          string                                  AbilityDescription;
@@ -102,6 +103,68 @@ namespace Ability
         public void DealDamage()
         {
             // character.ReceiveDamage (new Damage(BaseDamage));
+        }
+
+        protected override DataSO_Object _getDataSO_Object()
+        {
+            var dataObjects = new List<DataSO_Object>();
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Ability Base Stats",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Ability ID: {(uint)AbilityName}",
+                        $"Ability Name: {AbilityName}",
+                        $"Ability Description: {AbilityDescription}"
+                    }));
+            }
+            catch
+            {
+                Debug.Log("Error in Ability Base Stats");
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Ability Combat Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Ability Actions: {AbilityActions.Count}",
+                        $"Ability Max Level: {MaxLevel}",
+                        $"Ability Base Damage: {BaseDamage.Count}"
+                    }));
+            }
+            catch
+            {
+                Debug.Log("Error in Ability Combat Data");
+
+                Debug.LogWarning(AbilityActions);
+                Debug.LogWarning(AbilityActions?.Select(action => action.Name));
+            }
+
+            try
+            {
+                dataObjects.Add(new DataSO_Object(
+                    title: "Ability Animation Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Has Ability Animation: {AnimationClip != null}"
+                    }));
+            }
+            catch
+            {
+                Debug.Log("Error in Ability Animation Data");
+            }
+
+            return new DataSO_Object(
+                title: $"{(uint)AbilityName}: {AbilityName}",
+                dataDisplayType: DataDisplayType.List,
+                subData: new List<DataSO_Object>(dataObjects));
         }
     }
 

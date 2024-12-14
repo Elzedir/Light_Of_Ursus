@@ -13,7 +13,7 @@ namespace Actor
             _actorDataPreset_SO ??= _getActorDataPreset_SO();
 
         public static Actor_Data GetActorDataPreset(ActorDataPresetName actorDataPresetName) =>
-            ActorDataPreset_SO.GetActorDataPreset(actorDataPresetName);
+            ActorDataPreset_SO.GetActorDataPreset(actorDataPresetName).DataObject;
         
         public static void PopulateAllActorDataPresets()
         {

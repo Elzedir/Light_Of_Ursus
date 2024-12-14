@@ -5,9 +5,9 @@ namespace Items
 {
     public abstract class List_Consumable
     {
-        public static Dictionary<uint, Item_Master> GetAllDefaultConsumables()
+        public static Dictionary<uint, Item_Data> GetAllDefaultConsumables()
         {
-            var allConsumables = new Dictionary<uint, Item_Master>();
+            var allConsumables = new Dictionary<uint, Item_Data>();
             
             foreach (var consumable in _potions)
             {
@@ -17,11 +17,11 @@ namespace Items
             return allConsumables;
         }
 
-        static readonly Dictionary<uint, Item_Master> _potions = new()
+        static readonly Dictionary<uint, Item_Data> _potions = new()
         {
             {
                 202,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 202,
                         itemType: ItemType.Consumable,

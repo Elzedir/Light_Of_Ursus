@@ -7,9 +7,9 @@ namespace Lists
 {
     public abstract class List_Armour
     {
-        public static Dictionary<uint, Item_Master> GetAllDefaultArmour()
+        public static Dictionary<uint, Item_Data> GetAllDefaultArmour()
         {
-            var allArmour = new Dictionary<uint, Item_Master>();
+            var allArmour = new Dictionary<uint, Item_Data>();
             
             foreach (var armour in _heavy)
             {
@@ -19,11 +19,11 @@ namespace Lists
             return allArmour;
         }
 
-        static readonly Dictionary<uint, Item_Master> _heavy = new()
+        static readonly Dictionary<uint, Item_Data> _heavy = new()
         {
             {
                 100,
-                new Item_Master(
+                new Item_Data(
                     new CommonStats_Item(
                         itemID: 100,
                         itemType: ItemType.Armour,
