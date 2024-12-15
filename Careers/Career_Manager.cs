@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Jobs;
 using UnityEngine;
 
-namespace Career
+namespace Careers
 {
     public abstract class Career_Manager
     {
@@ -31,6 +27,11 @@ namespace Career
             career_SO = ScriptableObject.CreateInstance<Career_SO>();
             
             return career_SO;
+        }
+        
+        public static void ClearSOData()
+        {
+            Career_SO.ClearSOData();
         }
     }
 

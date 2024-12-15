@@ -18,7 +18,9 @@ namespace Tools
                 EditorGUILayout.LabelField($"{SO} is null or {SO?.DataObjects} is null", EditorStyles.boldLabel);
                 return;
             }
-
+            
+            SO.ToggleMissingDataDebugs = GUILayout.Toggle(false, "Toggle Missing Data Debugs");
+            
             if (GUILayout.Button("Refresh All Objects")) SO.RefreshDataObjects();
 
             if (SO.DataObjects.Length is 0)
@@ -51,7 +53,7 @@ namespace Tools
             return baseObjects.Select(base_Object => $"{base_Object.DataObjectTitle}").ToArray();
         }
 
-        static void _drawData_Object(DataSO_Object dataSO_Object, bool firstData = false)
+        static void _drawData_Object(Data_Display dataSO_Object, bool firstData = false)
         {
             while (true)
             {
@@ -67,7 +69,7 @@ namespace Tools
                         return;
                 }
                 
-                if (dataSO_Object.DataDisplayType == DataDisplayType.List && dataSO_Object.SubData is not null)
+                if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
                 {
                     foreach (var subData in dataSO_Object.SubData)
                         _drawData_Object(subData);

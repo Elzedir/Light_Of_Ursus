@@ -1,7 +1,8 @@
 using Ability;
 using Actor;
-using Career;
+using Careers;
 using City;
+using DataPersistence;
 using DateAndTime;
 using EmployeePosition;
 using Faction;
@@ -30,10 +31,15 @@ namespace Tools
             {
                 _saveAllSOs();
             }
-
+            
             if (GUILayout.Button("Refresh All SOs"))
             {
-                _refreshAllSOs();
+                ClearAllSOs();
+            }
+
+            if (GUILayout.Button("Recreate All SOs"))
+            {
+                RecreateAllSOs();
             }
 
             if (GUILayout.Button("Delete Test Save File"))
@@ -47,7 +53,24 @@ namespace Tools
             DataPersistenceManager.DataPersistence_SO.SaveGame("");
         }
 
-        static void _refreshAllSOs()
+        public static void ClearAllSOs()
+        {
+            Ability_Manager.ClearSOData();
+            Actor_Manager.ClearSOData();
+            ActorPreset_Manager.ClearSOData();
+            Career_Manager.ClearSOData();
+            City_Manager.ClearSOData();
+            EmployeePosition_Manager.ClearSOData();
+            Faction_Manager.ClearSOData();
+            Item_Manager.ClearSOData();
+            Job_Manager.ClearSOData();
+            JobSite_Manager.ClearSOData();
+            Recipe_Manager.ClearSOData();
+            Region_Manager.ClearSOData();
+            Station_Manager.ClearSOData();
+        }
+
+        public static void RecreateAllSOs()
         {
             var scriptableObjectsToDestroy = Resources.FindObjectsOfTypeAll<ScriptableObject>();
 
@@ -69,7 +92,7 @@ namespace Tools
 
             _saveScriptableObject<Ability_SO>("Ability_SO", folderPath);
             _saveScriptableObject<Actor_SO>("Actor_SO", folderPath);
-            _saveScriptableObject<ActorDataPreset_SO>("ActorDataPreset_SO", folderPath);
+            _saveScriptableObject<ActorPreset_SO>("ActorDataPreset_SO", folderPath);
             _saveScriptableObject<Career_SO>("Career_SO", folderPath);
             _saveScriptableObject<City_SO>("City_SO", folderPath);
             _saveScriptableObject<DataPersistence_SO>("DataPersistence_SO", folderPath);
@@ -82,8 +105,7 @@ namespace Tools
             _saveScriptableObject<Recipe_SO>("Recipe_SO", folderPath);
             _saveScriptableObject<Region_SO>("Region_SO", folderPath);
             _saveScriptableObject<Station_SO>("Station_SO", folderPath);
-
-            // Refresh the AssetDatabase to show the changes
+            
             AssetDatabase.Refresh();
 
             Debug.Log("All SOs refreshed.");

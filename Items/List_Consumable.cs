@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Item
+namespace Items
 {
     public abstract class List_Consumable
     {
@@ -34,7 +34,7 @@ namespace Item
                     null,
                     null,
 
-                    new FixedModifiers_Item(
+                    new Item_FixedModifiers(
                         healthRecovery: 5
                     ),
                     null,

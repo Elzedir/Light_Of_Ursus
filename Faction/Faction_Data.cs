@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Managers;
+using Relationships;
+using Tools;
 using UnityEngine;
 
 namespace Faction
 {
     [Serializable]
-    public class Faction_Data
+    public class Faction_Data : Data_Class
     {
         public uint   FactionID;
         public string FactionName;
@@ -47,14 +50,55 @@ namespace Faction
                 factionGO.transform.position = Vector3.zero;
             }
         }
-
-        public void AddToFactionActorIDList(uint actorID) => AllFactionActorIDs.Add(actorID);
-
-        public void RemoveFromFactionActorIDList(uint actorID) => AllFactionActorIDs.Remove(actorID);
-
-        public void ClearActorData()
+        
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
         {
-            AllFactionActorIDs.Clear();
+            var dataObjects = new List<Data_Display>();
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Base Faction Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Faction ID: {FactionID}",
+                        $"Faction Name: {FactionName}",
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base Faction Data");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Faction Actors",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllFactionActorIDs.Select(actorID => actorID.ToString()).ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error in Faction Actors");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Faction Relations",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllFactionRelations.Select(relation => $"{relation.FactionID_B}: {relation.FactionRelation}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error in Faction Actors");
+            }
+
+            return new Data_Display(
+                title: "Faction Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 }

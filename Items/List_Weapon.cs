@@ -1,7 +1,8 @@
 using System.Collections.Generic;
+using Equipment;
 using UnityEngine;
 
-namespace Item
+namespace Items
 {
     public enum WeaponType
     {
@@ -72,7 +73,7 @@ namespace Item
                         itemScale: Vector3.one
                     ),
 
-                    new WeaponStats_Item(
+                    new Item_WeaponStats(
                         weaponType: new[] { WeaponType.TwoHandedRanged },
                         weaponClass: new[] { WeaponClass.ShortBow },
                         maxChargeTime: 2
@@ -80,11 +81,11 @@ namespace Item
 
                     null,
 
-                    new FixedModifiers_Item(
+                    new Item_FixedModifiers(
                         attackRange: 1
                     ),
 
-                    new PercentageModifiers_Item(
+                    new Item_PercentageModifiers(
                         attackDamage: 1.1f,
                         attackSpeed: 1.5f,
                         attackSwingTime: 3f,
@@ -124,7 +125,7 @@ namespace Item
                         itemScale: new Vector3(0.1f, 0.6f, 0.1f)
                     ),
 
-                    new WeaponStats_Item(
+                    new Item_WeaponStats(
                         weaponType: new[] { WeaponType.OneHandedMelee },
                         weaponClass: new[] { WeaponClass.ShortSword },
                         maxChargeTime: 3
@@ -133,7 +134,7 @@ namespace Item
                     null,
                     null,
 
-                    new PercentageModifiers_Item(
+                    new Item_PercentageModifiers(
                         attackDamage: 1.2f,
                         attackSpeed: 1.1f,
                         attackSwingTime: 1.1f,
@@ -171,7 +172,7 @@ namespace Item
                         itemScale: new Vector3(1f, 1f, 0.1f)
                     ),
 
-                    new WeaponStats_Item(
+                    new Item_WeaponStats(
                         weaponType: new[] { WeaponType.OneHandedShield },
                         weaponClass: new[] { WeaponClass.Shield },
                         maxChargeTime: 3
@@ -179,11 +180,11 @@ namespace Item
 
                     null,
 
-                    new FixedModifiers_Item(
+                    new Item_FixedModifiers(
                         physicalArmour: 5
                     ),
 
-                    new PercentageModifiers_Item(
+                    new Item_PercentageModifiers(
                         attackDamage: 1.2f,
                         attackSpeed: 1.1f,
                         attackSwingTime: 1.1f,

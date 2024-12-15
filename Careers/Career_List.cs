@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using Jobs;
-using UnityEngine;
 
-namespace Career
+namespace Careers
 {
     public abstract class Career_List
     {

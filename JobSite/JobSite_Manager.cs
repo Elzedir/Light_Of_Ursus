@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DataPersistence;
 using EmployeePosition;
 using Initialisation;
 using UnityEditor;
@@ -16,7 +17,7 @@ namespace JobSite
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites);
+            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites.Select(jobSite => jobSite.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -59,7 +60,7 @@ namespace JobSite
         
         public static JobSite_Data GetJobSite_Data(uint jobSiteID)
         {
-            return JobSite_SO.GetJobSite_Data(jobSiteID);
+            return JobSite_SO.GetJobSite_Data(jobSiteID).DataObject;
         }
         
         public static JobSite_Component GetJobSite_Component(uint jobSiteID)
@@ -123,6 +124,11 @@ namespace JobSite
                 EmployeePositionName.Hauler
             }}
         };
+        
+        public static void ClearSOData()
+        {
+            JobSite_SO.ClearSOData();
+        }
     }
     
     public enum JobSiteName

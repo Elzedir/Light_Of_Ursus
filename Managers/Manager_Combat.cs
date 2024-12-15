@@ -1,20 +1,35 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Manager_Combat : MonoBehaviour
+namespace Managers
 {
-
-}
-
-public enum DamageType { Normal, Blunt, Slash, Pierce, Fire, Lightning, Magic, Pure }
-
-public class Damage
-{
-    public List<(float DamageAmount, DamageType DamageType)> TotalDamage = new();
-    
-    public Damage(List<(float, DamageType)> totalDamage)
+    public class Manager_Combat : MonoBehaviour
     {
-        TotalDamage = totalDamage;
+
+    }
+
+    public enum DamageType
+    {
+        Normal, 
+        Practice,
+        Blunt, 
+        Slash, 
+        Pierce, 
+        Fire, 
+        Lightning,
+        Magic, 
+        Pure
+    }
+
+    [Serializable]
+    public class Damage_Data
+    {
+        public Dictionary<DamageType, float> TotalDamage;
+    
+        public Damage_Data(Dictionary<DamageType, float> totalDamage)
+        {
+            TotalDamage = totalDamage;
+        }
     }
 }

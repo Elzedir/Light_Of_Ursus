@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using DataPersistence;
 using Initialisation;
 using UnityEditor;
 using UnityEngine;
@@ -13,7 +15,7 @@ namespace City
         static City_SO AllCities => _allCities ??= _getCity_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedCityData = new SavedCityData(AllCities.Cities);
+            saveData.SavedCityData = new SavedCityData(AllCities.Cities.Select(city => city.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -57,7 +59,7 @@ namespace City
         
         public static City_Data GetCity_Data(uint cityID)
         {
-            return AllCities.GetCity_Data(cityID);
+            return AllCities.GetCity_Data(cityID).DataObject;
         }
         
         public static City_Component GetCity_Component(uint cityID)
@@ -99,6 +101,11 @@ namespace City
         public static uint GetUnusedCityID()
         {
             return AllCities.GetUnusedCityID();
+        }
+        
+        public static void ClearSOData()
+        {
+            AllCities.ClearSOData();
         }
     }
 }

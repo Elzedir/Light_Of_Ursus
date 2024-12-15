@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Items;
-using Lists;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Item
+namespace Items
 {
     [CreateAssetMenu(fileName = "Item_SO", menuName = "SOList/Item_SO")]
     [Serializable]
@@ -65,7 +64,7 @@ namespace Item
                 dataObjectID: data.ItemID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.ItemID}: {data.ItemName}",
-                dataSO_Object: data.DataSO_Object);
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

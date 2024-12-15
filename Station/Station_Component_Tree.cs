@@ -6,7 +6,6 @@ using Items;
 using Jobs;
 using OperatingArea;
 using Recipe;
-using ScriptableObjects;
 using UnityEngine;
 
 namespace Station
@@ -95,10 +94,10 @@ namespace Station
                 return;
             }
 
-            Recipe_Master recipeMaster = Recipe_Manager.GetRecipe_Master(recipeName);
+            Recipe_Data recipeData = Recipe_Manager.GetRecipe_Master(recipeName);
 
-            var cost  = _getCost(recipeMaster.RequiredIngredients, actor);
-            var yield = _getYield(recipeMaster.RecipeProducts, actor);
+            var cost  = _getCost(recipeData.RequiredIngredients, actor);
+            var yield = _getYield(recipeData.RecipeProducts, actor);
 
             if (!StationData.InventoryData.InventoryContainsAllItems(cost))
             {

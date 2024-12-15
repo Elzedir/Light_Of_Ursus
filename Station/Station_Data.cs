@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Initialisation;
 using Inventory;
 using Items;
 using JobSite;
-using Managers;
 using Priority;
 using Recipe;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Station
 {
     [Serializable]
-    public class Station_Data
+    public class Station_Data : Data_Class
     {
         public uint       StationID;
+        public StationName StationName;
         Station_Component _station_Component;
         public Station_Component StationComponent => _station_Component ??= Station_Manager.GetStation_Component(StationID);
 
@@ -38,6 +38,17 @@ namespace Station
         public ProductionData      ProductionData => _productionData ??= new ProductionData(new List<Item>(), StationID);
 
         public List<uint> AllOperatingAreaIDs;
+        
+        public Station_Data(uint stationID, StationName stationName, string stationDescription, uint jobsiteID)
+        {
+            StationID          = stationID;
+            StationName        = stationName;
+            StationDescription = stationDescription;
+            SetJobsiteID(jobsiteID);
+
+            CurrentOperatorIDs = new List<uint>();
+            AllOperatingAreaIDs = new List<uint>();
+        }
 
         public void InitialiseStationData()
         {
@@ -81,25 +92,96 @@ namespace Station
         {
             StationIsActive = stationIsActive;
         }
-    }
 
-    [CustomPropertyDrawer(typeof(Station_Data))]
-    public class StationData_Drawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
         {
-            var    stationNameProp = property.FindPropertyRelative("StationName");
-            string stationName     = ((StationName)stationNameProp.enumValueIndex).ToString();
+            var dataObjects = new List<Data_Display>();
 
-            label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Base Station Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Station ID: {StationID}",
+                        $"Station Description: {StationDescription}",
+                        $"Station IsActive: {StationIsActive}",
+                        $"Inventory Data: {InventoryData}",
+                        $"Current Operator IDs: {string.Join(", ", CurrentOperatorIDs)}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error: Base Station Data not found.");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Station Items",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error: Inventory Data not found.");
+            }
 
-            EditorGUI.PropertyField(position, property, label, true);
-        }
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Station Progress Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Current Progress: {StationProgressData.CurrentProgress}",
+                        $"Current Quality: {StationProgressData.CurrentQuality}",
+                        $"Current Product: {StationProgressData.CurrentProduct}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error: Station Progress Data not found.");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Station Operators",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: CurrentOperatorIDs.Select(operatorID => $"{operatorID}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error: Current Operators not found.");
+            }
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Production Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"All Produced Items: {string.Join(", ", ProductionData.AllProducedItems)}",
+                        $"Estimated Production Rate Per Hour: {string.Join(", ", ProductionData.EstimatedProductionRatePerHour)}",
+                        $"Actual Production Rate Per Hour: {string.Join(", ", ProductionData.ActualProductionRatePerHour)}",
+                        $"Station ID: {ProductionData.StationID}"
+                    }));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: Production Data not found.");
+                }
+            }
 
+            return new Data_Display(
+                title: "Base Station Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: dataObjects);
         }
     }
 
@@ -144,8 +226,8 @@ namespace Station
     {
         public float         CurrentProgress;
         public float         CurrentQuality;
-        public Recipe_Master CurrentProduct;
-        public void          SetCurrentProduct(Recipe_Master currentProduct) => CurrentProduct = currentProduct;
+        public Recipe_Data CurrentProduct;
+        public void          SetCurrentProduct(Recipe_Data currentProduct) => CurrentProduct = currentProduct;
 
         public bool Progress(float progress)
         {

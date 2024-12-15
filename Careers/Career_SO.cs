@@ -1,19 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Jobs;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Career
+namespace Careers
 {
     [CreateAssetMenu(fileName = "Career_SO", menuName = "SOList/Career_SO")]
     [Serializable]
-    public class Career_SO : Data_SO<Career_Master>
+    public class Career_SO : Data_SO<Career_Data>
     {
-        public Data_Object<Career_Master>[] Careers                           => DataObjects;
-        public Data_Object<Career_Master>   GetCareer_Master(CareerName careerName) => GetDataObject_Master((uint)careerName);
+        public Data_Object<Career_Data>[] Careers                           => DataObjects;
+        public Data_Object<Career_Data>   GetCareer_Master(CareerName careerName) => GetDataObject_Master((uint)careerName);
 
         public override uint GetDataObjectID(int id) => (uint)Careers[id].DataObject.CareerName;
 
@@ -24,9 +22,9 @@ namespace Career
                 Debug.Log("No Default Careers Found");
             }
         }
-        protected override Dictionary<uint, Data_Object<Career_Master>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Data_Object<Career_Data>> _populateDefaultDataObjects()
         {
-            var defaultCareers = new Dictionary<uint, Career_Master>();
+            var defaultCareers = new Dictionary<uint, Career_Data>();
 
             foreach (var item in Career_List.GetAllDefaultCareers())
             {
@@ -36,21 +34,21 @@ namespace Career
             return _convertDictionaryToDataObject(defaultCareers);
         }
         
-        Dictionary<uint, Data_Object<Career_Master>> _defaultCareers => DefaultDataObjects;
+        Dictionary<uint, Data_Object<Career_Data>> _defaultCareers => DefaultDataObjects;
         
-        protected override Data_Object<Career_Master> _convertToDataObject(Career_Master data)
+        protected override Data_Object<Career_Data> _convertToDataObject(Career_Data data)
         {
-            return new Data_Object<Career_Master>(
+            return new Data_Object<Career_Data>(
                 dataObjectID: (uint)data.CareerName,
                 dataObject: data,
-                dataObjectTitle: $"{(uint)data.CareerName}{data.CareerName}",
-                dataSO_Object: data.DataSO_Object);
+                dataObjectTitle: $"{(uint)data.CareerName}: {data.CareerName}",
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
         }
     }
     
     [CustomEditor(typeof(Career_SO))]
-    public class AllCareers_SOEditor : Editor
+    public class AllCareers_SOEditor : Data_SOEditor<Career_Data>
     {
-        
+        public override Data_SO<Career_Data> SO => _so ??= (Career_SO)target;
     }
 }

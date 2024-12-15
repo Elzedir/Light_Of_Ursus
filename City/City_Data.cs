@@ -1,33 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace City
 {
     [Serializable]
-    public class City_Data
+    public class City_Data : Data_Class
     {
-        public void SaveData()
-        {
-            Population.SaveData();
-        }
-
-        public void LoadData()
-        {
-            Population.LoadData();
-        }
-
         public uint   CityID;
         public string CityName;
         public uint   CityFactionID;
         public uint   RegionID;
-
         public string CityDescription;
 
         public PopulationData Population;
+        
         public ProsperityData ProsperityData;
+        
         public List<uint>     AllJobsiteIDs;
 
         public void InitialiseCityData()
@@ -42,6 +35,47 @@ namespace City
                     AllJobsiteIDs.Add(jobsite.JobSiteData.JobSiteID);
                 }
             }
+        }
+
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "City Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"City ID: {CityID}",
+                        $"City Name: {CityName}",
+                        $"City Faction ID: {CityFactionID}",
+                        $"Region ID: {RegionID}",
+                        $"City Description: {CityDescription}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base Career Data");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Population Data",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    subData: Population.DataSO_Object(toggleMissingDataDebugs).SubData));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base Career Data");
+            }
+
+            return new Data_Display(
+                title: $"{CityID}: {CityName}",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 
@@ -64,57 +98,64 @@ namespace City
     }
 
     [Serializable]
-    public class PopulationData
+    public class PopulationData : Data_Class
     {
-        public void SaveData()
-        {
-            AllCitizenIDList = AllCitizenIDs.ToList();
-        }
-
-        public void LoadData()
-        {
-            AllCitizenIDs = new HashSet<uint>(AllCitizenIDList);
-        }
-
         public float      CurrentPopulation;
         public float      MaxPopulation;
         public float      ExpectedPopulation;
         public List<uint> AllCitizenIDList;
 
         public HashSet<uint> AllCitizenIDs = new();
-
-        public void DisplayCurrentPopulation()
+        
+        public PopulationData(List<uint> allCitizenIDList, float maxPopulation, float expectedPopulation)
         {
-            CurrentPopulation = AllCitizenIDs.Count;
-        }
-
-        public void CalculateExpectedPopulation()
-        {
-            // Calculate expected population
-        }
-
-        public void AddCitizen(uint citizenID)
-        {
-            if (AllCitizenIDs.Contains(citizenID))
+            foreach (var citizenID in allCitizenIDList)
             {
-                Debug.Log($"CitizenID: {citizenID} already exists in AllCitizens.");
-                return;
+                AllCitizenIDs.Add(citizenID);
+            }
+            
+            CurrentPopulation = allCitizenIDList.Count;
+            MaxPopulation     = maxPopulation;
+            ExpectedPopulation = expectedPopulation;
+        }
+        
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Population Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Current Population: {CurrentPopulation}",
+                        $"Max Population: {MaxPopulation}",
+                        $"Expected Population: {ExpectedPopulation}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base Career Data");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Citizen IDs",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllCitizenIDs.Select(citizenID => citizenID.ToString()).ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base Career Data");
             }
 
-            AllCitizenIDs.Add(citizenID);
-            DisplayCurrentPopulation();
-        }
-
-        public void RemoveCitizen(uint actorID)
-        {
-            if (!AllCitizenIDs.Contains(actorID))
-            {
-                Debug.Log($"CitizenID: {actorID} does not exist in AllCitizens.");
-                return;
-            }
-
-            AllCitizenIDs.Remove(actorID);
-            DisplayCurrentPopulation();
+            return new Data_Display(
+                title: "Population Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 }

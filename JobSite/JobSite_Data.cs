@@ -4,19 +4,19 @@ using System.Linq;
 using Actor;
 using City;
 using EmployeePosition;
-using Initialisation;
-using Priority;
+using Managers;
 using Recipe;
 using Station;
-using UnityEditor;
+using Tools;
 using UnityEngine;
 
 namespace JobSite
 {
     [Serializable]
-    public class JobSite_Data
+    public class JobSite_Data : Data_Class
     {
-        public uint   JobSiteID;
+        public uint        JobSiteID;
+        public JobSiteName JobSiteName;
         
         JobSite_Component _jobSiteComponent;
         public JobSite_Component JobSite_Component => _jobSiteComponent ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
@@ -31,6 +31,17 @@ namespace JobSite
         public List<uint>                        AllEmployeeIDs;
         Dictionary<uint, Actor_Component>        _allEmployees;
         public Dictionary<uint, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
+        
+        public JobSite_Data(uint jobSiteID, JobSiteName jobSiteName, uint jobsiteFactionID, uint cityID, string jobsiteDescription, uint ownerID)
+        {
+            JobSiteID         = jobSiteID;
+            JobSiteName       = jobSiteName;
+            JobsiteFactionID  = jobsiteFactionID;
+            CityID            = cityID;
+            JobsiteDescription = jobsiteDescription;
+            OwnerID           = ownerID;
+            AllEmployeeIDs    = new List<uint>();
+        }
 
         Dictionary<uint, Actor_Component> _populateAllEmployees()
         {
@@ -193,7 +204,6 @@ namespace JobSite
 
             var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, employeeMaster.EmployeeDataPreset);
 
-            city.CityData.Population.AddCitizen(actor.ActorData.ActorID);
             AddEmployeeToJobsite(actor.ActorData.ActorID);
 
             return actor.ActorData.ActorID;
@@ -487,6 +497,75 @@ namespace JobSite
                     break;
                 }
             }
+        }
+
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Base JobSite Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"JobSite ID: {JobSiteID}",
+                        $"Jobsite Faction ID: {JobsiteFactionID}",
+                        $"City ID: {CityID}",
+                        $"Jobsite Description: {JobsiteDescription}",
+                        $"Owner ID: {OwnerID}",
+                        $"Jobsite is Active: {JobsiteIsActive}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error in Base JobSite Data");
+            }
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Employee Data",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllEmployeeIDs.Select(employeeID => $"{employeeID}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error in Employee Data");
+            }
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "All Station IDs",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllStationIDs?.Select(stationID => $"{stationID}").ToList()));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error in All Station IDs");
+                }
+            }
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Order Data",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: AllOrders.Select(order => $"{order.Key.ActorID}: {order.Key.OrderID}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error in Order Data");
+            }
+
+            return new Data_Display(
+                title: "JobSite Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 }

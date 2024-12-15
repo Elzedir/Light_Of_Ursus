@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Equipment;
 
-namespace Item
+namespace Items
 {
     [Serializable]
     public class Item_CommonStats

@@ -1,34 +1,20 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Actor;
 using Inventory;
 using Priority;
-using Tools;
-using UnityEditor;
 using UnityEngine;
 
 namespace Ability
 {
-    public class Ability_Manager : MonoBehaviour
+    public abstract class Ability_Manager
     {
         const string _ability_SOPath = "ScriptableObjects/Ability_SO";
 
         static Ability_SO _allAbilities;
         static Ability_SO AllAbilities => _allAbilities ??= _getAbility_SO();
 
-        // public static void OnSceneLoaded()
-        // {
-        //     Manager_Initialisation.OnInitialiseManagerAbility += _initialise;
-        // }
-        //
-        // static void _initialise()
-        // {
-        //     AllAbilities.PopulateSceneAbilities();
-        // }
-
-        public static Ability_Master GetAbility_Master(AbilityName abilityName)
+        public static Ability_Data GetAbility_Master(AbilityName abilityName)
         {
             return AllAbilities.GetAbility_Master(abilityName).DataObject;
         }
@@ -54,117 +40,10 @@ namespace Ability
         {
             return AllAbilities.GetUnusedAbilityID();
         }
-    }
 
-    public class Ability
-    {
-        public readonly AbilityName AbilityName;
-        public          uint        CurrentLevel;
-
-        Ability_Master        _abilityMaster;
-        public Ability_Master AbilityMaster => _abilityMaster ?? Ability_Manager.GetAbility_Master(AbilityName);
-
-        public Ability(AbilityName abilityName, uint currentLevel)
+        public static void ClearSOData()
         {
-            AbilityName  = abilityName;
-            CurrentLevel = currentLevel;
-        }
-    }
-
-    public class Ability_Master : Data_Class
-    {
-        public readonly AbilityName                             AbilityName;
-        public          string                                  AbilityDescription;
-        public          uint                                    MaxLevel;
-        public          List<(float, DamageType)>               BaseDamage;
-        public          AnimationClip                           AnimationClip;
-        public readonly        List<(string Name, IEnumerator Action)> AbilityActions;
-
-        public Ability_Master(AbilityName                 abilityName, string        abilityDescription, uint maxLevel,
-                              List<(float, DamageType)>   baseDamage,  AnimationClip animationClip,
-                              List<(string, IEnumerator)> abilityActions)
-        {
-            AbilityName        = abilityName;
-            AbilityDescription = abilityDescription;
-            MaxLevel           = maxLevel;
-            BaseDamage         = baseDamage;
-            AnimationClip      = animationClip;
-            AbilityActions    = abilityActions;
-        }
-
-        public IEnumerator GetAction(string actionName)
-        {
-            if (AbilityActions.All(a => a.Name != actionName))
-                throw new ArgumentException($"AbilityActions does not contain ActionName: {actionName}");
-
-            return AbilityActions.FirstOrDefault(a => a.Name == actionName).Action;
-        }
-
-        public void DealDamage()
-        {
-            // character.ReceiveDamage (new Damage(BaseDamage));
-        }
-
-        protected override DataSO_Object _getDataSO_Object()
-        {
-            var dataObjects = new List<DataSO_Object>();
-
-            try
-            {
-                dataObjects.Add(new DataSO_Object(
-                    title: "Ability Base Stats",
-                    dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
-                    {
-                        $"Ability ID: {(uint)AbilityName}",
-                        $"Ability Name: {AbilityName}",
-                        $"Ability Description: {AbilityDescription}"
-                    }));
-            }
-            catch
-            {
-                Debug.Log("Error in Ability Base Stats");
-            }
-
-            try
-            {
-                dataObjects.Add(new DataSO_Object(
-                    title: "Ability Combat Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
-                    {
-                        $"Ability Actions: {AbilityActions.Count}",
-                        $"Ability Max Level: {MaxLevel}",
-                        $"Ability Base Damage: {BaseDamage.Count}"
-                    }));
-            }
-            catch
-            {
-                Debug.Log("Error in Ability Combat Data");
-
-                Debug.LogWarning(AbilityActions);
-                Debug.LogWarning(AbilityActions?.Select(action => action.Name));
-            }
-
-            try
-            {
-                dataObjects.Add(new DataSO_Object(
-                    title: "Ability Animation Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
-                    {
-                        $"Has Ability Animation: {AnimationClip != null}"
-                    }));
-            }
-            catch
-            {
-                Debug.Log("Error in Ability Animation Data");
-            }
-
-            return new DataSO_Object(
-                title: $"{(uint)AbilityName}: {AbilityName}",
-                dataDisplayType: DataDisplayType.List,
-                subData: new List<DataSO_Object>(dataObjects));
+            AllAbilities.ClearSOData();
         }
     }
 
@@ -190,13 +69,5 @@ namespace Ability
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
-    }
-
-    public enum AbilityName
-    {
-        None,
-        
-        Charge,
-        Eagle_Stomp
     }
 }

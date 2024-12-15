@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Managers;
+using TickRates;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -67,6 +68,8 @@ namespace DateAndTime
             DateAndTime.CurrentTotalDays++;
             DateText.text = GetCurrentDateAsString();
             DateAndTime.SetDate();
+            
+            // Tick all the Prosperity Items
         }
 
         public static void ProgressTime()

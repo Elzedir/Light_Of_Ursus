@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DataPersistence;
 using Managers;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -89,7 +90,7 @@ public class Menu_LoadGame : Menu_Base
         if (!_saveSlotParent) _saveSlotParent = Manager_Game.FindTransformRecursively(transform, "SavedGamesParent");
         if (!_saveSlot) _saveSlot = Manager_Game.FindTransformRecursively(transform, "SaveSlot").GetComponent<SaveSlot>();
 
-        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedDatas)
+        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedData)
         {
             if (saveData.Key == "TheExister") continue;
 

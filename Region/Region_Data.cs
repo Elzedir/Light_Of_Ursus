@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Actor;
+using Managers;
+using Relationships;
+using Tools;
 using UnityEditor;
 using UnityEngine;
 
 namespace Region
 {
     [Serializable]
-    public class Region_Data
+    public class Region_Data : Data_Class
     {
         public uint   RegionID;
         public string RegionName;
@@ -19,6 +21,17 @@ namespace Region
 
         public FactionName Faction;
         public List<uint>  AllCityIDs;
+        
+        public Region_Data(uint regionID, string regionName, string regionDescription, int regionFactionID, ProsperityData prosperityData = null)
+        {
+            RegionID          = regionID;
+            RegionName        = regionName;
+            RegionDescription = regionDescription;
+            RegionFactionID   = regionFactionID;
+
+            ProsperityData = new ProsperityData(prosperityData);
+            AllCityIDs     = new List<uint>();
+        }
 
         public void InitialiseRegionData()
         {
@@ -32,6 +45,54 @@ namespace Region
                     AllCityIDs.Add(city.CityData.CityID);
                 }
             }
+        }
+
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Base Region Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Region ID: {RegionID}",
+                        $"Region Name: {RegionName}",
+                        $"Region Faction ID: {RegionFactionID}",
+                        $"Region Description: {RegionDescription}",
+                        $"Prosperity Data: {ProsperityData}",
+                        $"Faction: {Faction}",
+                        $"All City IDs: {string.Join(", ", AllCityIDs)}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error: Base Region Data not found.");
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Region Prosperity",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Current Prosperity: {ProsperityData.CurrentProsperity}",
+                        $"Max Prosperity: {ProsperityData.MaxProsperity}",
+                        $"Base Prosperity Growth: {ProsperityData.BaseProsperityGrowthPerDay}"
+                    }));
+            }
+            catch
+            {
+                Debug.LogError("Error: ProsperityData.");
+            }
+
+            return new Data_Display(
+                title: "Base Region Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: dataObjects);
         }
     }
 

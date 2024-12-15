@@ -11,7 +11,6 @@ namespace Initialisation
         public static event Action OnInitialiseManagerCity;
         public static event Action OnInitialiseManagerJobSite;
         public static event Action OnInitialiseManagerStation;
-        public static event Action OnInitialiseManagerOperatingArea;
         public static event Action OnInitialiseManagerOrder;
 
         public static event Action OnInitialiseFactions;
@@ -19,13 +18,8 @@ namespace Initialisation
 
         public static event Action OnInitialiseRegions;
         public static event Action OnInitialiseCities;
-        public static event Action OnInitialiseJobsites;
+        public static event Action OnInitialiseJobSites;
         public static event Action OnInitialiseStations;
-
-        public static void InitialiseFactions()
-        {
-            
-        }
 
         public static void InitialiseManagers() 
         {
@@ -36,8 +30,12 @@ namespace Initialisation
             OnInitialiseManagerCity?.Invoke();
             OnInitialiseManagerJobSite?.Invoke();
             OnInitialiseManagerStation?.Invoke();
-            OnInitialiseManagerOperatingArea?.Invoke();
             OnInitialiseManagerOrder?.Invoke();
+        }
+        
+        public static void InitialiseFactions()
+        {
+            OnInitialiseFactions?.Invoke();
         }
 
         public static void InitialiseActors()
@@ -55,9 +53,9 @@ namespace Initialisation
             OnInitialiseCities?.Invoke();
         }
 
-        public static void InitialiseJobsites()
+        public static void InitialiseJobSites()
         {
-            OnInitialiseJobsites?.Invoke();
+            OnInitialiseJobSites?.Invoke();
         }
 
         public static void InitialiseStations()

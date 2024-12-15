@@ -59,19 +59,10 @@ namespace Actor
 
             foreach (var defaultActor in Actor_List.DefaultActors)
             {
-                defaultActors.Add(defaultActor.Key, new Actor_Data(defaultActor.Value));
+                defaultActors.Add(defaultActor.Key, defaultActor.Value);
             }
 
             return _convertDictionaryToDataObject(defaultActors);
-        }
-
-        protected override Data_Object<Actor_Data> _convertToDataObject(Actor_Data data)
-        {
-            return new Data_Object<Actor_Data>(
-                dataObjectID: data.ActorID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.ActorID}: {data.ActorName}",
-                dataSO_Object: data.DataSO_Object);
         }
 
         static uint _lastUnusedActorID = 1;
@@ -87,6 +78,15 @@ namespace Actor
         }
         
         Dictionary<uint, Data_Object<Actor_Data>> _defaultActors => DefaultDataObjects;
+        
+        protected override Data_Object<Actor_Data> _convertToDataObject(Actor_Data data)
+        {
+            return new Data_Object<Actor_Data>(
+                dataObjectID: data.ActorID, 
+                dataObject: data,
+                dataObjectTitle: $"{data.ActorID}: {data.ActorName}",
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+        }
     }
 
     [CustomEditor(typeof(Actor_SO))]

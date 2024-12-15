@@ -2,35 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Tools
 {
     [Serializable]
     public abstract class Data_SO<T> : ScriptableObject where T : class
     {
-        int                                                                      _dataObjectLength;
+        int                               _dataObjects_CurrentLength;
         [SerializeField] Data_Object<T>[] _dataObjects;
 
         public Data_Object<T>[] DataObjects
         {
             get
             {
-                if (_dataObjects is not null && _dataObjects.Length != 0 && _dataObjects.Length == _dataObjectLength) return _dataObjects;
+                if (_dataObjects is not null && _dataObjects.Length != 0 && _dataObjects.Length == _dataObjects_CurrentLength) return _dataObjects;
                 
-                _dataObjectLength = _dataObjects?.Length ?? 0;
+                _dataObjects_CurrentLength = _dataObjects?.Length ?? 0;
                 var dataObjects = InitialiseAllDataObjects();
                 return dataObjects; 
             }
         }
 
-        public void RefreshDataObjects() => _dataObjectLength = 0;
+        public void RefreshDataObjects() => _dataObjects_CurrentLength = 0;
 
         public void LoadSO(T[] dataObjects) => _dataObjects = dataObjects.Select(_convertToDataObject).ToArray();
 
         Dictionary<uint, int>        _dataObjectIndexLookup;
         public Dictionary<uint, int> DataObjectIndexLookup => _dataObjectIndexLookup ??= _buildIndexLookup();
         int                          _currentIndex;
+
+        public bool ToggleMissingDataDebugs;
 
         public Data_Object<T>[] InitialiseAllDataObjects()
         {
@@ -125,7 +126,7 @@ namespace Tools
 
         public void UpdateAllDataObjects(Dictionary<uint, T> newDataObjects, bool clearDataFirst = false)
         {
-            if (clearDataFirst) ClearDataObjectData();
+            if (clearDataFirst) ClearSOData();
 
             foreach (var (key, value) in newDataObjects)
             {
@@ -145,8 +146,8 @@ namespace Tools
             }
         }
         
-        [FormerlySerializedAs("DataScrollPosition")] public Vector2        ScrollPosition;
-        protected abstract                                  Data_Object<T> _convertToDataObject(T data);
+        public             Vector2        ScrollPosition;
+        protected abstract Data_Object<T> _convertToDataObject(T data);
 
         protected Dictionary<uint, Data_Object<T>> _convertDictionaryToDataObject(
             Dictionary<uint, T> dictionary)
@@ -154,10 +155,10 @@ namespace Tools
             return dictionary.ToDictionary(key => key.Key, value => _convertToDataObject(value.Value));
         }
 
-        public void ClearDataObjectData()
+        public void ClearSOData()
         {
             _dataObjects = Array.Empty<Data_Object<T>>();
-            DataObjectIndexLookup.Clear();
+            _dataObjectIndexLookup?.Clear();
             _currentIndex = 0;
         }
 
@@ -170,36 +171,26 @@ namespace Tools
     }
 
     [Serializable]
-
-    public abstract class Data_Class
-    {
-        DataSO_Object        _dataSO_Object;
-        public DataSO_Object DataSO_Object => _dataSO_Object ??= _getDataSO_Object();
-
-        protected abstract DataSO_Object _getDataSO_Object();
-    }
-
-    [Serializable]
     public class Data_Object<T> where T : class
     {
-        public readonly uint                            DataObjectID;
-        public readonly string                          DataObjectTitle;
+        public readonly uint   DataObjectID;
+        public readonly string DataObjectTitle;
 
-        public T             DataObject;
-        public DataSO_Object DataSO_Object;
+        public T            DataObject;
+        public Data_Display DataSO_Object;
 
         public Data_Object(uint   dataObjectID,    T      dataObject,
-                           string dataObjectTitle, DataSO_Object dataSO_Object)
+                           string dataObjectTitle, Data_Display data_Display)
         {
             DataObjectID       = dataObjectID;
             DataObject         = dataObject;
             DataObjectTitle    = dataObjectTitle;
-            DataSO_Object = dataSO_Object;
+            DataSO_Object = data_Display;
         }
     }
 
     [Serializable]
-    public class DataSO_Object
+    public class Data_Display
     {
         public int     SelectedIndex = -1;
         public bool    ShowData;
@@ -208,13 +199,13 @@ namespace Tools
         public readonly string              Title;
         public readonly DataDisplayType     DataDisplayType;
         public readonly List<string>        Data;
-        public readonly List<DataSO_Object> SubData;
+        public readonly List<Data_Display> SubData;
         
-        public DataSO_Object(string title, DataDisplayType dataDisplayType, List<string> data = null, List<DataSO_Object> subData = null)
+        public Data_Display(string title, DataDisplayType dataDisplayType, List<string> data = null, List<Data_Display> subData = null)
         {
             switch (dataDisplayType)
             {
-                case DataDisplayType.List when data is null && subData is null:
+                case DataDisplayType.CheckBoxList when data is null && subData is null:
                     throw new NullReferenceException("Data is null.");
                 case DataDisplayType.Item when data is null:
                     throw new NullReferenceException("Data is null.");
@@ -232,7 +223,7 @@ namespace Tools
     public enum DataDisplayType
     {
         Item,
-        List,
+        CheckBoxList,
         SelectableList
     }
 }

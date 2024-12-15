@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Faction
 {
-    public abstract class Manager_Faction : IDataPersistence
+    public abstract class Faction_Manager : IDataPersistence
     {
         const string _faction_SOPath = "ScriptableObjects/Faction_SO";
         
@@ -102,6 +102,11 @@ namespace Faction
             }
 
             actor.transform.parent.SetParent(factionGO.transform);
+        }
+        
+        public static void ClearSOData()
+        {
+            AllFactions.ClearSOData();
         }
     }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
+using Managers;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -9,9 +10,9 @@ namespace Ability
 {
     public abstract class Ability_List
     {
-        public static Dictionary<AbilityName, Ability_Master> GetAllDefaultAbilities()
+        public static Dictionary<AbilityName, Ability_Data> GetAllDefaultAbilities()
         {
-            var allAbilities = new Dictionary<AbilityName, Ability_Master>();
+            var allAbilities = new Dictionary<AbilityName, Ability_Data>();
 
             foreach (var ability in _defaultAbilities)
             {
@@ -21,10 +22,10 @@ namespace Ability
             return allAbilities;
         }
             
-        static readonly Dictionary<AbilityName, Ability_Master> _defaultAbilities = new()
+        static readonly Dictionary<AbilityName, Ability_Data> _defaultAbilities = new()
         {
             {
-                AbilityName.Eagle_Stomp, new Ability_Master(
+                AbilityName.Eagle_Stomp, new Ability_Data(
                     abilityName: AbilityName.Eagle_Stomp,
                     abilityDescription: "Fly high, little one.",
                     maxLevel: 10,
@@ -37,7 +38,7 @@ namespace Ability
                     ) 
             },
             {
-                AbilityName.Charge, new Ability_Master(
+                AbilityName.Charge, new Ability_Data(
                     abilityName: AbilityName.Charge,
                     abilityDescription: "A charge.",
                     maxLevel: 10,

@@ -1,75 +1,76 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using Actor;
 using Items;
 using Managers;
 using UnityEngine;
 
-public class Interactable_Test : MonoBehaviour, IInteractable
+namespace Interactable
 {
-    public float InteractRange { get; private set; }
-
-    public void SetInteractRange(float interactRange)
+    public class Interactable_Test : MonoBehaviour, IInteractable
     {
-        InteractRange = interactRange;
-    }
+        public float InteractRange { get; private set; }
 
-    public bool WithinInteractRange(Actor_Component interactor)
-    {
-        return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
-    }
-
-    public IEnumerator Interact(Actor_Component actor)
-    {
-        if (transform.name == "Sword")
+        public void SetInteractRange(float interactRange)
         {
-            TestEquipSword();
-        }
-        else if (transform.name == "Shield")
-        {
-            TestEquipShield();
+            InteractRange = interactRange;
         }
 
-        yield break;
-    }
-
-    bool _swordEquipped = false;
-    bool _shieldEquipped = false;
-
-    public void TestEquipSword()
-    {
-        if (!_swordEquipped)
+        public bool WithinInteractRange(Actor_Component interactor)
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
+            return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
+        }
+
+        public IEnumerator Interact(Actor_Component actor)
+        {
+            if (transform.name == "Sword")
             {
-                _swordEquipped = true;
+                TestEquipSword();
             }
-        }
-        else
-        {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(4))
+            else if (transform.name == "Shield")
             {
-                _swordEquipped = false;
+                TestEquipShield();
             }
+
+            yield break;
         }
 
-    }
+        bool _swordEquipped  = false;
+        bool _shieldEquipped = false;
 
-    public void TestEquipShield()
-    {
-        if (!_shieldEquipped)
+        public void TestEquipSword()
         {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
+            if (!_swordEquipped)
             {
-                _shieldEquipped = true;
+                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
+                {
+                    _swordEquipped = true;
+                }
             }
-        }
-        else
-        {
-            if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(3))
+            else
             {
-                _shieldEquipped = false;
+                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(4))
+                {
+                    _swordEquipped = false;
+                }
+            }
+
+        }
+
+        public void TestEquipShield()
+        {
+            if (!_shieldEquipped)
+            {
+                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
+                {
+                    _shieldEquipped = true;
+                }
+            }
+            else
+            {
+                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(3))
+                {
+                    _shieldEquipped = false;
+                }
             }
         }
     }

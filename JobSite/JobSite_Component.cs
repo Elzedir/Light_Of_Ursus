@@ -8,6 +8,7 @@ using Jobs;
 using Managers;
 using Priority;
 using Station;
+using TickRates;
 using UnityEngine;
 using Station_Component = Station.Station_Component;
 
@@ -37,7 +38,7 @@ namespace JobSite
         
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseStations += _initialise;
+            Manager_Initialisation.OnInitialiseJobSites += _initialise;
         }
 
         void _initialise()

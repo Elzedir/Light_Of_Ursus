@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using DataPersistence;
 using EmployeePosition;
 using Initialisation;
 using Items;
@@ -36,7 +37,7 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
 
     void _initialise()
     {
-        _initialiseAllOrderData();
+        //_initialiseAllOrderData();
     }
 
     void _initialiseAllOrderData()
@@ -48,13 +49,12 @@ public class Manager_Order : MonoBehaviour, IDataPersistence
 
     public static void AddOrderData(OrderData orderData)
     {
-        if (AllOrderData.ContainsKey(orderData.ActorID))
+        if (!AllOrderData.TryAdd(orderData.ActorID, orderData))
         {
             Debug.Log($"OrderData with ActorID: {orderData.ActorID} already exists.");
             return;
         }
 
-        AllOrderData.Add(orderData.ActorID, orderData);
         DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
     }
 

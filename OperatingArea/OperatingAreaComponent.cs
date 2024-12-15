@@ -29,7 +29,7 @@ namespace OperatingArea
         public bool HasOperator()              => OperatingAreaData.CurrentOperatorID != 0;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
 
-        public float Operate(float baseProgressRate, Recipe_Master recipeMaster)
+        public float Operate(float baseProgressRate, Recipe_Data recipeData)
         {
             if (OperatingAreaData.CurrentOperatorID == 0 || OperatingAreaData.IsOperatorMovingToOperatingArea) return 0;
 
@@ -47,7 +47,7 @@ namespace OperatingArea
                 float productionRate = baseProgressRate;
                 // Then modify production rate by any area modifiers (Land type, events, etc.)
 
-                foreach (var vocation in recipeMaster.RequiredVocations)
+                foreach (var vocation in recipeData.RequiredVocations)
                 {
                     productionRate *= OperatingAreaData.CurrentOperator.ActorData.VocationData.GetProgress(vocation);
                 }

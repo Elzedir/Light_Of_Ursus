@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Priority;
 using Station;
 
-namespace Item
+namespace Items
 {
     public enum RawMaterialName
     {
@@ -203,7 +203,7 @@ namespace Item
                     null,
                     null,
                     null,
-                    new PriorityStats_Item(
+                    new Item_PriorityStats(
                         new Dictionary<PriorityImportance, List<StationName>>
                         {
                             { PriorityImportance.High, new() { StationName.Sawmill } },

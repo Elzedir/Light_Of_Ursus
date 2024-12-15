@@ -9,11 +9,11 @@ namespace Ability
 {
     [CreateAssetMenu(fileName = "Ability_SO", menuName = "SOList/Ability_SO")]
     [Serializable]
-    public class Ability_SO : Data_SO<Ability_Master>
+    public class Ability_SO : Data_SO<Ability_Data>
     {
-        public Data_Object<Ability_Master>[] Abilities => DataObjects;
+        public Data_Object<Ability_Data>[] Abilities => DataObjects;
 
-        public Data_Object<Ability_Master> GetAbility_Master(AbilityName abilityName) =>
+        public Data_Object<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
             GetDataObject_Master((uint)abilityName);
 
         public Ability GetAbility(AbilityName abilityName, uint currentLevel)
@@ -23,10 +23,10 @@ namespace Ability
 
         public override uint GetDataObjectID(int id) => (uint)Abilities[id].DataObject.AbilityName;
 
-        public void UpdateAbility(uint abilityID, Ability_Master ability_Master) =>
-            UpdateDataObject(abilityID, ability_Master);
+        public void UpdateAbility(uint abilityID, Ability_Data ability_Data) =>
+            UpdateDataObject(abilityID, ability_Data);
 
-        public void UpdateAllAbilities(Dictionary<uint, Ability_Master> allAbilities) =>
+        public void UpdateAllAbilities(Dictionary<uint, Ability_Data> allAbilities) =>
             UpdateAllDataObjects(allAbilities);
 
         public void PopulateSceneAbilities()
@@ -37,9 +37,9 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Ability_Master>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Data_Object<Ability_Data>> _populateDefaultDataObjects()
         {
-            var defaultAbilities = new Dictionary<uint, Ability_Master>();
+            var defaultAbilities = new Dictionary<uint, Ability_Data>();
 
             foreach (var defaultAbility in Ability_List.GetAllDefaultAbilities())
             {
@@ -49,13 +49,13 @@ namespace Ability
             return _convertDictionaryToDataObject(defaultAbilities);
         }
 
-        protected override Data_Object<Ability_Master> _convertToDataObject(Ability_Master data)
+        protected override Data_Object<Ability_Data> _convertToDataObject(Ability_Data data)
         {
-            return new Data_Object<Ability_Master>(
+            return new Data_Object<Ability_Data>(
                 dataObjectID: (uint)data.AbilityName,
                 dataObject: data, 
-                dataObjectTitle: $"{(uint)data.AbilityName}{data.AbilityName}",
-                dataSO_Object: data.DataSO_Object);
+                dataObjectTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
         }
 
         static uint _lastUnusedAbilityID = 1;
@@ -70,12 +70,12 @@ namespace Ability
             return _lastUnusedAbilityID;
         }
 
-        Dictionary<uint, Data_Object<Ability_Master>> _defaultAbilities => DefaultDataObjects;
+        Dictionary<uint, Data_Object<Ability_Data>> _defaultAbilities => DefaultDataObjects;
     }
 
     [CustomEditor(typeof(Ability_SO))]
-    public class Ability_SOEditor : Data_SOEditor<Ability_Master>
+    public class Ability_SOEditor : Data_SOEditor<Ability_Data>
     {
-        public override Data_SO<Ability_Master> SO => _so ??= (Ability_SO)target;
+        public override Data_SO<Ability_Data> SO => _so ??= (Ability_SO)target;
     }
 }

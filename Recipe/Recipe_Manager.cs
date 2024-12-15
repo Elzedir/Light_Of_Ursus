@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Items;
-using Station;
 using UnityEngine;
 
 namespace Recipe
@@ -14,7 +11,7 @@ namespace Recipe
         static Recipe_SO _allRecipes;
         static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
 
-        public static Recipe_Master GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName);
+        public static Recipe_Data GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName).DataObject;
 
         static Recipe_SO _getRecipe_SO()
         {
@@ -33,81 +30,10 @@ namespace Recipe
             AllRecipes.PopulateDefaultRecipes();
             // Then populate custom recipes.
         }
-    }
-
-    public enum RecipeName
-    {
-        None,
-        Plank,
-        Log,
-        Iron_Ingot,
-    }
-
-    public class Recipe
-    {
-        public readonly RecipeName RecipeName;
-        public          int        CurrentProgress;
-
-        public string                    RecipeDescription   => RecipeMaster.RecipeDescription;
-        public int                       RequiredProgress    => RecipeMaster.RequiredProgress;
-        public List<Item>                RequiredIngredients => RecipeMaster.RequiredIngredients;
-        public StationName               RequiredStation     => RecipeMaster.RequiredStation;
-        public List<VocationRequirement> RequiredVocations   => RecipeMaster.RequiredVocations;
-        public List<Item>                RecipeProducts      => RecipeMaster.RecipeProducts;
-
-        Recipe_Master _recipeMaster;
-        Recipe_Master RecipeMaster => _recipeMaster ??= Recipe_Manager.GetRecipe_Master(RecipeName);
-
-        public Recipe(RecipeName recipeName)
+        
+        public static void ClearSOData()
         {
-            RecipeName      = recipeName;
-            CurrentProgress = 0;
-        }
-    }
-
-    [Serializable]
-    public class Recipe_Master
-    {
-        public RecipeName RecipeName;
-        public string     RecipeDescription;
-
-        public int RequiredProgress;
-        List<Item> _requiredIngredients;
-
-        public List<Item> RequiredIngredients =>
-            (_requiredIngredients ??= new List<Item>()).Count is 0
-                ? new List<Item>()
-                : _requiredIngredients.Select(item => new Item(item)).ToList();
-
-
-        public StationName               RequiredStation;
-        public List<VocationRequirement> RequiredVocations;
-
-        List<Item> _recipeProducts;
-
-        public List<Item> RecipeProducts =>
-            (_recipeProducts ??= new List<Item>()).Count is 0
-                ? new List<Item>()
-                : _recipeProducts.Select(item => new Item(item)).ToList();
-
-
-        public List<CraftingQuality> PossibleQualities;
-
-        public Recipe_Master(RecipeName recipeName, string recipeDescription,
-                             int requiredProgress, List<Item> requiredIngredients, StationName requiredStation,
-                             List<VocationRequirement> requiredVocations,
-                             List<Item> recipeProducts, List<CraftingQuality> possibleQualities)
-        {
-            RecipeName        = recipeName;
-            RecipeDescription = recipeDescription;
-
-            RequiredProgress     = requiredProgress;
-            _requiredIngredients = new List<Item>(requiredIngredients);
-            RequiredStation      = requiredStation;
-            RequiredVocations    = requiredVocations;
-
-            _recipeProducts   = new List<Item>(recipeProducts);
-            PossibleQualities = possibleQualities;
+            AllRecipes.ClearSOData();
         }
     }
 

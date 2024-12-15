@@ -1,3 +1,4 @@
+using DataPersistence;
 using Managers;
 using UnityEngine;
 
@@ -53,7 +54,7 @@ public class SaveAndLoadGames : MonoBehaviour
 
         gameObject.SetActive(true);
         
-        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedDatas)
+        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedData)
         {
             if (saveData.Key == "TheExister") continue;
 

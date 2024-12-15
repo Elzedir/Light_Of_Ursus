@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Ability;
 using Actor;
-using Career;
+using Careers;
 using City;
+using DataPersistence;
 using DateAndTime;
 using EmployeePosition;
 using Faction;
@@ -17,6 +18,8 @@ using Personality;
 using Recipe;
 using Region;
 using Station;
+using TickRates;
+using Tools;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
@@ -116,6 +119,11 @@ namespace Managers
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            if (DataPersistenceManager.DataPersistence_SO.DeleteGameOnStart) DataPersistenceManager.DataPersistence_SO.DeleteTestSaveFile();
+            
+            SaveAndLoadSO.ClearAllSOs(); // Only do on game start, but refine since it will be called on every scene load
+            // which eliminates the whole purpose of the scriptable object persisting between scenes.
+            
             StartCoroutine(_initialiseManagers());
         }
 
@@ -137,7 +145,7 @@ namespace Managers
             
             Recipe_Manager.PopulateAllRecipes();
             Job_Manager.PopulateAllJobs();
-            ActorDataPreset_Manager.PopulateAllActorDataPresets();
+            ActorPreset_Manager.PopulateAllActorDataPresets();
             EmployeePosition_Manager.PopulateAllEmployeePositions();
             Career_Manager.PopulateAllCareers();
             Manager_DateAndTime.Initialise();
@@ -146,7 +154,7 @@ namespace Managers
 
             DataPersistenceManager.DataPersistence_SO.LoadGame("");
             
-            Manager_Faction.OnSceneLoaded();
+            Faction_Manager.OnSceneLoaded();
             Actor_Manager.OnSceneLoaded();
 
             Region_Manager.OnSceneLoaded();
@@ -154,10 +162,15 @@ namespace Managers
             JobSite_Manager.OnSceneLoaded();
             Station_Manager.OnSceneLoaded();
             
-            Manager_Initialisation.InitialiseFactions();
             Manager_Initialisation.InitialiseManagers();
+            
+            Manager_Initialisation.InitialiseFactions();
             Manager_Initialisation.InitialiseActors();
-            Manager_Initialisation.InitialiseJobsites();
+            
+            Manager_Initialisation.InitialiseRegions();
+            Manager_Initialisation.InitialiseCities();
+            Manager_Initialisation.InitialiseJobSites();
+            Manager_Initialisation.InitialiseStations();
 
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));

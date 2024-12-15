@@ -1,3 +1,5 @@
+using System.Linq;
+using DataPersistence;
 using Initialisation;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +14,7 @@ namespace Region
         static Region_SO AllRegions => _allRegions ??= _getRegion_SO();
         
         public void SaveData(SaveData saveData) =>
-            saveData.SavedRegionData = new SavedRegionData(AllRegions.Regions);
+            saveData.SavedRegionData = new SavedRegionData(AllRegions.Regions.Select(region => region.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -57,7 +59,7 @@ namespace Region
         
         public static Region_Data GetRegion_Data(uint regionID)
         {
-            return AllRegions.GetRegion_Data(regionID);
+            return AllRegions.GetRegion_Data(regionID).DataObject;
         }
         
         public static Region_Component GetRegion_Component(uint regionID)
@@ -99,6 +101,11 @@ namespace Region
         public static uint GetUnusedRegionID()
         {
             return AllRegions.GetUnusedRegionID();
+        }
+        
+        public static void ClearSOData()
+        {
+            AllRegions.ClearSOData();
         }
     }
 }

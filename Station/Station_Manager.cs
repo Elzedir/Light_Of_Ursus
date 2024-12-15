@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DataPersistence;
 using EmployeePosition;
 using Initialisation;
 using UnityEditor;
@@ -15,7 +16,7 @@ namespace Station
         static Station_SO Station_SO => _station_SO ??= _getStation_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedStationData = new SavedStationData(Station_SO.Stations);
+            saveData.SavedStationData = new SavedStationData(Station_SO.Stations.Select(station => station.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -58,7 +59,7 @@ namespace Station
         
         public static Station_Data GetStation_Data(uint stationID)
         {
-            return Station_SO.GetStation_Data(stationID);
+            return Station_SO.GetStation_Data(stationID).DataObject;
         }
         
         public static Station_Component GetStation_Component(uint stationID)
@@ -154,6 +155,11 @@ namespace Station
                 StationName.Tanning_Station, StationType.Crafter
             }
         };
+        
+        public static void ClearSOData()
+        {
+            Station_SO.ClearSOData();
+        }
     }
 
     public enum StationName

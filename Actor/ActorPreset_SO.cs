@@ -7,10 +7,10 @@ using UnityEngine;
 namespace Actor
 {
     [CreateAssetMenu(fileName = "ActorDataPreset_SO", menuName = "SOList/ActorDataPreset_SO")]
-    public class ActorDataPreset_SO : Data_SO<Actor_Data>
+    public class ActorPreset_SO : Data_SO<ActorPreset_Data>
     {
-        public Data_Object<Actor_Data>[] ActorDataPresets                                 => DataObjects;
-        public Data_Object<Actor_Data>   GetActorDataPreset(ActorDataPresetName actorDataPresetName) => GetDataObject_Master((uint)actorDataPresetName);
+        public Data_Object<ActorPreset_Data>[] ActorDataPresets                                 => DataObjects;
+        public Data_Object<ActorPreset_Data>   GetActorDataPreset(ActorDataPresetName actorDataPresetName) => GetDataObject_Master((uint)actorDataPresetName);
 
         public override uint GetDataObjectID(int id) => (uint)ActorDataPresets[id].DataObject.ActorDataPresetName; // Use the ActorDataPresetName
 
@@ -21,11 +21,11 @@ namespace Actor
                 Debug.Log("No Default Actor Data Presets Found");
             }
         }
-        protected override Dictionary<uint, Data_Object<Actor_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Data_Object<ActorPreset_Data>> _populateDefaultDataObjects()
         {
-            var defaultActorDataPresets = new Dictionary<uint, Actor_Data>();
+            var defaultActorDataPresets = new Dictionary<uint, ActorPreset_Data>();
 
-            foreach (var actorDataPreset in ActorDataPreset_List.GetAllDefaultActorDataPresets())
+            foreach (var actorDataPreset in ActorPreset_List.GetAllDefaultActorDataPresets())
             {
                 defaultActorDataPresets.Add(actorDataPreset.Key, actorDataPreset.Value);
             }
@@ -33,21 +33,21 @@ namespace Actor
             return _convertDictionaryToDataObject(defaultActorDataPresets);
         }
 
-        protected override Data_Object<Actor_Data> _convertToDataObject(Actor_Data data)
+        protected override Data_Object<ActorPreset_Data> _convertToDataObject(ActorPreset_Data data)
         {
-            return new Data_Object<Actor_Data>(
+            return new Data_Object<ActorPreset_Data>(
                 dataObjectID: (uint)data.ActorDataPresetName,
                 dataObject: data,
-                dataObjectTitle: $"{(uint)data.ActorDataPresetName}{data.ActorDataPresetName}",
-                dataSO_Object: data.DataSO_Object);
+                dataObjectTitle: $"{(uint)data.ActorDataPresetName}: {data.ActorDataPresetName}",
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
         }
         
-        Dictionary<uint, Data_Object<Actor_Data>> _defaultActorDataPresets => DefaultDataObjects;
+        Dictionary<uint, Data_Object<ActorPreset_Data>> _defaultActorDataPresets => DefaultDataObjects;
     }
     
-     [CustomEditor(typeof(ActorDataPreset_SO))]
-    public class AllActorDataPresets_SOEditor : Data_SOEditor<Actor_Data>
+     [CustomEditor(typeof(ActorPreset_SO))]
+    public class AllActorDataPresets_SOEditor : Data_SOEditor<ActorPreset_Data>
     {
-        public override Data_SO<Actor_Data> SO => _so ??= (ActorDataPreset_SO)target;
+        public override Data_SO<ActorPreset_Data> SO => _so ??= (ActorPreset_SO)target;
     }
 }

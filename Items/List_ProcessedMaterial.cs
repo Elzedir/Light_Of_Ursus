@@ -3,7 +3,7 @@ using Priority;
 using Station;
 using UnityEngine;
 
-namespace Item
+namespace Items
 {
     public enum ProcessedMaterialName
     {
@@ -193,7 +193,7 @@ namespace Item
                     null,
                     null,
                     null,
-                    new PriorityStats_Item(
+                    new Item_PriorityStats(
                         new Dictionary<PriorityImportance, List<StationName>>
                         {
                             { PriorityImportance.High, new() { StationName.Log_Pile } },

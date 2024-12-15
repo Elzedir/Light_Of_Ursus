@@ -3,52 +3,104 @@ using System.Linq;
 using Actor;
 using Faction;
 using Personality;
-using UnityEngine.Serialization;
+using UnityEngine;
 
-public class Manager_Relation
+namespace Relationships
 {
-    public static float GetRelation(Actor_Component a, Actor_Component b)
+    public class Manager_Relation
     {
-        float relation = 0;
+        public static float GetRelation(Actor_Component a, Actor_Component b)
+        {
+            float relation = 0;
 
-        relation += _compareFaction(a.ActorData.ActorFactionID, b.ActorData.ActorFactionID);
-        relation += _comparePersonality(a.ActorData.SpeciesAndPersonality.ActorPersonality, b.ActorData.SpeciesAndPersonality.ActorPersonality);
+            relation += _compareFaction(a.ActorData.ActorFactionID, b.ActorData.ActorFactionID);
+            relation += _comparePersonality(a.ActorData.SpeciesAndPersonality.ActorPersonality, b.ActorData.SpeciesAndPersonality.ActorPersonality);
 
-        return relation;
+            return relation;
+        }
+
+        static float _compareFaction(uint a, uint b)
+        {
+            Faction_Data factionDataA = Faction_Manager.GetFaction_Data(a);
+
+            if (!factionDataA.AllFactionRelations.Any(r => r.FactionID_A == b)) return 0;
+
+            return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID_A == b).FactionRelation;
+        }
+
+        static float _comparePersonality(ActorPersonality a, ActorPersonality b)
+        {
+            return Personality_List.GetPersonalityRelation(a.PersonalityTraits, b.PersonalityTraits);
+        }
     }
 
-    static float _compareFaction(uint a, uint b)
+    [Serializable]
+    public class FactionRelationData
     {
-        Faction_Data factionDataA = Manager_Faction.GetFaction_Data(a);
+        public uint FactionID_A;
+        public uint FactionID_B;
+        public int  FactionRelation;
 
-        if (!factionDataA.AllFactionRelations.Any(r => r.FactionID_A == b)) return 0;
-
-        return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID_A == b).FactionRelation;
+        public FactionRelationData(uint factionID_A, uint factionID_B, int factionRelations)
+        {
+            FactionID_A     = factionID_A;
+            FactionRelation = factionRelations;
+            FactionID_B     = factionID_B;
+        }
     }
 
-    static float _comparePersonality(ActorPersonality a, ActorPersonality b)
+    [Serializable]
+    public class Relation
     {
-        return Personality_List.GetPersonalityRelation(a.PersonalityTraits, b.PersonalityTraits);
+
     }
-}
-
-[Serializable]
-public class FactionRelationData
-{
-    public uint FactionID_A;
-    public uint FactionID_B;
-    public int  FactionRelation;
-
-    public FactionRelationData(uint factionID_A, uint factionID_B, int factionRelations)
+    
+    [Serializable]
+    public class FactionRelationship
     {
-        FactionID_A      = factionID_A;
-        FactionRelation  = factionRelations;
-        FactionID_B = factionID_B;
+        public                   FactionName               FactionName;
+        public                   FactionRelationshipStatus Relationship;
+        [SerializeField] float                     _relationshipValue; public float RelationshipValue { get { return _relationshipValue; } set { _relationshipValue = value; RefreshRelationship(); } }
+
+        public void RefreshRelationship()
+        {
+            if (_relationshipValue > 100)
+            {
+                _relationshipValue = 100;
+            }
+            else if (_relationshipValue < -100)
+            {
+                _relationshipValue = -100;
+            }
+
+            Relationship = _relationshipValue > 75
+                ? FactionRelationshipStatus.Ally
+                : _relationshipValue > 25
+                    ? FactionRelationshipStatus.Friend
+                    : _relationshipValue > -25
+                        ? FactionRelationshipStatus.Neutral
+                        : _relationshipValue > -75
+                            ? FactionRelationshipStatus.Hostile
+                            : FactionRelationshipStatus.Enemy;
+        }
     }
-}
+    
+    public enum FactionName
+    {
+        Passive,
+        Player,
+        Bandit,
+        Demon,
+        Human,
+        Orc
+    }
 
-[Serializable]
-public class Relation
-{
-
+    public enum FactionRelationshipStatus
+    {
+        Neutral,
+        Ally,
+        Friend,
+        Hostile,
+        Enemy
+    }
 }

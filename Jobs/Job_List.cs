@@ -7,9 +7,9 @@ namespace Jobs
 {
     public abstract class Job_List
     {
-        public static Dictionary<uint, Job_Master> GetAllDefaultJobs()
+        public static Dictionary<uint, Job_Data> GetAllDefaultJobs()
         {
-            var allJobs = new Dictionary<uint, Job_Master>();
+            var allJobs = new Dictionary<uint, Job_Data>();
 
             foreach (var idle in _idle())
             {
@@ -29,12 +29,12 @@ namespace Jobs
             return allJobs;
         }
 
-        static Dictionary<uint, Job_Master> _idle()
+        static Dictionary<uint, Job_Data> _idle()
         {
-            return new Dictionary<uint, Job_Master>
+            return new Dictionary<uint, Job_Data>
             {
                 {
-                    (uint)JobName.Idle, new Job_Master(
+                    (uint)JobName.Idle, new Job_Data(
                         jobName: JobName.Idle,
                         jobDescription: "An idler",
                         new HashSet<JobTaskName>
@@ -45,12 +45,12 @@ namespace Jobs
             };
         }
 
-        static Dictionary<uint, Job_Master> _lumberjack()
+        static Dictionary<uint, Job_Data> _lumberjack()
         {
-            return new Dictionary<uint, Job_Master>
+            return new Dictionary<uint, Job_Data>
             {
                 {
-                    (uint)JobName.Logger, new Job_Master(
+                    (uint)JobName.Logger, new Job_Data(
                         jobName: JobName.Logger,
                         jobDescription: "A logger",
                         new HashSet<JobTaskName>
@@ -63,12 +63,12 @@ namespace Jobs
             };
         }
 
-        static Dictionary<uint, Job_Master> _smith()
+        static Dictionary<uint, Job_Data> _smith()
         {
-            return new Dictionary<uint, Job_Master>()
+            return new Dictionary<uint, Job_Data>()
             {
                 {
-                    (uint)JobName.Smith, new Job_Master(
+                    (uint)JobName.Smith, new Job_Data(
                         jobName: JobName.Smith,
                         jobDescription: "Smith something",
                         new HashSet<JobTaskName>

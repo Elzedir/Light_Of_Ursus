@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Equipment;
+using Items;
 using UnityEngine;
 
-namespace Item
+namespace Items
 {
     public abstract class List_Armour
     {
@@ -41,12 +43,12 @@ namespace Item
 
                     null,
 
-                    new ArmourStats_Item(
+                    new Item_ArmourStats(
                         armourType: EquipmentSlot.Chest,
                         itemCoverage: 75
                     ),
 
-                    new FixedModifiers_Item(
+                    new Item_FixedModifiers(
                         maxHealth: 5,
                         maxMana: 5,
                         maxStamina: 5,
@@ -56,7 +58,7 @@ namespace Item
                         dodgeCooldownReduction: -1
                     ),
 
-                    new PercentageModifiers_Item(
+                    new Item_PercentageModifiers(
                         attackSpeed: 0.92f
                     ),
 

@@ -2,6 +2,7 @@ using System.Collections;
 using Initialisation;
 using Managers;
 using Personality;
+using TickRates;
 using UnityEngine;
 
 namespace Actor

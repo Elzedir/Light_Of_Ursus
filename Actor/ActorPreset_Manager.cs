@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Actor
 {
-    public abstract class ActorDataPreset_Manager
+    public abstract class ActorPreset_Manager
     {
         const string _actorDataPreset_SOPath = "ScriptableObjects/ActorDataPreset_SO";
 
@@ -12,12 +12,12 @@ namespace Actor
         static  ActorPreset_SO ActorPreset_SO =>
             _actorPreset_SO ??= _getActorDataPreset_SO();
 
-        public static Actor_Data GetActorDataPreset(ActorDataPresetName actorDataPresetName) =>
-            Actor.ActorPreset_SO.GetActorDataPreset(actorDataPresetName).DataObject;
+        public static ActorPreset_Data GetActorDataPreset(ActorDataPresetName actorDataPresetName) =>
+            ActorPreset_SO.GetActorDataPreset(actorDataPresetName).DataObject;
         
         public static void PopulateAllActorDataPresets()
         {
-            Actor.ActorPreset_SO.PopulateDefaultActorDataPresets();
+            ActorPreset_SO.PopulateDefaultActorDataPresets();
             // Then populate custom actor data presets.
         }
 
@@ -31,6 +31,11 @@ namespace Actor
             actorDataPreset_SO = ScriptableObject.CreateInstance<ActorPreset_SO>();
 
             return actorDataPreset_SO;
+        }
+        
+        public static void ClearSOData()
+        {
+            ActorPreset_SO.ClearSOData();
         }
     }
 

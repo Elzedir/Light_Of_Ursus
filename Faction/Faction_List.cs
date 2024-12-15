@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Relationships;
 
 namespace Faction
 {
@@ -8,16 +9,16 @@ namespace Faction
             new()
             {
                 {
-                    0, new Faction_Data(
-                        factionID: 0,
+                    1, new Faction_Data(
+                        factionID: 1,
                         factionName: "Wanderers",
                         allFactionActorIDs: new HashSet<uint>(),
                         allFactionRelations: new List<FactionRelationData>()
                     )  
                 },
                 {
-                    1, new Faction_Data(
-                        factionID: 1,
+                    2, new Faction_Data(
+                        factionID: 2,
                         factionName: "Player Faction",
                         allFactionActorIDs: new HashSet<uint>(),
                         allFactionRelations: new List<FactionRelationData>()

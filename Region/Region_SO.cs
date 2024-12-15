@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ScriptableObjects;
+using System.Text.RegularExpressions;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,10 +10,10 @@ namespace Region
 {
     [CreateAssetMenu(fileName = "Region_SO", menuName = "SOList/Region_SO")]
     [Serializable]
-    public class Region_SO : Base_SO<Region_Data>
+    public class Region_SO : Data_SO<Region_Data>
     {
-        public Region_Data[] Regions                         => Objects;
-        public Region_Data        GetRegion_Data(uint      regionID) => GetObject_Master(regionID);
+        public Data_Object<Region_Data>[] Regions                         => DataObjects;
+        public Data_Object<Region_Data>        GetRegion_Data(uint      regionID) => GetDataObject_Master(regionID);
         public Dictionary<uint, Region_Component> RegionComponents = new();
 
         public Region_Component GetRegion_Component(uint regionID)
@@ -27,136 +27,105 @@ namespace Region
             return null;
         }
 
-        public override uint GetObjectID(int id) => Regions[id].RegionID;
+        public override uint GetDataObjectID(int id) => Regions[id].DataObject.RegionID;
 
-        public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateObject(regionID, region_Data);
-        public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllObjects(allRegions);
+        public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateDataObject(regionID, region_Data);
+        public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllDataObjects(allRegions);
 
         public void PopulateSceneRegions()
         {
-            var allRegionComponents = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
-            var allRegionData =
-                allRegionComponents.ToDictionary(region => region.RegionID, region => region.RegionData);
+            if (_defaultRegions.Count == 0)
+            {
+                Debug.Log("No Default Regions Found");
+            }
 
-            UpdateAllRegions(allRegionData);
+            Debug.Log($"{_defaultRegions.Count} vs {Regions.Length}");
+
+            foreach (var region in _defaultRegions)
+            {
+                Debug.Log($"Region: {region.Key} - {region.Value?.DataObjectID} - {region.Value?.DataObject?.RegionID}");
+            }
             
             foreach (var region in Regions)
             {
-                region.ProsperityData.SetProsperity(50);
-                region.ProsperityData.MaxProsperity = 100;
+                Debug.Log($"Region: {region?.DataObjectID} - {region?.DataObject?.RegionID}");
+            }
+            
+            var existingRegions = FindObjectsByType<Region_Component>(FindObjectsSortMode.None)
+                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                     .ToDictionary(
+                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
+                                         station => station
+                                     );
+            
+            foreach (var region in Regions)
+            {
+                if (region?.DataObject is null) continue;
+                
+                Debug.Log($"Region: {region.DataObjectID} vs {region.DataObject.RegionID} - {region.DataObject.RegionName}: {region.DataObject}");
+                
+                if (existingRegions.TryGetValue(region.DataObject.RegionID, out var existingRegion))
+                {
+                    existingRegion.RegionData = region.DataObject;
+                    RegionComponents[region.DataObject.RegionID] = existingRegion;
+                    existingRegions.Remove(region.DataObject.RegionID);
+                    continue;
+                }
+                
+                Debug.LogWarning($"Region with ID {region.DataObject.RegionID} not found in the scene.");
+            }
+            
+            foreach (var region in existingRegions)
+            {
+                if (DataObjectIndexLookup.ContainsKey(region.Key))
+                {
+                    Debug.LogWarning($"Region with ID {region.Key} wasn't removed from existingRegions.");
+                    continue;
+                }
+                
+                Debug.LogWarning($"Region with ID {region.Key} does not have DataObject in Region_SO.");
             }
         }
 
-        protected override Dictionary<uint, Region_Data> _populateDefaultObjects()
+        protected override Dictionary<uint, Data_Object<Region_Data>> _populateDefaultDataObjects()
         {
-            return FindObjectsByType<Region_Component>(FindObjectsSortMode.None).ToDictionary(
-                region => region.RegionID, region => region.RegionData);
+            var defaultRegions = new Dictionary<uint, Region_Data>();
+
+            foreach (var defaultRegion in Region_List.DefaultRegions)
+            {
+                defaultRegions.Add(defaultRegion.Key, defaultRegion.Value);
+            }
+
+            return _convertDictionaryToDataObject(defaultRegions);
         }
 
         static uint _lastUnusedRegionID = 1;
 
         public uint GetUnusedRegionID()
         {
-            while (ObjectIndexLookup.ContainsKey(_lastUnusedRegionID))
+            while (DataObjectIndexLookup.ContainsKey(_lastUnusedRegionID))
             {
                 _lastUnusedRegionID++;
             }
 
             return _lastUnusedRegionID;
         }
+        
+        Dictionary<uint, Data_Object<Region_Data>> _defaultRegions => DefaultDataObjects;
+         
+        protected override Data_Object<Region_Data> _convertToDataObject(Region_Data data)
+        {
+            return new Data_Object<Region_Data>(
+                dataObjectID: data.RegionID, 
+                dataObject: data,
+                dataObjectTitle: $"{data.RegionID}: {data.RegionName}",
+                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+        }
     }
 
     [CustomEditor(typeof(Region_SO))]
-    public class Region_SOEditor : Editor
+    public class Region_SOEditor : Data_SOEditor<Region_Data>
     {
-        int  _selectedRegionIndex = -1;
-        bool _showCitys;
-        bool _showPopulation;
-        bool _showProsperity;
-
-        Vector2 _regionScrollPos;
-        Vector2 _cityScrollPos;
-        Vector2 _populationScrollPos;
-
-        public override void OnInspectorGUI()
-        {
-            var regionSO = (Region_SO)target;
-
-            EditorGUILayout.LabelField("All Regions", EditorStyles.boldLabel);
-            _regionScrollPos = EditorGUILayout.BeginScrollView(_regionScrollPos,
-                GUILayout.Height(Mathf.Min(200, regionSO.Regions.Length * 20)));
-            _selectedRegionIndex = GUILayout.SelectionGrid(_selectedRegionIndex, _getRegionNames(regionSO), 1);
-            EditorGUILayout.EndScrollView();
-
-            if (_selectedRegionIndex < 0 || _selectedRegionIndex >= regionSO.Regions.Length) return;
-
-            var selectedRegionData = regionSO.Regions[_selectedRegionIndex];
-            _drawRegionAdditionalData(selectedRegionData);
-        }
-
-        static string[] _getRegionNames(Region_SO regionSO)
-        {
-            return regionSO.Regions.Select(c => c.RegionName).ToArray();
-        }
-
-        void _drawRegionAdditionalData(Region_Data selectedRegionData)
-        {
-            EditorGUILayout.LabelField("Region Data", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Region Name", selectedRegionData.RegionName);
-            EditorGUILayout.LabelField("Region ID",   selectedRegionData.RegionID.ToString());
-            EditorGUILayout.LabelField("Region ID", selectedRegionData.RegionID.ToString());
-
-            if (selectedRegionData.AllCityIDs != null)
-            {
-                _showCitys = EditorGUILayout.Toggle("Cities", _showCitys);
-
-                if (_showCitys)
-                {
-                    _drawCityAdditionalData(selectedRegionData.AllCityIDs);
-                }
-            }
-
-            if (selectedRegionData.ProsperityData != null)
-            {
-                _showProsperity = EditorGUILayout.Toggle("Prosperity", _showProsperity);
-
-                if (_showProsperity)
-                {
-                    _drawProsperityDetails(selectedRegionData.ProsperityData);
-                }
-            }
-        }
-
-        void _drawCityAdditionalData(List<uint> allCityIDs)
-        {
-            _cityScrollPos = EditorGUILayout.BeginScrollView(_cityScrollPos,
-                GUILayout.Height(Mathf.Min(200, allCityIDs.Count * 20)));
-
-            try
-            {
-                foreach (var cityID in allCityIDs)
-                {
-                    EditorGUILayout.LabelField("City Data", EditorStyles.boldLabel);
-                    //EditorGUILayout.LabelField("City", CityID.CityName.ToString());
-                    EditorGUILayout.LabelField("City ID", cityID.ToString());
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Error: {e.Message}");
-            }
-            finally
-            {
-                EditorGUILayout.EndScrollView();
-            }
-        }
-
-        static void _drawProsperityDetails(ProsperityData prosperityData)
-        {
-            EditorGUILayout.LabelField("Current Prosperity", $"{prosperityData.CurrentProsperity}");
-            EditorGUILayout.LabelField("Max Prosperity",     $"{prosperityData.MaxProsperity}");
-            EditorGUILayout.LabelField("Base Prosperity Growth Per Day",
-                $"{prosperityData.BaseProsperityGrowthPerDay}");
-        }
+        public override Data_SO<Region_Data> SO => _so ??= (Region_SO)target;
     }
 }

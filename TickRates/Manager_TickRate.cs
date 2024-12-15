@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Managers
+namespace TickRates
 {
     public enum TickRate 
     { 

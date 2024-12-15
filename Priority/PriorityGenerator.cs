@@ -95,11 +95,11 @@ namespace Priority
 
             foreach (var item in items)
             {
-                var masterItem = Items.Item_Manager.GetItem_Data(item.ItemID);
+                var masterItem = Item_Manager.GetItem_Data(item.ItemID);
 
                 var allStationTypesList = allStationTypes.ToList();
 
-                if (!masterItem.PriorityStats_Item.IsHighestPriorityStation(currentStationType, allStationTypesList))
+                if (!masterItem.ItemPriorityStats.IsHighestPriorityStation(currentStationType, allStationTypesList))
                 {
                     // Debug.Log($"StationType: {currentStationType} is not the highest priority station type for item: {item.ItemName}");
                     continue;

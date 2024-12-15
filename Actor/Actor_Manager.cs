@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Ability;
-using Career;
+using Careers;
+using DataPersistence;
 using DateAndTime;
 using Faction;
 using Initialisation;
@@ -12,7 +13,6 @@ using Managers;
 using Personality;
 using Recipe;
 using Tools;
-using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -126,7 +126,7 @@ namespace Actor
 
             actor.Initialise();
 
-            Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
+            Faction_Manager.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
 
             return actor;
         }
@@ -145,7 +145,7 @@ namespace Actor
             actor.SetActorData(GetActor_Data(actorID));
             actor.Initialise();
 
-            Manager_Faction.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
+            Faction_Manager.AllocateActorToFactionGO(actor, actor.ActorData.ActorFactionID);
             
             actor.IsSpawned = true;
 
@@ -199,15 +199,14 @@ namespace Actor
         static Actor_Data _generateNewActorData(Actor_Component     actor,
                                                 ActorDataPresetName actorDataPresetName)
         {
-            var actorDataPreset = ActorDataPreset_Manager.GetActorDataPreset(actorDataPresetName);
+            var actorDataPreset = ActorPreset_Manager.GetActorDataPreset(actorDataPresetName);
 
             var fullIdentification = new FullIdentification(
-                actorID: actorDataPreset?.FullIdentification.ActorID               ?? _getUnusedActorID(),
-                actorName: actorDataPreset?.FullIdentification.ActorName           ?? _getRandomActorName(),
-                actorFactionID: actorDataPreset?.ActorFactionID ?? _getRandomFaction(),
-                actorBirthDate: actorDataPreset?.FullIdentification.ActorBirthDate ??
-                                new Date(Manager_DateAndTime.GetCurrentTotalDays()),
-                actorCityID: actorDataPreset?.FullIdentification.ActorCityID ?? 0
+                actorID: _getUnusedActorID(),
+                actorName: _getRandomActorName(),
+                actorFactionID: _getRandomFaction(),
+                actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays()),
+                actorCityID: 0
                 // Change this so that it generates correct CityID
             );
 
@@ -236,8 +235,8 @@ namespace Actor
             
             var speciesAndPersonality = new SpeciesAndPersonality(
                 actorID: fullIdentification.ActorID,
-                actorSpecies: actorDataPreset?.SpeciesAndPersonality.ActorSpecies         ?? _getRandomSpecies(),
-                actorPersonality: actorDataPreset?.SpeciesAndPersonality.ActorPersonality ?? _getRandomPersonality()
+                actorSpecies: _getRandomSpecies(),
+                actorPersonality: _getRandomPersonality()
             );
 
             var statsAndAbilities = new StatsAndAbilities(
@@ -247,8 +246,8 @@ namespace Actor
                 );
 
             var statesAndConditions = new StatesAndConditionsData(
-                actorStates: actorDataPreset?.StatesAndConditionsData.Actor_States ?? _getNewActorStates(fullIdentification.ActorID),
-                actorConditions: actorDataPreset?.StatesAndConditionsData.Actor_Conditions ?? _getNewActorConditions(fullIdentification.ActorID)
+                actorStates: _getNewActorStates(fullIdentification.ActorID),
+                actorConditions: _getNewActorConditions(fullIdentification.ActorID)
                 );
 
             var inventoryData = new InventoryData_Actor(
@@ -357,6 +356,11 @@ namespace Actor
                 actorID: actorID,
                 currentConditions: new ObservableDictionary<ConditionName, float>()
                 );
+        }
+        
+        public static void ClearSOData()
+        {
+            AllActors.ClearSOData();
         }
     }
 }

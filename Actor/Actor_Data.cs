@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Ability;
-using Career;
+using Careers;
 using DateAndTime;
 using EmployeePosition;
 using Faction;
@@ -15,6 +15,7 @@ using Managers;
 using Personality;
 using Priority;
 using Recipe;
+using Relationships;
 using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -24,11 +25,6 @@ namespace Actor
     [Serializable]
     public class Actor_Data : Data_Class
     {
-        public void UpdateActorData()
-        {
-            GameObjectData.UpdateActorGOProperties();
-        }
-
         public bool   IsSpawned;
         public uint   ActorID        => FullIdentification.ActorID;
         public uint   ActorFactionID => FullIdentification.ActorFactionID;
@@ -62,7 +58,7 @@ namespace Actor
                 Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
             }
 
-            var actorFaction = Manager_Faction.GetFaction_Data(ActorFactionID);
+            var actorFaction = Faction_Manager.GetFaction_Data(ActorFactionID);
 
             if (actorFaction is null)
             {
@@ -108,28 +104,30 @@ namespace Actor
             ActorQuests             = actorQuests;
         }
 
-        public Actor_Data(Actor_Data actor_Data)
-        {
-            FullIdentification      = new FullIdentification(actor_Data.FullIdentification);
-            GameObjectData          = new GameObjectData(actor_Data.GameObjectData);
-            CareerData              = new CareerData(actor_Data.CareerData);
-            CraftingData            = new CraftingData(actor_Data.CraftingData);
-            VocationData            = new VocationData(actor_Data.VocationData);
-            SpeciesAndPersonality   = new SpeciesAndPersonality(actor_Data.SpeciesAndPersonality);
-            StatsAndAbilities       = new StatsAndAbilities(actor_Data.StatsAndAbilities);
-            StatesAndConditionsData = new StatesAndConditionsData(actor_Data.StatesAndConditionsData);
-            InventoryData           = new InventoryData_Actor(actor_Data.InventoryData);
-            EquipmentData           = new EquipmentData(actor_Data.EquipmentData);
-            ActorQuests             = new QuestData(actor_Data.ActorQuests);
-        }
+        // Check if we need a clone function later
+        
+        // public Actor_Data(Actor_Data actor_Data)
+        // {
+        //     FullIdentification      = new FullIdentification(actor_Data.FullIdentification);
+        //     GameObjectData          = new GameObjectData(actor_Data.GameObjectData);
+        //     CareerData              = new CareerData(actor_Data.CareerData);
+        //     CraftingData            = new CraftingData(actor_Data.CraftingData);
+        //     VocationData            = new VocationData(actor_Data.VocationData);
+        //     SpeciesAndPersonality   = new SpeciesAndPersonality(actor_Data.SpeciesAndPersonality);
+        //     StatsAndAbilities       = new StatsAndAbilities(actor_Data.StatsAndAbilities);
+        //     StatesAndConditionsData = new StatesAndConditionsData(actor_Data.StatesAndConditionsData);
+        //     InventoryData           = new InventoryData_Actor(actor_Data.InventoryData);
+        //     EquipmentData           = new EquipmentData(actor_Data.EquipmentData);
+        //     ActorQuests             = new QuestData(actor_Data.ActorQuests);
+        // }
 
-        protected override DataSO_Object _getDataSO_Object()
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
         {
-            var dataObjects = new List<DataSO_Object>();
+            var dataObjects = new List<Data_Display>();
             
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Full Identification",
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
@@ -147,7 +145,7 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Game Object Properties",
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
@@ -169,7 +167,7 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Species And Personality",
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
@@ -188,7 +186,7 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Stats And Abilities",
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
@@ -208,7 +206,7 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Career Data",
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
@@ -229,10 +227,10 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Inventory Data",
-                    dataDisplayType: DataDisplayType.SelectableList,
-                    subData: InventoryData.AllInventoryItems.Values.Select(item => item.DataSO_Object_Data).ToList()
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} - Qty: {item.ItemAmount}").ToList()
                 ));
             }
             catch
@@ -243,7 +241,7 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new DataSO_Object(
+                dataObjects.Add(new Data_Display(
                     title: "Equipment Data",
                     dataDisplayType: DataDisplayType.SelectableList,
                     data: new List<string>
@@ -254,13 +252,16 @@ namespace Actor
             }
             catch
             {
-                Debug.LogWarning(EquipmentData);
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogWarning(EquipmentData);
+                }
             }
 
-            return new DataSO_Object(
+            return new Data_Display(
                 title: $"{ActorID}: {ActorName}",
-                dataDisplayType: DataDisplayType.List,
-                subData: new List<DataSO_Object>(dataObjects));
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 
@@ -900,24 +901,24 @@ namespace Actor
                 yield break;
             }
 
-            Recipe_Master recipeMaster = Recipe_Manager.GetRecipe_Master(recipeName);
+            Recipe_Data recipeData = Recipe_Manager.GetRecipe_Master(recipeName);
 
             var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
-            if (!_inventoryContainsAllIngredients(actorData, recipeMaster.RequiredIngredients))
+            if (!_inventoryContainsAllIngredients(actorData, recipeData.RequiredIngredients))
             {
                 Debug.Log("Inventory does not contain all ingredients.");
                 yield break;
             }
 
-            if (!actorData.InventoryData.HasSpaceForItems(recipeMaster.RecipeProducts))
+            if (!actorData.InventoryData.HasSpaceForItems(recipeData.RecipeProducts))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;
             }
 
-            actorData.InventoryData.RemoveFromInventory(recipeMaster.RequiredIngredients);
-            actorData.InventoryData.AddToInventory(recipeMaster.RecipeProducts);
+            actorData.InventoryData.RemoveFromInventory(recipeData.RequiredIngredients);
+            actorData.InventoryData.AddToInventory(recipeData.RecipeProducts);
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged)

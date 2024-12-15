@@ -5,11 +5,11 @@ using Recipe;
 
 namespace Actor
 {
-    public abstract class ActorDataPreset_List
+    public abstract class ActorPreset_List
     {
-        public static Dictionary<uint, Actor_Data> GetAllDefaultActorDataPresets()
+        public static Dictionary<uint, ActorPreset_Data> GetAllDefaultActorDataPresets()
         {
-            var allActorDataPresets = new Dictionary<uint, Actor_Data>();
+            var allActorDataPresets = new Dictionary<uint, ActorPreset_Data>();
 
             foreach (var wanderer in _wanderer())
             {
@@ -31,12 +31,12 @@ namespace Actor
 
         // Put a priority List in the tasks so you can check which tasks to do.
         
-        static Dictionary<uint, Actor_Data> _wanderer()
+        static Dictionary<uint, ActorPreset_Data> _wanderer()
         {
-            return new Dictionary<uint, Actor_Data>
+            return new Dictionary<uint, ActorPreset_Data>
             {
                 {
-                    (uint)ActorDataPresetName.Wanderer_Journeyman, new Actor_Data
+                    (uint)ActorDataPresetName.Wanderer_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Wanderer_Journeyman,
                         careerData: new CareerData
@@ -50,12 +50,12 @@ namespace Actor
             };
         }
 
-        static Dictionary<uint, Actor_Data> _lumberjack()
+        static Dictionary<uint, ActorPreset_Data> _lumberjack()
         {
-            return new Dictionary<uint, Actor_Data>
+            return new Dictionary<uint, ActorPreset_Data>
             {
                 {
-                    (uint)ActorDataPresetName.Lumberjack_Journeyman, new Actor_Data
+                    (uint)ActorDataPresetName.Lumberjack_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Lumberjack_Journeyman,
                         careerData: new CareerData
@@ -95,12 +95,12 @@ namespace Actor
             };
         }
 
-        static Dictionary<uint, Actor_Data> _smith()
+        static Dictionary<uint, ActorPreset_Data> _smith()
         {
-            return new Dictionary<uint, Actor_Data>
+            return new Dictionary<uint, ActorPreset_Data>
             {
                 {
-                    (uint)ActorDataPresetName.Smith_Journeyman, new Actor_Data
+                    (uint)ActorDataPresetName.Smith_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Smith_Journeyman,
                         careerData: new CareerData

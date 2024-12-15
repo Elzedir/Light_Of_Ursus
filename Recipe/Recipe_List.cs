@@ -8,9 +8,9 @@ namespace Recipe
     {
         // Don't use initialised lists since it relies on Item, which needs Item_Master to be initialised first.
         
-        public static Dictionary<uint, Recipe_Master> GetAllDefaultRecipes()
+        public static Dictionary<uint, Recipe_Data> GetAllDefaultRecipes()
         {
-            var allRecipes = new Dictionary<uint, Recipe_Master>();
+            var allRecipes = new Dictionary<uint, Recipe_Data>();
 
             foreach (var none in _defaultNone())
             {
@@ -30,12 +30,12 @@ namespace Recipe
             return allRecipes;
         }
 
-        static Dictionary<RecipeName, Recipe_Master> _defaultNone()
+        static Dictionary<RecipeName, Recipe_Data> _defaultNone()
         {
-            return new Dictionary<RecipeName, Recipe_Master>
+            return new Dictionary<RecipeName, Recipe_Data>
             {
                 {
-                    RecipeName.None, new Recipe_Master(
+                    RecipeName.None, new Recipe_Data(
                         recipeName: RecipeName.None,
                         recipeDescription: "Select a recipe",
                         requiredProgress: 0,
@@ -48,12 +48,12 @@ namespace Recipe
             };
         }
 
-        static Dictionary<RecipeName, Recipe_Master> _defaultRawMaterials()
+        static Dictionary<RecipeName, Recipe_Data> _defaultRawMaterials()
         {
-            return new Dictionary<RecipeName, Recipe_Master>
+            return new Dictionary<RecipeName, Recipe_Data>
             {
                 {
-                    RecipeName.Log, new Recipe_Master(
+                    RecipeName.Log, new Recipe_Data(
                         recipeName: RecipeName.Log,
                         recipeDescription: "Chop a log",
                         requiredProgress: 10,
@@ -66,12 +66,12 @@ namespace Recipe
             };
         }
 
-        static Dictionary<RecipeName, Recipe_Master> _defaultProcessedMaterials()
+        static Dictionary<RecipeName, Recipe_Data> _defaultProcessedMaterials()
         {
-            return new Dictionary<RecipeName, Recipe_Master>
+            return new Dictionary<RecipeName, Recipe_Data>
             {
                 {
-                    RecipeName.Plank, new Recipe_Master(
+                    RecipeName.Plank, new Recipe_Data(
                         recipeName: RecipeName.Plank,
                         recipeDescription: "Craft a plank",
                         requiredProgress: 10,
