@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Managers;
 
-namespace Items
+namespace Item
 {
     public abstract class List_Consumable
     {
@@ -22,7 +21,7 @@ namespace Items
             {
                 202,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 202,
                         itemType: ItemType.Consumable,
                         itemName: "Small Health Potion",

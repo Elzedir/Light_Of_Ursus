@@ -3,6 +3,7 @@ using System.Linq;
 using Actor;
 using Faction;
 using Personality;
+using UnityEngine.Serialization;
 
 public class Manager_Relation
 {
@@ -20,9 +21,9 @@ public class Manager_Relation
     {
         Faction_Data factionDataA = Manager_Faction.GetFaction_Data(a);
 
-        if (!factionDataA.AllFactionRelations.Any(r => r.FactionID == b)) return 0;
+        if (!factionDataA.AllFactionRelations.Any(r => r.FactionID_A == b)) return 0;
 
-        return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID == b).FactionRelation;
+        return factionDataA.AllFactionRelations.FirstOrDefault(r => r.FactionID_A == b).FactionRelation;
     }
 
     static float _comparePersonality(ActorPersonality a, ActorPersonality b)
@@ -34,15 +35,15 @@ public class Manager_Relation
 [Serializable]
 public class FactionRelationData
 {
-    public int FactionID;
-    public string FactionName;
-    public int FactionRelation;
+    public uint FactionID_A;
+    public uint FactionID_B;
+    public int  FactionRelation;
 
-    public FactionRelationData(int factionID, string factionName, int factionRelations)
+    public FactionRelationData(uint factionID_A, uint factionID_B, int factionRelations)
     {
-        FactionID = factionID;
-        FactionName = factionName;
-        FactionRelation = factionRelations;
+        FactionID_A      = factionID_A;
+        FactionRelation  = factionRelations;
+        FactionID_B = factionID_B;
     }
 }
 

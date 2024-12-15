@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Managers;
 using UnityEngine;
 
-namespace Items
+namespace Item
 {
     public enum WeaponType
     {
@@ -56,7 +55,7 @@ namespace Items
             {
                 3,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3,
                         itemType: ItemType.Weapon,
                         itemName: "Wooden ShortBow",
@@ -66,7 +65,7 @@ namespace Items
                         itemValue: 15
                     ),
 
-                    new VisualStats_Item(
+                    new Item_VisualStats(
                         itemIcon: null,
                         itemPosition: Vector3.zero,
                         itemRotation: Quaternion.identity,
@@ -103,7 +102,7 @@ namespace Items
             {
                 1,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1,
                         itemType: ItemType.Weapon,
                         itemName: "Wooden ShortSword",
@@ -114,7 +113,7 @@ namespace Items
                         itemValue: 15
                     ),
 
-                    new VisualStats_Item(
+                    new Item_VisualStats(
                         itemIcon: null,
                         //itemMesh: GameObject.Find("TestSword").GetComponent<MeshFilter>().mesh, //Other thing for now
                         itemMaterial: Resources.Load<Material>("Materials/Material_Red"),
@@ -152,7 +151,7 @@ namespace Items
             {
                 2,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2,
                         itemType: ItemType.Weapon,
                         itemName: "Test Shield",
@@ -162,7 +161,7 @@ namespace Items
                         itemValue: 15
                     ),
 
-                    new VisualStats_Item(
+                    new Item_VisualStats(
                         itemIcon: null,
                         itemMesh: Resources.GetBuiltinResource<Mesh>("Cube.fbx"),
                         itemMaterial: Resources.Load<Material>("Materials/Material_Red"),

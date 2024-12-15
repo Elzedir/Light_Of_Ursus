@@ -1,10 +1,9 @@
 using System.Collections.Generic;
-using Managers;
 using Priority;
 using Station;
 using UnityEngine;
 
-namespace Items
+namespace Item
 {
     public enum ProcessedMaterialName
     {
@@ -86,7 +85,7 @@ namespace Items
             {
                 2200,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2200,
                         itemType: ItemType.Processed_Material,
                         itemName: "Iron Ingot",
@@ -104,7 +103,7 @@ namespace Items
             {
                 2201,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2201,
                         itemType: ItemType.Processed_Material,
                         itemName: "Copper Ingot",
@@ -122,7 +121,7 @@ namespace Items
             {
                 2202,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2202,
                         itemType: ItemType.Processed_Material,
                         itemName: "Silver Ingot",
@@ -140,7 +139,7 @@ namespace Items
             {
                 2203,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2202,
                         itemType: ItemType.Processed_Material,
                         itemName: "Gold Ingot",
@@ -158,7 +157,7 @@ namespace Items
             {
                 2204,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2204,
                         itemType: ItemType.Processed_Material,
                         itemName: "Steel Ingot",
@@ -179,14 +178,14 @@ namespace Items
             {
                 2300,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2300,
                         itemType: ItemType.Processed_Material,
                         itemName: "Plank",
                         maxStackSize: 100,
                         itemWeight: 3,
                         itemValue: 5),
-                    new VisualStats_Item(
+                    new Item_VisualStats(
                         //itemMesh: GameObject.Find("TestPlank").GetComponent<MeshFilter>().mesh,
                         itemMaterial: Resources.Load<Material>("Materials/Material_Yellow"),
                         itemScale: new Vector3(0.1f, 1, 0.2f)),
@@ -204,7 +203,7 @@ namespace Items
             {
                 2301,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2301,
                         itemType: ItemType.Processed_Material,
                         itemName: "Timber",
@@ -221,7 +220,7 @@ namespace Items
             {
                 2302,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2302,
                         itemType: ItemType.Processed_Material,
                         itemName: "Board",
@@ -242,7 +241,7 @@ namespace Items
             {
                 2400,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2400,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Granite",
@@ -259,7 +258,7 @@ namespace Items
             {
                 2401,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2401,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Marble",
@@ -276,7 +275,7 @@ namespace Items
             {
                 2402,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2402,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Limestone",
@@ -297,7 +296,7 @@ namespace Items
             {
                 2500,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2500,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Diamond",
@@ -314,7 +313,7 @@ namespace Items
             {
                 2501,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2501,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Ruby",
@@ -331,7 +330,7 @@ namespace Items
             {
                 2502,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2502,
                         itemType: ItemType.Processed_Material,
                         itemName: "Cut Sapphire",
@@ -352,7 +351,7 @@ namespace Items
             {
                 2600,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2600,
                         itemType: ItemType.Processed_Material,
                         itemName: "Dried Lavender",
@@ -369,7 +368,7 @@ namespace Items
             {
                 2601,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2601,
                         itemType: ItemType.Processed_Material,
                         itemName: "Dried Mint",
@@ -386,7 +385,7 @@ namespace Items
             {
                 2602,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2602,
                         itemType: ItemType.Processed_Material,
                         itemName: "Dried Basil",
@@ -407,7 +406,7 @@ namespace Items
             {
                 2700,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2700,
                         itemType: ItemType.Processed_Material,
                         itemName: "Spun Cotton",
@@ -424,7 +423,7 @@ namespace Items
             {
                 2701,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2701,
                         itemType: ItemType.Processed_Material,
                         itemName: "Spun Wool",
@@ -441,7 +440,7 @@ namespace Items
             {
                 2702,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2702,
                         itemType: ItemType.Processed_Material,
                         itemName: "Spun Silk",
@@ -462,7 +461,7 @@ namespace Items
             {
                 2800,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2800,
                         itemType: ItemType.Processed_Material,
                         itemName: "Tanned Cowhide",
@@ -479,7 +478,7 @@ namespace Items
             {
                 2801,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2801,
                         itemType: ItemType.Processed_Material,
                         itemName: "Tanned Deerhide",
@@ -496,7 +495,7 @@ namespace Items
             {
                 2802,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2802,
                         itemType: ItemType.Processed_Material,
                         itemName: "Tanned Snakehide",
@@ -517,7 +516,7 @@ namespace Items
             {
                 2900,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2900,
                         itemType: ItemType.Processed_Material,
                         itemName: "Iron Powder",
@@ -534,7 +533,7 @@ namespace Items
             {
                 2901,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2901,
                         itemType: ItemType.Processed_Material,
                         itemName: "Copper Powder",
@@ -551,7 +550,7 @@ namespace Items
             {
                 2902,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2902,
                         itemType: ItemType.Processed_Material,
                         itemName: "Gold Powder",
@@ -572,7 +571,7 @@ namespace Items
             {
                 3000,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3000,
                         itemType: ItemType.Processed_Material,
                         itemName: "Refined Coal",
@@ -589,7 +588,7 @@ namespace Items
             {
                 3001,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3001,
                         itemType: ItemType.Processed_Material,
                         itemName: "Refined Oil",
@@ -606,7 +605,7 @@ namespace Items
             {
                 3002,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3002,
                         itemType: ItemType.Processed_Material,
                         itemName: "Charcoal Briquettes",
@@ -627,7 +626,7 @@ namespace Items
             {
                 3100,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3100,
                         itemType: ItemType.Processed_Material,
                         itemName: "Processed Flower Petals",
@@ -644,7 +643,7 @@ namespace Items
             {
                 3101,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3101,
                         itemType: ItemType.Processed_Material,
                         itemName: "Processed Roots",
@@ -665,7 +664,7 @@ namespace Items
             {
                 3200,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3200,
                         itemType: ItemType.Processed_Material,
                         itemName: "Bone Meal",
@@ -682,7 +681,7 @@ namespace Items
             {
                 3201,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3201,
                         itemType: ItemType.Processed_Material,
                         itemName: "Feather Quills",
@@ -699,7 +698,7 @@ namespace Items
             {
                 3202,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3202,
                         itemType: ItemType.Processed_Material,
                         itemName: "Claw Powder",
@@ -720,7 +719,7 @@ namespace Items
             {
                 3300,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3300,
                         itemType: ItemType.Processed_Material,
                         itemName: "Purified Water",
@@ -737,7 +736,7 @@ namespace Items
             {
                 3301,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3301,
                         itemType: ItemType.Processed_Material,
                         itemName: "Refined Oil",
@@ -754,7 +753,7 @@ namespace Items
             {
                 3302,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3302,
                         itemType: ItemType.Processed_Material,
                         itemName: "Potion Base",
@@ -771,7 +770,7 @@ namespace Items
             {
                 3303,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 3303,
                         itemType: ItemType.Processed_Material,
                         itemName: "Concentrated Reagent",

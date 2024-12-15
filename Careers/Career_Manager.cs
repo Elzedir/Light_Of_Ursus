@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Jobs;
-using UnityEditor;
 using UnityEngine;
 
 namespace Career
@@ -14,7 +13,7 @@ namespace Career
         static Career_SO _careerSO;
         static Career_SO Career_SO => _careerSO ??= _getCareer_SO();
 
-        public static Career_Master GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName);
+        public static Career_Data GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName).DataObject;
         
         public static void PopulateAllCareers()
         {
@@ -41,36 +40,5 @@ namespace Career
         Wanderer,
         Lumberjack,
         Smith
-    }
-
-    [Serializable]
-    public class Career
-    {
-        public CareerName CareerName;
-        
-        Career_Master _career_Master;
-        Career_Master Career_Master => _career_Master ??= Career_Manager.GetCareer_Master(CareerName);
-        
-        public List<JobName> CareerJobs => Career_Master.CareerJobs.ToList();
-        
-        public Career (CareerName careerName)
-        {
-            CareerName = careerName;
-        }
-    }
-
-    [Serializable]
-    public class Career_Master
-    {
-        public CareerName     CareerName;
-        public string         CareerDescription;
-        public HashSet<JobName> CareerJobs;
-
-        public Career_Master(CareerName careerName, string careerDescription, HashSet<JobName> careerJobs)
-        {
-            CareerName        = careerName;
-            CareerDescription = careerDescription;
-            CareerJobs        = careerJobs;
-        }
     }
 }

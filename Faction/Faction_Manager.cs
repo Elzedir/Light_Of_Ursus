@@ -1,6 +1,7 @@
+using System.Linq;
 using Actor;
+using DataPersistence;
 using Initialisation;
-using UnityEditor;
 using UnityEngine;
 
 namespace Faction
@@ -13,7 +14,7 @@ namespace Faction
         static Faction_SO AllFactions => _allFactions ??= _getFaction_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions);
+            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions.Select(x => x.DataObject).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -57,7 +58,7 @@ namespace Faction
         
         public static Faction_Data GetFaction_Data(uint factionID)
         {
-            return AllFactions.GetFaction_Data(factionID);
+            return AllFactions.GetFaction_Data(factionID).DataObject;
         }
         
         public static Faction_Component GetFaction_Component(uint factionID)

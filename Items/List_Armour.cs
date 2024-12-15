@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using Items;
-using Managers;
 using UnityEngine;
 
-namespace Lists
+namespace Item
 {
     public abstract class List_Armour
     {
@@ -24,7 +22,7 @@ namespace Lists
             {
                 100,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 100,
                         itemType: ItemType.Armour,
                         itemName: "Bronze ChestPlate",
@@ -34,7 +32,7 @@ namespace Lists
                         itemValue: 10
                     ),
 
-                    new VisualStats_Item(
+                    new Item_VisualStats(
                         itemIcon: null,
                         itemPosition: new Vector3(-0.04f, -0.07f, 0f),
                         itemRotation: Quaternion.Euler(180, 0, 0),

@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using Items;
 using Lists;
-using Priority;
-using Station;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Items
+namespace Item
 {
     [CreateAssetMenu(fileName = "Item_SO", menuName = "SOList/Item_SO")]
     [Serializable]

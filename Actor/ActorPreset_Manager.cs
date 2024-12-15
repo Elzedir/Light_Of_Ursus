@@ -7,28 +7,28 @@ namespace Actor
     {
         const string _actorDataPreset_SOPath = "ScriptableObjects/ActorDataPreset_SO";
 
-        static ActorDataPreset_SO _actorDataPreset_SO;
+        static ActorPreset_SO _actorPreset_SO;
 
-        static  ActorDataPreset_SO ActorDataPreset_SO =>
-            _actorDataPreset_SO ??= _getActorDataPreset_SO();
+        static  ActorPreset_SO ActorPreset_SO =>
+            _actorPreset_SO ??= _getActorDataPreset_SO();
 
         public static Actor_Data GetActorDataPreset(ActorDataPresetName actorDataPresetName) =>
-            ActorDataPreset_SO.GetActorDataPreset(actorDataPresetName).DataObject;
+            Actor.ActorPreset_SO.GetActorDataPreset(actorDataPresetName).DataObject;
         
         public static void PopulateAllActorDataPresets()
         {
-            ActorDataPreset_SO.PopulateDefaultActorDataPresets();
+            Actor.ActorPreset_SO.PopulateDefaultActorDataPresets();
             // Then populate custom actor data presets.
         }
 
-        static ActorDataPreset_SO _getActorDataPreset_SO()
+        static ActorPreset_SO _getActorDataPreset_SO()
         {
-            var actorDataPreset_SO = Resources.Load<ActorDataPreset_SO>(_actorDataPreset_SOPath);
+            var actorDataPreset_SO = Resources.Load<ActorPreset_SO>(_actorDataPreset_SOPath);
 
             if (actorDataPreset_SO is not null) return actorDataPreset_SO;
 
             Debug.LogError("ActorDataPreset_SO not found. Creating temporary ActorDataPreset_SO.");
-            actorDataPreset_SO = ScriptableObject.CreateInstance<ActorDataPreset_SO>();
+            actorDataPreset_SO = ScriptableObject.CreateInstance<ActorPreset_SO>();
 
             return actorDataPreset_SO;
         }

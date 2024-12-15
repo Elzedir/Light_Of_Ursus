@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Managers;
 using Priority;
 using Station;
 
-namespace Items
+namespace Item
 {
     public enum RawMaterialName
     {
@@ -85,7 +84,7 @@ namespace Items
             {
                 1000,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1000,
                         itemType: ItemType.Raw_Material,
                         itemName: "Iron Nuggets",
@@ -103,7 +102,7 @@ namespace Items
             {
                 1001,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1001,
                         itemType: ItemType.Raw_Material,
                         itemName: "Copper Nuggets",
@@ -120,7 +119,7 @@ namespace Items
             {
                 1002,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1002,
                         itemType: ItemType.Raw_Material,
                         itemName: "Silver Nuggets",
@@ -137,7 +136,7 @@ namespace Items
             {
                 1003,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1003,
                         itemType: ItemType.Raw_Material,
                         itemName: "Gold Nuggets",
@@ -154,7 +153,7 @@ namespace Items
             {
                 1004,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1004,
                         itemType: ItemType.Raw_Material,
                         itemName: "Steel Nuggets",
@@ -171,7 +170,7 @@ namespace Items
             {
                 1005,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1005,
                         itemType: ItemType.Raw_Material,
                         itemName: "Steel Fragments",
@@ -192,7 +191,7 @@ namespace Items
             {
                 1100,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1100,
                         itemType: ItemType.Raw_Material,
                         itemName: $"{RawMaterialName.Log}",
@@ -215,7 +214,7 @@ namespace Items
             {
                 1101,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1101,
                         itemType: ItemType.Raw_Material,
                         itemName: "Pine Wood",
@@ -232,7 +231,7 @@ namespace Items
             {
                 1102,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1102,
                         itemType: ItemType.Raw_Material,
                         itemName: "Birch Wood",
@@ -249,7 +248,7 @@ namespace Items
             {
                 1103,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1103,
                         itemType: ItemType.Raw_Material,
                         itemName: "Maple Wood",
@@ -266,7 +265,7 @@ namespace Items
             {
                 1104,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1104,
                         itemType: ItemType.Raw_Material,
                         itemName: "Mahogany Wood",
@@ -287,7 +286,7 @@ namespace Items
             {
                 1200,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1200,
                         itemType: ItemType.Raw_Material,
                         itemName: "Granite",
@@ -304,7 +303,7 @@ namespace Items
             {
                 1201,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1201,
                         itemType: ItemType.Raw_Material,
                         itemName: "Marble",
@@ -321,7 +320,7 @@ namespace Items
             {
                 1202,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1202,
                         itemType: ItemType.Raw_Material,
                         itemName: "Limestone",
@@ -338,7 +337,7 @@ namespace Items
             {
                 1203,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1203,
                         itemType: ItemType.Raw_Material,
                         itemName: "Slate",
@@ -355,7 +354,7 @@ namespace Items
             {
                 1204,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1204,
                         itemType: ItemType.Raw_Material,
                         itemName: "Sandstone",
@@ -377,7 +376,7 @@ namespace Items
             {
                 1300,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1300,
                         itemType: ItemType.Raw_Material,
                         itemName: "Diamond",
@@ -394,7 +393,7 @@ namespace Items
             {
                 1301,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1301,
                         itemType: ItemType.Raw_Material,
                         itemName: "Ruby",
@@ -411,7 +410,7 @@ namespace Items
             {
                 1302,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1302,
                         itemType: ItemType.Raw_Material,
                         itemName: "Sapphire",
@@ -428,7 +427,7 @@ namespace Items
             {
                 1303,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1303,
                         itemType: ItemType.Raw_Material,
                         itemName: "Emerald",
@@ -445,7 +444,7 @@ namespace Items
             {
                 1304,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1304,
                         itemType: ItemType.Raw_Material,
                         itemName: "Amethyst",
@@ -466,7 +465,7 @@ namespace Items
             {
                 1400,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1400,
                         itemType: ItemType.Raw_Material,
                         itemName: "Lavender",
@@ -483,7 +482,7 @@ namespace Items
             {
                 1401,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1401,
                         itemType: ItemType.Raw_Material,
                         itemName: "Mint",
@@ -500,7 +499,7 @@ namespace Items
             {
                 1402,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1402,
                         itemType: ItemType.Raw_Material,
                         itemName: "Basil",
@@ -517,7 +516,7 @@ namespace Items
             {
                 1403,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1403,
                         itemType: ItemType.Raw_Material,
                         itemName: "Rosemary",
@@ -534,7 +533,7 @@ namespace Items
             {
                 1404,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1404,
                         itemType: ItemType.Raw_Material,
                         itemName: "Thyme",
@@ -555,7 +554,7 @@ namespace Items
             {
                 1500,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1500,
                         itemType: ItemType.Raw_Material,
                         itemName: "Cotton",
@@ -572,7 +571,7 @@ namespace Items
             {
                 1501,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1501,
                         itemType: ItemType.Raw_Material,
                         itemName: "Wool",
@@ -589,7 +588,7 @@ namespace Items
             {
                 1502,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1502,
                         itemType: ItemType.Raw_Material,
                         itemName: "Silk",
@@ -606,7 +605,7 @@ namespace Items
             {
                 1503,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1503,
                         itemType: ItemType.Raw_Material,
                         itemName: "Hemp",
@@ -623,7 +622,7 @@ namespace Items
             {
                 1504,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1504,
                         itemType: ItemType.Raw_Material,
                         itemName: "Linen",
@@ -644,7 +643,7 @@ namespace Items
             {
                 1600,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1600,
                         itemType: ItemType.Raw_Material,
                         itemName: "Cowhide",
@@ -661,7 +660,7 @@ namespace Items
             {
                 1601,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1601,
                         itemType: ItemType.Raw_Material,
                         itemName: "Deerhide",
@@ -678,7 +677,7 @@ namespace Items
             {
                 1602,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1602,
                         itemType: ItemType.Raw_Material,
                         itemName: "Snakehide",
@@ -695,7 +694,7 @@ namespace Items
             {
                 1603,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1603,
                         itemType: ItemType.Raw_Material,
                         itemName: "Alligatorhide",
@@ -712,7 +711,7 @@ namespace Items
             {
                 1604,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1604,
                         itemType: ItemType.Raw_Material,
                         itemName: "Dragonhide",
@@ -733,7 +732,7 @@ namespace Items
             {
                 1700,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1700,
                         itemType: ItemType.Raw_Material,
                         itemName: "Iron Ore",
@@ -750,7 +749,7 @@ namespace Items
             {
                 1701,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1701,
                         itemType: ItemType.Raw_Material,
                         itemName: "Copper Ore",
@@ -767,7 +766,7 @@ namespace Items
             {
                 1702,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1702,
                         itemType: ItemType.Raw_Material,
                         itemName: "Gold Ore",
@@ -784,7 +783,7 @@ namespace Items
             {
                 1703,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1703,
                         itemType: ItemType.Raw_Material,
                         itemName: "Silver Ore",
@@ -801,7 +800,7 @@ namespace Items
             {
                 1704,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1704,
                         itemType: ItemType.Raw_Material,
                         itemName: "Mithril Ore",
@@ -822,7 +821,7 @@ namespace Items
             {
                 1800,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1800,
                         itemType: ItemType.Raw_Material,
                         itemName: "Coal",
@@ -839,7 +838,7 @@ namespace Items
             {
                 1801,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1801,
                         itemType: ItemType.Raw_Material,
                         itemName: "Oil",
@@ -856,7 +855,7 @@ namespace Items
             {
                 1802,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1802,
                         itemType: ItemType.Raw_Material,
                         itemName: "Firewood",
@@ -873,7 +872,7 @@ namespace Items
             {
                 1803,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1803,
                         itemType: ItemType.Raw_Material,
                         itemName: "Charcoal",
@@ -890,7 +889,7 @@ namespace Items
             {
                 1804,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1804,
                         itemType: ItemType.Raw_Material,
                         itemName: "Magic Crystals",
@@ -911,7 +910,7 @@ namespace Items
             {
                 1900,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1900,
                         itemType: ItemType.Raw_Material,
                         itemName: "Flower",
@@ -928,7 +927,7 @@ namespace Items
             {
                 1901,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1901,
                         itemType: ItemType.Raw_Material,
                         itemName: "Root",
@@ -945,7 +944,7 @@ namespace Items
             {
                 1902,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1902,
                         itemType: ItemType.Raw_Material,
                         itemName: "Leaf",
@@ -962,7 +961,7 @@ namespace Items
             {
                 1903,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1903,
                         itemType: ItemType.Raw_Material,
                         itemName: "Berry",
@@ -979,7 +978,7 @@ namespace Items
             {
                 1904,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 1904,
                         itemType: ItemType.Raw_Material,
                         itemName: "Mushroom",
@@ -1000,7 +999,7 @@ namespace Items
             {
                 2000,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2000,
                         itemType: ItemType.Raw_Material,
                         itemName: "Bone",
@@ -1017,7 +1016,7 @@ namespace Items
             {
                 2001,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2001,
                         itemType: ItemType.Raw_Material,
                         itemName: "Feather",
@@ -1034,7 +1033,7 @@ namespace Items
             {
                 2002,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2002,
                         itemType: ItemType.Raw_Material,
                         itemName: "Claw",
@@ -1051,7 +1050,7 @@ namespace Items
             {
                 2003,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2003,
                         itemType: ItemType.Raw_Material,
                         itemName: "Scale",
@@ -1068,7 +1067,7 @@ namespace Items
             {
                 2004,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2004,
                         itemType: ItemType.Raw_Material,
                         itemName: "Meat",
@@ -1089,7 +1088,7 @@ namespace Items
             {
                 2100,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2100,
                         itemType: ItemType.Raw_Material,
                         itemName: "Water",
@@ -1106,7 +1105,7 @@ namespace Items
             {
                 2101,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2101,
                         itemType: ItemType.Raw_Material,
                         itemName: "Oil",
@@ -1123,7 +1122,7 @@ namespace Items
             {
                 2102,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2102,
                         itemType: ItemType.Raw_Material,
                         itemName: "Potion Base",
@@ -1140,7 +1139,7 @@ namespace Items
             {
                 2103,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2103,
                         itemType: ItemType.Raw_Material,
                         itemName: "Alchemical Reagent",
@@ -1157,7 +1156,7 @@ namespace Items
             {
                 2104,
                 new Item_Data(
-                    new CommonStats_Item(
+                    new Item_CommonStats(
                         itemID: 2104,
                         itemType: ItemType.Raw_Material,
                         itemName: "Blood",

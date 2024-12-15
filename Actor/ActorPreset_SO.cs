@@ -36,9 +36,9 @@ namespace Actor
         protected override Data_Object<Actor_Data> _convertToDataObject(Actor_Data data)
         {
             return new Data_Object<Actor_Data>(
-                dataObjectID: data.ActorID,
+                dataObjectID: (uint)data.ActorDataPresetName,
                 dataObject: data,
-                dataObjectTitle: $"{data.ActorName}{data.ActorName}",
+                dataObjectTitle: $"{(uint)data.ActorDataPresetName}{data.ActorDataPresetName}",
                 dataSO_Object: data.DataSO_Object);
         }
         

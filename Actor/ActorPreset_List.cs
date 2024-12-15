@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Career;
+using Careers;
 using Jobs;
 using Recipe;
-using UnityEngine;
 
 namespace Actor
 {
@@ -25,11 +24,6 @@ namespace Actor
             foreach (var smith in _smith())
             {
                 allActorDataPresets.Add(smith.Key, smith.Value);
-            }
-            
-            foreach (var actorDataPreset in allActorDataPresets)
-            {
-                Debug.Log((ActorDataPresetName)actorDataPreset.Key);
             }
 
             return allActorDataPresets;
