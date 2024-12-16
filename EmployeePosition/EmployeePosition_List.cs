@@ -12,6 +12,11 @@ namespace EmployeePosition
         {
             var allEmployeePositions = new Dictionary<uint, EmployeePosition_Data>();
 
+            foreach (var hauler in _hauler())
+            {
+                allEmployeePositions.Add(hauler.Key, hauler.Value);
+            }
+
             foreach (var logger in _logger())
             {
                 allEmployeePositions.Add(logger.Key, logger.Value);
@@ -28,6 +33,21 @@ namespace EmployeePosition
             }
 
             return allEmployeePositions;
+        }
+        
+        static Dictionary<uint, EmployeePosition_Data> _hauler()
+        {
+            return new Dictionary<uint, EmployeePosition_Data>
+            {
+                {
+                    (uint)EmployeePositionName.Hauler, new EmployeePosition_Data(
+                        employeePositionName: EmployeePositionName.Hauler,
+                        employeeDataPreset: ActorDataPresetName.No_Preset,
+                        requiredCareer: CareerName.None,
+                        requiredVocations: new Dictionary<VocationName, float>(),
+                        requiredRecipes: new List<RecipeName>())
+                }
+            };
         }
 
         static Dictionary<uint, EmployeePosition_Data> _logger()

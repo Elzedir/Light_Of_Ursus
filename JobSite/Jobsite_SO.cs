@@ -12,8 +12,8 @@ namespace JobSite
     [Serializable]
     public class JobSite_SO : Data_SO<JobSite_Data>
     {
-        public Data_Object<JobSite_Data>[] JobSites                             => DataObjects;
-        public Data_Object<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetDataObject_Master(jobSiteID);
+        public Object_Data<JobSite_Data>[] JobSites                             => Objects_Data;
+        public Object_Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetObject_Data(jobSiteID);
         public Dictionary<uint, JobSite_Component> JobSiteComponents = new();
 
         public JobSite_Component GetJobSite_Component(uint jobSiteID)
@@ -52,8 +52,8 @@ namespace JobSite
                 
                 if (existingJobSites.TryGetValue(jobSite.DataObject.JobSiteID, out var existingJobSite))
                 {
-                    existingJobSite.JobSiteData = jobSite.DataObject;
                     JobSiteComponents[jobSite.DataObject.JobSiteID] = existingJobSite;
+                    existingJobSite.SetJobSiteData(jobSite.DataObject);
                     existingJobSites.Remove(jobSite.DataObject.JobSiteID);
                     continue;
                 }
@@ -73,7 +73,7 @@ namespace JobSite
             }
         }
 
-        protected override Dictionary<uint, Data_Object<JobSite_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<JobSite_Data>> _populateDefaultDataObjects()
         {
             var defaultJobSites = new Dictionary<uint, JobSite_Data>();
 
@@ -97,11 +97,11 @@ namespace JobSite
             return _lastUnusedJobSiteID;
         }
         
-        Dictionary<uint, Data_Object<JobSite_Data>> _defaultJobSites => DefaultDataObjects;
+        Dictionary<uint, Object_Data<JobSite_Data>> _defaultJobSites => DefaultDataObjects;
         
-        protected override Data_Object<JobSite_Data> _convertToDataObject(JobSite_Data data)
+        protected override Object_Data<JobSite_Data> _convertToDataObject(JobSite_Data data)
         {
-            return new Data_Object<JobSite_Data>(
+            return new Object_Data<JobSite_Data>(
                 dataObjectID: data.JobSiteID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.JobSiteID}: {data.JobSiteName}",

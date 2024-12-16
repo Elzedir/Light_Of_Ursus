@@ -85,7 +85,7 @@ namespace City
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var city in AllCities.CityComponents.Values)
+            foreach (var city in AllCities.City_Components.Values)
             {
                 var distance = Vector3.Distance(position, city.transform.position);
 

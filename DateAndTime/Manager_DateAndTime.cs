@@ -247,7 +247,7 @@ namespace DateAndTime
             _currentHour   = totalMinutes / 60;
             _currentMinute = totalMinutes % 60;
             
-            Manager_TickRate.RegisterTicker(TickerType.DateAndTime, TickRate.OneSecond, 1, _onTick);
+            Manager_TickRate.RegisterTicker(TickerTypeName.DateAndTime, TickRateName.OneSecond, 1, _onTick);
         }
 
         static void _onTick()

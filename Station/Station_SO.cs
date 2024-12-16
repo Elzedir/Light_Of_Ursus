@@ -12,8 +12,8 @@ namespace Station
     [Serializable]
     public class Station_SO : Data_SO<Station_Data>
     {
-        public Data_Object<Station_Data>[]         Stations                        => DataObjects;
-        public Data_Object<Station_Data>           GetStation_Data(uint stationID) => GetDataObject_Master(stationID);
+        public Object_Data<Station_Data>[]         Stations                        => Objects_Data;
+        public Object_Data<Station_Data>           GetStation_Data(uint stationID) => GetObject_Data(stationID);
         public Dictionary<uint, Station_Component> StationComponents = new();
 
         public Station_Component GetStation_Component(uint stationID)
@@ -54,8 +54,8 @@ namespace Station
                 
                 if (existingStations.TryGetValue(station.DataObject.StationID, out var existingStation))
                 {
-                    existingStation.StationData = station.DataObject;
                     StationComponents[station.DataObject.StationID] = existingStation;
+                    existingStation.StationData                     = station.DataObject;
                     existingStations.Remove(station.DataObject.StationID);
                     continue;
                 }
@@ -75,7 +75,7 @@ namespace Station
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Station_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Station_Data>> _populateDefaultDataObjects()
         {
             var defaultStations = new Dictionary<uint, Station_Data>();
 
@@ -99,11 +99,11 @@ namespace Station
             return _lastUnusedStationID;
         }
 
-        Dictionary<uint, Data_Object<Station_Data>> _defaultStations => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Station_Data>> _defaultStations => DefaultDataObjects;
 
-        protected override Data_Object<Station_Data> _convertToDataObject(Station_Data data)
+        protected override Object_Data<Station_Data> _convertToDataObject(Station_Data data)
         {
-            return new Data_Object<Station_Data>(
+            return new Object_Data<Station_Data>(
                 dataObjectID: data.StationID,
                 dataObject: data,
                 dataObjectTitle: $"{data.StationID}: {data.StationName}",

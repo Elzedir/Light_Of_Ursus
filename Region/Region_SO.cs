@@ -12,8 +12,8 @@ namespace Region
     [Serializable]
     public class Region_SO : Data_SO<Region_Data>
     {
-        public Data_Object<Region_Data>[] Regions                         => DataObjects;
-        public Data_Object<Region_Data>        GetRegion_Data(uint      regionID) => GetDataObject_Master(regionID);
+        public Object_Data<Region_Data>[] Regions                         => Objects_Data;
+        public Object_Data<Region_Data>        GetRegion_Data(uint      regionID) => GetObject_Data(regionID);
         public Dictionary<uint, Region_Component> RegionComponents = new();
 
         public Region_Component GetRegion_Component(uint regionID)
@@ -38,18 +38,6 @@ namespace Region
             {
                 Debug.Log("No Default Regions Found");
             }
-
-            Debug.Log($"{_defaultRegions.Count} vs {Regions.Length}");
-
-            foreach (var region in _defaultRegions)
-            {
-                Debug.Log($"Region: {region.Key} - {region.Value?.DataObjectID} - {region.Value?.DataObject?.RegionID}");
-            }
-            
-            foreach (var region in Regions)
-            {
-                Debug.Log($"Region: {region?.DataObjectID} - {region?.DataObject?.RegionID}");
-            }
             
             var existingRegions = FindObjectsByType<Region_Component>(FindObjectsSortMode.None)
                                      .Where(station => Regex.IsMatch(station.name, @"\d+"))
@@ -62,12 +50,10 @@ namespace Region
             {
                 if (region?.DataObject is null) continue;
                 
-                Debug.Log($"Region: {region.DataObjectID} vs {region.DataObject.RegionID} - {region.DataObject.RegionName}: {region.DataObject}");
-                
                 if (existingRegions.TryGetValue(region.DataObject.RegionID, out var existingRegion))
                 {
-                    existingRegion.RegionData = region.DataObject;
                     RegionComponents[region.DataObject.RegionID] = existingRegion;
+                    existingRegion.SetRegionData(region.DataObject);
                     existingRegions.Remove(region.DataObject.RegionID);
                     continue;
                 }
@@ -87,7 +73,7 @@ namespace Region
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Region_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Region_Data>> _populateDefaultDataObjects()
         {
             var defaultRegions = new Dictionary<uint, Region_Data>();
 
@@ -111,11 +97,11 @@ namespace Region
             return _lastUnusedRegionID;
         }
         
-        Dictionary<uint, Data_Object<Region_Data>> _defaultRegions => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Region_Data>> _defaultRegions => DefaultDataObjects;
          
-        protected override Data_Object<Region_Data> _convertToDataObject(Region_Data data)
+        protected override Object_Data<Region_Data> _convertToDataObject(Region_Data data)
         {
-            return new Data_Object<Region_Data>(
+            return new Object_Data<Region_Data>(
                 dataObjectID: data.RegionID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.RegionID}: {data.RegionName}",

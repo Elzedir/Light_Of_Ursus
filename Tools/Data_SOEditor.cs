@@ -13,9 +13,9 @@ namespace Tools
 
         public override void OnInspectorGUI()
         {
-            if (SO?.DataObjects is null)
+            if (SO?.Objects_Data is null)
             {
-                EditorGUILayout.LabelField($"{SO} is null or {SO?.DataObjects} is null", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"{SO} is null or {SO?.Objects_Data} is null", EditorStyles.boldLabel);
                 return;
             }
             
@@ -23,7 +23,7 @@ namespace Tools
             
             if (GUILayout.Button("Refresh All Objects")) SO.RefreshDataObjects();
 
-            if (SO.DataObjects.Length is 0)
+            if (SO.Objects_Data.Length is 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
@@ -31,7 +31,7 @@ namespace Tools
 
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            var nonNullDataObjects = SO.DataObjects.Where(data_Object =>
+            var nonNullDataObjects = SO.Objects_Data.Where(data_Object =>
                 data_Object              != null &&
                 data_Object.DataObjectID != 0).ToArray();
 
@@ -48,7 +48,7 @@ namespace Tools
             _drawData_Object(selectedDataObject.DataSO_Object, firstData: true);
         }
 
-        static string[] _getBaseObjectNames(Data_Object<T>[] baseObjects)
+        static string[] _getBaseObjectNames(Object_Data<T>[] baseObjects)
         {
             return baseObjects.Select(base_Object => $"{base_Object.DataObjectTitle}").ToArray();
         }

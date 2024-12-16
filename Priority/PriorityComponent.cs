@@ -53,7 +53,7 @@ namespace Priority
 
         public PriorityElement PeekHighestSpecificPriority(List<uint> priorityIDs)
         {
-            var permittedPriorities = _canPeek(priorityIDs);
+            var permittedPriorities = _getPermittedPriorities(priorityIDs);
             
             if (permittedPriorities.Count is 0)
             {
@@ -76,7 +76,7 @@ namespace Priority
             return PriorityQueue.Dequeue(highestPriority.PriorityID);
         }
 
-        protected abstract List<uint> _canPeek(List<uint> priorityIDs);
+        protected abstract List<uint> _getPermittedPriorities(List<uint> priorityIDs);
 
         public PriorityElement PeekHighestPriority(ActorPriorityState actorPriorityState)
         {
@@ -109,7 +109,10 @@ namespace Priority
                 
             var highestPriority = PeekHighestSpecificPriority(priorityIDs);
 
-            return PriorityQueue.Dequeue(highestPriority.PriorityID);
+            if (highestPriority is not null) return PriorityQueue.Dequeue(highestPriority.PriorityID);
+            
+            Debug.Log("No highest priority found.");
+            return null;
         }
 
         protected abstract List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID);

@@ -58,22 +58,22 @@ namespace Actor
             transform.parent.name = $"{ActorData.ActorName}Body";
             transform.name        = $"{ActorData.ActorName}";
 
-            _setTickRate(TickRate.OneSecond, false);
+            _setTickRate(TickRateName.OneSecond, false);
 
             _updateVisuals();
 
             _initialised = true;
         }
 
-        TickRate _currentTickRate;
+        TickRateName _currentTickRateName;
 
-        void _setTickRate(TickRate tickRate, bool unregister = true)
+        void _setTickRate(TickRateName tickRateName, bool unregister = true)
         {
-            if (_currentTickRate == tickRate) return;
+            if (_currentTickRateName == tickRateName) return;
 
-            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Actor, _currentTickRate, ActorID);
-            Manager_TickRate.RegisterTicker(TickerType.Actor, tickRate, ActorID, _onTick);
-            _currentTickRate = tickRate;
+            if (unregister) Manager_TickRate.UnregisterTicker(TickerTypeName.Actor, _currentTickRateName, ActorID);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Actor, tickRateName, ActorID, _onTick);
+            _currentTickRateName = tickRateName;
         }
 
         void _onTick()

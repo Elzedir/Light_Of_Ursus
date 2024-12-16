@@ -85,23 +85,15 @@ namespace Faction
 
         public static void AllocateActorToFactionGO(Actor_Component actor, uint factionID)
         {
-            var faction = GetFaction_Data(factionID);
+            var faction = GetFaction_Component(factionID);
  
-            if (faction == null)
+            if (faction is null)
             {
                 Debug.LogError($"Faction: {factionID} not found.");
                 return;
             }
 
-            var factionGO = GameObject.Find($"{factionID}: {faction.FactionName}");
-
-            if (factionGO == null)
-            {
-                Debug.LogError($"FactionGO: {factionID}: {faction.FactionName} not found.");
-                return;
-            }
-
-            actor.transform.parent.SetParent(factionGO.transform);
+            actor.transform.parent.SetParent(faction.transform);
         }
         
         public static void ClearSOData()

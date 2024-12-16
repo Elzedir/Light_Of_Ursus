@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using WorkPost;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace OperatingArea
+namespace WorkPosts
 {
     [CreateAssetMenu(fileName = "WorkPost_SO", menuName = "SOList/WorkPost_SO")]
     [Serializable]
@@ -47,30 +46,30 @@ namespace OperatingArea
                                          station => station
                                      );
             
-            foreach (var WorkPost in WorkPosts)
+            foreach (var workPost in WorkPosts)
             {
-                if (WorkPost?.DataObject is null) continue;
+                if (workPost?.DataObject is null) continue;
                 
-                if (existingWorkPosts.TryGetValue(WorkPost.DataObject.WorkPostID, out var existingWorkPost))
+                if (existingWorkPosts.TryGetValue(workPost.DataObject.WorkPostID, out var existingWorkPost))
                 {
-                    WorkPostComponents[WorkPost.DataObject.WorkPostID] = existingWorkPost;
-                    existingWorkPost.SetWorkPostData(WorkPost.DataObject);
-                    existingWorkPosts.Remove(WorkPost.DataObject.WorkPostID);
+                    WorkPostComponents[workPost.DataObject.WorkPostID] = existingWorkPost;
+                    existingWorkPost.SetWorkPostData(workPost.DataObject);
+                    existingWorkPosts.Remove(workPost.DataObject.WorkPostID);
                     continue;
                 }
                 
-                Debug.LogWarning($"WorkPost with ID {WorkPost.DataObject.WorkPostID} not found in the scene.");
+                Debug.LogWarning($"WorkPost with ID {workPost.DataObject.WorkPostID} not found in the scene.");
             }
             
-            foreach (var WorkPost in existingWorkPosts)
+            foreach (var workPost in existingWorkPosts)
             {
-                if (DataObjectIndexLookup.ContainsKey(WorkPost.Key))
+                if (DataObjectIndexLookup.ContainsKey(workPost.Key))
                 {
-                    Debug.LogWarning($"WorkPost with ID {WorkPost.Key} wasn't removed from existingWorkPosts.");
+                    Debug.LogWarning($"WorkPost with ID {workPost.Key} wasn't removed from existingWorkPosts.");
                     continue;
                 }
                 
-                Debug.LogWarning($"WorkPost with ID {WorkPost.Key} does not have DataObject in WorkPost_SO.");
+                Debug.LogWarning($"WorkPost with ID {workPost.Key} does not have DataObject in WorkPost_SO.");
             }
         }
 
@@ -105,7 +104,7 @@ namespace OperatingArea
             return new Object_Data<WorkPost_Data>(
                 dataObjectID: data.WorkPostID, 
                 dataObject: data,
-                dataObjectTitle: $"{data.WorkPostID}: {data.WorkPostName}",
+                dataObjectTitle: $"WorkPost: {data.WorkPostID}",
                 data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
         }
     }

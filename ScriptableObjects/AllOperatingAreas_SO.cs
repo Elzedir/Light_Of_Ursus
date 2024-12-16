@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DataPersistence;
-using OperatingArea;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,9 +10,9 @@ using UnityEngine;
 [Serializable]
 public class AllOperatingAreas_SO : ScriptableObject
 {
-    public List<OperatingAreaData> AllOperatingAreaData;
+    public List<WorkPost_Data> AllOperatingAreaData;
 
-    public void SetAllOperatingAreaData(List<OperatingAreaData> allOperatingAreaData)
+    public void SetAllOperatingAreaData(List<WorkPost_Data> allOperatingAreaData)
     {
         AllOperatingAreaData = allOperatingAreaData;
     }
@@ -63,7 +62,7 @@ public class AllOperatingAreasSOEditor : Editor
 
     private string[] GetOperatingAreaNames(AllOperatingAreas_SO allOperatingAreasSO)
     {
-        return allOperatingAreasSO.AllOperatingAreaData.Select(o => o.OperatingAreaID.ToString()).ToArray();
+        return allOperatingAreasSO.AllOperatingAreaData.Select(o => o.WorkPostID.ToString()).ToArray();
     }
 
     private float GetListHeight(int itemCount)
@@ -71,11 +70,11 @@ public class AllOperatingAreasSOEditor : Editor
         return Mathf.Min(200, itemCount * 20);
     }
 
-    private void DrawOperatingAreaAdditionalData(OperatingAreaData selectedOperatingAreaData)
+    private void DrawOperatingAreaAdditionalData(WorkPost_Data selectedWorkPostData)
     {
         EditorGUILayout.LabelField("Operating Area Data", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("Operating Area ID", selectedOperatingAreaData.OperatingAreaID.ToString());
-        EditorGUILayout.LabelField("Station ID", selectedOperatingAreaData.StationID.ToString());
-        EditorGUILayout.LabelField("Current Operator", $"{selectedOperatingAreaData.CurrentOperatorID}");
+        EditorGUILayout.LabelField("Operating Area ID", selectedWorkPostData.WorkPostID.ToString());
+        EditorGUILayout.LabelField("Station ID", selectedWorkPostData.StationID.ToString());
+        EditorGUILayout.LabelField("Current Operator", $"{selectedWorkPostData.CurrentOperatorID}");
     }
 }

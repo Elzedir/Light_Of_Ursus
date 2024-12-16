@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using EmployeePosition;
 using Items;
 using ScriptableObjects;
@@ -13,12 +14,12 @@ namespace JobSite
 
         protected override bool _compareProductionOutput()
         {
-            // Temporary
+            // Temporary, maybe change to cost of items over product of items
             SetIdealRatio(3f);
 
-            var producedItems = AllStationsInJobSite.Values
-                                .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
-                                .ToList();
+            var producedItems = JobSiteData.AllStationsInJobSite.Values
+                                           .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
+                                           .ToList();
 
             var mergedItems = producedItems
                               .GroupBy(item => item.ItemID)
@@ -39,13 +40,13 @@ namespace JobSite
             float logProduction   = mergedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
             float plankProduction = mergedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
-            float currentRatio = logProduction / plankProduction;
+            var currentRatio = logProduction / plankProduction;
 
-            float percentageDifference = Mathf.Abs(((currentRatio / IdealRatio) * 100) - 100);
+            var percentageDifference = Mathf.Abs(((currentRatio / IdealRatio) * 100) - 100);
 
             Debug.Log($"Log Average: {logProduction}, Plank Average: {plankProduction}, Percentage Difference: {percentageDifference}%");
 
-            bool isBalanced = percentageDifference <= PermittedProductionInequality;
+            var isBalanced = percentageDifference <= PermittedProductionInequality;
 
             if (!isBalanced)
             {
@@ -62,20 +63,20 @@ namespace JobSite
 
         protected override void _adjustProduction(float idealRatio)
         {
-            var   allEmployees        = new List<uint>(JobSiteData.AllEmployeeIDs);
-            var   bestCombination     = new List<uint>();
-            float bestRatioDifference = float.MaxValue;
+            var   allEmployees        = new Dictionary<uint, Actor_Component>(JobSiteData.AllEmployees);
+            var   bestCombination     = new Dictionary<uint, Actor_Component>();
+            var bestRatioDifference = float.MaxValue;
 
             var allCombinations = _getAllCombinations(allEmployees);
-            int i               = 0;
+            var i               = 0;
 
             foreach (var combination in allCombinations)
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = AllStationsInJobSite.Values
-                                          .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
-                                          .ToList();
+                var estimatedProduction = JobSiteData.AllStationsInJobSite.Values
+                                                     .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
+                                                     .ToList();
 
                 var mergedEstimatedProduction = estimatedProduction
                                                 .GroupBy(item => item.ItemID)
@@ -85,20 +86,19 @@ namespace JobSite
                 float estimatedLogProduction   = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
                 float estimatedPlankProduction = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
-                float estimatedRatio  = estimatedLogProduction / estimatedPlankProduction;
-                float ratioDifference = Mathf.Abs(estimatedRatio - idealRatio);
+                var estimatedRatio  = estimatedLogProduction / estimatedPlankProduction;
+                var ratioDifference = Mathf.Abs(estimatedRatio - idealRatio);
 
                 i++;
 
                 Debug.Log($"Combination {i} has eL: {estimatedLogProduction} eP: {estimatedPlankProduction} eR: {estimatedRatio} and rDif: {ratioDifference}");
 
-                if (ratioDifference < bestRatioDifference)
-                {
-                    Debug.Log($"Combination {i} the is best ratio");
+                if (!(ratioDifference < bestRatioDifference)) continue;
+                
+                Debug.Log($"Combination {i} the is best ratio");
 
-                    bestRatioDifference = ratioDifference;
-                    bestCombination     = new List<uint>(combination);
-                }
+                bestRatioDifference = ratioDifference;
+                bestCombination     = new Dictionary<uint, Actor_Component>(combination);
             }
 
             _assignAllEmployeesToStations(bestCombination);

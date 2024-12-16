@@ -5,13 +5,13 @@ using UnityEngine;
 
 namespace TickRates
 {
-    public enum TickRate 
+    public enum TickRateName 
     { 
         OneTenthSecond, OneSecond, TenSeconds, OneHundredSeconds,
         OneGameHour, OneGameDay, OneGameMonth, OneGameYear 
     }
 
-    public enum TickerType
+    public enum TickerTypeName
     {
         DateAndTime,
         DeferredTicker,
@@ -26,23 +26,23 @@ namespace TickRates
     {
         //Maybe save next tick times since last save and load them on scene load.
         
-        static          Dictionary<TickRate, float>                                            _nextTickTimes = new();
-        static readonly Dictionary<TickerType, Dictionary<TickRate, Dictionary<uint, Action>>> _allTickers    = new();
+        static          Dictionary<TickRateName, float>                                            _nextTickTimes = new();
+        static readonly Dictionary<TickerTypeName, Dictionary<TickRateName, Dictionary<uint, Action>>> _allTickerTypes    = new();
         
         //TickableSpreader _tickableSpreader;
 
         public void OnSceneLoaded()
         {
-            _nextTickTimes = new Dictionary<TickRate, float>
+            _nextTickTimes = new Dictionary<TickRateName, float>
             {
-                { TickRate.OneTenthSecond, Time.time    + 0.1f },
-                { TickRate.OneSecond, Time.time         + 1f },
-                { TickRate.TenSeconds, Time.time        + 10f },
-                { TickRate.OneHundredSeconds, Time.time + 100f },
-                { TickRate.OneGameHour, Time.time       + 120f },
-                { TickRate.OneGameDay, Time.time        + 2880f },
-                { TickRate.OneGameMonth, Time.time      + 43200f },
-                { TickRate.OneGameYear, Time.time       + 172800f }
+                { TickRateName.OneTenthSecond, Time.time    + 0.1f },
+                { TickRateName.OneSecond, Time.time         + 1f },
+                { TickRateName.TenSeconds, Time.time        + 10f },
+                { TickRateName.OneHundredSeconds, Time.time + 100f },
+                { TickRateName.OneGameHour, Time.time       + 120f },
+                { TickRateName.OneGameDay, Time.time        + 2880f },
+                { TickRateName.OneGameMonth, Time.time      + 43200f },
+                { TickRateName.OneGameYear, Time.time       + 172800f }
             };
             
             //_tickableSpreader = new TickableSpreader(new Dictionary<float, SpreadTickables>());
@@ -52,7 +52,7 @@ namespace TickRates
         {
             var currentTime = Time.time;
 
-            var keys = new List<TickRate>(_nextTickTimes.Keys);
+            var keys = new List<TickRateName>(_nextTickTimes.Keys);
 
             foreach (var tickRate in keys.Where(tickRate => currentTime >= _nextTickTimes[tickRate]))
             {
@@ -63,25 +63,25 @@ namespace TickRates
             //_tickableSpreader.Update();
         }
 
-        static float _getTickInterval(TickRate tickRate)
+        static float _getTickInterval(TickRateName tickRateName)
         {
-            return tickRate switch
+            return tickRateName switch
             {
-                TickRate.OneTenthSecond    => 0.1f,
-                TickRate.OneSecond         => 1f,
-                TickRate.TenSeconds        => 10f,
-                TickRate.OneHundredSeconds => 100f,
-                TickRate.OneGameHour       => 120f,
-                TickRate.OneGameDay        => 2880f,
-                TickRate.OneGameMonth      => 43200f,
-                TickRate.OneGameYear       => 172800f,
+                TickRateName.OneTenthSecond    => 0.1f,
+                TickRateName.OneSecond         => 1f,
+                TickRateName.TenSeconds        => 10f,
+                TickRateName.OneHundredSeconds => 100f,
+                TickRateName.OneGameHour       => 120f,
+                TickRateName.OneGameDay        => 2880f,
+                TickRateName.OneGameMonth      => 43200f,
+                TickRateName.OneGameYear       => 172800f,
                 _                          => throw new ArgumentOutOfRangeException()
             };
         }
 
-        public static void RegisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID, Action tickerAction)
+        public static void RegisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID, Action tickerAction)
         {
-            var tickerGroup = _tickerCheck(tickerType, tickRate);
+            var tickerGroup = _tickerCheck(tickerTypeName, tickRateName);
             
             if (!tickerGroup.TryGetValue(tickerID, out _))
             {
@@ -93,9 +93,9 @@ namespace TickRates
             tickerGroup[tickerID] = tickerAction;
         }
 
-        public static void UnregisterTicker(TickerType tickerType, TickRate tickRate, uint tickerID)
+        public static void UnregisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID)
         {
-            var tickerGroup = _tickerCheck(tickerType, tickRate);
+            var tickerGroup = _tickerCheck(tickerTypeName, tickRateName);
 
             if (!tickerGroup.ContainsKey(tickerID))
             {
@@ -106,37 +106,37 @@ namespace TickRates
             tickerGroup.Remove(tickerID);
         }
 
-        static Dictionary<uint, Action> _tickerCheck(TickerType tickerType, TickRate tickRate)
+        static Dictionary<uint, Action> _tickerCheck(TickerTypeName tickerTypeName, TickRateName tickRateName)
         {
-            if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
+            if (!_allTickerTypes.TryGetValue(tickerTypeName, out var tickerRate))
             {
-                tickerRate = new Dictionary<TickRate, Dictionary<uint, Action>>();
-                _allTickers.Add(tickerType, tickerRate);
+                tickerRate = new Dictionary<TickRateName, Dictionary<uint, Action>>();
+                _allTickerTypes.Add(tickerTypeName, tickerRate);
             }
             
-            if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+            if (!tickerRate.TryGetValue(tickRateName, out var tickerGroup))
             {
                 tickerGroup = new Dictionary<uint, Action>();
-                tickerRate.Add(tickRate, tickerGroup);
+                tickerRate.Add(tickRateName, tickerGroup);
             }
             
             return tickerGroup;
         }
 
-        static void _tick(TickRate tickRate)
+        static void _tick(TickRateName tickRateName)
         {
-            foreach (var tickerType in _allTickers.Keys)
+            foreach (var tickerTypeName in _allTickerTypes.Keys)
             {
-                if (!_allTickers.TryGetValue(tickerType, out var tickerRate))
+                if (!_allTickerTypes.TryGetValue(tickerTypeName, out var tickerRate))
                 {
-                    Debug.LogError($"TickerType: {TickerType.Actor} does not exist in TickerGroups.");
-                    return;
+                    Debug.LogError($"TickerType: {tickerTypeName} does not exist in TickerGroups.");
+                    continue;
                 }
 
-                if (!tickerRate.TryGetValue(tickRate, out var tickerGroup))
+                if (!tickerRate.TryGetValue(tickRateName, out var tickerGroup))
                 {
                     //Debug.LogError($"TickRate: {tickRate} does not exist in TickerGroups.");
-                    return;
+                    continue;
                 }
 
                 foreach (var tickerAction in tickerGroup.Values)
@@ -147,6 +147,42 @@ namespace TickRates
         }
     }
 
+    public class TickerType
+    {
+        public          TickerTypeName                     TickerTypeName;
+        public readonly Dictionary<TickRateName, TickRate> TickerGroups;
+        
+        public TickerType(TickerTypeName tickerTypeName)
+        {
+            TickerTypeName = tickerTypeName;
+            TickerGroups     = new Dictionary<TickRateName, TickRate>();
+        }
+    }
+
+    public class TickRate
+    {
+        public TickRateName TickRateName;
+        public Dictionary<TickerType, TickGroup> Tickers;
+        
+        public TickRate(TickRateName tickRateName)
+        {
+            TickRateName = tickRateName;
+            Tickers     = new Dictionary<TickerType, TickGroup>();
+        }
+    }
+
+    public class TickGroup
+    {
+        public TickRateName TickerType;
+        public Dictionary<uint, Action> Tickers;
+        
+        public TickGroup(TickRateName tickRateName)
+        {
+            TickerType = tickRateName;
+            Tickers   = new Dictionary<uint, Action>();
+        }
+    }
+
     public abstract class Manager_DeferredActions
     {
         static bool                      _initialised;
@@ -154,7 +190,7 @@ namespace TickRates
 
         static void _initialise()
         {
-            Manager_TickRate.RegisterTicker(TickerType.DeferredTicker, TickRate.OneTenthSecond, 1, _onTickStatic);
+            Manager_TickRate.RegisterTicker(TickerTypeName.DeferredTicker, TickRateName.OneTenthSecond, 1, _onTickStatic);
             _initialised = true;
         }
 

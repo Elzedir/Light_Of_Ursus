@@ -2,36 +2,37 @@ using System.Collections;
 using Actor;
 using Recipe;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace WorkPost
+namespace WorkPosts
 {
+    [RequireComponent(typeof(BoxCollider))]
+    
     public class WorkPost_Component : MonoBehaviour
     {
-        public uint          WorkPostID => WorkPostData.WorkPostID;
+        public uint WorkPostID                 => WorkPostData.WorkPostID;
+        public uint CurrentWorkerID            => WorkPostData.CurrentWorkerID;
+        
+        public bool HasWorker()                => WorkPostData.HasWorker();
+        public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
+        
         public WorkPost_Data WorkPostData;
         public void          SetWorkPostData(WorkPost_Data workPostData) => WorkPostData = workPostData;
-        public BoxCollider   WorkPostCollider;
+        BoxCollider          _workPostCollider;
+        public BoxCollider   WorkPostCollider => _workPostCollider ??= GetComponent<BoxCollider>();
 
         public void Initialise()
         {
             WorkPostData = WorkPostData;
 
-            WorkPostCollider = WorkPost;
-
-            if (!WorkPostCollider.isTrigger)
-            {
-                Debug.Log($"Set IsTrigger to true for {name}");
-                WorkPostCollider.isTrigger = true;
-            }
+            if (WorkPostCollider.isTrigger) return;
+            
+            Debug.LogError($"Set IsTrigger to true for {WorkPostID}: {name} BoxCollider");
+            WorkPostCollider.isTrigger = true;
         }
-        
-        public bool HasWorker()              => WorkPostData.CurrentWorkerID != 0;
-        public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
 
         public float Operate(float baseProgressRate, Recipe_Data recipeData)
         {
-            if (WorkPostData.CurrentWorkerID == 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;
+            if (WorkPostData.CurrentWorkerID is 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;
 
             if (WorkPostData.CurrentWorker.transform.position != null && !WorkPostCollider.bounds.Contains(WorkPostData.CurrentWorker.transform.position))
             {

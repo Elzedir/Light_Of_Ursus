@@ -9,45 +9,57 @@ using Recipe;
 using Tools;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
+using WorkPosts;
 
 namespace Station
 {
     [Serializable]
     public class Station_Data : Data_Class
     {
-        public uint       StationID;
-        public StationName StationName;
+        public           uint        StationID;
+        public           StationName StationName;
+        public           string      StationDescription;
+        public           bool        StationIsActive;
+        [SerializeField] uint        _jobsiteID;
+
+        [SerializeField] List<WorkPost_Data> _allWorkPostData;
+        public Dictionary<uint, WorkPost_Data> AllWorkPost_Data;
+        
+        
         Station_Component _station_Component;
-        public Station_Component StationComponent => _station_Component ??= Station_Manager.GetStation_Component(StationID);
-
-        ComponentReference_Jobsite _jobsiteReferences;
-        public void                SetJobsiteID(uint jobsiteID) => _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
-        public uint                JobsiteID                    => _jobsiteReferences.JobsiteID;
-        public JobSite_Component    JobSite                      => _jobsiteReferences.JobSite;
-
-        public bool StationIsActive = true;
-
-        public string        StationDescription;
+        public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
+        
+        JobSite_Component        _jobSite_Component;
+        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(_jobsiteID);
+        
         InventoryData _inventoryData;
-        public InventoryData InventoryData { get { return _inventoryData ??= new InventoryData_Station(StationID); } }
-
-        public List<uint>          CurrentOperatorIDs;
+        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
+        
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
+        
         ProductionData             _productionData;
         public ProductionData      ProductionData => _productionData ??= new ProductionData(new List<Item>(), StationID);
 
-        public List<uint> AllOperatingAreaIDs;
         
-        public Station_Data(uint stationID, StationName stationName, string stationDescription, uint jobsiteID)
+        Dictionary<uint, WorkPost_Component> _allWorkPostComponents;
+        public Dictionary<uint, WorkPost_Component> AllWorkPostComponents => _allWorkPostComponents ??= _getAllWorkPostComponents();
+
+        Dictionary<uint, WorkPost_Component> _getAllWorkPostComponents()
+        {
+                
+        }
+
+        public Station_Data(uint stationID, StationName stationName, string stationDescription, uint jobsiteID,
+                            Dictionary<uint, WorkPost_Data> allWorkPostComponents, bool stationIsActive = true)
         {
             StationID          = stationID;
             StationName        = stationName;
             StationDescription = stationDescription;
-            SetJobsiteID(jobsiteID);
-
-            CurrentOperatorIDs = new List<uint>();
-            AllOperatingAreaIDs = new List<uint>();
+            _jobsiteID         = jobsiteID;
+            AllWorkPost_Data   = allWorkPostComponents;
+            StationIsActive    = stationIsActive;
         }
 
         public void InitialiseStationData()
@@ -55,9 +67,9 @@ namespace Station
             var station = Station_Manager.GetStation_Component(StationID);
 
             foreach (var operatingArea in station.AllOperatingAreasInStation
-                                                 .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.OperatingAreaData.OperatingAreaID)))
+                                                 .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.WorkPostData.WorkPostID)))
             {
-                AllOperatingAreaIDs.Add(operatingArea.OperatingAreaData.OperatingAreaID);
+                AllOperatingAreaIDs.Add(operatingArea.WorkPostData.WorkPostID);
             }
         }
 
@@ -86,11 +98,6 @@ namespace Station
 
             Debug.Log($"CurrentOperators does not contain operator: {operatorID}");
             return false;
-        }
-
-        public void SetStationIsActive(bool stationIsActive)
-        {
-            StationIsActive = stationIsActive;
         }
 
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
@@ -188,21 +195,13 @@ namespace Station
     [Serializable]
     public class ProductionData
     {
-        public  List<Item>       AllProducedItems;
-        public  List<Item>       EstimatedProductionRatePerHour;
-        public  List<Item>       ActualProductionRatePerHour;
-        public  uint             StationID;
-        private Station_Component _station;
+        public List<Item>        AllProducedItems;
+        public List<Item>        EstimatedProductionRatePerHour;
+        public List<Item>        ActualProductionRatePerHour;
+        public uint              StationID;
 
-        public Station_Component Station
-        {
-            get
-            {
-                try { return _station ??= Station_Manager.GetStation_Component(StationID); }
-                catch (Exception e) { Debug.LogError(e); return null; }
-            }
-            set => _station = value;
-        }
+        Station_Component        _station;
+        public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
 
         public ProductionData(List<Item> allProducedItems, uint stationID)
         {
@@ -224,10 +223,10 @@ namespace Station
     [Serializable]
     public class StationProgressData
     {
-        public float         CurrentProgress;
-        public float         CurrentQuality;
+        public float       CurrentProgress;
+        public float       CurrentQuality;
         public Recipe_Data CurrentProduct;
-        public void          SetCurrentProduct(Recipe_Data currentProduct) => CurrentProduct = currentProduct;
+        public void        SetCurrentProduct(Recipe_Data currentProduct) => CurrentProduct = currentProduct;
 
         public bool Progress(float progress)
         {

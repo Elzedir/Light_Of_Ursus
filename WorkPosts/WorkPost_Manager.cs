@@ -1,4 +1,4 @@
-namespace OperatingArea
+namespace WorkPosts
 {
     public class WorkPost_Manager
     {

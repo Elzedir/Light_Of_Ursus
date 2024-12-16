@@ -62,8 +62,6 @@ namespace Ability
             CurrentAbilities = actorAbilities.CurrentAbilities;
         }
 
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
         public             Dictionary<AbilityName, float> CurrentAbilities;
         protected override bool                           _priorityChangeNeeded(object dataChanged) => false;
 

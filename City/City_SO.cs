@@ -12,13 +12,13 @@ namespace City
     [Serializable]
     public class City_SO : Data_SO<City_Data>
     {
-        public Data_Object<City_Data>[]                         Cities                         => DataObjects;
-        public Data_Object<City_Data>                           GetCity_Data(uint      cityID) => GetDataObject_Master(cityID);
-        public Dictionary<uint, City_Component> CityComponents = new();
+        public Object_Data<City_Data>[]                         Cities                         => Objects_Data;
+        public Object_Data<City_Data>                           GetCity_Data(uint      cityID) => GetObject_Data(cityID);
+        public Dictionary<uint, City_Component> City_Components = new();
 
         public City_Component GetCity_Component(uint cityID)
         {
-            if (CityComponents.TryGetValue(cityID, out var component))
+            if (City_Components.TryGetValue(cityID, out var component))
             {
                 return component;
             }   
@@ -40,10 +40,10 @@ namespace City
             }
             
             var existingCities = FindObjectsByType<City_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                     .Where(city => Regex.IsMatch(city.name, @"\d+"))
                                      .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
+                                         city_Component => uint.Parse(new string(city_Component.name.Where(char.IsDigit).ToArray())),
+                                         city_Component => city_Component
                                      );
             
             foreach (var city in Cities)
@@ -52,8 +52,8 @@ namespace City
                 
                 if (existingCities.TryGetValue(city.DataObject.CityID, out var existingCity))
                 {
-                    existingCity.CityData = city.DataObject;
-                    CityComponents[city.DataObject.CityID] = existingCity;
+                    City_Components[city.DataObject.CityID] = existingCity;
+                    existingCity.SetCityData(city.DataObject);
                     existingCities.Remove(city.DataObject.CityID);
                     continue;
                 }
@@ -73,7 +73,7 @@ namespace City
             }
         }
 
-        protected override Dictionary<uint, Data_Object<City_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<City_Data>> _populateDefaultDataObjects()
         {
             var defaultCities = new Dictionary<uint, City_Data>();
 
@@ -97,11 +97,11 @@ namespace City
             return _lastUnusedCityID;
         }
         
-        Dictionary<uint, Data_Object<City_Data>> _defaultCities => DefaultDataObjects;
+        Dictionary<uint, Object_Data<City_Data>> _defaultCities => DefaultDataObjects;
         
-        protected override Data_Object<City_Data> _convertToDataObject(City_Data data)
+        protected override Object_Data<City_Data> _convertToDataObject(City_Data data)
         {
-            return new Data_Object<City_Data>(
+            return new Object_Data<City_Data>(
                 dataObjectID: data.CityID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.CityID}: {data.CityName}",

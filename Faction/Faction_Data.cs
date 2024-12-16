@@ -42,13 +42,6 @@ namespace Faction
                 Debug.LogError("No Factions GameObject found.");
                 return;
             }
-
-            if (Manager_Game.FindTransformRecursively(factionsGO.transform, $"{FactionID}: {FactionName}") == null)
-            {
-                var factionGO = new GameObject($"{FactionID}: {FactionName}");
-                factionGO.transform.SetParent(factionsGO.transform);
-                factionGO.transform.position = Vector3.zero;
-            }
         }
         
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JobSite;
 using Managers;
 using Tools;
 using UnityEditor;
@@ -17,23 +18,57 @@ namespace City
         public uint   RegionID;
         public string CityDescription;
 
+        [SerializeField] List<uint> _allJobSiteIDs;
+        
+        City_Component        _city_Component;
+        public City_Component City_Component => _city_Component ??= City_Manager.GetCity_Component(CityID);
+
         public PopulationData Population;
         
         public ProsperityData ProsperityData;
         
-        public List<uint>     AllJobsiteIDs;
+        int                              _currentLength;
+        Dictionary<uint, JobSite_Component> _allJobSitesInCity;
+        public Dictionary<uint, JobSite_Component> AllJobSitesInCity
+        {
+            get
+            {
+                if (_allJobSitesInCity is not null && _allJobSitesInCity.Count != 0 && _allJobSitesInCity.Count == _currentLength) return _allJobSitesInCity;
+                
+                _currentLength = _allJobSitesInCity?.Count ?? 0;
+                return City_Component.GetAllJobSitesInCity();
+            }
+        }
+        
+        // Call when a new city is formed.
+        public void RefreshAllJobSites() => _currentLength = 0;
+
+        public City_Data(uint       cityID, string cityName, string cityDescription, uint cityFactionID, uint regionID,
+                         List<uint> allJobSiteIDs, PopulationData population, ProsperityData prosperityData = null)
+        {
+            CityID          = cityID;
+            CityName        = cityName;
+            CityDescription = cityDescription;
+            CityFactionID   = cityFactionID;
+            RegionID        = regionID;
+            _allJobSiteIDs  = allJobSiteIDs;
+            Population      = population;
+
+            ProsperityData = new ProsperityData(prosperityData);
+        }
 
         public void InitialiseCityData()
         {
-            var city = City_Manager.GetCity_Component(CityID);
-
-            foreach (var jobsite in city.AllJobSitesInCity)
+            foreach (var jobSite in AllJobSitesInCity
+                                                 .Where(jobSite_Component => !_allJobSiteIDs.Contains(jobSite_Component.Key)))
             {
-                if (!AllJobsiteIDs.Contains(jobsite.JobSiteData.JobSiteID))
-                {
-                    //Debug.Log($"Jobsite: {jobsite.JobsiteData.JobsiteID}: {jobsite.JobsiteData.JobsiteName} was not in AllJobsiteIDs");
-                    AllJobsiteIDs.Add(jobsite.JobSiteData.JobSiteID);
-                }
+                Debug.Log($"JobSite_Component: {jobSite.Value?.JobSiteData?.JobSiteID}: {jobSite.Value?.JobSiteData?.JobSiteName} doesn't exist in DataList");
+            }
+            
+            foreach (var jobSiteID in _allJobSiteIDs
+                         .Where(jobSiteID => !AllJobSitesInCity.ContainsKey(jobSiteID)))
+            {
+                Debug.LogError($"JobSite with ID {jobSiteID} doesn't exist physically in City: {CityID}: {CityName}");
             }
         }
 

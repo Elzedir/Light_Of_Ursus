@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -11,8 +12,8 @@ namespace Actor
     [Serializable]
     public class Actor_SO : Data_SO<Actor_Data>
     {
-        public Data_Object<Actor_Data>[]                        Actors                           => DataObjects;
-        public Data_Object<Actor_Data>                          GetActor_Data(uint      actorID) => GetDataObject_Master(actorID);
+        public Object_Data<Actor_Data>[]                        Actors                           => Objects_Data;
+        public Object_Data<Actor_Data>                          GetActor_Data(uint      actorID) => GetObject_Data(actorID);
         public Dictionary<uint, Actor_Component> ActorComponents = new();
 
         public Actor_Component GetActor_Component(uint actorID)
@@ -28,7 +29,11 @@ namespace Actor
 
         public override uint GetDataObjectID(int id) => Actors[id].DataObject.ActorID;
 
-        public void UpdateActor(uint actorID, Actor_Data actor_Data) => UpdateDataObject(actorID, actor_Data);
+        public void UpdateActor(uint actorID, Actor_Data actor_Data, Actor_Component actor_Component)
+        {
+            UpdateDataObject(actorID, actor_Data);
+            ActorComponents[actorID] = actor_Component;
+        }
         public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllDataObjects(allActors);
 
         public void PopulateSceneActors()
@@ -41,19 +46,42 @@ namespace Actor
             var allActorComponents = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
             var allActorData =
                 allActorComponents.ToDictionary(actor => actor.ActorID, actor => actor.ActorData);
-
-            foreach (var actor in allActorData)
+            
+            var existingActors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None)
+                                 .Where(actor => Regex.IsMatch(actor.name, @"\d+"))
+                                 .ToDictionary(
+                                     actor_Component => uint.Parse(new string(actor_Component.name.Where(char.IsDigit).ToArray())),
+                                     actor_Component => actor_Component
+                                 );
+            
+            foreach (var actor in Actors)
+            {
+                if (actor?.DataObject is null) continue;
+                
+                if (existingActors.TryGetValue(actor.DataObject.ActorID, out var existingActor))
+                {
+                    ActorComponents[actor.DataObject.ActorID] = existingActor;
+                    existingActor.SetActorData(actor.DataObject);
+                    existingActors.Remove(actor.DataObject.ActorID);
+                    continue;
+                }
+                
+                Debug.LogWarning($"Actor with ID {actor.DataObject.ActorID} not found in the scene.");
+            }
+            
+            foreach (var actor in existingActors)
             {
                 if (DataObjectIndexLookup.ContainsKey(actor.Key))
                 {
-                    return;
+                    Debug.LogWarning($"Actor with ID {actor.Key} wasn't removed from existingActors.");
+                    continue;
                 }
                 
-                Debug.LogWarning($"Actor with ID {actor.Key} not found in Actor_SO.");
+                Debug.LogWarning($"Actor with ID {actor.Key} does not have DataObject in Actor_SO.");
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Actor_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Actor_Data>> _populateDefaultDataObjects()
         {
             var defaultActors = new Dictionary<uint, Actor_Data>();
 
@@ -77,11 +105,11 @@ namespace Actor
             return _lastUnusedActorID;
         }
         
-        Dictionary<uint, Data_Object<Actor_Data>> _defaultActors => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Actor_Data>> _defaultActors => DefaultDataObjects;
         
-        protected override Data_Object<Actor_Data> _convertToDataObject(Actor_Data data)
+        protected override Object_Data<Actor_Data> _convertToDataObject(Actor_Data data)
         {
-            return new Data_Object<Actor_Data>(
+            return new Object_Data<Actor_Data>(
                 dataObjectID: data.ActorID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.ActorID}: {data.ActorName}",

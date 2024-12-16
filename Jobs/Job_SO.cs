@@ -10,8 +10,8 @@ namespace Jobs
     [Serializable]
     public class Job_SO : Data_SO<Job_Data>
     {
-        public Data_Object<Job_Data>[] Jobs                           => DataObjects;
-        public Data_Object<Job_Data>   GetJob_Master(JobName jobName) => GetDataObject_Master((uint)jobName);
+        public Object_Data<Job_Data>[] Jobs                           => Objects_Data;
+        public Object_Data<Job_Data>   GetJob_Master(JobName jobName) => GetObject_Data((uint)jobName);
 
         public override uint GetDataObjectID(int id) => (uint)Jobs[id].DataObject.JobName;
 
@@ -23,7 +23,7 @@ namespace Jobs
             }
         }
         
-        protected override Dictionary<uint, Data_Object<Job_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Job_Data>> _populateDefaultDataObjects()
         {
             var defaultJobs = new Dictionary<uint, Job_Data>();
 
@@ -35,11 +35,11 @@ namespace Jobs
             return _convertDictionaryToDataObject(defaultJobs);
         }
         
-        Dictionary<uint, Data_Object<Job_Data>> _defaultJobs => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Job_Data>> _defaultJobs => DefaultDataObjects;
         
-        protected override Data_Object<Job_Data> _convertToDataObject(Job_Data data)
+        protected override Object_Data<Job_Data> _convertToDataObject(Job_Data data)
         {
-            return new Data_Object<Job_Data>(
+            return new Object_Data<Job_Data>(
                 dataObjectID: (uint)data.JobName,
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.JobName}: {data.JobName}",

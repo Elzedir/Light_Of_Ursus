@@ -8,16 +8,16 @@ namespace Tools
     [Serializable]
     public abstract class Data_SO<T> : ScriptableObject where T : class
     {
-        int                               _dataObjects_CurrentLength;
-        [SerializeField] Data_Object<T>[] _dataObjects;
+        int                                                                       _dataObjects_CurrentLength;
+        [SerializeField] Object_Data<T>[] _objects_Data;
 
-        public Data_Object<T>[] DataObjects
+        public Object_Data<T>[] Objects_Data
         {
             get
             {
-                if (_dataObjects is not null && _dataObjects.Length != 0 && _dataObjects.Length == _dataObjects_CurrentLength) return _dataObjects;
+                if (_objects_Data is not null && _objects_Data.Length != 0 && _objects_Data.Length == _dataObjects_CurrentLength) return _objects_Data;
                 
-                _dataObjects_CurrentLength = _dataObjects?.Length ?? 0;
+                _dataObjects_CurrentLength = _objects_Data?.Length ?? 0;
                 var dataObjects = InitialiseAllDataObjects();
                 return dataObjects; 
             }
@@ -25,7 +25,7 @@ namespace Tools
 
         public void RefreshDataObjects() => _dataObjects_CurrentLength = 0;
 
-        public void LoadSO(T[] dataObjects) => _dataObjects = dataObjects.Select(_convertToDataObject).ToArray();
+        public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
 
         Dictionary<uint, int>        _dataObjectIndexLookup;
         public Dictionary<uint, int> DataObjectIndexLookup => _dataObjectIndexLookup ??= _buildIndexLookup();
@@ -33,23 +33,23 @@ namespace Tools
 
         public bool ToggleMissingDataDebugs;
 
-        public Data_Object<T>[] InitialiseAllDataObjects()
+        public Object_Data<T>[] InitialiseAllDataObjects()
         {
-            _dataObjects = new Data_Object<T>[DefaultDataObjects.Count * 2];
-            Array.Copy(DefaultDataObjects.Values.ToArray(), DataObjects, DefaultDataObjects.Count);
+            _objects_Data = new Object_Data<T>[DefaultDataObjects.Count * 2];
+            Array.Copy(DefaultDataObjects.Values.ToArray(), Objects_Data, DefaultDataObjects.Count);
             _currentIndex = DefaultDataObjects.Count;
             _buildIndexLookup();
             
-            return DataObjects ?? throw new NullReferenceException("DataObjects is null.");
+            return Objects_Data ?? throw new NullReferenceException("DataObjects is null.");
         }
 
         protected Dictionary<uint, int> _buildIndexLookup()
         {
             var newIndexLookup = new Dictionary<uint, int>();
 
-            for (var i = 0; i < DataObjects.Length; i++)
+            for (var i = 0; i < Objects_Data.Length; i++)
             {
-                if (DataObjects[i] is null) continue;
+                if (Objects_Data[i] is null) continue;
 
                 newIndexLookup[GetDataObjectID(i)] = i;
             }
@@ -59,20 +59,20 @@ namespace Tools
 
         public abstract uint GetDataObjectID(int id);
 
-        public Data_Object<T> GetDataObject_Master(uint dataObjectID)
+        public Object_Data<T> GetObject_Data(uint dataObjectID)
         {
-            if (DataObjects is null || DataObjects.Length is 0) InitialiseAllDataObjects();
+            if (Objects_Data is null || Objects_Data.Length is 0) InitialiseAllDataObjects();
 
             if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
-                return DataObjects?[index];
+                return Objects_Data?[index];
             }
 
             Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
             return null;
         }
 
-        public void AddDataObject(uint dataObjectID, Data_Object<T> dataObject)
+        public void AddDataObject(uint dataObjectID, Object_Data<T> objectData)
         {
             if (DataObjectIndexLookup.ContainsKey(dataObjectID))
             {
@@ -80,12 +80,12 @@ namespace Tools
                 return;
             }
 
-            if (_currentIndex >= DataObjects.Length)
+            if (_currentIndex >= Objects_Data.Length)
             {
                 _compactAndResizeArray();
             }
 
-            DataObjects[_currentIndex]          = dataObject;
+            Objects_Data[_currentIndex]          = objectData;
             DataObjectIndexLookup[dataObjectID] = _currentIndex;
             _currentIndex++;
         }
@@ -98,10 +98,10 @@ namespace Tools
                 return;
             }
 
-            DataObjects[index] = null;
+            Objects_Data[index] = null;
             DataObjectIndexLookup.Remove(dataObjectID);
 
-            if (DataObjectIndexLookup.Count < DataObjects.Length / 4)
+            if (DataObjectIndexLookup.Count < Objects_Data.Length / 4)
             {
                 _compactAndResizeArray();
             }
@@ -111,16 +111,16 @@ namespace Tools
         {
             var newSize = 0;
 
-            for (var i = 0; i < DataObjects.Length; i++)
+            for (var i = 0; i < Objects_Data.Length; i++)
             {
-                if (DataObjects[i] is null) continue;
+                if (Objects_Data[i] is null) continue;
 
-                DataObjects[newSize]                      = DataObjects[i];
+                Objects_Data[newSize]                      = Objects_Data[i];
                 DataObjectIndexLookup[GetDataObjectID(i)] = newSize;
                 newSize++;
             }
 
-            Array.Resize(ref _dataObjects, Math.Max(newSize * 2, DataObjects.Length));
+            Array.Resize(ref _objects_Data, Math.Max(newSize * 2, Objects_Data.Length));
             _currentIndex = newSize;
         }
 
@@ -138,7 +138,7 @@ namespace Tools
         {
             if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
-                DataObjects[index] = _convertToDataObject(dataObject);
+                Objects_Data[index] = _convertToDataObject(dataObject);
             }
             else
             {
@@ -147,9 +147,9 @@ namespace Tools
         }
         
         public             Vector2        ScrollPosition;
-        protected abstract Data_Object<T> _convertToDataObject(T data);
+        protected abstract Object_Data<T> _convertToDataObject(T data);
 
-        protected Dictionary<uint, Data_Object<T>> _convertDictionaryToDataObject(
+        protected Dictionary<uint, Object_Data<T>> _convertDictionaryToDataObject(
             Dictionary<uint, T> dictionary)
         {
             return dictionary.ToDictionary(key => key.Key, value => _convertToDataObject(value.Value));
@@ -157,21 +157,21 @@ namespace Tools
 
         public void ClearSOData()
         {
-            _dataObjects = Array.Empty<Data_Object<T>>();
+            _objects_Data = Array.Empty<Object_Data<T>>();
             _dataObjectIndexLookup?.Clear();
             _currentIndex = 0;
         }
 
-        protected abstract Dictionary<uint, Data_Object<T>> _populateDefaultDataObjects();
+        protected abstract Dictionary<uint, Object_Data<T>> _populateDefaultDataObjects();
 
-        Dictionary<uint, Data_Object<T>> _defaultDataObjects;
+        Dictionary<uint, Object_Data<T>> _defaultDataObjects;
 
-        public Dictionary<uint, Data_Object<T>> DefaultDataObjects =>
+        public Dictionary<uint, Object_Data<T>> DefaultDataObjects =>
             _defaultDataObjects ??= _populateDefaultDataObjects();
     }
 
     [Serializable]
-    public class Data_Object<T> where T : class
+    public class Object_Data<T> where T : class
     {
         public readonly uint   DataObjectID;
         public readonly string DataObjectTitle;
@@ -179,7 +179,7 @@ namespace Tools
         public T            DataObject;
         public Data_Display DataSO_Object;
 
-        public Data_Object(uint   dataObjectID,    T      dataObject,
+        public Object_Data(uint   dataObjectID,    T      dataObject,
                            string dataObjectTitle, Data_Display data_Display)
         {
             DataObjectID       = dataObjectID;

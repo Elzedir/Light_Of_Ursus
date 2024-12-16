@@ -10,10 +10,10 @@ namespace EmployeePosition
     [Serializable]
     public class EmployeePosition_SO : Data_SO<EmployeePosition_Data>
     {
-        public Data_Object<EmployeePosition_Data>[] EmployeePositions                           => DataObjects;
+        public Object_Data<EmployeePosition_Data>[] EmployeePositions                           => Objects_Data;
 
-        public Data_Object<EmployeePosition_Data> GetEmployeePosition_Master(EmployeePositionName employeePositionName) =>
-            GetDataObject_Master((uint)employeePositionName);
+        public Object_Data<EmployeePosition_Data> GetEmployeePosition_Master(EmployeePositionName employeePositionName) =>
+            GetObject_Data((uint)employeePositionName);
         
         public override uint GetDataObjectID(int id) => (uint)EmployeePositions[id].DataObject.EmployeePositionName;
 
@@ -24,7 +24,7 @@ namespace EmployeePosition
                 Debug.Log("No Default EmployeePosition Positions Found");
             }
         }
-        protected override Dictionary<uint, Data_Object<EmployeePosition_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<EmployeePosition_Data>> _populateDefaultDataObjects()
         {
             var defaultEmployeePositions = new Dictionary<uint, EmployeePosition_Data>();
 
@@ -36,11 +36,11 @@ namespace EmployeePosition
             return _convertDictionaryToDataObject(defaultEmployeePositions);
         }
         
-        Dictionary<uint, Data_Object<EmployeePosition_Data>> _defaultEmployeePositions => DefaultDataObjects;
+        Dictionary<uint, Object_Data<EmployeePosition_Data>> _defaultEmployeePositions => DefaultDataObjects;
         
-        protected override Data_Object<EmployeePosition_Data> _convertToDataObject(EmployeePosition_Data data)
+        protected override Object_Data<EmployeePosition_Data> _convertToDataObject(EmployeePosition_Data data)
         {
-            return new Data_Object<EmployeePosition_Data>(
+            return new Object_Data<EmployeePosition_Data>(
                 dataObjectID: (uint)data.EmployeePositionName,
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.EmployeePositionName}: {data.EmployeePositionName}",

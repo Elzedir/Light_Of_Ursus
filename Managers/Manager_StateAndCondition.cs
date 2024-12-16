@@ -180,7 +180,7 @@ namespace Managers
             CurrentConditions                   =  currentConditions;
             CurrentConditions.DictionaryChanged += OnConditionChanged;
             
-            Manager_TickRate.RegisterTicker(TickerType.Actor_StateAndCondition, TickRate.OneSecond, ActorReference.ActorID, _onTick);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Actor_StateAndCondition, TickRateName.OneSecond, ActorReference.ActorID, _onTick);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
 

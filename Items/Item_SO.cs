@@ -11,8 +11,8 @@ namespace Items
     [Serializable]
     public class Item_SO : Data_SO<Item_Data>
     {
-        public Data_Object<Item_Data>[] Items                       => DataObjects;
-        public Data_Object<Item_Data>   GetItem_Master(uint itemID) => GetDataObject_Master(itemID);
+        public Object_Data<Item_Data>[] Items                       => Objects_Data;
+        public Object_Data<Item_Data>   GetItem_Master(uint itemID) => GetObject_Data(itemID);
         
         public override uint GetDataObjectID(int id) => Items[id].DataObject.ItemID;
 
@@ -24,7 +24,7 @@ namespace Items
             }
         }    
         
-        protected override Dictionary<uint, Data_Object<Item_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Item_Data>> _populateDefaultDataObjects()
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
@@ -56,11 +56,11 @@ namespace Items
             return _convertDictionaryToDataObject(defaultItems);
         }
 
-        Dictionary<uint, Data_Object<Item_Data>> _defaultItems => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Item_Data>> _defaultItems => DefaultDataObjects;
         
-        protected override Data_Object<Item_Data> _convertToDataObject(Item_Data data)
+        protected override Object_Data<Item_Data> _convertToDataObject(Item_Data data)
         {
-            return new Data_Object<Item_Data>(
+            return new Object_Data<Item_Data>(
                 dataObjectID: data.ItemID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.ItemID}: {data.ItemName}",

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using City;
 using Managers;
 using Relationships;
 using Tools;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Region
 {
@@ -14,36 +17,61 @@ namespace Region
         public uint   RegionID;
         public string RegionName;
         public int    RegionFactionID;
-
         public string RegionDescription;
+        
+        Region_Component _region_Component;
+        public Region_Component Region_Component => _region_Component ??= Region_Manager.GetRegion_Component(RegionID);
 
         public ProsperityData ProsperityData;
 
-        public FactionName Faction;
-        public List<uint>  AllCityIDs;
+        public           FactionName     Faction;
+        [SerializeField] List<uint>      _allCityIDs;
+        int                              _currentLength;
+        Dictionary<uint, City_Component> _allCitiesInRegion;
+        public Dictionary<uint, City_Component> AllCitiesInRegion
+        {
+            get
+            {
+                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0 && _allCitiesInRegion.Count == _currentLength) return _allCitiesInRegion;
+                
+                _currentLength = _allCitiesInRegion?.Count ?? 0;
+                return Region_Component.GetAllCitiesInRegion().ToDictionary(city => city.CityID);
+            }
+        }
         
-        public Region_Data(uint regionID, string regionName, string regionDescription, int regionFactionID, ProsperityData prosperityData = null)
+        public uint GetNearestCityInRegion(Vector3 position)
+        {
+            return AllCitiesInRegion
+                   .OrderBy(city => Vector3.Distance(position, city.Value.transform.position))
+                   .FirstOrDefault().Key;
+        }
+        
+        // Call when a new city is formed.
+        public void RefreshAllCities() => _currentLength = 0;
+        
+        public Region_Data(uint regionID, string regionName, string regionDescription, int regionFactionID, List<uint> allCityIDs, ProsperityData prosperityData = null)
         {
             RegionID          = regionID;
             RegionName        = regionName;
             RegionDescription = regionDescription;
             RegionFactionID   = regionFactionID;
-
+            _allCityIDs        = allCityIDs;
+            
             ProsperityData = new ProsperityData(prosperityData);
-            AllCityIDs     = new List<uint>();
         }
 
         public void InitialiseRegionData()
         {
-            var region = Region_Manager.GetRegion_Component(RegionID);
-
-            foreach (var city in region.AllCitiesInRegion)
+            foreach (var city in AllCitiesInRegion
+                                       .Where(city_Component => !_allCityIDs.Contains(city_Component.Key)))
             {
-                if (!AllCityIDs.Contains(city.CityData.CityID))
-                {
-                    //Debug.Log($"City: {city.CityData.CityID}: {city.CityData.CityName} was not in AllCityData");
-                    AllCityIDs.Add(city.CityData.CityID);
-                }
+                Debug.Log($"City_Component: {city.Value?.CityData?.CityID}: {city.Value?.CityData?.CityName} doesn't exist in DataList");
+            }
+            
+            foreach (var cityID in _allCityIDs
+                .Where(cityID => !AllCitiesInRegion.ContainsKey(cityID)))
+            {
+                Debug.LogError($"City with ID {cityID} doesn't exist physically in Region: {RegionID}: {RegionName}");
             }
         }
 
@@ -64,7 +92,7 @@ namespace Region
                         $"Region Description: {RegionDescription}",
                         $"Prosperity Data: {ProsperityData}",
                         $"Faction: {Faction}",
-                        $"All City IDs: {string.Join(", ", AllCityIDs)}"
+                        $"All City IDs: {string.Join(", ", _allCityIDs)}"
                     }));
             }
             catch

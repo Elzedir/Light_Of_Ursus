@@ -20,7 +20,7 @@ namespace Personality
             HashSet<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1, SpeciesName speciesName = SpeciesName.Default)
         {
             existingPersonalityTraits ??= new HashSet<PersonalityTraitName>();
-
+            
             for (var i = 0; i < numberOfTraitsDesired; i++)
             {
                 var availablePersonalityTraits = _allPersonalityTitles.Keys.Where(traitName =>
@@ -55,7 +55,71 @@ namespace Personality
                         traitDescription: "Stupidity... Or?",
                         traitDisplayed: false,
                         personalityTraitEffects: new List<PersonalityEffect>())
-                      
+                },
+                {
+                    PersonalityTraitName.Craven, new PersonalityTrait(
+                        traitName: PersonalityTraitName.Craven,
+                        personalityAffixName: new PersonalityAffixName
+                        (
+                            prefix: "Craven",
+                            infix: "craven",
+                            suffix: "cravenly"
+                        ),
+                        traitDescription: "Cowardly... Or?",
+                        traitDisplayed: false,
+                        personalityTraitEffects: new List<PersonalityEffect>())
+                },
+                {
+                    PersonalityTraitName.Honest, new PersonalityTrait(
+                        traitName: PersonalityTraitName.Honest,
+                        personalityAffixName: new PersonalityAffixName
+                        (
+                            prefix: "Honest",
+                            infix: "honest",
+                            suffix: "honestly"
+                        ),
+                        traitDescription: "Honest... Or?",
+                        traitDisplayed: false,
+                        personalityTraitEffects: new List<PersonalityEffect>())
+                },
+                {
+                    PersonalityTraitName.Deceitful, new PersonalityTrait(
+                        traitName: PersonalityTraitName.Deceitful,
+                        personalityAffixName: new PersonalityAffixName
+                        (
+                            prefix: "Deceitful",
+                            infix: "deceitful",
+                            suffix: "deceitfully"
+                        ),
+                        traitDescription: "Deceitful... Or?",
+                        traitDisplayed: false,
+                        personalityTraitEffects: new List<PersonalityEffect>())
+                },
+                {
+                    PersonalityTraitName.Arrogant, new PersonalityTrait(
+                        traitName: PersonalityTraitName.Arrogant,
+                        personalityAffixName: new PersonalityAffixName
+                        (
+                            prefix: "Arrogant",
+                            infix: "arrogant",
+                            suffix: "arrogantly"
+                        ),
+                        traitDescription: "Arrogant... Or?",
+                        traitDisplayed: false,
+                        personalityTraitEffects: new List<PersonalityEffect>())
+                },
+                {
+                    PersonalityTraitName.Humble, new PersonalityTrait(
+                        traitName: PersonalityTraitName.Humble,
+                        personalityAffixName: new PersonalityAffixName
+                        (
+                            prefix: "Humble",
+                            infix: "humble",
+                            suffix: "humbly"
+                        ),
+                        traitDescription: "Humble... Or?",
+                        traitDisplayed: false,
+                        personalityTraitEffects: new List<PersonalityEffect>())
                 }
             };
 

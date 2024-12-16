@@ -164,8 +164,12 @@ namespace Managers
             
             Manager_Initialisation.InitialiseManagers();
             
+            yield return null;
+            
             Manager_Initialisation.InitialiseFactions();
             Manager_Initialisation.InitialiseActors();
+            
+            yield return null;
             
             Manager_Initialisation.InitialiseRegions();
             Manager_Initialisation.InitialiseCities();

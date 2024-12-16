@@ -9,14 +9,12 @@ using Inventory;
 using Items;
 using Jobs;
 using JobSite;
-using Managers;
-using OperatingArea;
 using Priority;
 using Recipe;
 using TickRates;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
+using WorkPosts;
 
 namespace Station
 {
@@ -24,28 +22,24 @@ namespace Station
     public abstract class Station_Component : MonoBehaviour, IInteractable
     {
         public uint             StationID => StationData.StationID;
-        public JobSite_Component JobSite   => StationData.JobSite;
+        public JobSite_Component JobSite   => StationData.JobSite_Component;
         bool                    _initialised;
 
         public          Station_Data StationData;
-        public abstract StationName StationName            { get; }
-        public abstract StationType StationType            { get; }
-        public          bool        IsStationBeingOperated => AllOperatingAreasInStation.Any(oa => oa.OperatingAreaData.CurrentOperatorID != 0);
+        public abstract StationName  StationName            { get; }
+        public abstract StationType  StationType            { get; }
+        bool                         _isStationBeingOperated => AllOperatingAreasInStation.Any(oa => oa.WorkPostData.CurrentOperatorID != 0);
 
-        public float InteractRange { get; protected set; }
+        public float InteractRange { get; private set; }
     
         public abstract         EmployeePositionName       CoreEmployeePositionName { get; }
-        public abstract         RecipeName                 DefaultProduct           { get; }
+        protected abstract      RecipeName                 _defaultProduct          { get; }
         public abstract         List<RecipeName>           AllowedRecipes           { get; }
         public abstract         List<uint>                 AllowedStoredItemIDs     { get; }
         public abstract         List<uint>                 DesiredStoredItemIDs     { get; }
-        public abstract         uint                       OperatingAreaCount       { get; }
+        protected abstract      uint                       _operatingAreaCount       { get; }
         public abstract         List<EmployeePositionName> AllowedEmployeePositions { get; }
         public         abstract List<JobName>              AllowedJobs              { get; }
-    
-        List<OperatingAreaComponent>     _allOperatingAreasInStation;
-        public List<OperatingAreaComponent> AllOperatingAreasInStation =>
-            _allOperatingAreasInStation ??= _getAllOperatingAreasInStation();
 
         const    float      _baseProgressRatePerHour = 5;
         readonly List<Item> _currentProductsCrafted  = new();
@@ -58,12 +52,17 @@ namespace Station
 
         // Temporary
         public Transform CollectionPoint;
-    
+        
+        public void SetStationData(Station_Data stationData)
+        {
+            StationData = stationData;
+        }
+
         void Awake()
         {
             Manager_Initialisation.OnInitialiseStations += _initialise;
         }
-    
+
         void _initialise()
         {
             StationData.InitialiseStationData();
@@ -71,23 +70,23 @@ namespace Station
             var employeeOperatingAreaPairs = from operatingArea in AllOperatingAreasInStation
                                              from employeeID in StationData.CurrentOperatorIDs
                                              let actorData = Actor_Manager.GetActor_Data(employeeID)
-                                             where actorData.CareerData.CurrentJob.OperatingAreaID == operatingArea.OperatingAreaData.OperatingAreaID
+                                             where actorData.CareerData.CurrentJob.OperatingAreaID == operatingArea.WorkPostData.WorkPostID
                                              select new { operatingArea, employeeID };
 
             foreach (var pair in employeeOperatingAreaPairs)
             {
-                pair.operatingArea.OperatingAreaData.AddOperatorToOperatingArea(pair.employeeID);
+                pair.operatingArea.WorkPostData.AddOperatorToOperatingArea(pair.employeeID);
             }
 
             SetInteractRange();
-            InitialiseStartingInventory();
+            _initialiseStartingInventory();
 
-            _setTickRate(TickRate.OneSecond, false);
+            _setTickRate(TickRateName.OneSecond, false);
 
             _initialised = true;
         }
 
-        public OperatingAreaComponent GetRelevantOperatingArea(Actor_Component actor)
+        public WorkPost_Component GetRelevantOperatingArea(Actor_Component actor)
         {
             var relevantOperatingArea = AllOperatingAreasInStation.FirstOrDefault(oa => !oa.HasOperator());
 
@@ -102,11 +101,11 @@ namespace Station
 
         public void AddOperatorToArea(uint operatorID)
         {
-            var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.OperatingAreaData.HasOperator());
+            var openOperatingArea = AllOperatingAreasInStation.FirstOrDefault(area => !area.WorkPostData.HasOperator());
         
             if (openOperatingArea is not null)
             {
-                openOperatingArea.OperatingAreaData.AddOperatorToOperatingArea(operatorID);
+                openOperatingArea.WorkPostData.AddOperatorToOperatingArea(operatorID);
             }
             else
             {
@@ -118,16 +117,16 @@ namespace Station
         {
             foreach (var operatingArea in AllOperatingAreasInStation)
             {
-                operatingArea.OperatingAreaData.RemoveOperatorFromOperatingArea();
+                operatingArea.WorkPostData.RemoveCurrentOperatorFromOperatingArea();
             }
         }
 
         public void RemoveOperatorFromArea(uint operatorID)
         {
-            if (AllOperatingAreasInStation.Any(area => area.OperatingAreaData.CurrentOperatorID == operatorID))
+            if (AllOperatingAreasInStation.Any(area => area.WorkPostData.CurrentOperatorID == operatorID))
             {
-                AllOperatingAreasInStation.FirstOrDefault(area => area.OperatingAreaData.CurrentOperatorID == operatorID)?
-                    .OperatingAreaData.RemoveOperatorFromOperatingArea();
+                AllOperatingAreasInStation.FirstOrDefault(area => area.WorkPostData.CurrentOperatorID == operatorID)?
+                    .WorkPostData.RemoveCurrentOperatorFromOperatingArea();
             }
             else
             {
@@ -139,19 +138,20 @@ namespace Station
         {
             foreach(var operatingArea in AllOperatingAreasInStation)
             {
-                operatingArea.OperatingAreaData.RemoveOperatorFromOperatingArea();
+                operatingArea.WorkPostData.RemoveCurrentOperatorFromOperatingArea();
             }
         }
     
-        TickRate _currentTickRate;
+        TickRateName _currentTickRateName;
 
-        void _setTickRate(TickRate tickRate, bool unregister = true)
+        void _setTickRate(TickRateName tickRateName, bool unregister = true)
         {
-            if (_currentTickRate == tickRate) return;
+            if (_currentTickRateName == tickRateName) return;
             
-            if (unregister) Manager_TickRate.UnregisterTicker(TickerType.Station, _currentTickRate, StationID);
-            Manager_TickRate.RegisterTicker(TickerType.Station, tickRate, StationID, _onTick);
-            _currentTickRate = tickRate;
+            if (unregister) Manager_TickRate.UnregisterTicker(TickerTypeName.Station, _currentTickRateName, StationID);
+            
+            Manager_TickRate.RegisterTicker(TickerTypeName.Station, tickRateName, StationID, _onTick);
+            _currentTickRateName = tickRateName;
         }
 
         void _onTick()
@@ -161,7 +161,7 @@ namespace Station
             _operateStation();
         }
 
-        protected virtual void _operateStation()
+        void _operateStation()
         {
             if (!_passesStationChecks()) return;
 
@@ -169,14 +169,17 @@ namespace Station
             {
                 var progressMade = operatingArea.Operate(_baseProgressRatePerHour,
                     StationData.StationProgressData.CurrentProduct);
+                
                 var itemCrafted = StationData.StationProgressData.Progress(progressMade);
+                
+                Debug.Log(3);
 
                 if (!itemCrafted) continue;
 
                 // For now is the final person who adds the last progress, but change to a cumulative system later.
-                CraftItem(
+                _craftItem(
                     StationData.StationProgressData.CurrentProduct.RecipeName,
-                    Actor_Manager.GetActor_Component(operatingArea.OperatingAreaData.CurrentOperatorID)
+                    Actor_Manager.GetActor_Component(operatingArea.WorkPostData.CurrentOperatorID)
                 );
             }
         }
@@ -186,8 +189,10 @@ namespace Station
             if (!StationData.StationIsActive) 
                 return false;
         
-            if (!IsStationBeingOperated) 
+            if (!_isStationBeingOperated) 
                 return false;
+            
+            Debug.Log(1);
 
             var success = false;
 
@@ -201,10 +206,12 @@ namespace Station
                 }
                 catch (Exception e)
                 {
-                    StationData.StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
+                    StationData.StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(_defaultProduct);
+                    
+                    Debug.Log(2);
 
                     if (StationData.StationProgressData.CurrentProduct.RecipeName != RecipeName.None ||
-                        DefaultProduct                                            == RecipeName.None)
+                        _defaultProduct                                            == RecipeName.None)
                     {
                         break;
                     }
@@ -216,12 +223,12 @@ namespace Station
             return success;
         }
 
-        public OperatingAreaComponent GetOperatingArea(int operatingAreaID)
+        public WorkPost_Component GetOperatingArea(int operatingAreaID)
         {
-            return AllOperatingAreasInStation.FirstOrDefault(oa => oa.OperatingAreaData.OperatingAreaID == operatingAreaID);
+            return AllOperatingAreasInStation.FirstOrDefault(oa => oa.WorkPostData.WorkPostID == operatingAreaID);
         }
 
-        List<OperatingAreaComponent> _getAllOperatingAreasInStation()
+        List<WorkPost_Component> _getAllWorkPostsInStation()
         {
             foreach(Transform child in transform)
             {
@@ -231,9 +238,9 @@ namespace Station
                 }
             }
 
-            var operatingAreas = new List<OperatingAreaComponent>();
+            var operatingAreas = new List<WorkPost_Component>();
 
-            for (uint i = 1; i <= OperatingAreaCount; i++)
+            for (uint i = 1; i <= _operatingAreaCount; i++)
             {
                 operatingAreas.Add(_createOperatingArea(i));
             }
@@ -245,9 +252,9 @@ namespace Station
             return operatingAreas;
         }
 
-        protected abstract OperatingAreaComponent _createOperatingArea(uint operatingAreaID);
+        protected abstract WorkPost_Component _createOperatingArea(uint operatingAreaID);
 
-        public abstract void InitialiseStartingInventory();
+        protected abstract void _initialiseStartingInventory();
         public List<Item> GetInventoryItemsToFetch()
         {
             return StationData.InventoryData.GetInventoryItemsToFetch();
@@ -257,8 +264,6 @@ namespace Station
         {
             return StationData.InventoryData.GetInventoryItemsToDeliver(inventory);
         }
-
-        public void SetStationData(Station_Data stationData) => StationData = stationData;
 
         public void SetInteractRange(float interactRange = 2)
         {
@@ -272,7 +277,7 @@ namespace Station
 
         public abstract IEnumerator Interact(Actor_Component actor);
 
-        public abstract void CraftItem(RecipeName recipeName, Actor_Component actor);
+        protected abstract void _craftItem(RecipeName recipeName, Actor_Component actor);
 
         protected abstract List<Item> _getCost(List<Item> ingredients, Actor_Component actor);
 
@@ -338,7 +343,7 @@ namespace Station
 
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspectorExcept(nameof(Station_Component.StationData), nameof(Station_Component.AllowedEmployeePositions), nameof(Station_Component.AllowedRecipes));
+            _drawDefaultInspectorExcept(nameof(Station_Component.StationData), nameof(Station_Component.AllowedEmployeePositions), nameof(Station_Component.AllowedRecipes));
 
             Station_Component stationComponent = (Station_Component)target;
             Station_Data      stationData      = stationComponent.StationData;
@@ -407,42 +412,48 @@ namespace Station
 
             }
 
-            if (stationData.StationProgressData != null)
+            if (stationData.StationProgressData == null) return;
+            
+            _showProgress = EditorGUILayout.Toggle("Progress", _showProgress);
+
+            if (!_showProgress) return;
+                
+            EditorGUILayout.LabelField("CurrentProgress", $"{stationData.StationProgressData.CurrentProgress}");
+            EditorGUILayout.LabelField("CurrentQuality",  $"{stationData.StationProgressData.CurrentQuality}");
+
+            _showRecipe = EditorGUILayout.Toggle("Current Recipe", _showRecipe);
+
+            if (!_showRecipe) return;
+
+            if (stationData.StationProgressData.CurrentProduct == null)
             {
-                _showProgress = EditorGUILayout.Toggle("Progress", _showProgress);
-
-                if (_showProgress)
-                {
-                    EditorGUILayout.LabelField("CurrentProgress", stationData.StationProgressData.CurrentProgress.ToString());
-                    EditorGUILayout.LabelField("CurrentQuality",  stationData.StationProgressData.CurrentQuality.ToString());
-
-                    _showRecipe = EditorGUILayout.Toggle("Current Recipe", _showRecipe);
-
-                    if (_showRecipe)
-                    {
-                        EditorGUILayout.LabelField("RecipeName",       stationData.StationProgressData.CurrentProduct.RecipeName.ToString());
-                        EditorGUILayout.LabelField("RequiredProgress", stationData.StationProgressData.CurrentProduct.RequiredProgress.ToString());
-                        foreach (var ingredient in stationData.StationProgressData.CurrentProduct.RequiredIngredients)
-                        {
-                            EditorGUILayout.LabelField($"Ingredient: {ingredient.ItemID}: {ingredient.ItemName} Qty: {ingredient.ItemAmount}");
-                        }
-                        foreach (var product in stationData.StationProgressData.CurrentProduct.RecipeProducts)
-                        {
-                            EditorGUILayout.LabelField($"Product: {product.ItemID}: {product.ItemName} Qty: {product.ItemAmount}");
-                        }
-                        foreach (var vocations in stationData.StationProgressData.CurrentProduct.RequiredVocations)
-                        {
-                            EditorGUILayout.LabelField($"Vocation: {vocations.VocationName}");
-                        }
-                    }
-                }
+                EditorGUILayout.LabelField("No Current Recipe");
+                return;
+            }
+                    
+            EditorGUILayout.LabelField("RecipeName",       $"{stationData.StationProgressData.CurrentProduct.RecipeName}");
+            EditorGUILayout.LabelField("RequiredProgress", $"{stationData.StationProgressData.CurrentProduct.RequiredProgress}");
+            
+            foreach (var ingredient in stationData.StationProgressData.CurrentProduct.RequiredIngredients)
+            {
+                EditorGUILayout.LabelField($"Ingredient: {ingredient.ItemID}: {ingredient.ItemName} Qty: {ingredient.ItemAmount}");
+            }
+            
+            foreach (var product in stationData.StationProgressData.CurrentProduct.RecipeProducts)
+            {
+                EditorGUILayout.LabelField($"Product: {product.ItemID}: {product.ItemName} Qty: {product.ItemAmount}");
+            }
+            
+            foreach (var vocations in stationData.StationProgressData.CurrentProduct.RequiredVocations)
+            {
+                EditorGUILayout.LabelField($"Vocation: {vocations.VocationName}");
             }
         }
 
-        private void DrawDefaultInspectorExcept(params string[] propertyNames)
+        void _drawDefaultInspectorExcept(params string[] propertyNames)
         {
-            SerializedProperty property      = serializedObject.GetIterator();
-            bool               enterChildren = true;
+            var property      = serializedObject.GetIterator();
+            var               enterChildren = true;
             while (property.NextVisible(enterChildren))
             {
                 if (!propertyNames.Contains(property.name))
@@ -457,10 +468,10 @@ namespace Station
     [Serializable]
     public class Operator
     {
-        public                                            int                  OperatorID;
-        public                                            string               OperatorName;
-        [FormerlySerializedAs("OperatorPosition")] public EmployeePositionName OperatorPositionName;
-        public                                            int                  OperatingAreaID;
+        public int                  OperatorID;
+        public string               OperatorName;
+        public EmployeePositionName OperatorPositionName;
+        public int                  OperatingAreaID;
 
         public Operator(int actorID, EmployeePositionName careerAndJobs, int operatingAreaID)
         {

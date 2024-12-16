@@ -4,9 +4,7 @@ using Actor;
 using EmployeePosition;
 using Items;
 using Jobs;
-using OperatingArea;
 using Recipe;
-using ScriptableObjects;
 using UnityEngine;
 
 namespace Station
@@ -19,7 +17,7 @@ namespace Station
         public          float            PercentageStorageFilled    = 0;
         public          float            PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
 
-        public override RecipeName       DefaultProduct       => RecipeName.Plank;
+        protected override RecipeName       _defaultProduct       => RecipeName.Plank;
         public override List<RecipeName> AllowedRecipes       { get; } = new() { RecipeName.Plank };
         public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100 };
@@ -32,44 +30,30 @@ namespace Station
             JobName.Sawmiller,
             JobName.Hauler
         };
-        public override uint OperatingAreaCount => 4;
 
-        protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
+        protected override uint _operatingAreaCount => 4;
+
+        protected override WorkPost_Component _createOperatingArea(uint operatingAreaID)
         {
-            var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
+            var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<WorkPost_Component>();
             operatingAreaComponent.transform.SetParent(transform);
         
             switch(operatingAreaID)
             {
-                case 1:
-                    operatingAreaComponent.transform.localPosition = new Vector3(0.75f,  0f, 0);
-                    operatingAreaComponent.transform.localScale    = new Vector3(0.333f, 1f, 1);
-                    break;
-                case 2:
-                    operatingAreaComponent.transform.localPosition = new Vector3(0,      0f, 1f);
-                    operatingAreaComponent.transform.localScale    = new Vector3(0.333f, 1f, 1);
-                    break;
-                case 3:
-                    operatingAreaComponent.transform.localPosition = new Vector3(-0.75f, 0f, 0);
-                    operatingAreaComponent.transform.localScale    = new Vector3(0.333f, 1f, 1);
-                    break;
-                case 4:
-                    operatingAreaComponent.transform.localPosition = new Vector3(0,      0f, -1f);
-                    operatingAreaComponent.transform.localScale    = new Vector3(0.333f, 1f, 1);
-                    break;
+                
                 default:
-                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {OperatingAreaCount}.");
+                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {_operatingAreaCount}.");
                     break;
             }
 
             var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
             operatingArea.isTrigger = true;
-            operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
+            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, StationData.StationID), operatingArea);
 
             return operatingAreaComponent;
         }
 
-        public override void InitialiseStartingInventory() { }
+        protected override void _initialiseStartingInventory() { }
 
         public override IEnumerator Interact(Actor_Component actor)
         {
@@ -77,7 +61,7 @@ namespace Station
             // Open inventory
         }
 
-        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        protected override void _craftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
             if (!AllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }

@@ -13,6 +13,10 @@ namespace Region
                     regionName: "The Heartlands",
                     regionDescription: "The land of hearts",
                     regionFactionID: 0,
+                    allCityIDs: new List<uint>
+                    {
+                        1
+                    },
                     prosperityData: new ProsperityData(
                         currentProsperity: 50, 
                         maxProsperity: 100,

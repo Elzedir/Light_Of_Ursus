@@ -477,7 +477,7 @@ public class Order_Base
 
         var jobsite = JobSite_Manager.GetJobSite_Component(JobsiteID);
 
-        foreach (var station in jobsite.AllStationsInJobSite.Values)
+        foreach (var station in jobsite.JobSiteData.AllStationsInJobSite.Values)
         {
             if (station.AllowedStoredItemIDs.Contains(1100) || station.AllowedStoredItemIDs.Contains(2300))
             {

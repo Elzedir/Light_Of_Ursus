@@ -24,7 +24,7 @@ namespace Priority
         JobSite_Component                _jobSite      => _jobsiteReferences.JobSite;
         protected override PriorityType _priorityType => PriorityType.JobTask;
 
-        protected override List<uint> _canPeek(List<uint> priorityIDs)
+        protected override List<uint> _getPermittedPriorities(List<uint> priorityIDs)
         {
             var allowedPriorities = new List<uint>();
 

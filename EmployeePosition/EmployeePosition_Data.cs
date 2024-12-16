@@ -136,8 +136,6 @@ namespace EmployeePosition
 
         Hauler,
         
-        Owner,
-        
         Fisher,
         
         Farmer,

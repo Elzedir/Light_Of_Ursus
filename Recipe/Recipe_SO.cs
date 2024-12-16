@@ -10,8 +10,8 @@ namespace Recipe
     [Serializable]
     public class Recipe_SO : Data_SO<Recipe_Data>
     {
-        public Data_Object<Recipe_Data>[] Recipes => DataObjects;
-        public Data_Object<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetDataObject_Master((uint)recipeName);
+        public Object_Data<Recipe_Data>[] Recipes => Objects_Data;
+        public Object_Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetObject_Data((uint)recipeName);
         
         public override uint GetDataObjectID(int id) => (uint)Recipes[id].DataObject.RecipeName;
         
@@ -23,16 +23,16 @@ namespace Recipe
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Recipe_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Recipe_Data>> _populateDefaultDataObjects()
         {
             return _convertDictionaryToDataObject(Recipe_List.GetAllDefaultRecipes());
         }
 
-        Dictionary<uint, Data_Object<Recipe_Data>> _defaultRecipes => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Recipe_Data>> _defaultRecipes => DefaultDataObjects;
 
-        protected override Data_Object<Recipe_Data> _convertToDataObject(Recipe_Data data)
+        protected override Object_Data<Recipe_Data> _convertToDataObject(Recipe_Data data)
         {
-            return new Data_Object<Recipe_Data>(
+            return new Object_Data<Recipe_Data>(
                 dataObjectID: (uint)data.RecipeName, 
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",

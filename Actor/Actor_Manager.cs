@@ -14,7 +14,6 @@ using Personality;
 using Recipe;
 using Tools;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Actor
 {
@@ -122,7 +121,7 @@ namespace Actor
 
             actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData, actor);
 
             actor.Initialise();
 
@@ -200,10 +199,17 @@ namespace Actor
                                                 ActorDataPresetName actorDataPresetName)
         {
             var actorDataPreset = ActorPreset_Manager.GetActorDataPreset(actorDataPresetName);
+            
+            if (actorDataPreset is null && actorDataPresetName != ActorDataPresetName.No_Preset)
+            {
+                Debug.LogError($"ActorDataPreset: {actorDataPresetName} does not exist when it should.");
+            }
 
+            var actorID = _getUnusedActorID();
+            
             var fullIdentification = new FullIdentification(
-                actorID: _getUnusedActorID(),
-                actorName: _getRandomActorName(),
+                actorID: actorID,
+                actorName: _getRandomActorName(actorID),
                 actorFactionID: _getRandomFaction(),
                 actorBirthDate: new Date(Manager_DateAndTime.GetCurrentTotalDays()),
                 actorCityID: 0
@@ -238,11 +244,11 @@ namespace Actor
                 actorSpecies: _getRandomSpecies(),
                 actorPersonality: _getRandomPersonality()
             );
-
+            
             var statsAndAbilities = new StatsAndAbilities(
-                actorStats: actorDataPreset?.StatsAndAbilities.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
-                actorAspects: actorDataPreset?.StatsAndAbilities.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
-                actorAbilities: actorDataPreset?.StatsAndAbilities.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
+                actorStats: actorDataPreset?.StatsAndAbilities?.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
+                actorAspects: actorDataPreset?.StatsAndAbilities?.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
+                actorAbilities: actorDataPreset?.StatsAndAbilities?.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
                 );
 
             var statesAndConditions = new StatesAndConditionsData(
@@ -282,7 +288,7 @@ namespace Actor
                 equipmentData
                 ));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData, actor);
 
             return actor.ActorData;
         }
@@ -292,18 +298,18 @@ namespace Actor
             return AllActors.GetUnusedActorID();
         }
 
-        static ActorName _getRandomActorName()
+        static ActorName _getRandomActorName(uint actorID)
         {
             // Get name based on culture, religion, species, etc.
 
-            return new ActorName($"Test_{Random.Range(0, 50000)}", "of Tester");
+            return new ActorName($"Test_{actorID}", "of Tester");
         }
 
         static uint _getRandomFaction()
         {
             // Take race and things into account for faction
 
-            return 0;
+            return 1;
         }
 
         static SpeciesName _getRandomSpecies()

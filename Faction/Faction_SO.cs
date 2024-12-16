@@ -12,13 +12,13 @@ namespace Faction
     [Serializable]
     public class Faction_SO : Data_SO<Faction_Data>
     {
-        public Data_Object<Faction_Data>[]                      Factions                             => DataObjects;
-        public Data_Object<Faction_Data>                        GetFaction_Data(uint      factionID) => GetDataObject_Master(factionID);
-        public Dictionary<uint, Faction_Component> FactionComponents = new();
+        public Object_Data<Faction_Data>[]                      Factions                             => Objects_Data;
+        public Object_Data<Faction_Data>                        GetFaction_Data(uint      factionID) => GetObject_Data(factionID);
+        public Dictionary<uint, Faction_Component> Faction_Components = new();
 
         public Faction_Component GetFaction_Component(uint factionID)
         {
-            if (FactionComponents.TryGetValue(factionID, out var component))
+            if (Faction_Components.TryGetValue(factionID, out var component))
             {
                 return component;
             }   
@@ -52,8 +52,8 @@ namespace Faction
                 
                 if (existingFactions.TryGetValue(faction.DataObject.FactionID, out var existingFaction))
                 {
-                    existingFaction.FactionData = faction.DataObject;
-                    FactionComponents[faction.DataObject.FactionID] = existingFaction;
+                    Faction_Components[faction.DataObject.FactionID] = existingFaction;
+                    existingFaction.SetFactionData(faction.DataObject);
                     existingFactions.Remove(faction.DataObject.FactionID);
                     continue;
                 }
@@ -73,7 +73,7 @@ namespace Faction
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Faction_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Faction_Data>> _populateDefaultDataObjects()
         {
             var defaultFactions = new Dictionary<uint, Faction_Data>();
 
@@ -97,11 +97,11 @@ namespace Faction
             return _lastUnusedFactionID;
         }
         
-        Dictionary<uint, Data_Object<Faction_Data>> _defaultFactions => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Faction_Data>> _defaultFactions => DefaultDataObjects;
 
-        protected override Data_Object<Faction_Data> _convertToDataObject(Faction_Data data)
+        protected override Object_Data<Faction_Data> _convertToDataObject(Faction_Data data)
         {
-            return new Data_Object<Faction_Data>(
+            return new Object_Data<Faction_Data>(
                 dataObjectID: data.FactionID,
                 dataObject: data,
                 dataObjectTitle: $"{data.FactionID}: {data.FactionName}",

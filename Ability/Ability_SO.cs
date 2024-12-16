@@ -11,10 +11,10 @@ namespace Ability
     [Serializable]
     public class Ability_SO : Data_SO<Ability_Data>
     {
-        public Data_Object<Ability_Data>[] Abilities => DataObjects;
+        public Object_Data<Ability_Data>[] Abilities => Objects_Data;
 
-        public Data_Object<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
-            GetDataObject_Master((uint)abilityName);
+        public Object_Data<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
+            GetObject_Data((uint)abilityName);
 
         public Ability GetAbility(AbilityName abilityName, uint currentLevel)
         {
@@ -37,7 +37,7 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Data_Object<Ability_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Ability_Data>> _populateDefaultDataObjects()
         {
             var defaultAbilities = new Dictionary<uint, Ability_Data>();
 
@@ -49,9 +49,9 @@ namespace Ability
             return _convertDictionaryToDataObject(defaultAbilities);
         }
 
-        protected override Data_Object<Ability_Data> _convertToDataObject(Ability_Data data)
+        protected override Object_Data<Ability_Data> _convertToDataObject(Ability_Data data)
         {
-            return new Data_Object<Ability_Data>(
+            return new Object_Data<Ability_Data>(
                 dataObjectID: (uint)data.AbilityName,
                 dataObject: data, 
                 dataObjectTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
@@ -70,7 +70,7 @@ namespace Ability
             return _lastUnusedAbilityID;
         }
 
-        Dictionary<uint, Data_Object<Ability_Data>> _defaultAbilities => DefaultDataObjects;
+        Dictionary<uint, Object_Data<Ability_Data>> _defaultAbilities => DefaultDataObjects;
     }
 
     [CustomEditor(typeof(Ability_SO))]

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Managers;
 
 namespace JobSite
 {
@@ -13,7 +14,16 @@ namespace JobSite
                     jobsiteFactionID: 0,
                     cityID: 1,
                     jobsiteDescription: "JobSite 1 Description",
-                    ownerID: 0)
+                    ownerID: 0,
+                    allStationIDs: new List<uint>
+                    {
+                        1, 2, 3
+                    },
+                    prosperityData: new ProsperityData(
+                        currentProsperity: 50,
+                        maxProsperity: 100,
+                        baseProsperityGrowthPerDay: 1
+                        ))
             }
         };
     }

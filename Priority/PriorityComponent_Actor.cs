@@ -82,7 +82,7 @@ namespace Priority
             //AllPriorities.DictionaryChanged += SetCurrentAction;
         }
 
-        protected override List<uint> _canPeek(List<uint> priorityIDs)
+        protected override List<uint> _getPermittedPriorities(List<uint> priorityIDs)
         {
             var allowedPriorities = new List<uint>();
 

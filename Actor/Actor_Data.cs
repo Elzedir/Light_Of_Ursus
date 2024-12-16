@@ -330,8 +330,6 @@ namespace Actor
             ActorBirthDate = new Date(fullIdentification.ActorBirthDate);
         }
 
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
         public uint                ActorID;
         public ActorName           ActorName;
         public uint                ActorFactionID;
@@ -362,8 +360,6 @@ namespace Actor
             ActorDynasty = actorDynasty;
             Religion    = religion;
         }
-
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
         public string  Birthplace;
         public Date    Birthdate;
@@ -396,8 +392,6 @@ namespace Actor
             ActorMesh       = gameObjectData.ActorMesh;
             ActorMaterial   = gameObjectData.ActorMaterial;
         }
-
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
         public void UpdateActorGOProperties()
         {

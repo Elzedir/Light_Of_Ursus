@@ -10,22 +10,25 @@ namespace City
             {
                 {
                     1, new City_Data
-                    {
-                        CityID = 1,
-                        CityName = "Test City",
-                        CityFactionID = 1,
-                        RegionID = 1,
-                        CityDescription = "City 1 Description",
-                        Population = new PopulationData(
+                    (
+                        cityID: 1,
+                        cityName: "Test City",
+                        cityDescription: "City 1 Description",
+                        cityFactionID: 1,
+                        regionID: 1,
+                        allJobSiteIDs: new List<uint>
+                        {
+                            1
+                        },
+                        population: new PopulationData(
                             allCitizenIDList: new List<uint>(),
                             maxPopulation: 100,
                             expectedPopulation: 50),
-                        ProsperityData = new ProsperityData(
+                        prosperityData: new ProsperityData(
                             currentProsperity: 50,
                             maxProsperity: 100,
-                            baseProsperityGrowthPerDay: 1),
-                        AllJobsiteIDs = new List<uint>()
-                    }
+                            baseProsperityGrowthPerDay: 1)
+                    )
                 }
             };
     }

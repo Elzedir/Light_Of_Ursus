@@ -4,9 +4,9 @@ using Actor;
 using EmployeePosition;
 using Items;
 using Jobs;
-using OperatingArea;
 using Recipe;
 using UnityEngine;
+using WorkPosts;
 
 namespace Station
 {
@@ -16,7 +16,7 @@ namespace Station
         public override StationType      StationType          => StationType.Resource;
         public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Logger;
 
-        public override RecipeName       DefaultProduct       => RecipeName.Log;
+        protected override RecipeName       _defaultProduct       => RecipeName.Log;
         public override List<RecipeName> AllowedRecipes       { get; } = new() { RecipeName.Log };
         public override List<uint>       AllowedStoredItemIDs { get; } = new();
         public override List<uint>       DesiredStoredItemIDs { get; } = new();
@@ -34,45 +34,30 @@ namespace Station
             JobName.Vendor
         };
 
-        public override uint OperatingAreaCount => 4;
+        protected override uint _operatingAreaCount => 4;
 
-        protected override OperatingAreaComponent _createOperatingArea(uint operatingAreaID)
+        protected override WorkPost_Component _createOperatingArea(uint operatingAreaID)
         {
             var operatingAreaComponent =
-                new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<OperatingAreaComponent>();
+                new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<WorkPost_Component>();
             operatingAreaComponent.transform.SetParent(transform);
 
             switch (operatingAreaID)
             {
-                case 1:
-                    operatingAreaComponent.transform.localPosition = new Vector3(1.5f, -0.8f,  0);
-                    operatingAreaComponent.transform.localScale    = new Vector3(1,    0.333f, 1);
-                    break;
-                case 2:
-                    operatingAreaComponent.transform.localPosition = new Vector3(0, -0.8f,  1.5f);
-                    operatingAreaComponent.transform.localScale    = new Vector3(1, 0.333f, 1);
-                    break;
-                case 3:
-                    operatingAreaComponent.transform.localPosition = new Vector3(-1.5f, -0.8f,  0);
-                    operatingAreaComponent.transform.localScale    = new Vector3(1,     0.333f, 1);
-                    break;
-                case 4:
-                    operatingAreaComponent.transform.localPosition = new Vector3(0, -0.8f,  -1.5f);
-                    operatingAreaComponent.transform.localScale    = new Vector3(1, 0.333f, 1);
-                    break;
+                
                 default:
-                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {OperatingAreaCount}.");
+                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {_operatingAreaCount}.");
                     break;
             }
 
             var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
             operatingArea.isTrigger = true;
-            operatingAreaComponent.Initialise(new OperatingAreaData(operatingAreaID, StationData.StationID), operatingArea);
+            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, StationData.StationID), operatingArea);
 
             return operatingAreaComponent;
         }
 
-        public override void InitialiseStartingInventory()
+        protected override void _initialiseStartingInventory()
         {
             if (StationData.InventoryData.AllInventoryItems.Count == 0)
             {
@@ -80,7 +65,7 @@ namespace Station
             }
         }
 
-        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        protected override void _craftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
             {

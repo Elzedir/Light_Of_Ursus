@@ -7,7 +7,6 @@ using Actor;
 using City;
 using Faction;
 using JobSite;
-using OperatingArea;
 using Region;
 using Station;
 using UnityEditor;
@@ -758,9 +757,9 @@ namespace DataPersistence
     [Serializable]
     public class SavedOperatingAreaData
     {
-        public List<OperatingAreaData> AllOperatingAreaData;
+        public List<WorkPost_Data> AllOperatingAreaData;
 
-        public SavedOperatingAreaData(List<OperatingAreaData> allOperatingAreaData) => AllOperatingAreaData = allOperatingAreaData;
+        public SavedOperatingAreaData(List<WorkPost_Data> allOperatingAreaData) => AllOperatingAreaData = allOperatingAreaData;
     }
 
     [Serializable]

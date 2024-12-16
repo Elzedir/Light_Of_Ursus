@@ -10,8 +10,8 @@ namespace Tools
     [Serializable]
     public class Example_SO : Data_SO<Test_Data>
     {
-        public Data_Object<Test_Data>[] Tests                     => DataObjects;
-        public Data_Object<Test_Data>   GetTest_Data(uint testID) => GetDataObject_Master(testID);
+        public Object_Data<Test_Data>[] Tests                     => Objects_Data;
+        public Object_Data<Test_Data>   GetTest_Data(uint testID) => GetObject_Data(testID);
 
         public override uint GetDataObjectID(int id) => Tests[id].DataObject.TestID;
 
@@ -23,7 +23,7 @@ namespace Tools
 
         }
 
-        protected override Dictionary<uint, Data_Object<Test_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Test_Data>> _populateDefaultDataObjects()
         {
             var tests = new Dictionary<uint, Test_Data>
             {
@@ -62,9 +62,9 @@ namespace Tools
             return _convertDictionaryToDataObject(tests);
         }
 
-        protected override Data_Object<Test_Data> _convertToDataObject(Test_Data data)
+        protected override Object_Data<Test_Data> _convertToDataObject(Test_Data data)
         {
-            return new Data_Object<Test_Data>(
+            return new Object_Data<Test_Data>(
                 dataObjectID: data.TestID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.TestID}{data.TestName}",
