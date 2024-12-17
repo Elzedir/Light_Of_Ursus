@@ -13,6 +13,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using WorkPosts;
 
 namespace DataPersistence
 {

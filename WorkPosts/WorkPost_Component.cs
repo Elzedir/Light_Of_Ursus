@@ -22,8 +22,6 @@ namespace WorkPosts
 
         public void Initialise()
         {
-            WorkPostData = WorkPostData;
-
             if (WorkPostCollider.isTrigger) return;
             
             Debug.LogError($"Set IsTrigger to true for {WorkPostID}: {name} BoxCollider");

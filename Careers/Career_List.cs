@@ -38,7 +38,7 @@ namespace Careers
                     (
                         careerName: CareerName.Wanderer,
                         careerDescription: "A wanderer",
-                        new HashSet<JobName>()
+                        careerBaseJobs: new HashSet<JobName>()
                         {
                             JobName.Wanderer
                         }

@@ -379,6 +379,7 @@ namespace Actor
     [Serializable]
     public class GameObjectData : PriorityData
     {
+        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         public GameObjectData(uint actorID, Transform actorTransform = null, Mesh actorMesh = null, Material actorMaterial = null) : base(actorID, ComponentType.Actor)
         {
             _actorTransform = actorTransform;
@@ -517,7 +518,7 @@ namespace Actor
 
             AllJobs.Clear();
 
-            var careerJobs = Career_Manager.GetCareer_Master(careerName).CareerJobs;
+            var careerJobs = Career_Manager.GetCareer_Master(careerName).CareerBaseJobs;
 
             foreach (var job in careerJobs)
             {

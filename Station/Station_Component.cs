@@ -14,6 +14,7 @@ using Recipe;
 using TickRates;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 
 namespace Station
@@ -283,18 +284,18 @@ namespace Station
 
         protected abstract List<Item> _getYield(List<Item> ingredients, Actor_Component actor);
 
-        protected virtual void _onCraftItem(List<Item> craftedItems)
+        protected void _onCraftItem(List<Item> craftedItems)
         {
             _currentProductsCrafted.AddRange(craftedItems);
         }
 
-        public virtual List<Item> GetActualProductionRatePerHour()
+        public List<Item> GetActualProductionRatePerHour()
         {
             var currentProductsCrafted = new List<Item>(_currentProductsCrafted);
             return currentProductsCrafted;
         }
 
-        public virtual List<Item> GetEstimatedProductionRatePerHour()
+        public List<Item> GetEstimatedProductionRatePerHour()
         {
             float totalProductionRate = 0;
             // Then modify production rate by any area modifiers (Land type, events, etc.)
@@ -313,11 +314,11 @@ namespace Station
             }
 
             float requiredProgress         = StationData.StationProgressData.CurrentProduct.RequiredProgress;
-            float estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
+            var estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
 
             var estimatedProductionItems = new List<Item>();
 
-            for (int i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
+            for (var i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
             {
                 foreach(var item in StationData.StationProgressData.CurrentProduct.RecipeProducts)
                 {
@@ -326,165 +327,6 @@ namespace Station
             }
 
             return estimatedProductionItems;
-        }
-    }
-
-    [CustomEditor(typeof(Station_Component), true)]
-    public class StationComponent_Editor : Editor
-    {
-        bool    _showBasicInfo;
-        bool    _showProductionItems;
-        bool    _showInventory;
-        bool    _showOperators;
-        bool    _showProgress;
-        bool    _showRecipe;
-        Vector2 _productionItemScrollPos;
-        Vector2 _inventoryItemScrollPos;
-
-        public override void OnInspectorGUI()
-        {
-            _drawDefaultInspectorExcept(nameof(Station_Component.StationData), nameof(Station_Component.AllowedEmployeePositions), nameof(Station_Component.AllowedRecipes));
-
-            Station_Component stationComponent = (Station_Component)target;
-            Station_Data      stationData      = stationComponent.StationData;
-
-            if (stationData == null) return;
-
-            EditorGUILayout.LabelField("Station Data", EditorStyles.boldLabel);
-
-            _showBasicInfo = EditorGUILayout.Toggle("Basic Info", _showBasicInfo);
-
-            if (_showBasicInfo)
-            {
-                EditorGUILayout.LabelField("StationID", stationData.StationID.ToString());
-                //EditorGUILayout.LabelField("StationType", stationData.StationType.ToString());
-                //EditorGUILayout.LabelField("StationName", stationData.StationName.ToString());
-                EditorGUILayout.LabelField("JobsiteID",          stationData.JobsiteID.ToString());
-                EditorGUILayout.LabelField("StationIsActive",    stationData.StationIsActive.ToString());
-                EditorGUILayout.LabelField("StationDescription", stationData.StationDescription);
-            }
-
-            if (stationData.ProductionData != null)
-            {
-                _showProductionItems = EditorGUILayout.Toggle("All Produced Items", _showProductionItems);
-
-                if (_showProductionItems)
-                {
-                    _productionItemScrollPos = EditorGUILayout.BeginScrollView(_productionItemScrollPos);
-
-                    foreach (var item in stationData.ProductionData.AllProducedItems)
-                    {
-                        EditorGUILayout.LabelField(item.ItemName);
-                    }
-
-                    EditorGUILayout.EndScrollView();
-                }
-            }
-
-            if (stationData.InventoryData != null)
-            {
-                _showInventory = EditorGUILayout.Toggle("Inventory", _showInventory);
-
-                if (_showInventory)
-                {
-                    _inventoryItemScrollPos = EditorGUILayout.BeginScrollView(_inventoryItemScrollPos);
-
-                    foreach (var item in stationData.InventoryData.AllInventoryItems.Values)
-                    {
-                        EditorGUILayout.LabelField($"{item.ItemID}: {item.ItemName} Qty: {item.ItemAmount}");
-                    }
-
-                    EditorGUILayout.EndScrollView();
-                }
-            }
-
-            if (stationData.CurrentOperatorIDs != null)
-            {
-                _showOperators = EditorGUILayout.Toggle("Current Operators", _showOperators);
-                if (_showOperators)
-                {
-                    foreach (var operatorID in stationData.CurrentOperatorIDs)
-                    {
-                        EditorGUILayout.LabelField($"Operator: {operatorID}");
-                        //EditorGUILayout.LabelField($"Operator: {operatorID.ActorID}: {operatorID.ActorName.GetName()} Pos: {operatorID.CareerAndJobs.EmployeePosition}");
-                    }
-                }
-
-            }
-
-            if (stationData.StationProgressData == null) return;
-            
-            _showProgress = EditorGUILayout.Toggle("Progress", _showProgress);
-
-            if (!_showProgress) return;
-                
-            EditorGUILayout.LabelField("CurrentProgress", $"{stationData.StationProgressData.CurrentProgress}");
-            EditorGUILayout.LabelField("CurrentQuality",  $"{stationData.StationProgressData.CurrentQuality}");
-
-            _showRecipe = EditorGUILayout.Toggle("Current Recipe", _showRecipe);
-
-            if (!_showRecipe) return;
-
-            if (stationData.StationProgressData.CurrentProduct == null)
-            {
-                EditorGUILayout.LabelField("No Current Recipe");
-                return;
-            }
-                    
-            EditorGUILayout.LabelField("RecipeName",       $"{stationData.StationProgressData.CurrentProduct.RecipeName}");
-            EditorGUILayout.LabelField("RequiredProgress", $"{stationData.StationProgressData.CurrentProduct.RequiredProgress}");
-            
-            foreach (var ingredient in stationData.StationProgressData.CurrentProduct.RequiredIngredients)
-            {
-                EditorGUILayout.LabelField($"Ingredient: {ingredient.ItemID}: {ingredient.ItemName} Qty: {ingredient.ItemAmount}");
-            }
-            
-            foreach (var product in stationData.StationProgressData.CurrentProduct.RecipeProducts)
-            {
-                EditorGUILayout.LabelField($"Product: {product.ItemID}: {product.ItemName} Qty: {product.ItemAmount}");
-            }
-            
-            foreach (var vocations in stationData.StationProgressData.CurrentProduct.RequiredVocations)
-            {
-                EditorGUILayout.LabelField($"Vocation: {vocations.VocationName}");
-            }
-        }
-
-        void _drawDefaultInspectorExcept(params string[] propertyNames)
-        {
-            var property      = serializedObject.GetIterator();
-            var               enterChildren = true;
-            while (property.NextVisible(enterChildren))
-            {
-                if (!propertyNames.Contains(property.name))
-                {
-                    EditorGUILayout.PropertyField(property, true);
-                }
-                enterChildren = false;
-            }
-        }
-    }
-
-    [Serializable]
-    public class Operator
-    {
-        public int                  OperatorID;
-        public string               OperatorName;
-        public EmployeePositionName OperatorPositionName;
-        public int                  OperatingAreaID;
-
-        public Operator(int actorID, EmployeePositionName careerAndJobs, int operatingAreaID)
-        {
-            OperatorID           = actorID;
-            OperatorPositionName = careerAndJobs;
-            OperatingAreaID      = operatingAreaID;
-        }
-
-        public Operator(Operator other)
-        {
-            OperatorID           = other.OperatorID;
-            OperatorPositionName = other.OperatorPositionName;
-            OperatingAreaID      = other.OperatingAreaID;
         }
     }
 }

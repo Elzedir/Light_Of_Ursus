@@ -295,7 +295,7 @@ namespace JobSite
         {
             RemoveEmployeeFromCurrentStation(employeeID);
 
-            if (station.StationData.CurrentOperatorIDs.Contains(employeeID))
+            if (station.StationData.Worker.Contains(employeeID))
             {
                 Debug.Log($"EmployeeID: {employeeID} is already an operator at StationID: {station.StationID}");
                 return false;

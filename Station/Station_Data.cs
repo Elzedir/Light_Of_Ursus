@@ -17,11 +17,11 @@ namespace Station
     [Serializable]
     public class Station_Data : Data_Class
     {
-        public           uint        StationID;
-        public           StationName StationName;
-        public           string      StationDescription;
-        public           bool        StationIsActive;
-        [SerializeField] uint        _jobsiteID;
+        public uint        StationID;
+        public StationName StationName;
+        public string      StationDescription;
+        public bool        StationIsActive;
+        public uint        JobsiteID;
 
         [SerializeField] List<WorkPost_Data> _allWorkPostData;
         public Dictionary<uint, WorkPost_Data> AllWorkPost_Data;
@@ -31,7 +31,7 @@ namespace Station
         public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
         
         JobSite_Component        _jobSite_Component;
-        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(_jobsiteID);
+        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         
         InventoryData _inventoryData;
         public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
@@ -57,7 +57,7 @@ namespace Station
             StationID          = stationID;
             StationName        = stationName;
             StationDescription = stationDescription;
-            _jobsiteID         = jobsiteID;
+            JobsiteID         = jobsiteID;
             AllWorkPost_Data   = allWorkPostComponents;
             StationIsActive    = stationIsActive;
         }

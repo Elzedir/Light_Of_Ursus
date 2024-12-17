@@ -6,6 +6,7 @@ using Items;
 using Jobs;
 using Recipe;
 using UnityEngine;
+using WorkPosts;
 
 namespace Station
 {
