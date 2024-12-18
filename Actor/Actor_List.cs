@@ -6,7 +6,7 @@ using Inventory;
 using Items;
 using Managers;
 using Personality;
-using Recipe;
+using Recipes;
 using Tools;
 
 namespace Actor

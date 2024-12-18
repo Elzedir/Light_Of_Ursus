@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Actor;
 using Careers;
-using Recipe;
+using Recipes;
 using UnityEngine;
 
 namespace EmployeePosition

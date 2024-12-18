@@ -2,14 +2,14 @@ using System;
 using Items;
 using UnityEngine;
 
-namespace Recipe
+namespace Recipes
 {
     public abstract class Recipe_Manager
     {
         const string _recipe_SOPath = "ScriptableObjects/Recipe_SO";
 
         static Recipe_SO _allRecipes;
-        static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
+        public static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
 
         public static Recipe_Data GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName).DataObject;
 

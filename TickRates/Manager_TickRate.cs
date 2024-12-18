@@ -79,8 +79,10 @@ namespace TickRates
             };
         }
 
-        public static void RegisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID, Action tickerAction)
+        public static void RegisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID, Action tickerAction, bool unregisterExisting = false)
         {
+            if (unregisterExisting) UnregisterTicker(tickerTypeName, tickRateName, tickerID);
+            
             var tickerGroup = _tickerCheck(tickerTypeName, tickRateName);
             
             if (!tickerGroup.TryGetValue(tickerID, out _))

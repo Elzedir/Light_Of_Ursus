@@ -351,14 +351,14 @@ namespace Jobs
 
             foreach (var station in allRelevantStations)
             {
-                stationParameters[PriorityParameterName.InventoryTarget] = station.StationData.InventoryData;
+                stationParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryData;
 
                 var stationPriority = PriorityGenerator.GeneratePriority(PriorityType.JobTask,
                     (uint)JobTaskName.Fetch_Items, stationParameters);
 
                 if (stationPriority is 0 || stationPriority < highestFetchPriority) continue;
 
-                taskParameters[PriorityParameterName.InventoryTarget] = station.StationData.InventoryData;
+                taskParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryData;
             }
 
             foreach (var parameter in taskParameters)

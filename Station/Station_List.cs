@@ -13,7 +13,7 @@ namespace Station
                     stationName: StationName.Tree,
                     stationDescription: "Station 1 Description",
                     jobsiteID: 1,
-                    allWorkPostComponents: new Dictionary<uint, WorkPost_Data>
+                    allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                     {
                         {
                             1, new WorkPost_Data(
@@ -35,7 +35,8 @@ namespace Station
                                 workPostID: 4,
                                 stationID: 1)
                         }
-                    })
+                    },
+                    workPostWorkers: new Dictionary<uint, uint>())
             },
             {
                 2, new Station_Data(
@@ -43,7 +44,7 @@ namespace Station
                     stationName: StationName.Sawmill,
                     stationDescription: "Station 2 Description",
                     jobsiteID: 1,
-                    allWorkPostComponents: new Dictionary<uint, WorkPost_Data>
+                    allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                     {
                         {
                             5, new WorkPost_Data(
@@ -65,7 +66,8 @@ namespace Station
                                 workPostID: 8,
                                 stationID: 2)
                         }
-                    })
+                    },
+                    workPostWorkers: new Dictionary<uint, uint>())
             },
             {
                 3, new Station_Data(
@@ -73,7 +75,7 @@ namespace Station
                     stationName: StationName.Log_Pile,
                     stationDescription: "Station 3 Description",
                     jobsiteID: 1,
-                    allWorkPostComponents: new Dictionary<uint, WorkPost_Data>
+                    allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                     {
                         {
                             9, new WorkPost_Data(
@@ -95,7 +97,8 @@ namespace Station
                                 workPostID: 12,
                                 stationID: 3)
                         }
-                    })
+                    },
+                    workPostWorkers: new Dictionary<uint, uint>())
             }
         };
     }

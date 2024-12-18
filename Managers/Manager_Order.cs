@@ -301,7 +301,7 @@ public class Order_Base
         ActorID = actorID;
         //OrderID = Actor.ActorData.OrderData.GetOrderID();
         StationID_Source = stationID_Source;
-        JobsiteID = Station_Source.StationData.JobsiteID;
+        JobsiteID = Station_Source.Station_Data.JobsiteID;
         StationID_Destination = stationID_Destination;
         OrderStatus = orderStatus;
         OrderItems = orderItems;
@@ -461,9 +461,9 @@ public class Order_Base
                 continue;
             }
 
-            Debug.Log($"Creating deliver order for Actor: {ActorID} to Station: {stationToHaulTo.StationData.StationID}.");
+            Debug.Log($"Creating deliver order for Actor: {ActorID} to Station: {stationToHaulTo.Station_Data.StationID}.");
 
-            return new Order_Base(OrderType.Haul_Deliver, ActorID, StationID_Destination, stationToHaulTo.StationData.StationID, OrderStatus.Pending, itemsToHaul);
+            return new Order_Base(OrderType.Haul_Deliver, ActorID, StationID_Destination, stationToHaulTo.Station_Data.StationID, OrderStatus.Pending, itemsToHaul);
         }
 
         Debug.Log($"Cannot haul to existing stations in Jobsite: {JobsiteID}");   

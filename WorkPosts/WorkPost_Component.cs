@@ -1,6 +1,6 @@
 using System.Collections;
 using Actor;
-using Recipe;
+using Recipes;
 using UnityEngine;
 
 namespace WorkPosts
@@ -10,9 +10,7 @@ namespace WorkPosts
     public class WorkPost_Component : MonoBehaviour
     {
         public uint WorkPostID                 => WorkPostData.WorkPostID;
-        public uint CurrentWorkerID            => WorkPostData.CurrentWorkerID;
-        
-        public bool HasWorker()                => WorkPostData.HasWorker();
+        public uint CurrentWorkerID            => WorkPostData.CurrentWorker.ActorID;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
         
         public WorkPost_Data WorkPostData;
@@ -28,31 +26,28 @@ namespace WorkPosts
             WorkPostCollider.isTrigger = true;
         }
 
-        public float Operate(float baseProgressRate, Recipe_Data recipeData)
+        public float Operate(float baseProgressRate, Recipe_Data recipe)
         {
-            if (WorkPostData.CurrentWorkerID is 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;
+            if (CurrentWorkerID is 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;
 
-            if (WorkPostData.CurrentWorker.transform.position != null && !WorkPostCollider.bounds.Contains(WorkPostData.CurrentWorker.transform.position))
+            if (WorkPostCollider.bounds.Contains(WorkPostData.CurrentWorker.transform.position)) return _produce(baseProgressRate, recipe);
+            
+            StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorkerID), transform.position));
+
+            return 0;
+        }
+        
+        float _produce(float baseProgressRate, Recipe_Data recipe)
+        {
+            var productionRate = baseProgressRate;
+            // Then modify production rate by any area modifiers (Land type, events, etc.)
+
+            foreach (var vocation in recipe.RequiredVocations)
             {
-                StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: WorkPostData.CurrentWorkerID), transform.position));
-
-                return 0;
+                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationData.GetProgress(vocation);
             }
 
-            return produce();
-
-            float produce()
-            {
-                float productionRate = baseProgressRate;
-                // Then modify production rate by any area modifiers (Land type, events, etc.)
-
-                foreach (var vocation in recipeData.RequiredVocations)
-                {
-                    productionRate *= WorkPostData.CurrentWorker.ActorData.VocationData.GetProgress(vocation);
-                }
-
-                return productionRate;
-            }
+            return productionRate;
         }
 
         IEnumerator _moveWorkerToWorkPost(Actor_Component actor, Vector3 position)

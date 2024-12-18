@@ -5,9 +5,11 @@ using System.Linq;
 using Actor;
 using City;
 using EmployeePosition;
+using Items;
 using Managers;
-using Recipe;
+using Recipes;
 using Station;
+using TickRates;
 using Tools;
 using UnityEngine;
 
@@ -30,7 +32,9 @@ namespace JobSite
         public string JobsiteDescription;
         public uint   OwnerID;
 
-        [SerializeField] List<uint>              _allEmployeeIDs;
+        List<uint>              _allEmployeeIDs => ;
+            
+            // Change to all current wokrers. AllStationsInJobSite.Values.SelectMany(station => station.Station_Data.AllWorkPost_Data.Values.Select(workPost => workPost.CurrentWorkerID)).ToList();;
         Dictionary<uint, Actor_Component>        _allEmployees;
         public Dictionary<uint, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
         
@@ -68,8 +72,10 @@ namespace JobSite
 
             return allEmployeePositions;
         }
-        
-        public JobSite_Data(uint jobSiteID, JobSiteName jobSiteName, uint jobsiteFactionID, uint cityID, string jobsiteDescription, uint ownerID, List<uint> allStationIDs, ProsperityData prosperityData)
+
+        public JobSite_Data(uint           jobSiteID, JobSiteName jobSiteName, uint jobsiteFactionID, uint cityID,
+                            string         jobsiteDescription, uint ownerID, List<uint> allStationIDs,
+                            ProsperityData prosperityData)
         {
             JobSiteID          = jobSiteID;
             JobSiteName        = jobSiteName;
@@ -79,7 +85,6 @@ namespace JobSite
             OwnerID            = ownerID;
             AllStationIDs      = allStationIDs;
             ProsperityData     = prosperityData;
-            _allEmployeeIDs    = new List<uint>();
         }
 
         Dictionary<uint, Actor_Component> _populateAllEmployees()
@@ -114,7 +119,7 @@ namespace JobSite
             foreach (var station in AllStationsInJobSite
                          .Where(station_Component => !AllStationIDs.Contains(station_Component.Key)))
             {
-                Debug.Log($"Station_Component: {station.Value?.StationData?.StationID}: {station.Value?.StationData?.StationName} doesn't exist in DataList");
+                Debug.Log($"Station_Component: {station.Value?.Station_Data?.StationID}: {station.Value?.Station_Data?.StationName} doesn't exist in DataList");
             }
             
             foreach (var stationID in AllStationIDs
@@ -126,8 +131,24 @@ namespace JobSite
             _jobSiteComponent.StartCoroutine(_populate());
         }
 
+        public void RegisterAllTickers()
+        {
+            _registerStations();
+        }
+
+        void _registerStations()
+        {
+            foreach (var station in AllStationsInJobSite.Values)
+            {
+                Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.Station_Data.OnTick);
+                station.Station_Data.CurrentTickRateName = TickRateName.OneSecond;
+            }
+        }
+
         IEnumerator _populate()
         {
+            RegisterAllTickers();
+            
             //Usually this will only happen a few seconds after game start since things won't hire immediately after game start. Instead it will be assigned to
             // TickRate manager to onTick();
             
@@ -295,13 +316,13 @@ namespace JobSite
         {
             RemoveEmployeeFromCurrentStation(employeeID);
 
-            if (station.StationData.Worker.Contains(employeeID))
+            if (station.Station_Data.Worker.Contains(employeeID))
             {
                 Debug.Log($"EmployeeID: {employeeID} is already an operator at StationID: {station.StationID}");
                 return false;
             }
 
-            if (!station.StationData.AddOperatorToStation(employeeID))
+            if (!station.Station_Data.AddOperatorToStation(employeeID))
             {
                 Debug.Log($"Couldn't add employee to station: {station.StationID}");
                 return false;
@@ -383,8 +404,6 @@ namespace JobSite
             }
         }
 
-        public List<uint> GetAllOperators() => AllStationIDs.SelectMany(stationID => Station_Manager.GetStation_Data(stationID).CurrentOperatorIDs).ToList();
-
         // public void AllocateEmployeesToStations()
         // {
         //     var allOperators = GetAllOperators();
@@ -413,6 +432,14 @@ namespace JobSite
         //     Debug.Log("Adjusted production to balance the ratio.");
         // }
         
+        public List<Item> GetEstimatedProductionRatePerHour()
+        {
+            foreach (var station in AllStationsInJobSite.Values)
+            {
+                station.Station_Data.GetEstimatedProductionRatePerHour();
+            }
+        }
+        
         public Station_Component GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
             => AllStationsInJobSite
                .Where(station => stationNames.Contains(station.Value.StationName))
@@ -422,17 +449,16 @@ namespace JobSite
         public void FillEmptyJobsitePositions()
         {
             var prosperityRatio      = ProsperityData.GetProsperityPercentage();
-            var maxOperatorCount     = AllStationIDs.SelectMany(stationID => Station_Manager.GetStation_Component(stationID).AllOperatingAreasInStation).ToList().Count;
-            var currentOperators = GetAllOperators();
+            var maxOperatorCount     = AllStationsInJobSite.Values.SelectMany(station => station.Station_Data.AllWorkPost_Components).ToList().Count;
             var desiredOperatorCount = Mathf.RoundToInt(maxOperatorCount * prosperityRatio);
 
-            if (currentOperators.Count >= maxOperatorCount)
+            if (_allEmployees.Count >= maxOperatorCount)
             {
                 //Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than MaxOperatorCount: {maxOperatorCount}.");
                 return;
             }
 
-            if (currentOperators.Count >= desiredOperatorCount)
+            if (_allEmployees.Count >= desiredOperatorCount)
             {
                 //Debug.Log($"CurrentOperatorCount {currentOperatorCount} is higher than DesiredOperatorCount: {desiredOperatorCount}.");
                 return;
@@ -440,18 +466,18 @@ namespace JobSite
 
             var iteration = 0;
 
-            while (iteration < desiredOperatorCount - currentOperators.Count)
+            while (iteration < desiredOperatorCount - _allEmployees.Count)
             {
                 var allPositionsFilled = true;
 
                 foreach (var station in AllStationsInJobSite.Values)
                 {
-                    if (iteration >= desiredOperatorCount - currentOperators.Count)
+                    if (iteration >= desiredOperatorCount - _allEmployees.Count)
                     {
                         break;
                     }
 
-                    if (station.StationData.CurrentOperatorIDs.Count >= station.AllOperatingAreasInStation.Count)
+                    if (station.Station_Data.WorkPost_Workers.Count >= station.Station_Data.AllWorkPost_Components.Count)
                     {
                         //Debug.Log($"All operating areas are already filled for StationID: {stationID}");
                         continue;

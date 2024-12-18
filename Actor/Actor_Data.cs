@@ -14,7 +14,7 @@ using JobSite;
 using Managers;
 using Personality;
 using Priority;
-using Recipe;
+using Recipes;
 using Relationships;
 using Tools;
 using UnityEngine;

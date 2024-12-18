@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Items;
 using Station;
 
-namespace Recipe
+namespace Recipes
 {
     public abstract class Recipe_List
     {

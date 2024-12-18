@@ -24,14 +24,7 @@ namespace Careers
         }
         protected override Dictionary<uint, Object_Data<Career_Data>> _populateDefaultDataObjects()
         {
-            var defaultCareers = new Dictionary<uint, Career_Data>();
-
-            foreach (var item in Career_List.GetAllDefaultCareers())
-            {
-                defaultCareers.Add(item.Key, item.Value);
-            }
-
-            return _convertDictionaryToDataObject(defaultCareers);
+            return _convertDictionaryToDataObject(Career_List.DefaultCareers);
         }
         
         Dictionary<uint, Object_Data<Career_Data>> _defaultCareers => DefaultDataObjects;

@@ -6,7 +6,7 @@ namespace WorkPosts
 {
     public abstract class WorkPost_List
     {
-        public static Dictionary<uint, WorkPost_Position> GetWorkPlacePosition(StationName stationName)
+        public static Dictionary<uint, WorkPost_TransformValue> GetWorkPlace_TransformValues(StationName stationName)
         {
             if (_workPlacePositions.TryGetValue(stationName, out var positions))
             {
@@ -17,31 +17,31 @@ namespace WorkPosts
             return null;
         }
         
-        static readonly Dictionary<StationName, Dictionary<uint, WorkPost_Position>> _workPlacePositions = new()
+        static readonly Dictionary<StationName, Dictionary<uint, WorkPost_TransformValue>> _workPlacePositions = new()
         {
             {
-                StationName.Tree, new Dictionary<uint, WorkPost_Position>
+                StationName.Tree, new Dictionary<uint, WorkPost_TransformValue>
                 {
                     {
-                        1, new WorkPost_Position(
+                        1, new WorkPost_TransformValue(
                             new Vector3(1.5f, -0.8f, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(1, 0.333f, 1))
                     },
                     {
-                        2, new WorkPost_Position(
+                        2, new WorkPost_TransformValue(
                             new Vector3(0, -0.8f, 1.5f),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(1, 0.333f, 1))
                     },
                     {
-                        3, new WorkPost_Position(
+                        3, new WorkPost_TransformValue(
                             new Vector3(-1.5f, -0.8f, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(1, 0.333f, 1))
                     },
                     {
-                        4, new WorkPost_Position(
+                        4, new WorkPost_TransformValue(
                             new Vector3(0, -0.8f, -1.5f),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(1, 0.333f, 1))
@@ -49,28 +49,28 @@ namespace WorkPosts
                 }
             },
             {
-                StationName.Sawmill, new Dictionary<uint, WorkPost_Position>
+                StationName.Sawmill, new Dictionary<uint, WorkPost_TransformValue>
                 {
                     {
-                        1, new WorkPost_Position(
+                        1, new WorkPost_TransformValue(
                             new Vector3(0.75f, 0, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.333f, 1, 1))
                     },
                     {
-                        2, new WorkPost_Position(
+                        2, new WorkPost_TransformValue(
                             new Vector3(0, 0, 1),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.333f, 1, 1))
                     },
                     {
-                        3, new WorkPost_Position(
+                        3, new WorkPost_TransformValue(
                             new Vector3(-0.75f, 0, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.333f, 1, 1))
                     },
                     {
-                        4, new WorkPost_Position(
+                        4, new WorkPost_TransformValue(
                             new Vector3(0, 0, -1),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.333f, 1, 1))
@@ -78,28 +78,28 @@ namespace WorkPosts
                 }
             },
             {
-                StationName.Log_Pile, new Dictionary<uint, WorkPost_Position>
+                StationName.Log_Pile, new Dictionary<uint, WorkPost_TransformValue>
                 {
                     {
-                        1, new WorkPost_Position(
+                        1, new WorkPost_TransformValue(
                             new Vector3(0.75f, 0, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.5f, 1f, 0.5f))
                     },
                     {
-                        2, new WorkPost_Position(
+                        2, new WorkPost_TransformValue(
                             new Vector3(0, 0, 0.75f),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.5f, 1f, 0.5f))
                     },
                     {
-                        3, new WorkPost_Position(
+                        3, new WorkPost_TransformValue(
                             new Vector3(-0.75f, 0, 0),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.5f, 1f, 0.5f))
                     },
                     {
-                        4, new WorkPost_Position(
+                        4, new WorkPost_TransformValue(
                             new Vector3(0, 0, -0.75f),
                             new Quaternion(0, 0, 0, 0),
                             new Vector3(0.5f, 1f, 0.5f))

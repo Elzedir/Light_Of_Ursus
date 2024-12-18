@@ -80,13 +80,13 @@ public class IDChecker : EditorWindow
 
         foreach (var station in stations)
         {
-            if (station.StationData == null)
+            if (station.Station_Data == null)
             {
                 Debug.LogWarning($"Station: {station.name} does not have StationData.");
                 continue;
             }
 
-            if (!existingIDs.Add(station.StationData.StationID) || station.StationData.StationID == 0)
+            if (!existingIDs.Add(station.Station_Data.StationID) || station.Station_Data.StationID == 0)
             {
                 duplicateStations.Add(station);
             }
@@ -95,7 +95,7 @@ public class IDChecker : EditorWindow
         foreach (var station in duplicateStations)
         {
             uint newStationID = GetNewID(existingIDs);
-            station.StationData.StationID = newStationID;
+            station.Station_Data.StationID = newStationID;
             existingIDs.Add(newStationID);
 
             EditorUtility.SetDirty(station);

@@ -65,7 +65,7 @@ namespace JobSite
         {
             if (!_initialised) return;
             
-            foreach (var product in JobSiteData.AllStationsInJobSite.Values.Select(s => s.StationData.ProductionData))
+            foreach (var product in JobSiteData.AllStationsInJobSite.Values.Select(s => s.Station_Data.ProductionData))
             {
                 product.GetEstimatedProductionRatePerHour();
                 product.GetActualProductionRatePerHour();
@@ -98,7 +98,7 @@ namespace JobSite
                 return false;
             }
             
-            var relevantOperatingArea = relevantStation.GetRelevantOperatingArea(actor);
+            var relevantOperatingArea = relevantStation.GetOpenWorkPost(actor);
 
             var job = new Job(jobName, relevantStation.StationID, relevantOperatingArea.WorkPostID);
 
@@ -142,7 +142,7 @@ namespace JobSite
         {
             foreach (var station in JobSiteData.AllStationsInJobSite.Values)
             {
-                station.RemoveAllOperatorsFromStation();
+                station.RemoveAllWorkersFromStation();
             }
 
             var tempEmployees = allEmployees.Select(employee => employee.Value.ActorData).ToList();

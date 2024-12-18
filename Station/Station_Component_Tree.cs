@@ -4,7 +4,7 @@ using Actor;
 using EmployeePosition;
 using Items;
 using Jobs;
-using Recipe;
+using Recipes;
 using UnityEngine;
 using WorkPosts;
 
@@ -17,14 +17,9 @@ namespace Station
         public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Logger;
 
         protected override RecipeName       _defaultProduct       => RecipeName.Log;
-        public override List<RecipeName> AllowedRecipes       { get; } = new() { RecipeName.Log };
+        public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
         public override List<uint>       AllowedStoredItemIDs { get; } = new();
         public override List<uint>       DesiredStoredItemIDs { get; } = new();
-
-        public override List<EmployeePositionName> AllowedEmployeePositions { get; } = new()
-        {
-            EmployeePositionName.Intern
-        };
 
         public override List<JobName> AllowedJobs { get; } = new()
         {
@@ -52,20 +47,20 @@ namespace Station
 
             var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
             operatingArea.isTrigger = true;
-            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, StationData.StationID), operatingArea);
+            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, Station_Data.StationID), operatingArea);
 
             return operatingAreaComponent;
         }
 
         protected override void _initialiseStartingInventory()
         {
-            if (StationData.InventoryData.AllInventoryItems.Count == 0)
+            if (Station_Data.InventoryData.AllInventoryItems.Count == 0)
             {
-                StationData.InventoryData.AddToInventory(new List<Item>());
+                Station_Data.InventoryData.AddToInventory(new List<Item>());
             }
         }
 
-        protected override void _craftItem(RecipeName recipeName, Actor_Component actor)
+        protected override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
             {
@@ -73,7 +68,7 @@ namespace Station
                 return;
             }
 
-            if (!AllowedRecipes.Contains(recipeName))
+            if (!DefaultAllowedRecipes.Contains(recipeName))
             {
                 Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}");
                 return;
@@ -81,30 +76,30 @@ namespace Station
 
             Recipe_Data recipeData = Recipe_Manager.GetRecipe_Master(recipeName);
 
-            var cost  = _getCost(recipeData.RequiredIngredients, actor);
-            var yield = _getYield(recipeData.RecipeProducts, actor);
+            var cost  = GetCost(recipeData.RequiredIngredients, actor);
+            var yield = GetYield(recipeData.RecipeProducts, actor);
 
-            if (!StationData.InventoryData.InventoryContainsAllItems(cost))
+            if (!Station_Data.InventoryData.InventoryContainsAllItems(cost))
             {
                 Debug.Log($"Inventory does not contain cost items.");
                 return;
             }
 
-            if (!StationData.InventoryData.HasSpaceForItems(yield))
+            if (!Station_Data.InventoryData.HasSpaceForItems(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
                 return;
             }
 
-            StationData.InventoryData.RemoveFromInventory(cost);
+            Station_Data.InventoryData.RemoveFromInventory(cost);
             // Have another system where the tree loses durability instead or something.
             // Later allow it to partially remove logs to chop the tree down completely.
-            StationData.InventoryData.AddToInventory(yield);
+            Station_Data.InventoryData.AddToInventory(yield);
 
             _onCraftItem(yield);
         }
 
-        protected override List<Item> _getCost(List<Item> ingredients, Actor_Component actor)
+        protected override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
         {
             return new List<Item>();
 
@@ -117,7 +112,7 @@ namespace Station
             yield return null;
         }
 
-        protected override List<Item> _getYield(List<Item> products, Actor_Component actor)
+        protected override List<Item> GetYield(List<Item> products, Actor_Component actor)
         {
             return new List<Item> { new Item(1100, 1) }; // For now
 

@@ -55,7 +55,7 @@ namespace Station
                 if (existingStations.TryGetValue(station.DataObject.StationID, out var existingStation))
                 {
                     StationComponents[station.DataObject.StationID] = existingStation;
-                    existingStation.StationData                     = station.DataObject;
+                    existingStation.Station_Data                     = station.DataObject;
                     existingStations.Remove(station.DataObject.StationID);
                     continue;
                 }

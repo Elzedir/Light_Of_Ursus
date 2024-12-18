@@ -216,8 +216,8 @@ namespace Debuggers
 
         void _displayStation(Station_Component station)
         {
-            var stationInventory    = station.StationData.InventoryData;
-            var stationProgressData = station.StationData.StationProgressData;
+            var stationInventory    = station.Station_Data.InventoryData;
+            var stationProgressData = station.Station_Data.StationProgressData;
 
             if (stationInventory != null)
             {
@@ -228,7 +228,7 @@ namespace Debuggers
                                                        .ToList();
 
                 var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("InventoryData", station.StationName.ToString(), station.StationData.StationID),
+                    new ObjectEntryKey("InventoryData", station.StationName.ToString(), station.Station_Data.StationID),
                     allInventoryData);
 
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
@@ -236,7 +236,7 @@ namespace Debuggers
             else
             {
                 Debug.LogWarning(
-                    $"Station {station.StationData.StationID}: {station.StationName} does not have a valid inventory.");
+                    $"Station {station.Station_Data.StationID}: {station.StationName} does not have a valid inventory.");
             }
 
             if (stationProgressData != null)
@@ -250,7 +250,7 @@ namespace Debuggers
                 };
 
                 var objectEntryData = new ObjectEntryData(
-                    new ObjectEntryKey("ProgressData", station.StationName.ToString(), station.StationData.StationID),
+                    new ObjectEntryKey("ProgressData", station.StationName.ToString(), station.Station_Data.StationID),
                     allProgressData);
 
                 _updateObjectEntry(ObjectSectionType.Testing, objectEntryData);
@@ -258,7 +258,7 @@ namespace Debuggers
             else
             {
                 Debug.LogWarning(
-                    $"Station {station.StationData.StationID}: {station.StationName} does not have a valid progress data.");
+                    $"Station {station.Station_Data.StationID}: {station.StationName} does not have a valid progress data.");
             }
         }
 

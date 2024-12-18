@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using Inventory;
 using Items;
 using JobSite;
 using Priority;
-using Recipe;
+using Recipes;
+using TickRates;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using WorkPosts;
+using Object = UnityEngine.Object;
 
 namespace Station
 {
@@ -25,7 +28,7 @@ namespace Station
 
         [SerializeField] List<WorkPost_Data> _allWorkPostData;
         public Dictionary<uint, WorkPost_Data> AllWorkPost_Data;
-        
+        public Dictionary<uint, uint> WorkPost_Workers;
         
         Station_Component _station_Component;
         public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
@@ -44,60 +47,233 @@ namespace Station
 
         
         Dictionary<uint, WorkPost_Component> _allWorkPostComponents;
-        public Dictionary<uint, WorkPost_Component> AllWorkPostComponents => _allWorkPostComponents ??= _getAllWorkPostComponents();
+        public Dictionary<uint, WorkPost_Component> AllWorkPost_Components => _allWorkPostComponents ??= _populateWorkPlace_Components();
 
-        Dictionary<uint, WorkPost_Component> _getAllWorkPostComponents()
+        public Station_Data(uint                            stationID,        StationName            stationName,        string stationDescription, uint jobsiteID,
+                            Dictionary<uint, WorkPost_Data> allWorkPost_Data, Dictionary<uint, uint> workPostWorkers, bool   stationIsActive = true)
         {
-                
-        }
-
-        public Station_Data(uint stationID, StationName stationName, string stationDescription, uint jobsiteID,
-                            Dictionary<uint, WorkPost_Data> allWorkPostComponents, bool stationIsActive = true)
-        {
-            StationID          = stationID;
-            StationName        = stationName;
-            StationDescription = stationDescription;
-            JobsiteID         = jobsiteID;
-            AllWorkPost_Data   = allWorkPostComponents;
-            StationIsActive    = stationIsActive;
+            StationID               = stationID;
+            StationName             = stationName;
+            StationDescription      = stationDescription;
+            JobsiteID               = jobsiteID;
+            AllWorkPost_Data        = allWorkPost_Data;
+            WorkPost_Workers = workPostWorkers;
+            StationIsActive         = stationIsActive;
         }
 
         public void InitialiseStationData()
         {
             var station = Station_Manager.GetStation_Component(StationID);
 
-            foreach (var operatingArea in station.AllOperatingAreasInStation
-                                                 .Where(operatingArea => !AllOperatingAreaIDs.Contains(operatingArea.WorkPostData.WorkPostID)))
+            if (station is null)
             {
-                AllOperatingAreaIDs.Add(operatingArea.WorkPostData.WorkPostID);
+                Debug.Log($"Station not found for StationID: {StationID}");
+                return;
+            }
+            
+            PopulateWorkPost_Workers();
+        }
+        
+        void PopulateWorkPost_Workers()
+        {
+            WorkPost_Workers = new Dictionary<uint, uint>();
+            
+            foreach (var workPostData in AllWorkPost_Data.Values)
+            {
+                WorkPost_Workers.Add(workPostData.WorkPostID, workPostData.CurrentWorker.ActorID);
             }
         }
-
-        public bool AddOperatorToStation(uint operatorID)
+        
+        public Transform CollectionPoint;
+        
+        Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()
         {
-            if (CurrentOperatorIDs.Contains(operatorID)) 
-            { 
-                Debug.Log($"CurrentOperators already contain operator: {operatorID}"); 
-                return false; 
+            foreach(Transform child in Station_Component.transform)
+            {
+                if (child.GetComponent<WorkPost_Component>() is null) continue;
+
+                Object.Destroy(child);
             }
 
-            CurrentOperatorIDs.Add(operatorID);
-            Station_Manager.GetStation_Component(StationID).AddOperatorToArea(operatorID);
+            var workPlace_Components = AllWorkPost_Data.Values.Select(_createWorkPost).ToList();
+
+            // Check this, maybe just assign one of the workPosts as the collection point in the WorkPlace_List.
+            CollectionPoint = new GameObject("CollectionPoint").transform;
+            CollectionPoint.SetParent(Station_Component.transform);
+            CollectionPoint.localPosition = new Vector3(0, 0, -2);
+
+            return workPlace_Components.ToDictionary(workPost => workPost.WorkPostID);
+        }
+
+        WorkPost_Component _createWorkPost(WorkPost_Data workPost_Data)
+        {
+            var workPost_Component = new GameObject($"WorkPost_{workPost_Data.WorkPostID}").AddComponent<WorkPost_Component>();
+            workPost_Component.transform.SetParent(Station_Component.transform);
+            workPost_Component.SetWorkPostData(workPost_Data);
+
+            var workPost_TransformValues = WorkPost_List.GetWorkPlace_TransformValues(StationName);
+
+            if (workPost_TransformValues is null)
+            {
+                Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
+                return null;
+            }
+
+            if (workPost_TransformValues.TryGetValue(workPost_Component.WorkPostID, out var transformValue))
+            {
+                workPost_Component.transform.localPosition = transformValue.Position;
+                workPost_Component.transform.localRotation = transformValue.Rotation;
+                workPost_Component.transform.localScale = transformValue.Scale;
+            }
+            else
+            {
+                Debug.Log($"WorkPost_TransformValue not found for WorkPostID: {workPost_Component.WorkPostID}");
+            }
+
+            var workPost_Collider = workPost_Component.gameObject.AddComponent<BoxCollider>();
+            workPost_Collider.isTrigger = true;
+            workPost_Component.Initialise();
+
+            return workPost_Component;
+        }
+
+        public bool AddOperatorToStation(uint workerID)
+        {
+            var openWorkPost_Data = AllWorkPost_Data.Values.FirstOrDefault(workPostData => workPostData.CurrentWorker.ActorID == 0);
+            
+            if (openWorkPost_Data is null)
+            {
+                Debug.Log($"No open WorkPosts found for Worker: {workerID}");
+                return false;
+            }
+            
+            openWorkPost_Data.AddWorkerToWorkPost(workerID);
+            WorkPost_Workers[openWorkPost_Data.WorkPostID] = workerID;
 
             return true;
         }
 
         public bool RemoveOperatorFromStation(uint operatorID)
         {
-            if (CurrentOperatorIDs.Contains(operatorID))
+            var workPostID = WorkPost_Workers.FirstOrDefault(x => x.Value == operatorID).Key;
+            
+            if (workPostID == 0)
             {
-                CurrentOperatorIDs.Remove(operatorID);
+                Debug.Log($"Operator {operatorID} not found in operating areas.");
+                return false;
+            }
+            
+            AllWorkPost_Data[workPostID].RemoveCurrentWorkerFromWorkPost();
+            WorkPost_Workers[workPostID] = 0;
+            
+            return true;
+        }
+        
+        bool                _initialised;
+        public TickRateName CurrentTickRateName;
+        
+        public void OnTick()
+        {
+            if (!_initialised) return;
 
-                return true;
+            _operateStation();
+        }
+
+        void _operateStation()
+        {
+            if (!_passesStationChecks()) return;
+
+            foreach (var workPost in AllWorkPost_Components.Values)
+            {
+                var progressMade = workPost.Operate(_baseProgressRatePerHour,
+                    StationProgressData.CurrentProduct);
+                
+                var itemCrafted = StationProgressData.Progress(progressMade);
+                
+                Debug.Log(3);
+
+                if (!itemCrafted) continue;
+
+                // For now is the final person who adds the last progress, but change to a cumulative system later.
+                Station_Component.CraftItem(
+                    StationProgressData.CurrentProduct.RecipeName,
+                    workPost.WorkPostData.CurrentWorker
+                );
+            }
+        }
+
+        bool _passesStationChecks()
+        {
+            if (!StationIsActive) 
+                return false;
+        
+            if (!_isStationBeingOperated) 
+                return false;
+            
+            Debug.Log(1);
+
+            var success = false;
+
+            while (!success)
+            {
+                try
+                {
+                    success = InventoryData.InventoryContainsAllItems(
+                        StationProgressData.CurrentProduct.RequiredIngredients);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(_defaultProduct);
+                    
+                    Debug.Log(2);
+
+                    if (StationProgressData.CurrentProduct.RecipeName != RecipeName.None ||
+                        _defaultProduct                                            == RecipeName.None)
+                    {
+                        break;
+                    }
+                
+                    Console.WriteLine(e);
+                }    
+            }
+        
+            return success;
+        }
+
+        public List<Item> GetEstimatedProductionRatePerHour()
+        {
+            float totalProductionRate = 0;
+            // Then modify production rate by any area modifiers (Land type, events, etc.)
+
+            foreach (var currentOperatorID in WorkPost_Workers)
+            {
+                var individualProductionRate = _baseProgressRatePerHour;
+
+                foreach (var vocation in StationProgressData.CurrentProduct.RequiredVocations)
+                {
+                    individualProductionRate *= Actor_Manager.GetActor_Data(currentOperatorID).VocationData
+                                                             .GetProgress(vocation);
+                }
+
+                totalProductionRate += individualProductionRate;
+                // Don't forget to add in estimations for travel time.
             }
 
-            Debug.Log($"CurrentOperators does not contain operator: {operatorID}");
-            return false;
+            float requiredProgress         = StationProgressData.CurrentProduct.RequiredProgress;
+            var   estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
+
+            var estimatedProductionItems = new List<Item>();
+
+            for (var i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
+            {
+                foreach (var item in StationProgressData.CurrentProduct.RecipeProducts)
+                {
+                    estimatedProductionItems.Add(new Item(item));
+                }
+            }
+
+            return estimatedProductionItems;
         }
 
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
@@ -115,7 +291,7 @@ namespace Station
                         $"Station Description: {StationDescription}",
                         $"Station IsActive: {StationIsActive}",
                         $"Inventory Data: {InventoryData}",
-                        $"Current Operator IDs: {string.Join(", ", CurrentOperatorIDs)}"
+                        $"Current Operator IDs: {string.Join(", ", WorkPost_Workers)}"
                     }));
             }
             catch
@@ -157,7 +333,7 @@ namespace Station
                 dataObjects.Add(new Data_Display(
                     title: "Station Operators",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: CurrentOperatorIDs.Select(operatorID => $"{operatorID}").ToList()));
+                    data: WorkPost_Workers.Select(operatorID => $"{operatorID}").ToList()));
             }
             catch
             {
@@ -216,7 +392,7 @@ namespace Station
 
         public List<Item> GetEstimatedProductionRatePerHour()
         {
-            return EstimatedProductionRatePerHour = Station.GetEstimatedProductionRatePerHour();
+            return EstimatedProductionRatePerHour = Station.Station_Data.GetEstimatedProductionRatePerHour();
         }
     }
 

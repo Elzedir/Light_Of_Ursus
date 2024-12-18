@@ -12,6 +12,8 @@ namespace WorkPosts
     [Serializable]
     public class WorkPost_SO : Data_SO<WorkPost_Data>
     {
+        // Not really a point to this class?
+        
         public Object_Data<WorkPost_Data>[]         WorkPosts                            => Objects_Data;
         public Object_Data<WorkPost_Data>           GetWorkPost_Data(uint      workPostID) => GetObject_Data(workPostID);
         public Dictionary<uint, WorkPost_Component> WorkPostComponents = new();
@@ -77,10 +79,10 @@ namespace WorkPosts
         {
             var defaultWorkPosts = new Dictionary<uint, WorkPost_Data>();
 
-            foreach (var defaultWorkPost in WorkPost_List.DefaultWorkPosts)
-            {
-                defaultWorkPosts.Add(defaultWorkPost.Key, defaultWorkPost.Value);
-            }
+            // foreach (var defaultWorkPost in WorkPost_List.DefaultWorkPosts)
+            // {
+            //     defaultWorkPosts.Add(defaultWorkPost.Key, defaultWorkPost.Value);
+            // }
 
             return _convertDictionaryToDataObject(defaultWorkPosts);
         }

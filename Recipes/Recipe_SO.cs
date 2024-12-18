@@ -4,7 +4,7 @@ using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Recipe
+namespace Recipes
 {
     [CreateAssetMenu(fileName = "Recipe_SO", menuName = "SOList/Recipe_SO")]
     [Serializable]

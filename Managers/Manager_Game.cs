@@ -15,7 +15,7 @@ using Initialisation;
 using Jobs;
 using JobSite;
 using Personality;
-using Recipe;
+using Recipes;
 using Region;
 using Station;
 using TickRates;

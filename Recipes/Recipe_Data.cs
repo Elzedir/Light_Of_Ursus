@@ -6,7 +6,7 @@ using Station;
 using Tools;
 using UnityEngine;
 
-namespace Recipe
+namespace Recipes
 {
     [Serializable]
     public class Recipe_Data : Data_Class
@@ -139,6 +139,8 @@ namespace Recipe
         public readonly RecipeName RecipeName;
         public          int        CurrentProgress;
 
+        // This is still only references, change it so that it creates new instances of the objects.
+        
         public string                    RecipeDescription   => RecipeData.RecipeDescription;
         public int                       RequiredProgress    => RecipeData.RequiredProgress;
         public List<Item>                RequiredIngredients => RecipeData.RequiredIngredients;
@@ -147,7 +149,7 @@ namespace Recipe
         public List<Item>                RecipeProducts      => RecipeData.RecipeProducts;
 
         Recipe_Data _recipeData;
-        Recipe_Data RecipeData => _recipeData ??= Recipe_Manager.GetRecipe_Master(RecipeName);
+        public Recipe_Data RecipeData => _recipeData ??= Recipe_Manager.GetRecipe_Master(RecipeName);
             
         public Recipe(RecipeName recipeName)
         {

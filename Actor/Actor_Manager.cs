@@ -11,7 +11,7 @@ using Items;
 using Jobs;
 using Managers;
 using Personality;
-using Recipe;
+using Recipes;
 using Tools;
 using UnityEngine;
 

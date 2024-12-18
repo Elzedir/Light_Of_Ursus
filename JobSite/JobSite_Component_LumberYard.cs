@@ -18,7 +18,7 @@ namespace JobSite
             SetIdealRatio(3f);
 
             var producedItems = JobSiteData.AllStationsInJobSite.Values
-                                           .SelectMany(s => s.StationData.ProductionData.ActualProductionRatePerHour)
+                                           .SelectMany(s => s.Station_Data.ProductionData.ActualProductionRatePerHour)
                                            .ToList();
 
             var mergedItems = producedItems
@@ -75,7 +75,7 @@ namespace JobSite
                 _assignAllEmployeesToStations(combination);
 
                 var estimatedProduction = JobSiteData.AllStationsInJobSite.Values
-                                                     .SelectMany(s => s.StationData.ProductionData.GetEstimatedProductionRatePerHour())
+                                                     .SelectMany(s => s.Station_Data.ProductionData.GetEstimatedProductionRatePerHour())
                                                      .ToList();
 
                 var mergedEstimatedProduction = estimatedProduction

@@ -16,41 +16,41 @@ namespace WorkPosts
         Station_Component        _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(_stationID);
 
-        public uint           CurrentWorkerID;
+        [SerializeField] uint           _currentWorkerID;
         Actor_Component        _currentWorker;
-        public Actor_Component CurrentWorker => _currentWorker ??= Actor_Manager.GetActor_Component(CurrentWorkerID);
-        public bool            HasWorker()   => CurrentWorkerID != 0;
+        public Actor_Component CurrentWorker => _currentWorker ??= Actor_Manager.GetActor_Component(_currentWorkerID);
+        
         public bool            IsWorkerMovingToWorkPost;
 
         public WorkPost_Data(uint workPostID, uint stationID, uint currentWorkerID = 0)
         {
             WorkPostID      = workPostID;
             _stationID      = stationID;
-            CurrentWorkerID = currentWorkerID;
+            _currentWorkerID = currentWorkerID;
         }
 
         public void AddWorkerToWorkPost(uint workerID)
         {
-            if (CurrentWorkerID != 0)
+            if (_currentWorkerID != 0)
             {
                 RemoveCurrentWorkerFromWorkPost();
-                Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {CurrentWorkerID} with new Worker {workerID}");
+                Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {workerID}");
             }
             
             IsWorkerMovingToWorkPost = false;
-            CurrentWorkerID              = workerID;
+            _currentWorkerID              = workerID;
         }
 
         public void RemoveCurrentWorkerFromWorkPost()
         {
-            if (CurrentWorkerID == 0)
+            if (_currentWorkerID == 0)
             {
                 Debug.Log($"WorkPost does not have current Worker.");
                 return;
             }
 
             CurrentWorker.ActorData.CareerData.StopCurrentJob();
-            CurrentWorkerID              = 0;
+            _currentWorkerID              = 0;
             _currentWorker                = null;
             IsWorkerMovingToWorkPost = false;
         }
@@ -68,7 +68,7 @@ namespace WorkPosts
                     {
                         $"WorkPost ID: {WorkPostID}",
                         $"StationID: {_stationID}",
-                        $"CurrentWorkedID: {CurrentWorkerID}",
+                        $"CurrentWorkedID: {_currentWorkerID}",
                         $"ISWorkingMovingTowardsWorkPost: {IsWorkerMovingToWorkPost}"
                     }));
             }
@@ -84,13 +84,13 @@ namespace WorkPosts
         }
     }
     
-    public class WorkPost_Position
+    public class WorkPost_TransformValue
     {
         public Vector3 Position;
         public Quaternion Rotation;
         public Vector3 Scale;
         
-        public WorkPost_Position(Vector3 position, Quaternion rotation, Vector3 scale)
+        public WorkPost_TransformValue(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             Position = position;
             Rotation = rotation;
