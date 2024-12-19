@@ -16,7 +16,7 @@ namespace Station
         public override StationType      StationType          => StationType.Resource;
         public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Logger;
 
-        protected override RecipeName       _defaultProduct       => RecipeName.Log;
+        public override RecipeName       DefaultProduct       => RecipeName.Log;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
         public override List<uint>       AllowedStoredItemIDs { get; } = new();
         public override List<uint>       DesiredStoredItemIDs { get; } = new();
@@ -29,29 +29,6 @@ namespace Station
             JobName.Vendor
         };
 
-        protected override uint _operatingAreaCount => 4;
-
-        protected override WorkPost_Component _createOperatingArea(uint operatingAreaID)
-        {
-            var operatingAreaComponent =
-                new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<WorkPost_Component>();
-            operatingAreaComponent.transform.SetParent(transform);
-
-            switch (operatingAreaID)
-            {
-                
-                default:
-                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {_operatingAreaCount}.");
-                    break;
-            }
-
-            var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
-            operatingArea.isTrigger = true;
-            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, Station_Data.StationID), operatingArea);
-
-            return operatingAreaComponent;
-        }
-
         protected override void _initialiseStartingInventory()
         {
             if (Station_Data.InventoryData.AllInventoryItems.Count == 0)
@@ -60,7 +37,7 @@ namespace Station
             }
         }
 
-        protected override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
             {
@@ -99,7 +76,7 @@ namespace Station
             _onCraftItem(yield);
         }
 
-        protected override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
+        public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
         {
             return new List<Item>();
 
@@ -112,7 +89,7 @@ namespace Station
             yield return null;
         }
 
-        protected override List<Item> GetYield(List<Item> products, Actor_Component actor)
+        public override List<Item> GetYield(List<Item> products, Actor_Component actor)
         {
             return new List<Item> { new Item(1100, 1) }; // For now
 

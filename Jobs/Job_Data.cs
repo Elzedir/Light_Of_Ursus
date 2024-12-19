@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Jobs
 {
@@ -69,26 +70,27 @@ namespace Jobs
     [Serializable]
     public class Job
     {
-        public readonly  JobName JobName;
-        [SerializeField] uint    _stationID;
-        public           uint    StationID                    => _stationID;
-        public           void    SetStationID(uint stationID) => _stationID = stationID;
-        
-        [SerializeField] uint _operatingAreaID;
-        public           uint OperatingAreaID                          => _operatingAreaID;
-        public           void SetOperatingAreaID(uint operatingAreaID) => _operatingAreaID = operatingAreaID;
+        public readonly JobName JobName;
+        public          uint    StationID;
+        public          uint    WorkPostID;
+
+        public void SetStationAndWorkPostID((uint StationID, uint WorkPostID) stationAndWorkPostID)
+        {
+            StationID  = stationAndWorkPostID.StationID;
+            WorkPostID = stationAndWorkPostID.WorkPostID;
+        }
         
         public ActivityPeriod ActivityPeriod;
 
         Job_Data                    _job_Data;
-        Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Master(JobName);
+        public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Master(JobName);
         public HashSet<JobTaskName> JobTasks => Job_Data.JobTasks;
         
-        public Job(JobName jobName, uint stationID, uint operatingAreaID)
+        public Job(JobName jobName, uint stationID, uint workPostID)
         {
-            JobName          = jobName;
-            _stationID       = stationID;
-            _operatingAreaID = operatingAreaID;
+            JobName    = jobName;
+            StationID  = stationID;
+            WorkPostID = workPostID;
         }
         
         // public IEnumerator PerformJob(ActorComponent actor)

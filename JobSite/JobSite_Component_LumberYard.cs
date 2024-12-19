@@ -17,7 +17,7 @@ namespace JobSite
             // Temporary, maybe change to cost of items over product of items
             SetIdealRatio(3f);
 
-            var producedItems = JobSiteData.AllStationsInJobSite.Values
+            var producedItems = JobSiteData.AllStationComponents.Values
                                            .SelectMany(s => s.Station_Data.ProductionData.ActualProductionRatePerHour)
                                            .ToList();
 
@@ -74,7 +74,7 @@ namespace JobSite
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = JobSiteData.AllStationsInJobSite.Values
+                var estimatedProduction = JobSiteData.AllStationComponents.Values
                                                      .SelectMany(s => s.Station_Data.ProductionData.GetEstimatedProductionRatePerHour())
                                                      .ToList();
 

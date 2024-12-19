@@ -35,8 +35,7 @@ namespace Station
                                 workPostID: 4,
                                 stationID: 1)
                         }
-                    },
-                    workPostWorkers: new Dictionary<uint, uint>())
+                    })
             },
             {
                 2, new Station_Data(
@@ -66,8 +65,7 @@ namespace Station
                                 workPostID: 8,
                                 stationID: 2)
                         }
-                    },
-                    workPostWorkers: new Dictionary<uint, uint>())
+                    })
             },
             {
                 3, new Station_Data(
@@ -97,8 +95,7 @@ namespace Station
                                 workPostID: 12,
                                 stationID: 3)
                         }
-                    },
-                    workPostWorkers: new Dictionary<uint, uint>())
+                    })
             }
         };
     }

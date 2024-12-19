@@ -50,8 +50,8 @@ namespace WorkPosts
             }
 
             CurrentWorker.ActorData.CareerData.StopCurrentJob();
-            _currentWorkerID              = 0;
-            _currentWorker                = null;
+            _currentWorkerID         = 0;
+            _currentWorker           = null;
             IsWorkerMovingToWorkPost = false;
         }
         

@@ -6,6 +6,7 @@ using Actor;
 using City;
 using EmployeePosition;
 using Items;
+using Jobs;
 using Managers;
 using Recipes;
 using Station;
@@ -32,41 +33,44 @@ namespace JobSite
         public string JobsiteDescription;
         public uint   OwnerID;
 
-        List<uint>              _allEmployeeIDs => ;
+        List<uint> _allEmployeeIDs;
             
             // Change to all current wokrers. AllStationsInJobSite.Values.SelectMany(station => station.Station_Data.AllWorkPost_Data.Values.Select(workPost => workPost.CurrentWorkerID)).ToList();;
         Dictionary<uint, Actor_Component>        _allEmployees;
         public Dictionary<uint, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
         
         int                                 _currentAllStationsLength;
-        Dictionary<uint, Station_Component> _allStationsInJobSite;
-        public Dictionary<uint, Station_Component> AllStationsInJobSite
+        // Call when a new city is formed.
+        public void                         RefreshAllStations() => _currentAllStationsLength = 0;
+        Dictionary<uint, Station_Component> _allStation_Components;
+        public Dictionary<uint, Station_Component> AllStationComponents
         {
             get
             {
-                if (_allStationsInJobSite is not null && _allStationsInJobSite.Count != 0 && _allStationsInJobSite.Count == _currentAllStationsLength) return _allStationsInJobSite;
+                if (_allStation_Components is not null && _allStation_Components.Count != 0 && _allStation_Components.Count == _currentAllStationsLength) return _allStation_Components;
                 
-                _currentAllStationsLength = _allStationsInJobSite?.Count ?? 0;
+                _currentAllStationsLength = _allStation_Components?.Count ?? 0;
                 return JobSite_Component.GetAllStationsInJobSite();
             }
         }
         
-        // Call when a new city is formed.
-        public void RefreshAllStations() => _currentAllStationsLength = 0;
-
-        Dictionary<uint, uint> _allEmployeePositions;
-        public Dictionary<uint, uint> AllEmployeePositions => _allEmployeePositions ??= _populateAllEmployeePositions();
         
-        Dictionary<uint, uint> _populateAllEmployeePositions()
-        {
-            var allEmployeePositions = new Dictionary<uint, uint>();
+        ProductionData        _productionData;
+        public ProductionData ProductionData => _productionData ??= new ProductionData(new List<Item>(), StationID);
 
-            foreach (var station in AllStationsInJobSite)
+        Dictionary<(uint, uint), uint> _workPost_Workers;
+        public Dictionary<(uint StationID, uint WorkPostID), uint> WorkPost_Workers => _workPost_Workers ??= _populateWorkPost_Workers();
+        
+        Dictionary<(uint, uint), uint> _populateWorkPost_Workers()
+        {
+            var allEmployeePositions = new Dictionary<(uint, uint), uint>();
+
+            foreach (var station in AllStationComponents)
             {
-                foreach (var operatingArea in station.Value.AllOperatingAreasInStation)
+                foreach (var workPost in station.Value.Station_Data.AllWorkPost_Data)
                 {
-                    allEmployeePositions.Add(uint.Parse(station.Key.ToString() + operatingArea.WorkPostID.ToString()), 0);
-                    Debug.Log(uint.Parse(station.Key.ToString() + operatingArea.WorkPostID.ToString()));
+                    allEmployeePositions.Add((station.Key, workPost.Key), 0);
+                    Debug.Log((station.Key, workPost.Key));
                 }
             }
 
@@ -116,14 +120,14 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
-            foreach (var station in AllStationsInJobSite
+            foreach (var station in AllStationComponents
                          .Where(station_Component => !AllStationIDs.Contains(station_Component.Key)))
             {
                 Debug.Log($"Station_Component: {station.Value?.Station_Data?.StationID}: {station.Value?.Station_Data?.StationName} doesn't exist in DataList");
             }
             
             foreach (var stationID in AllStationIDs
-                         .Where(stationID => !AllStationsInJobSite.ContainsKey(stationID)))
+                         .Where(stationID => !AllStationComponents.ContainsKey(stationID)))
             {
                 Debug.LogError($"Station with ID {stationID} doesn't exist physically in JobSite: {JobSiteID}: {JobSiteName}");
             }
@@ -138,7 +142,7 @@ namespace JobSite
 
         void _registerStations()
         {
-            foreach (var station in AllStationsInJobSite.Values)
+            foreach (var station in AllStationComponents.Values)
             {
                 Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.Station_Data.OnTick);
                 station.Station_Data.CurrentTickRateName = TickRateName.OneSecond;
@@ -315,28 +319,34 @@ namespace JobSite
         public bool AddEmployeeToStation(uint employeeID, Station_Component station)
         {
             RemoveEmployeeFromCurrentStation(employeeID);
-
-            if (station.Station_Data.Worker.Contains(employeeID))
-            {
-                Debug.Log($"EmployeeID: {employeeID} is already an operator at StationID: {station.StationID}");
-                return false;
-            }
-
-            if (!station.Station_Data.AddOperatorToStation(employeeID))
-            {
-                Debug.Log($"Couldn't add employee to station: {station.StationID}");
-                return false;
-            }
-
+            
             var actorCurrentJob = Actor_Manager.GetActor_Data(employeeID)?.CareerData?.CurrentJob;
 
             if (actorCurrentJob is null)
             {
-                Debug.LogWarning($"Actor Current Job for employeeID: {employeeID} does is null.");
+                Debug.LogWarning($"Actor Current Job for employeeID: {employeeID} is null. Needs to get a job first.");
+                // Try implement getting a job here.
                 return false;
             }
-                
-            actorCurrentJob.SetStationID(station.StationID);
+
+            if (_addWorkerToStation(employeeID, station, actorCurrentJob)) return true;
+            
+            Debug.Log($"Couldn't add employee to station: {station.StationID}");
+            return false;
+        }
+
+        bool _addWorkerToStation(uint workerID, Station_Component station, Job actorCurrentJob)
+        {
+            var openWorkPost_Data = station.Station_Data.GetOpenWorkPost()?.WorkPostData;
+            
+            if (openWorkPost_Data is null)
+            {
+                Debug.Log($"No open WorkPosts found for Worker: {workerID}");
+                return false;
+            }
+            
+            WorkPost_Workers[(station.StationID, openWorkPost_Data.WorkPostID)] = workerID;
+            openWorkPost_Data.AddWorkerToWorkPost(workerID);
 
             return true;
         }
@@ -349,13 +359,13 @@ namespace JobSite
                     Station_Manager.GetStation_Data(Actor_Manager.GetActor_Data(employeeID).CareerData.CurrentJob
                                                                  .StationID);
 
-                if (!station.RemoveOperatorFromStation(employeeID))
+                if (!RemoveWorkerFromStation(employeeID))
                 {
                     Debug.Log($"Couldn't remove employee from station: {station.StationID}");
                     return false;
                 }
 
-                Actor_Manager.GetActor_Data(employeeID)?.CareerData.CurrentJob.SetStationID(0);
+                Actor_Manager.GetActor_Data(employeeID)?.CareerData.CurrentJob.SetStationAndWorkPostID((0,0));
 
                 return true;
             }
@@ -403,6 +413,80 @@ namespace JobSite
                 return false;
             }
         }
+        
+        public uint GetWorkPostIDFromWorkerID(uint workerID)
+        {
+            return WorkPost_Workers.FirstOrDefault(x => x.Value == workerID).Key.WorkPostID;
+        }
+
+        public bool RemoveWorkerFromStation(uint operatorID)
+        {
+            var stationWorkPostID = WorkPost_Workers.FirstOrDefault(x => x.Value == operatorID).Key;
+            
+            if (stationWorkPostID == (0, 0))
+            {
+                Debug.Log($"Operator {operatorID} not found in operating areas.");
+                return false;
+            }
+            
+            AllStationComponents[stationWorkPostID.StationID].Station_Data.AllWorkPost_Data[stationWorkPostID.WorkPostID].RemoveCurrentWorkerFromWorkPost();
+            WorkPost_Workers[stationWorkPostID] = 0;
+            
+            return true;
+        }
+        
+        public void RemoveAllWorkersFromStation(Station_Component station)
+        {
+            foreach (var workPost in station.Station_Data.AllWorkPost_Components.Values)
+            {
+                workPost.WorkPostData.RemoveCurrentWorkerFromWorkPost();
+            }
+        }
+
+        public void RemoveAllWorkersFromAllStations()
+        {
+            foreach (var station in AllStationComponents.Values)
+            {
+                RemoveAllWorkersFromStation(station);
+            }
+        }
+        
+        public List<Item> GetEstimatedProductionRatePerHour()
+        {
+            float totalProductionRate = 0;
+            // Then modify production rate by any area modifiers (Land type, events, etc.)
+
+            foreach (var kvp in WorkPost_Workers)
+            {
+                var station_Data = AllStationComponents[kvp.Key.StationID].Station_Data;
+                
+                var individualProductionRate = station_Data.BaseProgressRatePerHour;
+
+                foreach (var vocation in station_Data.StationProgressData.CurrentProduct.RequiredVocations)
+                {
+                    individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationData
+                                                             .GetProgress(vocation);
+                }
+
+                totalProductionRate += individualProductionRate;
+                // Don't forget to add in estimations for travel time.
+            }
+
+            float requiredProgress         = StationProgressData.CurrentProduct.RequiredProgress;
+            var   estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
+
+            var estimatedProductionItems = new List<Item>();
+
+            for (var i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
+            {
+                foreach (var item in StationProgressData.CurrentProduct.RecipeProducts)
+                {
+                    estimatedProductionItems.Add(new Item(item));
+                }
+            }
+
+            return estimatedProductionItems;
+        }
 
         // public void AllocateEmployeesToStations()
         // {
@@ -432,16 +516,8 @@ namespace JobSite
         //     Debug.Log("Adjusted production to balance the ratio.");
         // }
         
-        public List<Item> GetEstimatedProductionRatePerHour()
-        {
-            foreach (var station in AllStationsInJobSite.Values)
-            {
-                station.Station_Data.GetEstimatedProductionRatePerHour();
-            }
-        }
-        
         public Station_Component GetNearestRelevantStationInJobsite(Vector3 position, List<StationName> stationNames)
-            => AllStationsInJobSite
+            => AllStationComponents
                .Where(station => stationNames.Contains(station.Value.StationName))
                .OrderBy(station => Vector3.Distance(position, station.Value.transform.position))
                .FirstOrDefault().Value;
@@ -449,7 +525,7 @@ namespace JobSite
         public void FillEmptyJobsitePositions()
         {
             var prosperityRatio      = ProsperityData.GetProsperityPercentage();
-            var maxOperatorCount     = AllStationsInJobSite.Values.SelectMany(station => station.Station_Data.AllWorkPost_Components).ToList().Count;
+            var maxOperatorCount     = AllStationComponents.Values.SelectMany(station => station.Station_Data.AllWorkPost_Components).ToList().Count;
             var desiredOperatorCount = Mathf.RoundToInt(maxOperatorCount * prosperityRatio);
 
             if (_allEmployees.Count >= maxOperatorCount)
@@ -470,14 +546,21 @@ namespace JobSite
             {
                 var allPositionsFilled = true;
 
-                foreach (var station in AllStationsInJobSite.Values)
+                foreach (var station in AllStationComponents.Values)
                 {
+                    var allStationWorkPosts = WorkPost_Workers.Select(kvp => kvp.Key)
+                                                              .Where(kvp => kvp.StationID == station.StationID)
+                                                              .ToList();
+
+                    var allStationWorkers = allStationWorkPosts.Select(workPost => WorkPost_Workers[workPost])
+                                                               .Where(workerID => workerID != 0).ToList();
+                    
                     if (iteration >= desiredOperatorCount - _allEmployees.Count)
                     {
                         break;
                     }
 
-                    if (station.Station_Data.WorkPost_Workers.Count >= station.Station_Data.AllWorkPost_Components.Count)
+                    if (allStationWorkers.Count >= station.Station_Data.AllWorkPost_Components.Count)
                     {
                         //Debug.Log($"All operating areas are already filled for StationID: {stationID}");
                         continue;
@@ -549,6 +632,18 @@ namespace JobSite
             {
                 Debug.LogError("Error in Employee Data");
             }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Station Operators",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: WorkPost_Workers.Select(operatorID => $"{operatorID}").ToList()));
+            }
+            catch
+            {
+                Debug.LogError("Error: Current Operators not found.");
+            }
 
             try
             {
@@ -576,11 +671,60 @@ namespace JobSite
             {
                 Debug.LogError("Error in Order Data");
             }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Production Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"All Produced Items: {string.Join(", ", ProductionData.AllProducedItems)}",
+                        $"Estimated Production Rate Per Hour: {string.Join(", ", ProductionData.EstimatedProductionRatePerHour)}",
+                        $"Actual Production Rate Per Hour: {string.Join(", ", ProductionData.ActualProductionRatePerHour)}",
+                        $"Station ID: {ProductionData.StationID}"
+                    }));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: Production Data not found.");
+                }
+            }
 
             return new Data_Display(
                 title: "JobSite Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
                 subData: new List<Data_Display>(dataObjects));
+        }
+    }
+    
+    [Serializable]
+    public class ProductionData
+    {
+        public List<Item> AllProducedItems;
+        public List<Item> EstimatedProductionRatePerHour;
+        public List<Item> ActualProductionRatePerHour;
+        public uint       StationID;
+
+        Station_Component        _station;
+        public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
+
+        public ProductionData(List<Item> allProducedItems, uint stationID)
+        {
+            AllProducedItems = allProducedItems;
+            StationID        = stationID;
+        }
+
+        public List<Item> GetActualProductionRatePerHour()
+        {
+            return ActualProductionRatePerHour = Station.GetActualProductionRatePerHour();
+        }
+
+        public List<Item> GetEstimatedProductionRatePerHour()
+        {
+            return EstimatedProductionRatePerHour = Station.Station_Data.GetEstimatedProductionRatePerHour();
         }
     }
 }

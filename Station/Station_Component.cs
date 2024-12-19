@@ -31,19 +31,16 @@ namespace Station
 
         //Maybe change this so that it checks if there is a worker in the station rather than just assigned to it,
         // since the worker could be away from the post.
-        public bool IsStationBeingOperated =>
-            Station_Data.AllWorkPost_Data.Values.Any(workPost => workPost.CurrentWorkerID != 0);
 
         public float InteractRange { get; private set; }
     
         public abstract         EmployeePositionName       CoreEmployeePositionName { get; }
-        protected abstract      RecipeName                 _defaultProduct          { get; }
+        public abstract      RecipeName                 DefaultProduct          { get; }
         public abstract         List<RecipeName>           DefaultAllowedRecipes           { get; }
         public abstract         List<uint>                 AllowedStoredItemIDs     { get; }
         public abstract         List<uint>                 DesiredStoredItemIDs     { get; }
         public         abstract List<JobName>              AllowedJobs              { get; }
-
-        const    float      _baseProgressRatePerHour = 5;
+        
         readonly List<Item> _currentProductsCrafted  = new();
     
         PriorityComponent_Station        _priorityComponent;
@@ -66,29 +63,8 @@ namespace Station
         {
             Station_Data.InitialiseStationData();
 
-            _populateWorkPlace_Components();
-
             SetInteractRange();
             _initialiseStartingInventory();
-        }
-    
-        public void RemoveAllWorkersFromStation()
-        {
-            foreach (var workPost in Station_Data.AllWorkPost_Components.Values)
-            {
-                workPost.WorkPostData.RemoveCurrentWorkerFromWorkPost();
-            }
-        }
-
-        public void RemoveWorkerFromWorkPost(uint workerID)
-        {
-            if (Station_Data.AllWorkPost_Data.Values.Any(area => area.CurrentWorkerID == workerID))
-            {
-                Station_Data.AllWorkPost_Data.Values.FirstOrDefault(area => area.CurrentWorkerID == workerID)?.RemoveCurrentWorkerFromWorkPost();
-                return;
-            }
-
-            Debug.Log($"Operator {workerID} not found in operating areas.");
         }
 
         protected abstract void _initialiseStartingInventory();

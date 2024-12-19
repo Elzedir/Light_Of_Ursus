@@ -18,41 +18,15 @@ namespace Station
         public          float            PercentageStorageFilled    = 0;
         public          float            PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
 
-        protected override RecipeName       _defaultProduct       => RecipeName.Plank;
+        public override RecipeName       DefaultProduct       => RecipeName.Plank;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Plank };
         public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100 };
-        public override List<EmployeePositionName> AllowedEmployeePositions { get; } = new()
-        {
-            EmployeePositionName.Intern
-        };
         public override List<JobName> AllowedJobs { get; } = new()
         {
             JobName.Sawmiller,
             JobName.Hauler
         };
-
-        protected override uint _operatingAreaCount => 4;
-
-        protected override WorkPost_Component _createOperatingArea(uint operatingAreaID)
-        {
-            var operatingAreaComponent = new GameObject($"OperatingArea_{operatingAreaID}").AddComponent<WorkPost_Component>();
-            operatingAreaComponent.transform.SetParent(transform);
-        
-            switch(operatingAreaID)
-            {
-                
-                default:
-                    Debug.Log($"OperatingAreaID: {operatingAreaID} greater than OperatingAreaCount: {_operatingAreaCount}.");
-                    break;
-            }
-
-            var operatingArea = operatingAreaComponent.gameObject.AddComponent<BoxCollider>();
-            operatingArea.isTrigger = true;
-            operatingAreaComponent.Initialise(new WorkPost_Data(operatingAreaID, Station_Data.StationID), operatingArea);
-
-            return operatingAreaComponent;
-        }
 
         protected override void _initialiseStartingInventory() { }
 
@@ -62,7 +36,7 @@ namespace Station
             // Open inventory
         }
 
-        protected override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
             if (!DefaultAllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
@@ -81,14 +55,14 @@ namespace Station
             _onCraftItem(yield);
         }
 
-        protected override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
+        public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
         {
             return ingredients;
 
             // Base resource cost on actor relevant skill
         }
 
-        protected override List<Item> GetYield(List<Item> products, Actor_Component actor)
+        public override List<Item> GetYield(List<Item> products, Actor_Component actor)
         {
             return products; // For now
 

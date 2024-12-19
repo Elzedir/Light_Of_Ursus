@@ -64,12 +64,9 @@ namespace JobSite
         void _onTick()
         {
             if (!_initialised) return;
-            
-            foreach (var product in JobSiteData.AllStationsInJobSite.Values.Select(s => s.Station_Data.ProductionData))
-            {
-                product.GetEstimatedProductionRatePerHour();
-                product.GetActualProductionRatePerHour();
-            }
+
+            JobSiteData.ProductionData.GetEstimatedProductionRatePerHour();
+            JobSiteData.ProductionData.GetActualProductionRatePerHour();
 
             _compareProductionOutput();
         }
@@ -82,34 +79,36 @@ namespace JobSite
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
             var highestPriorityJob = PriorityComponent.GetHighestSpecificPriority(
-                actor.ActorData.CareerData.AllJobs.Select(j => (uint)j).ToList(), stationID);
+                actor.ActorData.CareerData.AllJobs.Select(jobName => (uint)jobName).ToList(), stationID);
 
             if (highestPriorityJob == null) return false;
 
             var jobName = (JobName)highestPriorityJob.PriorityID;
 
             var relevantStations       = _getOrderedRelevantStationsForJob(jobName, actor);
-            
-            var relevantStation = relevantStations.FirstOrDefault();
-            
-            if (relevantStation is null)
+
+            foreach (var station in relevantStations)
             {
-                Debug.LogError($"No relevant stations found for job: {jobName}.");
-                return false;
+                if (!JobSiteData.AddEmployeeToStation(actor.ActorID, station))
+                {
+                    Debug.LogWarning($"Station: {station.StationName} is full.");
+                    continue;
+                }
+
+                var job = new Job(jobName, station.StationID, JobSiteData.GetWorkPostIDFromWorkerID(actor.ActorID));
+
+                actor.ActorData.CareerData.SetCurrentJob(job);
+
+                return true;    
             }
-            
-            var relevantOperatingArea = relevantStation.GetOpenWorkPost(actor);
 
-            var job = new Job(jobName, relevantStation.StationID, relevantOperatingArea.WorkPostID);
-
-            actor.ActorData.CareerData.SetCurrentJob(job);
-
-            return true;
+            Debug.LogWarning($"No relevant stations found for job: {jobName}.");
+            return false;
         }
 
         List<Station_Component> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
         {
-            var relevantStations = JobSiteData.AllStationsInJobSite.Values
+            var relevantStations = JobSiteData.AllStationComponents.Values
                                                        .Where(station => station.AllowedJobs.Contains(jobName))
                                                        .ToList();
 
@@ -123,39 +122,18 @@ namespace JobSite
             return null;
         }
 
-        public List<EmployeePositionName> GetMinimumEmployeePositions()
-        {
-            HashSet<EmployeePositionName> employeePositions = new();
-
-            foreach (var station in JobSiteData.AllStationsInJobSite.Values)
-            {
-                foreach (var position in station.AllowedEmployeePositions)
-                {
-                    employeePositions.Add(position);
-                }
-            }
-
-            return employeePositions.ToList();
-        }
-
         protected void _assignAllEmployeesToStations(Dictionary<uint, Actor_Component> allEmployees)
         {
-            foreach (var station in JobSiteData.AllStationsInJobSite.Values)
-            {
-                station.RemoveAllWorkersFromStation();
-            }
+            JobSiteData.RemoveAllWorkersFromAllStations();
 
             var tempEmployees = allEmployees.Select(employee => employee.Value.ActorData).ToList();
 
-            foreach (var station in JobSiteData.AllStationsInJobSite.Values)
+            foreach (var station in JobSiteData.AllStationComponents.Values)
             {
-                var allowedPositions = station.AllowedEmployeePositions;
                 var employeesForStation = tempEmployees
-                                          .Where(e => allowedPositions.Contains(e.CareerData.EmployeePositionName))
-                                          .OrderByDescending(e => e.CareerData.EmployeePositionName)
-                                          .ThenByDescending(e =>
-                                              e.VocationData.GetVocationExperience(
-                                                  _getRelevantVocation(e.CareerData.EmployeePositionName)))
+                                          .OrderByDescending(actor_Data =>
+                                              actor_Data.VocationData.GetVocationExperience(
+                                                  _getRelevantVocation(actor_Data.CareerData.EmployeePositionName)))
                                           .ToList();
 
                 foreach (var employee in employeesForStation)
@@ -200,12 +178,12 @@ namespace JobSite
 
         List<Station_Component> _relevantStations_Fetch()
         {
-            return JobSiteData.AllStationsInJobSite.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
+            return JobSiteData.AllStationComponents.Values.Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
         }
 
         List<Station_Component> _relevantStations_Deliver(InventoryData inventoryData)
         {
-            return JobSiteData.AllStationsInJobSite.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
+            return JobSiteData.AllStationComponents.Values.Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
                               .ToList();
         }
     }
