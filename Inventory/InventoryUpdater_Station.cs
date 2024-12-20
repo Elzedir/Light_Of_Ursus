@@ -9,11 +9,11 @@ using UnityEngine;
 namespace Inventory
 {
     [Serializable]
-    public class InventoryData_Station : InventoryData
+    public class InventoryUpdater_Station : InventoryUpdater
     {
-        public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station) { }
+        public InventoryUpdater_Station(uint stationID) : base(stationID, ComponentType.Station) { }
         public override ComponentType         ComponentType      => ComponentType.Station;
-        public          InventoryData_Station GetInventoryData() => this;
+        public          InventoryUpdater_Station GetInventoryData() => this;
 
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
         
@@ -79,7 +79,7 @@ namespace Inventory
             return itemsToFetch.Values.ToList();
         }
         
-        public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+        public override List<Item> GetInventoryItemsToDeliver(InventoryUpdater inventory)
         {
             var itemsToDeliver = new List<Item>();
 

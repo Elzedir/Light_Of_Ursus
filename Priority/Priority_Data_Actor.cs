@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityComponent_Actor : PriorityComponent
+    public class PriorityData_Actor : Priority_Data
     {
         public Coroutine                CurrentActionCoroutine { get; private set; }
         public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
@@ -74,7 +74,7 @@ namespace Priority
         public    uint           ActorID => _actorReferences.ActorID;
         protected Actor_Component _actor  => _actorReferences.Actor;
 
-        public PriorityComponent_Actor(uint actorID)
+        public PriorityData_Actor(uint actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
 

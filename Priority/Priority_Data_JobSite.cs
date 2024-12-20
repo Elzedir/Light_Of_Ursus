@@ -11,9 +11,9 @@ using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityComponent_JobSite : PriorityComponent
+    public class PriorityData_JobSite : Priority_Data
     {
-        public PriorityComponent_JobSite(uint jobsiteID)
+        public PriorityData_JobSite(uint jobsiteID)
         {
             _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
         }
@@ -50,8 +50,11 @@ namespace Priority
 
         protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
         {
-            return priorityIDs.Where(priorityID =>
-                Station_Manager.GetStation_Component(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
+            if (limiterID != 0)
+                return priorityIDs.Where(priorityID =>
+                    Station_Manager.GetStation_Component(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
+            
+            return priorityIDs;
         }
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(

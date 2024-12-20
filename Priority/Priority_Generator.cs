@@ -224,9 +224,9 @@ namespace Priority
             var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
             var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
             var inventory_Hauler =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryData;
+                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryUpdater;
             var inventory_Target =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryData;
+                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryUpdater;
 
             if (maxPriority == 0)
             {
@@ -296,9 +296,9 @@ namespace Priority
             var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
             var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
             var inventory_Hauler =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryData;
+                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryUpdater;
             var inventory_Target =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryData;
+                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryUpdater;
 
             var currentStationType =
                 existingPriorityParameters.TryGetValue((uint)PriorityParameterName.CurrentStationType,

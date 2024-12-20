@@ -2,16 +2,15 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using Inventory;
-using Managers;
 using UnityEngine;
 
 namespace Priority
 {
-    public abstract class PriorityData
+    public abstract class Priority_Data
     {
         public ComponentReference Reference { get; }
 
-        protected PriorityData (uint componentID, ComponentType componentType)
+        protected Priority_Data (uint componentID, ComponentType componentType)
         {
             switch(componentType)
             {

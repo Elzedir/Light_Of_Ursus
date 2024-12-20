@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using Managers;
 using TickRates;
-using Tools;
 using UnityEngine;
 
 namespace Priority
@@ -66,6 +64,8 @@ namespace Priority
             foreach (var priority in permittedPriorities)
             {
                 var priorityElement = PriorityQueue.Peek(priority);
+                
+                if (priorityElement is null) continue;
                 
                 if (priorityElement.PriorityValue >= highestPriority.PriorityValue)
                 {
