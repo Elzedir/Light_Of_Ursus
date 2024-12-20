@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using Tools;
 using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityData_Actor : Priority_Data
+    public class Priority_Data_Actor : Priority_Data
     {
         public Coroutine                CurrentActionCoroutine { get; private set; }
         public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
@@ -27,6 +28,24 @@ namespace Priority
 
             _actor.StartCoroutine(_performCurrentActionFromStart());
         }
+        
+        public override void RegenerateAllPriorities(bool includeOptionalPriorities = false)
+        {
+            if (!includeOptionalPriorities)
+            {
+                foreach (var actorAction in Priority_Manager.BasePriorityActorActions)
+                {
+                    _regeneratePriority((uint)actorAction);
+                }
+                
+                return;
+            }
+            
+            foreach (ActorActionName actorAction in Enum.GetValues(typeof(ActorActionName)))
+            {
+                _regeneratePriority((uint)actorAction);
+            }
+        }
 
         protected override void _regeneratePriority(uint priorityID)
         {
@@ -44,7 +63,7 @@ namespace Priority
             }
 
             var priorityValue =
-                PriorityGenerator.GeneratePriority(_priorityType, priorityID, _getPriorityParameters(priorityID, null));
+                Priority_Generator.GeneratePriority(_priorityType, priorityID, _getPriorityParameters(priorityID, null));
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
@@ -74,7 +93,7 @@ namespace Priority
         public    uint           ActorID => _actorReferences.ActorID;
         protected Actor_Component _actor  => _actorReferences.Actor;
 
-        public PriorityData_Actor(uint actorID)
+        public Priority_Data_Actor(uint actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
 
@@ -166,5 +185,36 @@ namespace Priority
                 }
             },
         };
+
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Base Priority Data",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: new List<string>
+                    {
+                        $"Actor ID: {ActorID}",
+                        $"Actor Action: {_currentActorAction}",
+                        $"Is Performing Action: {IsPerformingAction}",
+                        $"Current Action Coroutine: {CurrentActionCoroutine}",
+                    }));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error in Base Priority Data");
+                }
+            }
+
+            return new Data_Display(
+                title: "Priority Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
+        }
     }
 }

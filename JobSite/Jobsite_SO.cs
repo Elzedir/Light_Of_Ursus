@@ -14,11 +14,22 @@ namespace JobSite
     {
         public Object_Data<JobSite_Data>[] JobSites                             => Objects_Data;
         public Object_Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetObject_Data(jobSiteID);
-        public Dictionary<uint, JobSite_Component> JobSiteComponents = new();
+        Dictionary<uint, JobSite_Component>     _jobSite_Components;
+        public Dictionary<uint, JobSite_Component> JobSite_Components => _jobSite_Components ??= _getExistingJobSite_Components();
+        
+        Dictionary<uint, JobSite_Component> _getExistingJobSite_Components()
+        {
+            return FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None)
+                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                  .ToDictionary(
+                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
+                                      station => station
+                                  );
+        }
 
         public JobSite_Component GetJobSite_Component(uint jobSiteID)
         {
-            if (JobSiteComponents.TryGetValue(jobSiteID, out var component))
+            if (JobSite_Components.TryGetValue(jobSiteID, out var component))
             {
                 return component;
             }   
@@ -38,13 +49,8 @@ namespace JobSite
             {
                 Debug.Log("No Default JobSites Found");
             }
-            
-            var existingJobSites = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                     .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
-                                     );
+
+            var existingJobSites = _getExistingJobSite_Components();
             
             foreach (var jobSite in JobSites)
             {
@@ -52,7 +58,7 @@ namespace JobSite
                 
                 if (existingJobSites.TryGetValue(jobSite.DataObject.JobSiteID, out var existingJobSite))
                 {
-                    JobSiteComponents[jobSite.DataObject.JobSiteID] = existingJobSite;
+                    JobSite_Components[jobSite.DataObject.JobSiteID] = existingJobSite;
                     existingJobSite.SetJobSiteData(jobSite.DataObject);
                     existingJobSites.Remove(jobSite.DataObject.JobSiteID);
                     continue;

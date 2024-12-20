@@ -33,16 +33,16 @@ namespace EmployeePosition
 
         public bool MeetsRequirements(Actor_Data actorData)
         {
-            return MeetsRequirements(actorData.CareerData)     &&
-                   MeetsRequirements(actorData.CraftingData) &&
-                   MeetsRequirements(actorData.VocationData);
+            return MeetsRequirements(actorData.CareerUpdater)     &&
+                   MeetsRequirements(actorData.CraftingUpdater) &&
+                   MeetsRequirements(actorData.VocationUpdater);
         }
         
-        public bool MeetsRequirements(VocationData vocationData)
+        public bool MeetsRequirements(VocationUpdater vocationUpdater)
         {
             foreach (var requiredVocation in RequiredVocations)
             {
-                if (!vocationData.ActorVocations.TryGetValue(requiredVocation.Key, out var vocation))
+                if (!vocationUpdater.ActorVocations.TryGetValue(requiredVocation.Key, out var vocation))
                 {
                     return false;
                 }
@@ -56,14 +56,14 @@ namespace EmployeePosition
             return true;
         }
         
-        public bool MeetsRequirements(CraftingData craftingData)
+        public bool MeetsRequirements(CraftingUpdater craftingUpdater)
         {
-            return RequiredRecipes.TrueForAll(recipeName => craftingData.KnownRecipes.Contains(recipeName));
+            return RequiredRecipes.TrueForAll(recipeName => craftingUpdater.KnownRecipes.Contains(recipeName));
         }
         
-        public bool MeetsRequirements(CareerData careerData)
+        public bool MeetsRequirements(CareerUpdater careerUpdater)
         {
-            return careerData.CareerName == RequiredCareer;
+            return careerUpdater.CareerName == RequiredCareer;
         }
         
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)

@@ -29,16 +29,16 @@ namespace WorkPosts
             _currentWorkerID = currentWorkerID;
         }
 
-        public void AddWorkerToWorkPost(uint workerID)
+        public void AddWorkerToWorkPost(Actor_Component worker)
         {
             if (_currentWorkerID != 0)
             {
                 RemoveCurrentWorkerFromWorkPost();
-                Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {workerID}");
+                Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {worker.ActorID}");
             }
             
             IsWorkerMovingToWorkPost = false;
-            _currentWorkerID              = workerID;
+            _currentWorkerID              = worker.ActorID;
         }
 
         public void RemoveCurrentWorkerFromWorkPost()
@@ -49,7 +49,7 @@ namespace WorkPosts
                 return;
             }
 
-            CurrentWorker.ActorData.CareerData.StopCurrentJob();
+            CurrentWorker.ActorData.CareerUpdater.StopCurrentJob();
             _currentWorkerID         = 0;
             _currentWorker           = null;
             IsWorkerMovingToWorkPost = false;

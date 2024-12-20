@@ -10,24 +10,24 @@ namespace Actor
     {
         public ActorDataPresetName ActorDataPresetName;
         
-        public CareerData              CareerData;
-        public CraftingData            CraftingData;
-        public VocationData            VocationData;
+        public CareerUpdater              CareerUpdater;
+        public CraftingUpdater            CraftingUpdater;
+        public VocationUpdater            VocationUpdater;
         public StatsAndAbilities       StatsAndAbilities;
-        public InventoryData           InventoryData;
+        public InventoryUpdater           InventoryUpdater;
         public EquipmentData           EquipmentData;
 
-        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, CareerData    careerData = null,
-                                CraftingData        craftingData = null,        VocationData  vocationData = null,
-                                StatsAndAbilities   statsAndAbilities = null,   InventoryData inventoryData = null,
+        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, CareerUpdater    careerUpdater = null,
+                                CraftingUpdater        craftingUpdater = null,        VocationUpdater  vocationUpdater = null,
+                                StatsAndAbilities   statsAndAbilities = null,   InventoryUpdater inventoryUpdater = null,
                                 EquipmentData       equipmentData = null)
         {
             ActorDataPresetName = actorDataPresetName;
-            CareerData          = careerData;
-            CraftingData        = craftingData;
-            VocationData        = vocationData;
+            CareerUpdater          = careerUpdater;
+            CraftingUpdater        = craftingUpdater;
+            VocationUpdater        = vocationUpdater;
             StatsAndAbilities   = statsAndAbilities;
-            InventoryData       = inventoryData;
+            InventoryUpdater       = inventoryUpdater;
             EquipmentData       = equipmentData;
         }
         
@@ -65,11 +65,11 @@ namespace Actor
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
                     {
-                        $"Career Name: {CareerData.CareerName}",
-                        $"Jobs Active: {CareerData.JobsActive}",
-                        $"JobSiteID: {CareerData.JobSiteID}",
-                        $"Employee Position: {CareerData.EmployeePositionName}",
-                        $"Current Job: {CareerData.CurrentJob?.JobName}"
+                        $"Career Name: {CareerUpdater.CareerName}",
+                        $"Jobs Active: {CareerUpdater.JobsActive}",
+                        $"JobSiteID: {CareerUpdater.JobSiteID}",
+                        $"Employee Position: {CareerUpdater.EmployeePositionName}",
+                        $"Current Job: {CareerUpdater.CurrentJob?.JobName}"
                     }
                 ));
             }
@@ -77,8 +77,8 @@ namespace Actor
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(CareerData);
-                    Debug.LogWarning(CareerData?.CurrentJob);
+                    Debug.LogWarning(CareerUpdater);
+                    Debug.LogWarning(CareerUpdater?.CurrentJob);
                 }
             }
             
@@ -87,15 +87,15 @@ namespace Actor
                 dataObjects.Add(new Data_Display(
                     title: "Known Recipes",
                     dataDisplayType: DataDisplayType.Item,
-                    data: CraftingData.KnownRecipes.Select(recipe => $"{recipe}").ToList()
+                    data: CraftingUpdater.KnownRecipes.Select(recipe => $"{recipe}").ToList()
                 ));
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(CraftingData);
-                    Debug.LogWarning(CraftingData?.KnownRecipes);
+                    Debug.LogWarning(CraftingUpdater);
+                    Debug.LogWarning(CraftingUpdater?.KnownRecipes);
                 }
             }
 
@@ -104,15 +104,15 @@ namespace Actor
                 dataObjects.Add(new Data_Display(
                     title: "Vocations",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: VocationData.ActorVocations.Values.Select(vocation => $"{vocation.VocationName}: {vocation.VocationExperience}").ToList()
+                    data: VocationUpdater.ActorVocations.Values.Select(vocation => $"{vocation.VocationName}: {vocation.VocationExperience}").ToList()
                 ));
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(VocationData);
-                    Debug.LogWarning(VocationData?.ActorVocations);
+                    Debug.LogWarning(VocationUpdater);
+                    Debug.LogWarning(VocationUpdater?.ActorVocations);
                 }
             }
             
@@ -121,15 +121,15 @@ namespace Actor
                 dataObjects.Add(new Data_Display(
                     title: "All Inventory Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()
+                    data: InventoryUpdater.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()
                 ));
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(InventoryData);
-                    Debug.LogWarning(InventoryData?.AllInventoryItems);
+                    Debug.LogWarning(InventoryUpdater);
+                    Debug.LogWarning(InventoryUpdater?.AllInventoryItems);
                 }
             }
 

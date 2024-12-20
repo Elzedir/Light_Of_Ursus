@@ -22,7 +22,7 @@ namespace WorkPosts
         {
             if (WorkPostCollider.isTrigger) return;
             
-            Debug.LogError($"Set IsTrigger to true for {WorkPostID}: {name} BoxCollider");
+            //Debug.LogError($"Set IsTrigger to true for {WorkPostID}: {name} BoxCollider");
             WorkPostCollider.isTrigger = true;
         }
 
@@ -44,7 +44,7 @@ namespace WorkPosts
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationData.GetProgress(vocation);
+                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationUpdater.GetProgress(vocation);
             }
 
             return productionRate;
@@ -58,9 +58,9 @@ namespace WorkPosts
 
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
-            if (actor.ActorData.GameObjectData.ActorTransform.position != position)
+            if (actor.ActorData.GameObjectUpdater.ActorTransform.position != position)
             {
-                actor.ActorData.GameObjectData.ActorTransform.position = position;
+                actor.ActorData.GameObjectUpdater.ActorTransform.position = position;
             }
 
             WorkPostData.IsWorkerMovingToWorkPost = false;

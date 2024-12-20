@@ -7,13 +7,12 @@ using Debuggers;
 using Inventory;
 using Items;
 using Jobs;
-using Managers;
 using Station;
 using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityGenerator
+    public abstract class Priority_Generator
     {
         protected static float _defaultMaxPriority => 10;
 
@@ -160,18 +159,14 @@ namespace Priority
         }
 
         public static float GeneratePriority(PriorityType                              priorityType,
-                                             uint priorityID,
+                                             uint                                      priorityID,
                                              Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
             _generatePriority(priorityType, priorityID, existingPriorityParameters?
-                                            .Select(x => x)
-                                            .ToDictionary(x =>
-                                                (uint)x.Key, x => x.Value));
+                                                        .Select(x => x)
+                                                        .ToDictionary(x =>
+                                                            (uint)x.Key, x => x.Value));
 
-        static float _generatePriority(
-            PriorityType priorityType,
-            uint priorityID,
-            Dictionary<uint, object>
-                existingPriorityParameters)
+        static float _generatePriority(PriorityType priorityType, uint priorityID, Dictionary<uint, object> existingPriorityParameters)
         {
             if (existingPriorityParameters == null)
             {
@@ -204,7 +199,7 @@ namespace Priority
                     return 0;
             }
         }
-        
+
         static float _generatePriority_Jobsite(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
         {
             switch (priorityID)
@@ -374,7 +369,7 @@ namespace Priority
 
         static float _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
         {
-            return 1;
+            return 2;
         }
     }
 

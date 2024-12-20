@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Inventory;
-using Items;
 using JobSite;
 using Recipes;
 using TickRates;
@@ -36,8 +34,8 @@ namespace Station
         JobSite_Component        _jobSite_Component;
         public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         
-        InventoryData _inventoryData;
-        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
+        InventoryUpdater _inventoryUpdater;
+        public InventoryUpdater InventoryUpdater => _inventoryUpdater ??= new InventoryUpdater_Station(StationID);
         
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
@@ -62,15 +60,13 @@ namespace Station
         public void InitialiseStationData()
         {
             var station = Station_Manager.GetStation_Component(StationID);
+            
+            StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
 
-            if (station is null)
-            {
-                Debug.Log($"Station not found for StationID: {StationID}");
-                return;
-            }
+            if (station is not null) return;
+            
+            Debug.Log($"Station not found for StationID: {StationID}");
         }
-        
-        public Transform CollectionPoint;
         
         Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()
         {
@@ -81,46 +77,54 @@ namespace Station
                 Object.Destroy(child);
             }
 
-            var workPlace_Components = AllWorkPost_Data.Values.Select(_createWorkPost).ToList();
+            var workPlace_Components = _createWorkPost(AllWorkPost_Data.Values.ToList());
 
-            // Check this, maybe just assign one of the workPosts as the collection point in the WorkPlace_List.
-            CollectionPoint = new GameObject("CollectionPoint").transform;
-            CollectionPoint.SetParent(Station_Component.transform);
-            CollectionPoint.localPosition = new Vector3(0, 0, -2);
-
-            return workPlace_Components.ToDictionary(workPost => workPost.WorkPostID);
+            if (workPlace_Components is not null) return workPlace_Components;
+            
+            Debug.Log($"WorkPlace_Components not found for StationName: {StationName}");
+            return null;
         }
 
-        WorkPost_Component _createWorkPost(WorkPost_Data workPost_Data)
+        Dictionary<uint, WorkPost_Component> _createWorkPost(List<WorkPost_Data> allWorkPost_Data)
         {
-            var workPost_Component = new GameObject($"WorkPost_{workPost_Data.WorkPostID}").AddComponent<WorkPost_Component>();
-            workPost_Component.transform.SetParent(Station_Component.transform);
-            workPost_Component.SetWorkPostData(workPost_Data);
+            var workPost_DefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
 
-            var workPost_TransformValues = WorkPost_List.GetWorkPlace_TransformValues(StationName);
-
-            if (workPost_TransformValues is null)
+            if (workPost_DefaultValues is null)
             {
                 Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
                 return null;
             }
+            
+            var workPost_Components = new Dictionary<uint, WorkPost_Component>();
 
-            if (workPost_TransformValues.TryGetValue(workPost_Component.WorkPostID, out var transformValue))
+            for (var i = 0; i < allWorkPost_Data.Count; i++)
             {
+                var workPost_Data = allWorkPost_Data[i];
+                var transformValue = workPost_DefaultValues[i % workPost_DefaultValues.Count];
+
+                if (transformValue is null)
+                {
+                    Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
+                    return null;
+                }
+
+                var workPost_Component = new GameObject($"WorkPost_{workPost_Data.WorkPostID}").AddComponent<WorkPost_Component>();
+                
+                workPost_Component.transform.SetParent(Station_Component.transform);
+                workPost_Component.SetWorkPostData(workPost_Data);
+            
                 workPost_Component.transform.localPosition = transformValue.Position;
                 workPost_Component.transform.localRotation = transformValue.Rotation;
-                workPost_Component.transform.localScale = transformValue.Scale;
+                workPost_Component.transform.localScale    = transformValue.Scale;
+                
+                var workPost_Collider = workPost_Component.gameObject.AddComponent<BoxCollider>();
+                workPost_Collider.isTrigger = true;
+                workPost_Component.Initialise();
+                
+                workPost_Components[workPost_Data.WorkPostID] = workPost_Component;
             }
-            else
-            {
-                Debug.Log($"WorkPost_TransformValue not found for WorkPostID: {workPost_Component.WorkPostID}");
-            }
-
-            var workPost_Collider = workPost_Component.gameObject.AddComponent<BoxCollider>();
-            workPost_Collider.isTrigger = true;
-            workPost_Component.Initialise();
-
-            return workPost_Component;
+            
+            return workPost_Components;
         }
 
         public WorkPost_Component GetOpenWorkPost()
@@ -142,7 +146,7 @@ namespace Station
         {
             if (!_passesStationChecks()) return;
 
-            foreach (var workPost in AllWorkPost_Components.Values)
+            foreach (var workPost in AllWorkPost_Components.Values.Where(workPost => workPost.WorkPostData.CurrentWorker is not null))
             {
                 var progressMade = workPost.Operate(BaseProgressRatePerHour,
                     StationProgressData.CurrentProduct);
@@ -165,19 +169,16 @@ namespace Station
         {
             if (!StationIsActive) 
                 return false;
-        
-            if (!IsStationBeingOperated) 
-                return false;
             
             Debug.Log(1);
 
             var success = false;
 
-            while (!success)
+            for (var i = 0; i < 2; i++)
             {
                 try
                 {
-                    success = InventoryData.InventoryContainsAllItems(
+                    success = InventoryUpdater.InventoryContainsAllItems(
                         StationProgressData.CurrentProduct.RequiredIngredients);
                     break;
                 }
@@ -214,7 +215,7 @@ namespace Station
                         $"Station ID: {StationID}",
                         $"Station Description: {StationDescription}",
                         $"Station IsActive: {StationIsActive}",
-                        $"Inventory Data: {InventoryData}"
+                        $"Inventory Data: {InventoryUpdater}"
                     }));
             }
             catch
@@ -227,7 +228,7 @@ namespace Station
                 dataObjects.Add(new Data_Display(
                     title: "Station Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
+                    data: InventoryUpdater.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
             }
             catch
             {

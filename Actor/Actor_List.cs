@@ -34,16 +34,16 @@ namespace Actor
                                 month: 1,
                                 day: 1
                             )),
-                        gameObjectData: new GameObjectData
+                        gameObjectUpdater: new GameObjectUpdater
                         (
                             actorID: 1
                         ),
-                        careerData: new CareerData
+                        careerUpdater: new CareerUpdater
                         (
                             actorID: 1,
                             careerName: CareerName.Lumberjack
                         ),
-                        craftingData: new CraftingData
+                        craftingUpdater: new CraftingUpdater
                         (
                             actorID: 1,
                             knownRecipes: new List<RecipeName>
@@ -52,7 +52,7 @@ namespace Actor
                                 RecipeName.Plank,
                                 RecipeName.Iron_Ingot
                             }),
-                        vocationData: new VocationData(
+                        vocationUpdater: new VocationUpdater(
                             actorID: 1,
                             actorVocations: new Dictionary<VocationName, ActorVocation>
                             {
@@ -146,7 +146,7 @@ namespace Actor
                                 currentConditions: new ObservableDictionary<ConditionName, float>()
                             )
                         ),
-                        inventoryData: new InventoryData_Actor(
+                        inventoryUpdater: new InventoryUpdater_Actor(
                             actorID: 1,
                             allInventoryItems: new ObservableDictionary<uint, Item>
                             {
@@ -161,7 +161,7 @@ namespace Actor
                         equipmentData: new EquipmentData(
                             actorID: 1
                         ),
-                        actorQuests: new QuestData(
+                        actorQuests: new QuestUpdater(
                             actorID: 1
                         )
                     )

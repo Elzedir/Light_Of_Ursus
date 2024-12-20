@@ -85,7 +85,7 @@ namespace Station
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var station in Station_SO.StationComponents.Values.Where(s => s.StationName == stationName))
+            foreach (var station in Station_SO.Station_Components.Values.Where(s => s.StationName == stationName))
             {
                 var distance = Vector3.Distance(position, station.transform.position);
 

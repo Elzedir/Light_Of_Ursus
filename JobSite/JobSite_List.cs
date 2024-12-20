@@ -19,6 +19,7 @@ namespace JobSite
                     {
                         1, 2, 3
                     },
+                    allEmployeeIDs: new List<uint>(),
                     prosperityData: new ProsperityData(
                         currentProsperity: 50,
                         maxProsperity: 100,

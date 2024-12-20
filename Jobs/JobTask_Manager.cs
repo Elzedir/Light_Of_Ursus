@@ -218,6 +218,8 @@ namespace Jobs
         public static Dictionary<PriorityParameterName, object> GetTaskParameters(
             JobTaskName jobTaskName, Dictionary<PriorityParameterName, object> existingParameters)
         {
+            existingParameters ??= new Dictionary<PriorityParameterName, object>();
+            
             var emptyTaskParameters = GetEmptyTaskParameters(jobTaskName);
 
             return jobTaskName switch
@@ -304,6 +306,12 @@ namespace Jobs
             Dictionary<PriorityParameterName, object> emptyTaskParameters,
             Dictionary<PriorityParameterName, object> existingParameters)
         {
+            if (existingParameters is null)
+            {
+                Debug.LogError("Existing parameters are null.");
+                return null;
+            }
+            
             if (!existingParameters.TryGetValue(PriorityParameterName.Jobsite, out var jobsiteObject) ||
                 jobsiteObject is not JobSite_Component jobsite)
             {
@@ -327,7 +335,7 @@ namespace Jobs
             };
 
             var allRelevantStations =
-                jobsite.GetRelevantStations(JobTaskName.Fetch_Items, hauler.ActorData.InventoryData);
+                jobsite.GetRelevantStations(JobTaskName.Fetch_Items, hauler.ActorData.InventoryUpdater);
 
             if (allRelevantStations.Count is 0)
             {
@@ -339,26 +347,26 @@ namespace Jobs
                 Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
             var totalDistance = allRelevantStations.Sum(station =>
                 Vector3.Distance(hauler.transform.position, station.transform.position));
-            var highestFetchPriority = PriorityGenerator.GeneratePriority(PriorityType.JobTask,
+            var highestFetchPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
                 (uint)JobTaskName.Fetch_Items, taskParameters);
 
             var stationParameters = new Dictionary<PriorityParameterName, object>(taskParameters)
             {
                 [PriorityParameterName.TotalItems]      = totalItemsToFetch,
                 [PriorityParameterName.TotalDistance]   = totalDistance,
-                [PriorityParameterName.InventoryHauler] = hauler.ActorData.InventoryData,
+                [PriorityParameterName.InventoryHauler] = hauler.ActorData.InventoryUpdater,
             };
 
             foreach (var station in allRelevantStations)
             {
-                stationParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryData;
+                stationParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryUpdater;
 
-                var stationPriority = PriorityGenerator.GeneratePriority(PriorityType.JobTask,
+                var stationPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
                     (uint)JobTaskName.Fetch_Items, stationParameters);
 
                 if (stationPriority is 0 || stationPriority < highestFetchPriority) continue;
 
-                taskParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryData;
+                taskParameters[PriorityParameterName.InventoryTarget] = station.Station_Data.InventoryUpdater;
             }
 
             foreach (var parameter in taskParameters)

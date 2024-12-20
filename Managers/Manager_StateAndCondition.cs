@@ -173,7 +173,7 @@ namespace Managers
     }
 
     [Serializable]
-    public class Actor_Conditions : PriorityData
+    public class Actor_Conditions : Priority_Updater
     {
         public Actor_Conditions(uint actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
         {
@@ -307,7 +307,7 @@ namespace Managers
         IsTalking,
     }
 
-    public class Actor_States : PriorityData
+    public class Actor_States : Priority_Updater
     {
         public Actor_States(uint actorID, ObservableDictionary<PrimaryStateName, bool> initialisedStates = null) : base(actorID, ComponentType.Actor)
         {
@@ -397,7 +397,7 @@ namespace Managers
                     return false;
                 }    
                 
-                Debug.LogWarning($"PrimaryState: {primaryStateName} not found in CurrentStates. Setting to default value: {defaultPrimaryState}");
+                //Debug.LogWarning($"PrimaryState: {primaryStateName} not found in CurrentStates. Setting to default value: {defaultPrimaryState}");
                 
                 SetPrimaryState(primaryStateName, defaultPrimaryState);                
             }
@@ -434,7 +434,7 @@ namespace Managers
         {
             { PrimaryStateName.IsAlive, true},
             { PrimaryStateName.CanIdle, true},
-            { PrimaryStateName.CanCombat, false},
+            { PrimaryStateName.CanCombat, true},
         };
         
         static readonly ObservableDictionary<PrimaryStateName, Dictionary<SubStateName, bool>> _defaultSubStates = new()

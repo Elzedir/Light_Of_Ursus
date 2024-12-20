@@ -17,12 +17,12 @@ namespace Actor
             _actorReferences = new ComponentReference_Actor(actorID);
         }
 
-        PriorityComponent_Actor _priorityComponent;
+        Priority_Data_Actor _priorityData;
 
-        public PriorityComponent_Actor PriorityComponent =>
-            _priorityComponent ??= new PriorityComponent_Actor(_actorID);
+        public Priority_Data_Actor PriorityData =>
+            _priorityData ??= new Priority_Data_Actor(_actorID);
 
-        ActorAction _currentActorActionMaster => PriorityComponent.GetCurrentAction();
+        ActorAction _currentActorActionMaster => PriorityData.GetCurrentAction();
 
         public void MakeDecision()
         {
@@ -39,7 +39,7 @@ namespace Actor
                 return;
             }
 
-            PriorityComponent.SetCurrentAction(nextHighestPriorityValue.PriorityID);
+            PriorityData.SetCurrentAction(nextHighestPriorityValue.PriorityID);
         }
 
         ActorPriorityState _getPriorityState()
@@ -49,25 +49,19 @@ namespace Actor
                 return ActorPriorityState.InCombat;
             }
 
-            if (_actorData.CareerData.JobsActive && _actorData.CareerData.HasCurrentJob())
-            {
-                Debug.Log("Step 1: Has Job");
-                return ActorPriorityState.HasJob;
-            }
+            if (!_actorData.CareerUpdater.JobsActive || !_actorData.CareerUpdater.HasCurrentJob())
+                return _actorData.CareerUpdater.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
+            
+            Debug.Log("Step 1: Has Job");
+            return ActorPriorityState.HasJob;
 
-            if (_actorData.CareerData.GetNewCurrentJob())
-            {
-                return ActorPriorityState.HasJob;
-            }
-
-            return ActorPriorityState.None;
         }
 
         bool _mustChangeCurrentAction(ActorPriorityState  actorPriorityState,
                                       out PriorityElement nextHighestPriorityElement)
         {
-            var currentAction = PriorityComponent.GetCurrentAction();
-            nextHighestPriorityElement = PriorityComponent.PeekHighestPriority(actorPriorityState);
+            var currentAction = PriorityData.GetCurrentAction();
+            nextHighestPriorityElement = PriorityData.PeekHighestPriority(actorPriorityState);
 
             if (nextHighestPriorityElement is null)
             {

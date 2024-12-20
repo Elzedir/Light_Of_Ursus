@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tools;
 using UnityEngine;
 
 namespace Priority
 {
-    public class PriorityQueue
+    public class Priority_Queue : Data_Class
     {
         int                            _currentPosition;
         PriorityElement[]              _priorityArray;
@@ -13,7 +14,7 @@ namespace Priority
 
         public Action<uint> OnPriorityRemoved;
 
-        public PriorityQueue(int maxPriorities)
+        public Priority_Queue(int maxPriorities)
         {
             _currentPosition = 0;
             _priorityArray   = new PriorityElement[maxPriorities];
@@ -26,12 +27,10 @@ namespace Priority
             {
                 return _currentPosition == 0 ? null : _priorityArray[1];
             }
-            else
-            {
-                if (!_priorityQueue.TryGetValue(priorityID, out var index)) return null;
 
-                return index == 0 ? null : _priorityArray[index];
-            }
+            if (!_priorityQueue.TryGetValue(priorityID, out var index)) return null;
+
+            return index == 0 ? null : _priorityArray[index];
         }
 
         public PriorityElement[] PeekAll()
@@ -180,6 +179,33 @@ namespace Priority
             _priorityQueue[_priorityArray[indexB].PriorityID] = indexA;
             _priorityArray[indexB]                            = tempPriorityValueA;
             _priorityQueue[tempPriorityValueA.PriorityID]     = indexB;
+        }
+
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            var dataObjects = new List<Data_Display>();
+
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Priority Queue",
+                    dataDisplayType: DataDisplayType.CheckBoxList,
+                    data: _priorityArray.Select(priority =>
+                                            $"PriorityID: {priority.PriorityID}, PriorityValue: {priority.PriorityValue}")
+                                        .ToList()));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error in Priority Queue");
+                }
+            }
+
+            return new Data_Display(
+                title: "Priority Queue",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: new List<Data_Display>(dataObjects));
         }
     }
 

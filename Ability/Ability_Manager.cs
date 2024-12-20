@@ -48,7 +48,7 @@ namespace Ability
     }
 
     [Serializable]
-    public class Actor_Abilities : PriorityData
+    public class Actor_Abilities : Priority_Updater
     {
         public Actor_Abilities(uint actorID, Dictionary<AbilityName, float> abilityList = null) : base(actorID,
             ComponentType.Actor)

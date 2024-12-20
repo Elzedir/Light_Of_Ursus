@@ -12,10 +12,21 @@ namespace Region
     [Serializable]
     public class Region_SO : Data_SO<Region_Data>
     {
-        public Object_Data<Region_Data>[] Regions                         => Objects_Data;
-        public Object_Data<Region_Data>        GetRegion_Data(uint      regionID) => GetObject_Data(regionID);
-        public Dictionary<uint, Region_Component> RegionComponents = new();
+        public Object_Data<Region_Data>[]         Regions                            => Objects_Data;
+        public Object_Data<Region_Data>           GetRegion_Data(uint      regionID) => GetObject_Data(regionID);
+        Dictionary<uint, Region_Component>        _region_Components;
+        public Dictionary<uint, Region_Component> RegionComponents => _region_Components ??= _getExistingRegion_Components();
 
+        Dictionary<uint, Region_Component> _getExistingRegion_Components()
+        {
+            return FindObjectsByType<Region_Component>(FindObjectsSortMode.None)
+                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                  .ToDictionary(
+                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
+                                      station => station
+                                  );
+        }
+        
         public Region_Component GetRegion_Component(uint regionID)
         {
             if (RegionComponents.TryGetValue(regionID, out var component))
@@ -39,12 +50,7 @@ namespace Region
                 Debug.Log("No Default Regions Found");
             }
             
-            var existingRegions = FindObjectsByType<Region_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                     .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
-                                     );
+            var existingRegions = _getExistingRegion_Components();
             
             foreach (var region in Regions)
             {

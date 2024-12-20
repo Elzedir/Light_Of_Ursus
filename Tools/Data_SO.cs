@@ -8,22 +8,20 @@ namespace Tools
     [Serializable]
     public abstract class Data_SO<T> : ScriptableObject where T : class
     {
-        int                                                                       _dataObjects_CurrentLength;
         [SerializeField] Object_Data<T>[] _objects_Data;
 
         public Object_Data<T>[] Objects_Data
         {
             get
             {
-                if (_objects_Data is not null && _objects_Data.Length != 0 && _objects_Data.Length == _dataObjects_CurrentLength) return _objects_Data;
+                if (_objects_Data is not null && _objects_Data.Length != 0) return _objects_Data;
                 
-                _dataObjects_CurrentLength = _objects_Data?.Length ?? 0;
                 var dataObjects = InitialiseAllDataObjects();
                 return dataObjects; 
             }
         }
 
-        public void RefreshDataObjects() => _dataObjects_CurrentLength = 0;
+        public void RefreshDataObjects() => InitialiseAllDataObjects();
 
         public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
 

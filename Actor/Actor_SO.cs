@@ -43,10 +43,6 @@ namespace Actor
                 Debug.Log("No Default Items Found");
             }
             
-            var allActorComponents = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
-            var allActorData =
-                allActorComponents.ToDictionary(actor => actor.ActorID, actor => actor.ActorData);
-            
             var existingActors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None)
                                  .Where(actor => Regex.IsMatch(actor.name, @"\d+"))
                                  .ToDictionary(

@@ -14,7 +14,18 @@ namespace City
     {
         public Object_Data<City_Data>[]                         Cities                         => Objects_Data;
         public Object_Data<City_Data>                           GetCity_Data(uint      cityID) => GetObject_Data(cityID);
-        public Dictionary<uint, City_Component> City_Components = new();
+        Dictionary<uint, City_Component>                        _city_Components;
+        public Dictionary<uint, City_Component> City_Components => _city_Components ??= _getExistingCity_Components();
+        
+        Dictionary<uint, City_Component> _getExistingCity_Components()
+        {
+            return FindObjectsByType<City_Component>(FindObjectsSortMode.None)
+                                  .Where(city => Regex.IsMatch(city.name, @"\d+"))
+                                  .ToDictionary(
+                                      city => uint.Parse(new string(city.name.Where(char.IsDigit).ToArray())),
+                                      city => city
+                                  );
+        }
 
         public City_Component GetCity_Component(uint cityID)
         {
@@ -39,12 +50,7 @@ namespace City
                 Debug.Log("No Default Cities Found");
             }
             
-            var existingCities = FindObjectsByType<City_Component>(FindObjectsSortMode.None)
-                                     .Where(city => Regex.IsMatch(city.name, @"\d+"))
-                                     .ToDictionary(
-                                         city_Component => uint.Parse(new string(city_Component.name.Where(char.IsDigit).ToArray())),
-                                         city_Component => city_Component
-                                     );
+            var existingCities = _getExistingCity_Components();
             
             foreach (var city in Cities)
             {

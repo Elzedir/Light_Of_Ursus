@@ -686,7 +686,7 @@ namespace DataPersistence
         public string LastScene;
 
         // public SerializableDictionary<string, string> QuestSaveData;
-        public List<QuestData> QuestData;
+        public List<QuestUpdater> QuestData;
         // Try replace with a list of serialised classes instead.
         //public SerializableDictionary<string, string> PuzzleSaveData;
         public List<PuzzleData> PuzzleData;

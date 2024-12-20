@@ -6,11 +6,11 @@ using UnityEngine;
 
 namespace Priority
 {
-    public abstract class Priority_Data
+    public abstract class Priority_Updater
     {
         public ComponentReference Reference { get; }
 
-        protected Priority_Data (uint componentID, ComponentType componentType)
+        protected Priority_Updater (uint componentID, ComponentType componentType)
         {
             switch(componentType)
             {
@@ -26,8 +26,8 @@ namespace Priority
             }
         }
 
-        PriorityComponent _priorityComponent;
-        public PriorityComponent PriorityComponent => _priorityComponent ??= Reference.GetPriorityComponent();
+        Priority_Data _priorityData;
+        public Priority_Data PriorityData => _priorityData ??= Reference.GetPriorityComponent();
 
         Action<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _onDataChange { get; set; }
     
@@ -53,7 +53,7 @@ namespace Priority
         protected abstract bool _priorityChangeNeeded(object dataChanged);
 
         void _setOnDataChange() => _onDataChange = (dataChanged, changedParameters)
-            => PriorityComponent.CriticalDataChanged(dataChanged, changedParameters);
+            => PriorityData.CriticalDataChanged(dataChanged, changedParameters);
 
         Dictionary<PriorityParameterName, object> _getNewPriorityParameters(PriorityUpdateTrigger priorityUpdateTrigger)
         {

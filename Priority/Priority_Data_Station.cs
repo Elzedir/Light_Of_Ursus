@@ -1,6 +1,6 @@
 namespace Priority
 {
-    public class PriorityComponent_Station// : PriorityComponent
+    public class Priority_Data_Station// : PriorityComponent
     {
         // protected override List<uint> _canPeek(List<uint> priorityIDs)
         // {

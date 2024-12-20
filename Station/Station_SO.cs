@@ -14,11 +14,22 @@ namespace Station
     {
         public Object_Data<Station_Data>[]         Stations                        => Objects_Data;
         public Object_Data<Station_Data>           GetStation_Data(uint stationID) => GetObject_Data(stationID);
-        public Dictionary<uint, Station_Component> StationComponents = new();
+        Dictionary<uint, Station_Component>       _station_Components;
+        public Dictionary<uint, Station_Component> Station_Components => _station_Components ??= _getExistingStation_Components();
+        
+        Dictionary<uint, Station_Component> _getExistingStation_Components()
+        {
+            return FindObjectsByType<Station_Component>(FindObjectsSortMode.None)
+                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                  .ToDictionary(
+                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
+                                      station => station
+                                  );
+        }
 
         public Station_Component GetStation_Component(uint stationID)
         {
-            if (StationComponents.TryGetValue(stationID, out var component))
+            if (Station_Components.TryGetValue(stationID, out var component))
             {
                 return component;
             }
@@ -41,12 +52,7 @@ namespace Station
                 Debug.Log("No Default Stations Found");
             }
 
-            var existingStations = FindObjectsByType<Station_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                     .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
-                                     );
+            var existingStations = _getExistingStation_Components();
 
             foreach (var station in Stations)
             {
@@ -54,7 +60,7 @@ namespace Station
                 
                 if (existingStations.TryGetValue(station.DataObject.StationID, out var existingStation))
                 {
-                    StationComponents[station.DataObject.StationID] = existingStation;
+                    Station_Components[station.DataObject.StationID] = existingStation;
                     existingStation.Station_Data                     = station.DataObject;
                     existingStations.Remove(station.DataObject.StationID);
                     continue;

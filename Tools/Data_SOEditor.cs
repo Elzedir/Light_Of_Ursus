@@ -57,6 +57,8 @@ namespace Tools
         {
             while (true)
             {
+                // Fix the first data thing to apply when needed, like Item and Priority.
+                
                 if (!firstData && !(dataSO_Object.ShowData = EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
                     return;
 

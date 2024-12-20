@@ -1,7 +1,5 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Actor;
 using EmployeePosition;
 using Initialisation;
@@ -11,11 +9,7 @@ using Jobs;
 using JobSite;
 using Priority;
 using Recipes;
-using TickRates;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
-using WorkPosts;
 
 namespace Station
 {
@@ -40,11 +34,9 @@ namespace Station
         public abstract         List<uint>                 AllowedStoredItemIDs     { get; }
         public abstract         List<uint>                 DesiredStoredItemIDs     { get; }
         public         abstract List<JobName>              AllowedJobs              { get; }
-        
-        readonly List<Item> _currentProductsCrafted  = new();
     
-        PriorityComponent_Station        _priorityComponent;
-        public PriorityComponent_Station PriorityComponent => _priorityComponent ??= new PriorityComponent_Station(); 
+        Priority_Data_Station        _priorityData;
+        public Priority_Data_Station PriorityData => _priorityData ??= new Priority_Data_Station(); 
 
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
@@ -70,12 +62,12 @@ namespace Station
         protected abstract void _initialiseStartingInventory();
         public List<Item> GetInventoryItemsToFetch()
         {
-            return Station_Data.InventoryData.GetInventoryItemsToFetch();
+            return Station_Data.InventoryUpdater.GetInventoryItemsToFetch();
         }
 
-        public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+        public List<Item> GetInventoryItemsToDeliver(InventoryUpdater inventory)
         {
-            return Station_Data.InventoryData.GetInventoryItemsToDeliver(inventory);
+            return Station_Data.InventoryUpdater.GetInventoryItemsToDeliver(inventory);
         }
 
         public void SetInteractRange(float interactRange = 2)
@@ -95,16 +87,5 @@ namespace Station
         public abstract List<Item> GetCost(List<Item> ingredients, Actor_Component actor);
 
         public abstract List<Item> GetYield(List<Item> ingredients, Actor_Component actor);
-
-        protected void _onCraftItem(List<Item> craftedItems)
-        {
-            _currentProductsCrafted.AddRange(craftedItems);
-        }
-
-        public List<Item> GetActualProductionRatePerHour()
-        {
-            var currentProductsCrafted = new List<Item>(_currentProductsCrafted);
-            return currentProductsCrafted;
-        }
     }
 }

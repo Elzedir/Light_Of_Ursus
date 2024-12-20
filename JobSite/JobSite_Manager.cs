@@ -90,7 +90,7 @@ namespace JobSite
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var jobSite in JobSite_SO.JobSiteComponents.Values.Where(j => j.JobSiteName == jobSiteName))
+            foreach (var jobSite in JobSite_SO.JobSite_Components.Values.Where(j => j.JobSiteName == jobSiteName))
             {
                 var distance = Vector3.Distance(position, jobSite.transform.position);
 
