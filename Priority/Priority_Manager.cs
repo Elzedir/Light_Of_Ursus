@@ -12,8 +12,7 @@ namespace Priority
         public static readonly List<ActorActionName> BasePriorityActorActions = new()
         {
             ActorActionName.Idle,
-            ActorActionName.Fetch,
-            ActorActionName.Deliver
+            ActorActionName.Perform_JobTask
         };
         
         public static readonly List<JobTaskName> BasePriorityJobTasks = new()
@@ -40,9 +39,9 @@ namespace Priority
         public ComponentReference_Actor(uint actorID) : base(actorID) { }
         Actor_Component                    _actor;
         protected override object         _component => _actor ??= Actor_Manager.GetActor_Component(ComponentID);
-        public             Actor_Component Actor      => _component as Actor_Component;
-        public override GameObject GameObject => Actor.gameObject;
-        public override Priority_Data GetPriorityComponent() => Actor.DecisionMakerComponent.PriorityData;
+        public             Actor_Component Actor_Component      => _component as Actor_Component;
+        public override GameObject GameObject => Actor_Component.gameObject;
+        public override Priority_Data GetPriorityComponent() => Actor_Component.DecisionMakerComponent.PriorityData;
     }
     public class ComponentReference_Station : ComponentReference
     {
@@ -71,15 +70,19 @@ namespace Priority
         None,
 
         // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every TotalItems, TotalDistance, etc. has an attached maxPriority.
-        ActionOrTask,
         DefaultPriority,
-        TotalItems,
-        TotalDistance,
-        InventoryHauler,
-        InventoryTarget,
+        
+        Jobsite_Component,
+        JobTaskName,
+        Worker,
         CurrentStationType,
         AllStationTypes,
-        Jobsite,
+        
+        Hauler_Component,
+        Target_Component,
+        
+        Total_Items,
+        Total_Distance,
     }
 
     public enum PriorityImportance

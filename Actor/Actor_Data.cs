@@ -37,15 +37,15 @@ namespace Actor
 
         public FullIdentification FullIdentification;
 
-        public GameObjectUpdater       GameObjectUpdater;
-        public CareerUpdater           CareerUpdater;
-        public CraftingUpdater         CraftingUpdater;
-        public VocationUpdater         VocationUpdater;
-        public                                        SpeciesAndPersonality   SpeciesAndPersonality;
-        public                                        StatsAndAbilities       StatsAndAbilities;
-        public                                        StatesAndConditionsData StatesAndConditionsData;
-        public                                        InventoryUpdater           InventoryUpdater;
-        public                                        EquipmentData           EquipmentData;
+        public GameObjectData          GameObjectData;
+        public CareerData              CareerData;
+        public CraftingData            CraftingData;
+        public VocationData            VocationData;
+        public SpeciesAndPersonality   SpeciesAndPersonality;
+        public StatsAndAbilities       StatsAndAbilities;
+        public StatesAndConditionsData StatesAndConditionsData;
+        public InventoryData           InventoryData;
+        public EquipmentData           EquipmentData;
 
         public QuestUpdater ActorQuests;
 
@@ -81,25 +81,25 @@ namespace Actor
         // Make an ability to make a deep copy of every class here and every class that needs to be saved.
 
         public Actor_Data(ActorDataPresetName     actorDataPresetName, FullIdentification fullIdentification = null,
-                          GameObjectUpdater          gameObjectUpdater          = null,
-                          CareerUpdater              careerUpdater              = null, CraftingUpdater craftingUpdater = null,
-                          VocationUpdater            vocationUpdater            = null,
+                          GameObjectData          gameObjectData          = null,
+                          CareerData              careerData              = null, CraftingData craftingData = null,
+                          VocationData            vocationData            = null,
                           SpeciesAndPersonality   speciesAndPersonality   = null,
                           StatsAndAbilities       statsAndAbilities       = null,
-                          StatesAndConditionsData statesAndConditionsData = null, InventoryUpdater inventoryUpdater = null,
+                          StatesAndConditionsData statesAndConditionsData = null, InventoryData inventoryData = null,
                           EquipmentData           equipmentData           = null, QuestUpdater     actorQuests   = null)
         {
             ActorDataPresetName = actorDataPresetName;
 
             FullIdentification      = fullIdentification;
-            GameObjectUpdater          = gameObjectUpdater;
-            CareerUpdater              = careerUpdater;
-            CraftingUpdater            = craftingUpdater;
-            VocationUpdater            = vocationUpdater;
+            GameObjectData          = gameObjectData;
+            CareerData              = careerData;
+            CraftingData            = craftingData;
+            VocationData            = vocationData;
             SpeciesAndPersonality   = speciesAndPersonality;
             StatsAndAbilities       = statsAndAbilities;
             StatesAndConditionsData = statesAndConditionsData;
-            InventoryUpdater           = inventoryUpdater;
+            InventoryData           = inventoryData;
             EquipmentData           = equipmentData;
             ActorQuests             = actorQuests;
         }
@@ -150,19 +150,19 @@ namespace Actor
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
                     {
-                        $"Actor Last Saved Position: {GameObjectUpdater.LastSavedActorPosition}",
-                        $"Actor Last Saved Scale: {GameObjectUpdater.LastSavedActorScale}",
-                        $"Actor Last Saved Rotation: {GameObjectUpdater.LastSavedActorRotation.eulerAngles}",
-                        $"Actor Mesh: {GameObjectUpdater.ActorMesh}",
-                        $"Actor Material: {GameObjectUpdater.ActorMaterial}"
+                        $"Actor Last Saved Position: {GameObjectData.LastSavedActorPosition}",
+                        $"Actor Last Saved Scale: {GameObjectData.LastSavedActorScale}",
+                        $"Actor Last Saved Rotation: {GameObjectData.LastSavedActorRotation.eulerAngles}",
+                        $"Actor Mesh: {GameObjectData.ActorMesh}",
+                        $"Actor Material: {GameObjectData.ActorMaterial}"
                     }
                 ));
             }
             catch
             {
-                Debug.LogWarning(GameObjectUpdater);
-                Debug.LogWarning(GameObjectUpdater.ActorMesh);
-                Debug.LogWarning(GameObjectUpdater.ActorMaterial);
+                Debug.LogWarning(GameObjectData);
+                Debug.LogWarning(GameObjectData.ActorMesh);
+                Debug.LogWarning(GameObjectData.ActorMaterial);
             }
 
             try
@@ -211,18 +211,18 @@ namespace Actor
                     dataDisplayType: DataDisplayType.Item,
                     data: new List<string>
                     {
-                        $"Career Name: {CareerUpdater.CareerName}",
-                        $"Jobs Active: {CareerUpdater.JobsActive}",
-                        $"JobSiteID: {CareerUpdater.JobSiteID}",
-                        $"Employee Position: {CareerUpdater.EmployeePositionName}",
-                        $"Current Job: {CareerUpdater.CurrentJob?.JobName}"
+                        $"Career Name: {CareerData.CareerName}",
+                        $"Jobs Active: {CareerData.JobsActive}",
+                        $"JobSiteID: {CareerData.JobSiteID}",
+                        $"Employee Position: {CareerData.EmployeePositionName}",
+                        $"Current Job: {CareerData.CurrentJob?.JobName}"
                     }
                 ));
             }
             catch
             {
-                Debug.LogWarning(CareerUpdater);
-                Debug.LogWarning(CareerUpdater.CurrentJob);
+                Debug.LogWarning(CareerData);
+                Debug.LogWarning(CareerData.CurrentJob);
             }
 
             try
@@ -230,13 +230,13 @@ namespace Actor
                 dataObjects.Add(new Data_Display(
                     title: "Inventory Data",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryUpdater.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} - Qty: {item.ItemAmount}").ToList()
+                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} - Qty: {item.ItemAmount}").ToList()
                 ));
             }
             catch
             {
-                Debug.LogWarning(InventoryUpdater);
-                Debug.LogWarning(InventoryUpdater.AllInventoryItems);
+                Debug.LogWarning(InventoryData);
+                Debug.LogWarning(InventoryData.AllInventoryItems);
             }
 
             try
@@ -377,21 +377,21 @@ namespace Actor
     }
 
     [Serializable]
-    public class GameObjectUpdater : Priority_Updater
+    public class GameObjectData : Priority_Updater
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-        public GameObjectUpdater(uint actorID, Transform actorTransform = null, Mesh actorMesh = null, Material actorMaterial = null) : base(actorID, ComponentType.Actor)
+        public GameObjectData(uint actorID, Transform actorTransform = null, Mesh actorMesh = null, Material actorMaterial = null) : base(actorID, ComponentType.Actor)
         {
             _actorTransform = actorTransform;
             ActorMesh       = actorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
             ActorMaterial   = actorMaterial ?? Resources.Load<Material>("Materials/Material_Red");
         }
         
-        public GameObjectUpdater(GameObjectUpdater gameObjectUpdater) : base(gameObjectUpdater.ActorReference.ActorID, ComponentType.Actor)
+        public GameObjectData(GameObjectData gameObjectData) : base(gameObjectData.ActorReference.ActorID, ComponentType.Actor)
         {
-            _actorTransform = gameObjectUpdater.ActorTransform;
-            ActorMesh       = gameObjectUpdater.ActorMesh;
-            ActorMaterial   = gameObjectUpdater.ActorMaterial;
+            _actorTransform = gameObjectData.ActorTransform;
+            ActorMesh       = gameObjectData.ActorMesh;
+            ActorMaterial   = gameObjectData.ActorMaterial;
         }
 
         public void UpdateActorGOProperties()
@@ -491,9 +491,9 @@ namespace Actor
     }
 
     [Serializable]
-    public class CareerUpdater : Priority_Updater
+    public class CareerData : Priority_Updater
     {
-        public CareerUpdater(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(actorID,
+        public CareerData(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(actorID,
             ComponentType.Actor)
         {
             CareerName = careerName;
@@ -505,10 +505,10 @@ namespace Actor
             }
         }
         
-        public CareerUpdater(CareerUpdater careerUpdater) : base(careerUpdater.ActorReference.ActorID, ComponentType.Actor)
+        public CareerData(CareerData careerData) : base(careerData.ActorReference.ActorID, ComponentType.Actor)
         {
-            CareerName = careerUpdater.CareerName;
-            AllJobs    = new HashSet<JobName>(careerUpdater.AllJobs);
+            CareerName = careerData.CareerName;
+            AllJobs    = new HashSet<JobName>(careerData.AllJobs);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -560,7 +560,7 @@ namespace Actor
 
         public bool GetNewCurrentJob(uint stationID = 0)
         {
-            return CareerName != CareerName.Wanderer && JobSite.GetNewCurrentJob(ActorReference.Actor, stationID);
+            return CareerName != CareerName.Wanderer && JobSite.GetNewCurrentJob(ActorReference.Actor_Component, stationID);
         }
 
         public bool JobsActive = true;
@@ -701,7 +701,7 @@ namespace Actor
             100; // For now. Eventually. ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
 
         public float AvailableCarryWeight => TotalCarryWeight -
-                                             Item.GetItemListTotal_Weight(ActorReference.Actor.ActorData.InventoryUpdater
+                                             Item.GetItemListTotal_Weight(ActorReference.Actor_Component.ActorData.InventoryData
                                                  .GetAllInventoryItemsClone().Values.ToList());
 
         public void AddExperience(uint experience)
@@ -842,16 +842,16 @@ namespace Actor
     }
 
     [Serializable]
-    public class CraftingUpdater : Priority_Updater
+    public class CraftingData : Priority_Updater
     {
-        public CraftingUpdater(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
+        public CraftingData(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
         {
             KnownRecipes = knownRecipes ?? new List<RecipeName>();
         }
         
-        public CraftingUpdater(CraftingUpdater craftingUpdater) : base(craftingUpdater.ActorReference.ActorID, ComponentType.Actor)
+        public CraftingData(CraftingData craftingData) : base(craftingData.ActorReference.ActorID, ComponentType.Actor)
         {
-            KnownRecipes = new List<RecipeName>(craftingUpdater.KnownRecipes);
+            KnownRecipes = new List<RecipeName>(craftingData.KnownRecipes);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -883,7 +883,7 @@ namespace Actor
         {
             foreach (var ingredient in ingredients)
             {
-                var inventoryItem = actorData.InventoryUpdater.GetItemFromInventory(ingredient.ItemID);
+                var inventoryItem = actorData.InventoryData.GetItemFromInventory(ingredient.ItemID);
 
                 if (inventoryItem == null || inventoryItem.ItemAmount < ingredient.ItemAmount)
                 {
@@ -912,14 +912,14 @@ namespace Actor
                 yield break;
             }
 
-            if (!actorData.InventoryUpdater.HasSpaceForItems(recipeData.RecipeProducts))
+            if (!actorData.InventoryData.HasSpaceForItems(recipeData.RecipeProducts))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;
             }
 
-            actorData.InventoryUpdater.RemoveFromInventory(recipeData.RequiredIngredients);
-            actorData.InventoryUpdater.AddToInventory(recipeData.RecipeProducts);
+            actorData.InventoryData.RemoveFromInventory(recipeData.RequiredIngredients);
+            actorData.InventoryData.AddToInventory(recipeData.RecipeProducts);
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged)
@@ -962,17 +962,17 @@ namespace Actor
     }
 
     [Serializable]
-    public class VocationUpdater : Priority_Updater
+    public class VocationData : Priority_Updater
     {
-        public VocationUpdater(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(actorID,
+        public VocationData(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(actorID,
             ComponentType.Actor)
         {
             ActorVocations = actorVocations ?? new Dictionary<VocationName, ActorVocation>();
         }
         
-        public VocationUpdater(VocationUpdater vocationUpdater) : base(vocationUpdater.ActorReference.ActorID, ComponentType.Actor)
+        public VocationData(VocationData vocationData) : base(vocationData.ActorReference.ActorID, ComponentType.Actor)
         {
-            ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationUpdater.ActorVocations);
+            ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationData.ActorVocations);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;

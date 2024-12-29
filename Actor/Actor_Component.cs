@@ -85,8 +85,8 @@ namespace Actor
 
         void _updateVisuals()
         {
-            ActorMesh.mesh = ActorData.GameObjectUpdater.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            ActorMaterial.material = ActorData.GameObjectUpdater.ActorMaterial ??
+            ActorMesh.mesh = ActorData.GameObjectData.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            ActorMaterial.material = ActorData.GameObjectData.ActorMaterial ??
                                      Resources.Load<Material>("Materials/Material_Red");
         }
 

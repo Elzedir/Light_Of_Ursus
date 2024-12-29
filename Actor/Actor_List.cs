@@ -34,16 +34,16 @@ namespace Actor
                                 month: 1,
                                 day: 1
                             )),
-                        gameObjectUpdater: new GameObjectUpdater
+                        gameObjectData: new GameObjectData
                         (
                             actorID: 1
                         ),
-                        careerUpdater: new CareerUpdater
+                        careerData: new CareerData
                         (
                             actorID: 1,
                             careerName: CareerName.Lumberjack
                         ),
-                        craftingUpdater: new CraftingUpdater
+                        craftingData: new CraftingData
                         (
                             actorID: 1,
                             knownRecipes: new List<RecipeName>
@@ -52,7 +52,7 @@ namespace Actor
                                 RecipeName.Plank,
                                 RecipeName.Iron_Ingot
                             }),
-                        vocationUpdater: new VocationUpdater(
+                        vocationData: new VocationData(
                             actorID: 1,
                             actorVocations: new Dictionary<VocationName, ActorVocation>
                             {
@@ -146,7 +146,7 @@ namespace Actor
                                 currentConditions: new ObservableDictionary<ConditionName, float>()
                             )
                         ),
-                        inventoryUpdater: new InventoryUpdater_Actor(
+                        inventoryData: new InventoryData_Actor(
                             actorID: 1,
                             allInventoryItems: new ObservableDictionary<uint, Item>
                             {

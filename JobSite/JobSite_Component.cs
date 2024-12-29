@@ -72,12 +72,12 @@ namespace JobSite
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
             var highestPriorityJob = JobSiteData.PriorityData.GetHighestSpecificPriority(
-                actor.ActorData.CareerUpdater.AllJobs.Select(jobName => (uint)jobName).ToList(), stationID);
+                actor.ActorData.CareerData.AllJobs.Select(jobName => (uint)jobName).ToList(), stationID);
 
             if (highestPriorityJob == null)
             {
                 Debug.LogWarning("No highest priority job found. Setting job to Idle.");
-                actor.ActorData.CareerUpdater.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                actor.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
             }
 
@@ -95,7 +95,7 @@ namespace JobSite
 
                 var job = new Job(jobName, station.StationID, JobSiteData.GetWorkPostIDFromWorkerID(actor.ActorID));
 
-                actor.ActorData.CareerUpdater.SetCurrentJob(job);
+                actor.ActorData.CareerData.SetCurrentJob(job);
 
                 return true;
             }
@@ -130,8 +130,8 @@ namespace JobSite
             {
                 var employeesForStation = tempEmployees
                                           .OrderByDescending(actor =>
-                                              actor.ActorData.VocationUpdater.GetVocationExperience(
-                                                  _getRelevantVocation(actor.ActorData.CareerUpdater
+                                              actor.ActorData.VocationData.GetVocationExperience(
+                                                  _getRelevantVocation(actor.ActorData.CareerData
                                                                             .EmployeePositionName)))
                                           .ToList();
 
@@ -166,12 +166,12 @@ namespace JobSite
             return result;
         }
 
-        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName, InventoryUpdater inventoryUpdater)
+        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName, InventoryData inventoryData)
         {
             return jobTaskName switch
             {
                 JobTaskName.Fetch_Items   => _relevantStations_Fetch(),
-                JobTaskName.Deliver_Items => _relevantStations_Deliver(inventoryUpdater),
+                JobTaskName.Deliver_Items => _relevantStations_Deliver(inventoryData),
                 _                         => new List<Station_Component>()
             };
         }
@@ -182,10 +182,10 @@ namespace JobSite
                               .Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
         }
 
-        List<Station_Component> _relevantStations_Deliver(InventoryUpdater inventoryUpdater)
+        List<Station_Component> _relevantStations_Deliver(InventoryData inventoryData)
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItemsToDeliver(inventoryUpdater).Count > 0)
+                              .Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
                               .ToList();
         }
     }

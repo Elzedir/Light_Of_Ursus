@@ -68,13 +68,9 @@ namespace Priority
                 return;
             }
             
-            a
-                
-                // Re-look at priority system and make sure we can generate priority in the beginning with no parameters as on initialisation, we need
-                // to have some parameters to generate some priority to assign initial jobs to the actors.
+            var priorityParameters = _getPriorityParameters(priorityID);
 
-            var priorityValue =
-                Priority_Generator.GeneratePriority(_priorityType, priorityID, _getPriorityParameters(priorityID, null));
+            var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
             
             Debug.Log($"PriorityID: {priorityID}, PriorityValue: {priorityValue}");
 
@@ -90,10 +86,14 @@ namespace Priority
             return priorityIDs;
         }
 
-        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(
-            uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters)
+        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            return JobTask_Manager.GetTaskParameters((JobTaskName)priorityID, requiredParameters);
+            var requiredParameters = new Dictionary<PriorityParameterName, object>
+            {
+                { PriorityParameterName.Jobsite_Component, _jobSite }
+            };
+            
+            return JobTask_Manager.PopulateTaskParameters((JobTaskName)priorityID, requiredParameters);
         }
 
         protected override Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState)

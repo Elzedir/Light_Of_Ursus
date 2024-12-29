@@ -39,7 +39,7 @@ namespace Actor
                     (uint)ActorDataPresetName.Wanderer_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Wanderer_Journeyman,
-                        careerUpdater: new CareerUpdater
+                        careerData: new CareerData
                         (
                             actorID: 0,
                             careerName: CareerName.Wanderer,
@@ -58,14 +58,14 @@ namespace Actor
                     (uint)ActorDataPresetName.Lumberjack_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Lumberjack_Journeyman,
-                        careerUpdater: new CareerUpdater
+                        careerData: new CareerData
                         (
                             actorID: 0,
                             careerName: CareerName.Lumberjack,
                             jobsNotFromCareer: new HashSet<JobName>()
                         ),
 
-                        craftingUpdater: new CraftingUpdater
+                        craftingData: new CraftingData
                         (
                             actorID: 0,
                             new List<RecipeName>
@@ -75,7 +75,7 @@ namespace Actor
                             }
                         ),
 
-                        vocationUpdater: new VocationUpdater
+                        vocationData: new VocationData
                         (
                             actorID: 0,
                             actorVocations: new Dictionary<VocationName, ActorVocation>
@@ -103,14 +103,14 @@ namespace Actor
                     (uint)ActorDataPresetName.Smith_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Smith_Journeyman,
-                        careerUpdater: new CareerUpdater
+                        careerData: new CareerData
                         (
                             actorID: 0,
                             careerName: CareerName.Smith,
                             jobsNotFromCareer: new HashSet<JobName>()
                         ),
 
-                        craftingUpdater: new CraftingUpdater
+                        craftingData: new CraftingData
                         (
                             actorID: 0,
                             new List<RecipeName>
@@ -119,7 +119,7 @@ namespace Actor
                             }
                         ),
 
-                        vocationUpdater: new VocationUpdater
+                        vocationData: new VocationData
                         (
                             actorID: 0,
                             actorVocations: new Dictionary<VocationName, ActorVocation>

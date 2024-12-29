@@ -454,17 +454,17 @@ namespace Managers
         {
             {PrimaryStateName.CanCombat, new ActionMap
             {
-                EnabledGroupActions = new HashSet<ActorActionGroup> {ActorActionGroup.Combat},
-                DisabledGroupActions = new HashSet<ActorActionGroup> { ActorActionGroup.Work, ActorActionGroup.Recreation, }
+                EnabledGroupActions = new HashSet<ActorBehaviourName> {ActorBehaviourName.Combat},
+                DisabledGroupActions = new HashSet<ActorBehaviourName> { ActorBehaviourName.Work, ActorBehaviourName.Recreation, }
             }},
         }; 
     }
 
     public class ActionMap
     {
-        public HashSet<ActorActionGroup> EnabledGroupActions;
+        public HashSet<ActorBehaviourName> EnabledGroupActions;
         public HashSet<ActorActionName>  EnabledIndividualActions;
-        public HashSet<ActorActionGroup>  DisabledGroupActions;
+        public HashSet<ActorBehaviourName>  DisabledGroupActions;
         public HashSet<ActorActionName>  DisabledIndividualActions;
     }
 }

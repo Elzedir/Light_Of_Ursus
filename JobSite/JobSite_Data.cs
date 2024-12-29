@@ -218,7 +218,7 @@ namespace JobSite
 
             var citizenID = allCitizenIDs
                 .FirstOrDefault(c =>
-                    Actor_Manager.GetActor_Data(c)?.CareerUpdater.JobSiteID == 0 &&
+                    Actor_Manager.GetActor_Data(c)?.CareerData.JobSiteID == 0 &&
                     _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                 );
 
@@ -257,7 +257,7 @@ namespace JobSite
             {
                 if (vocation.VocationName == VocationName.None) continue;
 
-                if (actorData.VocationUpdater.GetVocationExperience(vocation.VocationName) <
+                if (actorData.VocationData.GetVocationExperience(vocation.VocationName) <
                     vocation.MinimumVocationExperience)
                 {
                     return false;
@@ -305,7 +305,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Add(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerUpdater.SetJobsiteID(JobSiteID);
+            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(JobSiteID);
         }
 
         public void HireEmployee(uint employeeID)
@@ -324,7 +324,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Remove(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerUpdater.SetJobsiteID(0);
+            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(0);
 
             // Remove employee job from employee job component.
         }
@@ -340,11 +340,11 @@ namespace JobSite
         {
             RemoveWorkerFromCurrentStation(employee);
 
-            var actorCurrentJob = employee.ActorData.CareerUpdater.CurrentJob;
+            var actorCurrentJob = employee.ActorData.CareerData.CurrentJob;
 
             if (actorCurrentJob is null)
             {
-                if (!employee.ActorData.CareerUpdater.GetNewCurrentJob())
+                if (!employee.ActorData.CareerData.GetNewCurrentJob())
                 {
                     Debug.LogWarning(
                         $"Actor Current Job for employeeID: {employee} is null. Needs to get a job first.");
@@ -398,9 +398,9 @@ namespace JobSite
                                                                  .RemoveCurrentWorkerFromWorkPost();
                 WorkPost_Workers[stationWorkPostID] = 0;
 
-                if (worker.ActorData.CareerUpdater.CurrentJob is null) return true;
+                if (worker.ActorData.CareerData.CurrentJob is null) return true;
 
-                worker.ActorData.CareerUpdater.StopCurrentJob();
+                worker.ActorData.CareerData.StopCurrentJob();
                 Debug.LogError($"CurrentJob was not stopped for employeeID: {worker.ActorID}. Stopping here.");
 
                 return true;
@@ -413,7 +413,7 @@ namespace JobSite
                     return false;
                 }
 
-                var actorCareer = worker.ActorData.CareerUpdater;
+                var actorCareer = worker.ActorData.CareerData;
 
                 if (actorCareer == null)
                 {
@@ -421,7 +421,7 @@ namespace JobSite
                     return false;
                 }
 
-                if (worker.ActorData.CareerUpdater.CurrentJob == null)
+                if (worker.ActorData.CareerData.CurrentJob == null)
                 {
                     Debug.Log($"Employee does not have a current job.");
                     return false;
@@ -490,7 +490,7 @@ namespace JobSite
 
                     foreach (var vocation in station_Data.StationProgressData.CurrentProduct.RequiredVocations)
                     {
-                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationUpdater
+                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationData
                                                                  .GetProgress(vocation);
                     }
 
@@ -613,7 +613,7 @@ namespace JobSite
                         continue;
                     }
 
-                    newEmployee.ActorData.CareerUpdater.SetEmployeePosition(station.CoreEmployeePositionName);
+                    newEmployee.ActorData.CareerData.SetEmployeePosition(station.CoreEmployeePositionName);
 
                     iteration++;
                 }

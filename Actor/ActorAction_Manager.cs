@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Priority;
 using UnityEngine;
 
@@ -9,10 +8,6 @@ namespace Actor
 {
     public abstract class ActorAction_Manager : MonoBehaviour
     {
-        public static ActorAction GetNewActorAction(ActorActionName actorActionName) =>
-            new(actorActionName, GetActionParameters(actorActionName, null),
-                GetDefaultActionHighestPriorityState(actorActionName));
-
         public static ActorAction_Master GetActorAction_Master(ActorActionName actorActionName)
         {
             if (_allActorAction_Masters.TryGetValue(actorActionName, out var actorActionMaster))
@@ -29,136 +24,60 @@ namespace Actor
             new()
             {
                 {
-                    ActorActionName.Fetch, new ActorAction_Master(
-                        ActorActionName.Fetch, ActorActionGroup.Work,
-                        new List<IEnumerator>
-                        {
-
-                        })
-                },
-
-                {
-                    ActorActionName.Deliver, new ActorAction_Master(
-                        ActorActionName.Deliver, ActorActionGroup.Work,
-                        new List<IEnumerator>
-                        {
-
-                        })
+                    ActorActionName.Perform_JobTask, new ActorAction_Master(
+                        ActorActionName.Perform_JobTask, ActorBehaviourName.Work,
+                        actionList: new List<IEnumerator>())
                 },
 
                 {
                     ActorActionName.Wander, new ActorAction_Master(
-                        ActorActionName.Wander, ActorActionGroup.Recreation,
-                        new List<IEnumerator>
-                        {
-
-                        })
+                        ActorActionName.Wander, ActorBehaviourName.Recreation,
+                        actionList: new List<IEnumerator>())
                 },
             };
 
-        public static List<ActorActionName> GetActionGroup(ActorActionGroup actorActionGroup) =>
-            _allActionGroups[actorActionGroup];
-
-        static readonly Dictionary<ActorActionGroup, List<ActorActionName>> _allActionGroups = new()
+        public static ActorBehaviourName GetActorBehaviourOfActorAction(ActorActionName actorActionName)
         {
+            if (_behavioursByAction.TryGetValue(actorActionName, out var actionGroup))
             {
-                ActorActionGroup.Normal, new List<ActorActionName>()
-                {
-                    ActorActionName.Idle,
-                    ActorActionName.Scavenge,
-                }
-            },
-            {
-                ActorActionGroup.Combat, new List<ActorActionName>()
-                {
-                    ActorActionName.Attack,
-                    ActorActionName.Defend,
-                }
-            },
-            {
-                ActorActionGroup.Work, new List<ActorActionName>()
-                {
-                    ActorActionName.Deliver,
-                    ActorActionName.Fetch,
-                }
-            },
-            {
-                ActorActionGroup.Recreation, new List<ActorActionName>()
-                {
-                    ActorActionName.Wander,
-                }
-            },
+                return actionGroup;
+            }
+
+            Debug.LogError($"No action group found for {actorActionName}.");
+            return ActorBehaviourName.Normal;
+        }
+
+        static readonly Dictionary<ActorActionName, ActorBehaviourName> _behavioursByAction = new()
+        {
+            { ActorActionName.Idle, ActorBehaviourName.Normal },
+            { ActorActionName.Scavenge, ActorBehaviourName.Normal },
+
+            { ActorActionName.Attack, ActorBehaviourName.Combat },
+            { ActorActionName.Defend, ActorBehaviourName.Combat },
+
+            { ActorActionName.Perform_JobTask, ActorBehaviourName.Work },
+
+            { ActorActionName.Wander, ActorBehaviourName.Recreation },
         };
 
-        public static Dictionary<PriorityParameterName, object> GetActionParameters(
+        public static Dictionary<PriorityParameterName, object> PopulateActionParameters(
             ActorActionName actorActionName, Dictionary<PriorityParameterName, object> requiredParameters)
         {
-            requiredParameters ??= new Dictionary<PriorityParameterName, object>();
-            
-            var emptyActionParameters = GetEmptyActionParameters(actorActionName);
-
             return actorActionName switch
             {
-                ActorActionName.Fetch => _populateFetchActionParameters(emptyActionParameters, requiredParameters),
-                _                     => null
+                ActorActionName.Idle            => null, // Replace
+                ActorActionName.Perform_JobTask => _populatePerformJobTaskParameters(requiredParameters),
+                _                               => null
             };
         }
 
-        public static Dictionary<PriorityParameterName, object> GetEmptyActionParameters(ActorActionName actorActionName)
+        static Dictionary<PriorityParameterName, object> _populatePerformJobTaskParameters(
+            Dictionary<PriorityParameterName, object> requiredParameters)
         {
-            if (_allDefaultActionParameters.TryGetValue(actorActionName, out var defaultParameters))
+            return new Dictionary<PriorityParameterName, object>
             {
-                return defaultParameters.ToDictionary<PriorityParameterName, PriorityParameterName, object>(
-                    parameterName => parameterName, _ => null);
-            }
-
-            Debug.LogWarning($"No default parameters found for {actorActionName}. Returning empty dictionary.");
-            return new Dictionary<PriorityParameterName, object>();
-        }
-
-        static readonly Dictionary<ActorActionName, List<PriorityParameterName>> _allDefaultActionParameters = new()
-        {
-            {
-                ActorActionName.Fetch, new List<PriorityParameterName>
-                {
-                    PriorityParameterName.DefaultPriority,
-                    PriorityParameterName.TotalItems,
-                    PriorityParameterName.TotalDistance,
-                    PriorityParameterName.InventoryHauler,
-                    PriorityParameterName.InventoryTarget,
-                }
-            },
-            {
-                ActorActionName.Deliver, new List<PriorityParameterName>
-                {
-                    PriorityParameterName.DefaultPriority,
-                    PriorityParameterName.TotalItems,
-                    PriorityParameterName.TotalDistance,
-                    PriorityParameterName.InventoryHauler,
-                    PriorityParameterName.InventoryTarget,
-                    PriorityParameterName.CurrentStationType,
-                    PriorityParameterName.AllStationTypes,
-                }
-            },
-            {
-                ActorActionName.Wander, new List<PriorityParameterName>
-                {
-                    PriorityParameterName.DefaultPriority,
-                }
-            },
-        };
-
-        static Dictionary<PriorityParameterName, object> _populateFetchActionParameters(
-            Dictionary<PriorityParameterName, object> actionParameters,
-            Dictionary<PriorityParameterName, object> existingParameters)
-        {
-            return new Dictionary<PriorityParameterName, object>(actionParameters)
-            {
-                [PriorityParameterName.DefaultPriority] = 1,
-                [PriorityParameterName.TotalItems]      = 0,
-                [PriorityParameterName.TotalDistance]   = 0,
-                [PriorityParameterName.InventoryHauler] = null,
-                [PriorityParameterName.InventoryTarget] = null,
+                { PriorityParameterName.JobTaskName, requiredParameters[PriorityParameterName.JobTaskName] },
+                { PriorityParameterName.Jobsite_Component, requiredParameters[PriorityParameterName.Jobsite_Component] }
             };
         }
 
@@ -178,8 +97,7 @@ namespace Actor
             { ActorActionName.Attack, ActorPriorityState.InCombat },
             { ActorActionName.Defend, ActorPriorityState.InCombat },
 
-            { ActorActionName.Fetch, ActorPriorityState.HasJob },
-            { ActorActionName.Deliver, ActorPriorityState.HasJob },
+            { ActorActionName.Perform_JobTask, ActorPriorityState.HasJob },
 
             { ActorActionName.Wander, ActorPriorityState.None },
             { ActorActionName.Idle, ActorPriorityState.None },
@@ -191,66 +109,19 @@ namespace Actor
     // often driven by immediate needs, combat, exploration, or player commands.
     // These actions typically occur in reaction to dynamic game states.
 
-    public class ActorAction
-    {
-        public readonly ActorActionName ActionName;
-        ActorAction_Master              _actionMaster;
-        public ActorPriorityState       HighestPriorityState;
-
-        public ActorAction_Master ActionMaster =>
-            _actionMaster ??= ActorAction_Manager.GetActorAction_Master(ActionName);
-
-        public Dictionary<PriorityParameterName, object> ActionParameters;
-        
-        public List<IEnumerator> ActionList => ActionMaster.ActionList;
-
-        public ActorAction(ActorActionName actionName, Dictionary<PriorityParameterName, object> actionParameters, ActorPriorityState highestPriorityState)
-        {
-            ActionName           = actionName;
-            ActionParameters     = actionParameters;
-            HighestPriorityState = highestPriorityState;
-        }
-    }
-
-    public class ActorAction_Target : ActorAction
-    {
-        public ActorAction_Target(ActorActionName actionName,
-                                  Dictionary<PriorityParameterName, object> actionParameters,
-                                  ActorPriorityState highestPriorityState, GameObject target) : base(actionName,
-            actionParameters, highestPriorityState)
-        {
-            Target = target;
-        }
-
-        public GameObject Target;
-    }
-
-    public class ActorAction_Location : ActorAction
-    {
-        public ActorAction_Location(ActorActionName actionName,
-                                    Dictionary<PriorityParameterName, object> actionParameters,
-                                    ActorPriorityState highestPriorityState, Vector3 location) : base(actionName,
-            actionParameters, highestPriorityState)
-        {
-            Location = location;
-        }
-        
-        public Vector3 Location;
-    }
-
     [Serializable]
     public class ActorAction_Master
     {
-        public readonly ActorActionName   ActionName;
-        public readonly ActorActionGroup  ActionGroup;
-        public readonly List<IEnumerator> ActionList;
+        public readonly ActorActionName    ActionName;
+        public readonly ActorBehaviourName BehaviourName;
+        public readonly List<IEnumerator>  ActionList;
 
-        public ActorAction_Master(ActorActionName   actionName, ActorActionGroup actionGroup,
+        public ActorAction_Master(ActorActionName   actionName, ActorBehaviourName behaviourName,
                                   List<IEnumerator> actionList)
         {
-            ActionName  = actionName;
-            ActionGroup = actionGroup;
-            ActionList  = actionList;
+            ActionName    = actionName;
+            BehaviourName = behaviourName;
+            ActionList    = actionList;
         }
     }
 
@@ -259,20 +130,22 @@ namespace Actor
         // PriorityState None (Can do in all situations)
         Idle,
         All,
-        
+
         Wander,
 
         // PriorityState Combat
-        
+
         Attack,
         Defend,
         Cast_Spell,
         Parry_Attack,
 
         // PriorityState Job
-        
-        Deliver,
-        Fetch,
+
+        Perform_JobTask,
+
+        //Deliver,
+        //Fetch,
         Scavenge,
 
         // PriorityState_All
@@ -291,13 +164,5 @@ namespace Actor
         Gather_Herbs,
         Drop_Item,
         Inspect_Inventory,
-    }
-
-    public enum ActorActionGroup
-    {
-        Normal,
-        Combat,
-        Recreation,
-        Work,
     }
 }

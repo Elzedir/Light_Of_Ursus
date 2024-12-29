@@ -216,27 +216,27 @@ namespace Actor
                 // Change this so that it generates correct CityID
             );
 
-            var gameObjectData = new GameObjectUpdater(
+            var gameObjectData = new GameObjectData(
                 actorID: fullIdentification.ActorID,
                 actorTransform: actor.transform,
                 actorMesh: null,
                 actorMaterial: null
             );
 
-            var careerData = new CareerUpdater(
+            var careerData = new CareerData(
                 actorID: fullIdentification.ActorID,
-                careerName: actorDataPreset?.CareerUpdater.CareerName     ?? CareerName.Wanderer,
-                jobsNotFromCareer: actorDataPreset?.CareerUpdater.AllJobs ?? new HashSet<JobName>()
+                careerName: actorDataPreset?.CareerData.CareerName     ?? CareerName.Wanderer,
+                jobsNotFromCareer: actorDataPreset?.CareerData.AllJobs ?? new HashSet<JobName>()
             );
             
-            var craftingData = new CraftingUpdater(
+            var craftingData = new CraftingData(
                 actorID: fullIdentification.ActorID,
-                knownRecipes: actorDataPreset?.CraftingUpdater.KnownRecipes ?? new List<RecipeName>()
+                knownRecipes: actorDataPreset?.CraftingData.KnownRecipes ?? new List<RecipeName>()
             );
 
-            var vocationData = new VocationUpdater(
+            var vocationData = new VocationData(
                 actorID: fullIdentification.ActorID,
-                actorVocations: actorDataPreset?.VocationUpdater.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
+                actorVocations: actorDataPreset?.VocationData.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
                 );
             
             var speciesAndPersonality = new SpeciesAndPersonality(
@@ -256,7 +256,7 @@ namespace Actor
                 actorConditions: _getNewActorConditions(fullIdentification.ActorID)
                 );
 
-            var inventoryData = new InventoryUpdater_Actor(
+            var inventoryData = new InventoryData_Actor(
                 actorID: fullIdentification.ActorID,
                 new ObservableDictionary<uint, Item>()
             );

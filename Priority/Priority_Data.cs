@@ -135,15 +135,7 @@ namespace Priority
             return PriorityQueue.Dequeue(priorityID);
         }
 
-        protected bool _priorityExists(uint priorityID)
-        {
-            return PriorityQueue.Peek(priorityID) is not null;
-            
-            //Debug.LogError($"PriorityID: {priorityID} not found in _existingParameters.");
-        }
-
-        protected abstract Dictionary<PriorityParameterName, object> _getPriorityParameters(
-            uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters);
+        protected abstract Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID);
 
         bool        _syncingCachedQueue;
         const float _timeDeferment = 1f;

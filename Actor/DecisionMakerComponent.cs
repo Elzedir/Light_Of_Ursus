@@ -9,7 +9,7 @@ namespace Actor
         readonly ComponentReference_Actor _actorReferences;
 
         uint           _actorID   => _actorReferences.ActorID;
-        Actor_Component _actor     => _actorReferences.Actor;
+        Actor_Component _actor     => _actorReferences.Actor_Component;
         Actor_Data      _actorData => _actor.ActorData;
 
         public DecisionMakerComponent(uint actorID)
@@ -22,7 +22,7 @@ namespace Actor
         public Priority_Data_Actor PriorityData =>
             _priorityData ??= new Priority_Data_Actor(_actorID);
 
-        ActorAction _currentActorActionMaster => PriorityData.GetCurrentAction();
+        ActorAction_Master _currentActorActionMaster => PriorityData.GetCurrentAction();
 
         public void MakeDecision()
         {
@@ -49,8 +49,8 @@ namespace Actor
                 return ActorPriorityState.InCombat;
             }
 
-            if (!_actorData.CareerUpdater.JobsActive || !_actorData.CareerUpdater.HasCurrentJob())
-                return _actorData.CareerUpdater.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
+            if (!_actorData.CareerData.JobsActive || !_actorData.CareerData.HasCurrentJob())
+                return _actorData.CareerData.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
             
             Debug.Log("Step 1: Has Job");
             return ActorPriorityState.HasJob;
@@ -76,7 +76,7 @@ namespace Actor
             }
 
             var nextHighestPriority =
-                ActorAction_Manager.GetNewActorAction((ActorActionName)nextHighestPriorityElement.PriorityID);
+                ActorAction_Manager.GetActorAction_Master((ActorActionName)nextHighestPriorityElement.PriorityID);
 
             Debug.Log($"Next Highest Priority: {nextHighestPriority} is higher than Current Action: {currentAction.ActionName}");
             

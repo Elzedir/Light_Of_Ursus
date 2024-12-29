@@ -49,7 +49,7 @@ namespace WorkPosts
                 return;
             }
 
-            CurrentWorker.ActorData.CareerUpdater.StopCurrentJob();
+            CurrentWorker.ActorData.CareerData.StopCurrentJob();
             _currentWorkerID         = 0;
             _currentWorker           = null;
             IsWorkerMovingToWorkPost = false;

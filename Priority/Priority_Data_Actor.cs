@@ -12,8 +12,8 @@ namespace Priority
     {
         public Coroutine                CurrentActionCoroutine { get; private set; }
         public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
-        ActorAction                     _currentActorAction;
-        public             ActorAction  GetCurrentAction() => _currentActorAction;
+        ActorAction_Master                     _currentActorAction;
+        public             ActorAction_Master  GetCurrentAction() => _currentActorAction;
         protected override PriorityType _priorityType      => PriorityType.ActorAction;
 
         public void SetCurrentAction(uint actorActionName)
@@ -22,7 +22,7 @@ namespace Priority
             
             Debug.Log($"Setting current action to: {(ActorActionName)actorActionName}.");
             
-            var actorAction = ActorAction_Manager.GetNewActorAction((ActorActionName)actorActionName);
+            var actorAction = ActorAction_Manager.GetActorAction_Master((ActorActionName)actorActionName);
 
             _currentActorAction = actorAction;
 
@@ -49,8 +49,6 @@ namespace Priority
 
         protected override void _regeneratePriority(uint priorityID)
         {
-            if (!_priorityExists(priorityID)) return;
-
             switch (priorityID)
             {
                 case (uint)ActorActionName.All:
@@ -61,17 +59,34 @@ namespace Priority
                     PriorityQueue.Update(priorityID, 1);
                     return;
             }
+            
+            var priorityParameters = _getPriorityParameters(priorityID);
 
-            var priorityValue =
-                Priority_Generator.GeneratePriority(_priorityType, priorityID, _getPriorityParameters(priorityID, null));
+            var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
+            
+            Debug.Log($"PriorityID: {priorityID}, PriorityValue: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(
-            uint priorityID, Dictionary<PriorityParameterName, object> requiredParameters)
+        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            return ActorAction_Manager.GetActionParameters((ActorActionName)priorityID, requiredParameters);
+            var actorBehaviour = ActorAction_Manager.GetActorBehaviourOfActorAction((ActorActionName)priorityID);
+            var actorBehaviourParameters = ActorBehaviour_Manager.GetRequiredParametersOfActorBehaviour(actorBehaviour);
+            var requiredParameters = actorBehaviourParameters.ToDictionary(parameter => parameter, _getParameter);
+
+            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, requiredParameters);
+        }
+
+        object _getParameter(PriorityParameterName parameter)
+        {
+            return parameter switch
+            {
+                // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
+                PriorityParameterName.Jobsite_Component => _actor.ActorData.CareerData.JobSite,
+                PriorityParameterName.Hauler_Component => _actor,
+                _ => null
+            };
         }
 
         IEnumerator _performCurrentActionFromStart()
@@ -91,7 +106,7 @@ namespace Priority
         readonly ComponentReference_Actor _actorReferences;
 
         public    uint           ActorID => _actorReferences.ActorID;
-        protected Actor_Component _actor  => _actorReferences.Actor;
+        protected Actor_Component _actor  => _actorReferences.Actor_Component;
 
         public Priority_Data_Actor(uint actorID)
         {
@@ -140,14 +155,14 @@ namespace Priority
             switch (actorPriorityState)
             {
                 case ActorPriorityState.InCombat:
-                    foreach (var actorActionName in ActorAction_Manager.GetActionGroup(ActorActionGroup.Combat))
+                    foreach (var actorActionName in ActorBehaviour_Manager.GetActorActionsOfActorBehaviour(ActorBehaviourName.Combat))
                     {
                         relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
                     }
 
                     break;
                 case ActorPriorityState.HasJob:
-                    foreach (var actorActionName in ActorAction_Manager.GetActionGroup(ActorActionGroup.Work))
+                    foreach (var actorActionName in ActorBehaviour_Manager.GetActorActionsOfActorBehaviour(ActorBehaviourName.Work))
                     {
                         relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
                     }
@@ -166,14 +181,13 @@ namespace Priority
             {
                 PriorityUpdateTrigger.ChangedInventory, new List<uint>
                 {
-                    (uint)ActorActionName.Deliver
+                    (uint)ActorActionName.Perform_JobTask
                 }
             },
 
             {
                 PriorityUpdateTrigger.DroppedItems, new List<uint>
                 {
-                    (uint)ActorActionName.Fetch,
                     (uint)ActorActionName.Scavenge
                 }
             },

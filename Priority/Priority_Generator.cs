@@ -190,10 +190,10 @@ namespace Priority
         {
             switch (priorityID)
             {
-                case (uint)ActorActionName.Fetch:
-                    return _generateFetchPriority(existingPriorityParameters);
-                case (uint)ActorActionName.Deliver:
-                    return _generateDeliverPriority(existingPriorityParameters);
+                case (uint)ActorActionName.Perform_JobTask:
+                    return _generatePriority_Jobsite(
+                        (uint)existingPriorityParameters[(uint)PriorityParameterName.JobTaskName],
+                        existingPriorityParameters);
                 default:
                     Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");
                     return 0;
@@ -205,7 +205,9 @@ namespace Priority
             switch (priorityID)
             {
                 case (uint)JobTaskName.Fetch_Items:
-                    return _generateStockpilePriority(existingPriorityParameters);
+                    return _generateFetchPriority(existingPriorityParameters);
+                case (uint)JobTaskName.Deliver_Items:
+                    return _generateDeliverPriority(existingPriorityParameters);
                 default:
                     Debug.LogError($"JobTask: {(JobTaskName)priorityID} not found.");
                     return 0;
@@ -216,12 +218,12 @@ namespace Priority
         {
             var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                               _defaultMaxPriority;
-            var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
-            var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
+            var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.Total_Distance] as float? ?? 0;
+            var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.Total_Items] as float?    ?? 0;
             var inventory_Hauler =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryUpdater;
+                existingPriorityParameters[(uint)PriorityParameterName.Hauler_Component] as InventoryData;
             var inventory_Target =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryUpdater;
+                existingPriorityParameters[(uint)PriorityParameterName.Target_Component] as InventoryData;
 
             if (maxPriority == 0)
             {
@@ -235,9 +237,9 @@ namespace Priority
                 return 0;
             }
 
-            if (inventory_Hauler == null || inventory_Target == null)
+            if (inventory_Target == null)
             {
-                Debug.LogError($"Inventory_Hauler {inventory_Hauler} or Inventory_Target: {inventory_Target} is null.");
+                Debug.LogError($"Inventory_Target is null.");
                 return 0;
             }
 
@@ -249,16 +251,21 @@ namespace Priority
                 return 0;
             }
 
-            var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
-            var targetPosition = inventory_Target.Reference.GameObject.transform.position;
-
             var priority_ItemQuantity = allItemsToFetch.Count != 0
                 ? _moreItemsDesired_Total(allItemsToFetch, totalItems, maxPriority)
                 : 0;
 
-            var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority)
-                : 0;
+            float priority_Distance = 0;
+
+            if (inventory_Hauler is not null)
+            {
+                var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
+                var targetPosition = inventory_Target.Reference.GameObject.transform.position;
+
+                priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+                    ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, maxPriority)
+                    : 0;   
+            }
 
             var debugDataList = new DebugEntry_Data
             (
@@ -288,12 +295,12 @@ namespace Priority
         {
             var maxPriority = existingPriorityParameters[(uint)PriorityParameterName.DefaultPriority] as float? ??
                               _defaultMaxPriority;
-            var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.TotalDistance] as float? ?? 0;
-            var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.TotalItems] as float?    ?? 0;
+            var totalDistance = existingPriorityParameters[(uint)PriorityParameterName.Total_Distance] as float? ?? 0;
+            var totalItems    = existingPriorityParameters[(uint)PriorityParameterName.Total_Items] as float?    ?? 0;
             var inventory_Hauler =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryHauler] as InventoryUpdater;
+                existingPriorityParameters[(uint)PriorityParameterName.Hauler_Component] as InventoryData;
             var inventory_Target =
-                existingPriorityParameters[(uint)PriorityParameterName.InventoryTarget] as InventoryUpdater;
+                existingPriorityParameters[(uint)PriorityParameterName.Target_Component] as InventoryData;
 
             var currentStationType =
                 existingPriorityParameters.TryGetValue((uint)PriorityParameterName.CurrentStationType,
@@ -365,11 +372,6 @@ namespace Priority
             DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
 
             return priority_ItemQuantity + priority_Distance;
-        }
-
-        static float _generateStockpilePriority(Dictionary<uint, object> existingPriorityParameters)
-        {
-            return 2;
         }
     }
 

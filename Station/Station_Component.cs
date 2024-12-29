@@ -62,12 +62,12 @@ namespace Station
         protected abstract void _initialiseStartingInventory();
         public List<Item> GetInventoryItemsToFetch()
         {
-            return Station_Data.InventoryUpdater.GetInventoryItemsToFetch();
+            return Station_Data.InventoryData.GetInventoryItemsToFetch();
         }
 
-        public List<Item> GetInventoryItemsToDeliver(InventoryUpdater inventory)
+        public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
         {
-            return Station_Data.InventoryUpdater.GetInventoryItemsToDeliver(inventory);
+            return Station_Data.InventoryData.GetInventoryItemsToDeliver(inventory);
         }
 
         public void SetInteractRange(float interactRange = 2)

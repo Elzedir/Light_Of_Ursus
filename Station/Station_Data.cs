@@ -34,8 +34,8 @@ namespace Station
         JobSite_Component        _jobSite_Component;
         public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         
-        InventoryUpdater _inventoryUpdater;
-        public InventoryUpdater InventoryUpdater => _inventoryUpdater ??= new InventoryUpdater_Station(StationID);
+        InventoryData _inventoryData;
+        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
         
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
@@ -178,7 +178,7 @@ namespace Station
             {
                 try
                 {
-                    success = InventoryUpdater.InventoryContainsAllItems(
+                    success = InventoryData.InventoryContainsAllItems(
                         StationProgressData.CurrentProduct.RequiredIngredients);
                     break;
                 }
@@ -215,7 +215,7 @@ namespace Station
                         $"Station ID: {StationID}",
                         $"Station Description: {StationDescription}",
                         $"Station IsActive: {StationIsActive}",
-                        $"Inventory Data: {InventoryUpdater}"
+                        $"Inventory Data: {InventoryData}"
                     }));
             }
             catch
@@ -228,7 +228,7 @@ namespace Station
                 dataObjects.Add(new Data_Display(
                     title: "Station Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryUpdater.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
+                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
             }
             catch
             {

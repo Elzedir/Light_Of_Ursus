@@ -1,9 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using ScriptableObjects;
-using Station;
-using UnityEditor;
 using UnityEngine;
 
 namespace Jobs
