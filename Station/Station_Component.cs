@@ -60,14 +60,19 @@ namespace Station
         }
 
         protected abstract void _initialiseStartingInventory();
-        public List<Item> GetInventoryItemsToFetch()
+        public List<Item> GetInventoryItemsToFetchFromStation()
         {
-            return Station_Data.InventoryData.GetInventoryItemsToFetch();
+            return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();
         }
 
-        public List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+        public List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
         {
-            return Station_Data.InventoryData.GetInventoryItemsToDeliver(inventory);
+            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
+        }
+
+        public List<Item> GetInventoryItemsToDeliverFromOtherStations()
+        {
+            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations();
         }
 
         public void SetInteractRange(float interactRange = 2)

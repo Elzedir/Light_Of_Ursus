@@ -70,15 +70,14 @@ namespace Priority
         None,
 
         // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every TotalItems, TotalDistance, etc. has an attached maxPriority.
-        DefaultPriority,
+        DefaultMaxPriority,
         
         Jobsite_Component,
-        JobTaskName,
         Worker,
         CurrentStationType,
         AllStationTypes,
         
-        Hauler_Component,
+        Worker_Component,
         Target_Component,
         
         Total_Items,

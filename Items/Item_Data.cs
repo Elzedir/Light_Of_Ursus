@@ -157,6 +157,7 @@ namespace Items
         public uint   ItemID;
         public string ItemName;
         public uint   ItemAmount;
+        public uint   ItemAmountOnHold;
         public uint   MaxStackSize;
 
         Item_Data        _dataItem;
@@ -180,10 +181,11 @@ namespace Items
 
         public Item(Item item)
         {
-            ItemID       = item.ItemID;
-            ItemName     = item.ItemName;
-            ItemAmount   = item.ItemAmount;
-            MaxStackSize = item.MaxStackSize;
+            ItemID           = item.ItemID;
+            ItemName         = item.ItemName;
+            ItemAmount       = item.ItemAmount;
+            ItemAmountOnHold = item.ItemAmountOnHold;
+            MaxStackSize     = item.MaxStackSize;
         }
 
         public static uint GetItemListTotal_CountAllItems(List<Item> items)

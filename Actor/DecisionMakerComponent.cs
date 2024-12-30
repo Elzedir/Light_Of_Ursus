@@ -62,10 +62,12 @@ namespace Actor
         {
             var currentAction = PriorityData.GetCurrentAction();
             nextHighestPriorityElement = PriorityData.PeekHighestPriority(actorPriorityState);
+            
+            Debug.Log($"Current Action: {currentAction?.ActionName}, Next Highest Priority: {nextHighestPriorityElement?.PriorityID}");
 
             if (nextHighestPriorityElement is null)
             {
-                //Debug.LogWarning("There is no next highest priority.");
+                Debug.LogWarning("There is no next highest priority.");
                 return false;
             }
 

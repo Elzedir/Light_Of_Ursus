@@ -71,11 +71,10 @@ namespace Priority
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            var actorBehaviour = ActorAction_Manager.GetActorBehaviourOfActorAction((ActorActionName)priorityID);
-            var actorBehaviourParameters = ActorBehaviour_Manager.GetRequiredParametersOfActorBehaviour(actorBehaviour);
-            var requiredParameters = actorBehaviourParameters.ToDictionary(parameter => parameter, _getParameter);
+            var actorAction_Master = ActorAction_Manager.GetActorAction_Master((ActorActionName)priorityID);
+            var parameters = actorAction_Master.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
 
-            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, requiredParameters);
+            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, parameters);
         }
 
         object _getParameter(PriorityParameterName parameter)
@@ -84,7 +83,7 @@ namespace Priority
             {
                 // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
                 PriorityParameterName.Jobsite_Component => _actor.ActorData.CareerData.JobSite,
-                PriorityParameterName.Hauler_Component => _actor,
+                PriorityParameterName.Worker_Component => _actor,
                 _ => null
             };
         }

@@ -69,10 +69,15 @@ namespace Priority
             }
             
             var priorityParameters = _getPriorityParameters(priorityID);
+            
+            if (priorityParameters == null)
+            {
+                Debug.LogWarning($"PriorityParameters not found for: {(JobTaskName)priorityID}.");
+            }
 
             var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
             
-            Debug.Log($"PriorityID: {priorityID}, PriorityValue: {priorityValue}");
+            Debug.Log($"JobTaskName: {(JobTaskName)priorityID}, PriorityValue: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
@@ -88,12 +93,21 @@ namespace Priority
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            var requiredParameters = new Dictionary<PriorityParameterName, object>
-            {
-                { PriorityParameterName.Jobsite_Component, _jobSite }
-            };
+            var jobTask_Master = JobTask_Manager.GetJobTask_Master((JobTaskName)priorityID);
+            var parameters = jobTask_Master.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
             
-            return JobTask_Manager.PopulateTaskParameters((JobTaskName)priorityID, requiredParameters);
+            return JobTask_Manager.PopulateTaskParameters((JobTaskName)priorityID, parameters);
+        }
+        
+        object _getParameter(PriorityParameterName parameter)
+        {
+            return parameter switch
+            {
+                // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
+                PriorityParameterName.Jobsite_Component => _jobSite,
+                //PriorityParameterName.Worker_Component  => _actor,
+                _                                       => null
+            };
         }
 
         protected override Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState)

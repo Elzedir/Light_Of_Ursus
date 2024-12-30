@@ -18,6 +18,12 @@ namespace Actor
 
         public Actor_Component GetActor_Component(uint actorID)
         {
+            if (actorID == 0)
+            {
+                Debug.LogError("ActorID cannot be 0.");
+                return null;
+            }
+            
             if (ActorComponents.TryGetValue(actorID, out var component))
             {
                 return component;

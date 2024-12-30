@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
@@ -5,6 +6,7 @@ using EmployeePosition;
 using Initialisation;
 using Inventory;
 using Jobs;
+using Station;
 using TickRates;
 using UnityEngine;
 using Station_Component = Station.Station_Component;
@@ -166,27 +168,34 @@ namespace JobSite
             return result;
         }
 
-        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName, InventoryData inventoryData)
+        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName)
         {
             return jobTaskName switch
             {
                 JobTaskName.Fetch_Items   => _relevantStations_Fetch(),
-                JobTaskName.Deliver_Items => _relevantStations_Deliver(inventoryData),
-                _                         => new List<Station_Component>()
+                JobTaskName.Deliver_Items => _relevantStations_Deliver(),
+                JobTaskName.Chop_Wood     => _relevantStations_Chop_Wood(),
+                _                         => throw new ArgumentException($"JobTaskName: {jobTaskName} not recognised.")
             };
         }
 
         List<Station_Component> _relevantStations_Fetch()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItemsToFetch().Count > 0).ToList();
+                              .Where(station => station.GetInventoryItemsToFetchFromStation().Count > 0).ToList();
         }
 
-        List<Station_Component> _relevantStations_Deliver(InventoryData inventoryData)
+        List<Station_Component> _relevantStations_Deliver()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItemsToDeliver(inventoryData).Count > 0)
+                              .Where(station => station.GetInventoryItemsToDeliverFromOtherStations().Count > 0)
                               .ToList();
+        }
+
+        List<Station_Component> _relevantStations_Chop_Wood()
+        {
+            return JobSiteData.AllStationComponents.Values
+                       .Where(station => station.StationName == StationName.Tree && station.Station_Data.GetOpenWorkPost() is not null).ToList();   
         }
     }
 }

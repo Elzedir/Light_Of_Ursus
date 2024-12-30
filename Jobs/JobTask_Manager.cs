@@ -9,7 +9,6 @@ using Priority;
 using Station;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Jobs
 {
@@ -30,75 +29,133 @@ namespace Jobs
             new()
             {
                 {
+                    JobTaskName.Fetch_Items, new JobTask_Master(
+                        taskName: JobTaskName.Fetch_Items,
+                        taskDescription: "Fetch Items",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        {
+                            _fetchWood
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
+                        })
+                },
+                {
+                    JobTaskName.Deliver_Items, new JobTask_Master(
+                        taskName: JobTaskName.Deliver_Items,
+                        taskDescription: "Deliver Items",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        {
+                            _fetchWood
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
+                        })  
+                },
+                {
                     JobTaskName.Beat_Metal, new JobTask_Master(
-                        JobTaskName.Beat_Metal,
-                        "Beat Iron into Shape",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Beat_Metal,
+                        taskDescription: "Beat Iron into Shape",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _beatIron
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Chop_Wood, new JobTask_Master(
-                        JobTaskName.Chop_Wood,
-                        "Chop Wood",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Chop_Wood,
+                        taskDescription: "Chop Wood",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _chopWood
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Process_Logs, new JobTask_Master(
-                        JobTaskName.Process_Logs,
-                        "Process Logs",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Process_Logs,
+                        taskDescription: "Process Logs",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _processLogs
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Drop_Off_Wood, new JobTask_Master(
-                        JobTaskName.Drop_Off_Wood,
-                        "Drop Off Wood",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Drop_Off_Wood,
+                        taskDescription: "Drop Off Wood",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _dropOffWood
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Stand_At_Counter, new JobTask_Master(
-                        JobTaskName.Stand_At_Counter,
-                        "Stand at Counter",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Stand_At_Counter,
+                        taskDescription: "Stand at Counter",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _standAtCounter
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Restock_Shelves, new JobTask_Master(
-                        JobTaskName.Restock_Shelves,
-                        "Restock Shelves",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Restock_Shelves,
+                        taskDescription: "Restock Shelves",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _restockShelves
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Defend_Ally, new JobTask_Master(
-                        JobTaskName.Defend_Ally,
-                        "Defend Ally",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Defend_Ally,
+                        taskDescription: "Defend Ally",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendAlly
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
                     JobTaskName.Defend_Neutral, new JobTask_Master(
-                        JobTaskName.Defend_Neutral,
-                        "Defend Neutral",
-                        new List<Func<Actor_Component, uint, IEnumerator>>
+                        taskName: JobTaskName.Defend_Neutral,
+                        taskDescription: "Defend Neutral",
+                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendNeutral
+                        },
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
                         })
                 },
             };
@@ -172,122 +229,161 @@ namespace Jobs
             yield return null;
         }
 
-        public static Dictionary<PriorityParameterName, object> PopulateTaskParameters(JobTaskName jobTaskName, Dictionary<PriorityParameterName, object> requiredParameters)
+        public static Dictionary<PriorityParameterName, object> PopulateTaskParameters(
+            JobTaskName jobTaskName, Dictionary<PriorityParameterName, object> parameters)
         {
+            JobSite_Component jobSite_Component = null; 
+
+            var requiredParameters = _allJobTask_Masters[jobTaskName].RequiredParameters;
+                    
+            foreach (var requiredParameter in requiredParameters)
+            {
+                if (parameters.TryGetValue(requiredParameter, out var parameter))
+                {
+                    if (parameter is null)
+                    {
+                        Debug.LogError($"Parameter: {requiredParameter} is null.");
+                        return null;
+                    }
+                    
+                    switch (requiredParameter)
+                    {
+                        case PriorityParameterName.Jobsite_Component:
+                            jobSite_Component = parameter as JobSite_Component;
+                            break;
+                    }
+
+                    continue;
+                }
+                    
+                Debug.LogError($"Required Parameter: {requiredParameter} doesn't exist in parameters.");
+                return null;
+            }
+            
             return jobTaskName switch
             {
-                JobTaskName.Fetch_Items   => _populateFetchTaskParameters(requiredParameters),
-                JobTaskName.Deliver_Items => null,
-                JobTaskName.Chop_Wood     => null,
-                JobTaskName.Process_Logs  => null,
-                _                         => null
+                JobTaskName.Fetch_Items => _populateFetch_Items(jobSite_Component),
+                JobTaskName.Deliver_Items => _populateDeliver_Items(jobSite_Component),
+                JobTaskName.Chop_Wood => _populateChop_Wood(jobSite_Component),
+                _ => null
             };
         }
 
-        static Dictionary<PriorityParameterName, object> _populateFetchTaskParameters(Dictionary<PriorityParameterName, object> requiredParameters)
+        static Dictionary<PriorityParameterName, object> _populateFetch_Items(JobSite_Component jobSite_Component)
         {
-            try
+            var taskParameters = new Dictionary<PriorityParameterName, object>
             {
-                var hauler_Component = requiredParameters[PriorityParameterName.Worker] as Actor_Component;
-                
-                if (requiredParameters[PriorityParameterName.Jobsite_Component] is not JobSite_Component jobsite)
-                {
-                    Debug.LogError($"Jobsite is null.");
-                    return null;
-                }
-                
-                var taskParameters = new Dictionary<PriorityParameterName, object>
-                {
-                    { PriorityParameterName.Jobsite_Component, requiredParameters[PriorityParameterName.Jobsite_Component] },
-                    { PriorityParameterName.Total_Items, 0 },
-                    { PriorityParameterName.Total_Distance, 0 },
-                    { PriorityParameterName.Hauler_Component, requiredParameters[PriorityParameterName.Hauler_Component] }
-                };
-                
-                var allRelevantStations =
-                    jobsite.GetRelevantStations(JobTaskName.Fetch_Items, hauler_Component?.ActorData.InventoryData);
-                
-                if (allRelevantStations.Count is 0)
-                {
-                    //Debug.LogError("No stations to fetch from.");
-                    return null;
-                }
-
-                taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
-                    Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetch()));
-
-                if (hauler_Component is not null)
-                {
-                    taskParameters[PriorityParameterName.Total_Distance] = allRelevantStations.Sum(station =>
-                        Vector3.Distance(hauler_Component.transform.position, station.transform.position));    
-                }
-
-                float highestFetchPriority     = 0;
-                var   currentStationParameters = new Dictionary<PriorityParameterName, object>(taskParameters);
-
-                foreach (var station in allRelevantStations)
-                {
-                    currentStationParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryData;
-
-                    var stationPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
-                        (uint)JobTaskName.Fetch_Items, currentStationParameters);
-
-                    if (stationPriority is 0 || stationPriority < highestFetchPriority) continue;
-
-                    highestFetchPriority = stationPriority;
-                    taskParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryData;
-                }
-
-                foreach (var parameter in taskParameters)
-                {
-                    if (parameter.Value is not null && parameter.Value is not 0) continue;
-
-                    Debug.LogError($"Parameter: {parameter.Key} is null or 0.");
-                    return null;
-                }
-
-                return taskParameters;
-            }
-            catch
+                { PriorityParameterName.Jobsite_Component, jobSite_Component },
+                { PriorityParameterName.Total_Items, 0 }
+            };
+            
+            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Fetch_Items);
+            
+            if (allRelevantStations.Count is 0)
             {
-                if (requiredParameters is null)
-                {
-                    Debug.LogError("Existing parameters are null.");
-                    return null;
-                }
-                
-                if (!requiredParameters.TryGetValue(PriorityParameterName.Jobsite_Component, out var jobsiteObject) ||
-                    jobsiteObject is not JobSite_Component)
-                {
-                    Debug.LogError($"No jobsite: {jobsiteObject} found in existing parameters.");
-                    return null;
-                }
-                
-                if (!requiredParameters.TryGetValue(PriorityParameterName.Hauler_Component, out var haulerObject) ||
-                    haulerObject is not Actor_Component)
-                {
-                    Debug.LogError($"No hauler: {haulerObject} found in existing parameters.");
-                    return null;
-                }
-                
+                Debug.LogWarning("No stations to fetch from.");
                 return null;
             }
+            
+            taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
+                Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetchFromStation()));
+            
+            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Fetch_Items);
+        }
+        
+        static Dictionary<PriorityParameterName, object> _populateDeliver_Items(JobSite_Component jobSite_Component)
+        {
+            var taskParameters = new Dictionary<PriorityParameterName, object>
+            {
+                { PriorityParameterName.Jobsite_Component, jobSite_Component },
+                { PriorityParameterName.Total_Items, 0 }
+            };
+            
+            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Deliver_Items);
+            
+            if (allRelevantStations.Count is 0)
+            {
+                Debug.LogWarning("No stations to deliver to.");
+                return null;
+            }
+            
+            taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
+                Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToDeliverFromOtherStations()));
+            
+            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Deliver_Items);
+        }
+        
+        static Dictionary<PriorityParameterName, object> _populateChop_Wood(JobSite_Component jobSite_Component)
+        {
+            var taskParameters = new Dictionary<PriorityParameterName, object>
+            {
+                { PriorityParameterName.Jobsite_Component, jobSite_Component },
+                { PriorityParameterName.Total_Items, 0 }
+            };
+            
+            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Chop_Wood);
+            
+            if (allRelevantStations.Count is 0)
+            {
+                Debug.LogWarning("No stations to chop wood.");
+                return null;
+            }
+            
+            taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
+                Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetchFromStation()));
+            
+            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Chop_Wood);
+        }
+
+        static Dictionary<PriorityParameterName, object> _setParameters(
+            Dictionary<PriorityParameterName, object> taskParameters, List<Station_Component> allRelevantStations,
+            JobTaskName                               jobTaskName)
+        {
+            float highestPriority          = 0;
+            var   currentStationParameters = new Dictionary<PriorityParameterName, object>(taskParameters);
+
+            foreach (var station in allRelevantStations)
+            {
+                currentStationParameters[PriorityParameterName.Target_Component] =
+                    station.Station_Data.InventoryData;
+
+                var stationPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
+                    (uint)jobTaskName, currentStationParameters);
+
+                if (stationPriority is 0 || stationPriority < highestPriority) continue;
+
+                highestPriority                                        = stationPriority;
+                taskParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryData;
+            }
+
+            foreach (var parameter in taskParameters)
+            {
+                if (parameter.Value is not null && parameter.Value is not 0) continue;
+
+                Debug.LogError($"Parameter: {parameter.Key} is null or 0.");
+                return null;
+            }
+
+            return taskParameters;
         }
     }
 
     [Serializable]
     public class JobTask_Master
     {
-        public                                     JobTaskName                                    TaskName;
-        public                                     string                                         TaskDescription;
-        public                                     List<Func<Actor_Component, uint, IEnumerator>> TaskList;
+        public JobTaskName                                    TaskName;
+        public string                                         TaskDescription;
+        public List<PriorityParameterName>                    RequiredParameters;
+        public List<Func<Actor_Component, uint, IEnumerator>> TaskList;
 
-        public JobTask_Master(JobTaskName                                   taskName, string taskDescription,
-                              List<Func<Actor_Component, uint, IEnumerator>> taskList)
+        public JobTask_Master(JobTaskName                                    taskName, string taskDescription,
+                              List<Func<Actor_Component, uint, IEnumerator>> taskList,
+                              List<PriorityParameterName>                    requiredParameters)
         {
-            TaskName        = taskName;
-            TaskDescription = taskDescription;
-            TaskList        = taskList;
+            TaskName           = taskName;
+            TaskDescription    = taskDescription;
+            TaskList           = taskList;
+            RequiredParameters = requiredParameters;
         }
     }
 
@@ -296,7 +392,7 @@ namespace Jobs
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var    stationNameProp = property.FindPropertyRelative("TaskName");
+            var stationNameProp = property.FindPropertyRelative("TaskName");
             var stationName     = ((StationName)stationNameProp.enumValueIndex).ToString();
 
             label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";

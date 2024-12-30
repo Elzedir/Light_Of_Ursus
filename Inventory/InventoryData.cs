@@ -60,56 +60,6 @@ namespace Inventory
             return observableInventoryClone;
         }
 
-        public Dictionary<uint, Item> FetchItemsOnHold   = new();
-        public Dictionary<uint, Item> DeliverItemsOnHold = new();
-
-        public void AddToInventoryItemsOnHold(List<Item> itemsToAdd)
-        {
-            if (itemsToAdd == null) return;
-
-            foreach (var itemToAdd in itemsToAdd)
-            {
-                if (FetchItemsOnHold.TryGetValue(itemToAdd.ItemID, out var itemOnHold))
-                {
-                    itemOnHold.ItemAmount += itemToAdd.ItemAmount;
-                }
-                else
-                {
-                    FetchItemsOnHold.Add(itemToAdd.ItemID, new Item(itemToAdd));
-                }
-            }
-        }
-
-        public void RemoveFromFetchItemsOnHold(List<Item> itemsToRemove)
-        {
-            if (itemsToRemove is null) return;
-
-            foreach (var itemToRemove in itemsToRemove)
-            {
-                if (!FetchItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
-
-                if (itemOnHold.ItemAmount <= itemToRemove.ItemAmount)
-                    FetchItemsOnHold.Remove(itemToRemove.ItemID);
-                else
-                    itemOnHold.ItemAmount -= itemToRemove.ItemAmount;
-            }
-        }
-
-        public void RemoveFromDeliverItemsOnHold(List<Item> itemsToRemove)
-        {
-            if (itemsToRemove is null) return;
-
-            foreach (var itemToRemove in itemsToRemove)
-            {
-                if (!DeliverItemsOnHold.TryGetValue(itemToRemove.ItemID, out var itemOnHold)) continue;
-
-                if (itemOnHold.ItemAmount <= itemToRemove.ItemAmount)
-                    DeliverItemsOnHold.Remove(itemToRemove.ItemID);
-                else
-                    itemOnHold.ItemAmount -= itemToRemove.ItemAmount;
-            }
-        }
-
         public void SetInventory(ObservableDictionary<uint, Item> allInventoryItems, bool skipPriorityCheck = false)
         {
             if (skipPriorityCheck) SkipNextPriorityCheck();
@@ -295,7 +245,8 @@ namespace Inventory
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
 
-        public abstract List<Item> GetInventoryItemsToFetch();
-        public abstract List<Item> GetInventoryItemsToDeliver(InventoryData inventory);
+        public abstract List<Item> GetInventoryItemsToFetchFromStation();
+        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory);
+        public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
     }
 }

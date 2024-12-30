@@ -129,7 +129,7 @@ namespace Station
 
         public WorkPost_Component GetOpenWorkPost()
         {
-            return AllWorkPost_Components.Values.FirstOrDefault(workPost => workPost.WorkPostData.CurrentWorker.ActorID == 0);
+            return AllWorkPost_Components.Values.FirstOrDefault(workPost => workPost.WorkPostData.CurrentWorker is null);
         }
         
         bool                _initialised;

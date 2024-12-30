@@ -43,13 +43,19 @@ namespace Inventory
             return true;
         }
 
-        public override List<Item> GetInventoryItemsToFetch()
+        public override List<Item> GetInventoryItemsToFetchFromStation()
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
 
-        public override List<Item> GetInventoryItemsToDeliver(InventoryData inventory)
+        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
+        {
+            Debug.LogError("Not implemented yet.");
+            return null;
+        }
+        
+        public override List<Item> GetInventoryItemsToDeliverFromOtherStations()
         {
             Debug.LogError("Not implemented yet.");
             return null;

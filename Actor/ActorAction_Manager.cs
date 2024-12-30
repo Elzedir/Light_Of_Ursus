@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using JobSite;
 using Priority;
 using UnityEngine;
 
@@ -25,14 +27,22 @@ namespace Actor
             {
                 {
                     ActorActionName.Perform_JobTask, new ActorAction_Master(
-                        ActorActionName.Perform_JobTask, ActorBehaviourName.Work,
-                        actionList: new List<IEnumerator>())
+                        actionName: ActorActionName.Perform_JobTask, ActorBehaviourName.Work,
+                        actionList: new List<IEnumerator>(),
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component
+                        })
                 },
 
                 {
                     ActorActionName.Wander, new ActorAction_Master(
-                        ActorActionName.Wander, ActorBehaviourName.Recreation,
-                        actionList: new List<IEnumerator>())
+                        actionName: ActorActionName.Wander, ActorBehaviourName.Recreation,
+                        actionList: new List<IEnumerator>(),
+                        requiredParameters: new List<PriorityParameterName>
+                        {
+                            PriorityParameterName.Jobsite_Component,
+                        })
                 },
             };
 
@@ -61,23 +71,39 @@ namespace Actor
         };
 
         public static Dictionary<PriorityParameterName, object> PopulateActionParameters(
-            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> requiredParameters)
+            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> parameters)
         {
+            JobSite_Component jobSite_Component = null; 
+            Actor_Component   actor_Component  = null;
+            
+            var requiredParameters = _allActorAction_Masters[actorActionName].RequiredParameters;
+                    
+            foreach (var requiredParameter in requiredParameters)
+            {
+                if (parameters.TryGetValue(requiredParameter, out var parameter))
+                {
+                    switch (requiredParameter)
+                    {
+                        case PriorityParameterName.Jobsite_Component:
+                            jobSite_Component = parameter as JobSite_Component;
+                            break;
+                        case PriorityParameterName.Worker_Component:
+                            actor_Component = parameter as Actor_Component;
+                            break;
+                    }
+
+                    continue;
+                }
+                    
+                Debug.LogError($"Required Parameter: {requiredParameter} is null.");
+                return null;
+            }
+            
             return actorActionName switch
             {
-                ActorActionName.Idle            => null, // Replace
-                ActorActionName.Perform_JobTask => _populatePerformJobTaskParameters(requiredParameters),
-                _                               => null
-            };
-        }
-
-        static Dictionary<PriorityParameterName, object> _populatePerformJobTaskParameters(
-            Dictionary<PriorityParameterName, object> requiredParameters)
-        {
-            return new Dictionary<PriorityParameterName, object>
-            {
-                { PriorityParameterName.JobTaskName, requiredParameters[PriorityParameterName.JobTaskName] },
-                { PriorityParameterName.Jobsite_Component, requiredParameters[PriorityParameterName.Jobsite_Component] }
+                ActorActionName.Perform_JobTask => _allActorAction_Masters[actorActionName].RequiredParameters
+                    .ToDictionary(parameter => parameter, parameter => parameters[parameter]),
+                _ => null
             };
         }
 
@@ -112,16 +138,18 @@ namespace Actor
     [Serializable]
     public class ActorAction_Master
     {
-        public readonly ActorActionName    ActionName;
-        public readonly ActorBehaviourName BehaviourName;
-        public readonly List<IEnumerator>  ActionList;
+        public readonly ActorActionName             ActionName;
+        public readonly ActorBehaviourName          BehaviourName;
+        public readonly List<PriorityParameterName> RequiredParameters;
+        public readonly List<IEnumerator>           ActionList;
 
-        public ActorAction_Master(ActorActionName   actionName, ActorBehaviourName behaviourName,
-                                  List<IEnumerator> actionList)
+        public ActorAction_Master(ActorActionName   actionName, ActorBehaviourName          behaviourName,
+                                  List<IEnumerator> actionList, List<PriorityParameterName> requiredParameters)
         {
-            ActionName    = actionName;
-            BehaviourName = behaviourName;
-            ActionList    = actionList;
+            ActionName         = actionName;
+            BehaviourName      = behaviourName;
+            ActionList         = actionList;
+            RequiredParameters = requiredParameters;
         }
     }
 

@@ -18,7 +18,11 @@ namespace WorkPosts
 
         [SerializeField] uint           _currentWorkerID;
         Actor_Component        _currentWorker;
-        public Actor_Component CurrentWorker => _currentWorker ??= Actor_Manager.GetActor_Component(_currentWorkerID);
+
+        public Actor_Component CurrentWorker => _currentWorker ??=
+            _currentWorkerID != 0
+                ? Actor_Manager.GetActor_Component(_currentWorkerID)
+                : null;
         
         public bool            IsWorkerMovingToWorkPost;
 

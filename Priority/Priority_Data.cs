@@ -76,7 +76,7 @@ namespace Priority
                 }
             }
 
-            return PriorityQueue.Dequeue(highestPriority.PriorityID);
+            return PriorityQueue.Peek(highestPriority.PriorityID);
         }
 
         protected abstract List<uint> _getPermittedPriorities(List<uint> priorityIDs);
