@@ -43,7 +43,7 @@ namespace City
         public void UpdateCity(uint cityID, City_Data city_Data) => UpdateDataObject(cityID, city_Data);
         public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllDataObjects(allCities);
 
-        public void PopulateSceneCities()
+        public override void PopulateSceneData()
         {
             if (_defaultCities.Count == 0)
             {

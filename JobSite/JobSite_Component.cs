@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using EmployeePosition;
 using Initialisation;
-using Inventory;
 using Jobs;
 using Station;
 using TickRates;
@@ -68,48 +66,50 @@ namespace JobSite
 
         protected abstract bool _compareProductionOutput();
 
-        protected abstract void         _adjustProduction(float                   idealRatio);
-        protected abstract VocationName _getRelevantVocation(EmployeePositionName positionName);
+        protected abstract void         _adjustProduction(float      idealRatio);
+        protected abstract VocationName _getRelevantVocation(JobName positionName);
 
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
-            var highestPriorityJob = JobSiteData.PriorityData.GetHighestSpecificPriority(
-                actor.ActorData.CareerData.AllJobs.Select(jobName => (uint)jobName).ToList(), stationID);
+            var highestPriorityElement = JobSiteData.PriorityData.GetHighestSpecificPriority(
+                actor.ActorData.CareerData.AllJobTasks.Select(jobTaskName => (uint)jobTaskName).ToList(), stationID);
 
-            if (highestPriorityJob == null)
+            if (highestPriorityElement == null)
             {
                 Debug.LogWarning("No highest priority job found. Setting job to Idle.");
                 actor.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
             }
-
-            var jobName = (JobName)highestPriorityJob.PriorityID;
-
-            var relevantStations = _getOrderedRelevantStationsForJob(jobName, actor);
-
-            foreach (var station in relevantStations)
+            
+            var highestPriorityJobTask = (JobTaskName)highestPriorityElement.PriorityID;
+            
+            Debug.Log($"1: JobTaskName: {highestPriorityJobTask}");
+            
+            if (highestPriorityJobTask == JobTaskName.Idle)
             {
-                if (!JobSiteData.AddEmployeeToStation(actor, station))
-                {
-                    Debug.LogWarning($"Station: {station.StationName} is full.");
-                    continue;
-                }
-
-                var job = new Job(jobName, station.StationID, JobSiteData.GetWorkPostIDFromWorkerID(actor.ActorID));
-
-                actor.ActorData.CareerData.SetCurrentJob(job);
-
+                actor.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
             }
 
-            Debug.LogWarning($"No relevant stations found for job: {jobName}.");
+            var relevantStations = _getOrderedRelevantStationsForJob(highestPriorityJobTask, actor);
+
+            foreach (var station in relevantStations)
+            {
+                Debug.Log($"2: Station: {station.StationName}");
+
+                if (JobSiteData.AddEmployeeToStation(actor, station, highestPriorityJobTask)) return true;
+                
+                Debug.LogWarning($"Station: {station.StationName} is full.");
+            }
+
+            Debug.LogWarning($"No relevant stations found for job: {highestPriorityJobTask}.");
             return false;
         }
 
-        List<Station_Component> _getOrderedRelevantStationsForJob(JobName jobName, Actor_Component actor)
+        List<Station_Component> _getOrderedRelevantStationsForJob(JobTaskName jobTaskName, Actor_Component actor)
         {
             var relevantStations = JobSiteData.AllStationComponents.Values
-                                              .Where(station => station.AllowedJobs.Contains(jobName))
+                                              .Where(station => station.AllowedJobTasks.Contains(jobTaskName))
                                               .ToList();
 
             if (relevantStations.Count != 0)
@@ -118,7 +118,7 @@ namespace JobSite
                            Vector3.Distance(actor.transform.position, station.transform.position))
                        .ToList();
 
-            Debug.LogError($"No relevant stations found for job: {jobName}.");
+            Debug.LogError($"No relevant stations found for jobTask: {jobTaskName}.");
             return null;
         }
 
@@ -134,12 +134,12 @@ namespace JobSite
                                           .OrderByDescending(actor =>
                                               actor.ActorData.VocationData.GetVocationExperience(
                                                   _getRelevantVocation(actor.ActorData.CareerData
-                                                                            .EmployeePositionName)))
+                                                                            .CurrentJob.JobName)))
                                           .ToList();
 
                 foreach (var employee in employeesForStation)
                 {
-                    JobSiteData.AddEmployeeToStation(employee, station);
+                    GetNewCurrentJob(employee, station.StationID);
                     tempEmployees.Remove(employee);
                 }
 

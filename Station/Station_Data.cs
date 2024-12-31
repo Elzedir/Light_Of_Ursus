@@ -70,6 +70,10 @@ namespace Station
         
         Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()
         {
+            #if UNITY_EDITOR
+            return null;
+            #endif
+            
             foreach(Transform child in Station_Component.transform)
             {
                 if (child.GetComponent<WorkPost_Component>() is null) continue;
@@ -201,7 +205,7 @@ namespace Station
             return success;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
             var dataObjects = new List<Data_Display>();
 
@@ -220,7 +224,10 @@ namespace Station
             }
             catch
             {
-                Debug.LogError("Error: Base Station Data not found.");
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: Base Station Data not found.");
+                }
             }
             
             try
@@ -232,7 +239,10 @@ namespace Station
             }
             catch
             {
-                Debug.LogError("Error: Inventory Data not found.");
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: Inventory Data not found.");
+                }
             }
 
             try
@@ -249,13 +259,52 @@ namespace Station
             }
             catch
             {
-                Debug.LogError("Error: Station Progress Data not found.");
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: Station Progress Data not found.");
+                }
+            }
+            
+            try
+            {
+                dataObjects.Add(new Data_Display(
+                    title: "Station WorkPosts",
+                    dataDisplayType: DataDisplayType.Item,
+                    data: AllWorkPost_Components.Values.Select(workPost => $"{workPost.WorkPostID} - {workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}").ToList()));
+            }
+            catch
+            {
+                if (toggleMissingDataDebugs)
+                {
+                    Debug.LogError("Error: WorkPost Data not found.");
+                    Debug.LogError($"WorkPost Data: {AllWorkPost_Data}");
+                    Debug.LogError($"WorkPost Data: {AllWorkPost_Data?.Values}");
+
+                    foreach (var workPost in AllWorkPost_Components.Values)
+                    {
+                        Debug.LogError($"WorkPost Data: {workPost}");
+                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostID}");
+                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData}");
+                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker}");
+                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker?.ActorID}");
+                    }
+
+                    foreach (var workPostData in AllWorkPost_Data?.Values)
+                    {
+                        Debug.LogError($"WorkPost Data: {workPostData}");
+                        Debug.LogError($"WorkPost Data: {workPostData?.WorkPostID}");
+                        Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker}");
+                        Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker?.ActorID}");
+                    }
+                }
             }
 
             return new Data_Display(
                 title: "Base Station Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects);
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 

@@ -45,7 +45,7 @@ namespace Station
 
         public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllDataObjects(allStations);
 
-        public void PopulateSceneStations()
+        public override void PopulateSceneData()
         {
             if (_defaultStations.Count == 0)
             {
@@ -57,7 +57,7 @@ namespace Station
             foreach (var station in Stations)
             {
                 if (station?.DataObject is null) continue;
-                
+
                 if (existingStations.TryGetValue(station.DataObject.StationID, out var existingStation))
                 {
                     Station_Components[station.DataObject.StationID] = existingStation;
@@ -65,10 +65,12 @@ namespace Station
                     existingStations.Remove(station.DataObject.StationID);
                     continue;
                 }
-                
-                Debug.LogWarning($"Station with ID {station.DataObject.StationID} not found in the scene.");
+
+                #if !UNITY_EDITOR
+                    Debug.LogWarning($"Station with ID {station.DataObject.StationID} not found in the scene.");
+                #endif
             }
-            
+
             foreach (var station in existingStations)
             {
                 if (DataObjectIndexLookup.ContainsKey(station.Key))

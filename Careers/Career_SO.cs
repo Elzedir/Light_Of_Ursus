@@ -15,7 +15,7 @@ namespace Careers
 
         public override uint GetDataObjectID(int id) => (uint)Careers[id].DataObject.CareerName;
 
-        public void PopulateDefaultCareers()
+        public override void PopulateSceneData()
         {
             if (_defaultCareers.Count == 0)
             {

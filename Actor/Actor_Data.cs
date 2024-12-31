@@ -5,7 +5,6 @@ using System.Linq;
 using Ability;
 using Careers;
 using DateAndTime;
-using EmployeePosition;
 using Faction;
 using Inventory;
 using Items;
@@ -214,7 +213,6 @@ namespace Actor
                         $"Career Name: {CareerData.CareerName}",
                         $"Jobs Active: {CareerData.JobsActive}",
                         $"JobSiteID: {CareerData.JobSiteID}",
-                        $"Employee Position: {CareerData.EmployeePositionName}",
                         $"Current Job: {CareerData.CurrentJob?.JobName}"
                     }
                 ));
@@ -261,7 +259,9 @@ namespace Actor
             return new Data_Display(
                 title: $"{ActorID}: {ActorName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 
@@ -531,7 +531,10 @@ namespace Actor
             }
         }
 
+        List<JobName> _allJobs; // For saving purposes
         public HashSet<JobName> AllJobs;
+
+        public HashSet<JobTaskName> AllJobTasks => AllJobs.SelectMany(jobName => Job_Manager.GetJob_Master(jobName).JobTasks).ToHashSet();
 
         public void AddJob(JobName jobName)
         {
@@ -550,9 +553,16 @@ namespace Actor
             //Debug.LogWarning($"Job {jobName} does not exist in AllActorJobs.");
         }
 
-        [SerializeField] Job  _currentJob;
-        public           Job  CurrentJob             => _currentJob ??= new Job(JobName.Idle, 0, 0);
-        public           void SetCurrentJob(Job job) => _currentJob = job;
+        [SerializeField] Job _currentJob;
+        public           Job CurrentJob             => _currentJob ??= new Job(JobName.Idle, 0, 0);
+        public           HashSet<JobTaskName> CurrentJobTasks => Job_Manager.GetJob_Master(CurrentJob.JobName).JobTasks.ToHashSet();
+
+        public void SetCurrentJob(Job job)
+        {
+            Debug.Log($"Setting current job for Actor: {ActorReference.ActorID}: {ActorReference.Actor_Component} to {job.JobName}.");
+            
+            _currentJob = job;   
+        }
 
         public bool HasCurrentJob() => CurrentJob != null && CurrentJob.JobName != JobName.Idle;
 
@@ -570,11 +580,6 @@ namespace Actor
         JobSite_Component        _jobSite;
         public JobSite_Component JobSite                      => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         public void              SetJobsiteID(uint jobsiteID) => JobSiteID = jobsiteID;
-        
-        public EmployeePositionName EmployeePositionName;
-
-        public void SetEmployeePosition(EmployeePositionName employeePositionName) =>
-            EmployeePositionName = employeePositionName;
 
         protected override bool _priorityChangeNeeded(object dataChanged)
         {

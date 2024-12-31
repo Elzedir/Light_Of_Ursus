@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using City;
-using EmployeePosition;
 using Items;
 using Jobs;
 using Managers;
@@ -204,7 +203,7 @@ namespace JobSite
             OwnerID = ownerID;
         }
 
-        protected Actor_Component _findEmployeeFromCity(EmployeePositionName positionName)
+        protected Actor_Component _findEmployeeFromCity(JobName positionName)
         {
             var city = City_Manager.GetCity_Component(CityID);
 
@@ -233,16 +232,16 @@ namespace JobSite
             return actor;
         }
 
-        protected Actor_Component _generateNewEmployee(EmployeePositionName positionName)
+        protected Actor_Component _generateNewEmployee(JobName jobName)
         {
             var city = City_Manager.GetCity_Component(CityID);
 
-            var employeeMaster = EmployeePosition_Manager.GetEmployeePosition_Master(positionName);
+            // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
+            var actorPresetName = ActorPreset_List.GetActorDataPresetNameByJobName(jobName);
 
-            if (employeeMaster == null) throw new Exception($"EmployeeMaster for position: {positionName} is null.");
-
-            var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position,
-                employeeMaster.EmployeeDataPreset);
+            Debug.Log($"Spawning new worker for position: {jobName}, with preset: {actorPresetName}");
+            
+            var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
 
             AddEmployeeToJobsite(actor.ActorData.ActorID);
 
@@ -267,29 +266,26 @@ namespace JobSite
             return true;
         }
 
-        protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(EmployeePositionName positionName)
+        protected List<VocationRequirement> _getVocationAndMinimumExperienceRequired(JobName jobName)
         {
             var vocationRequirements = new List<VocationRequirement>();
 
-            switch (positionName)
+            switch (jobName)
             {
-                case EmployeePositionName.Logger:
+                case JobName.Logger:
                     vocationRequirements = new List<VocationRequirement>
                     {
                         new VocationRequirement(VocationName.Logging, 1000)
                     };
                     break;
-                case EmployeePositionName.Sawyer:
+                case JobName.Sawyer:
                     vocationRequirements = new List<VocationRequirement>
                     {
                         new VocationRequirement(VocationName.Sawying, 1000)
                     };
                     break;
-                case EmployeePositionName.Hauler:
-                    vocationRequirements = new List<VocationRequirement>();
-                    break;
                 default:
-                    Debug.Log($"EmployeePosition: {positionName} not recognised.");
+                    Debug.Log($"JobName: {jobName} not recognised.");
                     break;
             }
 
@@ -336,33 +332,14 @@ namespace JobSite
             // And then apply relation debuff.
         }
 
-        public bool AddEmployeeToStation(Actor_Component employee, Station_Component station)
+        public bool AddEmployeeToStation(Actor_Component worker, Station_Component station, JobTaskName desiredJobTask)
         {
-            RemoveWorkerFromCurrentStation(employee);
-
-            var actorCurrentJob = employee.ActorData.CareerData.CurrentJob;
-
-            if (actorCurrentJob is null)
-            {
-                if (!employee.ActorData.CareerData.GetNewCurrentJob())
-                {
-                    Debug.LogWarning(
-                        $"Actor Current Job for employeeID: {employee} is null. Needs to get a job first.");
-                    return false;
-                }
-            }
-
-            if (_addWorkerToStation(employee, station, actorCurrentJob)) return true;
-
-            Debug.Log($"Couldn't add employee to station: {station.StationID}");
-            return false;
-        }
-
-        bool _addWorkerToStation(Actor_Component worker, Station_Component station, Job actorCurrentJob)
-        {
-            if (actorCurrentJob.JobName == JobName.Idle)
+            if (desiredJobTask == JobTaskName.Idle)
             {
                 Debug.Log("Worker is idling. Adding to station '0'.");
+                
+                worker.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                
                 return true;
             }
 
@@ -373,10 +350,26 @@ namespace JobSite
                 Debug.Log($"No open WorkPosts found for Worker: {worker}");
                 return false;
             }
+            
+            Debug.Log($"3: Open WorkPost found: {openWorkPost_Data.WorkPostID}");
+            
+            RemoveWorkerFromCurrentStation(worker);
 
             WorkPost_Workers[(station.StationID, openWorkPost_Data.WorkPostID)] = worker.ActorID;
             openWorkPost_Data.AddWorkerToWorkPost(worker);
-            actorCurrentJob.SetStationAndWorkPostID((station.StationID, openWorkPost_Data.WorkPostID));
+            
+            var desiredJobName = JobTask_Manager.GetJobTask_Master(desiredJobTask).PrimaryJob;
+            
+            Debug.Log($"4: DesiredJobName: {desiredJobName}");
+
+            if (desiredJobName == JobName.Any)
+            {
+                Debug.Log($"DesiredJobName is Any. Setting to station.CoreJobName: {station.CoreJobName}");
+                
+                desiredJobName = station.CoreJobName;
+            }
+
+            worker.ActorData.CareerData.SetCurrentJob(new Job(desiredJobName, station.StationID, openWorkPost_Data.WorkPostID));
 
             return true;
         }
@@ -603,17 +596,14 @@ namespace JobSite
                     allPositionsFilled = false;
 
                     //Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
-                    var newEmployee = _findEmployeeFromCity(station.CoreEmployeePositionName) ??
-                                      _generateNewEmployee(station.CoreEmployeePositionName);
+                    var newEmployee = _findEmployeeFromCity(station.CoreJobName) ?? _generateNewEmployee(station.CoreJobName);
 
-                    if (!AddEmployeeToStation(newEmployee, station))
+                    if (!JobSite_Component.GetNewCurrentJob(newEmployee, station.StationID))
                     {
                         Object.Destroy(newEmployee.gameObject);
                         //Debug.Log($"Couldn't add employee to station: {stationID}");
                         continue;
                     }
-
-                    newEmployee.ActorData.CareerData.SetEmployeePosition(station.CoreEmployeePositionName);
 
                     iteration++;
                 }
@@ -750,7 +740,9 @@ namespace JobSite
             return new Data_Display(
                 title: "JobSite Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 

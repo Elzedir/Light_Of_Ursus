@@ -32,9 +32,10 @@ namespace Jobs
                     JobTaskName.Fetch_Items, new JobTask_Master(
                         taskName: JobTaskName.Fetch_Items,
                         taskDescription: "Fetch Items",
+                        primaryJob: JobName.Any,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
-                            _fetchWood
+                            _fetchItems
                         },
                         requiredParameters: new List<PriorityParameterName>
                         {
@@ -45,9 +46,10 @@ namespace Jobs
                     JobTaskName.Deliver_Items, new JobTask_Master(
                         taskName: JobTaskName.Deliver_Items,
                         taskDescription: "Deliver Items",
+                        primaryJob: JobName.Any,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
-                            _fetchWood
+                            _deliverItems
                         },
                         requiredParameters: new List<PriorityParameterName>
                         {
@@ -58,6 +60,7 @@ namespace Jobs
                     JobTaskName.Beat_Metal, new JobTask_Master(
                         taskName: JobTaskName.Beat_Metal,
                         taskDescription: "Beat Iron into Shape",
+                        primaryJob: JobName.Smith,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _beatIron
@@ -71,6 +74,7 @@ namespace Jobs
                     JobTaskName.Chop_Wood, new JobTask_Master(
                         taskName: JobTaskName.Chop_Wood,
                         taskDescription: "Chop Wood",
+                        primaryJob: JobName.Logger,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _chopWood
@@ -84,6 +88,7 @@ namespace Jobs
                     JobTaskName.Process_Logs, new JobTask_Master(
                         taskName: JobTaskName.Process_Logs,
                         taskDescription: "Process Logs",
+                        primaryJob: JobName.Sawyer,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _processLogs
@@ -94,22 +99,10 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Drop_Off_Wood, new JobTask_Master(
-                        taskName: JobTaskName.Drop_Off_Wood,
-                        taskDescription: "Drop Off Wood",
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
-                        {
-                            _dropOffWood
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
-                },
-                {
                     JobTaskName.Stand_At_Counter, new JobTask_Master(
                         taskName: JobTaskName.Stand_At_Counter,
                         taskDescription: "Stand at Counter",
+                        primaryJob: JobName.Vendor,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _standAtCounter
@@ -123,6 +116,7 @@ namespace Jobs
                     JobTaskName.Restock_Shelves, new JobTask_Master(
                         taskName: JobTaskName.Restock_Shelves,
                         taskDescription: "Restock Shelves",
+                        primaryJob: JobName.Vendor,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _restockShelves
@@ -136,6 +130,7 @@ namespace Jobs
                     JobTaskName.Defend_Ally, new JobTask_Master(
                         taskName: JobTaskName.Defend_Ally,
                         taskDescription: "Defend Ally",
+                        primaryJob: JobName.Guard,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendAlly
@@ -149,6 +144,7 @@ namespace Jobs
                     JobTaskName.Defend_Neutral, new JobTask_Master(
                         taskName: JobTaskName.Defend_Neutral,
                         taskDescription: "Defend Neutral",
+                        primaryJob: JobName.Guard,
                         taskList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendNeutral
@@ -175,7 +171,7 @@ namespace Jobs
             yield return null;
         }
 
-        static IEnumerator _fetchWood(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _fetchItems(Actor_Component actor, uint jobsiteID)
         {
             yield return null;
             // if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
@@ -190,16 +186,10 @@ namespace Jobs
             // StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
         }
 
-        IEnumerator _moveOperatorToOperatingArea(Actor_Component actor, Vector3 position)
-        {
-            yield return actor.StartCoroutine(actor.BasicMove(position));
-
-            if (actor.transform.position != position) actor.transform.position = position;
-        }
-
-        static IEnumerator _dropOffWood(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _deliverItems(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
+            
             // if (Vector3.Distance(actor.transform.position, station.transform.position) > (station.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
             // {
             //     yield return actor.ActorHaulCoroutine = actor.StartCoroutine(_moveOperatorToOperatingArea(actor, station.CollectionPoint.position));
@@ -207,6 +197,13 @@ namespace Jobs
             //
             // actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
             // station.StationData.InventoryData.AddToInventory(orderItems);
+        }
+
+        IEnumerator _moveOperatorToOperatingArea(Actor_Component actor, Vector3 position)
+        {
+            yield return actor.StartCoroutine(actor.BasicMove(position));
+
+            if (actor.transform.position != position) actor.transform.position = position;
         }
 
         static IEnumerator _standAtCounter(Actor_Component actor, uint jobsiteID)
@@ -374,14 +371,16 @@ namespace Jobs
         public JobTaskName                                    TaskName;
         public string                                         TaskDescription;
         public List<PriorityParameterName>                    RequiredParameters;
+        public JobName                                        PrimaryJob;
         public List<Func<Actor_Component, uint, IEnumerator>> TaskList;
 
-        public JobTask_Master(JobTaskName                                    taskName, string taskDescription,
+        public JobTask_Master(JobTaskName                                    taskName, string taskDescription, JobName primaryJob,
                               List<Func<Actor_Component, uint, IEnumerator>> taskList,
                               List<PriorityParameterName>                    requiredParameters)
         {
             TaskName           = taskName;
             TaskDescription    = taskDescription;
+            PrimaryJob         = primaryJob;
             TaskList           = taskList;
             RequiredParameters = requiredParameters;
         }
@@ -427,7 +426,6 @@ namespace Jobs
         // Lumberjack
         Chop_Wood,
         Process_Logs,
-        Drop_Off_Wood,
 
         // Vendor
         Stand_At_Counter,
@@ -451,7 +449,7 @@ namespace Jobs
         // Forager
         Gather_Food,
 
-        // Minder
+        // Miner
         Mine_Ore,
         Refine_Ore,
 

@@ -54,7 +54,7 @@ namespace Region
 
         static void _initialise()
         {
-            AllRegions.PopulateSceneRegions();
+            AllRegions.PopulateSceneData();
         }
         
         public static Region_Data GetRegion_Data(uint regionID)

@@ -43,7 +43,7 @@ namespace Region
         public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateDataObject(regionID, region_Data);
         public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllDataObjects(allRegions);
 
-        public void PopulateSceneRegions()
+        public override void PopulateSceneData()
         {
             if (_defaultRegions.Count == 0)
             {

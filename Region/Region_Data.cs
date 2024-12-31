@@ -18,8 +18,8 @@ namespace Region
         public string RegionName;
         public int    RegionFactionID;
         public string RegionDescription;
-        
-        Region_Component _region_Component;
+
+        Region_Component        _region_Component;
         public Region_Component Region_Component => _region_Component ??= Region_Manager.GetRegion_Component(RegionID);
 
         public ProsperityData ProsperityData;
@@ -28,54 +28,58 @@ namespace Region
         [SerializeField] List<uint>      _allCityIDs;
         int                              _currentLength;
         Dictionary<uint, City_Component> _allCitiesInRegion;
+
         public Dictionary<uint, City_Component> AllCitiesInRegion
         {
             get
             {
-                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0 && _allCitiesInRegion.Count == _currentLength) return _allCitiesInRegion;
-                
+                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0 &&
+                    _allCitiesInRegion.Count == _currentLength) return _allCitiesInRegion;
+
                 _currentLength = _allCitiesInRegion?.Count ?? 0;
                 return Region_Component.GetAllCitiesInRegion().ToDictionary(city => city.CityID);
             }
         }
-        
+
         public uint GetNearestCityInRegion(Vector3 position)
         {
             return AllCitiesInRegion
                    .OrderBy(city => Vector3.Distance(position, city.Value.transform.position))
                    .FirstOrDefault().Key;
         }
-        
+
         // Call when a new city is formed.
         public void RefreshAllCities() => _currentLength = 0;
-        
-        public Region_Data(uint regionID, string regionName, string regionDescription, int regionFactionID, List<uint> allCityIDs, ProsperityData prosperityData = null)
+
+        public Region_Data(uint       regionID,   string regionName, string regionDescription, int regionFactionID,
+                           List<uint> allCityIDs, ProsperityData prosperityData = null)
         {
             RegionID          = regionID;
             RegionName        = regionName;
             RegionDescription = regionDescription;
             RegionFactionID   = regionFactionID;
-            _allCityIDs        = allCityIDs;
-            
+            _allCityIDs       = allCityIDs;
+
             ProsperityData = new ProsperityData(prosperityData);
         }
 
         public void InitialiseRegionData()
         {
             foreach (var city in AllCitiesInRegion
-                                       .Where(city_Component => !_allCityIDs.Contains(city_Component.Key)))
+                         .Where(city_Component => !_allCityIDs.Contains(city_Component.Key)))
             {
-                Debug.Log($"City_Component: {city.Value?.CityData?.CityID}: {city.Value?.CityData?.CityName} doesn't exist in DataList");
+                Debug.Log(
+                    $"City_Component: {city.Value?.CityData?.CityID}: {city.Value?.CityData?.CityName} doesn't exist in DataList");
             }
-            
+
             foreach (var cityID in _allCityIDs
-                .Where(cityID => !AllCitiesInRegion.ContainsKey(cityID)))
+                         .Where(cityID => !AllCitiesInRegion.ContainsKey(cityID)))
             {
                 Debug.LogError($"City with ID {cityID} doesn't exist physically in Region: {RegionID}: {RegionName}");
             }
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
             var dataObjects = new List<Data_Display>();
 
@@ -99,7 +103,7 @@ namespace Region
             {
                 Debug.LogError("Error: Base Region Data not found.");
             }
-            
+
             try
             {
                 dataObjects.Add(new Data_Display(
@@ -120,7 +124,9 @@ namespace Region
             return new Data_Display(
                 title: "Base Region Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects);
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 

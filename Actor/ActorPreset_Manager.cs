@@ -1,3 +1,4 @@
+using Jobs;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace Actor
         
         public static void PopulateAllActorDataPresets()
         {
-            ActorPreset_SO.PopulateDefaultActorDataPresets();
+            ActorPreset_SO.PopulateSceneData();
             // Then populate custom actor data presets.
         }
 
@@ -50,12 +51,12 @@ namespace Actor
         Wanderer_Expert,
         Wanderer_Master,
         
-        Lumberjack_Beginner,
-        Lumberjack_Novice,
-        Lumberjack_Apprentice,
-        Lumberjack_Journeyman,
-        Lumberjack_Expert,
-        Lumberjack_Master,
+        Logger_Beginner,
+        Logger_Novice,
+        Logger_Apprentice,
+        Logger_Journeyman,
+        Logger_Expert,
+        Logger_Master,
         
         Smith_Beginner,
         Smith_Novice,

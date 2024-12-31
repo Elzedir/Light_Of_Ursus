@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using EmployeePosition;
 using Items;
+using Jobs;
 using ScriptableObjects;
 using UnityEngine;
 
@@ -102,13 +102,13 @@ namespace JobSite
             Debug.Log("Adjusted production to balance the ratio.");
         }
 
-        protected override VocationName _getRelevantVocation(EmployeePositionName positionName)
+        protected override VocationName _getRelevantVocation(JobName positionName)
         {
             switch (positionName)
             {
-                case EmployeePositionName.Logger:
+                case JobName.Logger:
                     return VocationName.Logging;
-                case EmployeePositionName.Sawyer:
+                case JobName.Sawyer:
                     return VocationName.Sawying;
                 default:
                     Debug.Log($"EmployeePosition: {positionName} does not have a relevant vocation.");

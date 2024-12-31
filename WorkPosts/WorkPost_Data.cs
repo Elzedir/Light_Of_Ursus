@@ -42,7 +42,7 @@ namespace WorkPosts
             }
             
             IsWorkerMovingToWorkPost = false;
-            _currentWorkerID              = worker.ActorID;
+            _currentWorkerID         = worker.ActorID;
         }
 
         public void RemoveCurrentWorkerFromWorkPost()
@@ -59,7 +59,7 @@ namespace WorkPosts
             IsWorkerMovingToWorkPost = false;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
             var dataObjects = new List<Data_Display>();
 
@@ -84,7 +84,9 @@ namespace WorkPosts
             return new Data_Display(
                 title: "Base WorkPost Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects);
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
     

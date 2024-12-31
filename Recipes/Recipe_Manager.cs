@@ -27,7 +27,7 @@ namespace Recipes
 
         public static void PopulateAllRecipes()
         {
-            AllRecipes.PopulateDefaultRecipes();
+            AllRecipes.PopulateSceneData();
             // Then populate custom recipes.
         }
         

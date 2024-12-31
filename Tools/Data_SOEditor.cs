@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -7,9 +8,11 @@ namespace Tools
     [CustomEditor(typeof(Data_SO<>), true)]
     public abstract class Data_SOEditor<T> : Editor where T : class
     {
-        int                        _selectedIndex = -1;
+        int _selectedBaseIndex = -1;
         protected       Data_SO<T> _so;
         public abstract Data_SO<T> SO { get; }
+        
+        double _lastRefreshTime;
 
         public override void OnInspectorGUI()
         {
@@ -19,9 +22,13 @@ namespace Tools
                 return;
             }
             
-            SO.ToggleMissingDataDebugs = GUILayout.Toggle(false, "Toggle Missing Data Debugs");
+            SO.ToggleMissingDataDebugs = GUILayout.Toggle(SO.ToggleMissingDataDebugs, "Toggle Missing Data Debugs");
             
-            if (GUILayout.Button("Refresh All Objects")) SO.RefreshDataObjects();
+            if (EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
+            {
+                SO.RefreshDataObjects();
+                _lastRefreshTime = EditorApplication.timeSinceStartup;
+            }
 
             if (SO.Objects_Data.Length is 0)
             {
@@ -37,13 +44,13 @@ namespace Tools
 
             SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
                 GUILayout.Height(Mathf.Min(200, nonNullDataObjects.Length * 20)));
-            _selectedIndex =
-                GUILayout.SelectionGrid(_selectedIndex, _getBaseObjectNames(nonNullDataObjects), 1);
+            _selectedBaseIndex =
+                GUILayout.SelectionGrid(_selectedBaseIndex, _getBaseObjectNames(nonNullDataObjects), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedIndex < 0 || _selectedIndex >= nonNullDataObjects.Length) return;
+            if (_selectedBaseIndex < 0 || _selectedBaseIndex >= nonNullDataObjects.Length) return;
 
-            var selectedDataObject = nonNullDataObjects[_selectedIndex];
+            var selectedDataObject = nonNullDataObjects[_selectedBaseIndex];
 
             _drawData_Object(selectedDataObject.DataSO_Object, firstData: true);
         }
@@ -58,27 +65,28 @@ namespace Tools
             while (true)
             {
                 // Fix the first data thing to apply when needed, like Item and Priority.
-                
-                if (!firstData && !(dataSO_Object.ShowData = EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
+
+                if (!firstData && !(dataSO_Object.ShowData =
+                        EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
                     return;
 
                 if (dataSO_Object.Data is not null)
                 {
                     foreach (var data in dataSO_Object.Data)
                         GUILayout.Label(data);
-                    
-                    if (dataSO_Object.DataDisplayType == DataDisplayType.Item) 
+
+                    if (dataSO_Object.DataDisplayType == DataDisplayType.Item)
                         return;
                 }
-                
+
                 if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
                 {
                     foreach (var subData in dataSO_Object.SubData)
                         _drawData_Object(subData);
-                    
+
                     return;
                 }
-                
+
                 if (dataSO_Object.SubData == null || dataSO_Object.SubData.Count == 0)
                     return;
 
@@ -99,7 +107,7 @@ namespace Tools
 
                 if (!selectedBaseObject.ShowData) return;
 
-                dataSO_Object = selectedBaseObject;
+                dataSO_Object = selectedBaseObject;   
             }
         }
     }

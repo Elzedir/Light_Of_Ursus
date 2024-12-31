@@ -143,6 +143,15 @@ namespace Items
             {
                 Debug.LogError("Error in Armour Stats");
             }
+            
+            var dataDisplay = new Data_Display(
+                title: "Base Station Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
+
+            return dataDisplay;
 
             return new Data_Display(
                 title: $"{ItemID}: {ItemName}",
@@ -224,7 +233,9 @@ namespace Items
             return new Data_Display(
                 title: $"{ItemID}: {ItemName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 

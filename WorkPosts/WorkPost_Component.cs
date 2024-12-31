@@ -26,6 +26,11 @@ namespace WorkPosts
             WorkPostCollider.isTrigger = true;
         }
 
+        void FixedUpdate()
+        {
+            Debug.Log($"WorkPost: {WorkPostID} Actor: {WorkPostData.CurrentWorker?.ActorID}");
+        }
+
         public float Operate(float baseProgressRate, Recipe_Data recipe)
         {
             if (CurrentWorkerID is 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;

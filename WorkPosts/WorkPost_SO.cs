@@ -34,7 +34,7 @@ namespace WorkPosts
         public void UpdateWorkPost(uint workPostID, WorkPost_Data workPost_Data) => UpdateDataObject(workPostID, workPost_Data);
         public void UpdateAllWorkPosts(Dictionary<uint, WorkPost_Data> allWorkPosts) => UpdateAllDataObjects(allWorkPosts);
 
-        public void PopulateSceneWorkPosts()
+        public override void PopulateSceneData()
         {
             if (_defaultWorkPosts.Count == 0)
             {

@@ -54,7 +54,7 @@ namespace City
 
         static void _initialise()
         {
-            AllCities.PopulateSceneCities();
+            AllCities.PopulateSceneData();
         }
         
         public static City_Data GetCity_Data(uint cityID)

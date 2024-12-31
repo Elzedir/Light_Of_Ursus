@@ -68,7 +68,6 @@ namespace Actor
                         $"Career Name: {CareerData.CareerName}",
                         $"Jobs Active: {CareerData.JobsActive}",
                         $"JobSiteID: {CareerData.JobSiteID}",
-                        $"Employee Position: {CareerData.EmployeePositionName}",
                         $"Current Job: {CareerData.CurrentJob?.JobName}"
                     }
                 ));
@@ -155,7 +154,9 @@ namespace Actor
             return new Data_Display(
                 title: $"{(uint)ActorDataPresetName}: {ActorDataPresetName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Items
         
         public override uint GetDataObjectID(int id) => Items[id].DataObject.ItemID;
 
-        public void PopulateDefaultItems()
+        public override void PopulateSceneData()
         {
             if (_defaultItems.Count == 0)
             {

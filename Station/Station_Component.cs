@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
-using EmployeePosition;
 using Initialisation;
 using Inventory;
 using Items;
@@ -16,30 +15,39 @@ namespace Station
     [RequireComponent(typeof(BoxCollider))]
     public abstract class Station_Component : MonoBehaviour, IInteractable
     {
-        public uint             StationID => Station_Data.StationID;
+        public uint              StationID => Station_Data.StationID;
         public JobSite_Component JobSite   => Station_Data.JobSite_Component;
 
-        public Station_Data Station_Data;
-        public abstract                              StationName  StationName             { get; }
-        public abstract                              StationType  StationType             { get; }
+        public          Station_Data Station_Data;
+        public abstract StationName  StationName { get; }
+        public abstract StationType  StationType { get; }
 
         //Maybe change this so that it checks if there is a worker in the station rather than just assigned to it,
         // since the worker could be away from the post.
 
         public float InteractRange { get; private set; }
-    
-        public abstract         EmployeePositionName       CoreEmployeePositionName { get; }
-        public abstract      RecipeName                 DefaultProduct          { get; }
-        public abstract         List<RecipeName>           DefaultAllowedRecipes           { get; }
-        public abstract         List<uint>                 AllowedStoredItemIDs     { get; }
-        public abstract         List<uint>                 DesiredStoredItemIDs     { get; }
-        public         abstract List<JobName>              AllowedJobs              { get; }
-    
+
+        public abstract JobName           CoreJobName           { get; }
+        public abstract RecipeName        DefaultProduct        { get; }
+        public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
+        public abstract List<uint>        AllowedStoredItemIDs  { get; }
+        public abstract List<uint>        DesiredStoredItemIDs  { get; }
+        public abstract List<JobTaskName> AllowedJobTasks       { get; }
+
         Priority_Data_Station        _priorityData;
-        public Priority_Data_Station PriorityData => _priorityData ??= new Priority_Data_Station(); 
+        public Priority_Data_Station PriorityData => _priorityData ??= new Priority_Data_Station();
 
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
+
+        void FixedUpdate()
+        {
+            foreach (var workPost in Station_Data.AllWorkPost_Components)
+            {
+                Debug.Log($"Station: {StationID} WorkPost: {workPost.Key} Actor: {workPost.Value.WorkPostData.CurrentWorker?.ActorID}");
+                Debug.Log($"Station: {StationID} WorkPost: {workPost.Key} Actor: {Station_Data.AllWorkPost_Data[workPost.Key].CurrentWorker?.ActorID}");
+            }
+        }
         
         public void SetStationData(Station_Data stationData)
         {
@@ -60,6 +68,7 @@ namespace Station
         }
 
         protected abstract void _initialiseStartingInventory();
+
         public List<Item> GetInventoryItemsToFetchFromStation()
         {
             return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();

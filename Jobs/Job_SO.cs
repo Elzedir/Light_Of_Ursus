@@ -15,7 +15,7 @@ namespace Jobs
 
         public override uint GetDataObjectID(int id) => (uint)Jobs[id].DataObject.JobName;
 
-        public void PopulateDefaultJobs()
+        public override void PopulateSceneData()
         {
             if (_defaultJobs.Count == 0)
             {

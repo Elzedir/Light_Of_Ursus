@@ -4,281 +4,283 @@ using City;
 using Faction;
 using JobSite;
 using Region;
-using Station;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-public class IDChecker : EditorWindow
+namespace Tools
 {
-    [MenuItem("Tools/ID Checker")]
-    public static void ShowWindow()
+    public class IDChecker : EditorWindow
     {
-        GetWindow<IDChecker>("ID Checker");
-    }
-
-    private void OnGUI()
-    {
-        // Need to put in the functionality to factor in default actors and factions and regions so that they can't be overwritten.
-
-        if (GUILayout.Button("Check and Fix All IDs"))
+        [MenuItem("Tools/ID Checker")]
+        public static void ShowWindow()
         {
-            CheckAndFixStationIDs();
-            CheckAndFixJobsiteIDs();
-            CheckAndFixCityIDs();
-            CheckAndFixRegionIDs();
-            CheckAndFixActorIDs();
-            CheckAndFixFactionIDs();
+            GetWindow<IDChecker>("ID Checker");
         }
 
-        if (GUILayout.Button("Check and Fix Station IDs"))
+        private void OnGUI()
         {
-            CheckAndFixStationIDs();
-        }
+            // Need to put in the functionality to factor in default actors and factions and regions so that they can't be overwritten.
 
-        if (GUILayout.Button("Check and Fix Jobsite IDs"))
-        {
-            CheckAndFixJobsiteIDs();
-        }
-
-        if (GUILayout.Button("Check and Fix City IDs"))
-        {
-            CheckAndFixCityIDs();
-        }
-
-        if (GUILayout.Button("Check and Fix Region IDs"))
-        {
-            CheckAndFixRegionIDs();
-        }
-
-        if (GUILayout.Button("Check and Fix Actor IDs"))
-        {
-            CheckAndFixActorIDs();
-        }
-
-        if (GUILayout.Button("Check and Fix Faction IDs"))
-        {
-            CheckAndFixFactionIDs();
-        }
-    }
-
-    private uint GetNewID(HashSet<uint> existingIDs)
-    {
-        uint newID = 1;
-        while (existingIDs.Contains(newID))
-        {
-            newID++;
-        }
-        return newID;
-    }
-
-    private void CheckAndFixStationIDs()
-    {
-        var stations = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateStations = new List<Station_Component>();
-
-        foreach (var station in stations)
-        {
-            if (station.Station_Data == null)
+            if (GUILayout.Button("Check and Fix All IDs"))
             {
-                Debug.LogWarning($"Station: {station.name} does not have StationData.");
-                continue;
+                //CheckAndFixStationIDs();
+                CheckAndFixJobsiteIDs();
+                CheckAndFixCityIDs();
+                CheckAndFixRegionIDs();
+                CheckAndFixActorIDs();
+                CheckAndFixFactionIDs();
             }
 
-            if (!existingIDs.Add(station.Station_Data.StationID) || station.Station_Data.StationID == 0)
+            // if (GUILayout.Button("Check and Fix Station IDs"))
+            // {
+            //     CheckAndFixStationIDs();
+            // }
+
+            if (GUILayout.Button("Check and Fix Jobsite IDs"))
             {
-                duplicateStations.Add(station);
+                CheckAndFixJobsiteIDs();
+            }
+
+            if (GUILayout.Button("Check and Fix City IDs"))
+            {
+                CheckAndFixCityIDs();
+            }
+
+            if (GUILayout.Button("Check and Fix Region IDs"))
+            {
+                CheckAndFixRegionIDs();
+            }
+
+            if (GUILayout.Button("Check and Fix Actor IDs"))
+            {
+                CheckAndFixActorIDs();
+            }
+
+            if (GUILayout.Button("Check and Fix Faction IDs"))
+            {
+                CheckAndFixFactionIDs();
             }
         }
 
-        foreach (var station in duplicateStations)
+        private uint GetNewID(HashSet<uint> existingIDs)
         {
-            uint newStationID = GetNewID(existingIDs);
-            station.Station_Data.StationID = newStationID;
-            existingIDs.Add(newStationID);
-
-            EditorUtility.SetDirty(station);
-            EditorSceneManager.MarkSceneDirty(station.gameObject.scene);
-
-            Debug.Log($"Assigned new StationID {newStationID} to station {station.name}");
+            uint newID = 1;
+            while (existingIDs.Contains(newID))
+            {
+                newID++;
+            }
+            return newID;
         }
 
-        Debug.Log("Station ID check and fix completed.");
-    }
+        // private void CheckAndFixStationIDs()
+        // {
+        //     var stations = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
+        //     var existingIDs = new HashSet<uint>();
+        //     var duplicateStations = new List<Station_Component>();
+        //
+        //     foreach (var station in stations)
+        //     {
+        //         if (station.Station_Data == null)
+        //         {
+        //             Debug.LogWarning($"Station: {station.name} does not have StationData.");
+        //             continue;
+        //         }
+        //
+        //         if (!existingIDs.Add(station.Station_Data.StationID) || station.Station_Data.StationID == 0)
+        //         {
+        //             duplicateStations.Add(station);
+        //         }
+        //     }
+        //
+        //     foreach (var station in duplicateStations)
+        //     {
+        //         uint newStationID = GetNewID(existingIDs);
+        //         station.Station_Data.StationID = newStationID;
+        //         existingIDs.Add(newStationID);
+        //
+        //         EditorUtility.SetDirty(station);
+        //         EditorSceneManager.MarkSceneDirty(station.gameObject.scene);
+        //
+        //         Debug.Log($"Assigned new StationID {newStationID} to station {station.name}");
+        //     }
+        //
+        //     Debug.Log("Station ID check and fix completed.");
+        // }
 
-    private void CheckAndFixJobsiteIDs()
-    {
-        var jobsites = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateJobsites = new List<JobSite_Component>();
-
-        foreach (var jobsite in jobsites)
+        private void CheckAndFixJobsiteIDs()
         {
-            if (jobsite.JobSiteData == null)
+            var jobsites          = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
+            var existingIDs       = new HashSet<uint>();
+            var duplicateJobsites = new List<JobSite_Component>();
+
+            foreach (var jobsite in jobsites)
             {
-                Debug.LogWarning($"Jobsite: {jobsite.name} does not have JobsiteData.");
-                continue;
+                if (jobsite.JobSiteData == null)
+                {
+                    Debug.LogWarning($"Jobsite: {jobsite.name} does not have JobsiteData.");
+                    continue;
+                }
+
+                if (!existingIDs.Add(jobsite.JobSiteData.JobSiteID))
+                {
+                    duplicateJobsites.Add(jobsite);
+                }
             }
 
-            if (!existingIDs.Add(jobsite.JobSiteData.JobSiteID))
+            foreach (var jobsite in duplicateJobsites)
             {
-                duplicateJobsites.Add(jobsite);
-            }
-        }
+                uint newJobsiteID = GetNewID(existingIDs);
+                jobsite.JobSiteData.JobSiteID = newJobsiteID;
+                existingIDs.Add(newJobsiteID);
 
-        foreach (var jobsite in duplicateJobsites)
-        {
-            uint newJobsiteID = GetNewID(existingIDs);
-            jobsite.JobSiteData.JobSiteID = newJobsiteID;
-            existingIDs.Add(newJobsiteID);
+                EditorUtility.SetDirty(jobsite);
+                EditorSceneManager.MarkSceneDirty(jobsite.gameObject.scene);
 
-            EditorUtility.SetDirty(jobsite);
-            EditorSceneManager.MarkSceneDirty(jobsite.gameObject.scene);
-
-            Debug.Log($"Assigned new JobsiteID {newJobsiteID} to jobsite {jobsite.name}");
-        }
-
-        Debug.Log("Jobsite ID check and fix completed.");
-    }
-
-    private void CheckAndFixCityIDs()
-    {
-        var cities = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateCities = new List<City_Component>();
-
-        foreach (var city in cities)
-        {
-            if (city.CityData == null)
-            {
-                Debug.LogWarning($"City: {city.name} does not have CityData.");
-                continue;
+                Debug.Log($"Assigned new JobsiteID {newJobsiteID} to jobsite {jobsite.name}");
             }
 
-            if (!existingIDs.Add(city.CityData.CityID))
-            {
-                duplicateCities.Add(city);
-            }
+            Debug.Log("Jobsite ID check and fix completed.");
         }
 
-        foreach (var city in duplicateCities)
+        private void CheckAndFixCityIDs()
         {
-            uint newCityID = GetNewID(existingIDs);
-            city.CityData.CityID = newCityID;
-            existingIDs.Add(newCityID);
+            var cities          = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
+            var existingIDs     = new HashSet<uint>();
+            var duplicateCities = new List<City_Component>();
 
-            EditorUtility.SetDirty(city);
-            EditorSceneManager.MarkSceneDirty(city.gameObject.scene);
-
-            Debug.Log($"Assigned new CityID {newCityID} to city {city.name}");
-        }
-
-        Debug.Log("City ID check and fix completed.");
-    }
-
-    private void CheckAndFixRegionIDs()
-    {
-        var regions = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateRegions = new List<Region_Component>();
-
-        foreach (var region in regions)
-        {
-            if (region.RegionData == null)
+            foreach (var city in cities)
             {
-                Debug.LogWarning($"Region: {region.name} does not have RegionData.");
-                continue;
+                if (city.CityData == null)
+                {
+                    Debug.LogWarning($"City: {city.name} does not have CityData.");
+                    continue;
+                }
+
+                if (!existingIDs.Add(city.CityData.CityID))
+                {
+                    duplicateCities.Add(city);
+                }
             }
 
-            if (!existingIDs.Add(region.RegionData.RegionID))
+            foreach (var city in duplicateCities)
             {
-                duplicateRegions.Add(region);
-            }
-        }
+                uint newCityID = GetNewID(existingIDs);
+                city.CityData.CityID = newCityID;
+                existingIDs.Add(newCityID);
 
-        foreach (var region in duplicateRegions)
-        {
-            uint newRegionID = GetNewID(existingIDs);
-            region.RegionData.RegionID = newRegionID;
-            existingIDs.Add(newRegionID);
+                EditorUtility.SetDirty(city);
+                EditorSceneManager.MarkSceneDirty(city.gameObject.scene);
 
-            EditorUtility.SetDirty(region);
-            EditorSceneManager.MarkSceneDirty(region.gameObject.scene);
-
-            Debug.Log($"Assigned new RegionID {newRegionID} to region {region.name}");
-        }
-
-        Debug.Log("Region ID check and fix completed.");
-    }
-
-    private void CheckAndFixActorIDs()
-    {
-        var actors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateActors = new List<Actor_Component>();
-
-        foreach (var actor in actors)
-        {
-            if (actor.ActorData == null)
-            {
-                Debug.LogWarning($"Actor: {actor.name} does not have ActorData.");
-                continue;
+                Debug.Log($"Assigned new CityID {newCityID} to city {city.name}");
             }
 
-            if (!existingIDs.Add(actor.ActorData.ActorID))
-            {
-                duplicateActors.Add(actor);
-            }
+            Debug.Log("City ID check and fix completed.");
         }
 
-        foreach (var actor in duplicateActors)
+        private void CheckAndFixRegionIDs()
         {
-            uint newActorID = GetNewID(existingIDs);
-            actor.ActorData.FullIdentification.ActorID = newActorID;
-            existingIDs.Add(newActorID);
+            var regions          = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
+            var existingIDs      = new HashSet<uint>();
+            var duplicateRegions = new List<Region_Component>();
 
-            EditorUtility.SetDirty(actor);
-            EditorSceneManager.MarkSceneDirty(actor.gameObject.scene);
-
-            Debug.Log($"Assigned new ActorID {newActorID} to actor {actor.name}");
-        }
-
-        Debug.Log("Actor ID check and fix completed.");
-    }
-
-    private void CheckAndFixFactionIDs()
-    {
-        var factions = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
-        var existingIDs = new HashSet<uint>();
-        var duplicateFactions = new List<Faction_Component>();
-
-        foreach (var faction in factions)
-        {
-            if (faction.FactionData == null)
+            foreach (var region in regions)
             {
-                Debug.LogWarning($"Faction: {faction.name} does not have FactionData.");
-                continue;
+                if (region.RegionData == null)
+                {
+                    Debug.LogWarning($"Region: {region.name} does not have RegionData.");
+                    continue;
+                }
+
+                if (!existingIDs.Add(region.RegionData.RegionID))
+                {
+                    duplicateRegions.Add(region);
+                }
             }
 
-            if (!existingIDs.Add(faction.FactionData.FactionID))
+            foreach (var region in duplicateRegions)
             {
-                duplicateFactions.Add(faction);
+                uint newRegionID = GetNewID(existingIDs);
+                region.RegionData.RegionID = newRegionID;
+                existingIDs.Add(newRegionID);
+
+                EditorUtility.SetDirty(region);
+                EditorSceneManager.MarkSceneDirty(region.gameObject.scene);
+
+                Debug.Log($"Assigned new RegionID {newRegionID} to region {region.name}");
             }
+
+            Debug.Log("Region ID check and fix completed.");
         }
 
-        foreach (var faction in duplicateFactions)
+        private void CheckAndFixActorIDs()
         {
-            uint newFactionID = GetNewID(existingIDs);
-            faction.FactionData.FactionID = newFactionID;
-            existingIDs.Add(newFactionID);
+            var actors          = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
+            var existingIDs     = new HashSet<uint>();
+            var duplicateActors = new List<Actor_Component>();
 
-            EditorUtility.SetDirty(faction);
-            EditorSceneManager.MarkSceneDirty(faction.gameObject.scene);
+            foreach (var actor in actors)
+            {
+                if (actor.ActorData == null)
+                {
+                    Debug.LogWarning($"Actor: {actor.name} does not have ActorData.");
+                    continue;
+                }
 
-            Debug.Log($"Assigned new FactionID {newFactionID} to faction {faction.name}");
+                if (!existingIDs.Add(actor.ActorData.ActorID))
+                {
+                    duplicateActors.Add(actor);
+                }
+            }
+
+            foreach (var actor in duplicateActors)
+            {
+                uint newActorID = GetNewID(existingIDs);
+                actor.ActorData.FullIdentification.ActorID = newActorID;
+                existingIDs.Add(newActorID);
+
+                EditorUtility.SetDirty(actor);
+                EditorSceneManager.MarkSceneDirty(actor.gameObject.scene);
+
+                Debug.Log($"Assigned new ActorID {newActorID} to actor {actor.name}");
+            }
+
+            Debug.Log("Actor ID check and fix completed.");
         }
 
-        Debug.Log("Faction ID check and fix completed.");
+        private void CheckAndFixFactionIDs()
+        {
+            var factions          = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
+            var existingIDs       = new HashSet<uint>();
+            var duplicateFactions = new List<Faction_Component>();
+
+            foreach (var faction in factions)
+            {
+                if (faction.FactionData == null)
+                {
+                    Debug.LogWarning($"Faction: {faction.name} does not have FactionData.");
+                    continue;
+                }
+
+                if (!existingIDs.Add(faction.FactionData.FactionID))
+                {
+                    duplicateFactions.Add(faction);
+                }
+            }
+
+            foreach (var faction in duplicateFactions)
+            {
+                uint newFactionID = GetNewID(existingIDs);
+                faction.FactionData.FactionID = newFactionID;
+                existingIDs.Add(newFactionID);
+
+                EditorUtility.SetDirty(faction);
+                EditorSceneManager.MarkSceneDirty(faction.gameObject.scene);
+
+                Debug.Log($"Assigned new FactionID {newFactionID} to faction {faction.name}");
+            }
+
+            Debug.Log("Faction ID check and fix completed.");
+        }
     }
 }

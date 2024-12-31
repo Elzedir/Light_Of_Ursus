@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
-using EmployeePosition;
 using Items;
 using Jobs;
 using Recipes;
@@ -14,19 +13,19 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Tree;
         public override StationType      StationType          => StationType.Resource;
-        public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Logger;
+        public override JobName CoreJobName => JobName.Logger;
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
         public override List<uint>       AllowedStoredItemIDs { get; } = new();
         public override List<uint>       DesiredStoredItemIDs { get; } = new();
 
-        public override List<JobName> AllowedJobs { get; } = new()
+        public override List<JobTaskName> AllowedJobTasks { get; } = new()
         {
-            JobName.Logger,
-            JobName.Sawmiller,
-            JobName.Hauler,
-            JobName.Vendor
+            JobTaskName.Chop_Wood,
+            JobTaskName.Fetch_Items,
+            JobTaskName.Deliver_Items
+
         };
 
         protected override void _initialiseStartingInventory()

@@ -13,7 +13,7 @@ namespace Careers
         
         public static void PopulateAllCareers()
         {
-            Career_SO.PopulateDefaultCareers();
+            Career_SO.PopulateSceneData();
             // Then populate custom careers.
         }
         

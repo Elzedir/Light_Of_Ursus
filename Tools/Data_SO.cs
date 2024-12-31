@@ -21,7 +21,14 @@ namespace Tools
             }
         }
 
-        public void RefreshDataObjects() => InitialiseAllDataObjects();
+        public void RefreshDataObjects()
+        {
+            _defaultDataObjects = null;
+            
+            PopulateSceneData();
+            
+            InitialiseAllDataObjects();   
+        }
 
         public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
 
@@ -160,6 +167,7 @@ namespace Tools
             _currentIndex = 0;
         }
 
+        public abstract void PopulateSceneData();
         protected abstract Dictionary<uint, Object_Data<T>> _populateDefaultDataObjects();
 
         Dictionary<uint, Object_Data<T>> _defaultDataObjects;
@@ -194,12 +202,13 @@ namespace Tools
         public bool    ShowData;
         public Vector2 ScrollPosition;
 
-        public readonly string              Title;
-        public readonly DataDisplayType     DataDisplayType;
-        public readonly List<string>        Data;
+        public readonly string             Title;
+        public readonly DataDisplayType    DataDisplayType;
+        public readonly List<string>       Data;
         public readonly List<Data_Display> SubData;
-        
-        public Data_Display(string title, DataDisplayType dataDisplayType, List<string> data = null, List<Data_Display> subData = null)
+
+        public Data_Display(string             title, DataDisplayType dataDisplayType, List<string> data = null,
+                            List<Data_Display> subData = null, int selectedIndex = -1, bool showData = false)
         {
             switch (dataDisplayType)
             {
@@ -211,10 +220,12 @@ namespace Tools
                     throw new NullReferenceException("SubData is null.");
             }
 
-            Title            = title;
-            DataDisplayType  = dataDisplayType;
-            Data             = data;
-            SubData          = subData;
+            Title           = title;
+            DataDisplayType = dataDisplayType;
+            SelectedIndex   = selectedIndex;
+            ShowData        = showData;
+            Data            = data;
+            SubData         = subData;
         }
     }
 

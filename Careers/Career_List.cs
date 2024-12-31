@@ -29,8 +29,7 @@ namespace Careers
                     careerBaseJobs: new HashSet<JobName>
                     {
                         JobName.Logger,
-                        JobName.Sawmiller,
-                        JobName.Hauler,
+                        JobName.Sawyer,
                         JobName.Vendor,
                     },
                     careerSpecialistJobs: new Dictionary<JobName, JobRequirement>())

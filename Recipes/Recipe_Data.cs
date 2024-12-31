@@ -129,7 +129,9 @@ namespace Recipes
             return new Data_Display(
                 title: "Base Recipe Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects);
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
     

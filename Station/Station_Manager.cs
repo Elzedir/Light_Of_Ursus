@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using DataPersistence;
-using EmployeePosition;
 using Initialisation;
-using UnityEditor;
+using Jobs;
 using UnityEngine;
 
 namespace Station
@@ -54,7 +53,7 @@ namespace Station
 
         static void _initialise()
         {
-            Station_SO.PopulateSceneStations();
+            Station_SO.PopulateSceneData();
         }
         
         public static Station_Data GetStation_Data(uint stationID)
@@ -65,6 +64,11 @@ namespace Station
         public static Station_Component GetStation_Component(uint stationID)
         {
             return Station_SO.GetStation_Component(stationID);
+        }
+        
+        public static void UpdateStation(uint stationID, Station_Data stationData)
+        {
+            Station_SO.UpdateStation(stationID, stationData);
         }
         
         static Station_SO _getStation_SO()
@@ -104,17 +108,17 @@ namespace Station
         }
 
 
-        public static Dictionary<StationName, List<EmployeePositionName>> EmployeeCanUseList = new()
+        public static Dictionary<StationName, List<JobName>> WorkerCanUseList = new()
         {
-            {StationName.Iron_Node, new List<EmployeePositionName> { EmployeePositionName.Miner} },
-            {StationName.Anvil, new List<EmployeePositionName> { EmployeePositionName.Smith} },
-            {StationName.Tree, new List<EmployeePositionName> { EmployeePositionName.Logger} },
-            {StationName.Sawmill, new List<EmployeePositionName> { EmployeePositionName.Sawyer} },
-            {StationName.Log_Pile, new List<EmployeePositionName> { EmployeePositionName.Hauler} },
-            {StationName.Fishing_Spot, new List<EmployeePositionName> { EmployeePositionName.Fisher} },
-            {StationName.Farming_Plot, new List<EmployeePositionName> { EmployeePositionName.Farmer} },
-            {StationName.Campfire, new List<EmployeePositionName> { EmployeePositionName.Cook} },
-            {StationName.Tanning_Station, new List<EmployeePositionName> { EmployeePositionName.Tanner} }
+            {StationName.Iron_Node, new List<JobName> { JobName.Miner} },
+            {StationName.Anvil, new List<JobName> { JobName.Smith} },
+            {StationName.Tree, new List<JobName> { JobName.Logger} },
+            {StationName.Sawmill, new List<JobName> { JobName.Sawyer} },
+            {StationName.Log_Pile, new List<JobName> { JobName.Logger, JobName.Sawyer} },
+            {StationName.Fishing_Spot, new List<JobName> { JobName.Fisher} },
+            {StationName.Farming_Plot, new List<JobName> { JobName.Farmer} },
+            {StationName.Campfire, new List<JobName> { JobName.Cook} },
+            {StationName.Tanning_Station, new List<JobName> { JobName.Tanner} }
         };
 
         public static StationType GetStationType(StationName stationNAme)

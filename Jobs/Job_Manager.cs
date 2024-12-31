@@ -13,7 +13,7 @@ namespace Jobs
         
         public static void PopulateAllJobs()
         {
-            AllJobs.PopulateDefaultJobs();
+            AllJobs.PopulateSceneData();
             // Then populate custom jobs.
         }
         
@@ -39,9 +39,9 @@ namespace Jobs
     {
         Idle, 
         
-        Wanderer,
+        Any,
         
-        Hauler,
+        Wanderer,
         
         Vendor,
         
@@ -49,15 +49,22 @@ namespace Jobs
 
         Researcher,
 
-        Harvester,
-
         Logger,
-        Sawmiller,
+        Sawyer,
         
         Carpenter,
 
+        Miner,
+        
         Smith,
     
+        Fisher,
+        
+        Farmer,
+        
+        Cook,
+        
+        Tanner
     }
     
     public enum ActivityPeriodName { Cathemeral, Nocturnal, Diurnal, Crepuscular }

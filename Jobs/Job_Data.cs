@@ -59,11 +59,13 @@ namespace Jobs
             {
                 Debug.LogError("Error: Job Tasks not found.");
             }
-
+            
             return new Data_Display(
                 title: "Job Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects);
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
     

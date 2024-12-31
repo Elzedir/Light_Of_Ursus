@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
-using EmployeePosition;
 using Items;
 using Jobs;
 using Recipes;
@@ -14,7 +13,7 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Sawmill;
         public override StationType      StationType          => StationType.Crafter;
-        public override EmployeePositionName CoreEmployeePositionName => EmployeePositionName.Sawyer;
+        public override JobName CoreJobName => JobName.Sawyer;
         public          float            PercentageStorageFilled    = 0;
         public          float            PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
 
@@ -22,10 +21,11 @@ namespace Station
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Plank };
         public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100 };
-        public override List<JobName> AllowedJobs { get; } = new()
+        public override List<JobTaskName> AllowedJobTasks { get; } = new()
         {
-            JobName.Sawmiller,
-            JobName.Hauler
+            JobTaskName.Process_Logs,
+            JobTaskName.Fetch_Items,
+            JobTaskName.Deliver_Items
         };
 
         protected override void _initialiseStartingInventory() { }

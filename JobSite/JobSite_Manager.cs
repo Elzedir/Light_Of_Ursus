@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DataPersistence;
-using EmployeePosition;
 using Initialisation;
+using Jobs;
 using UnityEditor;
 using UnityEngine;
 
@@ -55,7 +55,7 @@ namespace JobSite
 
         static void _initialise()
         {
-            JobSite_SO.PopulateSceneJobSites();
+            JobSite_SO.PopulateSceneData();
         }
         
         public static JobSite_Data GetJobSite_Data(uint jobSiteID)
@@ -108,20 +108,18 @@ namespace JobSite
             return JobSite_SO.GetUnusedJobSiteID();
         }
         
-        public static Dictionary<JobSiteName, List<EmployeePositionName>> EmployeeCanUseList = new()
+        public static Dictionary<JobSiteName, List<JobName>> EmployeeCanUseList = new()
         {
-            {JobSiteName.Lumber_Yard, new List<EmployeePositionName>
+            {JobSiteName.Lumber_Yard, new List<JobName>
             {
-                EmployeePositionName.Logger,
-                EmployeePositionName.Sawyer,
-                EmployeePositionName.Hauler
+                JobName.Logger,
+                JobName.Sawyer,
                 
             }},
-            {JobSiteName.Smithy, new List<EmployeePositionName>
+            {JobSiteName.Smithy, new List<JobName>
             {
-                EmployeePositionName.Miner,
-                EmployeePositionName.Smith,
-                EmployeePositionName.Hauler
+                JobName.Miner,
+                JobName.Smith,
             }}
         };
         

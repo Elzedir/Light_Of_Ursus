@@ -15,7 +15,7 @@ namespace Recipes
         
         public override uint GetDataObjectID(int id) => (uint)Recipes[id].DataObject.RecipeName;
         
-        public void PopulateDefaultRecipes()
+        public override void PopulateSceneData()
         {
             if (_defaultRecipes.Count == 0)
             {

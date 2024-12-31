@@ -4,7 +4,6 @@ using Careers;
 using City;
 using DataPersistence;
 using DateAndTime;
-using EmployeePosition;
 using Faction;
 using Items;
 using Jobs;
@@ -60,7 +59,6 @@ namespace Tools
             ActorPreset_Manager.ClearSOData();
             Career_Manager.ClearSOData();
             City_Manager.ClearSOData();
-            EmployeePosition_Manager.ClearSOData();
             Faction_Manager.ClearSOData();
             Item_Manager.ClearSOData();
             Job_Manager.ClearSOData();
@@ -97,7 +95,6 @@ namespace Tools
             _saveScriptableObject<City_SO>("City_SO", folderPath);
             _saveScriptableObject<DataPersistence_SO>("DataPersistence_SO", folderPath);
             _saveScriptableObject<DateAndTime_SO>("DateAndTime_SO", folderPath);
-            _saveScriptableObject<EmployeePosition_SO>("EmployeePosition_SO", folderPath);
             _saveScriptableObject<Faction_SO>("Faction_SO", folderPath);
             _saveScriptableObject<Item_SO>("Item_SO", folderPath);
             _saveScriptableObject<Job_SO>("Job_SO", folderPath);

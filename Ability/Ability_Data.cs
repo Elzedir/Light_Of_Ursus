@@ -105,7 +105,9 @@ namespace Ability
             return new Data_Display(
                 title: $"{(uint)AbilityName}: {AbilityName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
     

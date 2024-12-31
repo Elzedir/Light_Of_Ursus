@@ -65,7 +65,7 @@ namespace Actor
 
         static void _initialise()
         {
-            AllActors.PopulateSceneActors();
+            AllActors.PopulateSceneData();
         }
         
         public static Actor_Data GetActor_Data(uint actorID)
@@ -114,8 +114,7 @@ namespace Actor
             return AllActors.GetUnusedActorID();
         }
 
-        public static Actor_Component SpawnNewActor(Vector3             spawnPoint,
-                                                    ActorDataPresetName actorDataPreset)
+        public static Actor_Component SpawnNewActor(Vector3 spawnPoint, ActorDataPresetName actorDataPreset)
         {
             var actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
 

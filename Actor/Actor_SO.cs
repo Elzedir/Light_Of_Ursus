@@ -42,7 +42,7 @@ namespace Actor
         }
         public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllDataObjects(allActors);
 
-        public void PopulateSceneActors()
+        public override void PopulateSceneData()
         {
             if (_defaultActors.Count == 0)
             {

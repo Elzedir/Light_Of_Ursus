@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Jobs;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -9,12 +10,12 @@ namespace Actor
     [CreateAssetMenu(fileName = "ActorDataPreset_SO", menuName = "SOList/ActorDataPreset_SO")]
     public class ActorPreset_SO : Data_SO<ActorPreset_Data>
     {
-        public Object_Data<ActorPreset_Data>[] ActorDataPresets                                 => Objects_Data;
+        public Object_Data<ActorPreset_Data>[] ActorDataPresets => Objects_Data;
         public Object_Data<ActorPreset_Data>   GetActorDataPreset(ActorDataPresetName actorDataPresetName) => GetObject_Data((uint)actorDataPresetName);
 
         public override uint GetDataObjectID(int id) => (uint)ActorDataPresets[id].DataObject.ActorDataPresetName; // Use the ActorDataPresetName
 
-        public void PopulateDefaultActorDataPresets()
+        public override void PopulateSceneData()
         {
             if (_defaultActorDataPresets.Count == 0)
             {

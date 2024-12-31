@@ -8,7 +8,6 @@ using Careers;
 using City;
 using DataPersistence;
 using DateAndTime;
-using EmployeePosition;
 using Faction;
 using FMODUnity;
 using Initialisation;
@@ -146,7 +145,6 @@ namespace Managers
             Recipe_Manager.PopulateAllRecipes();
             Job_Manager.PopulateAllJobs();
             ActorPreset_Manager.PopulateAllActorDataPresets();
-            EmployeePosition_Manager.PopulateAllEmployeePositions();
             Career_Manager.PopulateAllCareers();
             Manager_DateAndTime.Initialise();
             

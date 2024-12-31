@@ -43,7 +43,7 @@ namespace JobSite
         public void UpdateJobSite(uint jobSiteID, JobSite_Data jobSite_Component) => UpdateDataObject(jobSiteID, jobSite_Component);
         public void UpdateAllJobSites(Dictionary<uint, JobSite_Data> allJobSites) => UpdateAllDataObjects(allJobSites);
 
-        public void PopulateSceneJobSites()
+        public override void PopulateSceneData()
         {
             if (_defaultJobSites.Count == 0)
             {

@@ -32,7 +32,7 @@ namespace Faction
         public void UpdateFaction(uint factionID, Faction_Data faction_Data) => UpdateDataObject(factionID, faction_Data);
         public void UpdateAllFactions(Dictionary<uint, Faction_Data> allFactions) => UpdateAllDataObjects(allFactions);
 
-        public void PopulateSceneFactions()
+        public override void PopulateSceneData()
         {
             if (_defaultFactions.Count == 0)
             {

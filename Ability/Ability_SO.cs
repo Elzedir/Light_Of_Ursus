@@ -29,7 +29,7 @@ namespace Ability
         public void UpdateAllAbilities(Dictionary<uint, Ability_Data> allAbilities) =>
             UpdateAllDataObjects(allAbilities);
 
-        public void PopulateSceneAbilities()
+        public override void PopulateSceneData()
         {
             if (_defaultAbilities.Count == 0)
             {

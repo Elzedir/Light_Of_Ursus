@@ -73,6 +73,15 @@ namespace Managers
                     $"Base Prosperity Growth Per Day: {BaseProsperityGrowthPerDay}"
                 });
             
+            var dataDisplay = new Data_Display(
+                title: "Base Station Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                subData: dataObjects,
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
+
+            return dataDisplay;
+            
             return dataObjects;
         }
     }

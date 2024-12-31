@@ -53,7 +53,7 @@ namespace Faction
 
         static void _initialise()
         {
-            AllFactions.PopulateSceneFactions();
+            AllFactions.PopulateSceneData();
         }
         
         public static Faction_Data GetFaction_Data(uint factionID)

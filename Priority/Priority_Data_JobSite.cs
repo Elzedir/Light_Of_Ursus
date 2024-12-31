@@ -86,7 +86,7 @@ namespace Priority
         {
             if (limiterID != 0)
                 return priorityIDs.Where(priorityID =>
-                    Station_Manager.GetStation_Component(limiterID).AllowedJobs.Contains((JobName)priorityID)).ToList();
+                    Station_Manager.GetStation_Component(limiterID).AllowedJobTasks.Contains((JobTaskName)priorityID)).ToList();// This should be JobTaskName
             
             return priorityIDs;
         }
@@ -159,7 +159,9 @@ namespace Priority
             return new Data_Display(
                 title: "Priority Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 }

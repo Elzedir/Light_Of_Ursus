@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
+using Jobs;
 using Tools;
 using UnityEngine;
 
@@ -58,6 +60,10 @@ namespace Priority
             _moveDown(index);
 
             OnPriorityRemoved?.Invoke(priorityID);
+            
+            Debug.Log($"PriorityID: {priorityValue.PriorityID} Dequeued.");
+            Debug.Log($"PriorityID: {(JobTaskName)priorityValue.PriorityID} Dequeued.");
+            Debug.Log($"Or PriorityID: {(ActorActionName)priorityValue.PriorityID} Dequeued.");
 
             return priorityValue;
         }
@@ -205,7 +211,9 @@ namespace Priority
             return new Data_Display(
                 title: "Priority Queue",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                subData: new List<Data_Display>(dataObjects),
+                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
+                showData: dataSO_Object?.ShowData           ?? false);
         }
     }
 

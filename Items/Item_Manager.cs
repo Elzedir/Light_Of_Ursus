@@ -29,7 +29,7 @@ namespace Items
 
         public static void PopulateAllItems()
         {
-            AllItems.PopulateDefaultItems();
+            AllItems.PopulateSceneData();
             // Then populate custom items.
         }
 
