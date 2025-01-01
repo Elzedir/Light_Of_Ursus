@@ -199,22 +199,25 @@ namespace Priority
             },
         };
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Priority Data"] = new Data_Display(
                     title: "Base Priority Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Actor ID: {ActorID}",
-                        $"Actor Action: {_currentActorAction}",
-                        $"Is Performing Action: {IsPerformingAction}",
-                        $"Current Action Coroutine: {CurrentActionCoroutine}",
-                    }));
+                        { "Actor ID", $"{ActorID}" },
+                        { "Actor Action", $"{_currentActorAction}" },
+                        { "Is Performing Action", $"{IsPerformingAction}" },
+                        { "Current Action Coroutine", $"{CurrentActionCoroutine}" }
+                    });
             }
             catch
             {
@@ -224,12 +227,11 @@ namespace Priority
                 }
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Priority Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 }

@@ -72,23 +72,26 @@ namespace City
             }
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["City Data"] = new Data_Display(
                     title: "City Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"City ID: {CityID}",
-                        $"City Name: {CityName}",
-                        $"City Faction ID: {CityFactionID}",
-                        $"Region ID: {RegionID}",
-                        $"City Description: {CityDescription}"
-                    }));
+                        { "City ID", $"{CityID}" },
+                        { "City Name", CityName },
+                        { "City Faction ID", $"{CityFactionID}" },
+                        { "Region ID", $"{RegionID}" },
+                        { "City Description", CityDescription }
+                    });
             }
             catch
             {
@@ -97,29 +100,22 @@ namespace City
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Population Data"] = new Data_Display(
                     title: "Population Data",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    subData: Population.DataSO_Object(toggleMissingDataDebugs).SubData));
+                    dataSO_Object: dataSO_Object,
+                    subData: Population.GetDataSO_Object(toggleMissingDataDebugs).SubData);
             }
             catch
             {
                 Debug.LogError("Error in Base Career Data");
             }
-            
-            var dataDisplay = new Data_Display(
-                title: "Base Station Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
 
-            return dataDisplay;
-
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: $"{CityID}: {CityName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 
@@ -163,21 +159,24 @@ namespace City
             ExpectedPopulation = expectedPopulation;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Population Data"] = new Data_Display(
                     title: "Population Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Current Population: {CurrentPopulation}",
-                        $"Max Population: {MaxPopulation}",
-                        $"Expected Population: {ExpectedPopulation}"
-                    }));
+                        { "Current Population", $"{CurrentPopulation}" },
+                        { "Max Population", $"{MaxPopulation}" },
+                        { "Expected Population", $"{ExpectedPopulation}" }
+                    });
             }
             catch
             {
@@ -186,22 +185,22 @@ namespace City
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Citizen IDs"] = new Data_Display(
                     title: "Citizen IDs",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: AllCitizenIDs.Select(citizenID => citizenID.ToString()).ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: AllCitizenIDs.ToDictionary(citizenID => $"{citizenID}", citizenID => $"{citizenID}"));
             }
             catch
             {
                 Debug.LogError("Error in Base Career Data");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Population Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 }

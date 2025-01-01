@@ -24,7 +24,7 @@ namespace Items
             }
         }    
         
-        protected override Dictionary<uint, Object_Data<Item_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Item_Data>> _getDefaultDataObjects()
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
@@ -64,7 +64,7 @@ namespace Items
                 dataObjectID: data.ItemID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.ItemID}: {data.ItemName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

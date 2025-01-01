@@ -53,22 +53,25 @@ namespace Recipes
             PossibleQualities = possibleQualities;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Recipe Data"] = new Data_Display(
                     title: "Base Recipe Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Recipe Name: {RecipeName}",
-                        $"Recipe Description: {RecipeDescription}",
-                        $"Required Progress: {RequiredProgress}",
-                        $"Required Station: {RequiredStation}"
-                    }));
+                        { "Recipe Name", RecipeName.ToString() },
+                        { "Recipe Description", RecipeDescription },
+                        { "Required Progress", $"{RequiredProgress}" },
+                        { "Required Station", RequiredStation.ToString() }
+                    });
             }
             catch
             {
@@ -77,10 +80,11 @@ namespace Recipes
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Required Ingredients"] = new Data_Display(
                     title: "Required Ingredients",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: RequiredIngredients.Select(item => $"{item.ItemID}: {item.ItemName} - Qty: {item.ItemAmount}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: RequiredIngredients.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName} - Qty: {item.ItemAmount}"));
             }
             catch
             {
@@ -89,13 +93,14 @@ namespace Recipes
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Required Vocations"] = new Data_Display(
                     title: "Required Vocations",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: RequiredVocations.Select(vocation =>
-                                               $"{vocation.VocationName}: "                  +
-                                               $"Min: {vocation.MinimumVocationExperience} " +
-                                               $"Expected: {vocation.ExpectedVocationExperience}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: RequiredVocations.ToDictionary(vocation =>
+                            $"{vocation.VocationName}:",
+                        vocation => $"Min: {vocation.MinimumVocationExperience} " +
+                                    $"Expected: {vocation.ExpectedVocationExperience}"));
             }
             catch
             {
@@ -104,10 +109,11 @@ namespace Recipes
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Recipe Products"] = new Data_Display(
                     title: "Recipe Products",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: RecipeProducts.Select(item => $"{item.ItemID}: {item.ItemName}: Qty - {item.ItemAmount}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName}: Qty - {item.ItemAmount}"));
             }
             catch
             {
@@ -116,22 +122,22 @@ namespace Recipes
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Possible Qualities"] = new Data_Display(
                     title: "Possible Qualities",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: PossibleQualities.Select(quality => $"{quality.QualityName}: {quality.QualityLevel}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
             }
             catch
             {
                 Debug.LogError("Error: Possible Qualities not found.");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Base Recipe Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
     

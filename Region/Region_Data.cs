@@ -79,25 +79,28 @@ namespace Region
             }
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Region Data"] = new Data_Display(
                     title: "Base Region Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Region ID: {RegionID}",
-                        $"Region Name: {RegionName}",
-                        $"Region Faction ID: {RegionFactionID}",
-                        $"Region Description: {RegionDescription}",
-                        $"Prosperity Data: {ProsperityData}",
-                        $"Faction: {Faction}",
-                        $"All City IDs: {string.Join(", ", _allCityIDs)}"
-                    }));
+                        {"Region ID", $"{RegionID}"},
+                        {"Region Name", RegionName},
+                        {"Region Faction ID", $"{RegionFactionID}"},
+                        {"Region Description", RegionDescription},
+                        {"Prosperity Data", ProsperityData.ToString()},
+                        {"Faction", $"{Faction}"},
+                        {"All City IDs", string.Join(", ", _allCityIDs)}
+                    });
             }
             catch
             {
@@ -106,27 +109,27 @@ namespace Region
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Region Prosperity"] = new Data_Display(
                     title: "Region Prosperity",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string , string>
                     {
-                        $"Current Prosperity: {ProsperityData.CurrentProsperity}",
-                        $"Max Prosperity: {ProsperityData.MaxProsperity}",
-                        $"Base Prosperity Growth: {ProsperityData.BaseProsperityGrowthPerDay}"
-                    }));
+                        { "Current Prosperity", $"{ProsperityData.CurrentProsperity}" },
+                        { "Max Prosperity", $"{ProsperityData.MaxProsperity}" },
+                        { "Base Prosperity Growth", $"{ProsperityData.BaseProsperityGrowthPerDay}" }
+                    });
             }
             catch
             {
                 Debug.LogError("Error: ProsperityData.");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Base Region Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 

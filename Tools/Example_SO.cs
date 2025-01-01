@@ -23,7 +23,7 @@ namespace Tools
 
         }
 
-        protected override Dictionary<uint, Object_Data<Test_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Test_Data>> _getDefaultDataObjects()
         {
             var tests = new Dictionary<uint, Test_Data>
             {

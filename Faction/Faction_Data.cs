@@ -44,20 +44,23 @@ namespace Faction
             }
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Faction Data"] = new Data_Display(
                     title: "Base Faction Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Faction ID: {FactionID}",
-                        $"Faction Name: {FactionName}",
-                    }));
+                        { "Faction ID", $"{FactionID}" },
+                        { "Faction Name", FactionName }
+                    });
             }
             catch
             {
@@ -66,10 +69,11 @@ namespace Faction
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Faction Actors"] = new Data_Display(
                     title: "Faction Actors",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: AllFactionActorIDs.Select(actorID => actorID.ToString()).ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
             }
             catch
             {
@@ -78,22 +82,22 @@ namespace Faction
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Faction Relations"] = new Data_Display(
                     title: "Faction Relations",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: AllFactionRelations.Select(relation => $"{relation.FactionID_B}: {relation.FactionRelation}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
             }
             catch
             {
                 Debug.LogError("Error in Faction Actors");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Faction Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 }

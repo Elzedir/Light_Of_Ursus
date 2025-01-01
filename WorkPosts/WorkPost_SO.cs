@@ -75,7 +75,7 @@ namespace WorkPosts
             }
         }
 
-        protected override Dictionary<uint, Object_Data<WorkPost_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<WorkPost_Data>> _getDefaultDataObjects()
         {
             var defaultWorkPosts = new Dictionary<uint, WorkPost_Data>();
 
@@ -107,7 +107,7 @@ namespace WorkPosts
                 dataObjectID: data.WorkPostID, 
                 dataObject: data,
                 dataObjectTitle: $"WorkPost: {data.WorkPostID}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

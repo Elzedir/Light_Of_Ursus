@@ -22,7 +22,7 @@ namespace Careers
                 Debug.Log("No Default Careers Found");
             }
         }
-        protected override Dictionary<uint, Object_Data<Career_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Career_Data>> _getDefaultDataObjects()
         {
             return _convertDictionaryToDataObject(Career_List.DefaultCareers);
         }
@@ -35,7 +35,7 @@ namespace Careers
                 dataObjectID: (uint)data.CareerName,
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.CareerName}: {data.CareerName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
     

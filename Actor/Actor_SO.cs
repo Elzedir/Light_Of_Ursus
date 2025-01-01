@@ -83,7 +83,7 @@ namespace Actor
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Actor_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Actor_Data>> _getDefaultDataObjects()
         {
             var defaultActors = new Dictionary<uint, Actor_Data>();
 
@@ -115,7 +115,7 @@ namespace Actor
                 dataObjectID: data.ActorID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.ActorID}: {data.ActorName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

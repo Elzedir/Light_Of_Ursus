@@ -79,7 +79,7 @@ namespace City
             }
         }
 
-        protected override Dictionary<uint, Object_Data<City_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<City_Data>> _getDefaultDataObjects()
         {
             var defaultCities = new Dictionary<uint, City_Data>();
 
@@ -111,7 +111,7 @@ namespace City
                 dataObjectID: data.CityID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.CityID}: {data.CityName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

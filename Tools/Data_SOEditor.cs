@@ -73,7 +73,7 @@ namespace Tools
                 if (dataSO_Object.Data is not null)
                 {
                     foreach (var data in dataSO_Object.Data)
-                        GUILayout.Label(data);
+                        GUILayout.Label($"{data.Key}: {data.Value}");
 
                     if (dataSO_Object.DataDisplayType == DataDisplayType.Item)
                         return;
@@ -81,7 +81,7 @@ namespace Tools
 
                 if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
                 {
-                    foreach (var subData in dataSO_Object.SubData)
+                    foreach (var subData in dataSO_Object.SubData.Values)
                         _drawData_Object(subData);
 
                     return;
@@ -93,19 +93,18 @@ namespace Tools
                 dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
                     GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
                 dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
-                    dataSO_Object.SubData.Select(subData => subData.Title).ToArray(), 1);
+                    dataSO_Object.SubData.Select(subData => subData.Value.Title).ToArray(), 1);
 
                 EditorGUILayout.EndScrollView();
 
                 if (dataSO_Object.SelectedIndex < 0 ||
                     dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
 
-                var selectedBaseObject = dataSO_Object.SubData[dataSO_Object.SelectedIndex];
+                var selectedBaseObject = dataSO_Object.SubData.ElementAt(dataSO_Object.SelectedIndex).Value;
 
-                selectedBaseObject.ShowData =
-                    EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData);
-
-                if (!selectedBaseObject.ShowData) return;
+                if (!(selectedBaseObject.ShowData =
+                        EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData)))
+                    return;
 
                 dataSO_Object = selectedBaseObject;   
             }

@@ -79,7 +79,7 @@ namespace Region
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Region_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Region_Data>> _getDefaultDataObjects()
         {
             var defaultRegions = new Dictionary<uint, Region_Data>();
 
@@ -111,7 +111,7 @@ namespace Region
                 dataObjectID: data.RegionID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.RegionID}: {data.RegionName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

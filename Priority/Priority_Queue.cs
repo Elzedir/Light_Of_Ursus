@@ -187,18 +187,20 @@ namespace Priority
             _priorityQueue[tempPriorityValueA.PriorityID]     = indexB;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Priority Queue"] = new Data_Display(
                     title: "Priority Queue",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: _priorityArray.Select(priority =>
-                                            $"PriorityID: {priority.PriorityID}, PriorityValue: {priority.PriorityValue}")
-                                        .ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
+                        priority => $"PriorityValue: {priority.PriorityValue}"));
             }
             catch
             {
@@ -208,12 +210,11 @@ namespace Priority
                 }
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Priority Queue",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 

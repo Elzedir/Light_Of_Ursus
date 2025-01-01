@@ -145,7 +145,7 @@ namespace JobSite
                 Debug.LogError(
                     $"Station with ID {stationID} doesn't exist physically in JobSite: {JobSiteID}: {JobSiteName}");
             }
-            
+
             PriorityData.RegenerateAllPriorities();
 
             _jobSiteComponent.StartCoroutine(_populate());
@@ -240,7 +240,7 @@ namespace JobSite
             var actorPresetName = ActorPreset_List.GetActorDataPresetNameByJobName(jobName);
 
             Debug.Log($"Spawning new worker for position: {jobName}, with preset: {actorPresetName}");
-            
+
             var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
 
             AddEmployeeToJobsite(actor.ActorData.ActorID);
@@ -337,9 +337,9 @@ namespace JobSite
             if (desiredJobTask == JobTaskName.Idle)
             {
                 Debug.Log("Worker is idling. Adding to station '0'.");
-                
+
                 worker.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
-                
+
                 return true;
             }
 
@@ -350,26 +350,29 @@ namespace JobSite
                 Debug.Log($"No open WorkPosts found for Worker: {worker}");
                 return false;
             }
-            
+
             Debug.Log($"3: Open WorkPost found: {openWorkPost_Data.WorkPostID}");
-            
+
             RemoveWorkerFromCurrentStation(worker);
 
             WorkPost_Workers[(station.StationID, openWorkPost_Data.WorkPostID)] = worker.ActorID;
             openWorkPost_Data.AddWorkerToWorkPost(worker);
             
+            Debug.Log($"DesiredJobTask: {desiredJobTask}");
+
             var desiredJobName = JobTask_Manager.GetJobTask_Master(desiredJobTask).PrimaryJob;
-            
+
             Debug.Log($"4: DesiredJobName: {desiredJobName}");
 
             if (desiredJobName == JobName.Any)
             {
                 Debug.Log($"DesiredJobName is Any. Setting to station.CoreJobName: {station.CoreJobName}");
-                
+
                 desiredJobName = station.CoreJobName;
             }
 
-            worker.ActorData.CareerData.SetCurrentJob(new Job(desiredJobName, station.StationID, openWorkPost_Data.WorkPostID));
+            worker.ActorData.CareerData.SetCurrentJob(new Job(desiredJobName, station.StationID,
+                openWorkPost_Data.WorkPostID));
 
             return true;
         }
@@ -471,7 +474,7 @@ namespace JobSite
             foreach (var swp in WorkPost_Workers)
             {
                 if (swp.Value == 0) continue;
-                
+
                 float totalProductionRate = 0;
 
                 var station_Data = AllStationComponents[swp.Key.StationID].Station_Data;
@@ -596,7 +599,8 @@ namespace JobSite
                     allPositionsFilled = false;
 
                     //Debug.Log($"Couldn't find employee from City for position: {station.CoreEmployeePosition}");
-                    var newEmployee = _findEmployeeFromCity(station.CoreJobName) ?? _generateNewEmployee(station.CoreJobName);
+                    var newEmployee = _findEmployeeFromCity(station.CoreJobName) ??
+                                      _generateNewEmployee(station.CoreJobName);
 
                     if (!JobSite_Component.GetNewCurrentJob(newEmployee, station.StationID))
                     {
@@ -618,24 +622,28 @@ namespace JobSite
             Debug.Log(iteration);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base JobSite Data"] = new Data_Display(
                     title: "Base JobSite Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"JobSite ID: {JobSiteID}",
-                        $"Jobsite Faction ID: {JobsiteFactionID}",
-                        $"City ID: {CityID}",
-                        $"Jobsite Description: {JobsiteDescription}",
-                        $"Owner ID: {OwnerID}",
-                        $"Jobsite is Active: {JobsiteIsActive}"
-                    }));
+                        { "JobSite ID", $"{JobSiteID}" },
+                        { "JobSite Name", $"{JobSiteName}" },
+                        { "JobSite Faction ID", $"{JobsiteFactionID}" },
+                        { "City ID", $"{CityID}" },
+                        { "JobSite Description", JobsiteDescription },
+                        { "Owner ID", $"{OwnerID}" },
+                        { "JobSite is Active", $"{JobsiteIsActive}" }
+                    });
             }
             catch
             {
@@ -647,10 +655,11 @@ namespace JobSite
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Employee Data"] = new Data_Display(
                     title: "Employee Data",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: _allEmployeeIDs.Select(employeeID => $"{employeeID}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}"));
             }
             catch
             {
@@ -662,10 +671,12 @@ namespace JobSite
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Station Operators"] = new Data_Display(
                     title: "Station Operators",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: WorkPost_Workers.Select(operatorID => $"{operatorID}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
+                        operatorID => $"{operatorID.Value}"));
             }
             catch
             {
@@ -677,10 +688,11 @@ namespace JobSite
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["All Station IDs"] = new Data_Display(
                     title: "All Station IDs",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: AllStationIDs?.Select(stationID => $"{stationID}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
             }
             catch
             {
@@ -692,27 +704,19 @@ namespace JobSite
 
             try
             {
-                dataObjects.Add(new Data_Display(
-                    title: "Order Data",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: AllOrders.Select(order => $"{order.Key.ActorID}: {order.Key.OrderID}").ToList()));
-            }
-            catch
-            {
-                Debug.LogError("Error in Order Data");
-            }
-
-            try
-            {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Production Data"] = new Data_Display(
                     title: "Production Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"All Produced Items: {string.Join(", ", ProductionData.AllProducedItems)}",
-                        $"Estimated Production Rate Per Hour: {string.Join(", ", ProductionData.EstimatedProductionRatePerHour)}",
-                        $"Station ID: {ProductionData.JobSiteID}"
-                    }));
+                        { "All Produced Items", $"{string.Join(", ", ProductionData.AllProducedItems)}" },
+                        {
+                            "Estimated Production Rate Per Hour",
+                            $"{string.Join(", ", ProductionData.EstimatedProductionRatePerHour)}"
+                        },
+                        { "Station ID", $"{ProductionData.JobSiteID}" }
+                    });
             }
             catch
             {
@@ -724,10 +728,11 @@ namespace JobSite
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Priority Data"] = new Data_Display(
                     title: "Priority Data",
                     dataDisplayType: DataDisplayType.SelectableList,
-                    subData: PriorityData.DataSO_Object(toggleMissingDataDebugs).SubData));
+                    dataSO_Object: dataSO_Object,
+                    subData: PriorityData.GetDataSO_Object(toggleMissingDataDebugs).SubData);
             }
             catch
             {
@@ -737,12 +742,11 @@ namespace JobSite
                 }
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "JobSite Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 

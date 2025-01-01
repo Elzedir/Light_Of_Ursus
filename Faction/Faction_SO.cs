@@ -73,7 +73,7 @@ namespace Faction
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Faction_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Faction_Data>> _getDefaultDataObjects()
         {
             var defaultFactions = new Dictionary<uint, Faction_Data>();
 
@@ -105,7 +105,7 @@ namespace Faction
                 dataObjectID: data.FactionID,
                 dataObject: data,
                 dataObjectTitle: $"{data.FactionID}: {data.FactionName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

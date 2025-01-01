@@ -31,22 +31,25 @@ namespace Actor
             EquipmentData       = equipmentData;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Stats And Abilities"] = new Data_Display(
                     title: "Stats And Abilities",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Actor Level: {StatsAndAbilities.ActorStats.ActorLevelData.ActorLevel}",
-                        $"Actor Experience: {StatsAndAbilities.ActorStats.ActorLevelData.TotalExperience}",
-                        $"Actor Special: {StatsAndAbilities.ActorStats.ActorSpecial.GetStatsToString()}"
+                        { "Actor Level", $"{StatsAndAbilities.ActorStats.ActorLevelData.ActorLevel}" },
+                        { "Actor Experience", $"{StatsAndAbilities.ActorStats.ActorLevelData.TotalExperience}" },
+                        { "Actor Special", $"{StatsAndAbilities.ActorStats.ActorSpecial.GetStatsToString()}" }
                     }
-                ));
+                );
             }
             catch
             {
@@ -60,17 +63,18 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Career Data"] = new Data_Display(
                     title: "Career Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Career Name: {CareerData.CareerName}",
-                        $"Jobs Active: {CareerData.JobsActive}",
-                        $"JobSiteID: {CareerData.JobSiteID}",
-                        $"Current Job: {CareerData.CurrentJob?.JobName}"
+                        { "Career Name", $"{CareerData.CareerName}" },
+                        { "Jobs Active", $"{CareerData.JobsActive}" },
+                        { "JobSiteID", $"{CareerData.JobSiteID}" },
+                        { "Current Job", $"{CareerData.CurrentJob?.JobName}" }
                     }
-                ));
+                );
             }
             catch
             {
@@ -83,11 +87,12 @@ namespace Actor
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Known Recipes"] = new Data_Display(
                     title: "Known Recipes",
                     dataDisplayType: DataDisplayType.Item,
-                    data: CraftingData.KnownRecipes.Select(recipe => $"{recipe}").ToList()
-                ));
+                    dataSO_Object: dataSO_Object,
+                    data: CraftingData.KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}")
+                );
             }
             catch
             {
@@ -100,11 +105,12 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Vocations"] = new Data_Display(
                     title: "Vocations",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: VocationData.ActorVocations.Values.Select(vocation => $"{vocation.VocationName}: {vocation.VocationExperience}").ToList()
-                ));
+                    dataSO_Object: dataSO_Object,
+                    data: VocationData.ActorVocations.Values.ToDictionary(vocation => $"{vocation.VocationName}:", vocation => $"{vocation.VocationExperience}")
+                );
             }
             catch
             {
@@ -117,11 +123,12 @@ namespace Actor
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["All Inventory Items"] = new Data_Display(
                     title: "All Inventory Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()
-                ));
+                    dataSO_Object: dataSO_Object,
+                    data: InventoryData.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName} Qty - {item.ItemAmount}")
+                );
             }
             catch
             {
@@ -134,14 +141,15 @@ namespace Actor
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Equipment Data"] = new Data_Display(
                     title: "Equipment Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        "Equipment Data"
+                        { "Equipment Data", "EquipmentData would be here" }
                     }
-                ));
+                );
             }
             catch
             {
@@ -151,12 +159,11 @@ namespace Actor
                 }
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: $"{(uint)ActorDataPresetName}: {ActorDataPresetName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Ability_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Ability_Data>> _getDefaultDataObjects()
         {
             var defaultAbilities = new Dictionary<uint, Ability_Data>();
 
@@ -55,7 +55,7 @@ namespace Ability
                 dataObjectID: (uint)data.AbilityName,
                 dataObject: data, 
                 dataObjectTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
 
         static uint _lastUnusedAbilityID = 1;

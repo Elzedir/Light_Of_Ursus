@@ -28,20 +28,24 @@ namespace Jobs
             JobTasks       = jobData.JobTasks;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Job Data"] = new Data_Display(
                     title: "Base Job Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Job Name: {JobName}",
-                        $"Job Description: {JobDescription}"
-                    }));
+                        { "Job ID", $"{(uint)JobName}" },
+                        { "Job Name", JobName.ToString() },
+                        { "Job Description", JobDescription }
+                    });
             }
             catch
             {
@@ -50,22 +54,22 @@ namespace Jobs
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Job Tasks"] = new Data_Display(
                     title: "Job Tasks",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: JobTasks.Select(jobTask => jobTask.ToString()).ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
             }
             catch
             {
                 Debug.LogError("Error: Job Tasks not found.");
             }
             
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Job Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
     

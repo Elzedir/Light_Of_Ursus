@@ -50,28 +50,30 @@ namespace Items
             ItemPriorityStats       = new Item_PriorityStats(item.ItemPriorityStats);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Common Stats"] = new Data_Display(
                     title: "Common Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"ItemID: {ItemCommonStats.ItemID}",
-                        $"ItemName: {ItemCommonStats.ItemName}",
-                        $"ItemType: {ItemCommonStats.ItemType}",
-                        //$"EquipmentSlots: {string.Join(", ", ItemCommonStats.EquipmentSlots)}",
-                        $"MaxStackSize: {ItemCommonStats.MaxStackSize}",
-                        $"ItemLevel: {ItemCommonStats.ItemLevel}",
-                        $"ItemQuality: {ItemCommonStats.ItemQuality}",
-                        $"ItemValue: {ItemCommonStats.ItemValue}",
-                        $"ItemWeight: {ItemCommonStats.ItemWeight}",
-                        $"ItemEquippable: {ItemCommonStats.ItemEquippable}"
-                    }));
+                        { "ItemID", $"{ItemCommonStats.ItemID}" },
+                        { "ItemName", $"{ItemCommonStats.ItemName}" },
+                        { "ItemType", $"{ItemCommonStats.ItemType}" },
+                        { "MaxStackSize", $"{ItemCommonStats.MaxStackSize}" },
+                        { "ItemLevel", $"{ItemCommonStats.ItemLevel}" },
+                        { "ItemQuality", $"{ItemCommonStats.ItemQuality}" },
+                        { "ItemValue", $"{ItemCommonStats.ItemValue}" },
+                        { "ItemWeight", $"{ItemCommonStats.ItemWeight}" },
+                        { "ItemEquippable", $"{ItemCommonStats.ItemEquippable}" } 
+                    });
             }
             catch
             {
@@ -91,20 +93,21 @@ namespace Items
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Visual Stats"] = new Data_Display(
                     title: "Visual Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"ItemIcon: {ItemVisualStats.ItemIcon}",
-                        $"ItemMesh: {ItemVisualStats.ItemMesh}",
-                        $"ItemMaterial: {ItemVisualStats.ItemMaterial}",
-                        $"ItemCollider: {ItemVisualStats.ItemCollider}",
-                        $"ItemAnimatorController: {ItemVisualStats.ItemAnimatorController}",
-                        $"ItemPosition: {ItemVisualStats.ItemPosition}",
-                        $"ItemRotation: {ItemVisualStats.ItemRotation}",
-                        $"ItemScale: {ItemVisualStats.ItemScale}"
-                    }));
+                        { "ItemIcon", $"{ItemVisualStats.ItemIcon}" },
+                        { "ItemMesh", $"{ItemVisualStats.ItemMesh}" },
+                        { "ItemMaterial", $"{ItemVisualStats.ItemMaterial}" },
+                        { "ItemCollider", $"{ItemVisualStats.ItemCollider}" },
+                        { "ItemAnimatorController", $"{ItemVisualStats.ItemAnimatorController}" },
+                        { "ItemPosition", $"{ItemVisualStats.ItemPosition}" },
+                        { "ItemRotation", $"{ItemVisualStats.ItemRotation}" },
+                        { "ItemScale", $"{ItemVisualStats.ItemScale}" }
+                    });
             }
             catch
             {
@@ -113,15 +116,16 @@ namespace Items
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Weapon Stats"] = new Data_Display(
                     title: "Weapon Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"WeaponTypeArray: {string.Join(", ",  ItemWeaponStats.WeaponTypeArray)}",
-                        $"WeaponClassArray: {string.Join(", ", ItemWeaponStats.WeaponClassArray)}",
-                        $"MaxChargeTime: {ItemWeaponStats.MaxChargeTime}"
-                    }));
+                        { "WeaponTypeArray", $"{string.Join(", ",  ItemWeaponStats.WeaponTypeArray)}" },
+                        { "WeaponClassArray", $"{string.Join(", ", ItemWeaponStats.WeaponClassArray)}" },
+                        { "MaxChargeTime", $"{ItemWeaponStats.MaxChargeTime}" }
+                    });
             }
             catch
             {
@@ -130,33 +134,26 @@ namespace Items
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Armour Stats"] = new Data_Display(
                     title: "Armour Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"EquipmentSlot: {ItemArmourStats.EquipmentSlot}",
-                        $"ItemCoverage: {ItemArmourStats.ItemCoverage}"
-                    }));
+                        { "EquipmentSlot", $"{ItemArmourStats.EquipmentSlot}" },
+                        { "ItemCoverage", $"{ItemArmourStats.ItemCoverage}" }
+                    });
             }
             catch
             {
                 Debug.LogError("Error in Armour Stats");
             }
-            
-            var dataDisplay = new Data_Display(
-                title: "Base Station Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
 
-            return dataDisplay;
-
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: $"{ItemID}: {ItemName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects));
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 
@@ -206,36 +203,38 @@ namespace Items
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
 
-        public Data_Display DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.DataSO_Object(toggleMissingDataDebugs);
+        public Data_Display DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetDataSO_Object(toggleMissingDataDebugs);
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Common Stats"] = new Data_Display(
                     title: "Common Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"ItemID: {ItemID}",
-                        $"ItemName: {ItemName}",
-                        $"ItemAmount: {ItemAmount}",
-                        $"MaxStackSize: {MaxStackSize}",
-                    }));
+                        { "ItemID", $"{ItemID}" },
+                        { "ItemName", $"{ItemName}" },
+                        { "ItemAmount", $"{ItemAmount}" },
+                        { "MaxStackSize", $"{MaxStackSize}" }
+                    });
             }
             catch
             {
                 Debug.LogError("Error in Common Stats");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: $"{ItemID}: {ItemName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
 

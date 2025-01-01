@@ -23,7 +23,7 @@ namespace Recipes
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Recipe_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Recipe_Data>> _getDefaultDataObjects()
         {
             return _convertDictionaryToDataObject(Recipe_List.GetAllDefaultRecipes());
         }
@@ -36,7 +36,7 @@ namespace Recipes
                 dataObjectID: (uint)data.RecipeName, 
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

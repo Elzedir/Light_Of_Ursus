@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Tools
 {
@@ -6,9 +7,13 @@ namespace Tools
 
     public abstract class Data_Class
     {
-        Data_Display        _dataSO_Object;
-        public Data_Display DataSO_Object(bool toggleMissingDataDebugs) => _getDataSO_Object(toggleMissingDataDebugs, _dataSO_Object);
+        [SerializeField] Data_Display        _dataSO_Object;
+
+        public Data_Display GetDataSO_Object(bool toggleMissingDataDebugs)
+        {
+            return _getDataSO_Object(toggleMissingDataDebugs, ref _dataSO_Object);   
+        }
         
-        protected abstract Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object);
+        protected abstract Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object);
     }
 }

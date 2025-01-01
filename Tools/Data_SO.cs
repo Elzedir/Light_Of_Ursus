@@ -17,17 +17,15 @@ namespace Tools
                 if (_objects_Data is not null && _objects_Data.Length != 0) return _objects_Data;
                 
                 var dataObjects = InitialiseAllDataObjects();
-                return dataObjects; 
+                return dataObjects.Length == 0 ? null : dataObjects;
             }
         }
 
         public void RefreshDataObjects()
         {
-            _defaultDataObjects = null;
+            InitialiseAllDataObjects();
             
             PopulateSceneData();
-            
-            InitialiseAllDataObjects();   
         }
 
         public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
@@ -40,9 +38,10 @@ namespace Tools
 
         public Object_Data<T>[] InitialiseAllDataObjects()
         {
-            _objects_Data = new Object_Data<T>[DefaultDataObjects.Count * 2];
-            Array.Copy(DefaultDataObjects.Values.ToArray(), Objects_Data, DefaultDataObjects.Count);
-            _currentIndex = DefaultDataObjects.Count;
+            _objects_Data = new Object_Data<T>[_initialisationDefaultDataObjects.Count * 2];
+            // Then maybe load to get all loaded data objects
+            Array.Copy(_initialisationDefaultDataObjects.Values.ToArray(), Objects_Data, _initialisationDefaultDataObjects.Count);
+            _currentIndex = _initialisationDefaultDataObjects.Count;
             _buildIndexLookup();
             
             return Objects_Data ?? throw new NullReferenceException("DataObjects is null.");
@@ -167,13 +166,13 @@ namespace Tools
             _currentIndex = 0;
         }
 
-        public abstract void PopulateSceneData();
-        protected abstract Dictionary<uint, Object_Data<T>> _populateDefaultDataObjects();
+        public abstract    void                             PopulateSceneData();
+        protected abstract Dictionary<uint, Object_Data<T>> _getDefaultDataObjects(bool initialisation = false);
 
-        Dictionary<uint, Object_Data<T>> _defaultDataObjects;
+        protected Dictionary<uint, Object_Data<T>> _defaultDataObjects;
 
-        public Dictionary<uint, Object_Data<T>> DefaultDataObjects =>
-            _defaultDataObjects ??= _populateDefaultDataObjects();
+        public Dictionary<uint, Object_Data<T>> DefaultDataObjects => _getDefaultDataObjects();
+        Dictionary<uint, Object_Data<T>> _initialisationDefaultDataObjects => _getDefaultDataObjects(true);
     }
 
     [Serializable]
@@ -198,17 +197,17 @@ namespace Tools
     [Serializable]
     public class Data_Display
     {
-        public int     SelectedIndex = -1;
+        public int     SelectedIndex;
         public bool    ShowData;
         public Vector2 ScrollPosition;
 
         public readonly string             Title;
         public readonly DataDisplayType    DataDisplayType;
-        public readonly List<string>       Data;
-        public readonly List<Data_Display> SubData;
+        public readonly Dictionary<string, string>       Data;
+        public Dictionary<string, Data_Display> SubData;
 
-        public Data_Display(string             title, DataDisplayType dataDisplayType, List<string> data = null,
-                            List<Data_Display> subData = null, int selectedIndex = -1, bool showData = false)
+        public Data_Display(string             title, DataDisplayType dataDisplayType, Data_Display dataSO_Object , Dictionary<string, string> data = null,
+                            Dictionary<string, Data_Display> subData = null)
         {
             switch (dataDisplayType)
             {
@@ -222,10 +221,10 @@ namespace Tools
 
             Title           = title;
             DataDisplayType = dataDisplayType;
-            SelectedIndex   = selectedIndex;
-            ShowData        = showData;
-            Data            = data;
-            SubData         = subData;
+            SelectedIndex = dataSO_Object?.SelectedIndex ?? -1;
+            ShowData      = dataSO_Object?.ShowData      ?? false;
+            Data          = data;
+            SubData       = subData;
         }
     }
 

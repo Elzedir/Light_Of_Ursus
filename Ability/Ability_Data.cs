@@ -43,21 +43,24 @@ namespace Ability
             // character.ReceiveDamage (new Damage(BaseDamage));
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Ability Base Stats"] = new Data_Display(
                     title: "Ability Base Stats",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Ability ID: {(uint)AbilityName}",
-                        $"Ability Name: {AbilityName}",
-                        $"Ability Description: {AbilityDescription}"
-                    }));
+                        { "Ability ID", $"{(uint)AbilityName}" },
+                        { "Ability Name", $"{AbilityName}" },
+                        { "Ability Description", $"{AbilityDescription}" }
+                    });
             }
             catch
             {
@@ -66,15 +69,16 @@ namespace Ability
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Ability Combat Data"] = new Data_Display(
                     title: "Ability Combat Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Ability Actions: {AbilityActions.Count}",
-                        $"Ability Max Level: {MaxLevel}",
-                        $"Ability Base Damage: {BaseDamage.Count}"
-                    }));
+                        { "Ability Actions", $"{AbilityActions.Count}" },
+                        { "Ability Max Level", $"{MaxLevel}" },
+                        { "Ability Base Damage", $"{BaseDamage.Count}" }
+                    });
             }
             catch
             {
@@ -89,25 +93,25 @@ namespace Ability
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Ability Animation Data"] = new Data_Display(
                     title: "Ability Animation Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Has Ability Animation: {AnimationClip != null}"
-                    }));
+                        { "Has Ability Animation", $"{AnimationClip is not null}" }
+                    });
             }
             catch
             {
                 Debug.Log("Error in Ability Animation Data");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: $"{(uint)AbilityName}: {AbilityName}",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: new List<Data_Display>(dataObjects),
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
     

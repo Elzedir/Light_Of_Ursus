@@ -52,26 +52,24 @@ namespace Station
                 Debug.Log("No Default Stations Found");
             }
 
-            var existingStations = _getExistingStation_Components();
+            var physicalStations = _getExistingStation_Components();
 
             foreach (var station in Stations)
             {
                 if (station?.DataObject is null) continue;
 
-                if (existingStations.TryGetValue(station.DataObject.StationID, out var existingStation))
+                if (physicalStations.TryGetValue(station.DataObject.StationID, out var physicalStation))
                 {
-                    Station_Components[station.DataObject.StationID] = existingStation;
-                    existingStation.Station_Data                     = station.DataObject;
-                    existingStations.Remove(station.DataObject.StationID);
+                    physicalStation.Station_Data                     = station.DataObject;
+                    Station_Components[station.DataObject.StationID] = physicalStation;
+                    physicalStations.Remove(station.DataObject.StationID);
                     continue;
                 }
 
-                #if !UNITY_EDITOR
-                    Debug.LogWarning($"Station with ID {station.DataObject.StationID} not found in the scene.");
-                #endif
+                Debug.LogWarning($"Station with ID {station.DataObject.StationID} not found in the scene.");
             }
 
-            foreach (var station in existingStations)
+            foreach (var station in physicalStations)
             {
                 if (DataObjectIndexLookup.ContainsKey(station.Key))
                 {
@@ -82,16 +80,39 @@ namespace Station
                 Debug.LogWarning($"Station with ID {station.Key} does not have DataObject in Station_SO.");
             }
         }
+        
+        
 
-        protected override Dictionary<uint, Object_Data<Station_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Station_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultStations = new Dictionary<uint, Station_Data>();
+            a
+                
+                // Copy this framework to all other data classes.
+            var defaultStations = Station_List.DefaultStations.ToDictionary(
+                station => station.Key,
+                station => station.Value
+            );
 
-            foreach (var defaultStation in Station_List.DefaultStations)
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation) return _defaultDataObjects ??= _convertDictionaryToDataObject(defaultStations);
+            
+            if (Stations is null || Stations.Length > 0)
             {
-                defaultStations.Add(defaultStation.Key, defaultStation.Value);
+                Debug.LogError("Stations is null or not empty.");
+                return _defaultDataObjects;
             }
 
+            foreach (var station in Stations)
+            {
+                if (!defaultStations.ContainsKey(station.DataObjectID))
+                {
+                    Debug.LogError($"Station with ID {station.DataObjectID} not found in DefaultStations.");
+                    continue;
+                }
+                
+                Debug.LogError($"Station with ID {station.DataObjectID} already exists in DefaultStations.");
+                defaultStations[station.DataObjectID] = station.DataObject;
+            }
+            
             return _convertDictionaryToDataObject(defaultStations);
         }
 
@@ -115,7 +136,7 @@ namespace Station
                 dataObjectID: data.StationID,
                 dataObject: data,
                 dataObjectTitle: $"{data.StationID}: {data.StationName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

@@ -67,24 +67,25 @@ namespace Station
             
             Debug.Log($"Station not found for StationID: {StationID}");
         }
-        
+
         Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()
         {
-            #if UNITY_EDITOR
-            return null;
-            #endif
+            if (!Application.isPlaying)
+            {
+                return null;
+            }
             
-            foreach(Transform child in Station_Component.transform)
+            foreach (Transform child in Station_Component.transform)
             {
                 if (child.GetComponent<WorkPost_Component>() is null) continue;
 
-                Object.Destroy(child);
+                Object.DestroyImmediate(child.gameObject);
             }
 
             var workPlace_Components = _createWorkPost(AllWorkPost_Data.Values.ToList());
 
             if (workPlace_Components is not null) return workPlace_Components;
-            
+
             Debug.Log($"WorkPlace_Components not found for StationName: {StationName}");
             return null;
         }
@@ -205,22 +206,32 @@ namespace Station
             return success;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            dataSO_Object ??= new Data_Display(
+                title: "Station Data",
+                dataDisplayType: DataDisplayType.CheckBoxList,
+                dataSO_Object: null,
+                subData: new Dictionary<string, Data_Display>());
+            
+            var dataObjects = new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base Station Data"] = new Data_Display(
                     title: "Base Station Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Station ID: {StationID}",
-                        $"Station Description: {StationDescription}",
-                        $"Station IsActive: {StationIsActive}",
-                        $"Inventory Data: {InventoryData}"
-                    }));
+                        { "Station ID:", $"{StationID}" },
+                        { "Station Name:", $"{StationName}" },
+                        { "Station Description:", $"{StationDescription}" },
+                        { "Station IsActive:", $"{StationIsActive}" },
+                        { "Jobsite ID:", $"{JobsiteID}" },
+                        { "Default Product:", $"{DefaultProduct}" },
+                        { "Base Progress Rate Per Hour:", $"{BaseProgressRatePerHour}" }
+                    });
             }
             catch
             {
@@ -232,10 +243,11 @@ namespace Station
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Station Items"] = new Data_Display(
                     title: "Station Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
-                    data: InventoryData.AllInventoryItems.Values.Select(item => $"{item.ItemID}: {item.ItemName} Qty - {item.ItemAmount}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: InventoryData.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:", item =>  $"{item.ItemName} Qty - {item.ItemAmount}"));
             }
             catch
             {
@@ -247,15 +259,16 @@ namespace Station
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Station Progress Data"] = new Data_Display(
                     title: "Station Progress Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"Current Progress: {StationProgressData.CurrentProgress}",
-                        $"Current Quality: {StationProgressData.CurrentQuality}",
-                        $"Current Product: {StationProgressData.CurrentProduct}"
-                    }));
+                        { "Current Progress:", $"{StationProgressData.CurrentProgress}" },
+                        { "Current Quality:", $"{StationProgressData.CurrentQuality}" },
+                        { "Current Product:", $"{StationProgressData.CurrentProduct}" }
+                    });
             }
             catch
             {
@@ -267,10 +280,13 @@ namespace Station
             
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["StationWorkPosts"] = new Data_Display(
                     title: "Station WorkPosts",
                     dataDisplayType: DataDisplayType.Item,
-                    data: AllWorkPost_Components.Values.Select(workPost => $"{workPost.WorkPostID} - {workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}").ToList()));
+                    dataSO_Object: dataSO_Object,
+                    data: AllWorkPost_Components.Values.ToDictionary(workPost => $"{workPost.WorkPostID} -",
+                        workPost =>
+                            $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}"));
             }
             catch
             {
@@ -299,12 +315,9 @@ namespace Station
                 }
             }
 
-            return new Data_Display(
-                title: "Base Station Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+            dataSO_Object.SubData = dataObjects;
+            
+            return dataSO_Object;
         }
     }
 

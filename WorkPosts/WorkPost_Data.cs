@@ -59,34 +59,36 @@ namespace WorkPosts
             IsWorkerMovingToWorkPost = false;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new List<Data_Display>();
+            var dataObjects = dataSO_Object == null
+                ? new Dictionary<string, Data_Display>()
+                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects.Add(new Data_Display(
+                dataObjects["Base WorkPost Data"] = new Data_Display(
                     title: "Base WorkPost Data",
                     dataDisplayType: DataDisplayType.Item,
-                    data: new List<string>
+                    dataSO_Object: dataSO_Object,
+                    data: new Dictionary<string, string>
                     {
-                        $"WorkPost ID: {WorkPostID}",
-                        $"StationID: {_stationID}",
-                        $"CurrentWorkedID: {_currentWorkerID}",
-                        $"ISWorkingMovingTowardsWorkPost: {IsWorkerMovingToWorkPost}"
-                    }));
+                        {"WorkPost ID", $"{WorkPostID}"},
+                        {"Station ID", $"{_stationID}"},
+                        {"Current Worker ID", $"{_currentWorkerID}"},
+                        {"Is Worker Moving To WorkPost", $"{IsWorkerMovingToWorkPost}"}
+                    });
             }
             catch
             {
                 Debug.LogError("Error: Base WorkPost Data not found.");
             }
 
-            return new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Base WorkPost Data",
                 dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
+                dataSO_Object: dataSO_Object,
+                subData: dataObjects);
         }
     }
     

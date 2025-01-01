@@ -39,15 +39,6 @@ namespace Station
 
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
-
-        void FixedUpdate()
-        {
-            foreach (var workPost in Station_Data.AllWorkPost_Components)
-            {
-                Debug.Log($"Station: {StationID} WorkPost: {workPost.Key} Actor: {workPost.Value.WorkPostData.CurrentWorker?.ActorID}");
-                Debug.Log($"Station: {StationID} WorkPost: {workPost.Key} Actor: {Station_Data.AllWorkPost_Data[workPost.Key].CurrentWorker?.ActorID}");
-            }
-        }
         
         public void SetStationData(Station_Data stationData)
         {

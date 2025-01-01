@@ -79,7 +79,7 @@ namespace JobSite
             }
         }
 
-        protected override Dictionary<uint, Object_Data<JobSite_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<JobSite_Data>> _getDefaultDataObjects()
         {
             var defaultJobSites = new Dictionary<uint, JobSite_Data>();
 
@@ -111,7 +111,7 @@ namespace JobSite
                 dataObjectID: data.JobSiteID, 
                 dataObject: data,
                 dataObjectTitle: $"{data.JobSiteID}: {data.JobSiteName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

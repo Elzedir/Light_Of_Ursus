@@ -61,28 +61,18 @@ namespace Managers
             return BaseProsperityGrowthPerDay; // Add modifiers afterwards.
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
         {
-            var dataObjects = new Data_Display(
+            return dataSO_Object = new Data_Display(
                 title: "Prosperity Data",
                 dataDisplayType: DataDisplayType.Item,
-                data: new List<string>
+                dataSO_Object: dataSO_Object,
+                data: new Dictionary<string, string>
                 {
-                    $"Current Prosperity: {CurrentProsperity}",
-                    $"Max Prosperity: {MaxProsperity}",
-                    $"Base Prosperity Growth Per Day: {BaseProsperityGrowthPerDay}"
+                    { "Current Prosperity", $"{CurrentProsperity}" },
+                    { "Max Prosperity", $"{MaxProsperity}" },
+                    { "Base Prosperity Growth Per Day", $"{BaseProsperityGrowthPerDay}" }
                 });
-            
-            var dataDisplay = new Data_Display(
-                title: "Base Station Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                subData: dataObjects,
-                selectedIndex: dataSO_Object?.SelectedIndex ?? -1,
-                showData: dataSO_Object?.ShowData           ?? false);
-
-            return dataDisplay;
-            
-            return dataObjects;
         }
     }
 }

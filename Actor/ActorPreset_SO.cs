@@ -22,7 +22,7 @@ namespace Actor
                 Debug.Log("No Default Actor Data Presets Found");
             }
         }
-        protected override Dictionary<uint, Object_Data<ActorPreset_Data>> _populateDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<ActorPreset_Data>> _getDefaultDataObjects()
         {
             var defaultActorDataPresets = new Dictionary<uint, ActorPreset_Data>();
 
@@ -40,7 +40,7 @@ namespace Actor
                 dataObjectID: (uint)data.ActorDataPresetName,
                 dataObject: data,
                 dataObjectTitle: $"{(uint)data.ActorDataPresetName}: {data.ActorDataPresetName}",
-                data_Display: data.DataSO_Object(ToggleMissingDataDebugs));
+                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
         }
         
         Dictionary<uint, Object_Data<ActorPreset_Data>> _defaultActorDataPresets => DefaultDataObjects;
