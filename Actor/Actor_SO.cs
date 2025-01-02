@@ -83,16 +83,31 @@ namespace Actor
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Actor_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Actor_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultActors = new Dictionary<uint, Actor_Data>();
-
-            foreach (var defaultActor in Actor_List.DefaultActors)
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
+                return _defaultDataObjects ??= _convertDictionaryToDataObject(Actor_List.DefaultActors);
+            
+            if (Actors is null || Actors.Length == 0)
             {
-                defaultActors.Add(defaultActor.Key, defaultActor.Value);
+                Debug.LogWarning("No Actors Found in Actor_SO.");
+                return _defaultDataObjects;
+            }
+            
+            foreach (var actor in Actors)
+            {
+                if (actor?.DataObject is null) continue;
+                
+                if (!_defaultDataObjects.ContainsKey(actor.DataObject.ActorID))
+                {
+                    Debug.LogWarning($"Actor with ID {actor.DataObject.ActorID} not found in DefaultActors.");
+                    continue;
+                }
+                
+                _defaultDataObjects[actor.DataObject.ActorID] = actor;
             }
 
-            return _convertDictionaryToDataObject(defaultActors);
+            return _defaultDataObjects;
         }
 
         static uint _lastUnusedActorID = 1;
@@ -109,13 +124,13 @@ namespace Actor
         
         Dictionary<uint, Object_Data<Actor_Data>> _defaultActors => DefaultDataObjects;
         
-        protected override Object_Data<Actor_Data> _convertToDataObject(Actor_Data data)
+        protected override Object_Data<Actor_Data> _convertToDataObject(Actor_Data dataObject)
         {
             return new Object_Data<Actor_Data>(
-                dataObjectID: data.ActorID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.ActorID}: {data.ActorName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.ActorID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.ActorID}: {dataObject.ActorName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

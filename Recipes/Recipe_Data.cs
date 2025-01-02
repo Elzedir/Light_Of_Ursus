@@ -84,7 +84,7 @@ namespace Recipes
                     title: "Required Ingredients",
                     dataDisplayType: DataDisplayType.CheckBoxList,
                     dataSO_Object: dataSO_Object,
-                    data: RequiredIngredients.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName} - Qty: {item.ItemAmount}"));
+                    data: RequiredIngredients.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
             }
             catch
             {
@@ -113,7 +113,7 @@ namespace Recipes
                     title: "Recipe Products",
                     dataDisplayType: DataDisplayType.CheckBoxList,
                     dataSO_Object: dataSO_Object,
-                    data: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName}: Qty - {item.ItemAmount}"));
+                    data: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty - {item.ItemAmount}"));
             }
             catch
             {

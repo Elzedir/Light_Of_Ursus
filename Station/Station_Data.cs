@@ -213,12 +213,12 @@ namespace Station
                 dataDisplayType: DataDisplayType.CheckBoxList,
                 dataSO_Object: null,
                 subData: new Dictionary<string, Data_Display>());
-            
-            var dataObjects = new Dictionary<string, Data_Display>(dataSO_Object.SubData);
 
             try
             {
-                dataObjects["Base Station Data"] = new Data_Display(
+                Debug.Log($"Old: {dataSO_Object.SubData["Base Station Data"].Data["Station ID:"]} New: {StationID}");
+                
+                dataSO_Object.SubData["Base Station Data"] = new Data_Display(
                     title: "Base Station Data",
                     dataDisplayType: DataDisplayType.Item,
                     dataSO_Object: dataSO_Object,
@@ -243,7 +243,7 @@ namespace Station
             
             try
             {
-                dataObjects["Station Items"] = new Data_Display(
+                dataSO_Object.SubData["Station Items"] = new Data_Display(
                     title: "Station Items",
                     dataDisplayType: DataDisplayType.CheckBoxList,
                     dataSO_Object: dataSO_Object,
@@ -259,7 +259,7 @@ namespace Station
 
             try
             {
-                dataObjects["Station Progress Data"] = new Data_Display(
+                dataSO_Object.SubData["Station Progress Data"] = new Data_Display(
                     title: "Station Progress Data",
                     dataDisplayType: DataDisplayType.Item,
                     dataSO_Object: dataSO_Object,
@@ -280,7 +280,25 @@ namespace Station
             
             try
             {
-                dataObjects["StationWorkPosts"] = new Data_Display(
+                foreach (var workPost in AllWorkPost_Data.Values)
+                {
+                    Debug.LogWarning($"WorkPostData: {workPost.WorkPostID}: {workPost.CurrentWorker?.ActorID}");
+                }
+
+                foreach (var workPostComp in AllWorkPost_Components.Values)
+                {
+                    Debug.LogWarning($"WorkPostComponent: {workPostComp.WorkPostData.WorkPostID}: {workPostComp.WorkPostData.CurrentWorker?.ActorID}");
+                }
+
+                foreach (var workPostCompShown in AllWorkPost_Components.Values.ToDictionary(
+                             workPost => $"{workPost.WorkPostID} -",
+                             workPost =>
+                                 $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}"))
+                {
+                    Debug.LogWarning($"Key: {workPostCompShown.Key} Value: {workPostCompShown.Value}");
+                }
+                
+                dataSO_Object.SubData["StationWorkPosts"] = new Data_Display(
                     title: "Station WorkPosts",
                     dataDisplayType: DataDisplayType.Item,
                     dataSO_Object: dataSO_Object,
@@ -314,8 +332,6 @@ namespace Station
                     }
                 }
             }
-
-            dataSO_Object.SubData = dataObjects;
             
             return dataSO_Object;
         }

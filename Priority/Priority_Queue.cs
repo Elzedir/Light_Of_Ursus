@@ -60,10 +60,6 @@ namespace Priority
             _moveDown(index);
 
             OnPriorityRemoved?.Invoke(priorityID);
-            
-            Debug.Log($"PriorityID: {priorityValue.PriorityID} Dequeued.");
-            Debug.Log($"PriorityID: {(JobTaskName)priorityValue.PriorityID} Dequeued.");
-            Debug.Log($"Or PriorityID: {(ActorActionName)priorityValue.PriorityID} Dequeued.");
 
             return priorityValue;
         }

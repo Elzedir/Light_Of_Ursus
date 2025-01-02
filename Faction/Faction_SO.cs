@@ -73,16 +73,31 @@ namespace Faction
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Faction_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Faction_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultFactions = new Dictionary<uint, Faction_Data>();
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
+                return _defaultDataObjects ??= _convertDictionaryToDataObject(Faction_List.DefaultFactions);
 
-            foreach (var defaultFaction in Faction_List.DefaultFactions)
+            if (Factions is null || Factions.Length == 0)
             {
-                defaultFactions.Add(defaultFaction.Key, new Faction_Data(defaultFaction.Value));
+                Debug.LogWarning("No Factions Found in Faction_SO.");
+                return _defaultDataObjects;
             }
 
-            return _convertDictionaryToDataObject(defaultFactions);
+            foreach (var faction in Factions)
+            {
+                if (faction?.DataObject is null) continue;
+                
+                if (!_defaultDataObjects.ContainsKey(faction.DataObject.FactionID))
+                {
+                    Debug.LogError($"Faction with ID {faction.DataObject.FactionID} not found in DefaultFactions.");
+                    continue;
+                }
+                
+                _defaultDataObjects[faction.DataObject.FactionID] = faction;
+            }
+            
+            return _defaultDataObjects;
         }
 
         static uint _lastUnusedFactionID = 1;
@@ -99,13 +114,13 @@ namespace Faction
         
         Dictionary<uint, Object_Data<Faction_Data>> _defaultFactions => DefaultDataObjects;
 
-        protected override Object_Data<Faction_Data> _convertToDataObject(Faction_Data data)
+        protected override Object_Data<Faction_Data> _convertToDataObject(Faction_Data dataObject)
         {
             return new Object_Data<Faction_Data>(
-                dataObjectID: data.FactionID,
-                dataObject: data,
-                dataObjectTitle: $"{data.FactionID}: {data.FactionName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.FactionID,
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.FactionID}: {dataObject.FactionName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

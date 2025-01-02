@@ -76,8 +76,6 @@ namespace Priority
             }
 
             var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
-            
-            Debug.Log($"JobTaskName: {(JobTaskName)priorityID}, PriorityValue: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }

@@ -24,7 +24,7 @@ namespace Items
             }
         }    
         
-        protected override Dictionary<uint, Object_Data<Item_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Item_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
@@ -58,13 +58,13 @@ namespace Items
 
         Dictionary<uint, Object_Data<Item_Data>> _defaultItems => DefaultDataObjects;
         
-        protected override Object_Data<Item_Data> _convertToDataObject(Item_Data data)
+        protected override Object_Data<Item_Data> _convertToDataObject(Item_Data dataObject)
         {
             return new Object_Data<Item_Data>(
-                dataObjectID: data.ItemID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.ItemID}: {data.ItemName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.ItemID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.ItemID}: {dataObject.ItemName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

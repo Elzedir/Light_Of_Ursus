@@ -79,16 +79,31 @@ namespace City
             }
         }
 
-        protected override Dictionary<uint, Object_Data<City_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<City_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultCities = new Dictionary<uint, City_Data>();
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
+                return _defaultDataObjects ??= _convertDictionaryToDataObject(City_List.DefaultCities);
 
-            foreach (var defaultCity in City_List.DefaultCities)
+            if (Cities is null || Cities.Length == 0)
             {
-                defaultCities.Add(defaultCity.Key, defaultCity.Value);
+                Debug.LogError("Cities is null or empty.");
+                return _defaultDataObjects;
             }
 
-            return _convertDictionaryToDataObject(defaultCities);
+            foreach (var city in Cities)
+            {
+                if (city?.DataObject is null) continue;
+                
+                if (!_defaultDataObjects.ContainsKey(city.DataObject.CityID))
+                {
+                    Debug.LogError($"City with ID {city.DataObject.CityID} not found in City_List.");
+                    continue;
+                }
+                
+                _defaultDataObjects[city.DataObject.CityID] = city;
+            }
+            
+            return _defaultDataObjects;
         }
 
         static uint _lastUnusedCityID = 1;
@@ -105,13 +120,13 @@ namespace City
         
         Dictionary<uint, Object_Data<City_Data>> _defaultCities => DefaultDataObjects;
         
-        protected override Object_Data<City_Data> _convertToDataObject(City_Data data)
+        protected override Object_Data<City_Data> _convertToDataObject(City_Data dataObject)
         {
             return new Object_Data<City_Data>(
-                dataObjectID: data.CityID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.CityID}: {data.CityName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.CityID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.CityID}: {dataObject.CityName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

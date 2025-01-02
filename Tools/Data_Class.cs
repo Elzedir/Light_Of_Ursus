@@ -11,9 +11,9 @@ namespace Tools
 
         public Data_Display GetDataSO_Object(bool toggleMissingDataDebugs)
         {
-            return _getDataSO_Object(toggleMissingDataDebugs, ref _dataSO_Object);   
+            return _dataSO_Object = _getDataSO_Object(toggleMissingDataDebugs, _dataSO_Object);
         }
         
-        protected abstract Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object);
+        protected abstract Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object);
     }
 }

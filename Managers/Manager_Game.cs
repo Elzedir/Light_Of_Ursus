@@ -11,6 +11,7 @@ using DateAndTime;
 using Faction;
 using FMODUnity;
 using Initialisation;
+using Items;
 using Jobs;
 using JobSite;
 using Personality;
@@ -130,7 +131,7 @@ namespace Managers
         {
             if (SceneManager.GetActiveScene().name == "Main_Menu") yield break;
 
-            if (GameObject.Find("Manager_Parent") != null) yield break;
+            if (GameObject.Find("Manager_Parent") is not null) yield break;
 
             yield return null;
 
@@ -142,10 +143,14 @@ namespace Managers
             _createManager("Manager_Cutscene",     _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             
+            Item_Manager.PopulateAllItems();
+            
+            yield return null;
+            
             Recipe_Manager.PopulateAllRecipes();
             Job_Manager.PopulateAllJobs();
-            ActorPreset_Manager.PopulateAllActorDataPresets();
             Career_Manager.PopulateAllCareers();
+            ActorPreset_Manager.PopulateAllActorDataPresets();
             Manager_DateAndTime.Initialise();
             
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();

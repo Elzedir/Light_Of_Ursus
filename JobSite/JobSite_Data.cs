@@ -239,8 +239,6 @@ namespace JobSite
             // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
             var actorPresetName = ActorPreset_List.GetActorDataPresetNameByJobName(jobName);
 
-            Debug.Log($"Spawning new worker for position: {jobName}, with preset: {actorPresetName}");
-
             var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
 
             AddEmployeeToJobsite(actor.ActorData.ActorID);

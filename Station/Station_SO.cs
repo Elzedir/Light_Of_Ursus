@@ -47,11 +47,6 @@ namespace Station
 
         public override void PopulateSceneData()
         {
-            if (_defaultStations.Count == 0)
-            {
-                Debug.Log("No Default Stations Found");
-            }
-
             var physicalStations = _getExistingStation_Components();
 
             foreach (var station in Stations)
@@ -80,40 +75,36 @@ namespace Station
                 Debug.LogWarning($"Station with ID {station.Key} does not have DataObject in Station_SO.");
             }
         }
-        
-        
 
         protected override Dictionary<uint, Object_Data<Station_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            a
-                
-                // Copy this framework to all other data classes.
-            var defaultStations = Station_List.DefaultStations.ToDictionary(
-                station => station.Key,
-                station => station.Value
-            );
-
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation) return _defaultDataObjects ??= _convertDictionaryToDataObject(defaultStations);
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
+                return _defaultDataObjects ??= _convertDictionaryToDataObject(Station_List.DefaultStations);
             
-            if (Stations is null || Stations.Length > 0)
+            if (Stations is null || Stations.Length == 0)
             {
-                Debug.LogError("Stations is null or not empty.");
+                Debug.LogError("Stations is null or empty.");
                 return _defaultDataObjects;
             }
 
             foreach (var station in Stations)
             {
-                if (!defaultStations.ContainsKey(station.DataObjectID))
+                if (station?.DataObject is null || station.DataObject.StationID == 0) continue;
+
+                if (!_defaultDataObjects.ContainsKey(station.DataObjectID))
                 {
                     Debug.LogError($"Station with ID {station.DataObjectID} not found in DefaultStations.");
                     continue;
                 }
                 
-                Debug.LogError($"Station with ID {station.DataObjectID} already exists in DefaultStations.");
-                defaultStations[station.DataObjectID] = station.DataObject;
+                _defaultDataObjects[station.DataObjectID] = station;
             }
             
-            return _convertDictionaryToDataObject(defaultStations);
+            //  The problem is that data_Display is not being passed through since _convertToDataOBject is not being called
+            // and so the data_display constructor is not updating the ddata ddisplay, even through the data object itself is being updated. Find a way
+            // to update the data display using the object, and not have to rely on a constructor to do so.
+            
+            return _defaultDataObjects;
         }
 
         static uint _lastUnusedStationID = 1;
@@ -128,15 +119,13 @@ namespace Station
             return _lastUnusedStationID;
         }
 
-        Dictionary<uint, Object_Data<Station_Data>> _defaultStations => DefaultDataObjects;
-
-        protected override Object_Data<Station_Data> _convertToDataObject(Station_Data data)
+        protected override Object_Data<Station_Data> _convertToDataObject(Station_Data dataObject)
         {
             return new Object_Data<Station_Data>(
-                dataObjectID: data.StationID,
-                dataObject: data,
-                dataObjectTitle: $"{data.StationID}: {data.StationName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.StationID,
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.StationID}: {dataObject.StationName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

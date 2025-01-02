@@ -161,37 +161,25 @@ namespace Items
     public class Item : Data_Class
     {
         public uint   ItemID;
-        public string ItemName;
+        public string ItemName => DataItem.ItemCommonStats.ItemName;
         public uint   ItemAmount;
         public uint   ItemAmountOnHold;
-        public uint   MaxStackSize;
+        public uint   MaxStackSize => DataItem.ItemCommonStats.MaxStackSize;
 
         Item_Data        _dataItem;
         public Item_Data DataItem => _dataItem ??= Item_Manager.GetItem_Data(ItemID);
 
         public Item(uint itemID, uint itemAmount)
         {
-            var item_Data = Item_Manager.GetItem_Data(itemID);
-
-            if (item_Data == null)
-            {
-                Debug.LogError("MasterItem for itemID: " + itemID + " is null");
-                return;
-            }
-
             ItemID       = itemID;
-            ItemName     = item_Data.ItemCommonStats.ItemName;
             ItemAmount   = itemAmount;
-            MaxStackSize = item_Data.ItemCommonStats.MaxStackSize;
         }
 
         public Item(Item item)
         {
             ItemID           = item.ItemID;
-            ItemName         = item.ItemName;
             ItemAmount       = item.ItemAmount;
             ItemAmountOnHold = item.ItemAmountOnHold;
-            MaxStackSize     = item.MaxStackSize;
         }
 
         public static uint GetItemListTotal_CountAllItems(List<Item> items)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -23,27 +24,20 @@ namespace Jobs
             }
         }
         
-        protected override Dictionary<uint, Object_Data<Job_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Job_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultJobs = new Dictionary<uint, Job_Data>();
-
-            foreach (var item in Job_List.GetAllDefaultJobs())
-            {
-                defaultJobs.Add(item.Key, item.Value);
-            }
-
-            return _convertDictionaryToDataObject(defaultJobs);
+            return _convertDictionaryToDataObject(Job_List.DefaultJobs);
         }
         
         Dictionary<uint, Object_Data<Job_Data>> _defaultJobs => DefaultDataObjects;
         
-        protected override Object_Data<Job_Data> _convertToDataObject(Job_Data data)
+        protected override Object_Data<Job_Data> _convertToDataObject(Job_Data dataObject)
         {
             return new Object_Data<Job_Data>(
-                dataObjectID: (uint)data.JobName,
-                dataObject: data,
-                dataObjectTitle: $"{(uint)data.JobName}: {data.JobName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: (uint)dataObject.JobName,
+                dataObject: dataObject,
+                dataObjectTitle: $"{(uint)dataObject.JobName}: {dataObject.JobName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

@@ -75,8 +75,10 @@ namespace WorkPosts
             }
         }
 
-        protected override Dictionary<uint, Object_Data<WorkPost_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<WorkPost_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
+            // No default work stations for now.
+            
             var defaultWorkPosts = new Dictionary<uint, WorkPost_Data>();
 
             // foreach (var defaultWorkPost in WorkPost_List.DefaultWorkPosts)
@@ -101,13 +103,13 @@ namespace WorkPosts
         
         Dictionary<uint, Object_Data<WorkPost_Data>> _defaultWorkPosts => DefaultDataObjects;
          
-        protected override Object_Data<WorkPost_Data> _convertToDataObject(WorkPost_Data data)
+        protected override Object_Data<WorkPost_Data> _convertToDataObject(WorkPost_Data dataObject)
         {
             return new Object_Data<WorkPost_Data>(
-                dataObjectID: data.WorkPostID, 
-                dataObject: data,
-                dataObjectTitle: $"WorkPost: {data.WorkPostID}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.WorkPostID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"WorkPost: {dataObject.WorkPostID}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

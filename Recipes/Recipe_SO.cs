@@ -23,20 +23,20 @@ namespace Recipes
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Recipe_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Recipe_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            return _convertDictionaryToDataObject(Recipe_List.GetAllDefaultRecipes());
+            return _convertDictionaryToDataObject(Recipe_List.DefaultRecipes);
         }
 
         Dictionary<uint, Object_Data<Recipe_Data>> _defaultRecipes => DefaultDataObjects;
 
-        protected override Object_Data<Recipe_Data> _convertToDataObject(Recipe_Data data)
+        protected override Object_Data<Recipe_Data> _convertToDataObject(Recipe_Data dataObject)
         {
             return new Object_Data<Recipe_Data>(
-                dataObjectID: (uint)data.RecipeName, 
-                dataObject: data,
-                dataObjectTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: (uint)dataObject.RecipeName, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{(uint)dataObject.RecipeName}: {dataObject.RecipeName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

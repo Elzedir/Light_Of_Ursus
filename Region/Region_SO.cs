@@ -79,16 +79,31 @@ namespace Region
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Region_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Region_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultRegions = new Dictionary<uint, Region_Data>();
+            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
+                return _defaultDataObjects ??= _convertDictionaryToDataObject(Region_List.DefaultRegions);
 
-            foreach (var defaultRegion in Region_List.DefaultRegions)
+            if (Regions is null || Regions.Length == 0)
             {
-                defaultRegions.Add(defaultRegion.Key, defaultRegion.Value);
+                Debug.LogError("Regions is null or empty.");
+                return _defaultDataObjects;
             }
 
-            return _convertDictionaryToDataObject(defaultRegions);
+            foreach (var region in Regions)
+            {
+                if (region?.DataObject is null) continue;
+                
+                if (!_defaultDataObjects.ContainsKey(region.DataObject.RegionID))
+                {
+                    Debug.LogError($"Region with ID {region.DataObject.RegionID} not found in DefaultRegions.");
+                    continue;
+                }
+                
+                _defaultDataObjects[region.DataObject.RegionID] = region;
+            }
+
+            return _defaultDataObjects;
         }
 
         static uint _lastUnusedRegionID = 1;
@@ -105,13 +120,13 @@ namespace Region
         
         Dictionary<uint, Object_Data<Region_Data>> _defaultRegions => DefaultDataObjects;
          
-        protected override Object_Data<Region_Data> _convertToDataObject(Region_Data data)
+        protected override Object_Data<Region_Data> _convertToDataObject(Region_Data dataObject)
         {
             return new Object_Data<Region_Data>(
-                dataObjectID: data.RegionID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.RegionID}: {data.RegionName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: dataObject.RegionID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.RegionID}: {dataObject.RegionName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
 

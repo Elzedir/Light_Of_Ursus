@@ -10,22 +10,10 @@ namespace Ability
 {
     public abstract class Ability_List
     {
-        public static Dictionary<AbilityName, Ability_Data> GetAllDefaultAbilities()
-        {
-            var allAbilities = new Dictionary<AbilityName, Ability_Data>();
-
-            foreach (var ability in _defaultAbilities)
-            {
-                allAbilities.Add(ability.Key, ability.Value);
-            }
-
-            return allAbilities;
-        }
-            
-        static readonly Dictionary<AbilityName, Ability_Data> _defaultAbilities = new()
+        public static readonly Dictionary<uint, Ability_Data> DefaultAbilities = new()
         {
             {
-                AbilityName.Eagle_Stomp, new Ability_Data(
+                (uint)AbilityName.Eagle_Stomp, new Ability_Data(
                     abilityName: AbilityName.Eagle_Stomp,
                     abilityDescription: "Fly high, little one.",
                     maxLevel: 10,
@@ -38,7 +26,7 @@ namespace Ability
                     ) 
             },
             {
-                AbilityName.Charge, new Ability_Data(
+                (uint)AbilityName.Charge, new Ability_Data(
                     abilityName: AbilityName.Charge,
                     abilityDescription: "A charge.",
                     maxLevel: 10,

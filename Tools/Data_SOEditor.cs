@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
+using Station;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,6 +26,7 @@ namespace Tools
             
             if (EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
             {
+                // Maybe refhresh has no purpsoe since it should be showing a reference, not a snapshot.
                 SO.RefreshDataObjects();
                 _lastRefreshTime = EditorApplication.timeSinceStartup;
             }
@@ -62,52 +63,49 @@ namespace Tools
 
         static void _drawData_Object(Data_Display dataSO_Object, bool firstData = false)
         {
-            while (true)
+            // Fix the first data thing to apply when needed, like Item and Priority.
+
+            if (!firstData && !(dataSO_Object.ShowData =
+                    EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
+                return;
+
+            if (dataSO_Object.Data is not null)
             {
-                // Fix the first data thing to apply when needed, like Item and Priority.
+                foreach (var data in dataSO_Object.Data)
+                    GUILayout.Label($"{data.Key}: {data.Value}");
 
-                if (!firstData && !(dataSO_Object.ShowData =
-                        EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
+                if (dataSO_Object.DataDisplayType == DataDisplayType.Item)
                     return;
-
-                if (dataSO_Object.Data is not null)
-                {
-                    foreach (var data in dataSO_Object.Data)
-                        GUILayout.Label($"{data.Key}: {data.Value}");
-
-                    if (dataSO_Object.DataDisplayType == DataDisplayType.Item)
-                        return;
-                }
-
-                if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
-                {
-                    foreach (var subData in dataSO_Object.SubData.Values)
-                        _drawData_Object(subData);
-
-                    return;
-                }
-
-                if (dataSO_Object.SubData == null || dataSO_Object.SubData.Count == 0)
-                    return;
-
-                dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
-                    GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
-                dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
-                    dataSO_Object.SubData.Select(subData => subData.Value.Title).ToArray(), 1);
-
-                EditorGUILayout.EndScrollView();
-
-                if (dataSO_Object.SelectedIndex < 0 ||
-                    dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
-
-                var selectedBaseObject = dataSO_Object.SubData.ElementAt(dataSO_Object.SelectedIndex).Value;
-
-                if (!(selectedBaseObject.ShowData =
-                        EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData)))
-                    return;
-
-                dataSO_Object = selectedBaseObject;   
             }
+
+            if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
+            {
+                foreach (var subData in dataSO_Object.SubData.Values)
+                    _drawData_Object(subData);
+
+                return;
+            }
+
+            if (dataSO_Object.SubData == null || dataSO_Object.SubData.Count == 0)
+                return;
+
+            dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
+                GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
+            dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
+                dataSO_Object.SubData.Select(subData => subData.Value.Title).ToArray(), 1);
+
+            EditorGUILayout.EndScrollView();
+
+            if (dataSO_Object.SelectedIndex < 0 ||
+                dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
+
+            var selectedBaseObject = dataSO_Object.SubData.ElementAt(dataSO_Object.SelectedIndex).Value;
+
+            if (!(selectedBaseObject.ShowData =
+                    EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData)))
+                return;
+
+            dataSO_Object = selectedBaseObject;
         }
     }
 }

@@ -15,17 +15,15 @@ namespace Tools
             get
             {
                 if (_objects_Data is not null && _objects_Data.Length != 0) return _objects_Data;
-                
+
                 var dataObjects = InitialiseAllDataObjects();
-                return dataObjects.Length == 0 ? null : dataObjects;
+                return dataObjects.Length != 0 ? dataObjects : null;
             }
         }
 
         public void RefreshDataObjects()
         {
-            InitialiseAllDataObjects();
-            
-            PopulateSceneData();
+            InitialiseAllDataObjects(false);
         }
 
         public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
@@ -36,14 +34,16 @@ namespace Tools
 
         public bool ToggleMissingDataDebugs;
 
-        public Object_Data<T>[] InitialiseAllDataObjects()
+        public Object_Data<T>[] InitialiseAllDataObjects(bool initialisation = true)
         {
-            _objects_Data = new Object_Data<T>[_initialisationDefaultDataObjects.Count * 2];
+            var defaultObjects = initialisation ? _initialisationDefaultDataObjects : DefaultDataObjects;
+
+            _objects_Data = new Object_Data<T>[defaultObjects.Count * 2];
             // Then maybe load to get all loaded data objects
-            Array.Copy(_initialisationDefaultDataObjects.Values.ToArray(), Objects_Data, _initialisationDefaultDataObjects.Count);
-            _currentIndex = _initialisationDefaultDataObjects.Count;
+            Array.Copy(defaultObjects.Values.ToArray(), Objects_Data, defaultObjects.Count);
+            _currentIndex = defaultObjects.Count;
             _buildIndexLookup();
-            
+
             return Objects_Data ?? throw new NullReferenceException("DataObjects is null.");
         }
 
@@ -65,15 +65,22 @@ namespace Tools
 
         public Object_Data<T> GetObject_Data(uint dataObjectID)
         {
-            if (Objects_Data is null || Objects_Data.Length is 0) InitialiseAllDataObjects();
-
-            if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
+            try
             {
-                return Objects_Data?[index];
-            }
+                return Objects_Data[DataObjectIndexLookup[dataObjectID]];
 
-            Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
-            return null;
+            }
+            catch
+            {
+                if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
+                {
+                    Debug.LogWarning($"DataObject {dataObjectID} is null at index {index}.");
+                    return null;
+                }
+
+                Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
+                return null;
+            }
         }
 
         public void AddDataObject(uint dataObjectID, Object_Data<T> objectData)
@@ -89,7 +96,7 @@ namespace Tools
                 _compactAndResizeArray();
             }
 
-            Objects_Data[_currentIndex]          = objectData;
+            Objects_Data[_currentIndex]         = objectData;
             DataObjectIndexLookup[dataObjectID] = _currentIndex;
             _currentIndex++;
         }
@@ -119,7 +126,7 @@ namespace Tools
             {
                 if (Objects_Data[i] is null) continue;
 
-                Objects_Data[newSize]                      = Objects_Data[i];
+                Objects_Data[newSize]                     = Objects_Data[i];
                 DataObjectIndexLookup[GetDataObjectID(i)] = newSize;
                 newSize++;
             }
@@ -149,9 +156,9 @@ namespace Tools
                 AddDataObject(dataObjectID, _convertToDataObject(dataObject));
             }
         }
-        
+
         public             Vector2        ScrollPosition;
-        protected abstract Object_Data<T> _convertToDataObject(T data);
+        protected abstract Object_Data<T> _convertToDataObject(T dataObject);
 
         protected Dictionary<uint, Object_Data<T>> _convertDictionaryToDataObject(
             Dictionary<uint, T> dictionary)
@@ -170,9 +177,8 @@ namespace Tools
         protected abstract Dictionary<uint, Object_Data<T>> _getDefaultDataObjects(bool initialisation = false);
 
         protected Dictionary<uint, Object_Data<T>> _defaultDataObjects;
-
-        public Dictionary<uint, Object_Data<T>> DefaultDataObjects => _getDefaultDataObjects();
-        Dictionary<uint, Object_Data<T>> _initialisationDefaultDataObjects => _getDefaultDataObjects(true);
+        public    Dictionary<uint, Object_Data<T>> DefaultDataObjects                => _getDefaultDataObjects();
+        Dictionary<uint, Object_Data<T>>           _initialisationDefaultDataObjects => _getDefaultDataObjects(true);
     }
 
     [Serializable]
@@ -184,13 +190,13 @@ namespace Tools
         public T            DataObject;
         public Data_Display DataSO_Object;
 
-        public Object_Data(uint   dataObjectID,    T      dataObject,
+        public Object_Data(uint   dataObjectID,    T            dataObject,
                            string dataObjectTitle, Data_Display data_Display)
         {
-            DataObjectID       = dataObjectID;
-            DataObject         = dataObject;
-            DataObjectTitle    = dataObjectTitle;
-            DataSO_Object = data_Display;
+            DataObjectID    = dataObjectID;
+            DataObject      = dataObject;
+            DataObjectTitle = dataObjectTitle;
+            DataSO_Object   = data_Display;
         }
     }
 
@@ -201,12 +207,13 @@ namespace Tools
         public bool    ShowData;
         public Vector2 ScrollPosition;
 
-        public readonly string             Title;
-        public readonly DataDisplayType    DataDisplayType;
+        public readonly string                           Title;
+        public readonly DataDisplayType                  DataDisplayType;
         public readonly Dictionary<string, string>       Data;
-        public Dictionary<string, Data_Display> SubData;
+        public          Dictionary<string, Data_Display> SubData;
 
-        public Data_Display(string             title, DataDisplayType dataDisplayType, Data_Display dataSO_Object , Dictionary<string, string> data = null,
+        public Data_Display(string title, DataDisplayType dataDisplayType, Data_Display dataSO_Object,
+                            Dictionary<string, string> data = null,
                             Dictionary<string, Data_Display> subData = null)
         {
             switch (dataDisplayType)
@@ -221,10 +228,11 @@ namespace Tools
 
             Title           = title;
             DataDisplayType = dataDisplayType;
-            SelectedIndex = dataSO_Object?.SelectedIndex ?? -1;
-            ShowData      = dataSO_Object?.ShowData      ?? false;
-            Data          = data;
-            SubData       = subData;
+            SelectedIndex   = dataSO_Object?.SelectedIndex  ?? -1;
+            ShowData        = dataSO_Object?.ShowData       ?? false;
+            ScrollPosition  = dataSO_Object?.ScrollPosition ?? Vector2.zero;
+            Data            = data;
+            SubData         = subData;
         }
     }
 

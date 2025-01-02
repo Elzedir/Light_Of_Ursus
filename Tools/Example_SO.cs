@@ -23,7 +23,7 @@ namespace Tools
 
         }
 
-        protected override Dictionary<uint, Object_Data<Test_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Test_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
             var tests = new Dictionary<uint, Test_Data>
             {
@@ -62,12 +62,12 @@ namespace Tools
             return _convertDictionaryToDataObject(tests);
         }
 
-        protected override Object_Data<Test_Data> _convertToDataObject(Test_Data data)
+        protected override Object_Data<Test_Data> _convertToDataObject(Test_Data dataObject)
         {
             return new Object_Data<Test_Data>(
-                dataObjectID: data.TestID, 
-                dataObject: data,
-                dataObjectTitle: $"{data.TestID}{data.TestName}",
+                dataObjectID: dataObject.TestID, 
+                dataObject: dataObject,
+                dataObjectTitle: $"{dataObject.TestID}{dataObject.TestName}",
                 null);
         }
 

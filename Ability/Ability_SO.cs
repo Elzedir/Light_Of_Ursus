@@ -37,25 +37,18 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Ability_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Ability_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
-            var defaultAbilities = new Dictionary<uint, Ability_Data>();
-
-            foreach (var defaultAbility in Ability_List.GetAllDefaultAbilities())
-            {
-                defaultAbilities.Add((uint)defaultAbility.Key, defaultAbility.Value);
-            }
-
-            return _convertDictionaryToDataObject(defaultAbilities);
+            return _convertDictionaryToDataObject(Ability_List.DefaultAbilities);
         }
 
-        protected override Object_Data<Ability_Data> _convertToDataObject(Ability_Data data)
+        protected override Object_Data<Ability_Data> _convertToDataObject(Ability_Data dataObject)
         {
             return new Object_Data<Ability_Data>(
-                dataObjectID: (uint)data.AbilityName,
-                dataObject: data, 
-                dataObjectTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: (uint)dataObject.AbilityName,
+                dataObject: dataObject, 
+                dataObjectTitle: $"{(uint)dataObject.AbilityName}: {dataObject.AbilityName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
 
         static uint _lastUnusedAbilityID = 1;

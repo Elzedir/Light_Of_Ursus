@@ -22,20 +22,20 @@ namespace Careers
                 Debug.Log("No Default Careers Found");
             }
         }
-        protected override Dictionary<uint, Object_Data<Career_Data>> _getDefaultDataObjects()
+        protected override Dictionary<uint, Object_Data<Career_Data>> _getDefaultDataObjects(bool initialisation = false)
         {
             return _convertDictionaryToDataObject(Career_List.DefaultCareers);
         }
         
         Dictionary<uint, Object_Data<Career_Data>> _defaultCareers => DefaultDataObjects;
         
-        protected override Object_Data<Career_Data> _convertToDataObject(Career_Data data)
+        protected override Object_Data<Career_Data> _convertToDataObject(Career_Data dataObject)
         {
             return new Object_Data<Career_Data>(
-                dataObjectID: (uint)data.CareerName,
-                dataObject: data,
-                dataObjectTitle: $"{(uint)data.CareerName}: {data.CareerName}",
-                data_Display: data.GetDataSO_Object(ToggleMissingDataDebugs));
+                dataObjectID: (uint)dataObject.CareerName,
+                dataObject: dataObject,
+                dataObjectTitle: $"{(uint)dataObject.CareerName}: {dataObject.CareerName}",
+                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
         }
     }
     
