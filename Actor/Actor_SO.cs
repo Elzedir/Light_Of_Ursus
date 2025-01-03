@@ -14,8 +14,19 @@ namespace Actor
     {
         public Object_Data<Actor_Data>[]                        Actors                           => Objects_Data;
         public Object_Data<Actor_Data>                          GetActor_Data(uint      actorID) => GetObject_Data(actorID);
-        public Dictionary<uint, Actor_Component> ActorComponents = new();
+        Dictionary<uint, Actor_Component>       _actor_Components;
+        public Dictionary<uint, Actor_Component> Actor_Components => _actor_Components ??= _getExistingActor_Components();
 
+        Dictionary<uint, Actor_Component> _getExistingActor_Components()
+        {
+            return FindObjectsByType<Actor_Component>(FindObjectsSortMode.None)
+                                 .Where(actor => Regex.IsMatch(actor.name, @"\d+"))
+                                 .ToDictionary(
+                                     actor_Component => uint.Parse(new string(actor_Component.name.Where(char.IsDigit).ToArray())),
+                                     actor_Component => actor_Component
+                                 );
+        }
+        
         public Actor_Component GetActor_Component(uint actorID)
         {
             if (actorID == 0)
@@ -24,7 +35,7 @@ namespace Actor
                 return null;
             }
             
-            if (ActorComponents.TryGetValue(actorID, out var component))
+            if (Actor_Components.TryGetValue(actorID, out var component))
             {
                 return component;
             }   
@@ -35,51 +46,35 @@ namespace Actor
 
         public override uint GetDataObjectID(int id) => Actors[id].DataObject.ActorID;
 
-        public void UpdateActor(uint actorID, Actor_Data actor_Data, Actor_Component actor_Component)
-        {
+        public void UpdateActor(uint actorID, Actor_Data actor_Data) => 
             UpdateDataObject(actorID, actor_Data);
-            ActorComponents[actorID] = actor_Component;
-        }
+        
         public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllDataObjects(allActors);
 
         public override void PopulateSceneData()
         {
-            if (_defaultActors.Count == 0)
-            {
-                Debug.Log("No Default Items Found");
-            }
-            
-            var existingActors = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None)
-                                 .Where(actor => Regex.IsMatch(actor.name, @"\d+"))
-                                 .ToDictionary(
-                                     actor_Component => uint.Parse(new string(actor_Component.name.Where(char.IsDigit).ToArray())),
-                                     actor_Component => actor_Component
-                                 );
+            var physicalActors = _getExistingActor_Components();
             
             foreach (var actor in Actors)
             {
-                if (actor?.DataObject is null) continue;
+                if (actor?.DataObject is null || actor.DataObjectID == 0) continue;
+
+                Debug.LogError(actor.DataObjectID);
                 
-                if (existingActors.TryGetValue(actor.DataObject.ActorID, out var existingActor))
+                if (physicalActors.TryGetValue(actor.DataObject.ActorID, out var physicalActor))
                 {
-                    ActorComponents[actor.DataObject.ActorID] = existingActor;
-                    existingActor.SetActorData(actor.DataObject);
-                    existingActors.Remove(actor.DataObject.ActorID);
+                    physicalActor.SetActorData(actor.DataObject);
+                    Actor_Components[actor.DataObject.ActorID] = physicalActor;
+                    physicalActors.Remove(actor.DataObject.ActorID);
                     continue;
                 }
                 
                 Debug.LogWarning($"Actor with ID {actor.DataObject.ActorID} not found in the scene.");
             }
-            
-            foreach (var actor in existingActors)
+
+            foreach (var actor in physicalActors)
             {
-                if (DataObjectIndexLookup.ContainsKey(actor.Key))
-                {
-                    Debug.LogWarning($"Actor with ID {actor.Key} wasn't removed from existingActors.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"Actor with ID {actor.Key} does not have DataObject in Actor_SO.");
+                UpdateActor(actor.Key, actor.Value.ActorData);
             }
         }
 
@@ -90,13 +85,13 @@ namespace Actor
             
             if (Actors is null || Actors.Length == 0)
             {
-                Debug.LogWarning("No Actors Found in Actor_SO.");
+                Debug.LogWarning("Actors is null or empty.");
                 return _defaultDataObjects;
             }
             
             foreach (var actor in Actors)
             {
-                if (actor?.DataObject is null) continue;
+                if (actor?.DataObject is null || actor.DataObjectID == 0) continue;
                 
                 if (!_defaultDataObjects.ContainsKey(actor.DataObject.ActorID))
                 {
@@ -122,15 +117,13 @@ namespace Actor
             return _lastUnusedActorID;
         }
         
-        Dictionary<uint, Object_Data<Actor_Data>> _defaultActors => DefaultDataObjects;
-        
         protected override Object_Data<Actor_Data> _convertToDataObject(Actor_Data dataObject)
         {
             return new Object_Data<Actor_Data>(
                 dataObjectID: dataObject.ActorID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.ActorID}: {dataObject.ActorName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

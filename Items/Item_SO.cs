@@ -28,27 +28,27 @@ namespace Items
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
-            foreach (var item in List_Weapon.GetAllDefaultWeapons())
+            foreach (var item in List_Weapon.DefaultWeapons)
             {
                 defaultItems.Add(item.Key, item.Value);
             }
 
-            foreach (var item in List_Armour.GetAllDefaultArmour())
+            foreach (var item in List_Armour.DefaultArmour)
             {
                 defaultItems.Add(item.Key, item.Value);
             }
 
-            foreach (var item in List_Consumable.GetAllDefaultConsumables())
+            foreach (var item in List_Consumable.DefaultConsumables)
             {
                 defaultItems.Add(item.Key, item.Value);
             }
 
-            foreach (var rawMaterial in List_RawMaterial.GetAllDefaultRawMaterials())
+            foreach (var rawMaterial in List_RawMaterial.DefaultRawMaterials)
             {
                 defaultItems.Add(rawMaterial.Key, rawMaterial.Value);
             }
 
-            foreach (var processedMaterial in List_ProcessedMaterial.GetAllDefaultProcessedMaterials())
+            foreach (var processedMaterial in List_ProcessedMaterial.DefaultProcessedMaterials)
             {
                 defaultItems.Add(processedMaterial.Key, processedMaterial.Value);
             }
@@ -64,7 +64,7 @@ namespace Items
                 dataObjectID: dataObject.ItemID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.ItemID}: {dataObject.ItemName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

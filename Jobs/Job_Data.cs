@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Jobs
 {
@@ -28,24 +27,36 @@ namespace Jobs
             JobTasks       = jobData.JobTasks;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Job Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
             
             try
             {
-                dataObjects["Base Job Data"] = new Data_Display(
-                    title: "Base Job Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (dataSO_Object.SubData.TryGetValue("Base Job Data", out var baseJobData))
+                {
+                    dataSO_Object.SubData["Base Job Data"] = new Data_Display(
+                        title: "Base Job Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (baseJobData is not null)
+                {
+                    baseJobData.Data = new Dictionary<string, string>
                     {
                         { "Job ID", $"{(uint)JobName}" },
                         { "Job Name", JobName.ToString() },
                         { "Job Description", JobDescription }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -54,22 +65,26 @@ namespace Jobs
             
             try
             {
-                dataObjects["Job Tasks"] = new Data_Display(
-                    title: "Job Tasks",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
+                if (dataSO_Object.SubData.TryGetValue("Job Tasks", out var jobTasks))
+                {
+                    dataSO_Object.SubData["Job Tasks"] = new Data_Display(
+                        title: "Job Tasks",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (jobTasks is not null)
+                {
+                    jobTasks.Data = JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}");
+                }
             }
             catch
             {
                 Debug.LogError("Error: Job Tasks not found.");
             }
-            
-            return dataSO_Object = new Data_Display(
-                title: "Job Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+
+            return dataSO_Object;
         }
     }
     

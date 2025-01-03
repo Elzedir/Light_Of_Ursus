@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Personality
 {
@@ -11,11 +13,54 @@ namespace Personality
 
     public abstract class Personality_Manager
     {
-        public static HashSet<PersonalityTraitName> GetRandomPersonalityTraits(
-            HashSet<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1,
-            SpeciesName                   speciesName = SpeciesName.Default)
+        public static List<PersonalityTraitName> GetRandomPersonalityTraits(
+            List<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1, SpeciesName speciesName = SpeciesName.Default)
         {
-            return Personality_List.GetRandomPersonalityTraits(existingPersonalityTraits, numberOfTraitsDesired, speciesName);
+            existingPersonalityTraits ??= new List<PersonalityTraitName>();
+            
+            for (var i = 0; i < numberOfTraitsDesired; i++)
+            {
+                var availablePersonalityTraits = Personality_List.PersonalityTraits.Keys.Where(traitName =>
+                    !existingPersonalityTraits.Contains(traitName)).ToList();
+
+                if (availablePersonalityTraits.Count == 0)
+                {
+                    Debug.LogWarning("No available personality traits found. Returning existing traits.");
+                    break;
+                }
+
+                var randomTrait =
+                    availablePersonalityTraits[Random.Range(0, availablePersonalityTraits.Count)];
+
+                existingPersonalityTraits.Add(randomTrait);
+            }
+
+            return existingPersonalityTraits;
+        }
+        
+        public static float GetPersonalityRelation(List<PersonalityTraitName> a, List<PersonalityTraitName> b)
+        {
+            // Currently VERY open to double adding. Fix later.
+            
+            var relation = 0f;
+
+            foreach (var traitA in a)
+            {
+                foreach (var traitB in b)
+                {
+                    if (Personality_List.PersonalityRelations.TryGetValue(traitA, out var relationData) && relationData.traitName == traitB)
+                    {
+                        relation += relationData.relation;
+                    }
+                    
+                    if (Personality_List.PersonalityRelations.TryGetValue(traitB, out relationData) && relationData.traitName == traitA)
+                    {
+                        relation += relationData.relation;
+                    }
+                }
+            }
+
+            return relation;
         }
     }
 
@@ -27,9 +72,9 @@ namespace Personality
         // HashSets can't be serialised, change. Maybe save list and load a hashset so they can't add multiple of the same trait
         // from the save files.
         List<PersonalityTraitName> _personalityTraits;
-        public HashSet<PersonalityTraitName> PersonalityTraits;
+        public List<PersonalityTraitName> PersonalityTraits;
 
-        public ActorPersonality(HashSet<PersonalityTraitName> personalityTraits)
+        public ActorPersonality(List<PersonalityTraitName> personalityTraits)
         {
             PersonalityTraits = personalityTraits ?? Personality_Manager.GetRandomPersonalityTraits(null, 3);
         }

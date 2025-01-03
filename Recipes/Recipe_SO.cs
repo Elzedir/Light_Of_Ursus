@@ -36,7 +36,7 @@ namespace Recipes
                 dataObjectID: (uint)dataObject.RecipeName, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{(uint)dataObject.RecipeName}: {dataObject.RecipeName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

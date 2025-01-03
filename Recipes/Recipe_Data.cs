@@ -53,25 +53,37 @@ namespace Recipes
             PossibleQualities = possibleQualities;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Base Recipe Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Base Recipe Data"] = new Data_Display(
-                    title: "Base Recipe Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base Recipe Data", out var baseRecipeData))
+                {
+                    dataSO_Object.SubData["Base Recipe Data"] = new Data_Display(
+                        title: "Base Recipe Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (baseRecipeData is not null)
+                {
+                    baseRecipeData.Data = new Dictionary<string, string>
                     {
                         { "Recipe Name", RecipeName.ToString() },
                         { "Recipe Description", RecipeDescription },
                         { "Required Progress", $"{RequiredProgress}" },
                         { "Required Station", RequiredStation.ToString() }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -80,11 +92,19 @@ namespace Recipes
 
             try
             {
-                dataObjects["Required Ingredients"] = new Data_Display(
-                    title: "Required Ingredients",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: RequiredIngredients.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
+                if (!dataSO_Object.SubData.TryGetValue("Required Ingredients", out var requiredIngredients))
+                {
+                    dataSO_Object.SubData["Required Ingredients"] = new Data_Display(
+                        title: "Required Ingredients",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (requiredIngredients is not null)
+                {
+                    requiredIngredients.Data = RequiredIngredients.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}");
+                }
             }
             catch
             {
@@ -93,14 +113,22 @@ namespace Recipes
 
             try
             {
-                dataObjects["Required Vocations"] = new Data_Display(
-                    title: "Required Vocations",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: RequiredVocations.ToDictionary(vocation =>
+                if (!dataSO_Object.SubData.TryGetValue("Required Vocations", out var requiredVocations))
+                {
+                    dataSO_Object.SubData["Required Vocations"] = new Data_Display(
+                        title: "Required Vocations",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (requiredVocations is not null)
+                {
+                    requiredVocations.Data = RequiredVocations.ToDictionary(vocation =>
                             $"{vocation.VocationName}:",
                         vocation => $"Min: {vocation.MinimumVocationExperience} " +
-                                    $"Expected: {vocation.ExpectedVocationExperience}"));
+                                    $"Expected: {vocation.ExpectedVocationExperience}");
+                }
             }
             catch
             {
@@ -109,11 +137,19 @@ namespace Recipes
 
             try
             {
-                dataObjects["Recipe Products"] = new Data_Display(
-                    title: "Recipe Products",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty - {item.ItemAmount}"));
+                if (!dataSO_Object.SubData.TryGetValue("Recipe Products", out var recipeProducts))
+                {
+                    dataSO_Object.SubData["Recipe Products"] = new Data_Display(
+                        title: "Recipe Products",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (recipeProducts is not null)
+                {
+                    recipeProducts.Data = RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}");
+                }
             }
             catch
             {
@@ -122,22 +158,26 @@ namespace Recipes
 
             try
             {
-                dataObjects["Possible Qualities"] = new Data_Display(
-                    title: "Possible Qualities",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
+                if (!dataSO_Object.SubData.TryGetValue("Possible Qualities", out var possibleQualities))
+                {
+                    dataSO_Object.SubData["Possible Qualities"] = new Data_Display(
+                        title: "Possible Qualities",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (possibleQualities is not null)
+                {
+                    possibleQualities.Data = PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}");
+                }
             }
             catch
             {
                 Debug.LogError("Error: Possible Qualities not found.");
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Base Recipe Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
     

@@ -217,7 +217,7 @@ namespace JobSite
 
             var citizenID = allCitizenIDs
                 .FirstOrDefault(c =>
-                    Actor_Manager.GetActor_Data(c)?.CareerData.JobSiteID == 0 &&
+                    Actor_Manager.GetActor_Data(c)?.CareerDataPreset.JobSiteID == 0 &&
                     _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                 );
 
@@ -237,7 +237,7 @@ namespace JobSite
             var city = City_Manager.GetCity_Component(CityID);
 
             // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
-            var actorPresetName = ActorPreset_List.GetActorDataPresetNameByJobName(jobName);
+            var actorPresetName = ActorPreset_List.ActorDataPresetNameByJobName[jobName];
 
             var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
 
@@ -254,7 +254,7 @@ namespace JobSite
             {
                 if (vocation.VocationName == VocationName.None) continue;
 
-                if (actorData.VocationData.GetVocationExperience(vocation.VocationName) <
+                if (actorData.VocationDataPreset.GetVocationExperience(vocation.VocationName) <
                     vocation.MinimumVocationExperience)
                 {
                     return false;
@@ -299,7 +299,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Add(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(JobSiteID);
+            Actor_Manager.GetActor_Data(employeeID).CareerDataPreset.SetJobsiteID(JobSiteID);
         }
 
         public void HireEmployee(uint employeeID)
@@ -318,7 +318,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Remove(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobsiteID(0);
+            Actor_Manager.GetActor_Data(employeeID).CareerDataPreset.SetJobsiteID(0);
 
             // Remove employee job from employee job component.
         }
@@ -334,9 +334,7 @@ namespace JobSite
         {
             if (desiredJobTask == JobTaskName.Idle)
             {
-                Debug.Log("Worker is idling. Adding to station '0'.");
-
-                worker.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                worker.ActorData.CareerDataPreset.SetCurrentJob(new Job(JobName.Idle, 0, 0));
 
                 return true;
             }
@@ -345,31 +343,23 @@ namespace JobSite
 
             if (openWorkPost_Data is null)
             {
-                Debug.Log($"No open WorkPosts found for Worker: {worker}");
+                //Debug.Log($"No open WorkPosts found for Worker: {worker}");
                 return false;
             }
-
-            Debug.Log($"3: Open WorkPost found: {openWorkPost_Data.WorkPostID}");
 
             RemoveWorkerFromCurrentStation(worker);
 
             WorkPost_Workers[(station.StationID, openWorkPost_Data.WorkPostID)] = worker.ActorID;
             openWorkPost_Data.AddWorkerToWorkPost(worker);
-            
-            Debug.Log($"DesiredJobTask: {desiredJobTask}");
 
             var desiredJobName = JobTask_Manager.GetJobTask_Master(desiredJobTask).PrimaryJob;
 
-            Debug.Log($"4: DesiredJobName: {desiredJobName}");
-
             if (desiredJobName == JobName.Any)
             {
-                Debug.Log($"DesiredJobName is Any. Setting to station.CoreJobName: {station.CoreJobName}");
-
                 desiredJobName = station.CoreJobName;
             }
 
-            worker.ActorData.CareerData.SetCurrentJob(new Job(desiredJobName, station.StationID,
+            worker.ActorData.CareerDataPreset.SetCurrentJob(new Job(desiredJobName, station.StationID,
                 openWorkPost_Data.WorkPostID));
 
             return true;
@@ -392,9 +382,9 @@ namespace JobSite
                                                                  .RemoveCurrentWorkerFromWorkPost();
                 WorkPost_Workers[stationWorkPostID] = 0;
 
-                if (worker.ActorData.CareerData.CurrentJob is null) return true;
+                if (worker.ActorData.CareerDataPreset.CurrentJob is null) return true;
 
-                worker.ActorData.CareerData.StopCurrentJob();
+                worker.ActorData.CareerDataPreset.StopCurrentJob();
                 Debug.LogError($"CurrentJob was not stopped for employeeID: {worker.ActorID}. Stopping here.");
 
                 return true;
@@ -407,7 +397,7 @@ namespace JobSite
                     return false;
                 }
 
-                var actorCareer = worker.ActorData.CareerData;
+                var actorCareer = worker.ActorData.CareerDataPreset;
 
                 if (actorCareer == null)
                 {
@@ -415,7 +405,7 @@ namespace JobSite
                     return false;
                 }
 
-                if (worker.ActorData.CareerData.CurrentJob == null)
+                if (worker.ActorData.CareerDataPreset.CurrentJob == null)
                 {
                     Debug.Log($"Employee does not have a current job.");
                     return false;
@@ -484,7 +474,7 @@ namespace JobSite
 
                     foreach (var vocation in station_Data.StationProgressData.CurrentProduct.RequiredVocations)
                     {
-                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationData
+                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationDataPreset
                                                                  .GetProgress(vocation);
                     }
 
@@ -564,8 +554,8 @@ namespace JobSite
 
             var iteration = 0;
 
-            //while (iteration < desiredOperatorCount - AllEmployees.Count && iteration < 100)
-            for (var i = 0; i < 10; i++)
+            while (iteration < desiredOperatorCount - AllEmployees.Count && iteration < 100)
+            //for (var i = 0; i < 10; i++)
             {
                 var allPositionsFilled = true;
 
@@ -617,22 +607,33 @@ namespace JobSite
                 }
             }
 
-            Debug.Log(iteration);
+            Debug.LogError(iteration);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "JobSite Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Base JobSite Data"] = new Data_Display(
-                    title: "Base JobSite Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base JobSite Data", out var baseJobSiteData))
+                {
+                    dataSO_Object.SubData["Base JobSite Data"] = new Data_Display(
+                        title: "Base JobSite Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (baseJobSiteData is not null)
+                {
+                    baseJobSiteData.Data = new Dictionary<string, string>
                     {
                         { "JobSite ID", $"{JobSiteID}" },
                         { "JobSite Name", $"{JobSiteName}" },
@@ -641,7 +642,8 @@ namespace JobSite
                         { "JobSite Description", JobsiteDescription },
                         { "Owner ID", $"{OwnerID}" },
                         { "JobSite is Active", $"{JobsiteIsActive}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -653,11 +655,19 @@ namespace JobSite
 
             try
             {
-                dataObjects["Employee Data"] = new Data_Display(
-                    title: "Employee Data",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}"));
+                if (!dataSO_Object.SubData.TryGetValue("Prosperity Data", out var prosperityData))
+                {
+                    dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
+                        title: "Prosperity Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (prosperityData is not null)
+                {
+                    prosperityData.Data = _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}");
+                }
             }
             catch
             {
@@ -669,12 +679,20 @@ namespace JobSite
 
             try
             {
-                dataObjects["Station Operators"] = new Data_Display(
-                    title: "Station Operators",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
-                        operatorID => $"{operatorID.Value}"));
+                if (!dataSO_Object.SubData.TryGetValue("All Station IDs", out var allStationIDs))
+                {
+                    dataSO_Object.SubData["All Station IDs"] = new Data_Display(
+                        title: "All Station IDs",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
+                }
+                
+                if (allStationIDs is not null)
+                {
+                    allStationIDs.Data =  WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
+                        operatorID => $"{operatorID.Value}");
+                }
             }
             catch
             {
@@ -686,11 +704,19 @@ namespace JobSite
 
             try
             {
-                dataObjects["All Station IDs"] = new Data_Display(
-                    title: "All Station IDs",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
+                if (!dataSO_Object.SubData.TryGetValue("Production Data", out var productionData))
+                {
+                    dataSO_Object.SubData["Production Data"] = new Data_Display(
+                        title: "Production Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (productionData is not null)
+                {
+                    productionData.Data = AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}");
+                }
             }
             catch
             {
@@ -702,11 +728,18 @@ namespace JobSite
 
             try
             {
-                dataObjects["Production Data"] = new Data_Display(
-                    title: "Production Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Priority Data", out var priorityData))
+                {
+                    dataSO_Object.SubData["Priority Data"] = new Data_Display(
+                        title: "Priority Data",
+                        dataDisplayType: DataDisplayType.List_Selectable,
+                        existingDataSO_Object: dataSO_Object,
+                        subData: PriorityData.GetDataSO_Object(toggleMissingDataDebugs).SubData);
+                }
+                
+                if (priorityData is not null)
+                {
+                    priorityData.Data = new Dictionary<string, string>
                     {
                         { "All Produced Items", $"{string.Join(", ", ProductionData.AllProducedItems)}" },
                         {
@@ -714,7 +747,8 @@ namespace JobSite
                             $"{string.Join(", ", ProductionData.EstimatedProductionRatePerHour)}"
                         },
                         { "Station ID", $"{ProductionData.JobSiteID}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -726,11 +760,19 @@ namespace JobSite
 
             try
             {
-                dataObjects["Priority Data"] = new Data_Display(
-                    title: "Priority Data",
-                    dataDisplayType: DataDisplayType.SelectableList,
-                    dataSO_Object: dataSO_Object,
-                    subData: PriorityData.GetDataSO_Object(toggleMissingDataDebugs).SubData);
+                if (!dataSO_Object.SubData.TryGetValue("Priority Data", out var priorityData))
+                {
+                    dataSO_Object.SubData["Priority Data"] = new Data_Display(
+                        title: "Priority Data",
+                        dataDisplayType: DataDisplayType.List_Selectable,
+                        existingDataSO_Object: dataSO_Object,
+                        subData: new Dictionary<string, Data_Display>());
+                }
+                
+                if (priorityData is not null)
+                {
+                    priorityData.SubData = PriorityData.GetDataSO_Object(toggleMissingDataDebugs).SubData;
+                }
             }
             catch
             {
@@ -740,11 +782,7 @@ namespace JobSite
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "JobSite Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 

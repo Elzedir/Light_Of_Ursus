@@ -115,24 +115,36 @@ namespace Priority
 
         protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Priority Data JobSite",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Base Priority Data"] = new Data_Display(
-                    title: "Base Priority Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base Priority Data", out var basePriorityData))
+                {
+                    dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
+                        title: "Base Priority Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (basePriorityData is not null)
+                {
+                    basePriorityData.Data = new Dictionary<string, string>
                     {
                         { "JobsiteID", $"{JobsiteID}" },
                         { "JobSite", $"{_jobSite.JobSiteData.JobSiteName}" },
                         { "PriorityType", $"{_priorityType}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -144,11 +156,19 @@ namespace Priority
             
             try
             {
-                dataObjects["All Priorities"] = new Data_Display(
-                    title: "All Priorities",
-                    dataDisplayType: DataDisplayType.SelectableList,
-                    dataSO_Object: dataSO_Object,
-                    subData: PriorityQueue.GetDataSO_Object(toggleMissingDataDebugs).SubData);
+                if (!dataSO_Object.SubData.TryGetValue("All Priorities", out var allPriorities))
+                {
+                    dataSO_Object.SubData["All Priorities"] = new Data_Display(
+                        title: "All Priorities",
+                        dataDisplayType: DataDisplayType.List_Selectable,
+                        existingDataSO_Object: dataSO_Object,
+                        subData: new Dictionary<string, Data_Display>());
+                }
+                
+                if (allPriorities is not null)
+                {
+                    allPriorities.SubData = PriorityQueue.GetDataSO_Object(toggleMissingDataDebugs).SubData;
+                }
             }
             catch
             {
@@ -158,11 +178,7 @@ namespace Priority
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Priority Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 }

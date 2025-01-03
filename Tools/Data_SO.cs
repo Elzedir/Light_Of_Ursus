@@ -24,6 +24,8 @@ namespace Tools
         public void RefreshDataObjects()
         {
             InitialiseAllDataObjects(false);
+            
+            PopulateSceneData();
         }
 
         public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
@@ -37,9 +39,10 @@ namespace Tools
         public Object_Data<T>[] InitialiseAllDataObjects(bool initialisation = true)
         {
             var defaultObjects = initialisation ? _initialisationDefaultDataObjects : DefaultDataObjects;
-
+            //* We need to include physical objects in the scene here too, for the array size. 
+            //* Then maybe load to get all loaded data objects
+            
             _objects_Data = new Object_Data<T>[defaultObjects.Count * 2];
-            // Then maybe load to get all loaded data objects
             Array.Copy(defaultObjects.Values.ToArray(), Objects_Data, defaultObjects.Count);
             _currentIndex = defaultObjects.Count;
             _buildIndexLookup();
@@ -149,6 +152,7 @@ namespace Tools
         {
             if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
             {
+                Debug.Log($"Updating DataObject {dataObjectID} at index {index} with Array size {Objects_Data.Length}.");
                 Objects_Data[index] = _convertToDataObject(dataObject);
             }
             else
@@ -187,59 +191,60 @@ namespace Tools
         public readonly uint   DataObjectID;
         public readonly string DataObjectTitle;
 
-        public T            DataObject;
-        public Data_Display DataSO_Object;
+        public T                       DataObject;
+        public Func<bool, Data_Display> GetData_Display;
 
-        public Object_Data(uint   dataObjectID,    T            dataObject,
-                           string dataObjectTitle, Data_Display data_Display)
+        public Object_Data(uint   dataObjectID,    T                       dataObject,
+                           string dataObjectTitle, Func<bool, Data_Display> getData_Display)
         {
             DataObjectID    = dataObjectID;
             DataObject      = dataObject;
             DataObjectTitle = dataObjectTitle;
-            DataSO_Object   = data_Display;
+            GetData_Display = getData_Display;
         }
     }
 
     [Serializable]
     public class Data_Display
     {
-        public int     SelectedIndex;
-        public bool    ShowData;
-        public Vector2 ScrollPosition;
+        public          int     SelectedIndex;
+        public          bool    ShowData;
+        public readonly bool    FirstData;
+        public          Vector2 ScrollPosition;
 
         public readonly string                           Title;
         public readonly DataDisplayType                  DataDisplayType;
-        public readonly Dictionary<string, string>       Data;
+        public          Dictionary<string, string>       Data;
         public          Dictionary<string, Data_Display> SubData;
 
-        public Data_Display(string title, DataDisplayType dataDisplayType, Data_Display dataSO_Object,
-                            Dictionary<string, string> data = null,
-                            Dictionary<string, Data_Display> subData = null)
+        public Data_Display(string                           title, DataDisplayType dataDisplayType, Data_Display existingDataSO_Object, Dictionary<string, string> data = null,
+                            Dictionary<string, Data_Display> subData = null, bool firstData = false)
         {
             switch (dataDisplayType)
             {
-                case DataDisplayType.CheckBoxList when data is null && subData is null:
+                case DataDisplayType.List_CheckBox when data is null && subData is null:
                     throw new NullReferenceException("Data is null.");
-                case DataDisplayType.Item when data is null:
+                case DataDisplayType.List_Item when data is null:
                     throw new NullReferenceException("Data is null.");
-                case DataDisplayType.SelectableList when subData is null:
+                case DataDisplayType.List_Selectable when subData is null:
                     throw new NullReferenceException("SubData is null.");
             }
 
             Title           = title;
             DataDisplayType = dataDisplayType;
-            SelectedIndex   = dataSO_Object?.SelectedIndex  ?? -1;
-            ShowData        = dataSO_Object?.ShowData       ?? false;
-            ScrollPosition  = dataSO_Object?.ScrollPosition ?? Vector2.zero;
-            Data            = data;
-            SubData         = subData;
+            FirstData       = firstData;
+            SelectedIndex   = -1;
+            ShowData        = false;
+            ScrollPosition  = Vector2.zero;
+            Data            = data    ?? new Dictionary<string, string>();
+            SubData         = subData ?? new Dictionary<string, Data_Display>();
         }
     }
 
     public enum DataDisplayType
     {
-        Item,
-        CheckBoxList,
-        SelectableList
+        List_Item,
+        List_CheckBox,
+        List_Selectable
     }
 }

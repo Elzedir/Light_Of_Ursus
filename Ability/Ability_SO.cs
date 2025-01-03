@@ -48,7 +48,7 @@ namespace Ability
                 dataObjectID: (uint)dataObject.AbilityName,
                 dataObject: dataObject, 
                 dataObjectTitle: $"{(uint)dataObject.AbilityName}: {dataObject.AbilityName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
 
         static uint _lastUnusedAbilityID = 1;

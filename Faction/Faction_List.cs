@@ -5,8 +5,12 @@ namespace Faction
 {
     public abstract class Faction_List
     {
-        public static readonly Dictionary<uint, Faction_Data> DefaultFactions =
-            new()
+        static Dictionary<uint, Faction_Data> _defaultFactions;
+        public static Dictionary<uint, Faction_Data> DefaultFactions => _defaultFactions ??= _initialiseDefaultFactions();
+        
+        static Dictionary<uint, Faction_Data> _initialiseDefaultFactions()
+        {
+            return new Dictionary<uint, Faction_Data>
             {
                 {
                     1, new Faction_Data(
@@ -14,7 +18,7 @@ namespace Faction
                         factionName: "Wanderers",
                         allFactionActorIDs: new HashSet<uint>(),
                         allFactionRelations: new List<FactionRelationData>()
-                    )  
+                    )
                 },
                 {
                     2, new Faction_Data(
@@ -25,5 +29,6 @@ namespace Faction
                     )
                 }
             };
+        }
     }
 }

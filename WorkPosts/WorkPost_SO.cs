@@ -109,7 +109,7 @@ namespace WorkPosts
                 dataObjectID: dataObject.WorkPostID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"WorkPost: {dataObject.WorkPostID}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

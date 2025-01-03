@@ -7,41 +7,21 @@ namespace Personality
 {
     public abstract class Personality_List
     {
+        static Dictionary<PersonalityTraitName, PersonalityTrait> _personalityTraits;
+        public static Dictionary<PersonalityTraitName, PersonalityTrait> PersonalityTraits => _personalityTraits ??= _initialisePersonalityTitles();
+        
         public static PersonalityTrait GetPersonalityTrait(PersonalityTraitName traitName)
         {
-            if (_allPersonalityTitles.TryGetValue(traitName, out var trait)) return trait;
+            if (PersonalityTraits.TryGetValue(traitName, out var trait)) return trait;
             
             Debug.LogWarning($"No PersonalityTrait found for {traitName}. Returning null.");
             
             return null;
         }
 
-        public static HashSet<PersonalityTraitName> GetRandomPersonalityTraits(
-            HashSet<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1, SpeciesName speciesName = SpeciesName.Default)
+        static Dictionary<PersonalityTraitName, PersonalityTrait> _initialisePersonalityTitles()
         {
-            existingPersonalityTraits ??= new HashSet<PersonalityTraitName>();
-            
-            for (var i = 0; i < numberOfTraitsDesired; i++)
-            {
-                var availablePersonalityTraits = _allPersonalityTitles.Keys.Where(traitName =>
-                    !existingPersonalityTraits.Contains(traitName)).ToList();
-
-                if (availablePersonalityTraits.Count == 0)
-                {
-                    Debug.LogWarning("No available personality traits found. Returning existing traits.");
-                    break;
-                }
-
-                var randomTrait =
-                    availablePersonalityTraits[Random.Range(0, availablePersonalityTraits.Count)];
-
-                existingPersonalityTraits.Add(randomTrait);
-            }
-
-            return existingPersonalityTraits;
-        }
-
-        static readonly Dictionary<PersonalityTraitName, PersonalityTrait> _allPersonalityTitles = new()
+            return new Dictionary<PersonalityTraitName, PersonalityTrait>
             {
                 {
                     PersonalityTraitName.Brave, new PersonalityTrait(
@@ -122,43 +102,28 @@ namespace Personality
                         personalityTraitEffects: new List<PersonalityEffect>())
                 }
             };
-
-        public static float GetPersonalityRelation(HashSet<PersonalityTraitName> a, HashSet<PersonalityTraitName> b)
-        {
-            // Currently VERY open to double adding. Fix later.
-            
-            var relation = 0f;
-
-            foreach (var traitA in a)
-            {
-                foreach (var traitB in b)
-                {
-                    if (_personalityRelations.TryGetValue(traitA, out var relationData) && relationData.traitName == traitB)
-                    {
-                        relation += relationData.relation;
-                    }
-                    
-                    if (_personalityRelations.TryGetValue(traitB, out relationData) && relationData.traitName == traitA)
-                    {
-                        relation += relationData.relation;
-                    }
-                }
-            }
-
-            return relation;
         }
 
-        static readonly Dictionary<PersonalityTraitName, (PersonalityTraitName traitName, float relation)> _personalityRelations = new()
+        static Dictionary<PersonalityTraitName, (PersonalityTraitName traitName, float relation)> _personalityRelations;
+
+        public static Dictionary<PersonalityTraitName, (PersonalityTraitName traitName, float relation)>
+            PersonalityRelations => _personalityRelations ??= _initialisePersonalityRelations();
+        
+
+        static Dictionary<PersonalityTraitName, (PersonalityTraitName traitName, float relation)> _initialisePersonalityRelations()
         {
+            return new Dictionary<PersonalityTraitName, (PersonalityTraitName traitName, float relation)>
             {
-                PersonalityTraitName.Arrogant, (PersonalityTraitName.Humble,  -15)    
-            },
-            {
-                PersonalityTraitName.Brave, (PersonalityTraitName.Craven,     -15)
-            },
-            {
-                PersonalityTraitName.Honest, (PersonalityTraitName.Deceitful, -10)
-            }
-        };
+                {
+                    PersonalityTraitName.Arrogant, (PersonalityTraitName.Humble, -15)
+                },
+                {
+                    PersonalityTraitName.Brave, (PersonalityTraitName.Craven, -15)
+                },
+                {
+                    PersonalityTraitName.Honest, (PersonalityTraitName.Deceitful, -10)
+                }
+            };
+        }
     }
 }

@@ -147,7 +147,7 @@ namespace Debuggers
         void _displayActor(Actor_Component actor)
         {
             var actorFullIdentification = actor.ActorData.FullIdentification;
-            var actorInventory          = actor.ActorData.InventoryData;
+            var actorInventory          = actor.ActorData.InventoryDataPreset;
             var actorPriorities         = actor.DecisionMakerComponent.PriorityData.PriorityQueue;
 
             if (actorFullIdentification != null)
@@ -216,7 +216,7 @@ namespace Debuggers
 
         void _displayStation(Station_Component station)
         {
-            var stationInventory    = station.Station_Data.InventoryData;
+            var stationInventory    = station.Station_Data.InventoryDataPreset;
             var stationProgressData = station.Station_Data.StationProgressData;
 
             if (stationInventory != null)

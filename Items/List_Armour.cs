@@ -1,22 +1,24 @@
 using System.Collections.Generic;
 using Equipment;
-using Items;
 using UnityEngine;
 
 namespace Items
 {
     public abstract class List_Armour
     {
-        public static Dictionary<uint, Item_Data> GetAllDefaultArmour()
+        static Dictionary<uint, Item_Data> _defaultArmour;
+        public static Dictionary<uint, Item_Data> DefaultArmour => _defaultArmour ??= _initialiseDefaultArmour();
+        
+        static Dictionary<uint, Item_Data> _initialiseDefaultArmour()
         {
-            var allArmour = new Dictionary<uint, Item_Data>();
-            
-            foreach (var armour in _heavy)
+            var defaultArmour = new Dictionary<uint, Item_Data>();
+
+            foreach (var item in _heavy)
             {
-                allArmour.Add(armour.Key, armour.Value);
+                defaultArmour.Add(item.Key, item.Value);
             }
-            
-            return allArmour;
+
+            return defaultArmour;
         }
 
         static readonly Dictionary<uint, Item_Data> _heavy = new()

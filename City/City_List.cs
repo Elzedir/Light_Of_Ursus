@@ -5,8 +5,12 @@ namespace City
 {
     public abstract class City_List
     {
-        public static readonly Dictionary<uint, City_Data> DefaultCities =
-            new()
+        static Dictionary<uint, City_Data> _defaultCities;
+        public static Dictionary<uint, City_Data> DefaultCities => _defaultCities ??= _initialiseDefaultCities();
+        
+        static Dictionary<uint, City_Data> _initialiseDefaultCities()
+        {
+            return new Dictionary<uint, City_Data>
             {
                 {
                     1, new City_Data
@@ -31,5 +35,6 @@ namespace City
                     )
                 }
             };
+        }
     }
 }

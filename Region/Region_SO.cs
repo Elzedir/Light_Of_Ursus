@@ -126,7 +126,7 @@ namespace Region
                 dataObjectID: dataObject.RegionID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.RegionID}: {dataObject.RegionName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

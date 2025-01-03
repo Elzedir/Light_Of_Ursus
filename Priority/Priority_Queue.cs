@@ -183,20 +183,33 @@ namespace Priority
             _priorityQueue[tempPriorityValueA.PriorityID]     = indexB;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Priority Queue",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Priority Queue"] = new Data_Display(
-                    title: "Priority Queue",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
-                        priority => $"PriorityValue: {priority.PriorityValue}"));
+                if (!dataSO_Object.SubData.TryGetValue("Priority Queue", out var priorityQueue))
+                {
+                    dataSO_Object.SubData["Priority Queue"] = new Data_Display(
+                        title: "Priority Queue",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
+                            priority => $"PriorityValue: {priority.PriorityValue}"));
+                }
+                
+                if (priorityQueue is not null)
+                {
+                    priorityQueue.Data = _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
+                        priority => $"PriorityValue: {priority.PriorityValue}");
+                }
             }
             catch
             {
@@ -206,11 +219,7 @@ namespace Priority
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Priority Queue",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 

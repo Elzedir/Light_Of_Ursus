@@ -10,32 +10,38 @@ namespace Ability
 {
     public abstract class Ability_List
     {
-        public static readonly Dictionary<uint, Ability_Data> DefaultAbilities = new()
+        static Dictionary<uint, Ability_Data> _defaultAbilities;
+        public static Dictionary<uint, Ability_Data> DefaultAbilities => _defaultAbilities ??= _initialiseDefaultAbilities();
+        
+        static Dictionary<uint, Ability_Data> _initialiseDefaultAbilities()
         {
+            return new Dictionary<uint, Ability_Data>
             {
-                (uint)AbilityName.Eagle_Stomp, new Ability_Data(
-                    abilityName: AbilityName.Eagle_Stomp,
-                    abilityDescription: "Fly high, little one.",
-                    maxLevel: 10,
-                    baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
-                    animationClip: null,
-                    abilityActions: new List<(string Name, IEnumerator Action)>
-                    {
-                        ("Eagle Stomp", _eagleStomp())
-                    }
-                    ) 
-            },
-            {
-                (uint)AbilityName.Charge, new Ability_Data(
-                    abilityName: AbilityName.Charge,
-                    abilityDescription: "A charge.",
-                    maxLevel: 10,
-                    baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
-                    Resources.Load<AnimationClip>("Animations/Abilities/Charge"),
-                    null
-                )
-            }
-        };
+                {
+                    (uint)AbilityName.Eagle_Stomp, new Ability_Data(
+                        abilityName: AbilityName.Eagle_Stomp,
+                        abilityDescription: "Fly high, little one.",
+                        maxLevel: 10,
+                        baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
+                        animationClip: null,
+                        abilityActions: new List<(string Name, IEnumerator Action)>
+                        {
+                            ("Eagle Stomp", _eagleStomp())
+                        }
+                    )
+                },
+                {
+                    (uint)AbilityName.Charge, new Ability_Data(
+                        abilityName: AbilityName.Charge,
+                        abilityDescription: "A charge.",
+                        maxLevel: 10,
+                        baseDamage: new List<(float, DamageType)> { (5, DamageType.Normal) },
+                        Resources.Load<AnimationClip>("Animations/Abilities/Charge"),
+                        null
+                    )
+                }
+            };
+        }
 
         static IEnumerator _eagleStomp(Actor_Component actor = null)
         {

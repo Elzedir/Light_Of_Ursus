@@ -4,15 +4,12 @@ using Station;
 
 namespace Items
 {
-    public enum RawMaterialName
-    {
-        None,
-        Log
-    }
-
     public abstract class List_RawMaterial
     {
-        public static Dictionary<uint, Item_Data> GetAllDefaultRawMaterials()
+        static Dictionary<uint, Item_Data> _defaultRawMaterials;
+        public static Dictionary<uint, Item_Data> DefaultRawMaterials => _defaultRawMaterials ??= _initialiseDefaultRawMaterials();
+        
+        static Dictionary<uint, Item_Data> _initialiseDefaultRawMaterials()
         {
             var allRawMaterials = new Dictionary<uint, Item_Data>();
 
@@ -194,7 +191,7 @@ namespace Items
                     new Item_CommonStats(
                         itemID: 1100,
                         itemType: ItemType.Raw_Material,
-                        itemName: $"{RawMaterialName.Log}",
+                        itemName: "Log",
                         maxStackSize: 100,
                         itemWeight: 3,
                         itemValue: 5),

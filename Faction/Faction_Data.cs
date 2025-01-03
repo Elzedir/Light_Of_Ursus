@@ -44,23 +44,35 @@ namespace Faction
             }
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Faction Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
             
             try
             {
-                dataObjects["Base Faction Data"] = new Data_Display(
-                    title: "Base Faction Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base Faction Data", out var baseFactionData))
+                {
+                    dataSO_Object.SubData["Base Faction Data"] = new Data_Display(
+                        title: "Base Faction Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (baseFactionData is not null)
+                {
+                    baseFactionData.Data = new Dictionary<string, string>
                     {
                         { "Faction ID", $"{FactionID}" },
                         { "Faction Name", FactionName }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -69,11 +81,19 @@ namespace Faction
             
             try
             {
-                dataObjects["Faction Actors"] = new Data_Display(
-                    title: "Faction Actors",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
+                if (!dataSO_Object.SubData.TryGetValue("Faction Actors", out var factionActors))
+                {
+                    dataSO_Object.SubData["Faction Actors"] = new Data_Display(
+                        title: "Faction Actors",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (factionActors is not null)
+                {
+                    factionActors.Data = AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}");
+                }
             }
             catch
             {
@@ -82,22 +102,26 @@ namespace Faction
             
             try
             {
-                dataObjects["Faction Relations"] = new Data_Display(
-                    title: "Faction Relations",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
+                if (!dataSO_Object.SubData.TryGetValue("Faction Relations", out var factionRelations))
+                {
+                    dataSO_Object.SubData["Faction Relations"] = new Data_Display(
+                        title: "Faction Relations",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (factionRelations is not null)
+                {
+                    factionRelations.Data = AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}");
+                }
             }
             catch
             {
                 Debug.LogError("Error in Faction Actors");
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Faction Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 }

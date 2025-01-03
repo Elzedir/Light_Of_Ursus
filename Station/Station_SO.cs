@@ -29,6 +29,12 @@ namespace Station
 
         public Station_Component GetStation_Component(uint stationID)
         {
+            if (stationID == 0)
+            {
+                Debug.LogError("StationID cannot be 0.");
+                return null;
+            }
+            
             if (Station_Components.TryGetValue(stationID, out var component))
             {
                 return component;
@@ -51,7 +57,7 @@ namespace Station
 
             foreach (var station in Stations)
             {
-                if (station?.DataObject is null) continue;
+                if (station?.DataObject is null || station.DataObjectID == 0) continue;
 
                 if (physicalStations.TryGetValue(station.DataObject.StationID, out var physicalStation))
                 {
@@ -66,13 +72,7 @@ namespace Station
 
             foreach (var station in physicalStations)
             {
-                if (DataObjectIndexLookup.ContainsKey(station.Key))
-                {
-                    Debug.LogWarning($"Station with ID {station.Key} wasn't removed from existingStations.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"Station with ID {station.Key} does not have DataObject in Station_SO.");
+                UpdateStation(station.Key, station.Value.Station_Data);
             }
         }
 
@@ -100,10 +100,6 @@ namespace Station
                 _defaultDataObjects[station.DataObjectID] = station;
             }
             
-            //  The problem is that data_Display is not being passed through since _convertToDataOBject is not being called
-            // and so the data_display constructor is not updating the ddata ddisplay, even through the data object itself is being updated. Find a way
-            // to update the data display using the object, and not have to rely on a constructor to do so.
-            
             return _defaultDataObjects;
         }
 
@@ -125,7 +121,7 @@ namespace Station
                 dataObjectID: dataObject.StationID,
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.StationID}: {dataObject.StationName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

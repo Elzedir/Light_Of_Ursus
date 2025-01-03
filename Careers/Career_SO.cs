@@ -35,7 +35,7 @@ namespace Careers
                 dataObjectID: (uint)dataObject.CareerName,
                 dataObject: dataObject,
                 dataObjectTitle: $"{(uint)dataObject.CareerName}: {dataObject.CareerName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
     

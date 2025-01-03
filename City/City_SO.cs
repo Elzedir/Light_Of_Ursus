@@ -126,7 +126,7 @@ namespace City
                 dataObjectID: dataObject.CityID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.CityID}: {dataObject.CityName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

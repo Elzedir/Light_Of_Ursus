@@ -61,18 +61,43 @@ namespace Managers
             return BaseProsperityGrowthPerDay; // Add modifiers afterwards.
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            return dataSO_Object = new Data_Display(
-                title: "Prosperity Data",
-                dataDisplayType: DataDisplayType.Item,
-                dataSO_Object: dataSO_Object,
-                data: new Dictionary<string, string>
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Prosperity Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
+
+            try
+            {
+                if (!dataSO_Object.SubData.TryGetValue("Prosperity Data", out var prosperityData))
                 {
-                    { "Current Prosperity", $"{CurrentProsperity}" },
-                    { "Max Prosperity", $"{MaxProsperity}" },
-                    { "Base Prosperity Growth Per Day", $"{BaseProsperityGrowthPerDay}" }
-                });
+                    dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
+                        title: "Prosperity Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (prosperityData is not null)
+                {
+                    prosperityData.Data = new Dictionary<string, string>
+                    {
+                        { "Current Prosperity", $"{CurrentProsperity}" },
+                        { "Max Prosperity", $"{MaxProsperity}" },
+                        { "Base Prosperity Growth Per Day", $"{BaseProsperityGrowthPerDay}" }
+                    };
+                }
+            }
+            catch
+            {
+                Debug.LogError("Error in Prosperity Data");
+            }
+            
+            return dataSO_Object;
         }
     }
 }

@@ -5,15 +5,14 @@ using UnityEngine;
 
 namespace Items
 {
-    public enum ProcessedMaterialName
-    {
-        None,
-        Plank
-    }
-
     public abstract class List_ProcessedMaterial
     {
-        public static Dictionary<uint, Item_Data> GetAllDefaultProcessedMaterials()
+        static Dictionary<uint, Item_Data> _defaultProcessedMaterials;
+
+        public static Dictionary<uint, Item_Data> DefaultProcessedMaterials =>
+            _defaultProcessedMaterials ??= _initialiseDefaultProcessedMaterials();
+
+        static Dictionary<uint, Item_Data> _initialiseDefaultProcessedMaterials()
         {
             var allProcessedMaterials = new Dictionary<uint, Item_Data>();
 

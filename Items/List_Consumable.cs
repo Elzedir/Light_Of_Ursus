@@ -4,16 +4,19 @@ namespace Items
 {
     public abstract class List_Consumable
     {
-        public static Dictionary<uint, Item_Data> GetAllDefaultConsumables()
+        static Dictionary<uint, Item_Data> _defaultConsumables;
+        public static Dictionary<uint, Item_Data> DefaultConsumables => _defaultConsumables ??= _initialiseDefaultConsumables();
+        
+        static Dictionary<uint, Item_Data> _initialiseDefaultConsumables()
         {
-            var allConsumables = new Dictionary<uint, Item_Data>();
-            
-            foreach (var consumable in _potions)
+            var defaultConsumables = new Dictionary<uint, Item_Data>();
+
+            foreach (var item in _potions)
             {
-                allConsumables.Add(consumable.Key, consumable.Value);
+                defaultConsumables.Add(item.Key, item.Value);
             }
-            
-            return allConsumables;
+
+            return defaultConsumables;
         }
 
         static readonly Dictionary<uint, Item_Data> _potions = new()

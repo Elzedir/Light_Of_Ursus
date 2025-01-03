@@ -387,8 +387,8 @@ namespace Priority
         }
         
         static bool _parameterChecks(Dictionary<uint, object> existingPriorityParameters, out float defaultMaxPriority,
-                                     out float totalDistance, out long totalItems, out InventoryData inventory_Hauler,
-                                     out InventoryData inventory_Target)
+                                     out float totalDistance, out long totalItems, out Inventory_Data_Preset inventory_Hauler,
+                                     out Inventory_Data_Preset inventory_Target)
         {
             defaultMaxPriority = 0;
             totalDistance = 0;
@@ -456,7 +456,7 @@ namespace Priority
             if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Worker_Component,
                     out var inventory_HaulerObject))
             {
-                if (inventory_HaulerObject is not InventoryData inventory_HaulerData)
+                if (inventory_HaulerObject is not Inventory_Data_Preset inventory_HaulerData)
                 {
                     Debug.LogError("Inventory_Hauler not found");
                     return false;    
@@ -468,7 +468,7 @@ namespace Priority
             if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Target_Component,
                     out var inventory_TargetObject))
             {
-                if (inventory_TargetObject is not InventoryData inventory_TargetData)
+                if (inventory_TargetObject is not Inventory_Data_Preset inventory_TargetData)
                 {
                     Debug.LogError(existingPriorityParameters.ContainsKey((uint)PriorityParameterName.Target_Component)
                         ? "Inventory_Target is not InventoryData"

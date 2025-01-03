@@ -30,7 +30,7 @@ namespace Relationships
 
         static float _comparePersonality(ActorPersonality a, ActorPersonality b)
         {
-            return Personality_List.GetPersonalityRelation(a.PersonalityTraits, b.PersonalityTraits);
+            return Personality_Manager.GetPersonalityRelation(a.PersonalityTraits, b.PersonalityTraits);
         }
     }
 

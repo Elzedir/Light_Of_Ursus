@@ -120,7 +120,7 @@ namespace Faction
                 dataObjectID: dataObject.FactionID,
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.FactionID}: {dataObject.FactionName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

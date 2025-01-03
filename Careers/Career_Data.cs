@@ -13,35 +13,47 @@ namespace Careers
     {
         public CareerName                          CareerName;
         public string                              CareerDescription;
-        public HashSet<JobName>                    CareerBaseJobs;
+        public List<JobName>                       CareerBaseJobs;
         public Dictionary<JobName, JobRequirement> CareerSpecialistJobs;
 
-        public Career_Data(CareerName careerName, string careerDescription, HashSet<JobName> careerBaseJobs, Dictionary<JobName, JobRequirement> careerSpecialistJobs)
+        public Career_Data(CareerName careerName, string careerDescription, List<JobName> careerBaseJobs, Dictionary<JobName, JobRequirement> careerSpecialistJobs)
         {
-            CareerName                = careerName;
-            CareerDescription         = careerDescription;
-            CareerBaseJobs            = careerBaseJobs;
+            CareerName           = careerName;
+            CareerDescription    = careerDescription;
+            CareerBaseJobs       = careerBaseJobs;
             CareerSpecialistJobs = careerSpecialistJobs;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Career Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
             
             try
             {
-                dataObjects["Career Data"] = new Data_Display(
-                    title: "Career Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Career Data", out var careerData))
+                {
+                    dataSO_Object.SubData["Career Data"] = new Data_Display(
+                        title: "Career Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (careerData is not null)
+                {
+                    careerData.Data = new Dictionary<string, string>
                     {
                         { "Career ID", $"{(uint)CareerName}" },
                         { "Career Name", CareerName.ToString() },
                         { "Career Description", CareerDescription }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -50,22 +62,26 @@ namespace Careers
             
             try
             {
-                dataObjects["Career Jobs"] = new Data_Display(
-                    title: "Career Jobs",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: CareerBaseJobs.ToDictionary(job => $"{(uint)job}:", job => $"{job}"));
+                if (!dataSO_Object.SubData.TryGetValue("Career Jobs", out var careerJobs))
+                {
+                    dataSO_Object.SubData["Career Jobs"] = new Data_Display(
+                        title: "Career Jobs",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: CareerBaseJobs.ToDictionary(job => $"{(uint)job}:", job => $"{job}"));
+                }
+                
+                if (careerJobs is not null)
+                {
+                    careerJobs.Data = CareerBaseJobs.ToDictionary(job => $"{(uint)job}:", job => $"{job}");
+                }
             }
             catch
             {
                 Debug.LogError("Error in Base Career Data");
             }
 
-            return dataSO_Object = new Data_Display(
-                title: $"{(uint)CareerName}: {CareerName}",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
     

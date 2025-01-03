@@ -96,7 +96,7 @@ namespace Actor
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var actor in AllActors.ActorComponents.Values)
+            foreach (var actor in AllActors.Actor_Components.Values)
             {
                 var distance = Vector3.Distance(position, actor.transform.position);
 
@@ -120,7 +120,7 @@ namespace Actor
 
             actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData, actor);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             actor.Initialise();
 
@@ -222,20 +222,20 @@ namespace Actor
                 actorMaterial: null
             );
 
-            var careerData = new CareerData(
+            var careerData = new Career_Data_Preset(
                 actorID: fullIdentification.ActorID,
-                careerName: actorDataPreset?.CareerData.CareerName     ?? CareerName.Wanderer,
-                jobsNotFromCareer: actorDataPreset?.CareerData.AllJobs ?? new HashSet<JobName>()
+                careerName: actorDataPreset?.CareerDataPreset.CareerName     ?? CareerName.Wanderer,
+                jobsNotFromCareer: actorDataPreset?.CareerDataPreset.AllJobs ?? new HashSet<JobName>()
             );
             
-            var craftingData = new CraftingData(
+            var craftingData = new Crafting_Data_Preset(
                 actorID: fullIdentification.ActorID,
-                knownRecipes: actorDataPreset?.CraftingData.KnownRecipes ?? new List<RecipeName>()
+                knownRecipes: actorDataPreset?.CraftingDataPreset.KnownRecipes ?? new List<RecipeName>()
             );
 
-            var vocationData = new VocationData(
+            var vocationData = new Vocation_Data_Preset(
                 actorID: fullIdentification.ActorID,
-                actorVocations: actorDataPreset?.VocationData.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
+                actorVocations: actorDataPreset?.VocationDataPreset.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
                 );
             
             var speciesAndPersonality = new SpeciesAndPersonality(
@@ -244,10 +244,10 @@ namespace Actor
                 actorPersonality: _getRandomPersonality()
             );
             
-            var statsAndAbilities = new StatsAndAbilities(
-                actorStats: actorDataPreset?.StatsAndAbilities?.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
-                actorAspects: actorDataPreset?.StatsAndAbilities?.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
-                actorAbilities: actorDataPreset?.StatsAndAbilities?.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
+            var statsAndAbilities = new StatsAndAbilities_Preset(
+                actorStats: actorDataPreset?.StatsAndAbilitiesPreset?.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
+                actorAspects: actorDataPreset?.StatsAndAbilitiesPreset?.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
+                actorAbilities: actorDataPreset?.StatsAndAbilitiesPreset?.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
                 );
 
             var statesAndConditions = new StatesAndConditionsData(
@@ -255,12 +255,12 @@ namespace Actor
                 actorConditions: _getNewActorConditions(fullIdentification.ActorID)
                 );
 
-            var inventoryData = new InventoryData_Actor(
+            var inventoryData = new InventoryDataPreset_Actor(
                 actorID: fullIdentification.ActorID,
                 new ObservableDictionary<uint, Item>()
             );
 
-            var equipmentData = new EquipmentData(
+            var equipmentData = new Equipment_Data_Preset(
                 actorID: fullIdentification.ActorID,
                 head: null,
                 neck: null,
@@ -287,7 +287,7 @@ namespace Actor
                 equipmentData
                 ));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData, actor);
+            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             return actor.ActorData;
         }

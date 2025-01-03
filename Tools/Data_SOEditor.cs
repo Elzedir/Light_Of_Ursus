@@ -1,5 +1,4 @@
 using System.Linq;
-using Station;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,10 +7,10 @@ namespace Tools
     [CustomEditor(typeof(Data_SO<>), true)]
     public abstract class Data_SOEditor<T> : Editor where T : class
     {
-        int _selectedBaseIndex = -1;
+        int                        _selectedBaseIndex = -1;
         protected       Data_SO<T> _so;
         public abstract Data_SO<T> SO { get; }
-        
+
         double _lastRefreshTime;
 
         public override void OnInspectorGUI()
@@ -21,12 +20,11 @@ namespace Tools
                 EditorGUILayout.LabelField($"{SO} is null or {SO?.Objects_Data} is null", EditorStyles.boldLabel);
                 return;
             }
-            
+
             SO.ToggleMissingDataDebugs = GUILayout.Toggle(SO.ToggleMissingDataDebugs, "Toggle Missing Data Debugs");
-            
+
             if (EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
             {
-                // Maybe refhresh has no purpsoe since it should be showing a reference, not a snapshot.
                 SO.RefreshDataObjects();
                 _lastRefreshTime = EditorApplication.timeSinceStartup;
             }
@@ -53,7 +51,7 @@ namespace Tools
 
             var selectedDataObject = nonNullDataObjects[_selectedBaseIndex];
 
-            _drawData_Object(selectedDataObject.DataSO_Object, firstData: true);
+            _drawData_Object(selectedDataObject.GetData_Display(SO.ToggleMissingDataDebugs));
         }
 
         static string[] _getBaseObjectNames(Object_Data<T>[] baseObjects)
@@ -61,51 +59,41 @@ namespace Tools
             return baseObjects.Select(base_Object => $"{base_Object.DataObjectTitle}").ToArray();
         }
 
-        static void _drawData_Object(Data_Display dataSO_Object, bool firstData = false)
+        static void _drawData_Object(Data_Display dataSO_Object)
         {
-            // Fix the first data thing to apply when needed, like Item and Priority.
-
-            if (!firstData && !(dataSO_Object.ShowData =
-                    EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData)))
-                return;
-
-            if (dataSO_Object.Data is not null)
+            while (true)
             {
-                foreach (var data in dataSO_Object.Data)
-                    GUILayout.Label($"{data.Key}: {data.Value}");
-
-                if (dataSO_Object.DataDisplayType == DataDisplayType.Item)
+                //* First Data is not working, so I will always have open the data first to see it, even if its First Data. Maybe one day find a way around it.
+                if (!(dataSO_Object.ShowData = EditorGUILayout.Toggle($"{dataSO_Object.Title}", dataSO_Object.ShowData))) 
                     return;
+
+                foreach (var data in dataSO_Object.Data)
+                {
+                    GUILayout.Label($"{data.Key}: {data.Value}");
+                }
+
+                if (dataSO_Object.DataDisplayType == DataDisplayType.List_CheckBox)
+                {
+                    foreach (var subData in dataSO_Object.SubData.Values)
+                    {
+                        _drawData_Object(subData);
+                    }
+                    return;
+                }
+
+                dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
+                    GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
+                dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
+                    dataSO_Object.SubData.Select(subData => subData.Value.Title).ToArray(), 1);
+
+                EditorGUILayout.EndScrollView();
+
+                if (dataSO_Object.SelectedIndex < 0 || dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
+            
+                var selectedSubData = dataSO_Object.SubData.ElementAt(dataSO_Object.SelectedIndex).Value;
+                
+                dataSO_Object = selectedSubData;
             }
-
-            if (dataSO_Object.DataDisplayType == DataDisplayType.CheckBoxList && dataSO_Object.SubData is not null)
-            {
-                foreach (var subData in dataSO_Object.SubData.Values)
-                    _drawData_Object(subData);
-
-                return;
-            }
-
-            if (dataSO_Object.SubData == null || dataSO_Object.SubData.Count == 0)
-                return;
-
-            dataSO_Object.ScrollPosition = EditorGUILayout.BeginScrollView(dataSO_Object.ScrollPosition,
-                GUILayout.Height(Mathf.Min(200, dataSO_Object.SubData.Count * 20)));
-            dataSO_Object.SelectedIndex = GUILayout.SelectionGrid(dataSO_Object.SelectedIndex,
-                dataSO_Object.SubData.Select(subData => subData.Value.Title).ToArray(), 1);
-
-            EditorGUILayout.EndScrollView();
-
-            if (dataSO_Object.SelectedIndex < 0 ||
-                dataSO_Object.SelectedIndex >= dataSO_Object.SubData.Count) return;
-
-            var selectedBaseObject = dataSO_Object.SubData.ElementAt(dataSO_Object.SelectedIndex).Value;
-
-            if (!(selectedBaseObject.ShowData =
-                    EditorGUILayout.Toggle($"{selectedBaseObject.Title}", selectedBaseObject.ShowData)))
-                return;
-
-            dataSO_Object = selectedBaseObject;
         }
     }
 }

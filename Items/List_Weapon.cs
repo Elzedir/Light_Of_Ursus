@@ -29,7 +29,10 @@ namespace Items
 
     public abstract class List_Weapon
     {
-        public static Dictionary<uint, Item_Data> GetAllDefaultWeapons()
+        static        Dictionary<uint, Item_Data> _defaultWeapons;
+        public static Dictionary<uint, Item_Data> DefaultWeapons => _defaultWeapons ??= _initialiseDefaultWeapons();
+        
+        static Dictionary<uint, Item_Data> _initialiseDefaultWeapons()
         {
             var allWeapons = new Dictionary<uint, Item_Data>();
             

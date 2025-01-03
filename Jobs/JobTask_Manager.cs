@@ -342,7 +342,7 @@ namespace Jobs
             foreach (var station in allRelevantStations)
             {
                 currentStationParameters[PriorityParameterName.Target_Component] =
-                    station.Station_Data.InventoryData;
+                    station.Station_Data.InventoryDataPreset;
 
                 var stationPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
                     (uint)jobTaskName, currentStationParameters);
@@ -350,7 +350,7 @@ namespace Jobs
                 if (stationPriority is 0 || stationPriority < highestPriority) continue;
 
                 highestPriority                                        = stationPriority;
-                taskParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryData;
+                taskParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryDataPreset;
             }
 
             foreach (var parameter in taskParameters)

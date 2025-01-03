@@ -79,28 +79,40 @@ namespace Region
             }
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
-
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Region Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: dataSO_Object,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
+                
             try
             {
-                dataObjects["Base Region Data"] = new Data_Display(
-                    title: "Base Region Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base Region Data", out var baseRegionData))
+                {
+                    dataSO_Object.SubData["Base Region Data"] = new Data_Display(
+                        title: "Base Region Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());    
+                }
+                
+                if (baseRegionData is not null)
+                {
+                    baseRegionData.Data = new Dictionary<string, string>
                     {
-                        {"Region ID", $"{RegionID}"},
-                        {"Region Name", RegionName},
-                        {"Region Faction ID", $"{RegionFactionID}"},
-                        {"Region Description", RegionDescription},
-                        {"Prosperity Data", ProsperityData.ToString()},
-                        {"Faction", $"{Faction}"},
-                        {"All City IDs", string.Join(", ", _allCityIDs)}
-                    });
+                        { "Region ID", $"{RegionID}" },
+                        { "Region Name", RegionName },
+                        { "Region Faction ID", $"{RegionFactionID}" },
+                        { "Region Description", RegionDescription },
+                        { "Prosperity Data", ProsperityData.ToString() },
+                        { "Faction", $"{Faction}" },
+                        { "All City IDs", string.Join(", ", _allCityIDs) }
+                    };
+                }
             }
             catch
             {
@@ -109,27 +121,31 @@ namespace Region
 
             try
             {
-                dataObjects["Region Prosperity"] = new Data_Display(
-                    title: "Region Prosperity",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string , string>
+                if (!dataSO_Object.SubData.TryGetValue("Region Cities", out var regionCities))
+                {
+                    dataSO_Object.SubData["Region Cities"] = new Data_Display(
+                        title: "Region Cities",
+                        dataDisplayType: DataDisplayType.List_Selectable,
+                        existingDataSO_Object: dataSO_Object,
+                        subData: new Dictionary<string, Data_Display>());
+                }
+                
+                if (regionCities is not null)
+                {
+                    regionCities.Data = new Dictionary<string, string>
                     {
                         { "Current Prosperity", $"{ProsperityData.CurrentProsperity}" },
                         { "Max Prosperity", $"{ProsperityData.MaxProsperity}" },
                         { "Base Prosperity Growth", $"{ProsperityData.BaseProsperityGrowthPerDay}" }
-                    });
+                    };
+                }
             }
             catch
             {
                 Debug.LogError("Error: ProsperityData.");
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Base Region Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 

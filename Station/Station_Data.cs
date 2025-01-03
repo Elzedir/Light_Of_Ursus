@@ -34,8 +34,8 @@ namespace Station
         JobSite_Component        _jobSite_Component;
         public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         
-        InventoryData _inventoryData;
-        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
+        Inventory_Data_Preset _inventoryDataPreset;
+        public Inventory_Data_Preset InventoryDataPreset => _inventoryDataPreset ??= new InventoryDataPreset_Station(StationID);
         
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
@@ -183,7 +183,7 @@ namespace Station
             {
                 try
                 {
-                    success = InventoryData.InventoryContainsAllItems(
+                    success = InventoryDataPreset.InventoryContainsAllItems(
                         StationProgressData.CurrentProduct.RequiredIngredients);
                     break;
                 }
@@ -206,23 +206,31 @@ namespace Station
             return success;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            dataSO_Object ??= new Data_Display(
-                title: "Station Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: null,
-                subData: new Dictionary<string, Data_Display>());
-
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Station Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: dataSO_Object,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
+            
             try
             {
-                Debug.Log($"Old: {dataSO_Object.SubData["Base Station Data"].Data["Station ID:"]} New: {StationID}");
+                    // Apply Try Get Value to all other data structures
+                if (!dataSO_Object.SubData.TryGetValue("Base Station Data", out var baseStationData))
+                {
+                    dataSO_Object.SubData["Base Station Data"] = new Data_Display(
+                        title: "Base Station Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
                 
-                dataSO_Object.SubData["Base Station Data"] = new Data_Display(
-                    title: "Base Station Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (baseStationData is not null)
+                {
+                    baseStationData.Data = new Dictionary<string, string>
                     {
                         { "Station ID:", $"{StationID}" },
                         { "Station Name:", $"{StationName}" },
@@ -231,7 +239,8 @@ namespace Station
                         { "Jobsite ID:", $"{JobsiteID}" },
                         { "Default Product:", $"{DefaultProduct}" },
                         { "Base Progress Rate Per Hour:", $"{BaseProgressRatePerHour}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -240,14 +249,25 @@ namespace Station
                     Debug.LogError("Error: Base Station Data not found.");
                 }
             }
-            
+
             try
             {
-                dataSO_Object.SubData["Station Items"] = new Data_Display(
-                    title: "Station Items",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: InventoryData.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:", item =>  $"{item.ItemName} Qty - {item.ItemAmount}"));
+                if (!dataSO_Object.SubData.TryGetValue("Inventory Data", out var inventoryData))
+                {
+                    dataSO_Object.SubData["Inventory Data"] = new Data_Display(
+                        title: "Inventory Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (inventoryData is not null)
+                {
+                    inventoryData.Data = InventoryDataPreset.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                        item => $"{item.ItemName} Qty - {item.ItemAmount}");
+                }
+
+                
             }
             catch
             {
@@ -259,16 +279,24 @@ namespace Station
 
             try
             {
-                dataSO_Object.SubData["Station Progress Data"] = new Data_Display(
-                    title: "Station Progress Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Station Progress Data", out var stationProgressData))
+                {
+                    dataSO_Object.SubData["Station Progress Data"] = new Data_Display(
+                        title: "Station Progress Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (stationProgressData is not null)
+                {
+                    stationProgressData.Data = new Dictionary<string, string>
                     {
                         { "Current Progress:", $"{StationProgressData.CurrentProgress}" },
                         { "Current Quality:", $"{StationProgressData.CurrentQuality}" },
                         { "Current Product:", $"{StationProgressData.CurrentProduct}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -277,62 +305,59 @@ namespace Station
                     Debug.LogError("Error: Station Progress Data not found.");
                 }
             }
-            
+
             try
             {
-                foreach (var workPost in AllWorkPost_Data.Values)
+                if (!dataSO_Object.SubData.TryGetValue("Station WorkPosts", out var stationWorkPosts))
                 {
-                    Debug.LogWarning($"WorkPostData: {workPost.WorkPostID}: {workPost.CurrentWorker?.ActorID}");
-                }
-
-                foreach (var workPostComp in AllWorkPost_Components.Values)
-                {
-                    Debug.LogWarning($"WorkPostComponent: {workPostComp.WorkPostData.WorkPostID}: {workPostComp.WorkPostData.CurrentWorker?.ActorID}");
-                }
-
-                foreach (var workPostCompShown in AllWorkPost_Components.Values.ToDictionary(
-                             workPost => $"{workPost.WorkPostID} -",
-                             workPost =>
-                                 $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}"))
-                {
-                    Debug.LogWarning($"Key: {workPostCompShown.Key} Value: {workPostCompShown.Value}");
+                    dataSO_Object.SubData["Station WorkPosts"] = new Data_Display(
+                        title: "Station WorkPosts",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
                 }
                 
-                dataSO_Object.SubData["StationWorkPosts"] = new Data_Display(
-                    title: "Station WorkPosts",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: AllWorkPost_Components.Values.ToDictionary(workPost => $"{workPost.WorkPostID} -",
+                if (stationWorkPosts is not null)
+                {
+                    stationWorkPosts.Data = AllWorkPost_Components.Values.ToDictionary(
+                        workPost => $"{workPost.WorkPostID} -",
                         workPost =>
-                            $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}"));
+                            $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: {workPost.WorkPostData?.CurrentWorker}");   
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
                     Debug.LogError("Error: WorkPost Data not found.");
+                    Debug.LogError($"WorkPost Components: {AllWorkPost_Components}");
                     Debug.LogError($"WorkPost Data: {AllWorkPost_Data}");
-                    Debug.LogError($"WorkPost Data: {AllWorkPost_Data?.Values}");
 
-                    foreach (var workPost in AllWorkPost_Components.Values)
+                    if (AllWorkPost_Components is not null)
                     {
-                        Debug.LogError($"WorkPost Data: {workPost}");
-                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostID}");
-                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData}");
-                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker}");
-                        Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker?.ActorID}");
+                        foreach (var workPost in AllWorkPost_Components.Values)
+                        {
+                            Debug.LogError($"WorkPost Data: {workPost}");
+                            Debug.LogError($"WorkPost Data: {workPost?.WorkPostID}");
+                            Debug.LogError($"WorkPost Data: {workPost?.WorkPostData}");
+                            Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker}");
+                            Debug.LogError($"WorkPost Data: {workPost?.WorkPostData?.CurrentWorker?.ActorID}");
+                        }    
                     }
-
-                    foreach (var workPostData in AllWorkPost_Data?.Values)
+                    
+                    if (AllWorkPost_Data is not null)
                     {
-                        Debug.LogError($"WorkPost Data: {workPostData}");
-                        Debug.LogError($"WorkPost Data: {workPostData?.WorkPostID}");
-                        Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker}");
-                        Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker?.ActorID}");
+                        foreach (var workPostData in AllWorkPost_Data.Values)
+                        {
+                            Debug.LogError($"WorkPost Data: {workPostData}");
+                            Debug.LogError($"WorkPost Data: {workPostData?.WorkPostID}");
+                            Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker}");
+                            Debug.LogError($"WorkPost Data: {workPostData?.CurrentWorker?.ActorID}");
+                        }
                     }
                 }
             }
-            
+
             return dataSO_Object;
         }
     }

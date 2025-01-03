@@ -72,22 +72,19 @@ namespace JobSite
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
             var highestPriorityElement = JobSiteData.PriorityData.GetHighestSpecificPriority(
-                actor.ActorData.CareerData.AllJobTasks.Select(jobTaskName => (uint)jobTaskName).ToList(), stationID);
+                actor.ActorData.CareerDataPreset.AllJobTasks.Select(jobTaskName => (uint)jobTaskName).ToList(), stationID);
 
             if (highestPriorityElement == null)
             {
-                Debug.LogWarning("No highest priority job found. Setting job to Idle.");
-                actor.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                actor.ActorData.CareerDataPreset.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
             }
             
             var highestPriorityJobTask = (JobTaskName)highestPriorityElement.PriorityID;
             
-            Debug.Log($"1: JobTaskName: {highestPriorityJobTask}");
-            
             if (highestPriorityJobTask == JobTaskName.Idle)
             {
-                actor.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                actor.ActorData.CareerDataPreset.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
             }
 
@@ -95,14 +92,12 @@ namespace JobSite
 
             foreach (var station in relevantStations)
             {
-                Debug.Log($"2: Station: {station.StationName}");
-
                 if (JobSiteData.AddEmployeeToStation(actor, station, highestPriorityJobTask)) return true;
                 
-                Debug.LogWarning($"Station: {station.StationName} is full.");
+                //Debug.LogWarning($"Station: {station.StationName} is full.");
             }
 
-            Debug.LogWarning($"No relevant stations found for job: {highestPriorityJobTask}.");
+            //Debug.LogWarning($"No relevant stations found for job: {highestPriorityJobTask}.");
             return false;
         }
 
@@ -132,8 +127,8 @@ namespace JobSite
             {
                 var employeesForStation = tempEmployees
                                           .OrderByDescending(actor =>
-                                              actor.ActorData.VocationData.GetVocationExperience(
-                                                  _getRelevantVocation(actor.ActorData.CareerData
+                                              actor.ActorData.VocationDataPreset.GetVocationExperience(
+                                                  _getRelevantVocation(actor.ActorData.CareerDataPreset
                                                                             .CurrentJob.JobName)))
                                           .ToList();
 

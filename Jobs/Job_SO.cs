@@ -37,7 +37,7 @@ namespace Jobs
                 dataObjectID: (uint)dataObject.JobName,
                 dataObject: dataObject,
                 dataObjectTitle: $"{(uint)dataObject.JobName}: {dataObject.JobName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 

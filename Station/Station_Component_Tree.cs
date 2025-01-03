@@ -30,15 +30,15 @@ namespace Station
 
         protected override void _initialiseStartingInventory()
         {
-            if (Station_Data.InventoryData.AllInventoryItems.Count == 0)
+            if (Station_Data.InventoryDataPreset.AllInventoryItems.Count == 0)
             {
-                Station_Data.InventoryData.AddToInventory(new List<Item>());
+                Station_Data.InventoryDataPreset.AddToInventory(new List<Item>());
             }
         }
 
         public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
-            if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
+            if (!actor.ActorData.CraftingDataPreset.KnownRecipes.Contains(recipeName))
             {
                 Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}");
                 return;
@@ -55,22 +55,22 @@ namespace Station
             var cost  = GetCost(recipeData.RequiredIngredients, actor);
             var yield = GetYield(recipeData.RecipeProducts, actor);
 
-            if (!Station_Data.InventoryData.InventoryContainsAllItems(cost))
+            if (!Station_Data.InventoryDataPreset.InventoryContainsAllItems(cost))
             {
                 Debug.Log($"Inventory does not contain cost items.");
                 return;
             }
 
-            if (!Station_Data.InventoryData.HasSpaceForItems(yield))
+            if (!Station_Data.InventoryDataPreset.HasSpaceForItems(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
                 return;
             }
 
-            Station_Data.InventoryData.RemoveFromInventory(cost);
+            Station_Data.InventoryDataPreset.RemoveFromInventory(cost);
             // Have another system where the tree loses durability instead or something.
             // Later allow it to partially remove logs to chop the tree down completely.
-            Station_Data.InventoryData.AddToInventory(yield);
+            Station_Data.InventoryDataPreset.AddToInventory(yield);
         }
 
         public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)

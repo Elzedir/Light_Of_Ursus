@@ -33,7 +33,7 @@ namespace Actor
                 dataObjectID: (uint)dataObject.ActorDataPresetName,
                 dataObject: dataObject,
                 dataObjectTitle: $"{(uint)dataObject.ActorDataPresetName}: {dataObject.ActorDataPresetName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
         
         Dictionary<uint, Object_Data<ActorPreset_Data>> _defaultActorDataPresets => DefaultDataObjects;

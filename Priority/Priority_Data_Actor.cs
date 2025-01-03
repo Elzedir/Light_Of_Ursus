@@ -82,7 +82,7 @@ namespace Priority
             return parameter switch
             {
                 // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-                PriorityParameterName.Jobsite_Component => _actor.ActorData.CareerData.JobSite,
+                PriorityParameterName.Jobsite_Component => _actor.ActorData.CareerDataPreset.JobSite,
                 PriorityParameterName.Worker_Component => _actor,
                 _ => null
             };
@@ -199,25 +199,37 @@ namespace Priority
             },
         };
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Priority Data Actor",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    subData: new Dictionary<string, Data_Display>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Base Priority Data"] = new Data_Display(
-                    title: "Base Priority Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Base Priority Data", out var basePriorityData))
+                {
+                    dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
+                        title: "Base Priority Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (basePriorityData is not null)
+                {
+                    basePriorityData.Data = new Dictionary<string, string>
                     {
                         { "Actor ID", $"{ActorID}" },
                         { "Actor Action", $"{_currentActorAction}" },
                         { "Is Performing Action", $"{IsPerformingAction}" },
                         { "Current Action Coroutine", $"{CurrentActionCoroutine}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -227,11 +239,7 @@ namespace Priority
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: "Priority Data",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 }

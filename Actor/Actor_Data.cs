@@ -36,15 +36,15 @@ namespace Actor
 
         public FullIdentification FullIdentification;
 
-        public GameObjectData          GameObjectData;
-        public CareerData              CareerData;
-        public CraftingData            CraftingData;
-        public VocationData            VocationData;
-        public SpeciesAndPersonality   SpeciesAndPersonality;
-        public StatsAndAbilities       StatsAndAbilities;
-        public StatesAndConditionsData StatesAndConditionsData;
-        public InventoryData           InventoryData;
-        public EquipmentData           EquipmentData;
+        public                                             GameObjectData           GameObjectData;
+        [FormerlySerializedAs("CareerData")]   public      Career_Data_Preset       CareerDataPreset;
+        [FormerlySerializedAs("CraftingData")] public      Crafting_Data_Preset     CraftingDataPreset;
+        [FormerlySerializedAs("VocationData")] public      Vocation_Data_Preset     VocationDataPreset;
+        public                                             SpeciesAndPersonality    SpeciesAndPersonality;
+        [FormerlySerializedAs("StatsAndAbilities")] public StatsAndAbilities_Preset StatsAndAbilitiesPreset;
+        public                                             StatesAndConditionsData  StatesAndConditionsData;
+        public                                             Inventory_Data_Preset    InventoryDataPreset;
+        [FormerlySerializedAs("EquipmentData")] public     Equipment_Data_Preset    EquipmentDataPreset;
 
         public QuestUpdater ActorQuests;
 
@@ -81,25 +81,25 @@ namespace Actor
 
         public Actor_Data(ActorDataPresetName     actorDataPresetName, FullIdentification fullIdentification = null,
                           GameObjectData          gameObjectData          = null,
-                          CareerData              careerData              = null, CraftingData craftingData = null,
-                          VocationData            vocationData            = null,
+                          Career_Data_Preset              careerDataPreset              = null, Crafting_Data_Preset craftingDataPreset = null,
+                          Vocation_Data_Preset            vocationDataPreset            = null,
                           SpeciesAndPersonality   speciesAndPersonality   = null,
-                          StatsAndAbilities       statsAndAbilities       = null,
-                          StatesAndConditionsData statesAndConditionsData = null, InventoryData inventoryData = null,
-                          EquipmentData           equipmentData           = null, QuestUpdater     actorQuests   = null)
+                          StatsAndAbilities_Preset       statsAndAbilitiesPreset       = null,
+                          StatesAndConditionsData statesAndConditionsData = null, Inventory_Data_Preset inventoryDataPreset = null,
+                          Equipment_Data_Preset           equipmentDataPreset           = null, QuestUpdater     actorQuests   = null)
         {
             ActorDataPresetName = actorDataPresetName;
 
             FullIdentification      = fullIdentification;
             GameObjectData          = gameObjectData;
-            CareerData              = careerData;
-            CraftingData            = craftingData;
-            VocationData            = vocationData;
+            CareerDataPreset              = careerDataPreset;
+            CraftingDataPreset            = craftingDataPreset;
+            VocationDataPreset            = vocationDataPreset;
             SpeciesAndPersonality   = speciesAndPersonality;
-            StatsAndAbilities       = statsAndAbilities;
+            StatsAndAbilitiesPreset       = statsAndAbilitiesPreset;
             StatesAndConditionsData = statesAndConditionsData;
-            InventoryData           = inventoryData;
-            EquipmentData           = equipmentData;
+            InventoryDataPreset           = inventoryDataPreset;
+            EquipmentDataPreset           = equipmentDataPreset;
             ActorQuests             = actorQuests;
         }
 
@@ -120,24 +120,36 @@ namespace Actor
         //     ActorQuests             = new QuestData(actor_Data.ActorQuests);
         // }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Actor Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
             
             try
             {
-                dataObjects["Full Identification"] = new Data_Display(
-                    title: "Full Identification",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Full Identification", out var fullIdentification))
+                {
+                    dataSO_Object.SubData["Full Identification"] = new Data_Display(
+                        title: "Full Identification",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (fullIdentification is not null)
+                {
+                    fullIdentification.Data = new Dictionary<string, string>
                     {
                         { "Actor ID", $"{FullIdentification.ActorID}" },
                         { "Actor Name", $"{FullIdentification.ActorName.GetName()}" },
                         { "ActorFaction", $"{FullIdentification.ActorFactionID}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -147,18 +159,26 @@ namespace Actor
 
             try
             {
-                dataObjects["Game Object Properties"] = new Data_Display(
-                    title: "Game Object Properties",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Game Object Properties", out var gameObjectData))
+                {
+                    dataSO_Object.SubData["Game Object Properties"] = new Data_Display(
+                        title: "Game Object Properties",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (gameObjectData is not null)
+                {
+                    gameObjectData.Data = new Dictionary<string, string>
                     {
                         { "Actor Last Saved Position", $"{GameObjectData.LastSavedActorPosition}" },
                         { "Actor Last Saved Scale", $"{GameObjectData.LastSavedActorScale}" },
                         { "Actor Last Saved Rotation", $"{GameObjectData.LastSavedActorRotation.eulerAngles}" },
                         { "Actor Mesh", $"{GameObjectData.ActorMesh}" },
                         { "Actor Material", $"{GameObjectData.ActorMaterial}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -169,15 +189,23 @@ namespace Actor
 
             try
             {
-                dataObjects["Species And Personality"] = new Data_Display(
-                    title: "Species And Personality",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Species And Personality", out var speciesAndPersonality))
+                {
+                    dataSO_Object.SubData["Species And Personality"] = new Data_Display(
+                        title: "Species And Personality",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (speciesAndPersonality is not null)
+                {
+                    speciesAndPersonality.Data = new Dictionary<string, string>
                     {
                         { "Actor Species", $"{SpeciesAndPersonality.ActorSpecies}" },
                         { "Actor Personality", $"{SpeciesAndPersonality.ActorPersonality?.PersonalityTitle}" }
-                    });
+                    };
+                }
             }
             catch
             {
@@ -188,83 +216,113 @@ namespace Actor
 
             try
             {
-                dataObjects["Stats And Abilities"] = new Data_Display(
-                    title: "Stats And Abilities",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Stats And Abilities", out var statsAndAbilities))
+                {
+                    dataSO_Object.SubData["Stats And Abilities"] = new Data_Display(
+                        title: "Stats And Abilities",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (statsAndAbilities is not null)
+                {
+                    statsAndAbilities.Data = new Dictionary<string, string>
                     {
-                        { "Actor Level", $"{StatsAndAbilities.ActorStats.ActorLevelData.ActorLevel}" },
-                        { "Actor Experience", $"{StatsAndAbilities.ActorStats.ActorLevelData.TotalExperience}" },
-                        { "Actor Special", $"{StatsAndAbilities.ActorStats.ActorSpecial.GetStatsToString()}" }
-                    });
+                        { "Actor Level", $"{StatsAndAbilitiesPreset.ActorStats.ActorLevelData.ActorLevel}" },
+                        { "Actor Experience", $"{StatsAndAbilitiesPreset.ActorStats.ActorLevelData.TotalExperience}" },
+                        { "Actor Special", $"{StatsAndAbilitiesPreset.ActorStats.ActorSpecial.GetStatsToString()}" }
+                    };
+                }
             }
             catch
             {
-                Debug.LogWarning(StatsAndAbilities);
-                Debug.LogWarning(StatsAndAbilities.ActorStats);
-                Debug.LogWarning(StatsAndAbilities.ActorStats.ActorSpecial);
+                Debug.LogWarning(StatsAndAbilitiesPreset);
+                Debug.LogWarning(StatsAndAbilitiesPreset.ActorStats);
+                Debug.LogWarning(StatsAndAbilitiesPreset.ActorStats.ActorSpecial);
             }
 
             try
             {
-                dataObjects["Career Data"] = new Data_Display(
-                    title: "Career Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Career Data", out var careerData))
+                {
+                    dataSO_Object.SubData["Career Data"] = new Data_Display(
+                        title: "Career Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (careerData is not null)
+                {
+                    careerData.Data = new Dictionary<string, string>
                     {
-                        { "Career Name", $"{CareerData.CareerName}" },
-                        { "Jobs Active", $"{CareerData.JobsActive}" },
-                        { "JobSiteID", $"{CareerData.JobSiteID}" },
-                        { "Current Job", $"{CareerData.CurrentJob?.JobName}" }
-                    });
+                        { "Career Name", $"{CareerDataPreset.CareerName}" },
+                        { "Jobs Active", $"{CareerDataPreset.JobsActive}" },
+                        { "JobSiteID", $"{CareerDataPreset.JobSiteID}" },
+                        { "Current Job", $"{CareerDataPreset.CurrentJob?.JobName}" }
+                    };
+                }
             }
             catch
             {
-                Debug.LogWarning(CareerData);
-                Debug.LogWarning(CareerData.CurrentJob);
+                Debug.LogWarning(CareerDataPreset);
+                Debug.LogWarning(CareerDataPreset.CurrentJob);
             }
 
             try
             {
-                dataObjects["Inventory Data"] = new Data_Display(
-                    title: "Inventory Data",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: InventoryData.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName} - Qty: {item.ItemAmount}"));
+                if (!dataSO_Object.SubData.TryGetValue("Inventory Data", out var inventoryData))
+                {
+                    dataSO_Object.SubData["Inventory Data"] = new Data_Display(
+                        title: "Inventory Data",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>(),
+                        firstData: true);
+                }
+                
+                if (inventoryData is not null)
+                {
+                    inventoryData.Data = InventoryDataPreset.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                        item => $"{item.ItemName} - Qty: {item.ItemAmount}");
+                }
             }
             catch
             {
-                Debug.LogWarning(InventoryData);
-                Debug.LogWarning(InventoryData.AllInventoryItems);
+                Debug.LogWarning(InventoryDataPreset);
+                Debug.LogWarning(InventoryDataPreset.AllInventoryItems);
             }
 
             try
             {
-                dataObjects["Equipment Data"] = new Data_Display(
-                    title: "Equipment Data",
-                    dataDisplayType: DataDisplayType.SelectableList,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Equipment Data", out var equipmentData))
+                {
+                    dataSO_Object.SubData["Equipment Data"] = new Data_Display(
+                        title: "Equipment Data",
+                        dataDisplayType: DataDisplayType.List_Selectable,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>()
+                    );
+                }
+                
+                if (equipmentData is not null)
+                {
+                    equipmentData.Data = new Dictionary<string, string>
                     {
                         { "Equipment Data", "Equipment Data would be here" }
-                    }
-                );
+                    };
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(EquipmentData);
+                    Debug.LogWarning(EquipmentDataPreset);
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: $"{ActorID}: {ActorName}",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 
@@ -494,9 +552,9 @@ namespace Actor
     }
 
     [Serializable]
-    public class CareerData : Priority_Updater
+    public class Career_Data_Preset : Priority_Updater
     {
-        public CareerData(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(actorID,
+        public Career_Data_Preset(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(actorID,
             ComponentType.Actor)
         {
             CareerName = careerName;
@@ -508,10 +566,10 @@ namespace Actor
             }
         }
         
-        public CareerData(CareerData careerData) : base(careerData.ActorReference.ActorID, ComponentType.Actor)
+        public Career_Data_Preset(Career_Data_Preset careerDataPreset) : base(careerDataPreset.ActorReference.ActorID, ComponentType.Actor)
         {
-            CareerName = careerData.CareerName;
-            AllJobs    = new HashSet<JobName>(careerData.AllJobs);
+            CareerName = careerDataPreset.CareerName;
+            AllJobs    = new HashSet<JobName>(careerDataPreset.AllJobs);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -562,8 +620,6 @@ namespace Actor
 
         public void SetCurrentJob(Job job)
         {
-            Debug.Log($"Setting current job for Actor: {ActorReference.ActorID}: {ActorReference.Actor_Component} to {job.JobName}.");
-            
             _currentJob = job;   
         }
 
@@ -626,20 +682,20 @@ namespace Actor
     }
 
     [Serializable]
-    public class StatsAndAbilities
+    public class StatsAndAbilities_Preset
     {
-        public StatsAndAbilities(Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities)
+        public StatsAndAbilities_Preset(Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities)
         {
             ActorStats     = actorStats ?? new Actor_Stats(0, new ActorLevelData(), new Special(), new CombatStats());
             ActorAspects   = actorAspects ?? new Actor_Aspects(0);
             ActorAbilities = actorAbilities ?? new Actor_Abilities(0);
         }
         
-        public StatsAndAbilities(StatsAndAbilities statsAndAbilities)
+        public StatsAndAbilities_Preset(StatsAndAbilities_Preset statsAndAbilitiesPreset)
         {
-            ActorStats     = new Actor_Stats(statsAndAbilities.ActorStats);
-            ActorAspects   = new Actor_Aspects(statsAndAbilities.ActorAspects);
-            ActorAbilities = new Actor_Abilities(statsAndAbilities.ActorAbilities);
+            ActorStats     = new Actor_Stats(statsAndAbilitiesPreset.ActorStats);
+            ActorAspects   = new Actor_Aspects(statsAndAbilitiesPreset.ActorAspects);
+            ActorAbilities = new Actor_Abilities(statsAndAbilitiesPreset.ActorAbilities);
         }
 
         [FormerlySerializedAs("Actor_Stats")] public Actor_Stats ActorStats;
@@ -709,7 +765,7 @@ namespace Actor
             100; // For now. Eventually. ActorSpecial.Strength * 10; // Later add any effects from perks, equipment, etc.
 
         public float AvailableCarryWeight => TotalCarryWeight -
-                                             Item.GetItemListTotal_Weight(ActorReference.Actor_Component.ActorData.InventoryData
+                                             Item.GetItemListTotal_Weight(ActorReference.Actor_Component.ActorData.InventoryDataPreset
                                                  .GetAllInventoryItemsClone().Values.ToList());
 
         public void AddExperience(uint experience)
@@ -850,16 +906,16 @@ namespace Actor
     }
 
     [Serializable]
-    public class CraftingData : Priority_Updater
+    public class Crafting_Data_Preset : Priority_Updater
     {
-        public CraftingData(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
+        public Crafting_Data_Preset(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
         {
             KnownRecipes = knownRecipes ?? new List<RecipeName>();
         }
         
-        public CraftingData(CraftingData craftingData) : base(craftingData.ActorReference.ActorID, ComponentType.Actor)
+        public Crafting_Data_Preset(Crafting_Data_Preset craftingDataPreset) : base(craftingDataPreset.ActorReference.ActorID, ComponentType.Actor)
         {
-            KnownRecipes = new List<RecipeName>(craftingData.KnownRecipes);
+            KnownRecipes = new List<RecipeName>(craftingDataPreset.KnownRecipes);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -891,7 +947,7 @@ namespace Actor
         {
             foreach (var ingredient in ingredients)
             {
-                var inventoryItem = actorData.InventoryData.GetItemFromInventory(ingredient.ItemID);
+                var inventoryItem = actorData.InventoryDataPreset.GetItemFromInventory(ingredient.ItemID);
 
                 if (inventoryItem == null || inventoryItem.ItemAmount < ingredient.ItemAmount)
                 {
@@ -920,14 +976,14 @@ namespace Actor
                 yield break;
             }
 
-            if (!actorData.InventoryData.HasSpaceForItems(recipeData.RecipeProducts))
+            if (!actorData.InventoryDataPreset.HasSpaceForItems(recipeData.RecipeProducts))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;
             }
 
-            actorData.InventoryData.RemoveFromInventory(recipeData.RequiredIngredients);
-            actorData.InventoryData.AddToInventory(recipeData.RecipeProducts);
+            actorData.InventoryDataPreset.RemoveFromInventory(recipeData.RequiredIngredients);
+            actorData.InventoryDataPreset.AddToInventory(recipeData.RecipeProducts);
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged)
@@ -970,17 +1026,17 @@ namespace Actor
     }
 
     [Serializable]
-    public class VocationData : Priority_Updater
+    public class Vocation_Data_Preset : Priority_Updater
     {
-        public VocationData(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(actorID,
+        public Vocation_Data_Preset(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(actorID,
             ComponentType.Actor)
         {
             ActorVocations = actorVocations ?? new Dictionary<VocationName, ActorVocation>();
         }
         
-        public VocationData(VocationData vocationData) : base(vocationData.ActorReference.ActorID, ComponentType.Actor)
+        public Vocation_Data_Preset(Vocation_Data_Preset vocationDataPreset) : base(vocationDataPreset.ActorReference.ActorID, ComponentType.Actor)
         {
-            ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationData.ActorVocations);
+            ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationDataPreset.ActorVocations);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;

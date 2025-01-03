@@ -8,162 +8,207 @@ namespace Actor
 {
     public class ActorPreset_Data : Data_Class
     {
-        public ActorDataPresetName ActorDataPresetName;
+        public readonly ActorDataPresetName ActorDataPresetName;
         
-        public CareerData              CareerData;
-        public CraftingData            CraftingData;
-        public VocationData            VocationData;
-        public StatsAndAbilities       StatsAndAbilities;
-        public InventoryData           InventoryData;
-        public EquipmentData           EquipmentData;
+        public readonly Career_Data_Preset       CareerDataPreset;
+        public readonly Crafting_Data_Preset     CraftingDataPreset;
+        public readonly Vocation_Data_Preset     VocationDataPreset;
+        public readonly StatsAndAbilities_Preset StatsAndAbilitiesPreset;
+        public readonly Inventory_Data_Preset    InventoryDataPreset;
+        public readonly Equipment_Data_Preset    EquipmentDataPreset;
 
-        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, CareerData    careerData = null,
-                                CraftingData        craftingData = null,        VocationData  vocationData = null,
-                                StatsAndAbilities   statsAndAbilities = null,   InventoryData inventoryData = null,
-                                EquipmentData       equipmentData = null)
+        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, Career_Data_Preset    careerDataPreset = null,
+                                Crafting_Data_Preset        craftingDataPreset = null,        Vocation_Data_Preset  vocationDataPreset = null,
+                                StatsAndAbilities_Preset   statsAndAbilitiesPreset = null,   Inventory_Data_Preset inventoryDataPreset = null,
+                                Equipment_Data_Preset       equipmentDataPreset = null)
         {
             ActorDataPresetName = actorDataPresetName;
-            CareerData          = careerData;
-            CraftingData        = craftingData;
-            VocationData        = vocationData;
-            StatsAndAbilities   = statsAndAbilities;
-            InventoryData       = inventoryData;
-            EquipmentData       = equipmentData;
+            CareerDataPreset          = careerDataPreset;
+            CraftingDataPreset        = craftingDataPreset;
+            VocationDataPreset        = vocationDataPreset;
+            StatsAndAbilitiesPreset   = statsAndAbilitiesPreset;
+            InventoryDataPreset       = inventoryDataPreset;
+            EquipmentDataPreset       = equipmentDataPreset;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, ref Data_Display dataSO_Object)
+        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
-            var dataObjects = dataSO_Object == null
-                ? new Dictionary<string, Data_Display>()
-                : new Dictionary<string, Data_Display>(dataSO_Object.SubData);
+            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
+                dataSO_Object = new Data_Display(
+                    title: "Actor Data",
+                    dataDisplayType: DataDisplayType.List_CheckBox,
+                    existingDataSO_Object: null,
+                    data: new Dictionary<string, string>(),
+                    firstData: true);
 
             try
             {
-                dataObjects["Stats And Abilities"] = new Data_Display(
-                    title: "Stats And Abilities",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Actor Data", out var actorData))
+                {
+                    dataSO_Object.SubData["Actor Data"] = new Data_Display(
+                        title: "Actor Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (actorData is not null)
+                {
+                    actorData.Data = new Dictionary<string, string>
                     {
-                        { "Actor Level", $"{StatsAndAbilities.ActorStats.ActorLevelData.ActorLevel}" },
-                        { "Actor Experience", $"{StatsAndAbilities.ActorStats.ActorLevelData.TotalExperience}" },
-                        { "Actor Special", $"{StatsAndAbilities.ActorStats.ActorSpecial.GetStatsToString()}" }
-                    }
-                );
+                        { "Actor Level", $"{StatsAndAbilitiesPreset.ActorStats.ActorLevelData.ActorLevel}" },
+                        { "Actor Experience", $"{StatsAndAbilitiesPreset.ActorStats.ActorLevelData.TotalExperience}" },
+                        { "Actor Special", $"{StatsAndAbilitiesPreset.ActorStats.ActorSpecial.GetStatsToString()}" }
+                    };
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(StatsAndAbilities);
-                    Debug.LogWarning(StatsAndAbilities?.ActorStats);
-                    Debug.LogWarning(StatsAndAbilities?.ActorStats.ActorSpecial);   
+                    Debug.LogWarning(StatsAndAbilitiesPreset);
+                    Debug.LogWarning(StatsAndAbilitiesPreset?.ActorStats);
+                    Debug.LogWarning(StatsAndAbilitiesPreset?.ActorStats.ActorSpecial);   
                 }
             }
 
             try
             {
-                dataObjects["Career Data"] = new Data_Display(
-                    title: "Career Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Career Data", out var careerData))
+                {
+                    dataSO_Object.SubData["Career Data"] = new Data_Display(
+                        title: "Career Data",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (careerData is not null)
+                {
+                    careerData.Data = new Dictionary<string, string>
                     {
-                        { "Career Name", $"{CareerData.CareerName}" },
-                        { "Jobs Active", $"{CareerData.JobsActive}" },
-                        { "JobSiteID", $"{CareerData.JobSiteID}" },
-                        { "Current Job", $"{CareerData.CurrentJob?.JobName}" }
-                    }
-                );
+                        { "Career Name", $"{CareerDataPreset.CareerName}" },
+                        { "Jobs Active", $"{CareerDataPreset.JobsActive}" },
+                        { "JobSiteID", $"{CareerDataPreset.JobSiteID}" },
+                        { "Current Job", $"{CareerDataPreset.CurrentJob?.JobName}" }
+                    };
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(CareerData);
-                    Debug.LogWarning(CareerData?.CurrentJob);
+                    Debug.LogWarning(CareerDataPreset);
+                    Debug.LogWarning(CareerDataPreset?.CurrentJob);
                 }
             }
             
             try
             {
-                dataObjects["Known Recipes"] = new Data_Display(
-                    title: "Known Recipes",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: CraftingData.KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}")
-                );
+                if (!dataSO_Object.SubData.TryGetValue("Known Recipes", out var knownRecipes))
+                {
+                    dataSO_Object.SubData["Known Recipes"] = new Data_Display(
+                        title: "Known Recipes",
+                        dataDisplayType: DataDisplayType.List_Item,
+                        existingDataSO_Object: dataSO_Object,
+                        data: CraftingDataPreset.KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}")
+                    );
+                }
+                
+                if (knownRecipes is not null)
+                {
+                    knownRecipes.Data = CraftingDataPreset.KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}");
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(CraftingData);
-                    Debug.LogWarning(CraftingData?.KnownRecipes);
+                    Debug.LogWarning(CraftingDataPreset);
+                    Debug.LogWarning(CraftingDataPreset?.KnownRecipes);
                 }
             }
 
             try
             {
-                dataObjects["Vocations"] = new Data_Display(
-                    title: "Vocations",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: VocationData.ActorVocations.Values.ToDictionary(vocation => $"{vocation.VocationName}:", vocation => $"{vocation.VocationExperience}")
-                );
+                if (!dataSO_Object.SubData.TryGetValue("Vocations", out var vocations))
+                {
+                    dataSO_Object.SubData["Vocations"] = new Data_Display(
+                        title: "Vocations",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: VocationDataPreset.ActorVocations.Values.ToDictionary(vocation => $"{vocation.VocationName}:", vocation => $"{vocation.VocationExperience}")
+                    );
+                }
+                
+                if (vocations is not null)
+                {
+                    vocations.Data = VocationDataPreset.ActorVocations.Values.ToDictionary(vocation => $"{vocation.VocationName}:", vocation => $"{vocation.VocationExperience}");
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(VocationData);
-                    Debug.LogWarning(VocationData?.ActorVocations);
+                    Debug.LogWarning(VocationDataPreset);
+                    Debug.LogWarning(VocationDataPreset?.ActorVocations);
                 }
             }
             
             try
             {
-                dataObjects["All Inventory Items"] = new Data_Display(
-                    title: "All Inventory Items",
-                    dataDisplayType: DataDisplayType.CheckBoxList,
-                    dataSO_Object: dataSO_Object,
-                    data: InventoryData.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:", item => $"{item.ItemName} Qty - {item.ItemAmount}")
-                );
+                if (!dataSO_Object.SubData.TryGetValue("Stats and Abilities", out var statsAndAbilities))
+                {
+                    dataSO_Object.SubData["Stats and Abilities"] = new Data_Display(
+                        title: "Stats and Abilities",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (statsAndAbilities is not null)
+                {
+                    statsAndAbilities.Data = InventoryDataPreset.AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                        item => $"{item.ItemName} Qty - {item.ItemAmount}");
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(InventoryData);
-                    Debug.LogWarning(InventoryData?.AllInventoryItems);
+                    Debug.LogWarning(InventoryDataPreset);
+                    Debug.LogWarning(InventoryDataPreset?.AllInventoryItems);
                 }
             }
 
             try
             {
-                dataObjects["Equipment Data"] = new Data_Display(
-                    title: "Equipment Data",
-                    dataDisplayType: DataDisplayType.Item,
-                    dataSO_Object: dataSO_Object,
-                    data: new Dictionary<string, string>
+                if (!dataSO_Object.SubData.TryGetValue("Inventory Data", out var inventoryData))
+                {
+                    dataSO_Object.SubData["Inventory Data"] = new Data_Display(
+                        title: "Inventory Data",
+                        dataDisplayType: DataDisplayType.List_CheckBox,
+                        existingDataSO_Object: dataSO_Object,
+                        data: new Dictionary<string, string>());
+                }
+                
+                if (inventoryData is not null)
+                {
+                    inventoryData.Data = new Dictionary<string, string>
                     {
                         { "Equipment Data", "EquipmentData would be here" }
-                    }
-                );
+                    };
+                }
             }
             catch
             {
                 if (toggleMissingDataDebugs)
                 {
-                    Debug.LogWarning(EquipmentData);
+                    Debug.LogWarning(EquipmentDataPreset);
                 }
             }
 
-            return dataSO_Object = new Data_Display(
-                title: $"{(uint)ActorDataPresetName}: {ActorDataPresetName}",
-                dataDisplayType: DataDisplayType.CheckBoxList,
-                dataSO_Object: dataSO_Object,
-                subData: dataObjects);
+            return dataSO_Object;
         }
     }
 }

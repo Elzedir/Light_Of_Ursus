@@ -126,7 +126,7 @@ namespace JobSite
                 dataObjectID: dataObject.JobSiteID, 
                 dataObject: dataObject,
                 dataObjectTitle: $"{dataObject.JobSiteID}: {dataObject.JobSiteName}",
-                data_Display: dataObject.GetDataSO_Object(ToggleMissingDataDebugs));
+                getData_Display: dataObject.GetDataSO_Object);
         }
     }
 
