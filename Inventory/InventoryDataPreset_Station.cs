@@ -9,14 +9,14 @@ using UnityEngine;
 namespace Inventory
 {
     [Serializable]
-    public class InventoryData_Station : InventoryData
+    public class InventoryDataPreset_Station : Inventory_Data_Preset
     {
-        public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station)
+        public InventoryDataPreset_Station(uint stationID) : base(stationID, ComponentType.Station)
         {
         }
 
         public override ComponentType         ComponentType      => ComponentType.Station;
-        public          InventoryData_Station GetInventoryData() => this;
+        public          InventoryDataPreset_Station GetInventoryData() => this;
 
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
 
@@ -80,7 +80,7 @@ namespace Inventory
             return itemsToFetch.Values.ToList();
         }
 
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
+        public override List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data_Preset inventory)
         {
             var itemsToDeliver = new List<Item>();
 
@@ -108,7 +108,7 @@ namespace Inventory
             {
                 if (station.Key == Reference.ComponentID) continue;
 
-                var stationInventory = station.Value.Station_Data.InventoryData;
+                var stationInventory = station.Value.Station_Data.InventoryDataPreset;
 
                 foreach (var itemID in _getDesiredItemIDs().Where(itemID => stationInventory.AllInventoryItems.ContainsKey(itemID)))
                 {

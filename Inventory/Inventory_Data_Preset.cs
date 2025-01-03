@@ -17,9 +17,9 @@ namespace Inventory
     }
 
     [Serializable]
-    public abstract class InventoryData : Priority_Updater
+    public abstract class Inventory_Data_Preset : Priority_Updater
     {
-        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType)
+        protected Inventory_Data_Preset(uint componentID, ComponentType componentType) : base(componentID, componentType)
         {
             AllInventoryItems                   =  new ObservableDictionary<uint, Item>();
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
@@ -121,7 +121,7 @@ namespace Inventory
             return true;
         }
 
-        public void TransferItemsToTarget(InventoryData target, List<Item> items)
+        public void TransferItemsToTarget(Inventory_Data_Preset target, List<Item> items)
         {
             RemoveFromInventory(items);
 
@@ -246,7 +246,7 @@ namespace Inventory
             _priorityParameterList { get; set; } = new();
 
         public abstract List<Item> GetInventoryItemsToFetchFromStation();
-        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory);
+        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data_Preset inventory);
         public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
     }
 }
