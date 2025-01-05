@@ -11,10 +11,10 @@ namespace Items
     [Serializable]
     public class Item_SO : Data_SO<Item_Data>
     {
-        public Object_Data<Item_Data>[] Items                       => Objects_Data;
-        public Object_Data<Item_Data>   GetItem_Master(uint itemID) => GetObject_Data(itemID);
+        public Data<Item_Data>[] Items                       => Data;
+        public Data<Item_Data>   GetItem_Master(uint itemID) => GetData(itemID);
         
-        public override uint GetDataObjectID(int id) => Items[id].DataObject.ItemID;
+        public override uint GetDataID(int id) => Items[id].Data_Object.ItemID;
 
         public override void PopulateSceneData()
         {
@@ -24,7 +24,7 @@ namespace Items
             }
         }    
         
-        protected override Dictionary<uint, Object_Data<Item_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Item_Data>> _getDefaultData(bool initialisation = false)
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
@@ -53,18 +53,18 @@ namespace Items
                 defaultItems.Add(processedMaterial.Key, processedMaterial.Value);
             }
 
-            return _convertDictionaryToDataObject(defaultItems);
+            return _convertDictionaryToData(defaultItems);
         }
 
-        Dictionary<uint, Object_Data<Item_Data>> _defaultItems => DefaultDataObjects;
+        Dictionary<uint, Data<Item_Data>> _defaultItems => DefaultData;
         
-        protected override Object_Data<Item_Data> _convertToDataObject(Item_Data dataObject)
+        protected override Data<Item_Data> _convertToData(Item_Data data)
         {
-            return new Object_Data<Item_Data>(
-                dataObjectID: dataObject.ItemID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.ItemID}: {dataObject.ItemName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Item_Data>(
+                dataID: data.ItemID, 
+                data_Object: data,
+                dataTitle: $"{data.ItemID}: {data.ItemName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

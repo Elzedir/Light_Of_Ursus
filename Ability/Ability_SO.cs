@@ -11,23 +11,23 @@ namespace Ability
     [Serializable]
     public class Ability_SO : Data_SO<Ability_Data>
     {
-        public Object_Data<Ability_Data>[] Abilities => Objects_Data;
+        public Data<Ability_Data>[] Abilities => Data;
 
-        public Object_Data<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
-            GetObject_Data((uint)abilityName);
+        public Data<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
+            GetData((uint)abilityName);
 
         public Ability GetAbility(AbilityName abilityName, uint currentLevel)
         {
             return new Ability(abilityName, currentLevel);
         }
 
-        public override uint GetDataObjectID(int id) => (uint)Abilities[id].DataObject.AbilityName;
+        public override uint GetDataID(int id) => (uint)Abilities[id].Data_Object.AbilityName;
 
         public void UpdateAbility(uint abilityID, Ability_Data ability_Data) =>
-            UpdateDataObject(abilityID, ability_Data);
+            UpdateData(abilityID, ability_Data);
 
         public void UpdateAllAbilities(Dictionary<uint, Ability_Data> allAbilities) =>
-            UpdateAllDataObjects(allAbilities);
+            UpdateAllData(allAbilities);
 
         public override void PopulateSceneData()
         {
@@ -37,25 +37,25 @@ namespace Ability
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Ability_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Ability_Data>> _getDefaultData(bool initialisation = false)
         {
-            return _convertDictionaryToDataObject(Ability_List.DefaultAbilities);
+            return _convertDictionaryToData(Ability_List.DefaultAbilities);
         }
 
-        protected override Object_Data<Ability_Data> _convertToDataObject(Ability_Data dataObject)
+        protected override Data<Ability_Data> _convertToData(Ability_Data data)
         {
-            return new Object_Data<Ability_Data>(
-                dataObjectID: (uint)dataObject.AbilityName,
-                dataObject: dataObject, 
-                dataObjectTitle: $"{(uint)dataObject.AbilityName}: {dataObject.AbilityName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Ability_Data>(
+                dataID: (uint)data.AbilityName,
+                data_Object: data, 
+                dataTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
+                getData_Display: data.GetDataSO_Object);
         }
 
         static uint _lastUnusedAbilityID = 1;
 
         public uint GetUnusedAbilityID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedAbilityID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedAbilityID))
             {
                 _lastUnusedAbilityID++;
             }
@@ -63,7 +63,7 @@ namespace Ability
             return _lastUnusedAbilityID;
         }
 
-        Dictionary<uint, Object_Data<Ability_Data>> _defaultAbilities => DefaultDataObjects;
+        Dictionary<uint, Data<Ability_Data>> _defaultAbilities => DefaultData;
     }
 
     [CustomEditor(typeof(Ability_SO))]

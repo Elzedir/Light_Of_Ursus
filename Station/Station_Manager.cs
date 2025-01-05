@@ -15,7 +15,7 @@ namespace Station
         static Station_SO Station_SO => _station_SO ??= _getStation_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedStationData = new SavedStationData(Station_SO.Stations.Select(station => station.DataObject).ToArray());
+            saveData.SavedStationData = new SavedStationData(Station_SO.Stations.Select(station => station.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -58,7 +58,7 @@ namespace Station
         
         public static Station_Data GetStation_Data(uint stationID)
         {
-            return Station_SO.GetStation_Data(stationID).DataObject;
+            return Station_SO.GetStation_Data(stationID).Data_Object;
         }
         
         public static Station_Component GetStation_Component(uint stationID)

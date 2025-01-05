@@ -15,7 +15,7 @@ namespace City
         static City_SO AllCities => _allCities ??= _getCity_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedCityData = new SavedCityData(AllCities.Cities.Select(city => city.DataObject).ToArray());
+            saveData.SavedCityData = new SavedCityData(AllCities.Cities.Select(city => city.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -59,7 +59,7 @@ namespace City
         
         public static City_Data GetCity_Data(uint cityID)
         {
-            return AllCities.GetCity_Data(cityID).DataObject;
+            return AllCities.GetCity_Data(cityID).Data_Object;
         }
         
         public static City_Component GetCity_Component(uint cityID)

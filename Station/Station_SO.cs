@@ -12,8 +12,8 @@ namespace Station
     [Serializable]
     public class Station_SO : Data_SO<Station_Data>
     {
-        public Object_Data<Station_Data>[]         Stations                        => Objects_Data;
-        public Object_Data<Station_Data>           GetStation_Data(uint stationID) => GetObject_Data(stationID);
+        public Data<Station_Data>[]         Stations                        => Data;
+        public Data<Station_Data>           GetStation_Data(uint stationID) => GetData(stationID);
         Dictionary<uint, Station_Component>       _station_Components;
         public Dictionary<uint, Station_Component> Station_Components => _station_Components ??= _getExistingStation_Components();
         
@@ -44,12 +44,12 @@ namespace Station
             return null;
         }
 
-        public override uint GetDataObjectID(int id) => Stations[id].DataObject.StationID;
+        public override uint GetDataID(int id) => Stations[id].Data_Object.StationID;
 
         public void UpdateStation(uint stationID, Station_Data station_Data) =>
-            UpdateDataObject(stationID, station_Data);
+            UpdateData(stationID, station_Data);
 
-        public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllDataObjects(allStations);
+        public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllData(allStations);
 
         public override void PopulateSceneData()
         {
@@ -57,17 +57,17 @@ namespace Station
 
             foreach (var station in Stations)
             {
-                if (station?.DataObject is null || station.DataObjectID == 0) continue;
+                if (station?.Data_Object is null || station.DataID == 0) continue;
 
-                if (physicalStations.TryGetValue(station.DataObject.StationID, out var physicalStation))
+                if (physicalStations.TryGetValue(station.Data_Object.StationID, out var physicalStation))
                 {
-                    physicalStation.Station_Data                     = station.DataObject;
-                    Station_Components[station.DataObject.StationID] = physicalStation;
-                    physicalStations.Remove(station.DataObject.StationID);
+                    physicalStation.Station_Data                     = station.Data_Object;
+                    Station_Components[station.Data_Object.StationID] = physicalStation;
+                    physicalStations.Remove(station.Data_Object.StationID);
                     continue;
                 }
 
-                Debug.LogWarning($"Station with ID {station.DataObject.StationID} not found in the scene.");
+                Debug.LogWarning($"Station with ID {station.Data_Object.StationID} not found in the scene.");
             }
 
             foreach (var station in physicalStations)
@@ -76,38 +76,38 @@ namespace Station
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Station_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Station_Data>> _getDefaultData(bool initialisation = false)
         {
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
-                return _defaultDataObjects ??= _convertDictionaryToDataObject(Station_List.DefaultStations);
+            if (_defaultData is null || !Application.isPlaying || initialisation)
+                return _defaultData ??= _convertDictionaryToData(Station_List.DefaultStations);
             
             if (Stations is null || Stations.Length == 0)
             {
                 Debug.LogError("Stations is null or empty.");
-                return _defaultDataObjects;
+                return _defaultData;
             }
 
             foreach (var station in Stations)
             {
-                if (station?.DataObject is null || station.DataObject.StationID == 0) continue;
+                if (station?.Data_Object is null || station.Data_Object.StationID == 0) continue;
 
-                if (!_defaultDataObjects.ContainsKey(station.DataObjectID))
+                if (!_defaultData.ContainsKey(station.DataID))
                 {
-                    Debug.LogError($"Station with ID {station.DataObjectID} not found in DefaultStations.");
+                    Debug.LogError($"Station with ID {station.DataID} not found in DefaultStations.");
                     continue;
                 }
                 
-                _defaultDataObjects[station.DataObjectID] = station;
+                _defaultData[station.DataID] = station;
             }
             
-            return _defaultDataObjects;
+            return _defaultData;
         }
 
         static uint _lastUnusedStationID = 1;
 
         public uint GetUnusedStationID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedStationID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedStationID))
             {
                 _lastUnusedStationID++;
             }
@@ -115,13 +115,13 @@ namespace Station
             return _lastUnusedStationID;
         }
 
-        protected override Object_Data<Station_Data> _convertToDataObject(Station_Data dataObject)
+        protected override Data<Station_Data> _convertToData(Station_Data data)
         {
-            return new Object_Data<Station_Data>(
-                dataObjectID: dataObject.StationID,
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.StationID}: {dataObject.StationName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Station_Data>(
+                dataID: data.StationID,
+                data_Object: data,
+                dataTitle: $"{data.StationID}: {data.StationName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

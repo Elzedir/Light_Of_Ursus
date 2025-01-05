@@ -15,9 +15,9 @@ namespace Tools
 
         public override void OnInspectorGUI()
         {
-            if (SO?.Objects_Data is null)
+            if (SO?.Data is null)
             {
-                EditorGUILayout.LabelField($"{SO} is null or {SO?.Objects_Data} is null", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"{SO} is null or {SO?.Data} is null", EditorStyles.boldLabel);
                 return;
             }
 
@@ -25,11 +25,11 @@ namespace Tools
 
             if (EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
             {
-                SO.RefreshDataObjects();
+                SO.RefreshData();
                 _lastRefreshTime = EditorApplication.timeSinceStartup;
             }
 
-            if (SO.Objects_Data.Length is 0)
+            if (SO.Data.Length is 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
@@ -37,9 +37,9 @@ namespace Tools
 
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            var nonNullDataObjects = SO.Objects_Data.Where(data_Object =>
+            var nonNullDataObjects = SO.Data.Where(data_Object =>
                 data_Object              != null &&
-                data_Object.DataObjectID != 0).ToArray();
+                data_Object.DataID != 0).ToArray();
 
             SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
                 GUILayout.Height(Mathf.Min(200, nonNullDataObjects.Length * 20)));
@@ -54,9 +54,9 @@ namespace Tools
             _drawData_Object(selectedDataObject.GetData_Display(SO.ToggleMissingDataDebugs));
         }
 
-        static string[] _getBaseObjectNames(Object_Data<T>[] baseObjects)
+        static string[] _getBaseObjectNames(Data<T>[] baseObjects)
         {
-            return baseObjects.Select(base_Object => $"{base_Object.DataObjectTitle}").ToArray();
+            return baseObjects.Select(base_Object => $"{base_Object.DataTitle}").ToArray();
         }
 
         static void _drawData_Object(Data_Display dataSO_Object)

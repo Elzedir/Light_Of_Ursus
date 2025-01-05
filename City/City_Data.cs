@@ -78,7 +78,7 @@ namespace City
                 dataSO_Object = new Data_Display(
                     title: "City Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>(),
                     firstData: true);
             
@@ -89,7 +89,7 @@ namespace City
                     dataSO_Object.SubData["City Data"] = new Data_Display(
                         title: "City Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -117,7 +117,7 @@ namespace City
                     dataSO_Object.SubData["Population Data"] = new Data_Display(
                         title: "Population Data",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         subData: Population.GetDataSO_Object(toggleMissingDataDebugs).SubData);
                 }
                 
@@ -181,7 +181,7 @@ namespace City
                 dataSO_Object = new Data_Display(
                     title: "Population Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>());
             
             try
@@ -191,7 +191,7 @@ namespace City
                     dataSO_Object.SubData["Population Data"] = new Data_Display(
                         title: "Population Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -217,7 +217,7 @@ namespace City
                     dataSO_Object.SubData["Citizen IDs"] = new Data_Display(
                         title: "Citizen IDs",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

@@ -6,116 +6,112 @@ using UnityEngine;
 namespace Tools
 {
     [Serializable]
-    public abstract class Data_SO<T> : ScriptableObject where T : class
+    public abstract class Data_SO<TD> : ScriptableObject where TD : class
     {
-        [SerializeField] Object_Data<T>[] _objects_Data;
+        [SerializeField] Data<TD>[] _data;
 
-        public Object_Data<T>[] Objects_Data
+        public Data<TD>[] Data
         {
             get
             {
-                if (_objects_Data is not null && _objects_Data.Length != 0) return _objects_Data;
+                if (_data is not null && _data.Length != 0) return _data;
 
-                var dataObjects = InitialiseAllDataObjects();
-                return dataObjects.Length != 0 ? dataObjects : null;
+                var data = InitialiseAllData();
+                return data.Length != 0 ? data : null;
             }
         }
 
-        public void RefreshDataObjects()
+        public void RefreshData()
         {
-            InitialiseAllDataObjects(false);
-            
-            PopulateSceneData();
+            InitialiseAllData();
         }
 
-        public void LoadSO(T[] dataObjects) => _objects_Data = dataObjects.Select(_convertToDataObject).ToArray();
+        public void LoadSO(TD[] data) => _data = data.Select(_convertToData).ToArray();
 
-        Dictionary<uint, int>        _dataObjectIndexLookup;
-        public Dictionary<uint, int> DataObjectIndexLookup => _dataObjectIndexLookup ??= _buildIndexLookup();
+        Dictionary<uint, int>        _dataIndexLookup;
+        public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
         int                          _currentIndex;
 
         public bool ToggleMissingDataDebugs;
 
-        public Object_Data<T>[] InitialiseAllDataObjects(bool initialisation = true)
+        public Data<TD>[] InitialiseAllData()
         {
-            var defaultObjects = initialisation ? _initialisationDefaultDataObjects : DefaultDataObjects;
-            //* We need to include physical objects in the scene here too, for the array size. 
-            //* Then maybe load to get all loaded data objects
+            var allData = _getAllData();
             
-            _objects_Data = new Object_Data<T>[defaultObjects.Count * 2];
-            Array.Copy(defaultObjects.Values.ToArray(), Objects_Data, defaultObjects.Count);
-            _currentIndex = defaultObjects.Count;
+            _data = new Data<TD>[allData.Count * 2];
+            Array.Copy(allData.Values.ToArray(), Data, allData.Count);
+            _currentIndex = allData.Count;
             _buildIndexLookup();
 
-            return Objects_Data ?? throw new NullReferenceException("DataObjects is null.");
+            return Data ?? throw new NullReferenceException("Data is null.");
         }
 
         protected Dictionary<uint, int> _buildIndexLookup()
         {
             var newIndexLookup = new Dictionary<uint, int>();
 
-            for (var i = 0; i < Objects_Data.Length; i++)
+            for (var i = 0; i < Data.Length; i++)
             {
-                if (Objects_Data[i] is null) continue;
+                if (Data[i] is null) continue;
 
-                newIndexLookup[GetDataObjectID(i)] = i;
+                newIndexLookup[GetDataID(i)] = i;
             }
 
             return newIndexLookup;
         }
 
-        public abstract uint GetDataObjectID(int id);
+        public abstract uint GetDataID(int id);
 
-        public Object_Data<T> GetObject_Data(uint dataObjectID)
+        public Data<TD> GetData(uint dataID)
         {
             try
             {
-                return Objects_Data[DataObjectIndexLookup[dataObjectID]];
+                return Data[DataIndexLookup[dataID]];
 
             }
             catch
             {
-                if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
+                if (DataIndexLookup.TryGetValue(dataID, out var index))
                 {
-                    Debug.LogWarning($"DataObject {dataObjectID} is null at index {index}.");
+                    Debug.LogWarning($"Data {dataID} is null at index {index}.");
                     return null;
                 }
 
-                Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
+                Debug.LogWarning($"Data {dataID} does not exist in Data.");
                 return null;
             }
         }
 
-        public void AddDataObject(uint dataObjectID, Object_Data<T> objectData)
+        public void AddData(uint dataID, Data<TD> data)
         {
-            if (DataObjectIndexLookup.ContainsKey(dataObjectID))
+            if (DataIndexLookup.ContainsKey(dataID))
             {
-                Debug.LogWarning($"DataObject {dataObjectID} already exists in DataObjects.");
+                Debug.LogWarning($"Data {dataID} already exists in Data.");
                 return;
             }
 
-            if (_currentIndex >= Objects_Data.Length)
+            if (_currentIndex >= Data.Length)
             {
                 _compactAndResizeArray();
             }
 
-            Objects_Data[_currentIndex]         = objectData;
-            DataObjectIndexLookup[dataObjectID] = _currentIndex;
+            Data[_currentIndex]         = data;
+            DataIndexLookup[dataID] = _currentIndex;
             _currentIndex++;
         }
 
-        public void RemoveDataObjects(uint dataObjectID)
+        public void RemoveData(uint dataID)
         {
-            if (!DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
+            if (!DataIndexLookup.TryGetValue(dataID, out var index))
             {
-                Debug.LogWarning($"DataObject {dataObjectID} does not exist in DataObjects.");
+                Debug.LogWarning($"Data {dataID} does not exist in Data.");
                 return;
             }
 
-            Objects_Data[index] = null;
-            DataObjectIndexLookup.Remove(dataObjectID);
+            Data[index] = null;
+            DataIndexLookup.Remove(dataID);
 
-            if (DataObjectIndexLookup.Count < Objects_Data.Length / 4)
+            if (DataIndexLookup.Count < Data.Length / 4)
             {
                 _compactAndResizeArray();
             }
@@ -125,81 +121,99 @@ namespace Tools
         {
             var newSize = 0;
 
-            for (var i = 0; i < Objects_Data.Length; i++)
+            for (var i = 0; i < Data.Length; i++)
             {
-                if (Objects_Data[i] is null) continue;
+                if (Data[i] is null) continue;
 
-                Objects_Data[newSize]                     = Objects_Data[i];
-                DataObjectIndexLookup[GetDataObjectID(i)] = newSize;
+                Data[newSize]                     = Data[i];
+                DataIndexLookup[GetDataID(i)] = newSize;
                 newSize++;
             }
 
-            Array.Resize(ref _objects_Data, Math.Max(newSize * 2, Objects_Data.Length));
+            Array.Resize(ref _data, Math.Max(newSize * 2, Data.Length));
             _currentIndex = newSize;
         }
 
-        public void UpdateAllDataObjects(Dictionary<uint, T> newDataObjects, bool clearDataFirst = false)
+        public void UpdateAllData(Dictionary<uint, TD> newData, bool clearDataFirst = false)
         {
             if (clearDataFirst) ClearSOData();
 
-            foreach (var (key, value) in newDataObjects)
+            foreach (var (key, value) in newData)
             {
-                UpdateDataObject(key, value);
+                UpdateData(key, value);
             }
         }
 
-        public void UpdateDataObject(uint dataObjectID, T dataObject)
+        public void UpdateData(uint dataID, TD data)
         {
-            if (DataObjectIndexLookup.TryGetValue(dataObjectID, out var index))
+            if (DataIndexLookup.TryGetValue(dataID, out var index))
             {
-                Debug.Log($"Updating DataObject {dataObjectID} at index {index} with Array size {Objects_Data.Length}.");
-                Objects_Data[index] = _convertToDataObject(dataObject);
+                Debug.Log($"Updating Data {dataID} at index {index} with Array size {Data.Length}.");
+                Data[index] = _convertToData(data);
             }
             else
             {
-                AddDataObject(dataObjectID, _convertToDataObject(dataObject));
+                AddData(dataID, _convertToData(data));
             }
         }
 
         public             Vector2        ScrollPosition;
-        protected abstract Object_Data<T> _convertToDataObject(T dataObject);
+        protected abstract Data<TD> _convertToData(TD data);
 
-        protected Dictionary<uint, Object_Data<T>> _convertDictionaryToDataObject(
-            Dictionary<uint, T> dictionary)
+        protected Dictionary<uint, Data<TD>> _convertDictionaryToData(
+            Dictionary<uint, TD> dictionary)
         {
-            return dictionary.ToDictionary(key => key.Key, value => _convertToDataObject(value.Value));
+            return dictionary.ToDictionary(key => key.Key, value => _convertToData(value.Value));
         }
 
         public void ClearSOData()
         {
-            _objects_Data = Array.Empty<Object_Data<T>>();
-            _dataObjectIndexLookup?.Clear();
+            _data = Array.Empty<Data<TD>>();
+            _dataIndexLookup?.Clear();
             _currentIndex = 0;
         }
+        
+        protected          Dictionary<uint, Data<TD>> _defaultData;
+        public             Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
+        protected abstract Dictionary<uint, Data<TD>> _getDefaultData();
+        
+        protected          Dictionary<uint, Data<TD>> _savedData;
+        public             Dictionary<uint, Data<TD>> SavedData => _savedData ??= _getSavedData();
+        protected abstract Dictionary<uint, Data<TD>> _getSavedData();
 
-        public abstract    void                             PopulateSceneData();
-        protected abstract Dictionary<uint, Object_Data<T>> _getDefaultDataObjects(bool initialisation = false);
-
-        protected Dictionary<uint, Object_Data<T>> _defaultDataObjects;
-        public    Dictionary<uint, Object_Data<T>> DefaultDataObjects                => _getDefaultDataObjects();
-        Dictionary<uint, Object_Data<T>>           _initialisationDefaultDataObjects => _getDefaultDataObjects(true);
+        protected virtual Dictionary<uint, Data<TD>> _getAllData()
+        {
+            var allData = new Dictionary<uint, Data<TD>>();
+            
+            foreach (var (key, value) in DefaultData)
+            {
+                allData[key] = value;
+            }
+            
+            foreach(var (key, value) in SavedData)
+            {
+                allData[key] = value;
+            }
+            
+            return allData;
+        }
     }
 
     [Serializable]
-    public class Object_Data<T> where T : class
+    public class Data<T> where T : class
     {
-        public readonly uint   DataObjectID;
-        public readonly string DataObjectTitle;
+        public readonly uint   DataID;
+        public readonly string DataTitle;
 
-        public T                       DataObject;
-        public Func<bool, Data_Display> GetData_Display;
+        public T                        Data_Object;
+        public                                      Func<bool, Data_Display> GetData_Display;
 
-        public Object_Data(uint   dataObjectID,    T                       dataObject,
-                           string dataObjectTitle, Func<bool, Data_Display> getData_Display)
+        public Data(uint   dataID,    T                       data_Object,
+                           string dataTitle, Func<bool, Data_Display> getData_Display)
         {
-            DataObjectID    = dataObjectID;
-            DataObject      = dataObject;
-            DataObjectTitle = dataObjectTitle;
+            DataID    = dataID;
+            Data_Object      = data_Object;
+            DataTitle = dataTitle;
             GetData_Display = getData_Display;
         }
     }
@@ -209,7 +223,6 @@ namespace Tools
     {
         public          int     SelectedIndex;
         public          bool    ShowData;
-        public readonly bool    FirstData;
         public          Vector2 ScrollPosition;
 
         public readonly string                           Title;
@@ -217,8 +230,8 @@ namespace Tools
         public          Dictionary<string, string>       Data;
         public          Dictionary<string, Data_Display> SubData;
 
-        public Data_Display(string                           title, DataDisplayType dataDisplayType, Data_Display existingDataSO_Object, Dictionary<string, string> data = null,
-                            Dictionary<string, Data_Display> subData = null, bool firstData = false)
+        public Data_Display(string                           title, DataDisplayType dataDisplayType, Dictionary<string, string> data = null,
+                            Dictionary<string, Data_Display> subData = null)
         {
             switch (dataDisplayType)
             {
@@ -232,7 +245,6 @@ namespace Tools
 
             Title           = title;
             DataDisplayType = dataDisplayType;
-            FirstData       = firstData;
             SelectedIndex   = -1;
             ShowData        = false;
             ScrollPosition  = Vector2.zero;

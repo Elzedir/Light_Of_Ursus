@@ -14,7 +14,7 @@ namespace Region
         static Region_SO AllRegions => _allRegions ??= _getRegion_SO();
         
         public void SaveData(SaveData saveData) =>
-            saveData.SavedRegionData = new SavedRegionData(AllRegions.Regions.Select(region => region.DataObject).ToArray());
+            saveData.SavedRegionData = new SavedRegionData(AllRegions.Regions.Select(region => region.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -59,7 +59,7 @@ namespace Region
         
         public static Region_Data GetRegion_Data(uint regionID)
         {
-            return AllRegions.GetRegion_Data(regionID).DataObject;
+            return AllRegions.GetRegion_Data(regionID).Data_Object;
         }
         
         public static Region_Component GetRegion_Component(uint regionID)

@@ -85,7 +85,7 @@ namespace Region
                 dataSO_Object = new Data_Display(
                     title: "Region Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: dataSO_Object,
+                    existingData_Display: dataSO_Object,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
                 
@@ -96,7 +96,7 @@ namespace Region
                     dataSO_Object.SubData["Base Region Data"] = new Data_Display(
                         title: "Base Region Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());    
                 }
                 
@@ -126,7 +126,7 @@ namespace Region
                     dataSO_Object.SubData["Region Cities"] = new Data_Display(
                         title: "Region Cities",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         subData: new Dictionary<string, Data_Display>());
                 }
                 

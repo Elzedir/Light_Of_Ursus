@@ -11,10 +11,10 @@ namespace Jobs
     [Serializable]
     public class Job_SO : Data_SO<Job_Data>
     {
-        public Object_Data<Job_Data>[] Jobs                           => Objects_Data;
-        public Object_Data<Job_Data>   GetJob_Master(JobName jobName) => GetObject_Data((uint)jobName);
+        public Data<Job_Data>[] Jobs                           => Data;
+        public Data<Job_Data>   GetJob_Master(JobName jobName) => GetData((uint)jobName);
 
-        public override uint GetDataObjectID(int id) => (uint)Jobs[id].DataObject.JobName;
+        public override uint GetDataID(int id) => (uint)Jobs[id].Data_Object.JobName;
 
         public override void PopulateSceneData()
         {
@@ -24,20 +24,20 @@ namespace Jobs
             }
         }
         
-        protected override Dictionary<uint, Object_Data<Job_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Job_Data>> _getDefaultData(bool initialisation = false)
         {
-            return _convertDictionaryToDataObject(Job_List.DefaultJobs);
+            return _convertDictionaryToData(Job_List.DefaultJobs);
         }
         
-        Dictionary<uint, Object_Data<Job_Data>> _defaultJobs => DefaultDataObjects;
+        Dictionary<uint, Data<Job_Data>> _defaultJobs => DefaultData;
         
-        protected override Object_Data<Job_Data> _convertToDataObject(Job_Data dataObject)
+        protected override Data<Job_Data> _convertToData(Job_Data data)
         {
-            return new Object_Data<Job_Data>(
-                dataObjectID: (uint)dataObject.JobName,
-                dataObject: dataObject,
-                dataObjectTitle: $"{(uint)dataObject.JobName}: {dataObject.JobName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Job_Data>(
+                dataID: (uint)data.JobName,
+                data_Object: data,
+                dataTitle: $"{(uint)data.JobName}: {data.JobName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

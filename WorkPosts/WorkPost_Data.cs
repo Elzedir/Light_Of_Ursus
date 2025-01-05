@@ -65,7 +65,7 @@ namespace WorkPosts
                 dataSO_Object = new Data_Display(
                     title: "WorkPost Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: dataSO_Object,
+                    existingData_Display: dataSO_Object,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
             
@@ -76,7 +76,7 @@ namespace WorkPosts
                     dataSO_Object.SubData["Base WorkPost Data"] = new Data_Display(
                         title: "Base WorkPost Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());    
                 }
 

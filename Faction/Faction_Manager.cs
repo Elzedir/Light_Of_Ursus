@@ -14,7 +14,7 @@ namespace Faction
         static Faction_SO AllFactions => _allFactions ??= _getFaction_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions.Select(x => x.DataObject).ToArray());
+            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions.Select(x => x.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -58,7 +58,7 @@ namespace Faction
         
         public static Faction_Data GetFaction_Data(uint factionID)
         {
-            return AllFactions.GetFaction_Data(factionID).DataObject;
+            return AllFactions.GetFaction_Data(factionID).Data_Object;
         }
         
         public static Faction_Component GetFaction_Component(uint factionID)

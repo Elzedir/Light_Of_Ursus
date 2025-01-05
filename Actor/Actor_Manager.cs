@@ -5,7 +5,6 @@ using Careers;
 using DataPersistence;
 using DateAndTime;
 using Faction;
-using Initialisation;
 using Inventory;
 using Items;
 using Jobs;
@@ -25,7 +24,7 @@ namespace Actor
         static Actor_SO AllActors => _allActors ??= _getActor_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedActorData = new SavedActorData(AllActors.Actors.Select(actor => actor.DataObject).ToArray());
+            saveData.SavedActorData = new SavedActorData(AllActors.Actors.Select(actor => actor.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -58,19 +57,19 @@ namespace Actor
             }
         }
 
-        public static void OnSceneLoaded()
-        {
-            Manager_Initialisation.OnInitialiseManagerActor += _initialise;
-        }
-
-        static void _initialise()
-        {
-            AllActors.PopulateSceneData();
-        }
+        // public static void OnSceneLoaded()
+        // {
+        //     Manager_Initialisation.OnInitialiseManagerActor += _initialise;
+        // }
+        //
+        // static void _initialise()
+        // {
+        //     AllActors.PopulateSceneData();
+        // }
         
         public static Actor_Data GetActor_Data(uint actorID)
         {
-            return AllActors.GetActor_Data(actorID).DataObject;
+            return AllActors.GetActor_Data(actorID).Data_Object;
         }
         
         public static Actor_Component GetActor_Component(uint actorID)
@@ -95,16 +94,18 @@ namespace Actor
             Actor_Component nearestActor = null;
 
             var nearestDistance = float.MaxValue;
-
-            foreach (var actor in AllActors.Actor_Components.Values)
-            {
-                var distance = Vector3.Distance(position, actor.transform.position);
-
-                if (!(distance < nearestDistance)) continue;
-
-                nearestActor  = actor;
-                nearestDistance = distance;
-            }
+            
+            //* Instead, just flash a collider at increasing distances until it hits something.
+            a
+            // foreach (var actor in AllActors.Actor_Components.Values)
+            // {
+            //     var distance = Vector3.Distance(position, actor.transform.position);
+            //
+            //     if (!(distance < nearestDistance)) continue;
+            //
+            //     nearestActor  = actor;
+            //     nearestDistance = distance;
+            // }
 
             return nearestActor;
         }

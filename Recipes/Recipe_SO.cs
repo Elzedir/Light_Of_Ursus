@@ -10,10 +10,10 @@ namespace Recipes
     [Serializable]
     public class Recipe_SO : Data_SO<Recipe_Data>
     {
-        public Object_Data<Recipe_Data>[] Recipes => Objects_Data;
-        public Object_Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetObject_Data((uint)recipeName);
+        public Data<Recipe_Data>[] Recipes => Data;
+        public Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetData((uint)recipeName);
         
-        public override uint GetDataObjectID(int id) => (uint)Recipes[id].DataObject.RecipeName;
+        public override uint GetDataID(int id) => (uint)Recipes[id].Data_Object.RecipeName;
         
         public override void PopulateSceneData()
         {
@@ -23,20 +23,20 @@ namespace Recipes
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Recipe_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Recipe_Data>> _getDefaultData(bool initialisation = false)
         {
-            return _convertDictionaryToDataObject(Recipe_List.DefaultRecipes);
+            return _convertDictionaryToData(Recipe_List.DefaultRecipes);
         }
 
-        Dictionary<uint, Object_Data<Recipe_Data>> _defaultRecipes => DefaultDataObjects;
+        Dictionary<uint, Data<Recipe_Data>> _defaultRecipes => DefaultData;
 
-        protected override Object_Data<Recipe_Data> _convertToDataObject(Recipe_Data dataObject)
+        protected override Data<Recipe_Data> _convertToData(Recipe_Data data)
         {
-            return new Object_Data<Recipe_Data>(
-                dataObjectID: (uint)dataObject.RecipeName, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{(uint)dataObject.RecipeName}: {dataObject.RecipeName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Recipe_Data>(
+                dataID: (uint)data.RecipeName, 
+                data_Object: data,
+                dataTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

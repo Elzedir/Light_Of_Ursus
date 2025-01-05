@@ -10,20 +10,20 @@ namespace Tools
     [Serializable]
     public class Example_SO : Data_SO<Test_Data>
     {
-        public Object_Data<Test_Data>[] Tests                     => Objects_Data;
-        public Object_Data<Test_Data>   GetTest_Data(uint testID) => GetObject_Data(testID);
+        public Data<Test_Data>[] Tests                     => Data;
+        public Data<Test_Data>   GetTest_Data(uint testID) => GetData(testID);
 
-        public override uint GetDataObjectID(int id) => Tests[id].DataObject.TestID;
+        public override uint GetDataID(int id) => Tests[id].Data_Object.TestID;
 
-        public void UpdateTest(uint testID, Test_Data test_Data) => UpdateDataObject(testID, test_Data);
-        public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllDataObjects(allTests);
+        public void UpdateTest(uint testID, Test_Data test_Data) => UpdateData(testID, test_Data);
+        public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllData(allTests);
 
         public override void PopulateSceneData()
         {
 
         }
 
-        protected override Dictionary<uint, Object_Data<Test_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Test_Data>> _getDefaultData(bool initialisation = false)
         {
             var tests = new Dictionary<uint, Test_Data>
             {
@@ -59,15 +59,15 @@ namespace Tools
                 }
             };
 
-            return _convertDictionaryToDataObject(tests);
+            return _convertDictionaryToData(tests);
         }
 
-        protected override Object_Data<Test_Data> _convertToDataObject(Test_Data dataObject)
+        protected override Data<Test_Data> _convertToData(Test_Data data)
         {
-            return new Object_Data<Test_Data>(
-                dataObjectID: dataObject.TestID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.TestID}{dataObject.TestName}",
+            return new Data<Test_Data>(
+                dataID: data.TestID, 
+                data_Object: data,
+                dataTitle: $"{data.TestID}{data.TestName}",
                 null);
         }
 
@@ -75,7 +75,7 @@ namespace Tools
 
         public uint GetUnusedTestID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedTestID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedTestID))
             {
                 _lastUnusedTestID++;
             }

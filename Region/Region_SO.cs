@@ -12,8 +12,8 @@ namespace Region
     [Serializable]
     public class Region_SO : Data_SO<Region_Data>
     {
-        public Object_Data<Region_Data>[]         Regions                            => Objects_Data;
-        public Object_Data<Region_Data>           GetRegion_Data(uint      regionID) => GetObject_Data(regionID);
+        public Data<Region_Data>[]         Regions                            => Data;
+        public Data<Region_Data>           GetRegion_Data(uint      regionID) => GetData(regionID);
         Dictionary<uint, Region_Component>        _region_Components;
         public Dictionary<uint, Region_Component> RegionComponents => _region_Components ??= _getExistingRegion_Components();
 
@@ -38,10 +38,10 @@ namespace Region
             return null;
         }
 
-        public override uint GetDataObjectID(int id) => Regions[id].DataObject.RegionID;
+        public override uint GetDataID(int id) => Regions[id].Data_Object.RegionID;
 
-        public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateDataObject(regionID, region_Data);
-        public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllDataObjects(allRegions);
+        public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
+        public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllData(allRegions);
 
         public override void PopulateSceneData()
         {
@@ -54,22 +54,22 @@ namespace Region
             
             foreach (var region in Regions)
             {
-                if (region?.DataObject is null) continue;
+                if (region?.Data_Object is null) continue;
                 
-                if (existingRegions.TryGetValue(region.DataObject.RegionID, out var existingRegion))
+                if (existingRegions.TryGetValue(region.Data_Object.RegionID, out var existingRegion))
                 {
-                    RegionComponents[region.DataObject.RegionID] = existingRegion;
-                    existingRegion.SetRegionData(region.DataObject);
-                    existingRegions.Remove(region.DataObject.RegionID);
+                    RegionComponents[region.Data_Object.RegionID] = existingRegion;
+                    existingRegion.SetRegionData(region.Data_Object);
+                    existingRegions.Remove(region.Data_Object.RegionID);
                     continue;
                 }
                 
-                Debug.LogWarning($"Region with ID {region.DataObject.RegionID} not found in the scene.");
+                Debug.LogWarning($"Region with ID {region.Data_Object.RegionID} not found in the scene.");
             }
             
             foreach (var region in existingRegions)
             {
-                if (DataObjectIndexLookup.ContainsKey(region.Key))
+                if (DataIndexLookup.ContainsKey(region.Key))
                 {
                     Debug.LogWarning($"Region with ID {region.Key} wasn't removed from existingRegions.");
                     continue;
@@ -79,38 +79,38 @@ namespace Region
             }
         }
 
-        protected override Dictionary<uint, Object_Data<Region_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData(bool initialisation = false)
         {
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
-                return _defaultDataObjects ??= _convertDictionaryToDataObject(Region_List.DefaultRegions);
+            if (_defaultData is null || !Application.isPlaying || initialisation)
+                return _defaultData ??= _convertDictionaryToData(Region_List.DefaultRegions);
 
             if (Regions is null || Regions.Length == 0)
             {
                 Debug.LogError("Regions is null or empty.");
-                return _defaultDataObjects;
+                return _defaultData;
             }
 
             foreach (var region in Regions)
             {
-                if (region?.DataObject is null) continue;
+                if (region?.Data_Object is null) continue;
                 
-                if (!_defaultDataObjects.ContainsKey(region.DataObject.RegionID))
+                if (!_defaultData.ContainsKey(region.Data_Object.RegionID))
                 {
-                    Debug.LogError($"Region with ID {region.DataObject.RegionID} not found in DefaultRegions.");
+                    Debug.LogError($"Region with ID {region.Data_Object.RegionID} not found in DefaultRegions.");
                     continue;
                 }
                 
-                _defaultDataObjects[region.DataObject.RegionID] = region;
+                _defaultData[region.Data_Object.RegionID] = region;
             }
 
-            return _defaultDataObjects;
+            return _defaultData;
         }
 
         static uint _lastUnusedRegionID = 1;
 
         public uint GetUnusedRegionID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedRegionID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedRegionID))
             {
                 _lastUnusedRegionID++;
             }
@@ -118,15 +118,15 @@ namespace Region
             return _lastUnusedRegionID;
         }
         
-        Dictionary<uint, Object_Data<Region_Data>> _defaultRegions => DefaultDataObjects;
+        Dictionary<uint, Data<Region_Data>> _defaultRegions => DefaultData;
          
-        protected override Object_Data<Region_Data> _convertToDataObject(Region_Data dataObject)
+        protected override Data<Region_Data> _convertToData(Region_Data data)
         {
-            return new Object_Data<Region_Data>(
-                dataObjectID: dataObject.RegionID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.RegionID}: {dataObject.RegionName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Region_Data>(
+                dataID: data.RegionID, 
+                data_Object: data,
+                dataTitle: $"{data.RegionID}: {data.RegionName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

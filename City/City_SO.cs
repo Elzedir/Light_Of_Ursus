@@ -12,8 +12,8 @@ namespace City
     [Serializable]
     public class City_SO : Data_SO<City_Data>
     {
-        public Object_Data<City_Data>[]                         Cities                         => Objects_Data;
-        public Object_Data<City_Data>                           GetCity_Data(uint      cityID) => GetObject_Data(cityID);
+        public Data<City_Data>[]                         Cities                         => Data;
+        public Data<City_Data>                           GetCity_Data(uint      cityID) => GetData(cityID);
         Dictionary<uint, City_Component>                        _city_Components;
         public Dictionary<uint, City_Component> City_Components => _city_Components ??= _getExistingCity_Components();
         
@@ -38,10 +38,10 @@ namespace City
             return null;
         }
 
-        public override uint GetDataObjectID(int id) => Cities[id].DataObject.CityID;
+        public override uint GetDataID(int id) => Cities[id].Data_Object.CityID;
 
-        public void UpdateCity(uint cityID, City_Data city_Data) => UpdateDataObject(cityID, city_Data);
-        public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllDataObjects(allCities);
+        public void UpdateCity(uint cityID, City_Data city_Data) => UpdateData(cityID, city_Data);
+        public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllData(allCities);
 
         public override void PopulateSceneData()
         {
@@ -54,22 +54,22 @@ namespace City
             
             foreach (var city in Cities)
             {
-                if (city?.DataObject is null) continue;
+                if (city?.Data_Object is null) continue;
                 
-                if (existingCities.TryGetValue(city.DataObject.CityID, out var existingCity))
+                if (existingCities.TryGetValue(city.Data_Object.CityID, out var existingCity))
                 {
-                    City_Components[city.DataObject.CityID] = existingCity;
-                    existingCity.SetCityData(city.DataObject);
-                    existingCities.Remove(city.DataObject.CityID);
+                    City_Components[city.Data_Object.CityID] = existingCity;
+                    existingCity.SetCityData(city.Data_Object);
+                    existingCities.Remove(city.Data_Object.CityID);
                     continue;
                 }
                 
-                Debug.LogWarning($"City with ID {city.DataObject.CityID} not found in the scene.");
+                Debug.LogWarning($"City with ID {city.Data_Object.CityID} not found in the scene.");
             }
             
             foreach (var city in existingCities)
             {
-                if (DataObjectIndexLookup.ContainsKey(city.Key))
+                if (DataIndexLookup.ContainsKey(city.Key))
                 {
                     Debug.LogWarning($"City with ID {city.Key} wasn't removed from existingCities.");
                     continue;
@@ -79,38 +79,38 @@ namespace City
             }
         }
 
-        protected override Dictionary<uint, Object_Data<City_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<City_Data>> _getDefaultData(bool initialisation = false)
         {
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
-                return _defaultDataObjects ??= _convertDictionaryToDataObject(City_List.DefaultCities);
+            if (_defaultData is null || !Application.isPlaying || initialisation)
+                return _defaultData ??= _convertDictionaryToData(City_List.DefaultCities);
 
             if (Cities is null || Cities.Length == 0)
             {
                 Debug.LogError("Cities is null or empty.");
-                return _defaultDataObjects;
+                return _defaultData;
             }
 
             foreach (var city in Cities)
             {
-                if (city?.DataObject is null) continue;
+                if (city?.Data_Object is null) continue;
                 
-                if (!_defaultDataObjects.ContainsKey(city.DataObject.CityID))
+                if (!_defaultData.ContainsKey(city.Data_Object.CityID))
                 {
-                    Debug.LogError($"City with ID {city.DataObject.CityID} not found in City_List.");
+                    Debug.LogError($"City with ID {city.Data_Object.CityID} not found in City_List.");
                     continue;
                 }
                 
-                _defaultDataObjects[city.DataObject.CityID] = city;
+                _defaultData[city.Data_Object.CityID] = city;
             }
             
-            return _defaultDataObjects;
+            return _defaultData;
         }
 
         static uint _lastUnusedCityID = 1;
 
         public uint GetUnusedCityID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedCityID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedCityID))
             {
                 _lastUnusedCityID++;
             }
@@ -118,15 +118,15 @@ namespace City
             return _lastUnusedCityID;
         }
         
-        Dictionary<uint, Object_Data<City_Data>> _defaultCities => DefaultDataObjects;
+        Dictionary<uint, Data<City_Data>> _defaultCities => DefaultData;
         
-        protected override Object_Data<City_Data> _convertToDataObject(City_Data dataObject)
+        protected override Data<City_Data> _convertToData(City_Data data)
         {
-            return new Object_Data<City_Data>(
-                dataObjectID: dataObject.CityID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.CityID}: {dataObject.CityName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<City_Data>(
+                dataID: data.CityID, 
+                data_Object: data,
+                dataTitle: $"{data.CityID}: {data.CityName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

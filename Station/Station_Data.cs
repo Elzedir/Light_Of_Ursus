@@ -212,7 +212,7 @@ namespace Station
                 dataSO_Object = new Data_Display(
                     title: "Station Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: dataSO_Object,
+                    existingData_Display: dataSO_Object,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
             
@@ -224,7 +224,7 @@ namespace Station
                     dataSO_Object.SubData["Base Station Data"] = new Data_Display(
                         title: "Base Station Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -257,7 +257,7 @@ namespace Station
                     dataSO_Object.SubData["Inventory Data"] = new Data_Display(
                         title: "Inventory Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -284,7 +284,7 @@ namespace Station
                     dataSO_Object.SubData["Station Progress Data"] = new Data_Display(
                         title: "Station Progress Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -313,7 +313,7 @@ namespace Station
                     dataSO_Object.SubData["Station WorkPosts"] = new Data_Display(
                         title: "Station WorkPosts",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

@@ -189,7 +189,7 @@ namespace Priority
                 dataSO_Object = new Data_Display(
                     title: "Priority Queue",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
 
@@ -200,7 +200,7 @@ namespace Priority
                     dataSO_Object.SubData["Priority Queue"] = new Data_Display(
                         title: "Priority Queue",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
                             priority => $"PriorityValue: {priority.PriorityValue}"));
                 }

@@ -50,7 +50,7 @@ namespace Faction
                 dataSO_Object = new Data_Display(
                     title: "Faction Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>(),
                     firstData: true);
             
@@ -61,7 +61,7 @@ namespace Faction
                     dataSO_Object.SubData["Base Faction Data"] = new Data_Display(
                         title: "Base Faction Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -86,7 +86,7 @@ namespace Faction
                     dataSO_Object.SubData["Faction Actors"] = new Data_Display(
                         title: "Faction Actors",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -107,7 +107,7 @@ namespace Faction
                     dataSO_Object.SubData["Faction Relations"] = new Data_Display(
                         title: "Faction Relations",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

@@ -37,9 +37,7 @@ namespace Actor
                 dataSO_Object = new Data_Display(
                     title: "Actor Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
 
             try
             {
@@ -48,7 +46,6 @@ namespace Actor
                     dataSO_Object.SubData["Actor Data"] = new Data_Display(
                         title: "Actor Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -79,7 +76,6 @@ namespace Actor
                     dataSO_Object.SubData["Career Data"] = new Data_Display(
                         title: "Career Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -110,7 +106,6 @@ namespace Actor
                     dataSO_Object.SubData["Known Recipes"] = new Data_Display(
                         title: "Known Recipes",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: CraftingDataPreset.KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}")
                     );
                 }
@@ -136,7 +131,6 @@ namespace Actor
                     dataSO_Object.SubData["Vocations"] = new Data_Display(
                         title: "Vocations",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
                         data: VocationDataPreset.ActorVocations.Values.ToDictionary(vocation => $"{vocation.VocationName}:", vocation => $"{vocation.VocationExperience}")
                     );
                 }
@@ -162,7 +156,6 @@ namespace Actor
                     dataSO_Object.SubData["Stats and Abilities"] = new Data_Display(
                         title: "Stats and Abilities",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -188,7 +181,6 @@ namespace Actor
                     dataSO_Object.SubData["Inventory Data"] = new Data_Display(
                         title: "Inventory Data",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

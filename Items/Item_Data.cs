@@ -56,7 +56,7 @@ namespace Items
                 dataSO_Object = new Data_Display(
                     title: "Item Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>(),
                     firstData: true);
 
@@ -67,7 +67,7 @@ namespace Items
                     dataSO_Object.SubData["Common Stats"] = new Data_Display(
                         title: "Common Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -110,7 +110,7 @@ namespace Items
                     dataSO_Object.SubData["Visual Stats"] = new Data_Display(
                         title: "Visual Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -141,7 +141,7 @@ namespace Items
                     dataSO_Object.SubData["Weapon Stats"] = new Data_Display(
                         title: "Weapon Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -167,7 +167,7 @@ namespace Items
                     dataSO_Object.SubData["Armour Stats"] = new Data_Display(
                         title: "Armour Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -231,7 +231,7 @@ namespace Items
                 dataSO_Object = new Data_Display(
                     title: "Item",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
 
@@ -242,7 +242,7 @@ namespace Items
                     dataSO_Object.SubData["Common Stats"] = new Data_Display(
                         title: "Common Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

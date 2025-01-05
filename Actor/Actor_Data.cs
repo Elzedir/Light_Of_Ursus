@@ -126,9 +126,7 @@ namespace Actor
                 dataSO_Object = new Data_Display(
                     title: "Actor Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
             
             try
             {
@@ -137,7 +135,6 @@ namespace Actor
                     dataSO_Object.SubData["Full Identification"] = new Data_Display(
                         title: "Full Identification",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -164,7 +161,6 @@ namespace Actor
                     dataSO_Object.SubData["Game Object Properties"] = new Data_Display(
                         title: "Game Object Properties",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -194,7 +190,6 @@ namespace Actor
                     dataSO_Object.SubData["Species And Personality"] = new Data_Display(
                         title: "Species And Personality",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -221,7 +216,6 @@ namespace Actor
                     dataSO_Object.SubData["Stats And Abilities"] = new Data_Display(
                         title: "Stats And Abilities",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -249,7 +243,6 @@ namespace Actor
                     dataSO_Object.SubData["Career Data"] = new Data_Display(
                         title: "Career Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -277,9 +270,7 @@ namespace Actor
                     dataSO_Object.SubData["Inventory Data"] = new Data_Display(
                         title: "Inventory Data",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
-                        data: new Dictionary<string, string>(),
-                        firstData: true);
+                        data: new Dictionary<string, string>());
                 }
                 
                 if (inventoryData is not null)
@@ -301,7 +292,6 @@ namespace Actor
                     dataSO_Object.SubData["Equipment Data"] = new Data_Display(
                         title: "Equipment Data",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingDataSO_Object: dataSO_Object,
                         data: new Dictionary<string, string>()
                     );
                 }

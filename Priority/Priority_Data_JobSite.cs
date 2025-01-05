@@ -121,7 +121,7 @@ namespace Priority
                 dataSO_Object = new Data_Display(
                     title: "Priority Data JobSite",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
 
@@ -132,7 +132,7 @@ namespace Priority
                     dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
                         title: "Base Priority Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -161,7 +161,7 @@ namespace Priority
                     dataSO_Object.SubData["All Priorities"] = new Data_Display(
                         title: "All Priorities",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         subData: new Dictionary<string, Data_Display>());
                 }
                 

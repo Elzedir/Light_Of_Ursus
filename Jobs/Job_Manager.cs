@@ -9,7 +9,7 @@ namespace Jobs
         static Job_SO _allJobs;
         static Job_SO AllJobs => _allJobs ??= _getJob_SO();
 
-        public static Job_Data GetJob_Master(JobName jobName) => AllJobs.GetJob_Master(jobName).DataObject;
+        public static Job_Data GetJob_Master(JobName jobName) => AllJobs.GetJob_Master(jobName).Data_Object;
         
         public static void PopulateAllJobs()
         {

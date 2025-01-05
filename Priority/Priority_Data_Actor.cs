@@ -205,7 +205,7 @@ namespace Priority
                 dataSO_Object = new Data_Display(
                     title: "Priority Data Actor",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
 
@@ -216,7 +216,7 @@ namespace Priority
                     dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
                         title: "Base Priority Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

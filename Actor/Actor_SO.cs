@@ -10,106 +10,34 @@ namespace Actor
 {
     [CreateAssetMenu(fileName = "Actor_SO", menuName = "SOList/Actor_SO")]
     [Serializable]
-    public class Actor_SO : Data_SO<Actor_Data>
+    public class Actor_SO : Data_Component_SO<Actor_Data, Actor_Component>
     {
-        public Object_Data<Actor_Data>[]                        Actors                           => Objects_Data;
-        public Object_Data<Actor_Data>                          GetActor_Data(uint      actorID) => GetObject_Data(actorID);
-        Dictionary<uint, Actor_Component>       _actor_Components;
-        public Dictionary<uint, Actor_Component> Actor_Components => _actor_Components ??= _getExistingActor_Components();
+        public Data<Actor_Data>[] Actors                      => Data;
+        public Data<Actor_Data>   GetActor_Data(uint actorID) => GetData(actorID);
+        public Actor_Component GetActor_Component(uint actorID) => 
 
-        Dictionary<uint, Actor_Component> _getExistingActor_Components()
-        {
-            return FindObjectsByType<Actor_Component>(FindObjectsSortMode.None)
-                                 .Where(actor => Regex.IsMatch(actor.name, @"\d+"))
-                                 .ToDictionary(
-                                     actor_Component => uint.Parse(new string(actor_Component.name.Where(char.IsDigit).ToArray())),
-                                     actor_Component => actor_Component
-                                 );
-        }
-        
-        public Actor_Component GetActor_Component(uint actorID)
-        {
-            if (actorID == 0)
-            {
-                Debug.LogError("ActorID cannot be 0.");
-                return null;
-            }
-            
-            if (Actor_Components.TryGetValue(actorID, out var component))
-            {
-                return component;
-            }   
-            
-            Debug.LogError($"Actor_Component with ID {actorID} not found in Actor_Components.");
-            return null;
-        }
-
-        public override uint GetDataObjectID(int id) => Actors[id].DataObject.ActorID;
+        public override uint GetDataID(int id) => Actors[id].Data_Object.ActorID;
 
         public void UpdateActor(uint actorID, Actor_Data actor_Data) => 
-            UpdateDataObject(actorID, actor_Data);
+            UpdateData(actorID, actor_Data);
         
-        public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllDataObjects(allActors);
+        public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllData(allActors);
 
-        public override void PopulateSceneData()
-        {
-            var physicalActors = _getExistingActor_Components();
-            
-            foreach (var actor in Actors)
-            {
-                if (actor?.DataObject is null || actor.DataObjectID == 0) continue;
+        protected override Dictionary<uint, Data<Actor_Data>> _getDefaultData() =>
+            _convertDictionaryToData(Actor_List.DefaultActors);
 
-                Debug.LogError(actor.DataObjectID);
-                
-                if (physicalActors.TryGetValue(actor.DataObject.ActorID, out var physicalActor))
-                {
-                    physicalActor.SetActorData(actor.DataObject);
-                    Actor_Components[actor.DataObject.ActorID] = physicalActor;
-                    physicalActors.Remove(actor.DataObject.ActorID);
-                    continue;
-                }
-                
-                Debug.LogWarning($"Actor with ID {actor.DataObject.ActorID} not found in the scene.");
-            }
+        protected override Dictionary<uint, Data<Actor_Data>> _getSavedData() =>
+            _convertDictionaryToData(LoadSO());
 
-            foreach (var actor in physicalActors)
-            {
-                UpdateActor(actor.Key, actor.Value.ActorData);
-            }
-        }
-
-        protected override Dictionary<uint, Object_Data<Actor_Data>> _getDefaultDataObjects(bool initialisation = false)
-        {
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
-                return _defaultDataObjects ??= _convertDictionaryToDataObject(Actor_List.DefaultActors);
-            
-            if (Actors is null || Actors.Length == 0)
-            {
-                Debug.LogWarning("Actors is null or empty.");
-                return _defaultDataObjects;
-            }
-            
-            foreach (var actor in Actors)
-            {
-                if (actor?.DataObject is null || actor.DataObjectID == 0) continue;
-                
-                if (!_defaultDataObjects.ContainsKey(actor.DataObject.ActorID))
-                {
-                    Debug.LogWarning($"Actor with ID {actor.DataObject.ActorID} not found in DefaultActors.");
-                    continue;
-                }
-                
-                _defaultDataObjects[actor.DataObject.ActorID] = actor;
-            }
-
-            return _defaultDataObjects;
-        }
+        protected override Dictionary<uint, Data<Actor_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ActorData));
+        
 
         static uint _lastUnusedActorID = 1;
 
         public uint GetUnusedActorID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedActorID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedActorID))
             {
                 _lastUnusedActorID++;
             }
@@ -117,13 +45,13 @@ namespace Actor
             return _lastUnusedActorID;
         }
         
-        protected override Object_Data<Actor_Data> _convertToDataObject(Actor_Data dataObject)
+        protected override Data<Actor_Data> _convertToData(Actor_Data data)
         {
-            return new Object_Data<Actor_Data>(
-                dataObjectID: dataObject.ActorID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.ActorID}: {dataObject.ActorName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<Actor_Data>(
+                dataID: data.ActorID, 
+                data_Object: data,
+                dataTitle: $"{data.ActorID}: {data.ActorName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

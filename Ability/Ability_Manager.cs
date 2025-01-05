@@ -16,7 +16,7 @@ namespace Ability
 
         public static Ability_Data GetAbility_Master(AbilityName abilityName)
         {
-            return AllAbilities.GetAbility_Master(abilityName).DataObject;
+            return AllAbilities.GetAbility_Master(abilityName).Data_Object;
         }
 
         public static Ability GetAbility(AbilityName abilityName, uint abilityLevel)

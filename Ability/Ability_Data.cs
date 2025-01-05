@@ -49,7 +49,7 @@ namespace Ability
                 dataSO_Object = new Data_Display(
                     title: "Ability Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>(),
                     firstData: true);
 
@@ -60,7 +60,7 @@ namespace Ability
                     dataSO_Object.SubData["Ability Base Stats"] = new Data_Display(
                         title: "Ability Base Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
 
@@ -86,7 +86,7 @@ namespace Ability
                     dataSO_Object.SubData["Ability Combat Data"] = new Data_Display(
                         title: "Ability Combat Data",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
 
@@ -118,7 +118,7 @@ namespace Ability
                     dataSO_Object.SubData["Ability Animation Data"] = new Data_Display(
                         title: "Ability Animation Data",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
 

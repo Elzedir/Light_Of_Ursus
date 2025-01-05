@@ -10,10 +10,10 @@ namespace Careers
     [Serializable]
     public class Career_SO : Data_SO<Career_Data>
     {
-        public Object_Data<Career_Data>[] Careers                           => Objects_Data;
-        public Object_Data<Career_Data>   GetCareer_Master(CareerName careerName) => GetObject_Data((uint)careerName);
+        public Data<Career_Data>[] Careers                           => Data;
+        public Data<Career_Data>   GetCareer_Master(CareerName careerName) => GetData((uint)careerName);
 
-        public override uint GetDataObjectID(int id) => (uint)Careers[id].DataObject.CareerName;
+        public override uint GetDataID(int id) => (uint)Careers[id].Data_Object.CareerName;
 
         public override void PopulateSceneData()
         {
@@ -22,19 +22,19 @@ namespace Careers
                 Debug.Log("No Default Careers Found");
             }
         }
-        protected override Dictionary<uint, Object_Data<Career_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<Career_Data>> _getDefaultData(bool initialisation = false)
         {
-            return _convertDictionaryToDataObject(Career_List.DefaultCareers);
+            return _convertDictionaryToData(Career_List.DefaultCareers);
         }
         
-        Dictionary<uint, Object_Data<Career_Data>> _defaultCareers => DefaultDataObjects;
+        Dictionary<uint, Data<Career_Data>> _defaultCareers => DefaultData;
         
-        protected override Object_Data<Career_Data> _convertToDataObject(Career_Data dataObject)
+        protected override Data<Career_Data> _convertToData(Career_Data data)
         {
-            return new Object_Data<Career_Data>(
-                dataObjectID: (uint)dataObject.CareerName,
-                dataObject: dataObject,
-                dataObjectTitle: $"{(uint)dataObject.CareerName}: {dataObject.CareerName}",
+            return new Data<Career_Data>(
+                dataID: (uint)dataObject.CareerName,
+                data_Object: dataObject,
+                dataTitle: $"{(uint)dataObject.CareerName}: {dataObject.CareerName}",
                 getData_Display: dataObject.GetDataSO_Object);
         }
     }

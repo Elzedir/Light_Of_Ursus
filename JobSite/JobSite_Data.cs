@@ -616,7 +616,7 @@ namespace JobSite
                 dataSO_Object = new Data_Display(
                     title: "JobSite Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     subData: new Dictionary<string, Data_Display>(),
                     firstData: true);
 
@@ -627,7 +627,7 @@ namespace JobSite
                     dataSO_Object.SubData["Base JobSite Data"] = new Data_Display(
                         title: "Base JobSite Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -660,7 +660,7 @@ namespace JobSite
                     dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
                         title: "Prosperity Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -684,7 +684,7 @@ namespace JobSite
                     dataSO_Object.SubData["All Station IDs"] = new Data_Display(
                         title: "All Station IDs",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
                 }
                 
@@ -709,7 +709,7 @@ namespace JobSite
                     dataSO_Object.SubData["Production Data"] = new Data_Display(
                         title: "Production Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -733,7 +733,7 @@ namespace JobSite
                     dataSO_Object.SubData["Priority Data"] = new Data_Display(
                         title: "Priority Data",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         subData: PriorityData.GetDataSO_Object(toggleMissingDataDebugs).SubData);
                 }
                 
@@ -765,7 +765,7 @@ namespace JobSite
                     dataSO_Object.SubData["Priority Data"] = new Data_Display(
                         title: "Priority Data",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         subData: new Dictionary<string, Data_Display>());
                 }
                 

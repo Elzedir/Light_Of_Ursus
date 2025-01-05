@@ -67,7 +67,7 @@ namespace Managers
                 dataSO_Object = new Data_Display(
                     title: "Prosperity Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingDataSO_Object: null,
+                    existingData_Display: null,
                     data: new Dictionary<string, string>(),
                     firstData: true);
 
@@ -78,7 +78,7 @@ namespace Managers
                     dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
                         title: "Prosperity Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingDataSO_Object: dataSO_Object,
+                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

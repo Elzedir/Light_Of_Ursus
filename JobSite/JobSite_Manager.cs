@@ -17,7 +17,7 @@ namespace JobSite
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
 
         public void SaveData(SaveData saveData) =>
-            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites.Select(jobSite => jobSite.DataObject).ToArray());
+            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
 
         public void LoadData(SaveData saveData)
         {
@@ -60,7 +60,7 @@ namespace JobSite
         
         public static JobSite_Data GetJobSite_Data(uint jobSiteID)
         {
-            return JobSite_SO.GetJobSite_Data(jobSiteID).DataObject;
+            return JobSite_SO.GetJobSite_Data(jobSiteID).Data_Object;
         }
         
         public static JobSite_Component GetJobSite_Component(uint jobSiteID)

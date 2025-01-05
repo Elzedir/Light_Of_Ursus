@@ -12,8 +12,8 @@ namespace JobSite
     [Serializable]
     public class JobSite_SO : Data_SO<JobSite_Data>
     {
-        public Object_Data<JobSite_Data>[] JobSites                             => Objects_Data;
-        public Object_Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetObject_Data(jobSiteID);
+        public Data<JobSite_Data>[] JobSites                             => Data;
+        public Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetData(jobSiteID);
         Dictionary<uint, JobSite_Component>     _jobSite_Components;
         public Dictionary<uint, JobSite_Component> JobSite_Components => _jobSite_Components ??= _getExistingJobSite_Components();
         
@@ -38,10 +38,10 @@ namespace JobSite
             return null;
         }
 
-        public override uint GetDataObjectID(int id) => JobSites[id].DataObject.JobSiteID;
+        public override uint GetDataID(int id) => JobSites[id].Data_Object.JobSiteID;
 
-        public void UpdateJobSite(uint jobSiteID, JobSite_Data jobSite_Component) => UpdateDataObject(jobSiteID, jobSite_Component);
-        public void UpdateAllJobSites(Dictionary<uint, JobSite_Data> allJobSites) => UpdateAllDataObjects(allJobSites);
+        public void UpdateJobSite(uint jobSiteID, JobSite_Data jobSite_Component) => UpdateData(jobSiteID, jobSite_Component);
+        public void UpdateAllJobSites(Dictionary<uint, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
 
         public override void PopulateSceneData()
         {
@@ -54,22 +54,22 @@ namespace JobSite
             
             foreach (var jobSite in JobSites)
             {
-                if (jobSite?.DataObject is null) continue;
+                if (jobSite?.Data_Object is null) continue;
                 
-                if (existingJobSites.TryGetValue(jobSite.DataObject.JobSiteID, out var existingJobSite))
+                if (existingJobSites.TryGetValue(jobSite.Data_Object.JobSiteID, out var existingJobSite))
                 {
-                    JobSite_Components[jobSite.DataObject.JobSiteID] = existingJobSite;
-                    existingJobSite.SetJobSiteData(jobSite.DataObject);
-                    existingJobSites.Remove(jobSite.DataObject.JobSiteID);
+                    JobSite_Components[jobSite.Data_Object.JobSiteID] = existingJobSite;
+                    existingJobSite.SetJobSiteData(jobSite.Data_Object);
+                    existingJobSites.Remove(jobSite.Data_Object.JobSiteID);
                     continue;
                 }
                 
-                Debug.LogWarning($"JobSite with ID {jobSite.DataObject.JobSiteID} not found in the scene.");
+                Debug.LogWarning($"JobSite with ID {jobSite.Data_Object.JobSiteID} not found in the scene.");
             }
             
             foreach (var jobSite in existingJobSites)
             {
-                if (DataObjectIndexLookup.ContainsKey(jobSite.Key))
+                if (DataIndexLookup.ContainsKey(jobSite.Key))
                 {
                     Debug.LogWarning($"JobSite with ID {jobSite.Key} wasn't removed from existingJobSites.");
                     continue;
@@ -79,38 +79,38 @@ namespace JobSite
             }
         }
 
-        protected override Dictionary<uint, Object_Data<JobSite_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<JobSite_Data>> _getDefaultData(bool initialisation = false)
         {
-            if (_defaultDataObjects is null || !Application.isPlaying || initialisation)
-                return _defaultDataObjects ??= _convertDictionaryToDataObject(JobSite_List.DefaultJobSites);
+            if (_defaultData is null || !Application.isPlaying || initialisation)
+                return _defaultData ??= _convertDictionaryToData(JobSite_List.DefaultJobSites);
 
             if (JobSites is null || JobSites.Length == 0)
             {
                 Debug.LogError("No JobSites Found in JobSite_SO.");
-                return _defaultDataObjects;
+                return _defaultData;
             }
 
             foreach (var jobSite in JobSites)
             {
-                if (jobSite?.DataObject is null) continue;
+                if (jobSite?.Data_Object is null) continue;
                 
-                if (!_defaultDataObjects.ContainsKey(jobSite.DataObject.JobSiteID))
+                if (!_defaultData.ContainsKey(jobSite.Data_Object.JobSiteID))
                 {
-                    Debug.LogError($"JobSite with ID {jobSite.DataObject.JobSiteID} not found in DefaultJobSites.");
+                    Debug.LogError($"JobSite with ID {jobSite.Data_Object.JobSiteID} not found in DefaultJobSites.");
                     continue;
                 }
                 
-                _defaultDataObjects[jobSite.DataObject.JobSiteID] = jobSite;
+                _defaultData[jobSite.Data_Object.JobSiteID] = jobSite;
             }
 
-            return _defaultDataObjects;
+            return _defaultData;
         }
         
         static uint _lastUnusedJobSiteID = 1;
         
         public uint GetUnusedJobSiteID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedJobSiteID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedJobSiteID))
             {
                 _lastUnusedJobSiteID++;
             }
@@ -118,15 +118,15 @@ namespace JobSite
             return _lastUnusedJobSiteID;
         }
         
-        Dictionary<uint, Object_Data<JobSite_Data>> _defaultJobSites => DefaultDataObjects;
+        Dictionary<uint, Data<JobSite_Data>> _defaultJobSites => DefaultData;
         
-        protected override Object_Data<JobSite_Data> _convertToDataObject(JobSite_Data dataObject)
+        protected override Data<JobSite_Data> _convertToData(JobSite_Data data)
         {
-            return new Object_Data<JobSite_Data>(
-                dataObjectID: dataObject.JobSiteID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"{dataObject.JobSiteID}: {dataObject.JobSiteName}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<JobSite_Data>(
+                dataID: data.JobSiteID, 
+                data_Object: data,
+                dataTitle: $"{data.JobSiteID}: {data.JobSiteName}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

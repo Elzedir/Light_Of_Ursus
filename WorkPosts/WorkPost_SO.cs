@@ -14,8 +14,8 @@ namespace WorkPosts
     {
         // Not really a point to this class?
         
-        public Object_Data<WorkPost_Data>[]         WorkPosts                            => Objects_Data;
-        public Object_Data<WorkPost_Data>           GetWorkPost_Data(uint      workPostID) => GetObject_Data(workPostID);
+        public Data<WorkPost_Data>[]         WorkPosts                            => Data;
+        public Data<WorkPost_Data>           GetWorkPost_Data(uint      workPostID) => GetData(workPostID);
         public Dictionary<uint, WorkPost_Component> WorkPostComponents = new();
 
         public WorkPost_Component GetWorkPost_Component(uint workPostID)
@@ -29,10 +29,10 @@ namespace WorkPosts
             return null;
         }
 
-        public override uint GetDataObjectID(int id) => WorkPosts[id].DataObject.WorkPostID;
+        public override uint GetDataID(int id) => WorkPosts[id].Data_Object.WorkPostID;
 
-        public void UpdateWorkPost(uint workPostID, WorkPost_Data workPost_Data) => UpdateDataObject(workPostID, workPost_Data);
-        public void UpdateAllWorkPosts(Dictionary<uint, WorkPost_Data> allWorkPosts) => UpdateAllDataObjects(allWorkPosts);
+        public void UpdateWorkPost(uint workPostID, WorkPost_Data workPost_Data) => UpdateData(workPostID, workPost_Data);
+        public void UpdateAllWorkPosts(Dictionary<uint, WorkPost_Data> allWorkPosts) => UpdateAllData(allWorkPosts);
 
         public override void PopulateSceneData()
         {
@@ -50,22 +50,22 @@ namespace WorkPosts
             
             foreach (var workPost in WorkPosts)
             {
-                if (workPost?.DataObject is null) continue;
+                if (workPost?.Data_Object is null) continue;
                 
-                if (existingWorkPosts.TryGetValue(workPost.DataObject.WorkPostID, out var existingWorkPost))
+                if (existingWorkPosts.TryGetValue(workPost.Data_Object.WorkPostID, out var existingWorkPost))
                 {
-                    WorkPostComponents[workPost.DataObject.WorkPostID] = existingWorkPost;
-                    existingWorkPost.SetWorkPostData(workPost.DataObject);
-                    existingWorkPosts.Remove(workPost.DataObject.WorkPostID);
+                    WorkPostComponents[workPost.Data_Object.WorkPostID] = existingWorkPost;
+                    existingWorkPost.SetWorkPostData(workPost.Data_Object);
+                    existingWorkPosts.Remove(workPost.Data_Object.WorkPostID);
                     continue;
                 }
                 
-                Debug.LogWarning($"WorkPost with ID {workPost.DataObject.WorkPostID} not found in the scene.");
+                Debug.LogWarning($"WorkPost with ID {workPost.Data_Object.WorkPostID} not found in the scene.");
             }
             
             foreach (var workPost in existingWorkPosts)
             {
-                if (DataObjectIndexLookup.ContainsKey(workPost.Key))
+                if (DataIndexLookup.ContainsKey(workPost.Key))
                 {
                     Debug.LogWarning($"WorkPost with ID {workPost.Key} wasn't removed from existingWorkPosts.");
                     continue;
@@ -75,7 +75,7 @@ namespace WorkPosts
             }
         }
 
-        protected override Dictionary<uint, Object_Data<WorkPost_Data>> _getDefaultDataObjects(bool initialisation = false)
+        protected override Dictionary<uint, Data<WorkPost_Data>> _getDefaultData(bool initialisation = false)
         {
             // No default work stations for now.
             
@@ -86,14 +86,14 @@ namespace WorkPosts
             //     defaultWorkPosts.Add(defaultWorkPost.Key, defaultWorkPost.Value);
             // }
 
-            return _convertDictionaryToDataObject(defaultWorkPosts);
+            return _convertDictionaryToData(defaultWorkPosts);
         }
 
         static uint _lastUnusedWorkPostID = 1;
 
         public uint GetUnusedWorkPostID()
         {
-            while (DataObjectIndexLookup.ContainsKey(_lastUnusedWorkPostID))
+            while (DataIndexLookup.ContainsKey(_lastUnusedWorkPostID))
             {
                 _lastUnusedWorkPostID++;
             }
@@ -101,15 +101,15 @@ namespace WorkPosts
             return _lastUnusedWorkPostID;
         }
         
-        Dictionary<uint, Object_Data<WorkPost_Data>> _defaultWorkPosts => DefaultDataObjects;
+        Dictionary<uint, Data<WorkPost_Data>> _defaultWorkPosts => DefaultData;
          
-        protected override Object_Data<WorkPost_Data> _convertToDataObject(WorkPost_Data dataObject)
+        protected override Data<WorkPost_Data> _convertToData(WorkPost_Data data)
         {
-            return new Object_Data<WorkPost_Data>(
-                dataObjectID: dataObject.WorkPostID, 
-                dataObject: dataObject,
-                dataObjectTitle: $"WorkPost: {dataObject.WorkPostID}",
-                getData_Display: dataObject.GetDataSO_Object);
+            return new Data<WorkPost_Data>(
+                dataID: data.WorkPostID, 
+                data_Object: data,
+                dataTitle: $"WorkPost: {data.WorkPostID}",
+                getData_Display: data.GetDataSO_Object);
         }
     }
 

@@ -11,7 +11,7 @@ namespace Recipes
         static Recipe_SO _allRecipes;
         public static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
 
-        public static Recipe_Data GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName).DataObject;
+        public static Recipe_Data GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName).Data_Object;
 
         static Recipe_SO _getRecipe_SO()
         {
