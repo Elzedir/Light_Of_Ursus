@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Managers;
 using Relationships;
 using Tools;
 using UnityEngine;
@@ -50,9 +49,7 @@ namespace Faction
                 dataSO_Object = new Data_Display(
                     title: "Faction Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
             
             try
             {
@@ -61,7 +58,6 @@ namespace Faction
                     dataSO_Object.SubData["Base Faction Data"] = new Data_Display(
                         title: "Base Faction Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -86,7 +82,6 @@ namespace Faction
                     dataSO_Object.SubData["Faction Actors"] = new Data_Display(
                         title: "Faction Actors",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -107,7 +102,6 @@ namespace Faction
                     dataSO_Object.SubData["Faction Relations"] = new Data_Display(
                         title: "Faction Relations",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

@@ -33,9 +33,7 @@ namespace Jobs
                 dataSO_Object = new Data_Display(
                     title: "Job Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
             
             try
             {
@@ -44,7 +42,6 @@ namespace Jobs
                     dataSO_Object.SubData["Base Job Data"] = new Data_Display(
                         title: "Base Job Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -70,7 +67,6 @@ namespace Jobs
                     dataSO_Object.SubData["Job Tasks"] = new Data_Display(
                         title: "Job Tasks",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

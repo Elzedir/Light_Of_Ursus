@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,11 +11,22 @@ namespace Faction
 {
     [CreateAssetMenu(fileName = "Faction_SO", menuName = "SOList/Faction_SO")]
     [Serializable]
-    public class Faction_SO : Data_SO<Faction_Data>
+    public class Faction_SO : Data_Component_SO<Faction_Data, Faction_Component>
     {
         public Data<Faction_Data>[]                      Factions                             => Data;
         public Data<Faction_Data>                        GetFaction_Data(uint      factionID) => GetData(factionID);
-        public Dictionary<uint, Faction_Component> Faction_Components = new();
+        Dictionary<uint, Faction_Component>     _faction_Components;
+        public Dictionary<uint, Faction_Component> Faction_Components => _faction_Components ??= _getExistingFaction_Components();
+        
+        Dictionary<uint, Faction_Component> _getExistingFaction_Components()
+        {
+            return FindObjectsByType<Faction_Component>(FindObjectsSortMode.None)
+                .Where(faction => Regex.IsMatch(faction.name, @"\d+"))
+                .ToDictionary(
+                    faction => uint.Parse(new string(faction.name.Where(char.IsDigit).ToArray())),
+                    faction => faction
+                );
+        }
 
         public Faction_Component GetFaction_Component(uint factionID)
         {
@@ -32,73 +44,47 @@ namespace Faction
         public void UpdateFaction(uint factionID, Faction_Data faction_Data) => UpdateData(factionID, faction_Data);
         public void UpdateAllFactions(Dictionary<uint, Faction_Data> allFactions) => UpdateAllData(allFactions);
 
-        public override void PopulateSceneData()
+        protected override Dictionary<uint, Data<Faction_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Faction_List.DefaultFactions);
+
+        protected override Dictionary<uint, Data<Faction_Data>> _getSavedData()
         {
-            if (_defaultFactions.Count == 0)
+            Dictionary<uint, Faction_Data> savedData = new();
+            
+            try
             {
-                Debug.Log("No Default Factions Found");
+                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedFactionData.AllFactionData
+                    .ToDictionary(faction => faction.FactionID, faction => faction);
             }
-            
-            var existingFactions = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                     .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
-                                     );
-            
-            foreach (var faction in Factions)
+            catch (Exception ex)
             {
-                if (faction?.Data_Object is null) continue;
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (existingFactions.TryGetValue(faction.Data_Object.FactionID, out var existingFaction))
+                if (saveData == null)
                 {
-                    Faction_Components[faction.Data_Object.FactionID] = existingFaction;
-                    existingFaction.SetFactionData(faction.Data_Object);
-                    existingFactions.Remove(faction.Data_Object.FactionID);
-                    continue;
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                }
+                else if (saveData.SavedFactionData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedFactionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedFactionData.AllFactionData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllFactionData is null in SavedFactionData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedFactionData.AllFactionData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllFactionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
                 }
                 
-                Debug.LogWarning($"Faction with ID {faction.Data_Object.FactionID} not found in the scene.");
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
-            
-            foreach (var faction in existingFactions)
-            {
-                if (DataIndexLookup.ContainsKey(faction.Key))
-                {
-                    Debug.LogWarning($"Faction with ID {faction.Key} wasn't removed from existingFactions.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"Faction with ID {faction.Key} does not have DataObject in Faction_SO.");
-            }
+
+            return _convertDictionaryToData(savedData);
         }
-
-        protected override Dictionary<uint, Data<Faction_Data>> _getDefaultData(bool initialisation = false)
-        {
-            if (_defaultData is null || !Application.isPlaying || initialisation)
-                return _defaultData ??= _convertDictionaryToData(Faction_List.DefaultFactions);
-
-            if (Factions is null || Factions.Length == 0)
-            {
-                Debug.LogWarning("No Factions Found in Faction_SO.");
-                return _defaultData;
-            }
-
-            foreach (var faction in Factions)
-            {
-                if (faction?.Data_Object is null) continue;
-                
-                if (!_defaultData.ContainsKey(faction.Data_Object.FactionID))
-                {
-                    Debug.LogError($"Faction with ID {faction.Data_Object.FactionID} not found in DefaultFactions.");
-                    continue;
-                }
-                
-                _defaultData[faction.Data_Object.FactionID] = faction;
-            }
-            
-            return _defaultData;
-        }
+        
+        protected override Dictionary<uint, Data<Faction_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FactionData));
 
         static uint _lastUnusedFactionID = 1;
 
@@ -111,8 +97,6 @@ namespace Faction
 
             return _lastUnusedFactionID;
         }
-        
-        Dictionary<uint, Data<Faction_Data>> _defaultFactions => DefaultData;
 
         protected override Data<Faction_Data> _convertToData(Faction_Data data)
         {
@@ -120,8 +104,11 @@ namespace Faction
                 dataID: data.FactionID,
                 data_Object: data,
                 dataTitle: $"{data.FactionID}: {data.FactionName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+        
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedFactionData = new SavedFactionData(Factions.Select(x => x.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Faction_SO))]

@@ -56,9 +56,7 @@ namespace Items
                 dataSO_Object = new Data_Display(
                     title: "Item Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
 
             try
             {
@@ -67,7 +65,6 @@ namespace Items
                     dataSO_Object.SubData["Common Stats"] = new Data_Display(
                         title: "Common Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -110,7 +107,6 @@ namespace Items
                     dataSO_Object.SubData["Visual Stats"] = new Data_Display(
                         title: "Visual Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -141,7 +137,6 @@ namespace Items
                     dataSO_Object.SubData["Weapon Stats"] = new Data_Display(
                         title: "Weapon Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -167,7 +162,6 @@ namespace Items
                     dataSO_Object.SubData["Armour Stats"] = new Data_Display(
                         title: "Armour Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -223,7 +217,7 @@ namespace Items
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
 
-        public Data_Display DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetDataSO_Object(toggleMissingDataDebugs);
+        public Data_Display DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetData_Display(toggleMissingDataDebugs);
 
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
@@ -231,9 +225,7 @@ namespace Items
                 dataSO_Object = new Data_Display(
                     title: "Item",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    subData: new Dictionary<string, Data_Display>(),
-                    firstData: true);
+                    subData: new Dictionary<string, Data_Display>());
 
             try
             {
@@ -242,7 +234,6 @@ namespace Items
                     dataSO_Object.SubData["Common Stats"] = new Data_Display(
                         title: "Common Stats",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

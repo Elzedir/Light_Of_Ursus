@@ -18,12 +18,7 @@ namespace Tools
         public void UpdateTest(uint testID, Test_Data test_Data) => UpdateData(testID, test_Data);
         public void UpdateAllTests(Dictionary<uint, Test_Data> allTests) => UpdateAllData(allTests);
 
-        public override void PopulateSceneData()
-        {
-
-        }
-
-        protected override Dictionary<uint, Data<Test_Data>> _getDefaultData(bool initialisation = false)
+        protected override Dictionary<uint, Data<Test_Data>> _getDefaultData()
         {
             var tests = new Dictionary<uint, Test_Data>
             {

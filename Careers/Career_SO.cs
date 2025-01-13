@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -14,28 +15,17 @@ namespace Careers
         public Data<Career_Data>   GetCareer_Master(CareerName careerName) => GetData((uint)careerName);
 
         public override uint GetDataID(int id) => (uint)Careers[id].Data_Object.CareerName;
-
-        public override void PopulateSceneData()
-        {
-            if (_defaultCareers.Count == 0)
-            {
-                Debug.Log("No Default Careers Found");
-            }
-        }
-        protected override Dictionary<uint, Data<Career_Data>> _getDefaultData(bool initialisation = false)
-        {
-            return _convertDictionaryToData(Career_List.DefaultCareers);
-        }
         
-        Dictionary<uint, Data<Career_Data>> _defaultCareers => DefaultData;
+        protected override Dictionary<uint, Data<Career_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Career_List.DefaultCareers);
         
         protected override Data<Career_Data> _convertToData(Career_Data data)
         {
             return new Data<Career_Data>(
-                dataID: (uint)dataObject.CareerName,
-                data_Object: dataObject,
-                dataTitle: $"{(uint)dataObject.CareerName}: {dataObject.CareerName}",
-                getData_Display: dataObject.GetDataSO_Object);
+                dataID: (uint)data.CareerName,
+                data_Object: data,
+                dataTitle: $"{(uint)data.CareerName}: {data.CareerName}",
+                getData_Display: data.GetData_Display);
         }
     }
     

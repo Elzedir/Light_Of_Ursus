@@ -143,27 +143,13 @@ namespace Managers
             _createManager("Manager_Cutscene",     _manager_Parent).AddComponent<Manager_Cutscene>().OnSceneLoaded();
             _createManager("Manager_Spawner",      _manager_Parent).AddComponent<Manager_Spawner>().OnSceneLoaded();
             
-            Item_Manager.PopulateAllItems();
-            
             yield return null;
             
-            Recipe_Manager.PopulateAllRecipes();
-            Job_Manager.PopulateAllJobs();
-            Career_Manager.PopulateAllCareers();
-            ActorPreset_Manager.PopulateAllActorDataPresets();
             Manager_DateAndTime.Initialise();
             
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
             DataPersistenceManager.DataPersistence_SO.LoadGame("");
-            
-            Faction_Manager.OnSceneLoaded();
-            Actor_Manager.OnSceneLoaded();
-
-            Region_Manager.OnSceneLoaded();
-            City_Manager.OnSceneLoaded();
-            JobSite_Manager.OnSceneLoaded();
-            Station_Manager.OnSceneLoaded();
             
             Manager_Initialisation.InitialiseManagers();
             

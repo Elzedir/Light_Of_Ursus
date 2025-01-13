@@ -11,12 +11,6 @@ namespace Careers
 
         public static Career_Data GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName).Data_Object;
         
-        public static void PopulateAllCareers()
-        {
-            Career_SO.PopulateSceneData();
-            // Then populate custom careers.
-        }
-        
         static Career_SO _getCareer_SO()
         {
             var career_SO = Resources.Load<Career_SO>(_career_SOPath);

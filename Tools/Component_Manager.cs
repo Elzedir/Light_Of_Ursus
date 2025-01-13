@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Tools
 {
+    //* Maybe implement later for a more efficient way to manage and find components
     public class Component_Manager
     {
         // Central dictionary to cache components by ID
@@ -38,11 +39,11 @@ namespace Tools
                 else
                 {
                     // Handle newly added components
-                    var component = FindComponentByID(id);
-                    if (component != null)
-                    {
-                        _sceneComponents[id] = component;
-                    }
+                    // var component = FindComponentByID(id);
+                    // if (component != null)
+                    // {
+                    //     _sceneComponents[id] = component;
+                    // }
                 }
             }
 
@@ -64,11 +65,11 @@ namespace Tools
         }
 
         // Helper to find a specific component by ID
-        private MonoBehaviour FindComponentByID(uint id)
-        {
-            return FindObjectsOfType<MonoBehaviour>()
-                .FirstOrDefault(component => TryExtractID(component.name, out var componentID) && componentID == id);
-        }
+        // private MonoBehaviour FindComponentByID(uint id)
+        // {
+        //     return FindObjectsOfType<MonoBehaviour>()
+        //         .FirstOrDefault(component => TryExtractID(component.name, out var componentID) && componentID == id);
+        // }
 
         // Add/Remove IDs to the update set
         public void MarkComponentChanged(uint id)

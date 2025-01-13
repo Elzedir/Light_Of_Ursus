@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -29,18 +29,8 @@ namespace Ability
         public void UpdateAllAbilities(Dictionary<uint, Ability_Data> allAbilities) =>
             UpdateAllData(allAbilities);
 
-        public override void PopulateSceneData()
-        {
-            if (_defaultAbilities.Count == 0)
-            {
-                Debug.Log("No Default Items Found");
-            }
-        }
-
-        protected override Dictionary<uint, Data<Ability_Data>> _getDefaultData(bool initialisation = false)
-        {
-            return _convertDictionaryToData(Ability_List.DefaultAbilities);
-        }
+        protected override Dictionary<uint, Data<Ability_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Ability_List.DefaultAbilities);
 
         protected override Data<Ability_Data> _convertToData(Ability_Data data)
         {
@@ -48,7 +38,7 @@ namespace Ability
                 dataID: (uint)data.AbilityName,
                 data_Object: data, 
                 dataTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
 
         static uint _lastUnusedAbilityID = 1;
@@ -62,8 +52,6 @@ namespace Ability
 
             return _lastUnusedAbilityID;
         }
-
-        Dictionary<uint, Data<Ability_Data>> _defaultAbilities => DefaultData;
     }
 
     [CustomEditor(typeof(Ability_SO))]

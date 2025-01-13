@@ -11,12 +11,6 @@ namespace Jobs
 
         public static Job_Data GetJob_Master(JobName jobName) => AllJobs.GetJob_Master(jobName).Data_Object;
         
-        public static void PopulateAllJobs()
-        {
-            AllJobs.PopulateSceneData();
-            // Then populate custom jobs.
-        }
-        
         static Job_SO _getJob_SO()
         {
             var job_SO = Resources.Load<Job_SO>(_job_SOPath);

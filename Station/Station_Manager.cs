@@ -1,60 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
-using DataPersistence;
-using Initialisation;
 using Jobs;
 using UnityEngine;
 
 namespace Station
 {
-    public abstract class Station_Manager : IDataPersistence
+    public abstract class Station_Manager
     {
         const  string     _station_SOPath = "ScriptableObjects/Station_SO";
         
         static Station_SO _station_SO;
         static Station_SO Station_SO => _station_SO ??= _getStation_SO();
-
-        public void SaveData(SaveData saveData) =>
-            saveData.SavedStationData = new SavedStationData(Station_SO.Stations.Select(station => station.Data_Object).ToArray());
-
-        public void LoadData(SaveData saveData)
-        {
-            if (saveData == null)
-            {
-                //Debug.Log("No SaveData found in LoadData.");
-                return;
-            }
-
-            if (saveData.SavedStationData == null)
-            {
-                //Debug.Log("No SavedStationData found in SaveData.");
-                return;
-            }
-
-            if (saveData.SavedStationData.AllStationData == null)
-            {
-                //Debug.Log("No AllStationData found in SavedStationData.");
-                return;
-            }
-
-            if (saveData.SavedStationData.AllStationData.Length == 0)
-            {
-                //Debug.Log("AllStationData count is 0.");
-                return;
-            }
-
-            Station_SO.LoadSO(saveData.SavedStationData.AllStationData);
-        }
-
-        public static void OnSceneLoaded()
-        {
-            Manager_Initialisation.OnInitialiseManagerStation += _initialise;
-        }
-
-        static void _initialise()
-        {
-            Station_SO.PopulateSceneData();
-        }
         
         public static Station_Data GetStation_Data(uint stationID)
         {

@@ -15,12 +15,6 @@ namespace Actor
 
         public static ActorPreset_Data GetActorDataPreset(ActorDataPresetName actorDataPresetName) =>
             ActorPreset_SO.GetActorDataPreset(actorDataPresetName)?.Data_Object;
-        
-        public static void PopulateAllActorDataPresets()
-        {
-            ActorPreset_SO.PopulateSceneData();
-            // Then populate custom actor data presets.
-        }
 
         static ActorPreset_SO _getActorDataPreset_SO()
         {

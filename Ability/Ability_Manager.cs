@@ -23,16 +23,6 @@ namespace Ability
         {
             return AllAbilities.GetAbility(abilityName, abilityLevel);
         }
-        
-        public static void OnSceneLoaded()
-        {
-            //Manager_Initialisation.OnInitialiseManagerAbiliti += _initialise;
-        }
-
-        static void _initialise()
-        {
-            AllAbilities.PopulateSceneData();
-        }
 
         static Ability_SO _getAbility_SO()
         {

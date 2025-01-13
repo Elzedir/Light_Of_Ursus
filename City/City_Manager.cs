@@ -1,61 +1,13 @@
-using System.Collections.Generic;
-using System.Linq;
-using DataPersistence;
-using Initialisation;
-using UnityEditor;
 using UnityEngine;
 
 namespace City
 {
-    public abstract class City_Manager : IDataPersistence
+    public abstract class City_Manager
     {
         const string _city_SOPath = "ScriptableObjects/City_SO";
         
         static City_SO _allCities;
         static City_SO AllCities => _allCities ??= _getCity_SO();
-
-        public void SaveData(SaveData saveData) =>
-            saveData.SavedCityData = new SavedCityData(AllCities.Cities.Select(city => city.Data_Object).ToArray());
-
-        public void LoadData(SaveData saveData)
-        {
-            try
-            {
-                AllCities.LoadSO(saveData.SavedCityData.AllCityData);
-            }
-            catch
-            {
-                if (saveData is null)
-                {
-                    Debug.LogError("No SaveData found in LoadData.");
-                    return;
-                }
-
-                if (saveData.SavedCityData is null)
-                {
-                    Debug.LogError("No SavedCityData found in SaveData.");
-                    return;
-                }
-
-                if (saveData.SavedCityData.AllCityData is null)
-                {
-                    Debug.LogError("No AllCityData found in SavedCityData.");
-                    return;
-                }
-                
-                Debug.LogError("AllCityData count is 0.");
-            }
-        }
-
-        public static void OnSceneLoaded()
-        {
-            Manager_Initialisation.OnInitialiseManagerCity += _initialise;
-        }
-
-        static void _initialise()
-        {
-            AllCities.PopulateSceneData();
-        }
         
         public static City_Data GetCity_Data(uint cityID)
         {

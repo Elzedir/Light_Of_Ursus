@@ -24,12 +24,6 @@ namespace Recipes
 
             return recipe_SO;
         }
-
-        public static void PopulateAllRecipes()
-        {
-            AllRecipes.PopulateSceneData();
-            // Then populate custom recipes.
-        }
         
         public static void ClearSOData()
         {

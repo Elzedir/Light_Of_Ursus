@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace City
 {
     [CreateAssetMenu(fileName = "City_SO", menuName = "SOList/City_SO")]
     [Serializable]
-    public class City_SO : Data_SO<City_Data>
+    public class City_SO : Data_Component_SO<City_Data, City_Component>
     {
         public Data<City_Data>[]                         Cities                         => Data;
         public Data<City_Data>                           GetCity_Data(uint      cityID) => GetData(cityID);
@@ -43,68 +44,47 @@ namespace City
         public void UpdateCity(uint cityID, City_Data city_Data) => UpdateData(cityID, city_Data);
         public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllData(allCities);
 
-        public override void PopulateSceneData()
+        protected override Dictionary<uint, Data<City_Data>> _getDefaultData() => 
+            _convertDictionaryToData(City_List.DefaultCities);
+
+        protected override Dictionary<uint, Data<City_Data>> _getSavedData()
         {
-            if (_defaultCities.Count == 0)
-            {
-                Debug.Log("No Default Cities Found");
-            }
-            
-            var existingCities = _getExistingCity_Components();
-            
-            foreach (var city in Cities)
-            {
-                if (city?.Data_Object is null) continue;
+            Dictionary<uint, City_Data> savedData = new();
                 
-                if (existingCities.TryGetValue(city.Data_Object.CityID, out var existingCity))
+            try
+            {
+                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedCityData.AllCityData
+                    .ToDictionary(city => city.CityID, actor => actor);
+            }
+            catch (Exception ex)
+            {
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                
+                if (saveData == null)
                 {
-                    City_Components[city.Data_Object.CityID] = existingCity;
-                    existingCity.SetCityData(city.Data_Object);
-                    existingCities.Remove(city.Data_Object.CityID);
-                    continue;
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
                 }
-                
-                Debug.LogWarning($"City with ID {city.Data_Object.CityID} not found in the scene.");
+                else if (saveData.SavedCityData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedCityData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedCityData.AllCityData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllCityData is null in SavedCityData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedCityData.AllCityData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllCityData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
             
-            foreach (var city in existingCities)
-            {
-                if (DataIndexLookup.ContainsKey(city.Key))
-                {
-                    Debug.LogWarning($"City with ID {city.Key} wasn't removed from existingCities.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"City with ID {city.Key} does not have DataObject in City_SO.");
-            }
+            return _convertDictionaryToData(savedData);
         }
-
-        protected override Dictionary<uint, Data<City_Data>> _getDefaultData(bool initialisation = false)
-        {
-            if (_defaultData is null || !Application.isPlaying || initialisation)
-                return _defaultData ??= _convertDictionaryToData(City_List.DefaultCities);
-
-            if (Cities is null || Cities.Length == 0)
-            {
-                Debug.LogError("Cities is null or empty.");
-                return _defaultData;
-            }
-
-            foreach (var city in Cities)
-            {
-                if (city?.Data_Object is null) continue;
-                
-                if (!_defaultData.ContainsKey(city.Data_Object.CityID))
-                {
-                    Debug.LogError($"City with ID {city.Data_Object.CityID} not found in City_List.");
-                    continue;
-                }
-                
-                _defaultData[city.Data_Object.CityID] = city;
-            }
-            
-            return _defaultData;
-        }
+        
+        protected override Dictionary<uint, Data<City_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.CityData));
 
         static uint _lastUnusedCityID = 1;
 
@@ -118,16 +98,17 @@ namespace City
             return _lastUnusedCityID;
         }
         
-        Dictionary<uint, Data<City_Data>> _defaultCities => DefaultData;
-        
         protected override Data<City_Data> _convertToData(City_Data data)
         {
             return new Data<City_Data>(
                 dataID: data.CityID, 
                 data_Object: data,
                 dataTitle: $"{data.CityID}: {data.CityName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedCityData = new SavedCityData(Cities.Select(city => city.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(City_SO))]

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -14,7 +14,8 @@ namespace Actor
     {
         public Data<Actor_Data>[] Actors                      => Data;
         public Data<Actor_Data>   GetActor_Data(uint actorID) => GetData(actorID);
-        public Actor_Component GetActor_Component(uint actorID) => 
+        public Actor_Component GetActor_Component(uint actorID) => Actor_Components[actorID];
+        public Dictionary<uint, Actor_Component> Actor_Components => _getSceneComponents();
 
         public override uint GetDataID(int id) => Actors[id].Data_Object.ActorID;
 
@@ -26,11 +27,44 @@ namespace Actor
         protected override Dictionary<uint, Data<Actor_Data>> _getDefaultData() =>
             _convertDictionaryToData(Actor_List.DefaultActors);
 
-        protected override Dictionary<uint, Data<Actor_Data>> _getSavedData() =>
-            _convertDictionaryToData(LoadSO());
+        protected override Dictionary<uint, Data<Actor_Data>> _getSavedData()
+        {
+            Dictionary<uint, Actor_Data> savedData = new();
+                
+            try
+            {
+                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedActorData.AllActorData
+                     .ToDictionary(actor => actor.ActorID, actor => actor);
+            }
+            catch (Exception ex)
+            {
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+
+                if (saveData == null)
+                {
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                }
+                else if (saveData.SavedActorData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedActorData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedActorData.AllActorData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllActorData is null in SavedActorData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedActorData.AllActorData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllActorData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
+            }
+
+            return _convertDictionaryToData(savedData);
+        }
 
         protected override Dictionary<uint, Data<Actor_Data>> _getSceneData() =>
-            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ActorData));
+            _convertDictionaryToData(Actor_Components.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ActorData));
         
 
         static uint _lastUnusedActorID = 1;
@@ -51,8 +85,11 @@ namespace Actor
                 dataID: data.ActorID, 
                 data_Object: data,
                 dataTitle: $"{data.ActorID}: {data.ActorName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+        
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedActorData = new SavedActorData(Actors.Select(actor => actor.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Actor_SO))]

@@ -7,7 +7,7 @@ using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Manager_Spawner : MonoBehaviour, IDataPersistence
+public class Manager_Spawner : MonoBehaviour
 {
     public static Manager_Spawner Instance;
     List<GameObject> _spawners = new();

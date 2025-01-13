@@ -4,59 +4,16 @@ using System.Linq;
 using DataPersistence;
 using Initialisation;
 using Jobs;
-using UnityEditor;
 using UnityEngine;
 
 namespace JobSite
 {
-    public abstract class JobSite_Manager : IDataPersistence
+    public abstract class JobSite_Manager
     {
         const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
         
         static JobSite_SO _jobSite_SO;
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
-
-        public void SaveData(SaveData saveData) =>
-            saveData.SavedJobSiteData = new SavedJobSiteData(JobSite_SO.JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
-
-        public void LoadData(SaveData saveData)
-        {
-            if (saveData is null)
-            {
-                //Debug.Log("No SaveData found in LoadData.");
-                return;
-            }
-
-            if (saveData.SavedJobSiteData == null)
-            {
-                //Debug.Log("No SavedJobSiteData found in SaveData.");
-                return;
-            }
-
-            if (saveData.SavedJobSiteData.AllJobSiteData == null)
-            {
-                //Debug.Log("No AllJobSiteData found in SavedJobSiteData.");
-                return;
-            }
-
-            if (saveData.SavedJobSiteData.AllJobSiteData.Length == 0)
-            {
-                //Debug.Log("AllJobSiteData count is 0.");
-                return;
-            }
-
-            JobSite_SO.LoadSO(saveData.SavedJobSiteData.AllJobSiteData);
-        }
-
-        public static void OnSceneLoaded()
-        {
-            Manager_Initialisation.OnInitialiseManagerJobSite += _initialise;
-        }
-
-        static void _initialise()
-        {
-            JobSite_SO.PopulateSceneData();
-        }
         
         public static JobSite_Data GetJobSite_Data(uint jobSiteID)
         {

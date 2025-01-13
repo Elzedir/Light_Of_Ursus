@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Actor;
 using City;
+using DataPersistence;
 using Faction;
 using JobSite;
 using Managers;
@@ -221,9 +222,9 @@ namespace DataPersistence
 
             if (CurrentSaveData == null && CreateNewSaveFileIfNull) CurrentSaveData = new SaveData(GetRandomProfileID(), CurrentProfile.ProfileName);
 
-            if (CurrentSaveData == null) { Debug.Log("No data was found. A New Game needs to be started before data can be loaded."); return; }
-
-            foreach (IDataPersistence data in _dataPersistenceObjects) data.LoadData(CurrentSaveData);
+            if (CurrentSaveData != null) return;
+            
+            Debug.Log("No data was found. A New Game needs to be started before data can be loaded.");
         }
 
         public SaveData GetLatestSaveData()
@@ -270,12 +271,6 @@ namespace DataPersistence
                 Debug.LogError($"Failed to delete profile data for profileName: {CurrentTestSelectedProfileName} at path: {fullPath} \n {e}");
             }
         }
-    }
-
-    public interface IDataPersistence
-    {
-        void SaveData(SaveData data);
-        void LoadData(SaveData data);
     }
 
     [Serializable]
@@ -838,4 +833,9 @@ namespace DataPersistence
             }
         }
     }
+}
+
+public interface IDataPersistence
+{
+    void SaveData(SaveData saveData);
 }

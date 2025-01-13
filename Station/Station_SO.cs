@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace Station
 {
     [CreateAssetMenu(fileName = "Station_SO", menuName = "SOList/Station_SO")]
     [Serializable]
-    public class Station_SO : Data_SO<Station_Data>
+    public class Station_SO : Data_Component_SO<Station_Data, Station_Component>
     {
         public Data<Station_Data>[]         Stations                        => Data;
         public Data<Station_Data>           GetStation_Data(uint stationID) => GetData(stationID);
@@ -51,57 +52,47 @@ namespace Station
 
         public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllData(allStations);
 
-        public override void PopulateSceneData()
+        protected override Dictionary<uint, Data<Station_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Station_List.DefaultStations);
+
+        protected override Dictionary<uint, Data<Station_Data>> _getSavedData()
         {
-            var physicalStations = _getExistingStation_Components();
-
-            foreach (var station in Stations)
-            {
-                if (station?.Data_Object is null || station.DataID == 0) continue;
-
-                if (physicalStations.TryGetValue(station.Data_Object.StationID, out var physicalStation))
-                {
-                    physicalStation.Station_Data                     = station.Data_Object;
-                    Station_Components[station.Data_Object.StationID] = physicalStation;
-                    physicalStations.Remove(station.Data_Object.StationID);
-                    continue;
-                }
-
-                Debug.LogWarning($"Station with ID {station.Data_Object.StationID} not found in the scene.");
-            }
-
-            foreach (var station in physicalStations)
-            {
-                UpdateStation(station.Key, station.Value.Station_Data);
-            }
-        }
-
-        protected override Dictionary<uint, Data<Station_Data>> _getDefaultData(bool initialisation = false)
-        {
-            if (_defaultData is null || !Application.isPlaying || initialisation)
-                return _defaultData ??= _convertDictionaryToData(Station_List.DefaultStations);
+            Dictionary<uint, Station_Data> savedData = new();
             
-            if (Stations is null || Stations.Length == 0)
+            try
             {
-                Debug.LogError("Stations is null or empty.");
-                return _defaultData;
+                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedStationData.AllStationData
+                    .ToDictionary(station => station.StationID, station => station);
             }
-
-            foreach (var station in Stations)
+            catch (Exception ex)
             {
-                if (station?.Data_Object is null || station.Data_Object.StationID == 0) continue;
-
-                if (!_defaultData.ContainsKey(station.DataID))
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                
+                if (saveData == null)
                 {
-                    Debug.LogError($"Station with ID {station.DataID} not found in DefaultStations.");
-                    continue;
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                }
+                else if (saveData.SavedStationData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedStationData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedStationData.AllStationData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllStationData is null in SavedStationData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedStationData.AllStationData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllStationData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
                 }
                 
-                _defaultData[station.DataID] = station;
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
             
-            return _defaultData;
+            return _convertDictionaryToData(savedData);
         }
+
+        protected override Dictionary<uint, Data<Station_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Station_Data));
 
         static uint _lastUnusedStationID = 1;
 
@@ -121,8 +112,11 @@ namespace Station
                 dataID: data.StationID,
                 data_Object: data,
                 dataTitle: $"{data.StationID}: {data.StationName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedStationData = new SavedStationData(Stations.Select(station => station.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Station_SO))]

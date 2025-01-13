@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace JobSite
 {
     [CreateAssetMenu(fileName = "JobSite_SO", menuName = "SOList/JobSite_SO")]
     [Serializable]
-    public class JobSite_SO : Data_SO<JobSite_Data>
+    public class JobSite_SO : Data_Component_SO<JobSite_Data, JobSite_Component>
     {
         public Data<JobSite_Data>[] JobSites                             => Data;
         public Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetData(jobSiteID);
@@ -20,10 +21,10 @@ namespace JobSite
         Dictionary<uint, JobSite_Component> _getExistingJobSite_Components()
         {
             return FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None)
-                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
+                                  .Where(jobSite => Regex.IsMatch(jobSite.name, @"\d+"))
                                   .ToDictionary(
-                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                      station => station
+                                      jobSite => uint.Parse(new string(jobSite.name.Where(char.IsDigit).ToArray())),
+                                      jobSite => jobSite
                                   );
         }
 
@@ -43,68 +44,47 @@ namespace JobSite
         public void UpdateJobSite(uint jobSiteID, JobSite_Data jobSite_Component) => UpdateData(jobSiteID, jobSite_Component);
         public void UpdateAllJobSites(Dictionary<uint, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
 
-        public override void PopulateSceneData()
+        protected override Dictionary<uint, Data<JobSite_Data>> _getDefaultData() =>
+            _convertDictionaryToData(JobSite_List.DefaultJobSites);
+
+        protected override Dictionary<uint, Data<JobSite_Data>> _getSavedData()
         {
-            if (_defaultJobSites.Count == 0)
+            Dictionary<uint, JobSite_Data> savedData = new();
+
+            try
             {
-                Debug.Log("No Default JobSites Found");
+                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedJobSiteData.AllJobSiteData
+                    .ToDictionary(jobSite => jobSite.JobSiteID, jobSite => jobSite);
+            }
+            catch (Exception ex)
+            {
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                
+                if (saveData == null)
+                {
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                }
+                else if (saveData.SavedJobSiteData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedJobSiteData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedJobSiteData.AllJobSiteData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllJobSiteData is null in SavedJobSiteData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedJobSiteData.AllJobSiteData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllJobSiteData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
 
-            var existingJobSites = _getExistingJobSite_Components();
-            
-            foreach (var jobSite in JobSites)
-            {
-                if (jobSite?.Data_Object is null) continue;
-                
-                if (existingJobSites.TryGetValue(jobSite.Data_Object.JobSiteID, out var existingJobSite))
-                {
-                    JobSite_Components[jobSite.Data_Object.JobSiteID] = existingJobSite;
-                    existingJobSite.SetJobSiteData(jobSite.Data_Object);
-                    existingJobSites.Remove(jobSite.Data_Object.JobSiteID);
-                    continue;
-                }
-                
-                Debug.LogWarning($"JobSite with ID {jobSite.Data_Object.JobSiteID} not found in the scene.");
-            }
-            
-            foreach (var jobSite in existingJobSites)
-            {
-                if (DataIndexLookup.ContainsKey(jobSite.Key))
-                {
-                    Debug.LogWarning($"JobSite with ID {jobSite.Key} wasn't removed from existingJobSites.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"JobSite with ID {jobSite.Key} does not have DataObject in JobSite_SO.");
-            }
+            return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<JobSite_Data>> _getDefaultData(bool initialisation = false)
-        {
-            if (_defaultData is null || !Application.isPlaying || initialisation)
-                return _defaultData ??= _convertDictionaryToData(JobSite_List.DefaultJobSites);
-
-            if (JobSites is null || JobSites.Length == 0)
-            {
-                Debug.LogError("No JobSites Found in JobSite_SO.");
-                return _defaultData;
-            }
-
-            foreach (var jobSite in JobSites)
-            {
-                if (jobSite?.Data_Object is null) continue;
-                
-                if (!_defaultData.ContainsKey(jobSite.Data_Object.JobSiteID))
-                {
-                    Debug.LogError($"JobSite with ID {jobSite.Data_Object.JobSiteID} not found in DefaultJobSites.");
-                    continue;
-                }
-                
-                _defaultData[jobSite.Data_Object.JobSiteID] = jobSite;
-            }
-
-            return _defaultData;
-        }
+        protected override Dictionary<uint, Data<JobSite_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.JobSiteData));
         
         static uint _lastUnusedJobSiteID = 1;
         
@@ -118,16 +98,17 @@ namespace JobSite
             return _lastUnusedJobSiteID;
         }
         
-        Dictionary<uint, Data<JobSite_Data>> _defaultJobSites => DefaultData;
-        
         protected override Data<JobSite_Data> _convertToData(JobSite_Data data)
         {
             return new Data<JobSite_Data>(
                 dataID: data.JobSiteID, 
                 data_Object: data,
                 dataTitle: $"{data.JobSiteID}: {data.JobSiteName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+        
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedJobSiteData = new SavedJobSiteData(JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(JobSite_SO))]

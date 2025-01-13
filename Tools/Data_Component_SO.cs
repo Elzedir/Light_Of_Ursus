@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using UnityEngine;
 
 namespace Tools
@@ -9,27 +10,33 @@ namespace Tools
         where TD : class
         where TC : MonoBehaviour
     {
-        public             HashSet<uint>              ComponentIDsToChange = new();
+        //public             HashSet<uint>              ComponentIDsToChange = new();
+        public Dictionary<uint, Data<TD>> SavedData => _getSavedData();   
+        
+        protected abstract Dictionary<uint, Data<TD>> _getSavedData();
         public             Dictionary<uint, TC>       SceneComponents => _getSceneComponents();
         public             Dictionary<uint, Data<TD>> SceneData       => _getSceneData();
         protected abstract Dictionary<uint, Data<TD>> _getSceneData();
         
-        protected Dictionary<uint, TC> _getSceneComponents(bool initialisation = false)
+        protected Dictionary<uint, TC> _getSceneComponents(bool repopulate = false)
         {
-            foreach (var componentID in ComponentIDsToChange)
-            {
-                if (SceneComponents.TryGetValue(componentID, out var component))
-                {
-                    SceneComponents[componentID] = component;
-                }
-            }
+            // foreach (var componentID in ComponentIDsToChange)
+            // {
+            //     if (SceneComponents.TryGetValue(componentID, out var component))
+            //     {
+            //         SceneComponents[componentID] = component;
+            //     }
+            // }
             
-            foreach(var dataID in SceneData.Keys)
-            {
-                if (SceneComponents.TryGetValue(dataID, out var component)) continue;
-                
-                
-            }
+            // foreach(var dataID in SceneData.Keys)
+            // {
+            //     if (SceneComponents.TryGetValue(dataID, out var component)) continue;
+            //     
+            //     
+            // }
+            
+            //= \d: Matches any single digit (0–9).
+            //= +: Matches one or more of the preceding element (in this case, digits).
             
             var regex = new Regex(@"\d+");
 
@@ -66,5 +73,7 @@ namespace Tools
             
             return allData;
         }
+        
+        public abstract void SaveData(SaveData saveData);
     }
 }

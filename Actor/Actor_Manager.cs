@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using Ability;
 using Careers;
-using DataPersistence;
 using DateAndTime;
 using Faction;
 using Inventory;
@@ -16,46 +14,12 @@ using UnityEngine;
 
 namespace Actor
 {
-    public class Actor_Manager : MonoBehaviour, IDataPersistence
+    public class Actor_Manager : MonoBehaviour
     {
         const string _actor_SOPath = "ScriptableObjects/Actor_SO";
         
         static Actor_SO _allActors;
         static Actor_SO AllActors => _allActors ??= _getActor_SO();
-
-        public void SaveData(SaveData saveData) =>
-            saveData.SavedActorData = new SavedActorData(AllActors.Actors.Select(actor => actor.Data_Object).ToArray());
-
-        public void LoadData(SaveData saveData)
-        {
-            // NB: Apply this to all other LoadData functions.
-            try
-            {
-                AllActors.LoadSO(saveData.SavedActorData.AllActorData);
-            }
-            catch
-            {
-                if (saveData is null)
-                {
-                    Debug.LogWarning("No SaveData found in LoadData.");
-                    return;
-                }
-
-                if (saveData.SavedActorData == null)
-                {
-                    Debug.LogWarning("No SavedActorData found in SaveData.");
-                    return;
-                }
-
-                if (saveData.SavedActorData.AllActorData == null)
-                {
-                    Debug.LogWarning("No AllActorData found in SavedActorData.");
-                    return;
-                }
-                
-                Debug.LogWarning("AllActorData count is 0.");
-            }
-        }
 
         // public static void OnSceneLoaded()
         // {
@@ -95,17 +59,7 @@ namespace Actor
 
             var nearestDistance = float.MaxValue;
             
-            //* Instead, just flash a collider at increasing distances until it hits something.
-            a
-            // foreach (var actor in AllActors.Actor_Components.Values)
-            // {
-            //     var distance = Vector3.Distance(position, actor.transform.position);
-            //
-            //     if (!(distance < nearestDistance)) continue;
-            //
-            //     nearestActor  = actor;
-            //     nearestDistance = distance;
-            // }
+            //* Flash a collider at increasing distances until it hits something.
 
             return nearestActor;
         }

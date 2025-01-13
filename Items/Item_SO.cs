@@ -15,16 +15,14 @@ namespace Items
         public Data<Item_Data>   GetItem_Master(uint itemID) => GetData(itemID);
         
         public override uint GetDataID(int id) => Items[id].Data_Object.ItemID;
-
-        public override void PopulateSceneData()
-        {
-            if (_defaultItems.Count == 0)
-            {
-                Debug.Log("No Default Items Found");
-            }
-        }    
         
-        protected override Dictionary<uint, Data<Item_Data>> _getDefaultData(bool initialisation = false)
+        protected override Dictionary<uint, Data<Item_Data>> _getDefaultData() => 
+            _convertDictionaryToData(DefaultItems);
+        
+        static        Dictionary<uint, Item_Data> _defaultItems;
+        public static Dictionary<uint, Item_Data> DefaultItems => _defaultItems ??= _initialiseDefaultItems();
+        
+        static Dictionary<uint, Item_Data> _initialiseDefaultItems()
         {
             var defaultItems = new Dictionary<uint, Item_Data>();
 
@@ -53,10 +51,8 @@ namespace Items
                 defaultItems.Add(processedMaterial.Key, processedMaterial.Value);
             }
 
-            return _convertDictionaryToData(defaultItems);
+            return defaultItems;
         }
-
-        Dictionary<uint, Data<Item_Data>> _defaultItems => DefaultData;
         
         protected override Data<Item_Data> _convertToData(Item_Data data)
         {
@@ -64,7 +60,7 @@ namespace Items
                 dataID: data.ItemID, 
                 data_Object: data,
                 dataTitle: $"{data.ItemID}: {data.ItemName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
     }
 

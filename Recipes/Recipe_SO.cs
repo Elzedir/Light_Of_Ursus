@@ -14,21 +14,9 @@ namespace Recipes
         public Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetData((uint)recipeName);
         
         public override uint GetDataID(int id) => (uint)Recipes[id].Data_Object.RecipeName;
-        
-        public override void PopulateSceneData()
-        {
-            if (_defaultRecipes.Count == 0)
-            {
-                Debug.Log("No Default Recipes Found");
-            }
-        }
 
-        protected override Dictionary<uint, Data<Recipe_Data>> _getDefaultData(bool initialisation = false)
-        {
-            return _convertDictionaryToData(Recipe_List.DefaultRecipes);
-        }
-
-        Dictionary<uint, Data<Recipe_Data>> _defaultRecipes => DefaultData;
+        protected override Dictionary<uint, Data<Recipe_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Recipe_List.DefaultRecipes);
 
         protected override Data<Recipe_Data> _convertToData(Recipe_Data data)
         {
@@ -36,7 +24,7 @@ namespace Recipes
                 dataID: (uint)data.RecipeName, 
                 data_Object: data,
                 dataTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
     }
 

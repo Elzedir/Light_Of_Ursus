@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace Region
 {
     [CreateAssetMenu(fileName = "Region_SO", menuName = "SOList/Region_SO")]
     [Serializable]
-    public class Region_SO : Data_SO<Region_Data>
+    public class Region_SO : Data_Component_SO<Region_Data, Region_Component>
     {
         public Data<Region_Data>[]         Regions                            => Data;
         public Data<Region_Data>           GetRegion_Data(uint      regionID) => GetData(regionID);
@@ -43,68 +44,47 @@ namespace Region
         public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
         public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllData(allRegions);
 
-        public override void PopulateSceneData()
+        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Region_List.DefaultRegions);
+
+        protected override Dictionary<uint, Data<Region_Data>> _getSavedData()
         {
-            if (_defaultRegions.Count == 0)
+            Dictionary<uint, Region_Data> savedData = new();
+            
+            try
             {
-                Debug.Log("No Default Regions Found");
+                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedRegionData.AllRegionData
+                    .ToDictionary(region => region.RegionID, region => region);
             }
-            
-            var existingRegions = _getExistingRegion_Components();
-            
-            foreach (var region in Regions)
+            catch (Exception ex)
             {
-                if (region?.Data_Object is null) continue;
+                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (existingRegions.TryGetValue(region.Data_Object.RegionID, out var existingRegion))
+                if (saveData == null)
                 {
-                    RegionComponents[region.Data_Object.RegionID] = existingRegion;
-                    existingRegion.SetRegionData(region.Data_Object);
-                    existingRegions.Remove(region.Data_Object.RegionID);
-                    continue;
+                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                }
+                else if (saveData.SavedRegionData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: SavedRegionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (saveData.SavedRegionData.AllRegionData == null)
+                {
+                    Debug.LogWarning($"LoadData Error: AllRegionData is null in SavedRegionData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
+                }
+                else if (!saveData.SavedRegionData.AllRegionData.Any())
+                {
+                    Debug.LogWarning($"LoadData Warning: AllRegionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
                 }
                 
-                Debug.LogWarning($"Region with ID {region.Data_Object.RegionID} not found in the scene.");
+                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
-            
-            foreach (var region in existingRegions)
-            {
-                if (DataIndexLookup.ContainsKey(region.Key))
-                {
-                    Debug.LogWarning($"Region with ID {region.Key} wasn't removed from existingRegions.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"Region with ID {region.Key} does not have DataObject in Region_SO.");
-            }
+
+            return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData(bool initialisation = false)
-        {
-            if (_defaultData is null || !Application.isPlaying || initialisation)
-                return _defaultData ??= _convertDictionaryToData(Region_List.DefaultRegions);
-
-            if (Regions is null || Regions.Length == 0)
-            {
-                Debug.LogError("Regions is null or empty.");
-                return _defaultData;
-            }
-
-            foreach (var region in Regions)
-            {
-                if (region?.Data_Object is null) continue;
-                
-                if (!_defaultData.ContainsKey(region.Data_Object.RegionID))
-                {
-                    Debug.LogError($"Region with ID {region.Data_Object.RegionID} not found in DefaultRegions.");
-                    continue;
-                }
-                
-                _defaultData[region.Data_Object.RegionID] = region;
-            }
-
-            return _defaultData;
-        }
+        protected override Dictionary<uint, Data<Region_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.RegionData));
 
         static uint _lastUnusedRegionID = 1;
 
@@ -117,8 +97,6 @@ namespace Region
 
             return _lastUnusedRegionID;
         }
-        
-        Dictionary<uint, Data<Region_Data>> _defaultRegions => DefaultData;
          
         protected override Data<Region_Data> _convertToData(Region_Data data)
         {
@@ -126,8 +104,11 @@ namespace Region
                 dataID: data.RegionID, 
                 data_Object: data,
                 dataTitle: $"{data.RegionID}: {data.RegionName}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+        
+        public override void SaveData(SaveData saveData) =>
+            saveData.SavedRegionData = new SavedRegionData(Regions.Select(region => region.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Region_SO))]

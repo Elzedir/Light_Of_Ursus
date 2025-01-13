@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace Managers
 {
-    public class Manager_Order : MonoBehaviour, IDataPersistence
+    public class Manager_Order : MonoBehaviour
     {
         static        AllOrders_SO               _displayAllOrders;
         public static AllOrders_SO               DisplayAllOrders { get { return _displayAllOrders ??= Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO"); } }

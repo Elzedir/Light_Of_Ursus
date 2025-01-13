@@ -13,7 +13,7 @@ namespace Items
         {
             var defaultArmour = new Dictionary<uint, Item_Data>();
 
-            foreach (var item in _heavy)
+            foreach (var item in _heavy())
             {
                 defaultArmour.Add(item.Key, item.Value);
             }
@@ -21,52 +21,55 @@ namespace Items
             return defaultArmour;
         }
 
-        static readonly Dictionary<uint, Item_Data> _heavy = new()
+        static Dictionary<uint, Item_Data> _heavy()
         {
+            return new Dictionary<uint, Item_Data>
             {
-                100,
-                new Item_Data(
-                    new Item_CommonStats(
-                        itemID: 100,
-                        itemType: ItemType.Armour,
-                        itemName: "Bronze ChestPlate",
-                        equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.Chest },
-                        itemEquippable: true,
-                        maxStackSize: 1,
-                        itemValue: 10
-                    ),
+                {
+                    100,
+                    new Item_Data(
+                        new Item_CommonStats(
+                            itemID: 100,
+                            itemType: ItemType.Armour,
+                            itemName: "Bronze ChestPlate",
+                            equipmentSlots: new List<EquipmentSlot>() { EquipmentSlot.Chest },
+                            itemEquippable: true,
+                            maxStackSize: 1,
+                            itemValue: 10
+                        ),
 
-                    new Item_VisualStats(
-                        itemIcon: null,
-                        itemPosition: new Vector3(-0.04f, -0.07f, 0f),
-                        itemRotation: Quaternion.Euler(180, 0, 0),
-                        itemScale: new Vector3(0.4f, 0.4f, 0.4f)
-                    ),
+                        new Item_VisualStats(
+                            itemIcon: null,
+                            itemPosition: new Vector3(-0.04f, -0.07f, 0f),
+                            itemRotation: Quaternion.Euler(180, 0, 0),
+                            itemScale: new Vector3(0.4f, 0.4f, 0.4f)
+                        ),
 
-                    null,
+                        null,
 
-                    new Item_ArmourStats(
-                        armourType: EquipmentSlot.Chest,
-                        itemCoverage: 75
-                    ),
+                        new Item_ArmourStats(
+                            armourType: EquipmentSlot.Chest,
+                            itemCoverage: 75
+                        ),
 
-                    new Item_FixedModifiers(
-                        maxHealth: 5,
-                        maxMana: 5,
-                        maxStamina: 5,
-                        pushRecovery: 1,
-                        physicalArmour: 2,
-                        magicArmour: 2,
-                        dodgeCooldownReduction: -1
-                    ),
+                        new Item_FixedModifiers(
+                            maxHealth: 5,
+                            maxMana: 5,
+                            maxStamina: 5,
+                            pushRecovery: 1,
+                            physicalArmour: 2,
+                            magicArmour: 2,
+                            dodgeCooldownReduction: -1
+                        ),
 
-                    new Item_PercentageModifiers(
-                        attackSpeed: 0.92f
-                    ),
+                        new Item_PercentageModifiers(
+                            attackSpeed: 0.92f
+                        ),
 
-                    null
-                )
-            }
-        };
+                        null
+                    )
+                }
+            };
+        }
     }
 }

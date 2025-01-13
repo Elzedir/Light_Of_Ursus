@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DataPersistence;
 using UnityEngine;
 
 namespace Tools
@@ -25,8 +26,6 @@ namespace Tools
         {
             InitialiseAllData();
         }
-
-        public void LoadSO(TD[] data) => _data = data.Select(_convertToData).ToArray();
 
         Dictionary<uint, int>        _dataIndexLookup;
         public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
@@ -173,24 +172,15 @@ namespace Tools
             _currentIndex = 0;
         }
         
-        protected          Dictionary<uint, Data<TD>> _defaultData;
-        public             Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
+        protected Dictionary<uint, Data<TD>> _defaultData;
+        public    Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
         protected abstract Dictionary<uint, Data<TD>> _getDefaultData();
-        
-        protected          Dictionary<uint, Data<TD>> _savedData;
-        public             Dictionary<uint, Data<TD>> SavedData => _savedData ??= _getSavedData();
-        protected abstract Dictionary<uint, Data<TD>> _getSavedData();
 
         protected virtual Dictionary<uint, Data<TD>> _getAllData()
         {
             var allData = new Dictionary<uint, Data<TD>>();
             
             foreach (var (key, value) in DefaultData)
-            {
-                allData[key] = value;
-            }
-            
-            foreach(var (key, value) in SavedData)
             {
                 allData[key] = value;
             }

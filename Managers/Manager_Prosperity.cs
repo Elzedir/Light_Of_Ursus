@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TickRates;
 using Tools;
 using UnityEngine;
 
@@ -67,9 +66,7 @@ namespace Managers
                 dataSO_Object = new Data_Display(
                     title: "Prosperity Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    data: new Dictionary<string, string>(),
-                    firstData: true);
+                    data: new Dictionary<string, string>());
 
             try
             {
@@ -78,7 +75,6 @@ namespace Managers
                     dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
                         title: "Prosperity Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 

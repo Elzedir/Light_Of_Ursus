@@ -1,60 +1,14 @@
-using System.Linq;
 using Actor;
-using DataPersistence;
-using Initialisation;
 using UnityEngine;
 
 namespace Faction
 {
-    public abstract class Faction_Manager : IDataPersistence
+    public abstract class Faction_Manager
     {
         const string _faction_SOPath = "ScriptableObjects/Faction_SO";
         
         static Faction_SO _allFactions;
         static Faction_SO AllFactions => _allFactions ??= _getFaction_SO();
-
-        public void SaveData(SaveData saveData) =>
-            saveData.SavedFactionData = new SavedFactionData(AllFactions.Factions.Select(x => x.Data_Object).ToArray());
-
-        public void LoadData(SaveData saveData)
-        {
-            try
-            {
-                AllFactions.LoadSO(saveData.SavedFactionData.AllFactionData);
-            }
-            catch
-            {
-                if (saveData is null)
-                {
-                    Debug.Log("No SaveData found in LoadData.");
-                    return;
-                }
-
-                if (saveData.SavedFactionData is null)
-                {
-                    Debug.Log("No SavedFactionData found in SaveData.");
-                    return;
-                }
-
-                if (saveData.SavedFactionData.AllFactionData is null)
-                {
-                    Debug.Log("No AllFactionData found in SavedFactionData.");
-                    return;
-                }
-
-                Debug.Log("AllFactionData count is 0.");
-            }
-        }
-
-        public static void OnSceneLoaded()
-        {
-            Manager_Initialisation.OnInitialiseManagerFaction += _initialise;
-        }
-
-        static void _initialise()
-        {
-            AllFactions.PopulateSceneData();
-        }
         
         public static Faction_Data GetFaction_Data(uint factionID)
         {

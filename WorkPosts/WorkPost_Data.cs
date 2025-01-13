@@ -4,7 +4,6 @@ using Actor;
 using Station;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace WorkPosts
 {
@@ -65,9 +64,7 @@ namespace WorkPosts
                 dataSO_Object = new Data_Display(
                     title: "WorkPost Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: dataSO_Object,
-                    subData: new Dictionary<string, Data_Display>(),
-                    firstData: true);
+                    subData: new Dictionary<string, Data_Display>());
             
             try
             {
@@ -76,7 +73,6 @@ namespace WorkPosts
                     dataSO_Object.SubData["Base WorkPost Data"] = new Data_Display(
                         title: "Base WorkPost Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());    
                 }
 

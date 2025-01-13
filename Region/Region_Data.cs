@@ -28,7 +28,11 @@ namespace Region
         [SerializeField] List<uint>      _allCityIDs;
         int                              _currentLength;
         Dictionary<uint, City_Component> _allCitiesInRegion;
-
+        
+        a
+        //* Find out why naming Region Test_Region_01 doesn't allocate the correct RegionID to it and still tries to use its default
+        //* RegionID of 0.
+        
         public Dictionary<uint, City_Component> AllCitiesInRegion
         {
             get
@@ -85,9 +89,7 @@ namespace Region
                 dataSO_Object = new Data_Display(
                     title: "Region Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: dataSO_Object,
-                    subData: new Dictionary<string, Data_Display>(),
-                    firstData: true);
+                    subData: new Dictionary<string, Data_Display>());
                 
             try
             {
@@ -96,7 +98,6 @@ namespace Region
                     dataSO_Object.SubData["Base Region Data"] = new Data_Display(
                         title: "Base Region Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());    
                 }
                 
@@ -126,7 +127,6 @@ namespace Region
                     dataSO_Object.SubData["Region Cities"] = new Data_Display(
                         title: "Region Cities",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingData_Display: dataSO_Object,
                         subData: new Dictionary<string, Data_Display>());
                 }
                 

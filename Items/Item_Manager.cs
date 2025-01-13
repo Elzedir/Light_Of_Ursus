@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Equipment;
-using Priority;
-using Station;
 using UnityEngine;
 
 namespace Items
@@ -26,12 +21,6 @@ namespace Items
         static Item_SO AllItems => _allItems ??= _getItem_SO();
 
         public static Item_Data GetItem_Data(uint itemID) => AllItems.GetItem_Master(itemID).Data_Object;
-
-        public static void PopulateAllItems()
-        {
-            AllItems.PopulateSceneData();
-            // Then populate custom items.
-        }
 
         static Item_SO _getItem_SO()
         {

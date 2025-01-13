@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -10,7 +10,7 @@ namespace WorkPosts
 {
     [CreateAssetMenu(fileName = "WorkPost_SO", menuName = "SOList/WorkPost_SO")]
     [Serializable]
-    public class WorkPost_SO : Data_SO<WorkPost_Data>
+    public class WorkPost_SO : Data_Component_SO<WorkPost_Data, WorkPost_Component>
     {
         // Not really a point to this class?
         
@@ -34,60 +34,14 @@ namespace WorkPosts
         public void UpdateWorkPost(uint workPostID, WorkPost_Data workPost_Data) => UpdateData(workPostID, workPost_Data);
         public void UpdateAllWorkPosts(Dictionary<uint, WorkPost_Data> allWorkPosts) => UpdateAllData(allWorkPosts);
 
-        public override void PopulateSceneData()
-        {
-            if (_defaultWorkPosts.Count == 0)
-            {
-                Debug.Log("No Default WorkPosts Found");
-            }
-            
-            var existingWorkPosts = FindObjectsByType<WorkPost_Component>(FindObjectsSortMode.None)
-                                     .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                     .ToDictionary(
-                                         station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                         station => station
-                                     );
-            
-            foreach (var workPost in WorkPosts)
-            {
-                if (workPost?.Data_Object is null) continue;
-                
-                if (existingWorkPosts.TryGetValue(workPost.Data_Object.WorkPostID, out var existingWorkPost))
-                {
-                    WorkPostComponents[workPost.Data_Object.WorkPostID] = existingWorkPost;
-                    existingWorkPost.SetWorkPostData(workPost.Data_Object);
-                    existingWorkPosts.Remove(workPost.Data_Object.WorkPostID);
-                    continue;
-                }
-                
-                Debug.LogWarning($"WorkPost with ID {workPost.Data_Object.WorkPostID} not found in the scene.");
-            }
-            
-            foreach (var workPost in existingWorkPosts)
-            {
-                if (DataIndexLookup.ContainsKey(workPost.Key))
-                {
-                    Debug.LogWarning($"WorkPost with ID {workPost.Key} wasn't removed from existingWorkPosts.");
-                    continue;
-                }
-                
-                Debug.LogWarning($"WorkPost with ID {workPost.Key} does not have DataObject in WorkPost_SO.");
-            }
-        }
+        protected override Dictionary<uint, Data<WorkPost_Data>> _getDefaultData() => 
+            _convertDictionaryToData(new Dictionary<uint, WorkPost_Data>());
 
-        protected override Dictionary<uint, Data<WorkPost_Data>> _getDefaultData(bool initialisation = false)
-        {
-            // No default work stations for now.
-            
-            var defaultWorkPosts = new Dictionary<uint, WorkPost_Data>();
+        protected override Dictionary<uint, Data<WorkPost_Data>> _getSavedData() =>
+            _convertDictionaryToData(new Dictionary<uint, WorkPost_Data>());
 
-            // foreach (var defaultWorkPost in WorkPost_List.DefaultWorkPosts)
-            // {
-            //     defaultWorkPosts.Add(defaultWorkPost.Key, defaultWorkPost.Value);
-            // }
-
-            return _convertDictionaryToData(defaultWorkPosts);
-        }
+        protected override Dictionary<uint, Data<WorkPost_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.WorkPostData));
 
         static uint _lastUnusedWorkPostID = 1;
 
@@ -100,8 +54,6 @@ namespace WorkPosts
 
             return _lastUnusedWorkPostID;
         }
-        
-        Dictionary<uint, Data<WorkPost_Data>> _defaultWorkPosts => DefaultData;
          
         protected override Data<WorkPost_Data> _convertToData(WorkPost_Data data)
         {
@@ -109,8 +61,10 @@ namespace WorkPosts
                 dataID: data.WorkPostID, 
                 data_Object: data,
                 dataTitle: $"WorkPost: {data.WorkPostID}",
-                getData_Display: data.GetDataSO_Object);
+                getData_Display: data.GetData_Display);
         }
+
+        public override void SaveData(SaveData saveData) { }
     }
 
     [CustomEditor(typeof(WorkPost_SO))]

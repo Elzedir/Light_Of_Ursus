@@ -121,9 +121,7 @@ namespace Priority
                 dataSO_Object = new Data_Display(
                     title: "Priority Data JobSite",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    subData: new Dictionary<string, Data_Display>(),
-                    firstData: true);
+                    subData: new Dictionary<string, Data_Display>());
 
             try
             {
@@ -132,7 +130,6 @@ namespace Priority
                     dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
                         title: "Base Priority Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -161,13 +158,12 @@ namespace Priority
                     dataSO_Object.SubData["All Priorities"] = new Data_Display(
                         title: "All Priorities",
                         dataDisplayType: DataDisplayType.List_Selectable,
-                        existingData_Display: dataSO_Object,
                         subData: new Dictionary<string, Data_Display>());
                 }
                 
                 if (allPriorities is not null)
                 {
-                    allPriorities.SubData = PriorityQueue.GetDataSO_Object(toggleMissingDataDebugs).SubData;
+                    allPriorities.SubData = PriorityQueue.GetData_Display(toggleMissingDataDebugs).SubData;
                 }
             }
             catch

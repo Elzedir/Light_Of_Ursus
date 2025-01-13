@@ -59,9 +59,7 @@ namespace Recipes
                 dataSO_Object = new Data_Display(
                     title: "Base Recipe Data",
                     dataDisplayType: DataDisplayType.List_CheckBox,
-                    existingData_Display: null,
-                    subData: new Dictionary<string, Data_Display>(),
-                    firstData: true);
+                    subData: new Dictionary<string, Data_Display>());
 
             try
             {
@@ -70,7 +68,6 @@ namespace Recipes
                     dataSO_Object.SubData["Base Recipe Data"] = new Data_Display(
                         title: "Base Recipe Data",
                         dataDisplayType: DataDisplayType.List_Item,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -97,7 +94,6 @@ namespace Recipes
                     dataSO_Object.SubData["Required Ingredients"] = new Data_Display(
                         title: "Required Ingredients",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -118,7 +114,6 @@ namespace Recipes
                     dataSO_Object.SubData["Required Vocations"] = new Data_Display(
                         title: "Required Vocations",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -142,7 +137,6 @@ namespace Recipes
                     dataSO_Object.SubData["Recipe Products"] = new Data_Display(
                         title: "Recipe Products",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
@@ -163,7 +157,6 @@ namespace Recipes
                     dataSO_Object.SubData["Possible Qualities"] = new Data_Display(
                         title: "Possible Qualities",
                         dataDisplayType: DataDisplayType.List_CheckBox,
-                        existingData_Display: dataSO_Object,
                         data: new Dictionary<string, string>());
                 }
                 
