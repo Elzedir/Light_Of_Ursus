@@ -16,7 +16,7 @@ namespace WorkPosts
         
         public Data<WorkPost_Data>[]         WorkPosts                            => Data;
         public Data<WorkPost_Data>           GetWorkPost_Data(uint      workPostID) => GetData(workPostID);
-        public Dictionary<uint, WorkPost_Component> WorkPostComponents = new();
+        public Dictionary<uint, WorkPost_Component> WorkPostComponents => _getSceneComponents();
 
         public WorkPost_Component GetWorkPost_Component(uint workPostID)
         {

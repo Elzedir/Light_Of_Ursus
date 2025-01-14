@@ -13,6 +13,11 @@ namespace Region
         {
             return AllRegions.GetRegion_Data(regionID).Data_Object;
         }
+
+        public static Region_Data GetRegion_DataFromComponent(Region_Component region_Component)
+        {
+            return AllRegions.GetDataFromName(region_Component.name)?.Data_Object;
+        }
         
         public static Region_Component GetRegion_Component(uint regionID)
         {

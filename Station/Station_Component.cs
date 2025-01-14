@@ -52,6 +52,15 @@ namespace Station
 
         void _initialise()
         {
+            var stationData = Station_Manager.GetStation_DataFromComponent(this);
+            
+            if (stationData is null)
+            {
+                Debug.LogWarning($"Station with name {name} not found in Station_SO.");
+                return;
+            }
+            
+            SetStationData(stationData);
             Station_Data.InitialiseStationData();
 
             SetInteractRange();

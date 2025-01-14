@@ -37,6 +37,15 @@ namespace JobSite
 
         void _initialise()
         {
+            var jobSiteData = JobSite_Manager.GetJobSite_DataFromComponent(this);
+            
+            if (jobSiteData is null)
+            {
+                Debug.LogWarning($"JobSite with name {name} not found in JobSite_SO.");
+                return;
+            }
+            
+            SetJobSiteData(jobSiteData);
             JobSiteData.InitialiseJobSiteData();
 
             _setTickRate(TickRateName.TenSeconds, false);

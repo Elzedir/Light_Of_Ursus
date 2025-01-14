@@ -49,6 +49,16 @@ namespace Actor
 
         public void Initialise()
         {
+            var actorData = Actor_Manager.GetActor_DataFromComponent(this);
+            
+            if (actorData is null)
+            {
+                Debug.LogWarning($"Actor with name {name} not found in Actor_SO.");
+                return;
+            }
+            
+            SetActorData(actorData);
+            
             if (ActorData == null)
             {
                 Debug.LogError($"Actor: {name} doesn't have ActorData.");

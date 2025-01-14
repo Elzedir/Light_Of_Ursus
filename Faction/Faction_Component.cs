@@ -25,6 +25,16 @@ namespace Faction
 
         void _initialise()
         {
+            var factionData = Faction_Manager.GetFaction_DataFromComponent(this);
+            
+            if (factionData is null)
+            {
+                Debug.LogWarning($"Faction with name {name} not found in Faction_SO.");
+                return;
+            }
+            
+            SetFactionData(factionData);
+            
             FactionData.InitialiseFactionData();
         }
     }

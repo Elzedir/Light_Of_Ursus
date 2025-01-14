@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DataPersistence;
 using UnityEngine;
 
 namespace Tools
@@ -9,6 +8,7 @@ namespace Tools
     [Serializable]
     public abstract class Data_SO<TD> : ScriptableObject where TD : class
     {
+        //* Maybe write a second array to save, so that we don't autoupdate the data to Save on SceneChange.
         [SerializeField] Data<TD>[] _data;
 
         public Data<TD>[] Data
@@ -22,10 +22,7 @@ namespace Tools
             }
         }
 
-        public void RefreshData()
-        {
-            InitialiseAllData();
-        }
+        public virtual void RefreshData() { }
 
         Dictionary<uint, int>        _dataIndexLookup;
         public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
@@ -35,7 +32,7 @@ namespace Tools
 
         public Data<TD>[] InitialiseAllData()
         {
-            var allData = _getAllData();
+            var allData = _getAllInitialisationData();
             
             _data = new Data<TD>[allData.Count * 2];
             Array.Copy(allData.Values.ToArray(), Data, allData.Count);
@@ -66,17 +63,16 @@ namespace Tools
             try
             {
                 return Data[DataIndexLookup[dataID]];
-
             }
             catch
             {
                 if (DataIndexLookup.TryGetValue(dataID, out var index))
                 {
-                    Debug.LogWarning($"Data {dataID} is null at index {index}.");
+                    Debug.LogWarning($"DataID: {dataID} is null at index {index}.");
                     return null;
                 }
 
-                Debug.LogWarning($"Data {dataID} does not exist in Data.");
+                Debug.LogWarning($"DataID: {dataID} does not exist in DataIndexLookup.");
                 return null;
             }
         }
@@ -85,7 +81,7 @@ namespace Tools
         {
             if (DataIndexLookup.ContainsKey(dataID))
             {
-                Debug.LogWarning($"Data {dataID} already exists in Data.");
+                Debug.LogWarning($"DataID: {dataID} already exists in Data.");
                 return;
             }
 
@@ -103,7 +99,7 @@ namespace Tools
         {
             if (!DataIndexLookup.TryGetValue(dataID, out var index))
             {
-                Debug.LogWarning($"Data {dataID} does not exist in Data.");
+                Debug.LogWarning($"DataID: {dataID} does not exist in Data.");
                 return;
             }
 
@@ -152,6 +148,7 @@ namespace Tools
             }
             else
             {
+                Debug.Log($"Adding Data {dataID} with Array size {Data.Length}.");
                 AddData(dataID, _convertToData(data));
             }
         }
@@ -176,7 +173,7 @@ namespace Tools
         public    Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
         protected abstract Dictionary<uint, Data<TD>> _getDefaultData();
 
-        protected virtual Dictionary<uint, Data<TD>> _getAllData()
+        protected virtual Dictionary<uint, Data<TD>> _getAllInitialisationData()
         {
             var allData = new Dictionary<uint, Data<TD>>();
             

@@ -15,21 +15,16 @@ namespace City
     {
         public Data<City_Data>[]                         Cities                         => Data;
         public Data<City_Data>                           GetCity_Data(uint      cityID) => GetData(cityID);
-        Dictionary<uint, City_Component>                        _city_Components;
-        public Dictionary<uint, City_Component> City_Components => _city_Components ??= _getExistingCity_Components();
-        
-        Dictionary<uint, City_Component> _getExistingCity_Components()
-        {
-            return FindObjectsByType<City_Component>(FindObjectsSortMode.None)
-                                  .Where(city => Regex.IsMatch(city.name, @"\d+"))
-                                  .ToDictionary(
-                                      city => uint.Parse(new string(city.name.Where(char.IsDigit).ToArray())),
-                                      city => city
-                                  );
-        }
+        public Dictionary<uint, City_Component> City_Components => _getSceneComponents();
 
         public City_Component GetCity_Component(uint cityID)
         {
+            if (cityID == 0)
+            {
+                Debug.LogError("CityID cannot be 0.");
+                return null;
+            }
+            
             if (City_Components.TryGetValue(cityID, out var component))
             {
                 return component;
@@ -54,30 +49,24 @@ namespace City
             try
             {
                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedCityData.AllCityData
-                    .ToDictionary(city => city.CityID, actor => actor);
+                    .ToDictionary(city => city.CityID, city => city);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (saveData == null)
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedCityData == null
+                            ? $"LoadData Error: SavedCityData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedCityData.AllCityData == null
+                                ? $"LoadData Error: AllCityData is null in SavedCityData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedCityData.AllCityData.Any()
+                                    ? $"LoadData Warning: AllCityData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedCityData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedCityData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedCityData.AllCityData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllCityData is null in SavedCityData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedCityData.AllCityData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllCityData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
             
             return _convertDictionaryToData(savedData);

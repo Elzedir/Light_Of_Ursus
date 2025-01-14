@@ -15,18 +15,7 @@ namespace JobSite
     {
         public Data<JobSite_Data>[] JobSites                             => Data;
         public Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetData(jobSiteID);
-        Dictionary<uint, JobSite_Component>     _jobSite_Components;
-        public Dictionary<uint, JobSite_Component> JobSite_Components => _jobSite_Components ??= _getExistingJobSite_Components();
-        
-        Dictionary<uint, JobSite_Component> _getExistingJobSite_Components()
-        {
-            return FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None)
-                                  .Where(jobSite => Regex.IsMatch(jobSite.name, @"\d+"))
-                                  .ToDictionary(
-                                      jobSite => uint.Parse(new string(jobSite.name.Where(char.IsDigit).ToArray())),
-                                      jobSite => jobSite
-                                  );
-        }
+        public Dictionary<uint, JobSite_Component> JobSite_Components => _getSceneComponents();
 
         public JobSite_Component GetJobSite_Component(uint jobSiteID)
         {
@@ -56,28 +45,22 @@ namespace JobSite
                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedJobSiteData.AllJobSiteData
                     .ToDictionary(jobSite => jobSite.JobSiteID, jobSite => jobSite);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (saveData == null)
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedJobSiteData == null
+                            ? $"LoadData Error: SavedJobSiteData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedJobSiteData.AllJobSiteData == null
+                                ? $"LoadData Error: AllJobSiteData is null in SavedJobSiteData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedJobSiteData.AllJobSiteData.Any()
+                                    ? $"LoadData Warning: AllJobSiteData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedJobSiteData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedJobSiteData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedJobSiteData.AllJobSiteData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllJobSiteData is null in SavedJobSiteData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedJobSiteData.AllJobSiteData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllJobSiteData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
 
             return _convertDictionaryToData(savedData);

@@ -15,18 +15,7 @@ namespace Region
     {
         public Data<Region_Data>[]         Regions                            => Data;
         public Data<Region_Data>           GetRegion_Data(uint      regionID) => GetData(regionID);
-        Dictionary<uint, Region_Component>        _region_Components;
-        public Dictionary<uint, Region_Component> RegionComponents => _region_Components ??= _getExistingRegion_Components();
-
-        Dictionary<uint, Region_Component> _getExistingRegion_Components()
-        {
-            return FindObjectsByType<Region_Component>(FindObjectsSortMode.None)
-                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                  .ToDictionary(
-                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                      station => station
-                                  );
-        }
+        public Dictionary<uint, Region_Component> RegionComponents => _getSceneComponents();
         
         public Region_Component GetRegion_Component(uint regionID)
         {
@@ -44,40 +33,34 @@ namespace Region
         public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
         public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllData(allRegions);
 
-        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData() => 
+        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData() =>
             _convertDictionaryToData(Region_List.DefaultRegions);
 
         protected override Dictionary<uint, Data<Region_Data>> _getSavedData()
         {
             Dictionary<uint, Region_Data> savedData = new();
-            
+
             try
             {
                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedRegionData.AllRegionData
                     .ToDictionary(region => region.RegionID, region => region);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
-                
-                if (saveData == null)
+
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedRegionData == null
+                            ? $"LoadData Error: SavedRegionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedRegionData.AllRegionData == null
+                                ? $"LoadData Error: AllRegionData is null in SavedRegionData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedRegionData.AllRegionData.Any()
+                                    ? $"LoadData Warning: AllRegionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedRegionData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedRegionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedRegionData.AllRegionData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllRegionData is null in SavedRegionData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedRegionData.AllRegionData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllRegionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
 
             return _convertDictionaryToData(savedData);

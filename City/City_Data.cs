@@ -57,21 +57,6 @@ namespace City
             ProsperityData = new ProsperityData(prosperityData);
         }
 
-        public void InitialiseCityData()
-        {
-            foreach (var jobSite in AllJobSitesInCity
-                                                 .Where(jobSite_Component => !_allJobSiteIDs.Contains(jobSite_Component.Key)))
-            {
-                Debug.Log($"JobSite_Component: {jobSite.Value?.JobSiteData?.JobSiteID}: {jobSite.Value?.JobSiteData?.JobSiteName} doesn't exist in DataList");
-            }
-            
-            foreach (var jobSiteID in _allJobSiteIDs
-                         .Where(jobSiteID => !AllJobSitesInCity.ContainsKey(jobSiteID)))
-            {
-                Debug.LogError($"JobSite with ID {jobSiteID} doesn't exist physically in City: {CityID}: {CityName}");
-            }
-        }
-
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
         {
             if (dataSO_Object.Data is null && dataSO_Object.SubData is null)

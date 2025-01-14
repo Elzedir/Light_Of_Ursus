@@ -15,6 +15,11 @@ namespace Faction
             return AllFactions.GetFaction_Data(factionID).Data_Object;
         }
         
+        public static Faction_Data GetFaction_DataFromComponent(Faction_Component faction_Component)
+        {
+            return AllFactions.GetDataFromName(faction_Component.name)?.Data_Object;
+        }
+        
         public static Faction_Component GetFaction_Component(uint factionID)
         {
             return AllFactions.GetFaction_Component(factionID);

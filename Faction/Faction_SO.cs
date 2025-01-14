@@ -15,18 +15,7 @@ namespace Faction
     {
         public Data<Faction_Data>[]                      Factions                             => Data;
         public Data<Faction_Data>                        GetFaction_Data(uint      factionID) => GetData(factionID);
-        Dictionary<uint, Faction_Component>     _faction_Components;
-        public Dictionary<uint, Faction_Component> Faction_Components => _faction_Components ??= _getExistingFaction_Components();
-        
-        Dictionary<uint, Faction_Component> _getExistingFaction_Components()
-        {
-            return FindObjectsByType<Faction_Component>(FindObjectsSortMode.None)
-                .Where(faction => Regex.IsMatch(faction.name, @"\d+"))
-                .ToDictionary(
-                    faction => uint.Parse(new string(faction.name.Where(char.IsDigit).ToArray())),
-                    faction => faction
-                );
-        }
+        public Dictionary<uint, Faction_Component> Faction_Components => _getSceneComponents();
 
         public Faction_Component GetFaction_Component(uint factionID)
         {
@@ -56,28 +45,22 @@ namespace Faction
                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedFactionData.AllFactionData
                     .ToDictionary(faction => faction.FactionID, faction => faction);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (saveData == null)
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedFactionData == null
+                            ? $"LoadData Error: SavedFactionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedFactionData.AllFactionData == null
+                                ? $"LoadData Error: AllFactionData is null in SavedFactionData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedFactionData.AllFactionData.Any()
+                                    ? $"LoadData Warning: AllFactionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedFactionData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedFactionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedFactionData.AllFactionData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllFactionData is null in SavedFactionData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedFactionData.AllFactionData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllFactionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
 
             return _convertDictionaryToData(savedData);

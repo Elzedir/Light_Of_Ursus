@@ -132,20 +132,6 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
-            foreach (var station in AllStationComponents
-                         .Where(station_Component => !AllStationIDs.Contains(station_Component.Key)))
-            {
-                Debug.Log(
-                    $"Station_Component: {station.Value?.Station_Data?.StationID}: {station.Value?.Station_Data?.StationName} doesn't exist in DataList");
-            }
-
-            foreach (var stationID in AllStationIDs
-                         .Where(stationID => !AllStationComponents.ContainsKey(stationID)))
-            {
-                Debug.LogError(
-                    $"Station with ID {stationID} doesn't exist physically in JobSite: {JobSiteID}: {JobSiteName}");
-            }
-
             PriorityData.RegenerateAllPriorities();
 
             _jobSiteComponent.StartCoroutine(_populate());

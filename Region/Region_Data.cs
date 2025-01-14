@@ -29,10 +29,6 @@ namespace Region
         int                              _currentLength;
         Dictionary<uint, City_Component> _allCitiesInRegion;
         
-        a
-        //* Find out why naming Region Test_Region_01 doesn't allocate the correct RegionID to it and still tries to use its default
-        //* RegionID of 0.
-        
         public Dictionary<uint, City_Component> AllCitiesInRegion
         {
             get
@@ -65,22 +61,6 @@ namespace Region
             _allCityIDs       = allCityIDs;
 
             ProsperityData = new ProsperityData(prosperityData);
-        }
-
-        public void InitialiseRegionData()
-        {
-            foreach (var city in AllCitiesInRegion
-                         .Where(city_Component => !_allCityIDs.Contains(city_Component.Key)))
-            {
-                Debug.Log(
-                    $"City_Component: {city.Value?.CityData?.CityID}: {city.Value?.CityData?.CityName} doesn't exist in DataList");
-            }
-
-            foreach (var cityID in _allCityIDs
-                         .Where(cityID => !AllCitiesInRegion.ContainsKey(cityID)))
-            {
-                Debug.LogError($"City with ID {cityID} doesn't exist physically in Region: {RegionID}: {RegionName}");
-            }
         }
 
         protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)

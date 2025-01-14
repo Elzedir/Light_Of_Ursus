@@ -14,8 +14,18 @@ namespace Actor
     {
         public Data<Actor_Data>[] Actors                      => Data;
         public Data<Actor_Data>   GetActor_Data(uint actorID) => GetData(actorID);
-        public Actor_Component GetActor_Component(uint actorID) => Actor_Components[actorID];
         public Dictionary<uint, Actor_Component> Actor_Components => _getSceneComponents();
+        
+        public Actor_Component GetActor_Component(uint actorID)
+        {
+            if (Actor_Components.TryGetValue(actorID, out var component))
+            {
+                return component;
+            }   
+            
+            Debug.LogError($"Actor with ID {actorID} not found in Actor_SO.");
+            return null;
+        }
 
         public override uint GetDataID(int id) => Actors[id].Data_Object.ActorID;
 
@@ -36,28 +46,22 @@ namespace Actor
                  savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedActorData.AllActorData
                      .ToDictionary(actor => actor.ActorID, actor => actor);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
-
-                if (saveData == null)
+                
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedActorData == null
+                            ? $"LoadData Error: SavedActorData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedActorData.AllActorData == null
+                                ? $"LoadData Error: AllActorData is null in SavedActorData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedActorData.AllActorData.Any()
+                                    ? $"LoadData Warning: AllActorData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedActorData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedActorData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedActorData.AllActorData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllActorData is null in SavedActorData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedActorData.AllActorData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllActorData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
 
             return _convertDictionaryToData(savedData);

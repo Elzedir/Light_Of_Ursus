@@ -25,7 +25,15 @@ namespace Region
 
         void _initialise()
         {
-            RegionData.InitialiseRegionData();
+            var regionData = Region_Manager.GetRegion_DataFromComponent(this);
+            
+            if (regionData is null)
+            {
+                Debug.LogWarning($"Region with name {name} not found in Region_SO.");
+                return;
+            }
+            
+            SetRegionData(regionData);
         }
 
         public List<City_Component> GetAllCitiesInRegion() => GetComponentsInChildren<City_Component>().ToList();

@@ -20,6 +20,11 @@ namespace Tools
         
         protected Dictionary<uint, TC> _getSceneComponents(bool repopulate = false)
         {
+            // if (repopulate)
+            // {
+            //     // Clear all   
+            // }
+            
             // foreach (var componentID in ComponentIDsToChange)
             // {
             //     if (SceneComponents.TryGetValue(componentID, out var component))
@@ -51,8 +56,41 @@ namespace Tools
                    .Where(entry => entry != null)
                    .ToDictionary(entry => entry.Id, entry => entry.Component);
         }
+
+        public Data<TD> GetDataFromName(string componentName)
+        {
+            var regex = new Regex(@"\d+");
+
+            var dataID = componentName;
+
+            if (regex.IsMatch(componentName))
+            {
+                dataID = regex.Match(componentName).Value;
+            }
+
+            if (uint.TryParse(dataID, out var id))
+            {
+                return GetData(id);
+            }
+
+            Debug.LogError($"Data_Component with name {componentName} not found in Data_SO.");
+            return null;
+        }
+
+        public override void RefreshData()
+        {
+            _initialiseSceneData();
+        }
+
+        void _initialiseSceneData()
+        {
+            foreach(var data in SceneData.Values)
+            {
+                UpdateData(data.DataID, data.Data_Object);
+            }
+        }
         
-        protected override Dictionary<uint, Data<TD>> _getAllData()
+        protected override Dictionary<uint, Data<TD>> _getAllInitialisationData()
         {
             var allData = new Dictionary<uint, Data<TD>>();
             
@@ -62,11 +100,6 @@ namespace Tools
             }
             
             foreach(var (key, value) in SavedData)
-            {
-                allData[key] = value;
-            }
-            
-            foreach(var (key, value) in SceneData)
             {
                 allData[key] = value;
             }

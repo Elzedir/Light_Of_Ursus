@@ -36,6 +36,11 @@ namespace Actor
             return AllActors.GetActor_Data(actorID).Data_Object;
         }
         
+        public static Actor_Data GetActor_DataFromComponent(Actor_Component actor_Component)
+        {
+            return AllActors.GetDataFromName(actor_Component.name)?.Data_Object;
+        }
+        
         public static Actor_Component GetActor_Component(uint actorID)
         {
             return AllActors.GetActor_Component(actorID);

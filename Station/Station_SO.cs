@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using DataPersistence;
 using Tools;
 using UnityEditor;
@@ -15,18 +14,7 @@ namespace Station
     {
         public Data<Station_Data>[]         Stations                        => Data;
         public Data<Station_Data>           GetStation_Data(uint stationID) => GetData(stationID);
-        Dictionary<uint, Station_Component>       _station_Components;
-        public Dictionary<uint, Station_Component> Station_Components => _station_Components ??= _getExistingStation_Components();
-        
-        Dictionary<uint, Station_Component> _getExistingStation_Components()
-        {
-            return FindObjectsByType<Station_Component>(FindObjectsSortMode.None)
-                                  .Where(station => Regex.IsMatch(station.name, @"\d+"))
-                                  .ToDictionary(
-                                      station => uint.Parse(new string(station.name.Where(char.IsDigit).ToArray())),
-                                      station => station
-                                  );
-        }
+        public Dictionary<uint, Station_Component> Station_Components => _getSceneComponents();
 
         public Station_Component GetStation_Component(uint stationID)
         {
@@ -64,28 +52,22 @@ namespace Station
                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedStationData.AllStationData
                     .ToDictionary(station => station.StationID, station => station);
             }
-            catch (Exception ex)
+            catch
             {
                 var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
                 
-                if (saveData == null)
+                if (ToggleMissingDataDebugs)
                 {
-                    Debug.LogWarning("LoadData Error: CurrentSaveData is null.");
+                    Debug.LogWarning(saveData == null
+                        ? "LoadData Error: CurrentSaveData is null."
+                        : saveData.SavedStationData == null
+                            ? $"LoadData Error: SavedStationData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedStationData.AllStationData == null
+                                ? $"LoadData Error: AllStationData is null in SavedStationData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedStationData.AllStationData.Any()
+                                    ? $"LoadData Warning: AllStationData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                    : string.Empty);
                 }
-                else if (saveData.SavedStationData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: SavedStationData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (saveData.SavedStationData.AllStationData == null)
-                {
-                    Debug.LogWarning($"LoadData Error: AllStationData is null in SavedStationData (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                else if (!saveData.SavedStationData.AllStationData.Any())
-                {
-                    Debug.LogWarning($"LoadData Warning: AllStationData is empty (SaveID: {saveData.SavedProfileData.SaveDataID}).");
-                }
-                
-                Debug.LogError($"LoadData Exception: {ex.Message}\n{ex.StackTrace}");
             }
             
             return _convertDictionaryToData(savedData);

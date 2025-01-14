@@ -20,6 +20,11 @@ namespace JobSite
             return JobSite_SO.GetJobSite_Data(jobSiteID).Data_Object;
         }
         
+        public static JobSite_Data GetJobSite_DataFromComponent(JobSite_Component jobSite_Component)
+        {
+            return JobSite_SO.GetDataFromName(jobSite_Component.name)?.Data_Object;
+        }
+        
         public static JobSite_Component GetJobSite_Component(uint jobSiteID)
         {
             return JobSite_SO.GetJobSite_Component(jobSiteID);

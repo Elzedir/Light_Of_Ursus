@@ -81,6 +81,9 @@ namespace Station
 
                 Object.DestroyImmediate(child.gameObject);
             }
+            
+            a
+                //* For some reason, AllWorkPostData is now null on initialisation. Check why and mabye initialise here instead.
 
             var workPlace_Components = _createWorkPost(AllWorkPost_Data.Values.ToList());
 

@@ -27,7 +27,15 @@ namespace City
 
         void _initialise()
         {
-            CityData.InitialiseCityData();
+            var cityData = City_Manager.GetCity_DataFromComponent(this);
+            
+            if (cityData is null)
+            {
+                Debug.LogWarning($"City with name {name} not found in City_SO.");
+                return;
+            }
+            
+            SetCityData(cityData);
             
             CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
         }
