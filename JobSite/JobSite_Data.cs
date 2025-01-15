@@ -23,10 +23,10 @@ namespace JobSite
         public uint        JobSiteID;
         public JobSiteName JobSiteName;
 
-        JobSite_Component _jobSiteComponent;
+        JobSite_Component _jobSite_Component;
 
         public JobSite_Component JobSite_Component =>
-            _jobSiteComponent ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+            _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
 
         public uint JobsiteFactionID;
         public uint CityID;
@@ -132,9 +132,9 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
-            PriorityData.RegenerateAllPriorities();
+            //PriorityData.RegenerateAllPriorities();
 
-            _jobSiteComponent.StartCoroutine(_populate());
+            JobSite_Component.StartCoroutine(_populate());
         }
 
         public void RegisterAllTickers()

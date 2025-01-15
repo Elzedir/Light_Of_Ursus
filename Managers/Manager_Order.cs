@@ -301,7 +301,7 @@ namespace Managers
             ActorID   = actorID;
             //OrderID = Actor.ActorData.OrderData.GetOrderID();
             StationID_Source      = stationID_Source;
-            JobsiteID             = Station_Source.Station_Data.JobsiteID;
+            JobsiteID             = Station_Source.Station_Data.JobSiteID;
             StationID_Destination = stationID_Destination;
             OrderStatus           = orderStatus;
             OrderItems            = orderItems;

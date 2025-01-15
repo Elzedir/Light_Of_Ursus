@@ -7,6 +7,7 @@ using Recipes;
 using TickRates;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 using Object = UnityEngine.Object;
 
@@ -18,7 +19,7 @@ namespace Station
         public uint        StationID;
         public string      StationDescription;
         public bool        StationIsActive;
-        public uint        JobsiteID;
+        public uint        JobSiteID;
 
         public float BaseProgressRatePerHour = 5;
 
@@ -32,7 +33,7 @@ namespace Station
         public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
         
         JobSite_Component        _jobSite_Component;
-        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
+        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         
         Inventory_Data_Preset _inventoryDataPreset;
         public Inventory_Data_Preset InventoryDataPreset => _inventoryDataPreset ??= new InventoryDataPreset_Station(StationID);
@@ -45,14 +46,14 @@ namespace Station
         public bool IsStationBeingOperated =>
             AllWorkPost_Data.Values.Any(workPost => workPost.CurrentWorker != null);
 
-        public Station_Data(uint                            stationID,        StationName            stationName,        string stationDescription, uint jobsiteID,
+        public Station_Data(uint                            stationID,        StationName            stationName,        string stationDescription, uint jobSiteID,
                             Dictionary<uint, WorkPost_Data> allWorkPost_Data, bool   stationIsActive = true)
         {
             StationID               = stationID;
             //stationName; WHen loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             // But if the station does exist, then we generate a new station with the required stationName type.
             StationDescription      = stationDescription;
-            JobsiteID               = jobsiteID;
+            JobSiteID               = jobSiteID;
             AllWorkPost_Data        = allWorkPost_Data;
             StationIsActive         = stationIsActive;
         }
@@ -81,9 +82,6 @@ namespace Station
 
                 Object.DestroyImmediate(child.gameObject);
             }
-            
-            a
-                //* For some reason, AllWorkPostData is now null on initialisation. Check why and mabye initialise here instead.
 
             var workPlace_Components = _createWorkPost(AllWorkPost_Data.Values.ToList());
 
@@ -236,7 +234,7 @@ namespace Station
                         { "Station Name:", $"{StationName}" },
                         { "Station Description:", $"{StationDescription}" },
                         { "Station IsActive:", $"{StationIsActive}" },
-                        { "Jobsite ID:", $"{JobsiteID}" },
+                        { "Jobsite ID:", $"{JobSiteID}" },
                         { "Default Product:", $"{DefaultProduct}" },
                         { "Base Progress Rate Per Hour:", $"{BaseProgressRatePerHour}" }
                     };

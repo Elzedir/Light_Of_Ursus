@@ -17,7 +17,7 @@ namespace Station
                         stationID: 1,
                         stationName: StationName.Tree,
                         stationDescription: "Station 1 Description",
-                        jobsiteID: 1,
+                        jobSiteID: 1,
                         allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                         {
                             {
@@ -47,7 +47,7 @@ namespace Station
                         stationID: 2,
                         stationName: StationName.Sawmill,
                         stationDescription: "Station 2 Description",
-                        jobsiteID: 1,
+                        jobSiteID: 1,
                         allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                         {
                             {
@@ -77,7 +77,7 @@ namespace Station
                         stationID: 3,
                         stationName: StationName.Log_Pile,
                         stationDescription: "Station 3 Description",
-                        jobsiteID: 1,
+                        jobSiteID: 1,
                         allWorkPost_Data: new Dictionary<uint, WorkPost_Data>
                         {
                             {

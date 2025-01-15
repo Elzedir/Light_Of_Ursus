@@ -143,12 +143,10 @@ namespace Tools
         {
             if (DataIndexLookup.TryGetValue(dataID, out var index))
             {
-                Debug.Log($"Updating Data {dataID} at index {index} with Array size {Data.Length}.");
                 Data[index] = _convertToData(data);
             }
             else
             {
-                Debug.Log($"Adding Data {dataID} with Array size {Data.Length}.");
                 AddData(dataID, _convertToData(data));
             }
         }
