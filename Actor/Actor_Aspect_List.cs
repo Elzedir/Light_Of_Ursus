@@ -174,7 +174,7 @@ namespace Managers
         Zenith
     }
 
-    public class Manager_Aspect // Can turn this into an SO eventually since it will be static.
+    public class Actor_Aspect_List // Can turn this into an SO eventually since it will be static.
     {
         public static Dictionary<(AspectName, AspectName, AspectName), ClassTitle> AllClassList { get; private set; } = new();
 

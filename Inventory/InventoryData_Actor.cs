@@ -9,20 +9,20 @@ using UnityEngine;
 namespace Inventory
 {
     [Serializable]
-    public class InventoryDataPreset_Actor : Inventory_Data_Preset
+    public class InventoryData_Actor : Inventory_Data
     {
-        public InventoryDataPreset_Actor(uint actorID, ObservableDictionary<uint, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
+        public InventoryData_Actor(uint actorID, ObservableDictionary<uint, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
         {
             AllInventoryItems = allInventoryItems;
         }
         
-        public InventoryDataPreset_Actor(Inventory_Data_Preset inventoryDataPreset_Actor) : base(inventoryDataPreset_Actor.Reference.ComponentID, ComponentType.Actor)
+        public InventoryData_Actor(Inventory_Data inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)
         {
-            AllInventoryItems = inventoryDataPreset_Actor.GetAllObservableInventoryItemsClone();
+            AllInventoryItems = inventoryData_Actor.GetAllObservableInventoryItemsClone();
         }
         
         public override ComponentType       ComponentType      => ComponentType.Actor;
-        public          InventoryDataPreset_Actor GetInventoryData() => this;
+        public          InventoryData_Actor GetInventoryData() => this;
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
@@ -31,7 +31,7 @@ namespace Inventory
         float _availableCarryWeight;
         public float AvailableCarryWeight => _availableCarryWeight != 0 
             ? _availableCarryWeight 
-            : ActorReference.Actor_Component.ActorData.StatsAndAbilitiesPreset.ActorStats.AvailableCarryWeight;
+            : ActorReference.Actor_Component.ActorData.StatsAndAbilities.ActorStats.AvailableCarryWeight;
         public override bool HasSpaceForItems(List<Item> items)
         {
             if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)
@@ -49,7 +49,7 @@ namespace Inventory
             return null;
         }
 
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data_Preset inventory)
+        public override List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
         {
             Debug.LogError("Not implemented yet.");
             return null;
