@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
+using Tools;
 using UnityEngine;
 
 namespace Items
 {
     [Serializable]
-    public class Item_VisualStats
+    public class Item_VisualStats : Data_Class
     {
         public Sprite                    ItemIcon;
         public Mesh                      ItemMesh;
@@ -47,6 +49,30 @@ namespace Items
             ItemPosition           = other.ItemPosition;
             ItemRotation           = other.ItemRotation;
             ItemScale              = other.ItemScale;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "ItemIcon", $"{ItemIcon}" },
+                { "ItemMesh", $"{ItemMesh}" },
+                { "ItemMaterial", $"{ItemMaterial}" },
+                { "ItemCollider", $"{ItemCollider}" },
+                { "ItemAnimatorController", $"{ItemAnimatorController}" },
+                { "ItemPosition", $"{ItemPosition}" },
+                { "ItemRotation", $"{ItemRotation}" },
+                { "ItemScale", $"{ItemScale}" }
+            };
+        }
+        
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Visual Stats",
+                stringData: GetStringData());
+
+            return dataToDisplay;
         }
 
         public void DisplayVisuals(GameObject go)

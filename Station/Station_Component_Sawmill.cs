@@ -38,7 +38,7 @@ namespace Station
 
         public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
-            if (!actor.ActorData.CraftingDataPreset.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
+            if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName)) { Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}"); return; }
             if (!DefaultAllowedRecipes.Contains(recipeName)) { Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}"); return; }
 
             var recipeMaster = Recipe_Manager.GetRecipe_Master(recipeName);
@@ -46,11 +46,11 @@ namespace Station
             var cost  = GetCost(recipeMaster.RequiredIngredients, actor);
             var yield = GetYield(recipeMaster.RecipeProducts, actor);
         
-            if (!Station_Data.InventoryDataPreset.InventoryContainsAllItems(cost)) { Debug.Log("Station does not have required items."); return; }
-            if (!Station_Data.InventoryDataPreset.HasSpaceForItems(yield)) { Debug.Log("Station does not have space for yield items."); return; }
+            if (!Station_Data.InventoryData.InventoryContainsAllItems(cost)) { Debug.Log("Station does not have required items."); return; }
+            if (!Station_Data.InventoryData.HasSpaceForItems(yield)) { Debug.Log("Station does not have space for yield items."); return; }
 
-            Station_Data.InventoryDataPreset.RemoveFromInventory(cost);
-            Station_Data.InventoryDataPreset.AddToInventory(yield);
+            Station_Data.InventoryData.RemoveFromInventory(cost);
+            Station_Data.InventoryData.AddToInventory(yield);
         }
 
         public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)

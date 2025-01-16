@@ -60,7 +60,7 @@ namespace Items
                 dataID: data.ItemID, 
                 data_Object: data,
                 dataTitle: $"{data.ItemID}: {data.ItemName}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
     }
 

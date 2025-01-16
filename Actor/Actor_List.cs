@@ -42,12 +42,12 @@ namespace Actor
                         (
                             actorID: 1
                         ),
-                        careerDataPreset: new Career_Data_Preset
+                        careerData: new Career_Data
                         (
                             actorID: 1,
                             careerName: CareerName.Lumberjack
                         ),
-                        craftingDataPreset: new Crafting_Data_Preset
+                        craftingData: new Crafting_Data
                         (
                             actorID: 1,
                             knownRecipes: new List<RecipeName>
@@ -56,7 +56,7 @@ namespace Actor
                                 RecipeName.Plank,
                                 RecipeName.Iron_Ingot
                             }),
-                        vocationDataPreset: new Vocation_Data_Preset(
+                        vocationData: new Vocation_Data(
                             actorID: 1,
                             actorVocations: new Dictionary<VocationName, ActorVocation>
                             {
@@ -82,7 +82,8 @@ namespace Actor
                                     PersonalityTraitName.Brave
                                 })
                         ),
-                        statsAndAbilitiesPreset: new StatsAndAbilities_Preset(
+                        statsAndAbilities: new StatsAndAbilities(
+                            actorID: 1,
                             actorStats: new Actor_Stats(
                                 actorID: 1,
                                 actorLevelData: new ActorLevelData(
@@ -150,7 +151,7 @@ namespace Actor
                                 currentConditions: new ObservableDictionary<ConditionName, float>()
                             )
                         ),
-                        inventoryDataPreset: new InventoryDataPreset_Actor(
+                        inventoryData: new InventoryData_Actor(
                             actorID: 1,
                             allInventoryItems: new ObservableDictionary<uint, Item>
                             {
@@ -162,7 +163,7 @@ namespace Actor
                                 }
                             }
                         ),
-                        equipmentDataPreset: new Equipment_Data_Preset(
+                        equipmentData: new Equipment_Data(
                             actorID: 1
                         ),
                         actorQuests: new QuestUpdater(

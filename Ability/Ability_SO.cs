@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -38,7 +37,7 @@ namespace Ability
                 dataID: (uint)data.AbilityName,
                 data_Object: data, 
                 dataTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
 
         static uint _lastUnusedAbilityID = 1;

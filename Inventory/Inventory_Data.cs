@@ -17,12 +17,28 @@ namespace Inventory
     }
 
     [Serializable]
-    public abstract class Inventory_Data_Preset : Priority_Updater
+    public abstract class Inventory_Data : Priority_Updater
     {
-        protected Inventory_Data_Preset(uint componentID, ComponentType componentType) : base(componentID, componentType)
+        protected Inventory_Data(uint componentID, ComponentType componentType) : base(componentID, componentType)
         {
             AllInventoryItems                   =  new ObservableDictionary<uint, Item>();
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                item => $"{item.ItemName} - Qty: {item.ItemAmount}");
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Inventory Items",
+                stringData: AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                    item => $"{item.ItemName} - Qty: {item.ItemAmount}"));
+
+            return dataToDisplay;
         }
 
         public abstract ComponentType ComponentType { get; }
@@ -121,7 +137,7 @@ namespace Inventory
             return true;
         }
 
-        public void TransferItemsToTarget(Inventory_Data_Preset target, List<Item> items)
+        public void TransferItemsToTarget(Inventory_Data target, List<Item> items)
         {
             RemoveFromInventory(items);
 
@@ -246,7 +262,7 @@ namespace Inventory
             _priorityParameterList { get; set; } = new();
 
         public abstract List<Item> GetInventoryItemsToFetchFromStation();
-        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data_Preset inventory);
+        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory);
         public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
     }
 }

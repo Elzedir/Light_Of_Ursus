@@ -49,8 +49,8 @@ namespace Actor
                 return ActorPriorityState.InCombat;
             }
 
-            if (!_actorData.CareerDataPreset.JobsActive || !_actorData.CareerDataPreset.HasCurrentJob())
-                return _actorData.CareerDataPreset.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
+            if (!_actorData.CareerData.JobsActive || !_actorData.CareerData.HasCurrentJob())
+                return _actorData.CareerData.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
             
             Debug.Log("Step 1: Has Job");
             return ActorPriorityState.HasJob;

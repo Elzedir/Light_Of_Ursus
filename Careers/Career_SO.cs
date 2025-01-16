@@ -25,7 +25,7 @@ namespace Careers
                 dataID: (uint)data.CareerName,
                 data_Object: data,
                 dataTitle: $"{(uint)data.CareerName}: {data.CareerName}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
     }
     

@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Tools;
 
 namespace Items
 {
     [Serializable]
-    public class Item_WeaponStats
+    public class Item_WeaponStats : Data_Class
     {
         public WeaponType[]  WeaponTypeArray;
         public WeaponClass[] WeaponClassArray;
@@ -26,6 +28,26 @@ namespace Items
             WeaponTypeArray  = other.WeaponTypeArray.ToArray();
             WeaponClassArray = other.WeaponClassArray.ToArray();
             MaxChargeTime    = other.MaxChargeTime;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "WeaponTypeArray", $"{string.Join(", ",  WeaponTypeArray)}" },
+                { "WeaponClassArray", $"{string.Join(", ", WeaponClassArray)}" },
+                { "MaxChargeTime", $"{MaxChargeTime}" }
+            };
+        }
+        
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Weapon Stats",
+                stringData: GetStringData()
+            );
+
+            return dataToDisplay;
         }
     }
 }

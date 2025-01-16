@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Tools;
-using UnityEngine;
 
 namespace Managers
 {
@@ -59,41 +58,24 @@ namespace Managers
 
             return BaseProsperityGrowthPerDay; // Add modifiers afterwards.
         }
-        
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
-        {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Prosperity Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
 
-            try
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
             {
-                if (!dataSO_Object.SubData.TryGetValue("Prosperity Data", out var prosperityData))
-                {
-                    dataSO_Object.SubData["Prosperity Data"] = new Data_Display(
-                        title: "Prosperity Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (prosperityData is not null)
-                {
-                    prosperityData.Data = new Dictionary<string, string>
-                    {
-                        { "Current Prosperity", $"{CurrentProsperity}" },
-                        { "Max Prosperity", $"{MaxProsperity}" },
-                        { "Base Prosperity Growth Per Day", $"{BaseProsperityGrowthPerDay}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Prosperity Data");
-            }
+                { "Current Prosperity", $"{CurrentProsperity}" },
+                { "Max Prosperity", $"{MaxProsperity}" },
+                { "Base Prosperity Growth Per Day", $"{BaseProsperityGrowthPerDay}" }
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Prosperity Data",
+                stringData: GetStringData());
             
-            return dataSO_Object;
+            return dataToDisplay;
         }
     }
 }

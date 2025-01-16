@@ -183,40 +183,19 @@ namespace Priority
             _priorityQueue[tempPriorityValueA.PriorityID]     = indexB;
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Priority Queue",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    subData: new Dictionary<string, Data_Display>());
+            return _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
+                priority => $"PriorityValue: {priority.PriorityValue}");
+        }
 
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Priority Queue", out var priorityQueue))
-                {
-                    dataSO_Object.SubData["Priority Queue"] = new Data_Display(
-                        title: "Priority Queue",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
-                            priority => $"PriorityValue: {priority.PriorityValue}"));
-                }
-                
-                if (priorityQueue is not null)
-                {
-                    priorityQueue.Data = _priorityArray.ToDictionary(priority => $"PriorityID: {priority.PriorityID}",
-                        priority => $"PriorityValue: {priority.PriorityValue}");
-                }
-            }
-            catch
-            {
-                if (toggleMissingDataDebugs)
-                {
-                    Debug.LogError("Error in Priority Queue");
-                }
-            }
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Priority Queue",
+                stringData: GetStringData());
 
-            return dataSO_Object;
+            return dataToDisplay;
         }
     }
 

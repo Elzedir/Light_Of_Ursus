@@ -43,79 +43,30 @@ namespace Faction
             }
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Faction Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Base Faction Data",
+                stringData: GetStringData());
             
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Base Faction Data", out var baseFactionData))
-                {
-                    dataSO_Object.SubData["Base Faction Data"] = new Data_Display(
-                        title: "Base Faction Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (baseFactionData is not null)
-                {
-                    baseFactionData.Data = new Dictionary<string, string>
-                    {
-                        { "Faction ID", $"{FactionID}" },
-                        { "Faction Name", FactionName }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Base Faction Data");
-            }
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Faction Actors",
+                stringData: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
             
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Faction Actors", out var factionActors))
-                {
-                    dataSO_Object.SubData["Faction Actors"] = new Data_Display(
-                        title: "Faction Actors",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (factionActors is not null)
-                {
-                    factionActors.Data = AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}");
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Faction Actors");
-            }
-            
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Faction Relations", out var factionRelations))
-                {
-                    dataSO_Object.SubData["Faction Relations"] = new Data_Display(
-                        title: "Faction Relations",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (factionRelations is not null)
-                {
-                    factionRelations.Data = AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}");
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Faction Actors");
-            }
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Faction Relations",
+                stringData: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
 
-            return dataSO_Object;
+            return dataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Faction ID", $"{FactionID}" },
+                { "Faction Name", FactionName }
+            };
         }
     }
 }

@@ -22,18 +22,21 @@ namespace Tools
             }
         }
 
-        public virtual void RefreshData() { }
+        public virtual void RefreshData(bool reinitialise = false)
+        {
+            if (reinitialise) InitialiseAllData();
+        }
 
-        Dictionary<uint, int>        _dataIndexLookup;
+        Dictionary<uint, int> _dataIndexLookup;
         public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
-        int                          _currentIndex;
+        int _currentIndex;
 
         public bool ToggleMissingDataDebugs;
 
         public Data<TD>[] InitialiseAllData()
         {
             var allData = _getAllInitialisationData();
-            
+
             _data = new Data<TD>[allData.Count * 2];
             Array.Copy(allData.Values.ToArray(), Data, allData.Count);
             _currentIndex = allData.Count;
@@ -90,7 +93,7 @@ namespace Tools
                 _compactAndResizeArray();
             }
 
-            Data[_currentIndex]         = data;
+            Data[_currentIndex] = data;
             DataIndexLookup[dataID] = _currentIndex;
             _currentIndex++;
         }
@@ -120,7 +123,7 @@ namespace Tools
             {
                 if (Data[i] is null) continue;
 
-                Data[newSize]                     = Data[i];
+                Data[newSize] = Data[i];
                 DataIndexLookup[GetDataID(i)] = newSize;
                 newSize++;
             }
@@ -151,7 +154,7 @@ namespace Tools
             }
         }
 
-        public             Vector2        ScrollPosition;
+        public Vector2 ScrollPosition;
         protected abstract Data<TD> _convertToData(TD data);
 
         protected Dictionary<uint, Data<TD>> _convertDictionaryToData(
@@ -166,20 +169,20 @@ namespace Tools
             _dataIndexLookup?.Clear();
             _currentIndex = 0;
         }
-        
+
         protected Dictionary<uint, Data<TD>> _defaultData;
-        public    Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
+        public Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
         protected abstract Dictionary<uint, Data<TD>> _getDefaultData();
 
         protected virtual Dictionary<uint, Data<TD>> _getAllInitialisationData()
         {
             var allData = new Dictionary<uint, Data<TD>>();
-            
+
             foreach (var (key, value) in DefaultData)
             {
                 allData[key] = value;
             }
-            
+
             return allData;
         }
     }
@@ -187,61 +190,19 @@ namespace Tools
     [Serializable]
     public class Data<T> where T : class
     {
-        public readonly uint   DataID;
+        public readonly uint DataID;
         public readonly string DataTitle;
 
-        public T                        Data_Object;
-        public                                      Func<bool, Data_Display> GetData_Display;
+        public T Data_Object;
+        public Func<bool, DataToDisplay> GetDataToDisplay;
 
-        public Data(uint   dataID,    T                       data_Object,
-                           string dataTitle, Func<bool, Data_Display> getData_Display)
+        public Data(uint dataID, T data_Object,
+            string dataTitle, Func<bool, DataToDisplay> getDataTo_Display)
         {
-            DataID    = dataID;
-            Data_Object      = data_Object;
+            DataID = dataID;
+            Data_Object = data_Object;
             DataTitle = dataTitle;
-            GetData_Display = getData_Display;
+            GetDataToDisplay = getDataTo_Display;
         }
-    }
-
-    [Serializable]
-    public class Data_Display
-    {
-        public          int     SelectedIndex;
-        public          bool    ShowData;
-        public          Vector2 ScrollPosition;
-
-        public readonly string                           Title;
-        public readonly DataDisplayType                  DataDisplayType;
-        public          Dictionary<string, string>       Data;
-        public          Dictionary<string, Data_Display> SubData;
-
-        public Data_Display(string                           title, DataDisplayType dataDisplayType, Dictionary<string, string> data = null,
-                            Dictionary<string, Data_Display> subData = null)
-        {
-            switch (dataDisplayType)
-            {
-                case DataDisplayType.List_CheckBox when data is null && subData is null:
-                    throw new NullReferenceException("Data is null.");
-                case DataDisplayType.List_Item when data is null:
-                    throw new NullReferenceException("Data is null.");
-                case DataDisplayType.List_Selectable when subData is null:
-                    throw new NullReferenceException("SubData is null.");
-            }
-
-            Title           = title;
-            DataDisplayType = dataDisplayType;
-            SelectedIndex   = -1;
-            ShowData        = false;
-            ScrollPosition  = Vector2.zero;
-            Data            = data    ?? new Dictionary<string, string>();
-            SubData         = subData ?? new Dictionary<string, Data_Display>();
-        }
-    }
-
-    public enum DataDisplayType
-    {
-        List_Item,
-        List_CheckBox,
-        List_Selectable
     }
 }

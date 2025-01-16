@@ -7,7 +7,6 @@ using Priority;
 using TickRates;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Managers
 {
@@ -186,7 +185,28 @@ namespace Managers
 
 
         public ObservableDictionary<ConditionName, float> CurrentConditions;
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            var data = new Dictionary<string, string>();
+
+            foreach (var condition in CurrentConditions)
+            {
+                data.Add(condition.Key.ToString(), condition.Value.ToString());
+            }
+
+            return data;
+        }
         
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Conditions",
+                stringData: GetStringData());
+            
+            return dataToDisplay;
+        }
+
         void OnConditionChanged(ConditionName conditionName)
         {
             _priorityChangeCheck(PriorityUpdateTrigger.ChangedCondition);
@@ -324,6 +344,32 @@ namespace Managers
 
         readonly ObservableDictionary<PrimaryStateName, bool> _currentPrimaryStates;
         readonly ObservableDictionary<SubStateName, bool>     _currentSubStates;
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            var data = new Dictionary<string, string>();
+
+            foreach (var primaryState in _currentPrimaryStates)
+            {
+                data.Add(primaryState.Key.ToString(), primaryState.Value.ToString());
+            }
+
+            foreach (var subState in _currentSubStates)
+            {
+                data.Add(subState.Key.ToString(), subState.Value.ToString());
+            }
+
+            return data;
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Primary States",
+                stringData: GetStringData());
+            
+            return dataToDisplay;
+        }
 
         void _setSubStates()
         {

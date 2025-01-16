@@ -16,9 +16,9 @@ namespace JobSite
                     1, new JobSite_Data(
                         jobSiteID: 1,
                         jobSiteName: JobSiteName.Lumber_Yard,
-                        jobsiteFactionID: 0,
+                        jobSiteFactionID: 0,
                         cityID: 1,
-                        jobsiteDescription: "JobSite 1 Description",
+                        jobSiteDescription: "JobSite 1 Description",
                         ownerID: 0,
                         allStationIDs: new List<uint>
                         {

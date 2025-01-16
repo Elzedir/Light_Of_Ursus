@@ -182,20 +182,20 @@ namespace Actor
                 actorMaterial: null
             );
 
-            var careerData = new Career_Data_Preset(
+            var careerData = new Career_Data(
                 actorID: fullIdentification.ActorID,
-                careerName: actorDataPreset?.CareerDataPreset.CareerName     ?? CareerName.Wanderer,
-                jobsNotFromCareer: actorDataPreset?.CareerDataPreset.AllJobs ?? new HashSet<JobName>()
+                careerName: actorDataPreset?.CareerData.CareerName     ?? CareerName.Wanderer,
+                jobsNotFromCareer: actorDataPreset?.CareerData.AllJobs ?? new HashSet<JobName>()
             );
             
-            var craftingData = new Crafting_Data_Preset(
+            var craftingData = new Crafting_Data(
                 actorID: fullIdentification.ActorID,
-                knownRecipes: actorDataPreset?.CraftingDataPreset.KnownRecipes ?? new List<RecipeName>()
+                knownRecipes: actorDataPreset?.CraftingData.KnownRecipes ?? new List<RecipeName>()
             );
 
-            var vocationData = new Vocation_Data_Preset(
+            var vocationData = new Vocation_Data(
                 actorID: fullIdentification.ActorID,
-                actorVocations: actorDataPreset?.VocationDataPreset.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
+                actorVocations: actorDataPreset?.VocationData.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
                 );
             
             var speciesAndPersonality = new SpeciesAndPersonality(
@@ -204,10 +204,11 @@ namespace Actor
                 actorPersonality: _getRandomPersonality()
             );
             
-            var statsAndAbilities = new StatsAndAbilities_Preset(
-                actorStats: actorDataPreset?.StatsAndAbilitiesPreset?.ActorStats ?? _getNewActorStats(fullIdentification.ActorID),
-                actorAspects: actorDataPreset?.StatsAndAbilitiesPreset?.ActorAspects ?? _getNewActorAspects(fullIdentification.ActorID),
-                actorAbilities: actorDataPreset?.StatsAndAbilitiesPreset?.ActorAbilities ?? _getNewActorAbilities(fullIdentification.ActorID)
+            var statsAndAbilities = new StatsAndAbilities(
+                actorID: fullIdentification.ActorID,
+                actorStats: actorDataPreset?.StatsAndAbilities?.Actor_Stats ?? _getNewActorStats(fullIdentification.ActorID),
+                actorAspects: actorDataPreset?.StatsAndAbilities?.Actor_Aspects ?? _getNewActorAspects(fullIdentification.ActorID),
+                actorAbilities: actorDataPreset?.StatsAndAbilities?.Actor_Abilities ?? _getNewActorAbilities(fullIdentification.ActorID)
                 );
 
             var statesAndConditions = new StatesAndConditionsData(
@@ -215,12 +216,12 @@ namespace Actor
                 actorConditions: _getNewActorConditions(fullIdentification.ActorID)
                 );
 
-            var inventoryData = new InventoryDataPreset_Actor(
+            var inventoryData = new InventoryData_Actor(
                 actorID: fullIdentification.ActorID,
                 new ObservableDictionary<uint, Item>()
             );
 
-            var equipmentData = new Equipment_Data_Preset(
+            var equipmentData = new Equipment_Data(
                 actorID: fullIdentification.ActorID,
                 head: null,
                 neck: null,

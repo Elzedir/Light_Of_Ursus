@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using Equipment;
+using Tools;
 
 namespace Items
 {
     [Serializable]
-    public class Item_ArmourStats
+    public class Item_ArmourStats : Data_Class
     {
         public EquipmentSlot EquipmentSlot;
         public float         ItemCoverage;
@@ -22,6 +24,24 @@ namespace Items
         {
             EquipmentSlot = other.EquipmentSlot;
             ItemCoverage  = other.ItemCoverage;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "EquipmentSlot", $"{EquipmentSlot}" },
+                { "ItemCoverage", $"{ItemCoverage}" }
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Armour Stats",
+                stringData: GetStringData());
+
+            return dataToDisplay;
         }
     }
 }

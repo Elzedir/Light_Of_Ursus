@@ -42,12 +42,12 @@ namespace Actor
 
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseActors += Initialise;
+            Manager_Initialisation.OnInitialiseActors += _initialise_PreExisting;
         }
 
         bool _initialised;
 
-        public void Initialise()
+        void _initialise_PreExisting()
         {
             var actorData = Actor_Manager.GetActor_DataFromComponent(this);
             
@@ -59,6 +59,11 @@ namespace Actor
             
             SetActorData(actorData);
             
+            Initialise();
+        }
+
+        public void Initialise()
+        {
             if (ActorData == null)
             {
                 Debug.LogError($"Actor: {name} doesn't have ActorData.");

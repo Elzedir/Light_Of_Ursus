@@ -87,7 +87,7 @@ namespace Region
                 dataID: data.RegionID, 
                 data_Object: data,
                 dataTitle: $"{data.RegionID}: {data.RegionName}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
         
         public override void SaveData(SaveData saveData) =>

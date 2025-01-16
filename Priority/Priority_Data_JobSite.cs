@@ -115,66 +115,27 @@ namespace Priority
 
         protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Priority Data JobSite",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    subData: new Dictionary<string, Data_Display>());
+            return new Dictionary<string, string>
+            {
+                { "JobSiteID", $"{JobsiteID}" },
+                { "JobSite", $"{_jobSite.JobSiteData.JobSiteName}" },
+                { "PriorityType", $"{_priorityType}" }
+            };
+        }
 
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Base Priority Data", out var basePriorityData))
-                {
-                    dataSO_Object.SubData["Base Priority Data"] = new Data_Display(
-                        title: "Base Priority Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (basePriorityData is not null)
-                {
-                    basePriorityData.Data = new Dictionary<string, string>
-                    {
-                        { "JobsiteID", $"{JobsiteID}" },
-                        { "JobSite", $"{_jobSite.JobSiteData.JobSiteName}" },
-                        { "PriorityType", $"{_priorityType}" }
-                    };
-                }
-            }
-            catch
-            {
-                if (toggleMissingDataDebugs)
-                {
-                    Debug.LogError("Error in Base Priority Data");
-                }
-            }
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Base Priority Data",
+                stringData: GetStringData());
             
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("All Priorities", out var allPriorities))
-                {
-                    dataSO_Object.SubData["All Priorities"] = new Data_Display(
-                        title: "All Priorities",
-                        dataDisplayType: DataDisplayType.List_Selectable,
-                        subData: new Dictionary<string, Data_Display>());
-                }
-                
-                if (allPriorities is not null)
-                {
-                    allPriorities.SubData = PriorityQueue.GetData_Display(toggleMissingDataDebugs).SubData;
-                }
-            }
-            catch
-            {
-                if (toggleMissingDataDebugs)
-                {
-                    Debug.LogError("Error in Base Priority Data");
-                }
-            }
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Priority Queue",
+                subData: PriorityQueue.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
 
-            return dataSO_Object;
+            return dataToDisplay;
         }
     }
 }

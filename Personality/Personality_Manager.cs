@@ -78,6 +78,12 @@ namespace Personality
         {
             PersonalityTraits = personalityTraits ?? Personality_Manager.GetRandomPersonalityTraits(null, 3);
         }
+
+        public Dictionary<string, string> SubData => new()
+        {
+            { "Personality Title: ", $"{PersonalityTitle}" },
+            { "PersonalityDescription: ", $"{PersonalityDescription}" }
+        };
         
         public ActorPersonality(ActorPersonality actorPersonality)
         {

@@ -71,17 +71,17 @@ namespace Station
 
         public List<Item> GetInventoryItemsToFetchFromStation()
         {
-            return Station_Data.InventoryDataPreset.GetInventoryItemsToFetchFromStation();
+            return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();
         }
 
-        public List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data_Preset inventory)
+        public List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
         {
-            return Station_Data.InventoryDataPreset.GetInventoryItemsToDeliverFromInventory(inventory);
+            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
         }
 
         public List<Item> GetInventoryItemsToDeliverFromOtherStations()
         {
-            return Station_Data.InventoryDataPreset.GetInventoryItemsToDeliverFromOtherStations();
+            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations();
         }
 
         public void SetInteractRange(float interactRange = 2)

@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Equipment;
+using Inventory;
 using Items;
 using Managers;
+using Priority;
+using Tools;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -143,7 +146,7 @@ public class EquipmentComponent
 }
 
 [Serializable]
-public class Equipment_Data_Preset
+public class Equipment_Data : Priority_Updater
 {
     public uint ActorID;
 
@@ -157,9 +160,9 @@ public class Equipment_Data_Preset
     public Item Legs;
     public Item Feet;
 
-    public Equipment_Data_Preset(uint actorID, Item head = null, Item neck = null, Item chest = null, Item leftHand = null,
+    public Equipment_Data(uint actorID, Item head = null, Item neck = null, Item chest = null, Item leftHand = null,
                          Item rightHand = null, Item[] rings = null, Item waist = null, Item legs = null,
-                         Item feet      = null)
+                         Item feet      = null) : base(actorID, ComponentType.Actor)
     {
         ActorID   = actorID;
         Head      = head;
@@ -173,7 +176,7 @@ public class Equipment_Data_Preset
         Feet      = feet;
     }
 
-    public Equipment_Data_Preset(Equipment_Data_Preset equipmentDataPreset)// : base (equipmentData.References.ActorID)
+    public Equipment_Data(Equipment_Data equipmentData)// : base (equipmentData.References.ActorID)
     {
         // Head      = new Item(equipmentData.Head);
         // Neck      = new Item(equipmentData.Neck);
@@ -184,6 +187,23 @@ public class Equipment_Data_Preset
         // Waist     = new Item(equipmentData.Waist);
         // Legs      = new Item(equipmentData.Legs);
         // Feet      = new Item(equipmentData.Feet);
+    }
+    
+    public override Dictionary<string, string> GetStringData()
+    {
+        return new Dictionary<string, string>
+        {
+            { "Equipment Data", "Equipment Data would be here" }
+        };
+    }
+    
+    public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+    {
+        _updateDataDisplay(ref dataToDisplay,
+            title: "Equipment Slots",
+            stringData: GetStringData());
+
+        return dataToDisplay;
     }
 
     public void SetEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)

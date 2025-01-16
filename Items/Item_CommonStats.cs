@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Equipment;
+using Tools;
 
 namespace Items
 {
     [Serializable]
-    public class Item_CommonStats
+    public class Item_CommonStats : Data_Class
     {
         public uint                ItemID;
         public string              ItemName;
@@ -55,6 +56,31 @@ namespace Items
             ItemValue      = item.ItemValue;
             ItemWeight     = item.ItemWeight;
             ItemEquippable = item.ItemEquippable;
+        }
+        
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "ItemID", $"{ItemID}" },
+                { "ItemName", $"{ItemName}" },
+                { "ItemType", $"{ItemType}" },
+                { "MaxStackSize", $"{MaxStackSize}" },
+                { "ItemLevel", $"{ItemLevel}" },
+                { "ItemQuality", $"{ItemQuality}" },
+                { "ItemValue", $"{ItemValue}" },
+                { "ItemWeight", $"{ItemWeight}" },
+                { "ItemEquippable", $"{ItemEquippable}" }
+            };
+        }
+        
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Common Stats",
+                stringData: GetStringData());
+
+            return dataToDisplay;
         }
     }
 }

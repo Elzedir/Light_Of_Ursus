@@ -61,7 +61,7 @@ namespace WorkPosts
                 dataID: data.WorkPostID, 
                 data_Object: data,
                 dataTitle: $"WorkPost: {data.WorkPostID}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
 
         public override void SaveData(SaveData saveData) { }

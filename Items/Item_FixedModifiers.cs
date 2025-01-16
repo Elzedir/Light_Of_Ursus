@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Managers;
+using Tools;
 
 namespace Items
 {
     [Serializable]
-    public class Item_FixedModifiers
+    public class Item_FixedModifiers : Data_Class
     {
         public float CurrentHealth;
         public float CurrentMana;
@@ -81,6 +82,7 @@ namespace Items
             CurrentHealth  = other.CurrentHealth;
             CurrentMana    = other.CurrentMana;
             CurrentStamina = other.CurrentStamina;
+            
             MaxHealth      = other.MaxHealth;
             MaxMana        = other.MaxMana;
             MaxStamina     = other.MaxStamina;
@@ -99,6 +101,43 @@ namespace Items
             MagicArmour            = other.MagicArmour;
             MoveSpeed              = other.MoveSpeed;
             DodgeCooldownReduction = other.DodgeCooldownReduction;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Current Health", $"{CurrentHealth}" },
+                { "Current Mana", $"{CurrentMana}" },
+                { "Current Stamina", $"{CurrentStamina}" },
+                { "Max Health", $"{MaxHealth}" },
+                { "Max Mana", $"{MaxMana}" },
+                { "Max Stamina", $"{MaxStamina}" },
+                { "Push Recovery", $"{PushRecovery}" },
+                { "Health Recovery", $"{HealthRecovery}" },
+                
+                { "Attack Damage", $"{AttackDamage}" },
+                { "Attack Speed", $"{AttackSpeed}" },
+                { "Attack Swing Time", $"{AttackSwingTime}" },
+                { "Attack Range", $"{AttackRange}" },
+                { "Attack Push Force", $"{AttackPushForce}" },
+                { "Attack Cooldown", $"{AttackCooldown}" },
+                
+                { "Physical Armour", $"{PhysicalArmour}" },
+                { "Magic Armour", $"{MagicArmour}" },
+                
+                { "Move Speed", $"{MoveSpeed}" },
+                { "Dodge Cooldown Reduction", $"{DodgeCooldownReduction}" }
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Fixed Modifiers",
+                stringData: GetStringData());
+
+            return dataToDisplay;
         }
     }
 }

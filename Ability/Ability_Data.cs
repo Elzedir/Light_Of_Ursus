@@ -43,96 +43,27 @@ namespace Ability
             // character.ReceiveDamage (new Damage(BaseDamage));
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Ability Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Ability Base Stats",
+                stringData: GetStringData());
 
-            try
+            return dataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
             {
-                if (!dataSO_Object.SubData.TryGetValue("Ability Base Stats", out var abilityBaseStats))
-                {
-                    dataSO_Object.SubData["Ability Base Stats"] = new Data_Display(
-                        title: "Ability Base Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-
-                if (abilityBaseStats is not null)
-                {
-                    abilityBaseStats.Data = new Dictionary<string, string>
-                    {
-                        { "Ability ID", $"{(uint)AbilityName}" },
-                        { "Ability Name", $"{AbilityName}" },
-                        { "Ability Description", $"{AbilityDescription}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.Log("Error in Ability Base Stats");
-            }
-
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Ability Combat Data", out var abilityCombatData))
-                {
-                    dataSO_Object.SubData["Ability Combat Data"] = new Data_Display(
-                        title: "Ability Combat Data",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-
-                if (abilityCombatData is not null)
-                {
-                    abilityCombatData.Data = new Dictionary<string, string>
-                    {
-                        { "Ability Actions", $"{AbilityActions.Count}" },
-                        { "Ability Max Level", $"{MaxLevel}" },
-                        { "Ability Base Damage", $"{BaseDamage.Count}" }
-                    };
-                }
-            }
-            catch
-            {
-                if (toggleMissingDataDebugs)
-                {
-                    Debug.Log("Error in Ability Combat Data");
-
-                    Debug.LogWarning(AbilityActions);
-                    Debug.LogWarning(AbilityActions?.Select(action => action.Name));
-                }
-            }
-
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Ability Animation Data", out var abilityAnimationData))
-                {
-                    dataSO_Object.SubData["Ability Animation Data"] = new Data_Display(
-                        title: "Ability Animation Data",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-
-                if (abilityAnimationData is not null)
-                {
-                    abilityAnimationData.Data = new Dictionary<string, string>
-                    {
-                        { "Has Ability Animation", $"{AnimationClip is not null}" }
-                    };
-                }
-
-                
-            }
-            catch
-            {
-                Debug.Log("Error in Ability Animation Data");
-            }
-
-            return dataSO_Object;
+                { "Ability ID", $"{(uint)AbilityName}" },
+                { "Ability Name", $"{AbilityName}" },
+                { "Ability Description", $"{AbilityDescription}" },
+                { "Ability Actions", $"{AbilityActions?.Count}" },
+                { "Ability Max Level", $"{MaxLevel}" },
+                { "Ability Base Damage", $"{BaseDamage?.Count}" },
+                { "Has Ability Animation", $"{AnimationClip is not null}" }
+            };
         }
     }
 

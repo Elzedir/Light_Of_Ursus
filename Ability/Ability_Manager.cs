@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actor;
 using Inventory;
 using Priority;
+using Tools;
 using UnityEngine;
 
 namespace Ability
@@ -60,6 +62,22 @@ namespace Ability
             ComponentType.Actor)
         {
             CurrentAbilities = actorAbilities.CurrentAbilities;
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Actor Abilities",
+                stringData: GetStringData());
+
+            return dataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return CurrentAbilities.ToDictionary(
+                ability => $"{ability.Key}", 
+                ability => $"{ability.Value}");
         }
 
         public             Dictionary<AbilityName, float> CurrentAbilities;

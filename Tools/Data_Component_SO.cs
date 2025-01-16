@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DataPersistence;
+using Station;
 using UnityEngine;
 
 namespace Tools
@@ -77,8 +78,13 @@ namespace Tools
             return null;
         }
 
-        public override void RefreshData()
+        public override void RefreshData(bool reinitialise = false)
         {
+            if (reinitialise)
+            {
+                _initialiseSceneData();
+            }
+            
             _initialiseSceneData();
         }
 

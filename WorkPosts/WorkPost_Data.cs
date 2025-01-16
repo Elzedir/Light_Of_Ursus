@@ -25,7 +25,7 @@ namespace WorkPosts
         
         public bool            IsWorkerMovingToWorkPost;
 
-        public WorkPost_Data(uint workPostID, uint stationID, uint currentWorkerID = 0)
+        public WorkPost_Data(uint workPostID, uint stationID, uint currentWorkerID)
         {
             WorkPostID      = workPostID;
             _stationID      = stationID;
@@ -39,6 +39,8 @@ namespace WorkPosts
                 RemoveCurrentWorkerFromWorkPost();
                 Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {worker.ActorID}");
             }
+
+            Debug.Log($"WorkPost: {WorkPostID} added Worker: {worker.ActorID}");
             
             IsWorkerMovingToWorkPost = false;
             _currentWorkerID         = worker.ActorID;
@@ -52,47 +54,30 @@ namespace WorkPosts
                 return;
             }
 
-            CurrentWorker.ActorData.CareerDataPreset.StopCurrentJob();
+            CurrentWorker.ActorData.CareerData.StopCurrentJob();
             _currentWorkerID         = 0;
             _currentWorker           = null;
             IsWorkerMovingToWorkPost = false;
         }
-        
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "WorkPost Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    subData: new Dictionary<string, Data_Display>());
-            
-            try
+            return new Dictionary<string, string>
             {
-                if (!dataSO_Object.SubData.TryGetValue("Base WorkPost Data", out var baseWorkPostData))
-                {
-                    dataSO_Object.SubData["Base WorkPost Data"] = new Data_Display(
-                        title: "Base WorkPost Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());    
-                }
+                { "WorkPost ID", $"{WorkPostID}" },
+                { "Station ID", $"{_stationID}" },
+                { "Current Worker ID", $"{_currentWorkerID}" },
+                { "Is Worker Moving To WorkPost", $"{IsWorkerMovingToWorkPost}" }
+            };
+        }
 
-                if (baseWorkPostData is not null)
-                {
-                    baseWorkPostData.Data = new Dictionary<string, string>
-                    {
-                        { "WorkPost ID", $"{WorkPostID}" },
-                        { "Station ID", $"{_stationID}" },
-                        { "Current Worker ID", $"{_currentWorkerID}" },
-                        { "Is Worker Moving To WorkPost", $"{IsWorkerMovingToWorkPost}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error: Base WorkPost Data not found.");
-            }
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Base WorkPost Data",
+                stringData: GetStringData());
 
-            return dataSO_Object;
+            return dataToDisplay;
         }
     }
     

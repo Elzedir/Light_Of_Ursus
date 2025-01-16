@@ -44,7 +44,7 @@ namespace WorkPosts
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationDataPreset.GetProgress(vocation);
+                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationData.GetProgress(vocation);
             }
 
             return productionRate;

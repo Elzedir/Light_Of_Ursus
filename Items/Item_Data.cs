@@ -50,136 +50,81 @@ namespace Items
             ItemPriorityStats       = new Item_PriorityStats(item.ItemPriorityStats);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Item Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
+            return new Dictionary<string, string>
+            {
+                { "ItemID", $"{ItemID}" },
+                { "ItemName", $"{ItemName}" }
+            };
+        }
 
-            try
-            {
-                if (dataSO_Object.SubData.TryGetValue("Common Stats", out var commonStats))
-                {
-                    dataSO_Object.SubData["Common Stats"] = new Data_Display(
-                        title: "Common Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (commonStats is not null)
-                {
-                    commonStats.Data = new Dictionary<string, string>
-                    {
-                        { "ItemID", $"{ItemCommonStats.ItemID}" },
-                        { "ItemName", $"{ItemCommonStats.ItemName}" },
-                        { "ItemType", $"{ItemCommonStats.ItemType}" },
-                        { "MaxStackSize", $"{ItemCommonStats.MaxStackSize}" },
-                        { "ItemLevel", $"{ItemCommonStats.ItemLevel}" },
-                        { "ItemQuality", $"{ItemCommonStats.ItemQuality}" },
-                        { "ItemValue", $"{ItemCommonStats.ItemValue}" },
-                        { "ItemWeight", $"{ItemCommonStats.ItemWeight}" },
-                        { "ItemEquippable", $"{ItemCommonStats.ItemEquippable}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Common Stats");
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Common Stats",
+                subData: ItemCommonStats.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Visual Stats",
+                subData: ItemVisualStats.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Weapon Stats",
+                subData: ItemWeaponStats.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Armour Stats",
+                subData: ItemArmourStats.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Fixed Modifiers",
+                subData: ItemFixedModifiers.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Percentage Modifiers",
+                subData: ItemPercentageModifiers.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Priority Stats",
+                subData: ItemPriorityStats.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
 
-                Debug.LogError(ItemCommonStats.ItemID);
-                Debug.LogError(ItemCommonStats.ItemName);
-                Debug.LogError(ItemCommonStats.ItemType);
-                Debug.LogError(ItemCommonStats.EquipmentSlots);
-                Debug.LogError(ItemCommonStats.MaxStackSize);
-                Debug.LogError(ItemCommonStats.ItemLevel);
-                Debug.LogError(ItemCommonStats.ItemQuality);
-                Debug.LogError(ItemCommonStats.ItemValue);
-                Debug.LogError(ItemCommonStats.ItemWeight);
-                Debug.LogError(ItemCommonStats.ItemEquippable);
-            }
+            return dataToDisplay;
+        }
 
-            try
+        public override Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDebugs, DataToDisplay dataToDisplay)
+        {
+            return new Dictionary<string, DataToDisplay>
             {
-                if (dataSO_Object.SubData.TryGetValue("Visual Stats", out var visualStats))
                 {
-                    dataSO_Object.SubData["Visual Stats"] = new Data_Display(
-                        title: "Visual Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (visualStats is not null)
+                    "Common Stats",
+                    ItemCommonStats.GetData_Display(toggleMissingDebugs)
+                },
                 {
-                    visualStats.Data = new Dictionary<string, string>
-                    {
-                        { "ItemIcon", $"{ItemVisualStats.ItemIcon}" },
-                        { "ItemMesh", $"{ItemVisualStats.ItemMesh}" },
-                        { "ItemMaterial", $"{ItemVisualStats.ItemMaterial}" },
-                        { "ItemCollider", $"{ItemVisualStats.ItemCollider}" },
-                        { "ItemAnimatorController", $"{ItemVisualStats.ItemAnimatorController}" },
-                        { "ItemPosition", $"{ItemVisualStats.ItemPosition}" },
-                        { "ItemRotation", $"{ItemVisualStats.ItemRotation}" },
-                        { "ItemScale", $"{ItemVisualStats.ItemScale}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Visual Stats");
-            }
-
-            try
-            {
-                if (dataSO_Object.SubData.TryGetValue("Weapon Stats", out var weaponStats))
+                    "Visual Stats",
+                    ItemVisualStats.GetData_Display(toggleMissingDebugs)
+                },
                 {
-                    dataSO_Object.SubData["Weapon Stats"] = new Data_Display(
-                        title: "Weapon Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (weaponStats is not null)
+                    "Weapon Stats",
+                    ItemWeaponStats.GetData_Display(toggleMissingDebugs)
+                },
                 {
-                    weaponStats.Data = new Dictionary<string, string>
-                    {
-                        { "WeaponTypeArray", $"{string.Join(", ",  ItemWeaponStats.WeaponTypeArray)}" },
-                        { "WeaponClassArray", $"{string.Join(", ", ItemWeaponStats.WeaponClassArray)}" },
-                        { "MaxChargeTime", $"{ItemWeaponStats.MaxChargeTime}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Weapon Stats");
-            }
-
-            try
-            {
-                if (dataSO_Object.SubData.TryGetValue("Armour Stats", out var armourStats))
+                    "Armour Stats",
+                    ItemArmourStats.GetData_Display(toggleMissingDebugs)
+                },
                 {
-                    dataSO_Object.SubData["Armour Stats"] = new Data_Display(
-                        title: "Armour Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (armourStats is not null)
+                    "Fixed Modifiers",
+                    ItemFixedModifiers.GetData_Display(toggleMissingDebugs)
+                },
                 {
-                    armourStats.Data = new Dictionary<string, string>
-                    {
-                        { "EquipmentSlot", $"{ItemArmourStats.EquipmentSlot}" },
-                        { "ItemCoverage", $"{ItemArmourStats.ItemCoverage}" }
-                    };
+                    "Percentage Modifiers",
+                    ItemPercentageModifiers.GetData_Display(toggleMissingDebugs)
+                },
+                {
+                    "Priority Stats",
+                    ItemPriorityStats.GetData_Display(toggleMissingDebugs)
                 }
-            }
-            catch
-            {
-                Debug.LogError("Error in Armour Stats");
-            }
-
-            return dataSO_Object;
+            };
         }
     }
 
@@ -217,43 +162,26 @@ namespace Items
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
 
-        public Data_Display DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetData_Display(toggleMissingDataDebugs);
+        public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetData_Display(toggleMissingDataDebugs);
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Item",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    subData: new Dictionary<string, Data_Display>());
-
-            try
+            return new Dictionary<string, string>
             {
-                if (!dataSO_Object.SubData.TryGetValue("Common Stats", out var commonStats))
-                {
-                    dataSO_Object.SubData["Common Stats"] = new Data_Display(
-                        title: "Common Stats",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (commonStats is not null)
-                {
-                    commonStats.Data = new Dictionary<string, string>
-                    {
-                        { "ItemID", $"{ItemID}" },
-                        { "ItemName", $"{ItemName}" },
-                        { "ItemAmount", $"{ItemAmount}" },
-                        { "MaxStackSize", $"{MaxStackSize}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Common Stats");
-            }
+                { "ItemID", $"{ItemID}" },
+                { "ItemName", $"{ItemName}" },
+                { "ItemAmount", $"{ItemAmount}" },
+                { "MaxStackSize", $"{MaxStackSize}" }
+            };
+        }
 
-            return dataSO_Object;
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Common Stats",
+                stringData: DataItem.ItemCommonStats.GetStringData());
+
+            return dataToDisplay;
         }
     }
 

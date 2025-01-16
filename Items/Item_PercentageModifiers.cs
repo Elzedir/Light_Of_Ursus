@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
+using Tools;
 
 namespace Items
 {
     [Serializable]
-    public class Item_PercentageModifiers
+    public class Item_PercentageModifiers : Data_Class
     {
         public float CurrentHealth;
         public float CurrentMana;
@@ -84,6 +86,42 @@ namespace Items
 
             MoveSpeed              = other.MoveSpeed;
             DodgeCooldownReduction = other.DodgeCooldownReduction;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Current Health: ", $"{CurrentHealth}" },
+                { "Current Mana: ", $"{CurrentMana}" },
+                { "Current Stamina: ", $"{CurrentStamina}" },
+                { "Max Health: ", $"{MaxHealth}" },
+                { "Max Mana: ", $"{MaxMana}" },
+                { "Max Stamina: ", $"{MaxStamina}" },
+                { "Push Recovery: ", $"{PushRecovery}" },
+                
+                { "Attack Damage: ", $"{AttackDamage}" },
+                { "Attack Speed: ", $"{AttackSpeed}" },
+                { "Attack Swing Time: ", $"{AttackSwingTime}" },
+                { "Attack Range: ", $"{AttackRange}" },
+                { "Attack Push Force: ", $"{AttackPushForce}" },
+                { "Attack Cooldown: ", $"{AttackCooldown}" },
+                
+                { "Physical Defence: ", $"{PhysicalDefence}" },
+                { "Magical Defence: ", $"{MagicalDefence}" },
+                
+                { "Move Speed: ", $"{MoveSpeed}" },
+                { "Dodge Cooldown Reduction: ", $"{DodgeCooldownReduction}" }
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Percentage Modifiers",
+                stringData: GetStringData());
+
+            return dataToDisplay;
         }
     }
 }

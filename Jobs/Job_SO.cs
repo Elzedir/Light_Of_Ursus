@@ -24,7 +24,7 @@ namespace Jobs
                 dataID: (uint)data.JobName,
                 data_Object: data,
                 dataTitle: $"{(uint)data.JobName}: {data.JobName}",
-                getData_Display: data.GetData_Display);
+                getDataTo_Display: data.GetData_Display);
         }
     }
 

@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using Priority;
 using Station;
+using Tools;
 using UnityEngine;
 
 namespace Items
 {
-    public class Item_PriorityStats
+    public class Item_PriorityStats : Data_Class
     {
         public readonly Dictionary<PriorityImportance, List<StationName>> Priority_Stations;
 
@@ -21,6 +22,26 @@ namespace Items
             Priority_Stations = other.Priority_Stations != null
                 ? new Dictionary<PriorityImportance, List<StationName>>(other.Priority_Stations)
                 : new Dictionary<PriorityImportance, List<StationName>>();
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                {"Priority Stations", Priority_Stations.ToString()}
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Priority Stations",
+                stringData: new Dictionary<string, string>
+                {
+                    {"Priority Stations", Priority_Stations.ToString()}
+                });
+
+            return dataToDisplay;
         }
 
         public PriorityImportance GetHighestStationPriority(List<StationName> allStations)

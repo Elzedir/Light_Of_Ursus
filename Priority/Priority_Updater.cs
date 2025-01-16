@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using Inventory;
+using Tools;
 using UnityEngine;
 
 namespace Priority
 {
-    public abstract class Priority_Updater
+    public abstract class Priority_Updater : Data_Class
     {
         public ComponentReference Reference { get; }
 

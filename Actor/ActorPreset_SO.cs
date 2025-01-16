@@ -25,7 +25,7 @@ namespace Actor
                 dataID: (uint)dataObject.ActorDataPresetName,
                 data_Object: dataObject,
                 dataTitle: $"{(uint)dataObject.ActorDataPresetName}: {dataObject.ActorDataPresetName}",
-                getData_Display: dataObject.GetData_Display);
+                getDataTo_Display: dataObject.GetData_Display);
         }
     }
     

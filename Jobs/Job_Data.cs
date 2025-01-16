@@ -26,61 +26,28 @@ namespace Jobs
             JobDescription = jobData.JobDescription;
             JobTasks       = jobData.JobTasks;
         }
-        
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
-        {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Job Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
-            
-            try
-            {
-                if (dataSO_Object.SubData.TryGetValue("Base Job Data", out var baseJobData))
-                {
-                    dataSO_Object.SubData["Base Job Data"] = new Data_Display(
-                        title: "Base Job Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (baseJobData is not null)
-                {
-                    baseJobData.Data = new Dictionary<string, string>
-                    {
-                        { "Job ID", $"{(uint)JobName}" },
-                        { "Job Name", JobName.ToString() },
-                        { "Job Description", JobDescription }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error: Job Data not found.");
-            }
-            
-            try
-            {
-                if (dataSO_Object.SubData.TryGetValue("Job Tasks", out var jobTasks))
-                {
-                    dataSO_Object.SubData["Job Tasks"] = new Data_Display(
-                        title: "Job Tasks",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (jobTasks is not null)
-                {
-                    jobTasks.Data = JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}");
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error: Job Tasks not found.");
-            }
 
-            return dataSO_Object;
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Job ID", $"{(uint)JobName}" },
+                { "Job Name", JobName.ToString() },
+                { "Job Description", JobDescription }
+            };
+        }
+
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Base Job Data",
+                stringData: GetStringData());
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Job Tasks",
+                stringData: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
+
+            return dataToDisplay;
         }
     }
     

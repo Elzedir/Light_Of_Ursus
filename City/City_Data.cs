@@ -57,62 +57,29 @@ namespace City
             ProsperityData = new ProsperityData(prosperityData);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "City Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
+            _updateDataDisplay(ref dataToDisplay,
+                title: "City Data",
+                stringData: GetStringData());
             
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("City Data", out var cityData))
-                {
-                    dataSO_Object.SubData["City Data"] = new Data_Display(
-                        title: "City Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (cityData is not null)
-                {
-                    cityData.Data = new Dictionary<string, string>
-                    {
-                        { "City ID", $"{CityID}" },
-                        { "City Name", CityName },
-                        { "City Faction ID", $"{CityFactionID}" },
-                        { "Region ID", $"{RegionID}" },
-                        { "City Description", CityDescription }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Base Career Data");
-            }
-            
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Population Data", out var populationData))
-                {
-                    dataSO_Object.SubData["Population Data"] = new Data_Display(
-                        title: "Population Data",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        subData: Population.GetData_Display(toggleMissingDataDebugs).SubData);
-                }
-                
-                if (populationData is not null)
-                {
-                    populationData.SubData = Population.GetData_Display(toggleMissingDataDebugs).SubData;
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Base Career Data");
-            }
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Population Data",
+                subData: Population.GetData_Display(toggleMissingDataDebugs).SubData);
 
-            return dataSO_Object;
+            return dataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "City ID", $"{CityID}" },
+                { "City Name", CityName },
+                { "City Faction ID", $"{CityFactionID}" },
+                { "Region ID", $"{RegionID}" },
+                { "City Description", CityDescription }
+            };
         }
     }
 
@@ -156,60 +123,27 @@ namespace City
             ExpectedPopulation = expectedPopulation;
         }
         
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Population Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    data: new Dictionary<string, string>());
-            
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Population Data", out var populationData))
-                {
-                    dataSO_Object.SubData["Population Data"] = new Data_Display(
-                        title: "Population Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (populationData is not null)
-                {
-                    populationData.Data = new Dictionary<string, string>
-                    {
-                        { "Current Population", $"{CurrentPopulation}" },
-                        { "Max Population", $"{MaxPopulation}" },
-                        { "Expected Population", $"{ExpectedPopulation}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Base Career Data");
-            }
-            
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Citizen IDs", out var citizenIDs))
-                {
-                    dataSO_Object.SubData["Citizen IDs"] = new Data_Display(
-                        title: "Citizen IDs",
-                        dataDisplayType: DataDisplayType.List_CheckBox,
-                        data: new Dictionary<string, string>());
-                }
-                
-                if (citizenIDs is not null)
-                {
-                    citizenIDs.Data = AllCitizenIDs.ToDictionary(citizenID => $"{citizenID}", citizenID => $"{citizenID}");
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error in Base Career Data");
-            }
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Population Data",
+                stringData: GetStringData());
 
-            return dataSO_Object;
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Citizen IDs",
+                stringData: AllCitizenIDs.ToDictionary(citizenID => $"{citizenID}", citizenID => $"{citizenID}"));
+
+            return dataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Current Population", $"{CurrentPopulation}" },
+                { "Max Population", $"{MaxPopulation}" },
+                { "Expected Population", $"{ExpectedPopulation}" }
+            };
         }
     }
 }

@@ -63,69 +63,37 @@ namespace Region
             ProsperityData = new ProsperityData(prosperityData);
         }
 
-        protected override Data_Display _getDataSO_Object(bool toggleMissingDataDebugs, Data_Display dataSO_Object)
+        public override Dictionary<string, string> GetStringData()
         {
-            if (dataSO_Object.Data is null && dataSO_Object.SubData is null)
-                dataSO_Object = new Data_Display(
-                    title: "Region Data",
-                    dataDisplayType: DataDisplayType.List_CheckBox,
-                    subData: new Dictionary<string, Data_Display>());
-                
-            try
+            return new Dictionary<string, string>
             {
-                if (!dataSO_Object.SubData.TryGetValue("Base Region Data", out var baseRegionData))
-                {
-                    dataSO_Object.SubData["Base Region Data"] = new Data_Display(
-                        title: "Base Region Data",
-                        dataDisplayType: DataDisplayType.List_Item,
-                        data: new Dictionary<string, string>());    
-                }
-                
-                if (baseRegionData is not null)
-                {
-                    baseRegionData.Data = new Dictionary<string, string>
-                    {
-                        { "Region ID", $"{RegionID}" },
-                        { "Region Name", RegionName },
-                        { "Region Faction ID", $"{RegionFactionID}" },
-                        { "Region Description", RegionDescription },
-                        { "Prosperity Data", ProsperityData.ToString() },
-                        { "Faction", $"{Faction}" },
-                        { "All City IDs", string.Join(", ", _allCityIDs) }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error: Base Region Data not found.");
-            }
+                { "Region ID", $"{RegionID}" },
+                { "Region Name", RegionName },
+                { "Region Faction ID", $"{RegionFactionID}" },
+                { "Region Description", RegionDescription },
+                { "Prosperity Data", ProsperityData.ToString() },
+                { "Faction", $"{Faction}" },
+                { "All City IDs", string.Join(", ", _allCityIDs) }
+            };
+        }
 
-            try
-            {
-                if (!dataSO_Object.SubData.TryGetValue("Region Cities", out var regionCities))
-                {
-                    dataSO_Object.SubData["Region Cities"] = new Data_Display(
-                        title: "Region Cities",
-                        dataDisplayType: DataDisplayType.List_Selectable,
-                        subData: new Dictionary<string, Data_Display>());
-                }
-                
-                if (regionCities is not null)
-                {
-                    regionCities.Data = new Dictionary<string, string>
-                    {
-                        { "Current Prosperity", $"{ProsperityData.CurrentProsperity}" },
-                        { "Max Prosperity", $"{ProsperityData.MaxProsperity}" },
-                        { "Base Prosperity Growth", $"{ProsperityData.BaseProsperityGrowthPerDay}" }
-                    };
-                }
-            }
-            catch
-            {
-                Debug.LogError("Error: ProsperityData.");
-            }
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        {
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Base Region Data",
+                stringData: GetStringData());
 
-            return dataSO_Object;
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Region Cities",
+                stringData: AllCitiesInRegion.ToDictionary(
+                    city => city.Key.ToString(),
+                    city => city.Value.name));
+            
+            _updateDataDisplay(ref dataToDisplay,
+                title: "Prosperity Data",
+                subData: ProsperityData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+
+            return dataToDisplay;
         }
     }
 
