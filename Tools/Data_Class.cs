@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Tools
 {
@@ -8,55 +9,55 @@ namespace Tools
 
     public abstract class Data_Class
     {
-        [SerializeField] DataToDisplay _dataTo_Display;
+        [SerializeField] protected DataToDisplay _dataToDisplay;
 
         public DataToDisplay GetData_Display(bool toggleMissingDataDebugs)
         {
-            if (_dataTo_Display?.StringData is null || 
-                _dataTo_Display.SubData is null ||
-                _dataTo_Display.InteractableData is null)
+            if (_dataToDisplay?.AllStringData is null ||
+                _dataToDisplay.AllSubData is null ||
+                _dataToDisplay.AllInteractableData is null)
             {
-                _dataTo_Display = new DataToDisplay("Display Data");
+                _dataToDisplay = new DataToDisplay("Display Data");
             }
-            
-            return _dataTo_Display = GetSubData(toggleMissingDataDebugs, _dataTo_Display);
-        }
-        
-        public abstract Dictionary<string, string> GetStringData();
-        public abstract DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay);
 
-        public virtual Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDebugs,
-            DataToDisplay dataToDisplay)
+            return _dataToDisplay = GetSubData(toggleMissingDataDebugs);
+        }
+
+        public abstract Dictionary<string, string> GetStringData();
+
+        // We're passing through the DataTODisplay as the SubDataToDisplay, so we're just showing the same data again and again.
+        // Try find a way to use this split system to display DataDisplay as First Data and SubData To Display as all other data.
+        public abstract DataToDisplay GetSubData(bool toggleMissingDataDebugs);
+
+        public virtual Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDataDebugs)
         {
             return new Dictionary<string, DataToDisplay>();
         }
-        
+
         protected void _updateDataDisplay(ref DataToDisplay dataToDisplay,
             string title,
-            Dictionary<string, string> stringData = null,
-            Dictionary<string, DataToDisplay> subData = null,
-            Dictionary<string, DataToDisplay> interactableData = null)
+            bool toggleMissingDataDebugs,
+            Dictionary<string, string> allStringData = null,
+            DataToDisplay allSubData = null,
+            DataToDisplay allInteractableData = null)
         {
             try
             {
-                if (stringData is null && subData is null && interactableData is null)
+                if (allStringData is null && allSubData is null && allInteractableData is null)
                 {
-                    Debug.LogError("StringData, SubData, InteractableData are all null. Data will be empty.");
+                    if (toggleMissingDataDebugs)
+                        Debug.LogError("StringData, SubData, InteractableData are all null. Data will be empty.");
                 }
-
-                if (dataToDisplay.SubData.TryGetValue(title, out var data))
-                {
-                    data.StringData = stringData ?? new Dictionary<string, string>();
-                    data.SubData = subData ?? new Dictionary<string, DataToDisplay>();
-                    data.InteractableData = interactableData ?? new Dictionary<string, DataToDisplay>();
-                    return;
-                }
-
-                dataToDisplay.SubData[title] = new DataToDisplay(title);
+                
+                dataToDisplay.AllStringData[title] = allStringData;
+                dataToDisplay.AllSubData[title] = allSubData;
+                dataToDisplay.AllSubData[title].Title = title;
+                dataToDisplay.AllInteractableData[title] = allInteractableData;
             }
             catch
             {
-                Debug.Log($"Error in {title} Data");
+                if (toggleMissingDataDebugs)
+                    Debug.Log($"Error in {title} Data");
             }
         }
     }

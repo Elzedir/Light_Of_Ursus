@@ -92,36 +92,37 @@ namespace Items
         {
             return new Dictionary<string, string>
             {
-                { "Current Health: ", $"{CurrentHealth}" },
-                { "Current Mana: ", $"{CurrentMana}" },
-                { "Current Stamina: ", $"{CurrentStamina}" },
-                { "Max Health: ", $"{MaxHealth}" },
-                { "Max Mana: ", $"{MaxMana}" },
-                { "Max Stamina: ", $"{MaxStamina}" },
-                { "Push Recovery: ", $"{PushRecovery}" },
+                { "Current Health", $"{CurrentHealth}" },
+                { "Current Mana", $"{CurrentMana}" },
+                { "Current Stamina", $"{CurrentStamina}" },
+                { "Max Health", $"{MaxHealth}" },
+                { "Max Mana", $"{MaxMana}" },
+                { "Max Stamina", $"{MaxStamina}" },
+                { "Push Recovery", $"{PushRecovery}" },
                 
-                { "Attack Damage: ", $"{AttackDamage}" },
-                { "Attack Speed: ", $"{AttackSpeed}" },
-                { "Attack Swing Time: ", $"{AttackSwingTime}" },
-                { "Attack Range: ", $"{AttackRange}" },
-                { "Attack Push Force: ", $"{AttackPushForce}" },
-                { "Attack Cooldown: ", $"{AttackCooldown}" },
+                { "Attack Damage", $"{AttackDamage}" },
+                { "Attack Speed", $"{AttackSpeed}" },
+                { "Attack Swing Time", $"{AttackSwingTime}" },
+                { "Attack Range", $"{AttackRange}" },
+                { "Attack Push Force", $"{AttackPushForce}" },
+                { "Attack Cooldown", $"{AttackCooldown}" },
                 
-                { "Physical Defence: ", $"{PhysicalDefence}" },
-                { "Magical Defence: ", $"{MagicalDefence}" },
+                { "Physical Defence", $"{PhysicalDefence}" },
+                { "Magical Defence", $"{MagicalDefence}" },
                 
-                { "Move Speed: ", $"{MoveSpeed}" },
-                { "Dodge Cooldown Reduction: ", $"{DodgeCooldownReduction}" }
+                { "Move Speed", $"{MoveSpeed}" },
+                { "Dodge Cooldown Reduction", $"{DodgeCooldownReduction}" }
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Percentage Modifiers",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
     }
 }

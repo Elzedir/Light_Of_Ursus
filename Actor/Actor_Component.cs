@@ -1,4 +1,5 @@
 using System.Collections;
+using Equipment;
 using Initialisation;
 using Managers;
 using Personality;

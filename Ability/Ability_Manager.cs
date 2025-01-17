@@ -64,13 +64,14 @@ namespace Ability
             CurrentAbilities = actorAbilities.CurrentAbilities;
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Actor Abilities",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()

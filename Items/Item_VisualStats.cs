@@ -66,13 +66,14 @@ namespace Items
             };
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Visual Stats",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public void DisplayVisuals(GameObject go)

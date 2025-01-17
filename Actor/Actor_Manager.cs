@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Ability;
 using Careers;
 using DateAndTime;
+using Equipment;
 using Faction;
 using Inventory;
 using Items;
@@ -62,7 +63,7 @@ namespace Actor
         {
             Actor_Component nearestActor = null;
 
-            var nearestDistance = float.MaxValue;
+            //var nearestDistance = float.MaxValue;
             
             //* Flash a collider at increasing distances until it hits something.
 

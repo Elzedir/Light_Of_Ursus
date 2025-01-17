@@ -102,25 +102,25 @@ namespace Managers
         {
             return new Dictionary<string, string>
             {
-                { "Current Health: ", $"{CurrentHealth}" },
-                { "Base Max Health: ", $"{BaseMaxHealth}" },
-                { "Current Mana: ", $"{CurrentMana}" },
-                { "Base Max Mana: ", $"{BaseMaxMana}" },
-                { "Current Stamina: ", $"{CurrentStamina}" },
-                { "Base Max Stamina: ", $"{BaseMaxStamina}" },
+                { "Current Health", $"{CurrentHealth}" },
+                { "Base Max Health", $"{BaseMaxHealth}" },
+                { "Current Mana", $"{CurrentMana}" },
+                { "Base Max Mana", $"{BaseMaxMana}" },
+                { "Current Stamina", $"{CurrentStamina}" },
+                { "Base Max Stamina", $"{BaseMaxStamina}" },
             
-                { "Base Attack Damage: ", $"{BaseAttackDamage}" },
-                { "Base Attack Speed: ", $"{BaseAttackSpeed}" },
-                { "Base Attack Swing Time: ", $"{BaseAttackSwingTime}" },
-                { "Base Attack Range: ", $"{BaseAttackRange}" },
-                { "Base Attack Push Force: ", $"{BaseAttackPushForce}" },
-                { "Base Attack Cooldown: ", $"{BaseAttackCooldown}" },
+                { "Base Attack Damage", $"{BaseAttackDamage}" },
+                { "Base Attack Speed", $"{BaseAttackSpeed}" },
+                { "Base Attack Swing Time", $"{BaseAttackSwingTime}" },
+                { "Base Attack Range", $"{BaseAttackRange}" },
+                { "Base Attack Push Force", $"{BaseAttackPushForce}" },
+                { "Base Attack Cooldown", $"{BaseAttackCooldown}" },
             
-                { "Base Physical Defence: ", $"{BasePhysicalDefence}" },
-                { "Base Magical Defence: ", $"{BaseMagicalDefence}" },
+                { "Base Physical Defence", $"{BasePhysicalDefence}" },
+                { "Base Magical Defence", $"{BaseMagicalDefence}" },
             
-                { "Base Move Speed: ", $"{BaseMoveSpeed}" },
-                { "Base Dodge Cooldown Reduction: ", $"{BaseDodgeCooldownReduction}" }
+                { "Base Move Speed", $"{BaseMoveSpeed}" },
+                { "Base Dodge Cooldown Reduction", $"{BaseDodgeCooldownReduction}" }
             };
         }
     }
@@ -163,13 +163,13 @@ namespace Managers
         {
             return new Dictionary<string, string>
             {
-                { "Agility: ", $"{Agility}" },
-                { "Charisma: ", $"{Charisma}" },
-                { "Endurance: ", $"{Endurance}" },
-                { "Intelligence: ", $"{Intelligence}" },
-                { "Luck: ", $"{Luck}" },
-                { "Perception: ", $"{Perception}" },
-                { "Strength: ", $"{Strength}" }
+                { "Agility", $"{Agility}" },
+                { "Charisma", $"{Charisma}" },
+                { "Endurance", $"{Endurance}" },
+                { "Intelligence", $"{Intelligence}" },
+                { "Luck", $"{Luck}" },
+                { "Perception", $"{Perception}" },
+                { "Strength", $"{Strength}" }
             };
         }
     }

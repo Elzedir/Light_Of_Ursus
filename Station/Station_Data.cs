@@ -237,28 +237,32 @@ namespace Station
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base Station Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Inventory Data",
-                subData: InventoryData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: InventoryData.GetSubData(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Station Progress Data",
-                subData: StationProgressData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: StationProgressData.GetSubData(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Station WorkPosts",
-                stringData: AllWorkPost_Components?.Values.ToDictionary(
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllWorkPost_Components?.Values.ToDictionary(
                     workPost => $"{workPost.WorkPostID} -",
                     workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: " +
                                 $"{workPost.WorkPostData?.CurrentWorker}"));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
     }
 
@@ -280,17 +284,19 @@ namespace Station
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Station Progress Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Current Product",
-                subData: CurrentProduct.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: CurrentProduct.GetSubData(toggleMissingDataDebugs));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public bool Progress(float progress)

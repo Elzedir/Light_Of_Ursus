@@ -210,17 +210,19 @@ namespace Priority
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base Priority Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Priority Queue",
-                subData: PriorityQueue.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: PriorityQueue.GetSubData(toggleMissingDataDebugs));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
     }
 }

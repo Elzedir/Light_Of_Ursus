@@ -87,7 +87,7 @@ namespace JobSite
                 dataID: data.JobSiteID, 
                 data_Object: data,
                 dataTitle: $"{data.JobSiteID}: {data.JobSiteName}",
-                getDataTo_Display: data.GetData_Display);
+                getDataToDisplay: data.GetData_Display);
         }
         
         public override void SaveData(SaveData saveData) =>

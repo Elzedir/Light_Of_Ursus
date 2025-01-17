@@ -64,34 +64,39 @@ namespace Recipes
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base Recipe Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Required Ingredients",
-                stringData: RequiredIngredients.ToDictionary(
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: RequiredIngredients.ToDictionary(
                     item => $"{item.ItemID}:",
                     item => $"Qty: {item.ItemAmount}"));
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Required Vocations",
-                stringData: RequiredVocations.ToDictionary(
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: RequiredVocations.ToDictionary(
                     vocation => $"{vocation.VocationName}:",
                     vocation => $"Min: {vocation.MinimumVocationExperience} " +
                                 $"Expected: {vocation.ExpectedVocationExperience}"));
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Recipe Products",
-                stringData: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Possible Qualities",
-                stringData: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
     }
     

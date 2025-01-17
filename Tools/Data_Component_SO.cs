@@ -82,7 +82,7 @@ namespace Tools
         {
             if (reinitialise)
             {
-                _initialiseSceneData();
+                InitialiseAllData();
             }
             
             _initialiseSceneData();

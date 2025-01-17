@@ -32,16 +32,17 @@ namespace Items
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Priority Stations",
-                stringData: new Dictionary<string, string>
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: new Dictionary<string, string>
                 {
                     {"Priority Stations", Priority_Stations.ToString()}
                 });
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public PriorityImportance GetHighestStationPriority(List<StationName> allStations)

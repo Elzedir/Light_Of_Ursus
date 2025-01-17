@@ -13,7 +13,7 @@ namespace Tools
         // Initialization (single search for efficiency)
         public void InitializeComponents()
         {
-            var components = Object.FindObjectsOfType<MonoBehaviour>(); // Generic search
+            var components = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None); // Generic search
             foreach (var component in components)
             {
                 uint id;

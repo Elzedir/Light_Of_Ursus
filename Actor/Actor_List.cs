@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Ability;
 using Careers;
 using DateAndTime;
+using Equipment;
 using Inventory;
 using Items;
 using Managers;

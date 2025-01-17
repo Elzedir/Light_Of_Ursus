@@ -197,12 +197,12 @@ namespace Tools
         public Func<bool, DataToDisplay> GetDataToDisplay;
 
         public Data(uint dataID, T data_Object,
-            string dataTitle, Func<bool, DataToDisplay> getDataTo_Display)
+            string dataTitle, Func<bool, DataToDisplay> getDataToDisplay)
         {
             DataID = dataID;
             Data_Object = data_Object;
             DataTitle = dataTitle;
-            GetDataToDisplay = getDataTo_Display;
+            GetDataToDisplay = getDataToDisplay;
         }
     }
 }

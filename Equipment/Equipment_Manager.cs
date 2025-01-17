@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Equipment
 {
-    public class Manager_Equipment
+    public class Equipment_Manager
     {
     
     }
@@ -195,13 +195,14 @@ namespace Equipment
             };
         }
     
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Equipment Slots",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public void SetEquipment(Item head, Item neck, Item chest, Item leftHand, Item rightHand, Item[] rings, Item waist, Item legs, Item feet)

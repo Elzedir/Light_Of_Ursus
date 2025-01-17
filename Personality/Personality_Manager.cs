@@ -81,8 +81,8 @@ namespace Personality
 
         public Dictionary<string, string> SubData => new()
         {
-            { "Personality Title: ", $"{PersonalityTitle}" },
-            { "PersonalityDescription: ", $"{PersonalityDescription}" }
+            { "Personality Title", $"{PersonalityTitle}" },
+            { "PersonalityDescription", $"{PersonalityDescription}" }
         };
         
         public ActorPersonality(ActorPersonality actorPersonality)

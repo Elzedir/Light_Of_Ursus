@@ -31,14 +31,15 @@ namespace Inventory
                 item => $"{item.ItemName} - Qty: {item.ItemAmount}");
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Inventory Items",
-                stringData: AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllInventoryItems.Values.ToDictionary(item => $"{item.ItemID}:",
                     item => $"{item.ItemName} - Qty: {item.ItemAmount}"));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public abstract ComponentType ComponentType { get; }

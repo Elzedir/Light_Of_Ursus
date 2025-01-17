@@ -43,21 +43,24 @@ namespace Faction
             }
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base Faction Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Faction Actors",
-                stringData: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Faction Relations",
-                stringData: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()

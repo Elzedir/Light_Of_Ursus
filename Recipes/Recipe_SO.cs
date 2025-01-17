@@ -24,7 +24,7 @@ namespace Recipes
                 dataID: (uint)data.RecipeName, 
                 data_Object: data,
                 dataTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
-                getDataTo_Display: data.GetData_Display);
+                getDataToDisplay: data.GetData_Display);
         }
     }
 

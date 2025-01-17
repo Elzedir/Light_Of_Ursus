@@ -173,19 +173,19 @@ namespace Priority
             {
                 return 0;
                 
-                Debug.LogError("ExistingPriorityParameters is null.");
-
-                switch (priorityType)
-                {
-                    case PriorityType.ActorAction:
-                        Debug.Log($"ActorAction: {(ActorActionName)priorityID} existing parameters not found.");
-                        break;
-                    case PriorityType.JobTask:
-                        Debug.Log($"JobTask: {(JobTaskName)priorityID} existing parameters not found.");
-                        break;
-                }
-
-                return 0;
+                // Debug.LogError("ExistingPriorityParameters is null.");
+                //
+                // switch (priorityType)
+                // {
+                //     case PriorityType.ActorAction:
+                //         Debug.Log($"ActorAction: {(ActorActionName)priorityID} existing parameters not found.");
+                //         break;
+                //     case PriorityType.JobTask:
+                //         Debug.Log($"JobTask: {(JobTaskName)priorityID} existing parameters not found.");
+                //         break;
+                // }
+                //
+                // return 0;
             }
 
             switch (priorityType)

@@ -37,7 +37,7 @@ namespace Ability
                 dataID: (uint)data.AbilityName,
                 data_Object: data, 
                 dataTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
-                getDataTo_Display: data.GetData_Display);
+                getDataToDisplay: data.GetData_Display);
         }
 
         static uint _lastUnusedAbilityID = 1;

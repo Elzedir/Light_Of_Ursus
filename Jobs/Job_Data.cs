@@ -37,17 +37,19 @@ namespace Jobs
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base Job Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Job Tasks",
-                stringData: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
     }
     

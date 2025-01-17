@@ -8,11 +8,12 @@ namespace Tools
     [CustomEditor(typeof(Data_SO<>), true)]
     public abstract class Data_SOEditor<T> : Editor where T : class
     {
-        int                        _selectedBaseIndex = -1;
-        protected       Data_SO<T> _so;
+        int _selectedBaseIndex = -1;
+        protected Data_SO<T> _so;
         public abstract Data_SO<T> SO { get; }
 
         double _lastRefreshTime;
+        double _lastRefreshTime2;
 
         public override void OnInspectorGUI()
         {
@@ -38,20 +39,20 @@ namespace Tools
 
             EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
 
-            Data<T>[] nonNullDataObjects = Array.Empty<Data<T>>();
-            
+            var nonNullDataObjects = Array.Empty<Data<T>>();
+
             for (var i = 0; i < 2; i++)
             {
                 nonNullDataObjects = SO.Data.Where(data_Object =>
-                    data_Object              != null &&
+                    data_Object != null &&
                     data_Object.DataID != 0).ToArray();
 
                 if (nonNullDataObjects.Length == 0)
                 {
                     SO.RefreshData(true);
-                }    
+                }
             }
-            
+
             SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
                 GUILayout.Height(Mathf.Min(200, nonNullDataObjects.Length * 20)));
             _selectedBaseIndex =
@@ -62,7 +63,7 @@ namespace Tools
 
             var selectedDataObject = nonNullDataObjects[_selectedBaseIndex];
 
-            _drawData_Object(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs));
+            _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 3, false );
         }
 
         static string[] _getBaseObjectNames(Data<T>[] baseObjects)
@@ -70,45 +71,84 @@ namespace Tools
             return baseObjects.Select(base_Object => $"{base_Object.DataTitle}").ToArray();
         }
 
-        static void _drawData_Object(DataToDisplay dataToDisplay)
+        static void _drawDataToDisplay(DataToDisplay dataToDisplay, int iteration, bool showToggle = true)
         {
-            while (true)
+            if (iteration-- <= 0)
             {
-                //* First Data is not working, so I will always have open the data first to see it, even if its First Data. Maybe one day find a way around it.
-                
-                if (!(dataToDisplay.ShowData = EditorGUILayout.Toggle($"{dataToDisplay.Title}", dataToDisplay.ShowData))) 
-                    return;
-
-                foreach (var data in dataToDisplay.StringData)
-                {
-                    GUILayout.Label($"{data.Key}: {data.Value}");
-                }
-
-                var allSubData = dataToDisplay.SubData?.Values;
-
-                if (allSubData?.Count > 0)
-                {
-                    foreach (var subData in allSubData)
-                    {
-                        _drawData_Object(subData);
-                    }    
-                }
-                
-                if (dataToDisplay.InteractableData is null || dataToDisplay.InteractableData.Count is 0) return;
-
-                dataToDisplay.ScrollPosition = EditorGUILayout.BeginScrollView(dataToDisplay.ScrollPosition,
-                    GUILayout.Height(Mathf.Min(200, dataToDisplay.InteractableData.Count * 20)));
-                dataToDisplay.SelectedIndex = GUILayout.SelectionGrid(dataToDisplay.SelectedIndex,
-                    dataToDisplay.InteractableData.Select(subData => subData.Value.Title).ToArray(), 1);
-
-                EditorGUILayout.EndScrollView();
-
-                if (dataToDisplay.SelectedIndex < 0 || dataToDisplay.SelectedIndex >= dataToDisplay.InteractableData.Count) return;
-            
-                var selectedSubData = dataToDisplay.InteractableData.ElementAt(dataToDisplay.SelectedIndex).Value;
-                
-                dataToDisplay = selectedSubData;
+                Debug.LogWarning("DataToDisplay iteration limit reached.");
+                return;
             }
+
+            if (showToggle)
+            {
+                if (!(dataToDisplay.ShowData = EditorGUILayout.Toggle($"{dataToDisplay.Title}", dataToDisplay.ShowData)))
+                    return;
+            }
+            else
+            {
+                dataToDisplay.ShowData = true;
+            }
+            
+
+            _drawStringData(dataToDisplay);
+            _drawSubData(dataToDisplay, iteration);
+            _drawInteractableData(dataToDisplay, iteration);
+        }
+
+        static void _drawStringData(DataToDisplay dataToDisplay)
+        {
+            if (dataToDisplay.AllStringData == null) return;
+            
+            foreach (var stringGroup in dataToDisplay.AllStringData)
+            {
+                if (stringGroup.Value is null) continue;
+                
+                EditorGUILayout.LabelField(stringGroup.Key, EditorStyles.boldLabel);
+                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(5));
+                
+                foreach (var stringData in stringGroup.Value)
+                {
+                    GUILayout.Label($"{stringData.Key}: {stringData.Value}");   
+                }
+                
+                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
+                GUILayout.Space(10);
+            }
+        }
+
+        static void _drawSubData(DataToDisplay dataToDisplay, int iteration)
+        {
+            var allSubData = dataToDisplay.AllSubData;
+
+            if (allSubData is null || allSubData.Count <= 0) return;
+
+            foreach (var subData in allSubData.Values.Where(subData => subData is not null))
+            {
+                _drawDataToDisplay(subData, iteration);
+            }
+        }
+
+        static void _drawInteractableData(DataToDisplay dataToDisplay, int iteration)
+        {
+            var allInteractableData = dataToDisplay.AllInteractableData;
+            
+            if (allInteractableData is null || allInteractableData.Count is 0) return;
+
+            dataToDisplay.ScrollPosition = EditorGUILayout.BeginScrollView(dataToDisplay.ScrollPosition,
+                GUILayout.Height(Mathf.Min(200, allInteractableData.Count * 20)));
+            dataToDisplay.SelectedIndex = GUILayout.SelectionGrid(dataToDisplay.SelectedIndex,
+                allInteractableData
+                    .Where(subData => subData.Value != null)
+                    .Select(subData => subData.Value.Title).ToArray(), 1);
+
+            EditorGUILayout.EndScrollView();
+
+            if (allInteractableData.Count is 0 ||
+                dataToDisplay.SelectedIndex < 0 ||
+                dataToDisplay.SelectedIndex >= allInteractableData.Count) return;
+
+            var selectedSubData = allInteractableData.ElementAt(dataToDisplay.SelectedIndex).Value;
+            _drawDataToDisplay(selectedSubData, iteration);
         }
     }
 }

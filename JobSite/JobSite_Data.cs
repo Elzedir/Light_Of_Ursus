@@ -72,6 +72,8 @@ namespace JobSite
 
         Dictionary<(uint, uint), uint> _populateWorkPost_Workers()
         {
+            if (!Application.isPlaying) return new Dictionary<(uint, uint), uint>();
+            
             var allEmployeePositions = new Dictionary<(uint, uint), uint>();
 
             foreach (var station in AllStationComponents)
@@ -615,51 +617,58 @@ namespace JobSite
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Base JobSite Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Employee Data",
-                stringData: _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}"));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Station Operators",
-                stringData: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
                     operatorID => $"{operatorID.Value}"));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "All Station IDs",
-                stringData: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
 
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Production Data",
-                subData: ProductionData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: ProductionData.GetSubData(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Prosperity Data",
-                subData: ProsperityData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: ProsperityData.GetSubData(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Priority Data",
-                subData: PriorityData.GetSubData(toggleMissingDataDebugs, dataToDisplay).SubData);
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: PriorityData.GetSubData(toggleMissingDataDebugs));
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
-        public override Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDebugs, DataToDisplay dataToDisplay)
+        public override Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDataDebugs)
         {
             return new Dictionary<string, DataToDisplay>
             {
                 {
                     "Prosperity Data",
-                    ProsperityData.GetSubData(toggleMissingDebugs, dataToDisplay)
+                    ProsperityData.GetSubData(toggleMissingDataDebugs)
                 },
                 {
                     "Priority Data",
-                    PriorityData.GetSubData(toggleMissingDebugs, dataToDisplay)
+                    PriorityData.GetSubData(toggleMissingDataDebugs)
                 }
             };
         }
@@ -683,24 +692,27 @@ namespace JobSite
 
         public override Dictionary<string, string> GetStringData()
         {
-            return new Dictionary<string, string>
+            var productionData = new Dictionary<string, string>
             {
-                { "All Produced Items", $"{string.Join(", ", AllProducedItems)}" },
-                {
-                    "Estimated Production Rate Per Hour",
-                    $"{string.Join(", ", EstimatedProductionRatePerHour)}"
-                },
                 { "Station ID", $"{JobSiteID}" }
             };
+                
+            var allProducedItems = AllProducedItems?.ToDictionary(item => item.ItemID.ToString(),
+                item => item.ItemName.ToString()) ?? new Dictionary<string, string>();
+            var estimatedProductionRatePerHour = EstimatedProductionRatePerHour?.ToDictionary(item => item.ItemID.ToString(),
+                item => item.ItemName.ToString()) ?? new Dictionary<string, string>();
+            
+            return productionData.Concat(allProducedItems).Concat(estimatedProductionRatePerHour).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs, DataToDisplay dataToDisplay)
+        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref dataToDisplay,
+            _updateDataDisplay(ref _dataToDisplay,
                 title: "Production Data",
-                stringData: GetStringData());
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
 
-            return dataToDisplay;
+            return _dataToDisplay;
         }
 
         public List<Item> GetEstimatedProductionRatePerHour()
