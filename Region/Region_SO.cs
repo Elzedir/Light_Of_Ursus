@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using DataPersistence;
 using Tools;
 using UnityEditor;
@@ -87,7 +86,7 @@ namespace Region
                 dataID: data.RegionID, 
                 data_Object: data,
                 dataTitle: $"{data.RegionID}: {data.RegionName}",
-                getDataToDisplay: data.GetData_Display);
+                getDataToDisplay: data.GetDataToDisplay);
         }
         
         public override void SaveData(SaveData saveData) =>

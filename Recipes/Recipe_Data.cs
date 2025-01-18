@@ -64,21 +64,21 @@ namespace Recipes
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Recipe Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Required Ingredients",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: RequiredIngredients.ToDictionary(
                     item => $"{item.ItemID}:",
                     item => $"Qty: {item.ItemAmount}"));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Required Vocations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: RequiredVocations.ToDictionary(
@@ -86,17 +86,17 @@ namespace Recipes
                     vocation => $"Min: {vocation.MinimumVocationExperience} " +
                                 $"Expected: {vocation.ExpectedVocationExperience}"));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Recipe Products",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Possible Qualities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
     

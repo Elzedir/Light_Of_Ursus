@@ -32,9 +32,9 @@ namespace Items
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Priority Stations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: new Dictionary<string, string>
@@ -42,7 +42,7 @@ namespace Items
                     {"Priority Stations", Priority_Stations.ToString()}
                 });
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public PriorityImportance GetHighestStationPriority(List<StationName> allStations)

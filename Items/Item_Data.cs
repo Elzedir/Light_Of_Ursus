@@ -59,44 +59,44 @@ namespace Items
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Common Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemCommonStats.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemCommonStats.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Visual Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemVisualStats.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemVisualStats.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Weapon Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemWeaponStats.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemWeaponStats.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Armour Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemArmourStats.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemArmourStats.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Fixed Modifiers",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemFixedModifiers.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemFixedModifiers.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Percentage Modifiers",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemPercentageModifiers.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemPercentageModifiers.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Priority Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ItemPriorityStats.GetSubData(toggleMissingDataDebugs));
+                allSubData: ItemPriorityStats.GetDataToDisplay(toggleMissingDataDebugs));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDataDebugs)
@@ -105,31 +105,31 @@ namespace Items
             {
                 {
                     "Common Stats",
-                    ItemCommonStats.GetSubData(toggleMissingDataDebugs)
+                    ItemCommonStats.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Visual Stats",
-                    ItemVisualStats.GetSubData(toggleMissingDataDebugs)
+                    ItemVisualStats.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Weapon Stats",
-                    ItemWeaponStats.GetSubData(toggleMissingDataDebugs)
+                    ItemWeaponStats.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Armour Stats",
-                    ItemArmourStats.GetSubData(toggleMissingDataDebugs)
+                    ItemArmourStats.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Fixed Modifiers",
-                    ItemFixedModifiers.GetSubData(toggleMissingDataDebugs)
+                    ItemFixedModifiers.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Percentage Modifiers",
-                    ItemPercentageModifiers.GetSubData(toggleMissingDataDebugs)
+                    ItemPercentageModifiers.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Priority Stats",
-                    ItemPriorityStats.GetSubData(toggleMissingDataDebugs)
+                    ItemPriorityStats.GetDataToDisplay(toggleMissingDataDebugs)
                 }
             };
         }
@@ -169,7 +169,7 @@ namespace Items
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
 
-        public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetData_Display(toggleMissingDataDebugs);
+        public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetDataToDisplay(toggleMissingDataDebugs);
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -182,14 +182,14 @@ namespace Items
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Common Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: DataItem.ItemCommonStats.GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
 

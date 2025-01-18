@@ -32,39 +32,39 @@ namespace Actor
             EquipmentData       = equipmentData;
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Actor Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: StatsAndAbilities?.GetSubData(toggleMissingDataDebugs));
+                allSubData: StatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CareerData?.GetSubData(toggleMissingDataDebugs));
+                allSubData: CareerData?.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Crafting Recipes",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CraftingData?.GetSubData(toggleMissingDataDebugs));
+                allSubData: CraftingData?.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Vocation Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: VocationData?.GetSubData(toggleMissingDataDebugs));
+                allSubData: VocationData?.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Inventory Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: InventoryData?.GetSubData(toggleMissingDataDebugs));
+                allSubData: InventoryData?.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Equipment Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: EquipmentData?.GetSubData(toggleMissingDataDebugs));
+                allSubData: EquipmentData?.GetDataToDisplay(toggleMissingDataDebugs));
             
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -79,12 +79,12 @@ namespace Actor
         {
             return new Dictionary<string, DataToDisplay>
             {
-                { "Stats and Abilities", StatsAndAbilities.GetSubData(toggleMissingDataDebugs) },
-                { "Career Data", CareerData.GetSubData(toggleMissingDataDebugs) },
-                { "Crafting Recipes", CraftingData.GetSubData(toggleMissingDataDebugs) },
-                { "Vocation Data", VocationData.GetSubData(toggleMissingDataDebugs) },
-                { "Inventory Data", InventoryData.GetSubData(toggleMissingDataDebugs) },
-                { "Equipment Data", EquipmentData.GetSubData(toggleMissingDataDebugs) }
+                { "Stats and Abilities", StatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Career Data", CareerData.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Crafting Recipes", CraftingData.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Vocation Data", VocationData.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Inventory Data", InventoryData.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Equipment Data", EquipmentData.GetDataToDisplay(toggleMissingDataDebugs) }
             };
         }
     }

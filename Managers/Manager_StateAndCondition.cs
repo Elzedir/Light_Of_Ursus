@@ -198,14 +198,14 @@ namespace Managers
             return data;
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Conditions",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         void OnConditionChanged(ConditionName conditionName)
@@ -363,14 +363,14 @@ namespace Managers
             return data;
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Primary States",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         void _setSubStates()

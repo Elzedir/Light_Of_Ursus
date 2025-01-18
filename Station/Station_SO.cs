@@ -94,7 +94,7 @@ namespace Station
                 dataID: data.StationID,
                 data_Object: data,
                 dataTitle: $"{data.StationID}: {data.StationName}",
-                getDataToDisplay: data.GetData_Display);
+                getDataToDisplay: data.GetDataToDisplay);
         }
 
         public override void SaveData(SaveData saveData) =>

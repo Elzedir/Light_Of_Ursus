@@ -62,8 +62,7 @@ namespace Tools
             if (_selectedBaseIndex < 0 || _selectedBaseIndex >= nonNullDataObjects.Length) return;
 
             var selectedDataObject = nonNullDataObjects[_selectedBaseIndex];
-
-            _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 3, false );
+            _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 50, false );
         }
 
         static string[] _getBaseObjectNames(Data<T>[] baseObjects)
@@ -88,7 +87,6 @@ namespace Tools
             {
                 dataToDisplay.ShowData = true;
             }
-            
 
             _drawStringData(dataToDisplay);
             _drawSubData(dataToDisplay, iteration);
@@ -108,7 +106,16 @@ namespace Tools
                 
                 foreach (var stringData in stringGroup.Value)
                 {
-                    GUILayout.Label($"{stringData.Key}: {stringData.Value}");   
+                    var labelStyle = new GUIStyle(GUI.skin.label)
+                    {
+                        wordWrap = true
+                    };
+
+                    const float labelWidth = 300f;
+                    
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Label($"{stringData.Key}: {stringData.Value}", labelStyle, GUILayout.Width(labelWidth));
+                    GUILayout.EndHorizontal();
                 }
                 
                 GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));

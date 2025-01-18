@@ -193,7 +193,7 @@ namespace Priority
                 case PriorityType.ActorAction:
                     return _generatePriority_Actor(priorityID, existingPriorityParameters);
                 case PriorityType.JobTask:
-                    return _generatePriority_Jobsite(priorityID, existingPriorityParameters);
+                    return _generatePriority_JobSite(priorityID, existingPriorityParameters);
                 default:
                     Debug.LogError($"PriorityType: {priorityType} not found.");
                     return 0;
@@ -213,7 +213,7 @@ namespace Priority
             }
         }
 
-        static float _generatePriority_Jobsite(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
+        static float _generatePriority_JobSite(uint priorityID, Dictionary<uint, object> existingPriorityParameters)
         {
             switch (priorityID)
             {
@@ -345,10 +345,13 @@ namespace Priority
             if (!_parameterChecks(existingPriorityParameters, out var defaultMaxPriority, out var totalDistance,
                 out var totalItems, out var inventory_Hauler, out var inventory_Target))
             {
+                Debug.LogError("Parameter checks failed for chop wood.");
                 return 0;
             }
             
             var allItemsToFetch = inventory_Target.GetInventoryItemsToFetchFromStation();
+            
+            Debug.LogError("AllItemsToFetch: " + allItemsToFetch.Count);
 
             var priority_ItemQuantity = _lessItemsDesired_Total(allItemsToFetch, totalItems, defaultMaxPriority);
             

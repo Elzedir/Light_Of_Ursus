@@ -80,6 +80,8 @@ namespace JobSite
 
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
+            JobSiteData.PriorityData.RegenerateAllPriorities();
+            
             var highestPriorityElement = JobSiteData.PriorityData.GetHighestSpecificPriority(
                 actor.ActorData.CareerData.AllJobTasks.Select(jobTaskName => (uint)jobTaskName).ToList(), stationID);
 

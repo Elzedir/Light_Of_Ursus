@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
@@ -39,7 +40,12 @@ namespace Station
 
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
-        
+
+        // public void Update()
+        // {
+        //     Debug.Log($"Station: {StationName} JobSiteID: {Station_Data.JobSiteID}");
+        // }
+
         public void SetStationData(Station_Data stationData)
         {
             Station_Data = stationData;
@@ -52,7 +58,7 @@ namespace Station
 
         void _initialise()
         {
-            var stationData = Station_Manager.GetStation_DataFromComponent(this);
+            var stationData = Station_Manager.GetStation_DataFromName(this);
             
             if (stationData is null)
             {
@@ -61,6 +67,7 @@ namespace Station
             }
             
             SetStationData(stationData);
+
             Station_Data.InitialiseStationData();
 
             SetInteractRange();

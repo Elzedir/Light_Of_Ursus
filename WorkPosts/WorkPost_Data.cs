@@ -71,14 +71,14 @@ namespace WorkPosts
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base WorkPost Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
     

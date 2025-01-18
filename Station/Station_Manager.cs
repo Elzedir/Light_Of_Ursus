@@ -17,7 +17,7 @@ namespace Station
             return Station_SO.GetStation_Data(stationID).Data_Object;
         }
         
-        public static Station_Data GetStation_DataFromComponent(Station_Component stationComponent)
+        public static Station_Data GetStation_DataFromName(Station_Component stationComponent)
         {
             return Station_SO.GetDataFromName(stationComponent.name)?.Data_Object;
         }

@@ -19,13 +19,13 @@ namespace Actor
             return _convertDictionaryToData(ActorPreset_List.DefaultActorDataPresets);
         }
         
-        protected override Data<ActorPreset_Data> _convertToData(ActorPreset_Data dataObject)
+        protected override Data<ActorPreset_Data> _convertToData(ActorPreset_Data data)
         {
             return new Data<ActorPreset_Data>(
-                dataID: (uint)dataObject.ActorDataPresetName,
-                data_Object: dataObject,
-                dataTitle: $"{(uint)dataObject.ActorDataPresetName}: {dataObject.ActorDataPresetName}",
-                getDataToDisplay: dataObject.GetData_Display);
+                dataID: (uint)data.ActorDataPresetName,
+                data_Object: data,
+                dataTitle: $"{(uint)data.ActorDataPresetName}: {data.ActorDataPresetName}",
+                getDataToDisplay: data.GetDataToDisplay);
         }
     }
     

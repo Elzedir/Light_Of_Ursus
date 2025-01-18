@@ -123,49 +123,49 @@ namespace Actor
         //     ActorQuests             = new QuestData(actor_Data.ActorQuests);
         // }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Actor Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Full Identification",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: FullIdentification.GetSubData(toggleMissingDataDebugs));
+                allSubData: FullIdentification.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Game Object Properties",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: GameObjectData.GetSubData(toggleMissingDataDebugs));
+                allSubData: GameObjectData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Species And Personality",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: SpeciesAndPersonality.GetSubData(toggleMissingDataDebugs));
+                allSubData: SpeciesAndPersonality.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Stats And Abilities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: StatsAndAbilities.GetSubData(toggleMissingDataDebugs));
+                allSubData: StatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CareerData.GetSubData(toggleMissingDataDebugs));
+                allSubData: CareerData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Inventory Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: InventoryData.GetSubData(toggleMissingDataDebugs));
+                allSubData: InventoryData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Equipment Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: EquipmentData.GetSubData(toggleMissingDataDebugs));
+                allSubData: EquipmentData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -184,31 +184,31 @@ namespace Actor
             {
                 {
                     "Full Identification",
-                    FullIdentification.GetSubData(toggleMissingDataDebugs)
+                    FullIdentification.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Game Object Data",
-                    GameObjectData.GetSubData(toggleMissingDataDebugs)
+                    GameObjectData.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Species And Personality",
-                    SpeciesAndPersonality.GetSubData(toggleMissingDataDebugs)
+                    SpeciesAndPersonality.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Stats And Abilities",
-                    StatsAndAbilities.GetSubData(toggleMissingDataDebugs)
+                    StatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Career Data",
-                    CareerData.GetSubData(toggleMissingDataDebugs)
+                    CareerData.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Inventory Data",
-                    InventoryData.GetSubData(toggleMissingDataDebugs)
+                    InventoryData.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Equipment Data",
-                    EquipmentData.GetSubData(toggleMissingDataDebugs)
+                    EquipmentData.GetDataToDisplay(toggleMissingDataDebugs)
                 }
             };
         }
@@ -280,14 +280,14 @@ namespace Actor
             ActorBirthDate = new Date(fullIdentification.ActorBirthDate);
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Full Identification",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData() => new()
@@ -329,14 +329,14 @@ namespace Actor
             Religion = religion;
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Background",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -387,14 +387,14 @@ namespace Actor
             ActorMaterial = gameObjectData.ActorMaterial;
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Game Object Properties",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData() => new()
@@ -474,14 +474,14 @@ namespace Actor
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "World State",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -509,14 +509,14 @@ namespace Actor
             AllRelationships = allRelationships;
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Relationships",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -561,14 +561,14 @@ namespace Actor
             AllJobs = new HashSet<JobName>(careerData.AllJobs);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -682,14 +682,14 @@ namespace Actor
             ActorPersonality = new ActorPersonality(speciesAndPersonality.ActorPersonality);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Species And Personality",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -746,14 +746,14 @@ namespace Actor
             return statsData.Concat(aspectsData).Concat(abilitiesData).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Stats And Abilities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
@@ -824,14 +824,14 @@ namespace Actor
             ActorCombatStats = new CombatStats(actorStats.ActorCombatStats);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Actor Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -922,14 +922,14 @@ namespace Actor
             ActorAspectList = new List<AspectName>(actorAspects.ActorAspectList);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Actor Aspects",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -1043,14 +1043,14 @@ namespace Actor
             KnownRecipes = new List<RecipeName>(craftingData.KnownRecipes);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Crafting Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -1147,14 +1147,14 @@ namespace Actor
             ActorQuests = new List<Quest>(questUpdater.ActorQuests);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Quests",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -1196,14 +1196,14 @@ namespace Actor
             ActorVocations = new Dictionary<VocationName, ActorVocation>(vocationData.ActorVocations);
         }
         
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Vocation Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()

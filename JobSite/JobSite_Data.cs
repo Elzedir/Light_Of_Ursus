@@ -617,45 +617,45 @@ namespace JobSite
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base JobSite Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Employee Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: _allEmployeeIDs.ToDictionary(employeeID => $"{employeeID}", employeeID => $"{employeeID}"));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Station Operators",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}: ",
+                allStringData: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}",
                     operatorID => $"{operatorID.Value}"));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "All Station IDs",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: AllStationIDs.ToDictionary(stationID => $"{stationID}", stationID => $"{stationID}"));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Production Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ProductionData.GetSubData(toggleMissingDataDebugs));
+                allSubData: ProductionData.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Prosperity Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ProsperityData.GetSubData(toggleMissingDataDebugs));
+                allSubData: ProsperityData.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Priority Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: PriorityData.GetSubData(toggleMissingDataDebugs));
+                allSubData: PriorityData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDataDebugs)
@@ -664,11 +664,11 @@ namespace JobSite
             {
                 {
                     "Prosperity Data",
-                    ProsperityData.GetSubData(toggleMissingDataDebugs)
+                    ProsperityData.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Priority Data",
-                    PriorityData.GetSubData(toggleMissingDataDebugs)
+                    PriorityData.GetDataToDisplay(toggleMissingDataDebugs)
                 }
             };
         }
@@ -705,14 +705,14 @@ namespace JobSite
             return productionData.Concat(allProducedItems).Concat(estimatedProductionRatePerHour).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Production Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public List<Item> GetEstimatedProductionRatePerHour()

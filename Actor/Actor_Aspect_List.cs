@@ -14,7 +14,9 @@ namespace Actor
         {
             if (aspectList.Count != 3)
             {
-                for (var i = 0; i < 3 - aspectList.Count; i++)
+                var iterations = 3 - aspectList.Count;
+                
+                for (var i = 0; i < iterations; i++)
                 {
                     aspectList.Add(AspectName.None);
                 }

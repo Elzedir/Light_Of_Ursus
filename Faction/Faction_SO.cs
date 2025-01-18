@@ -87,7 +87,7 @@ namespace Faction
                 dataID: data.FactionID,
                 data_Object: data,
                 dataTitle: $"{data.FactionID}: {data.FactionName}",
-                getDataToDisplay: data.GetData_Display);
+                getDataToDisplay: data.GetDataToDisplay);
         }
         
         public override void SaveData(SaveData saveData) =>

@@ -96,8 +96,8 @@ namespace Priority
 
             _priorityArray[index].UpdatePriority(newPriority);
 
-            if (index == _currentPosition) return true;
-            
+            if (index == _currentPosition || index == 1) return true;
+
             if (_priorityArray[index].PriorityValue >= _priorityArray[index / 2].PriorityValue)
             {
                 _moveDown(index);
@@ -165,6 +165,7 @@ namespace Priority
             while (true)
             {
                 if (index == 1) return;
+                
                 var parent = index / 2;
 
                 if (_priorityArray[parent].PriorityValue >= _priorityArray[index].PriorityValue) return;
@@ -185,18 +186,40 @@ namespace Priority
 
         public override Dictionary<string, string> GetStringData()
         {
-            return _priorityArray?.ToDictionary(priority => $"PriorityID: {priority?.PriorityID}",
-                priority => $"PriorityValue: {priority?.PriorityValue}") ?? new Dictionary<string, string>();
+            var stringData = new Dictionary<string, string>();
+            
+            foreach(var priority in _priorityArray)
+            {
+                if (priority is null) continue;
+
+                var iteration = 0;
+                
+                while (stringData.ContainsKey($"PriorityID({iteration}) - {priority.PriorityID}") && iteration < 4)
+                {
+                    Debug.LogError($"PriorityID({iteration}) - {priority.PriorityID} already exists.");
+                    iteration++;
+                }
+                
+                if (iteration >= 4)
+                {
+                    Debug.LogError("PriorityID iteration limit reached.");
+                    continue;
+                }
+                
+                stringData.Add($"PriorityID({iteration}) - {priority.PriorityID}", $"PriorityValue - {priority.PriorityValue}");
+            }
+            
+            return stringData;
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
 

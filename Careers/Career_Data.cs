@@ -23,21 +23,21 @@ namespace Careers
             CareerSpecialistJobs = careerSpecialistJobs;
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Career Base Jobs",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: CareerBaseJobs.ToDictionary(
                     job => $"{(uint)job}",
                     job => $"{job}"));
             
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public override Dictionary<string, string> GetStringData()

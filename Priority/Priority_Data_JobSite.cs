@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Actor;
 using Jobs;
 using JobSite;
@@ -12,15 +13,15 @@ namespace Priority
 {
     public class Priority_Data_JobSite : Priority_Data
     {
-        public Priority_Data_JobSite(uint jobsiteID)
+        public Priority_Data_JobSite(uint jobSiteID)
         {
-            _jobsiteReferences = new ComponentReference_Jobsite(jobsiteID);
+            _jobSiteReferences = new ComponentReference_Jobsite(jobSiteID);
         }
 
-        readonly ComponentReference_Jobsite _jobsiteReferences;
+        readonly ComponentReference_Jobsite _jobSiteReferences;
 
-        public uint                     JobsiteID     => _jobsiteReferences.JobsiteID;
-        JobSite_Component                _jobSite      => _jobsiteReferences.JobSite;
+        public uint                     JobSiteID     => _jobSiteReferences.JobsiteID;
+        JobSite_Component                _jobSite      => _jobSiteReferences.JobSite;
         protected override PriorityType _priorityType => PriorityType.JobTask;
 
         protected override List<uint> _getPermittedPriorities(List<uint> priorityIDs)
@@ -48,6 +49,7 @@ namespace Priority
             {
                 foreach (var jobTask in Priority_Manager.BasePriorityJobTasks)
                 {
+                    Debug.LogError("Regenerating priority for: " + jobTask);
                     _regeneratePriority((uint)jobTask);
                 }
                 
@@ -66,6 +68,11 @@ namespace Priority
             {
                 PriorityQueue.Update(priorityID, 1);
                 return;
+            }
+
+            if (priorityID == (uint)JobTaskName.Chop_Wood)
+            {
+                Debug.LogWarning(1);
             }
             
             var priorityParameters = _getPriorityParameters(priorityID);
@@ -119,25 +126,57 @@ namespace Priority
         {
             return new Dictionary<string, string>
             {
-                { "JobSiteID", $"{JobsiteID}" },
+                { "JobSiteID", $"{JobSiteID}" },
                 { "JobSite", $"{_jobSite.JobSiteData.JobSiteName}" },
                 { "PriorityType", $"{_priorityType}" }
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Priority Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: PriorityQueue.GetSubData(toggleMissingDataDebugs));
+                allSubData: _convertToJobTaskName(PriorityQueue.GetDataToDisplay(toggleMissingDataDebugs)));
 
-            return _dataToDisplay;
+            return DataToDisplay;
+        }
+
+        DataToDisplay _convertToJobTaskName(DataToDisplay dataToDisplay)
+        {
+            var regex = new Regex(@"PriorityID\((\d+)\)\s-\s(\d+)", RegexOptions.Compiled);
+            
+            foreach(var (key, value) in dataToDisplay.AllStringData.ToList())
+            {
+                if (!key.Contains("Priority Queue")) continue;
+                
+                foreach(var (innerKey, innerValue) in value.ToList())
+                {
+                    var match = regex.Match(innerKey);
+                    if (!match.Success) continue;
+
+                    var iteration = match.Groups[1].Value;
+                    var priorityIDString = match.Groups[2].Value;
+                    
+                    if (uint.TryParse(priorityIDString, out var priorityID))
+                    {
+                        Debug.Log($"Parsing PriorityID: {priorityID} to JobTaskName: {(JobTaskName)priorityID}");
+                        dataToDisplay.AllStringData[key][$"PriorityID({iteration}) - {(JobTaskName)priorityID}"] = innerValue;
+                        dataToDisplay.AllStringData[key].Remove($"PriorityID({iteration}) - {priorityID}");
+                    }
+                    else
+                    {
+                        Debug.LogError($"Failed to parse PriorityID from {innerKey}");
+                    }
+                }
+            }
+            
+            return dataToDisplay;
         }
     }
 }

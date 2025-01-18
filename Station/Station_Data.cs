@@ -52,6 +52,7 @@ namespace Station
             //stationName; WHen loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             // But if the station does exist, then we generate a new station with the required stationName type.
             StationDescription      = stationDescription;
+            Debug.LogWarning($"Setting JobSiteID to {jobSiteID}");
             JobSiteID               = jobSiteID;
             AllWorkPost_Data        = allWorkPost_Data;
             StationIsActive         = stationIsActive;
@@ -227,42 +228,42 @@ namespace Station
         {
             return new Dictionary<string, string>
             {
-                { "Station ID:", $"{StationID}" },
-                { "Station Name:", $"{StationName}" },
-                { "Station Description:", $"{StationDescription}" },
-                { "Station IsActive:", $"{StationIsActive}" },
-                { "JobSite ID:", $"{JobSiteID}" },
-                { "Default Product:", $"{DefaultProduct}" },
-                { "Base Progress Rate Per Hour:", $"{BaseProgressRatePerHour}" }
+                { "Station ID", $"{StationID}" },
+                { "Station Name", $"{StationName}" },
+                { "Station Description", $"{StationDescription}" },
+                { "Station IsActive", $"{StationIsActive}" },
+                { "JobSite ID", $"{JobSiteID}" },
+                { "Default Product", $"{DefaultProduct}" },
+                { "Base Progress Rate Per Hour", $"{BaseProgressRatePerHour}" }
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Station Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Inventory Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: InventoryData.GetSubData(toggleMissingDataDebugs));
+                allSubData: InventoryData.GetDataToDisplay(toggleMissingDataDebugs));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Station Progress Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: StationProgressData.GetSubData(toggleMissingDataDebugs));
+                allSubData: StationProgressData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Station WorkPosts",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: AllWorkPost_Components?.Values.ToDictionary(
                     workPost => $"{workPost.WorkPostID} -",
-                    workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorID}: " +
+                    workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorID}" +
                                 $"{workPost.WorkPostData?.CurrentWorker}"));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
 
@@ -278,25 +279,25 @@ namespace Station
         {
             return new Dictionary<string, string>
             {
-                { "Current Progress:", $"{CurrentProgress}" },
-                { "Current Quality:", $"{CurrentQuality}" },
-                { "Current Product:", $"{CurrentProduct}" }
+                { "Current Progress", $"{CurrentProgress}" },
+                { "Current Quality", $"{CurrentQuality}" },
+                { "Current Product", $"{CurrentProduct}" }
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Station Progress Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Current Product",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CurrentProduct.GetSubData(toggleMissingDataDebugs));
+                allSubData: CurrentProduct?.GetDataToDisplay(toggleMissingDataDebugs));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
 
         public bool Progress(float progress)

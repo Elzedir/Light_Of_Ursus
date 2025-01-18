@@ -93,7 +93,7 @@ namespace City
                 dataID: data.CityID, 
                 data_Object: data,
                 dataTitle: $"{data.CityID}: {data.CityName}",
-                getDataToDisplay: data.GetData_Display);
+                getDataToDisplay: data.GetDataToDisplay);
         }
 
         public override void SaveData(SaveData saveData) =>

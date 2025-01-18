@@ -77,26 +77,26 @@ namespace Region
             };
         }
 
-        public override DataToDisplay GetSubData(bool toggleMissingDataDebugs)
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Base Region Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Region Cities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: AllCitiesInRegion.ToDictionary(
                     city => city.Key.ToString(),
                     city => city.Value.name));
             
-            _updateDataDisplay(ref _dataToDisplay,
+            _updateDataDisplay(DataToDisplay,
                 title: "Prosperity Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ProsperityData.GetSubData(toggleMissingDataDebugs));
+                allSubData: ProsperityData.GetDataToDisplay(toggleMissingDataDebugs));
 
-            return _dataToDisplay;
+            return DataToDisplay;
         }
     }
 

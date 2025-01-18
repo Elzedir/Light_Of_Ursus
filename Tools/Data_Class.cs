@@ -9,55 +9,55 @@ namespace Tools
 
     public abstract class Data_Class
     {
-        [SerializeField] protected DataToDisplay _dataToDisplay;
+        [SerializeField] DataToDisplay _dataToDisplay;
 
-        public DataToDisplay GetData_Display(bool toggleMissingDataDebugs)
+        protected DataToDisplay DataToDisplay
         {
-            if (_dataToDisplay?.AllStringData is null ||
-                _dataToDisplay.AllSubData is null ||
-                _dataToDisplay.AllInteractableData is null)
-            {
-                _dataToDisplay = new DataToDisplay("Display Data");
-            }
-
-            return _dataToDisplay = GetSubData(toggleMissingDataDebugs);
+            get => _dataToDisplay ??= new DataToDisplay("Display Data");
+            set => _dataToDisplay = value;
         }
 
         public abstract Dictionary<string, string> GetStringData();
 
         // We're passing through the DataTODisplay as the SubDataToDisplay, so we're just showing the same data again and again.
         // Try find a way to use this split system to display DataDisplay as First Data and SubData To Display as all other data.
-        public abstract DataToDisplay GetSubData(bool toggleMissingDataDebugs);
+        public abstract DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs);
 
         public virtual Dictionary<string, DataToDisplay> GetInteractableData(bool toggleMissingDataDebugs)
         {
             return new Dictionary<string, DataToDisplay>();
         }
 
-        protected void _updateDataDisplay(ref DataToDisplay dataToDisplay,
+        protected void _updateDataDisplay(DataToDisplay dataToDisplay,
             string title,
             bool toggleMissingDataDebugs,
             Dictionary<string, string> allStringData = null,
-            DataToDisplay allSubData = null,
-            DataToDisplay allInteractableData = null)
+            DataToDisplay allInteractableData = null,
+            DataToDisplay allSubData = null)
         {
             try
             {
-                if (allStringData is null && allSubData is null && allInteractableData is null)
-                {
-                    if (toggleMissingDataDebugs)
-                        Debug.LogError("StringData, SubData, InteractableData are all null. Data will be empty.");
-                }
+                if (allStringData is not null)
+                    dataToDisplay.AllStringData[title] = allStringData;
+
+                if (allInteractableData is not null)
+                    dataToDisplay.AllInteractableData[title] = allInteractableData;
+
+                if (allSubData is null) return;
                 
-                dataToDisplay.AllStringData[title] = allStringData;
                 dataToDisplay.AllSubData[title] = allSubData;
-                dataToDisplay.AllSubData[title].Title = title;
-                dataToDisplay.AllInteractableData[title] = allInteractableData;
+                allSubData.Title = title;
+
             }
             catch
             {
-                if (toggleMissingDataDebugs)
-                    Debug.Log($"Error in {title} Data");
+                if (!toggleMissingDataDebugs) return;
+
+                if (string.IsNullOrEmpty(title))
+                    Debug.LogError("Title is null.");
+
+                if (dataToDisplay is null)
+                    Debug.LogError($"DataToDisplay for {title} is null.");
             }
         }
     }

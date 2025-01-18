@@ -89,7 +89,7 @@ namespace Actor
                 dataID: data.ActorID, 
                 data_Object: data,
                 dataTitle: $"{data.ActorID}: {data.ActorName}",
-                getDataToDisplay: data.GetData_Display);
+                getDataToDisplay: data.GetDataToDisplay);
         }
         
         public override void SaveData(SaveData saveData) =>
