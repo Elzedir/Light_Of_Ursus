@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Actor;
 using TickRates;
 using Tools;
@@ -81,7 +82,7 @@ namespace Priority
 
         protected abstract List<uint> _getPermittedPriorities(List<uint> priorityIDs);
 
-        public PriorityElement PeekHighestPriority(ActorPriorityState actorPriorityState)
+        protected PriorityElement _peekHighestPriority(ActorPriorityState actorPriorityState)
         {
             var overallHighestPriority = new PriorityElement(0, 0);
 
@@ -99,9 +100,7 @@ namespace Priority
                 overallHighestPriority = priority.Value;
             }
 
-            return overallHighestPriority.PriorityID != (uint)ActorActionName.Idle
-                ? overallHighestPriority
-                : null;
+            return overallHighestPriority;
         }
 
         protected abstract Dictionary<uint, PriorityElement> _getRelevantPriorities(
@@ -123,7 +122,7 @@ namespace Priority
 
         public PriorityElement GetHighestPriority(ActorPriorityState actorPriorityState)
         {
-            var highestPriority = PeekHighestPriority(actorPriorityState);
+            var highestPriority = _peekHighestPriority(actorPriorityState);
 
             return highestPriority != null
                 ? PriorityQueue.Dequeue(highestPriority.PriorityID)
@@ -176,5 +175,38 @@ namespace Priority
         }
 
         protected abstract Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; }
+        
+        protected DataToDisplay _convertUintIDToStringID(DataToDisplay dataToDisplay)
+        {
+            var regex = new Regex(@"PriorityID\((\d+)\)\s-\s(\d+)", RegexOptions.Compiled);
+            
+            foreach(var (key, value) in dataToDisplay.AllStringData.ToList())
+            {
+                if (!key.Contains("Priority Queue")) continue;
+                
+                foreach(var (innerKey, innerValue) in value.ToList())
+                {
+                    var match = regex.Match(innerKey);
+                    if (!match.Success) continue;
+
+                    var iteration = match.Groups[1].Value;
+                    var priorityIDString = match.Groups[2].Value;
+                    
+                    if (uint.TryParse(priorityIDString, out var priorityID))
+                    {
+                        dataToDisplay.AllStringData[key][_getPriorityID(iteration, priorityID)] = innerValue;
+                        dataToDisplay.AllStringData[key].Remove($"PriorityID({iteration}) - {priorityID}");
+                    }
+                    else
+                    {
+                        Debug.LogError($"Failed to parse PriorityID from {innerKey}");
+                    }
+                }
+            }
+            
+            return dataToDisplay;
+        }
+
+        protected abstract string _getPriorityID(string iteration, uint priorityID);
     }
 }

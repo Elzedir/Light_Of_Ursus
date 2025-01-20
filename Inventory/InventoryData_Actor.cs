@@ -31,7 +31,7 @@ namespace Inventory
         float _availableCarryWeight;
         public float AvailableCarryWeight => _availableCarryWeight != 0 
             ? _availableCarryWeight 
-            : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Actor_Stats.AvailableCarryWeight;
+            : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
         public override bool HasSpaceForItems(List<Item> items)
         {
             if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)

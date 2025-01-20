@@ -350,8 +350,6 @@ namespace Priority
             }
             
             var allItemsToFetch = inventory_Target.GetInventoryItemsToFetchFromStation();
-            
-            Debug.LogError("AllItemsToFetch: " + allItemsToFetch.Count);
 
             var priority_ItemQuantity = _lessItemsDesired_Total(allItemsToFetch, totalItems, defaultMaxPriority);
             

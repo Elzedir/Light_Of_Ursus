@@ -85,6 +85,8 @@ namespace Tools
                 InitialiseAllData();
             }
             
+            if (!Application.isPlaying) return;
+            
             _initialiseSceneData();
         }
 

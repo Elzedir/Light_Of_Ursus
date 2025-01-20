@@ -110,12 +110,8 @@ namespace Tools
                     {
                         wordWrap = true
                     };
-
-                    const float labelWidth = 300f;
                     
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label($"{stringData.Key}: {stringData.Value}", labelStyle, GUILayout.Width(labelWidth));
-                    GUILayout.EndHorizontal();
+                    GUILayout.Label($"{stringData.Key}: {stringData.Value}", labelStyle);
                 }
                 
                 GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));

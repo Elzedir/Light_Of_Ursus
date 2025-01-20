@@ -11,8 +11,7 @@ namespace Debuggers
         static DebugVisualiser _instance;
 
         public static DebugVisualiser Instance =>
-            _instance ??= GameObject.Find("Debug_Visualiser").GetComponent<DebugVisualiser>();
-    
+            _instance ??= Manager_Game.FindTransformRecursively(GameObject.Find("UI").transform, "Debug_Visualiser").GetComponent<DebugVisualiser>();
 
         GameObject _debugPanelParent;
         GameObject DebugPanelParent => _debugPanelParent ??= _debugPanelParent =

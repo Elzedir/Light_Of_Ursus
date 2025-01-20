@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Ability;
+using ActorPreset;
 using Careers;
 using DateAndTime;
 using Equipment;
@@ -7,14 +8,16 @@ using Inventory;
 using Items;
 using Managers;
 using Personality;
+using Priority;
 using Recipes;
+using StateAndCondition;
 using Tools;
 
 namespace Actor
 {
     public abstract class Actor_List
     {
-        static        Dictionary<uint, Actor_Data> _defaultActors;
+        static Dictionary<uint, Actor_Data> _defaultActors;
         public static Dictionary<uint, Actor_Data> DefaultActors => _defaultActors ??= _initialiseDefaultActors();
 
         static Dictionary<uint, Actor_Data> _initialiseDefaultActors()
@@ -24,7 +27,7 @@ namespace Actor
                 {
                     1, new Actor_Data(
                         actorDataPresetName: ActorDataPresetName.No_Preset,
-                        fullIdentification: new FullIdentification(
+                        identification: new Actor_Data_Identification(
                             actorID: 1,
                             actorName: new ActorName
                             (
@@ -39,16 +42,20 @@ namespace Actor
                                 month: 1,
                                 day: 1
                             )),
-                        gameObjectData: new GameObjectData
+                        sceneObject: new Actor_Data_GameObject
                         (
                             actorID: 1
                         ),
-                        careerData: new Career_Data
+                        career: new Actor_Data_Career
                         (
                             actorID: 1,
                             careerName: CareerName.Lumberjack
                         ),
-                        craftingData: new Crafting_Data
+                        priority: new Priority_Data_Actor
+                        (
+                            actorID: 1
+                        ),
+                        crafting: new Actor_Data_Crafting
                         (
                             actorID: 1,
                             knownRecipes: new List<RecipeName>
@@ -57,7 +64,7 @@ namespace Actor
                                 RecipeName.Plank,
                                 RecipeName.Iron_Ingot
                             }),
-                        vocationData: new Vocation_Data(
+                        vocation: new Actor_Data_Vocation(
                             actorID: 1,
                             actorVocations: new Dictionary<VocationName, ActorVocation>
                             {
@@ -74,7 +81,7 @@ namespace Actor
                                         vocationExperience: 20000)
                                 }
                             }),
-                        speciesAndPersonality: new SpeciesAndPersonality(
+                        speciesAndPersonality: new Actor_Data_SpeciesAndPersonality(
                             actorID: 1,
                             actorSpecies: SpeciesName.Human,
                             actorPersonality: new ActorPersonality(
@@ -83,7 +90,7 @@ namespace Actor
                                     PersonalityTraitName.Brave
                                 })
                         ),
-                        statsAndAbilities: new StatsAndAbilities(
+                        statsAndAbilities: new Actor_Data_StatsAndAbilities(
                             actorID: 1,
                             actorStats: new Actor_Stats(
                                 actorID: 1,
@@ -135,19 +142,20 @@ namespace Actor
                                     { AbilityName.Charge, 0 }
                                 })
                         ),
-                        statesAndConditionsData: new StatesAndConditionsData(
-                            actorStates: new Actor_States(
+                        statesAndConditions: new Actor_Data_StatesAndConditions(
+                            actorID: 1,
+                            states: new Actor_Data_States(
                                 actorID: 1,
-                                initialisedStates: new ObservableDictionary<PrimaryStateName, bool>
+                                initialisedStates: new ObservableDictionary<StateName, bool>
                                 {
-                                    { PrimaryStateName.IsAlive, true },
-                                    { PrimaryStateName.CanIdle, true },
-                                    { PrimaryStateName.CanCombat, true },
-                                    { PrimaryStateName.CanMove, true },
-                                    { PrimaryStateName.CanTalk, true }
+                                    { StateName.IsAlive, true },
+                                    { StateName.CanIdle, true },
+                                    { StateName.CanCombat, true },
+                                    { StateName.CanMove, true },
+                                    { StateName.CanTalk, true }
                                 }
                             ),
-                            actorConditions: new Actor_Conditions(
+                            conditions: new Actor_Data_Conditions(
                                 actorID: 1,
                                 currentConditions: new ObservableDictionary<ConditionName, float>()
                             )

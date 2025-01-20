@@ -38,7 +38,7 @@ namespace Station
 
         public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
-            if (!actor.ActorData.CraftingData.KnownRecipes.Contains(recipeName))
+            if (!actor.ActorData.Crafting.KnownRecipes.Contains(recipeName))
             {
                 Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}");
                 return;

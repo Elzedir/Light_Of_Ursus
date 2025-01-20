@@ -44,7 +44,7 @@ namespace WorkPosts
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= WorkPostData.CurrentWorker.ActorData.VocationData.GetProgress(vocation);
+                productionRate *= WorkPostData.CurrentWorker.ActorData.Vocation.GetProgress(vocation);
             }
 
             return productionRate;
@@ -58,9 +58,9 @@ namespace WorkPosts
 
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
-            if (actor.ActorData.GameObjectData.ActorTransform.position != position)
+            if (actor.ActorData.SceneObject.ActorTransform.position != position)
             {
-                actor.ActorData.GameObjectData.ActorTransform.position = position;
+                actor.ActorData.SceneObject.ActorTransform.position = position;
             }
 
             WorkPostData.IsWorkerMovingToWorkPost = false;

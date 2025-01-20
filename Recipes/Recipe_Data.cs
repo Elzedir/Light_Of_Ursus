@@ -74,14 +74,14 @@ namespace Recipes
             _updateDataDisplay(DataToDisplay,
                 title: "Required Ingredients",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: RequiredIngredients.ToDictionary(
+                allStringData: RequiredIngredients?.ToDictionary(
                     item => $"{item.ItemID}:",
                     item => $"Qty: {item.ItemAmount}"));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Required Vocations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: RequiredVocations.ToDictionary(
+                allStringData: RequiredVocations?.ToDictionary(
                     vocation => $"{vocation.VocationName}:",
                     vocation => $"Min: {vocation.MinimumVocationExperience} " +
                                 $"Expected: {vocation.ExpectedVocationExperience}"));
@@ -89,12 +89,12 @@ namespace Recipes
             _updateDataDisplay(DataToDisplay,
                 title: "Recipe Products",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: RecipeProducts.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
+                allStringData: RecipeProducts?.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
             
             _updateDataDisplay(DataToDisplay,
                 title: "Possible Qualities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: PossibleQualities.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
+                allStringData: PossibleQualities?.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
 
             return DataToDisplay;
         }

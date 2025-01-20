@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using Managers;
+using StateAndCondition;
 using Tools;
 using UnityEngine;
 
@@ -19,8 +21,6 @@ namespace Priority
         public void SetCurrentAction(uint actorActionName)
         {
             _stopCurrentAction();
-            
-            Debug.Log($"Setting current action to: {(ActorActionName)actorActionName}.");
             
             var actorAction = ActorAction_Manager.GetActorAction_Master((ActorActionName)actorActionName);
 
@@ -63,8 +63,6 @@ namespace Priority
             var priorityParameters = _getPriorityParameters(priorityID);
 
             var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
-            
-            Debug.Log($"PriorityID: {priorityID}, PriorityValue: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
@@ -82,7 +80,7 @@ namespace Priority
             return parameter switch
             {
                 // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-                PriorityParameterName.Jobsite_Component => _actor.ActorData.CareerData.JobSite,
+                PriorityParameterName.Jobsite_Component => _actor.ActorData.Career.JobSite,
                 PriorityParameterName.Worker_Component => _actor,
                 _ => null
             };
@@ -90,6 +88,10 @@ namespace Priority
 
         IEnumerator _performCurrentActionFromStart()
         {
+            a
+            //* Now ,we need to connect the actor Actions to the JobTasks. Either we need to consolidate JobTasks and ActorActions
+            // so that they're the same, or we need to create a way to connect them. Try make them the same. But either way, connect to
+            // performJobTask ActorAction.
             foreach (var action in _currentActorAction.ActionList)
             {
                 yield return CurrentActionCoroutine = _actor.StartCoroutine(action);
@@ -98,6 +100,8 @@ namespace Priority
 
         void _stopCurrentAction()
         {
+            if (CurrentActionCoroutine == null) return;
+            
             _actor.StopCoroutine(CurrentActionCoroutine);
             CurrentActionCoroutine = null;
         }
@@ -198,15 +202,72 @@ namespace Priority
                 }
             },
         };
+        
+        public void MakeDecision()
+        {
+            // Change tick rate according to number of zones to player.
+            // Local region is same zone.
+            // Regional region is within 1 zone distance.
+            // Distant region is 2+ zones.
+
+            var priorityState = _getPriorityState();
+
+            if (!_mustChangeCurrentAction(priorityState, out var nextHighestPriorityValue))
+            {
+                //Debug.Log("No need to change current action.");
+                return;
+            }
+
+            SetCurrentAction(nextHighestPriorityValue.PriorityID);
+        }
+
+        ActorPriorityState _getPriorityState()
+        {
+            var actorData = _actorReferences.Actor_Component.ActorData;
+            
+            if (actorData.StatesAndConditions.States.GetState(StateName.IsInCombat))
+            {
+                return ActorPriorityState.InCombat;
+            }
+
+            if (!actorData.Career.JobsActive || !actorData.Career.HasCurrentJob())
+                return actorData.Career.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
+            
+            return ActorPriorityState.HasJob;
+
+        }
+
+        bool _mustChangeCurrentAction(ActorPriorityState  actorPriorityState,
+                                      out PriorityElement nextHighestPriorityElement)
+        {
+            RegenerateAllPriorities();
+            
+            var currentAction = GetCurrentAction();
+            nextHighestPriorityElement = _peekHighestPriority(actorPriorityState);
+
+            if (nextHighestPriorityElement is not null)
+                return currentAction == null ||
+                       (uint)currentAction.ActionName != nextHighestPriorityElement.PriorityID;
+            
+            Debug.LogWarning("There is no next highest priority.");
+            return false;
+        }
 
         public override Dictionary<string, string> GetStringData()
         {
+            var highestPriority = _peekHighestPriority(_getPriorityState());
+            
             return new Dictionary<string, string>
             {
                 { "Actor ID", $"{ActorID}" },
-                { "Actor Action", $"{_currentActorAction}" },
-                { "Is Performing Action", $"{IsPerformingAction}" },
-                { "Current Action Coroutine", $"{CurrentActionCoroutine}" }
+                { "Current Actor Action", $"{_currentActorAction?.ActionName}" },
+                { "Is Performing Current Action", $"{IsPerformingAction}" },
+                { "Current Action Coroutine", $"{CurrentActionCoroutine}" },
+                { "Current Priority State", $"{_getPriorityState()}" },
+                { "Must Change Current Action", $"{_mustChangeCurrentAction(_getPriorityState(), out _)}" },
+                { "Next Highest Priority", highestPriority?.PriorityID != null 
+                    ? $"{(ActorActionName)highestPriority.PriorityID}({highestPriority.PriorityID}) - {highestPriority.PriorityValue}" 
+                    : "No Highest Priority" }
             };
         }
 
@@ -220,9 +281,21 @@ namespace Priority
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: PriorityQueue.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: _convertUintIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }
+        
+        protected override string _getPriorityID(string iteration, uint priorityID) => 
+            $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
+    }
+    
+    
+    public enum ActorPriorityState
+    {
+        None,
+            
+        InCombat,
+        HasJob,
     }
 }

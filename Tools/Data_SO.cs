@@ -28,7 +28,9 @@ namespace Tools
         }
 
         Dictionary<uint, int> _dataIndexLookup;
+
         public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
+        
         int _currentIndex;
 
         public bool ToggleMissingDataDebugs;
@@ -51,7 +53,8 @@ namespace Tools
 
             for (var i = 0; i < Data.Length; i++)
             {
-                if (Data[i] is null) continue;
+                if (Data[i]?.Data_Object is null)
+                    continue;
 
                 newIndexLookup[GetDataID(i)] = i;
             }
@@ -80,11 +83,11 @@ namespace Tools
             }
         }
 
-        public void AddData(uint dataID, Data<TD> data)
+        void _addData(uint dataID, Data<TD> data)
         {
             if (DataIndexLookup.ContainsKey(dataID))
             {
-                Debug.LogWarning($"DataID: {dataID} already exists in Data.");
+                Debug.LogError($"DataID: {dataID} already exists in Data. But since Add is only called in Update, there is a problem.");
                 return;
             }
 
@@ -150,7 +153,7 @@ namespace Tools
             }
             else
             {
-                AddData(dataID, _convertToData(data));
+                _addData(dataID, _convertToData(data));
             }
         }
 

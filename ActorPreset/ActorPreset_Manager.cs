@@ -1,8 +1,7 @@
-using Jobs;
-using UnityEditor;
+using Actor;
 using UnityEngine;
 
-namespace Actor
+namespace ActorPreset
 {
     public abstract class ActorPreset_Manager
     {

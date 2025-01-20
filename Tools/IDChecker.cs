@@ -235,8 +235,8 @@ namespace Tools
 
             foreach (var actor in duplicateActors)
             {
-                uint newActorID = GetNewID(existingIDs);
-                actor.ActorData.FullIdentification.ActorID = newActorID;
+                var newActorID = GetNewID(existingIDs);
+                actor.ActorData.Identification.ActorID = newActorID;
                 existingIDs.Add(newActorID);
 
                 EditorUtility.SetDirty(actor);

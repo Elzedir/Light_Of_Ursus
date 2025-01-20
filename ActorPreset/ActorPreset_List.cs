@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using Actor;
 using Careers;
 using Jobs;
 using Recipes;
 
-namespace Actor
+namespace ActorPreset
 {
     public abstract class ActorPreset_List
     {

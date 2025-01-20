@@ -41,7 +41,7 @@ namespace Priority
         protected override object         _component => _actor ??= Actor_Manager.GetActor_Component(ComponentID);
         public             Actor_Component Actor_Component      => _component as Actor_Component;
         public override GameObject GameObject => Actor_Component.gameObject;
-        public override Priority_Data GetPriorityComponent() => Actor_Component.DecisionMakerComponent.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Actor_Component.ActorData.Priority;
     }
     public class ComponentReference_Station : ComponentReference
     {

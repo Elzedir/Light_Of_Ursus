@@ -10,7 +10,7 @@ namespace WorkPosts
     [Serializable]
     public class WorkPost_Data : Data_Class
     {
-        public           uint    WorkPostID;
+        public readonly uint WorkPostID;
         [SerializeField] uint    _stationID;
         Station_Component        _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(_stationID);
@@ -37,10 +37,8 @@ namespace WorkPosts
             if (_currentWorkerID != 0)
             {
                 RemoveCurrentWorkerFromWorkPost();
-                Debug.Log($"WorkPost: {WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {worker.ActorID}");
+                Debug.Log($"WorkPost: {_stationID}{WorkPostID} replaced Worker: {_currentWorkerID} with new Worker {worker.ActorID}");
             }
-
-            Debug.Log($"WorkPost: {WorkPostID} added Worker: {worker.ActorID}");
             
             IsWorkerMovingToWorkPost = false;
             _currentWorkerID         = worker.ActorID;
@@ -50,11 +48,11 @@ namespace WorkPosts
         {
             if (_currentWorkerID == 0)
             {
-                Debug.Log($"WorkPost does not have current Worker.");
+                Debug.Log($"WorkPost: {_stationID}{WorkPostID} does not have current Worker.");
                 return;
             }
 
-            CurrentWorker.ActorData.CareerData.StopCurrentJob();
+            CurrentWorker.ActorData.Career.StopCurrentJob();
             _currentWorkerID         = 0;
             _currentWorker           = null;
             IsWorkerMovingToWorkPost = false;

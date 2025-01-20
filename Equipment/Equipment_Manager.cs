@@ -191,7 +191,7 @@ namespace Equipment
         {
             return new Dictionary<string, string>
             {
-                { "Equipment Data", "Equipment Data would be here" }
+                { "Equipment Data", "Equipment Data would be here." }
             };
         }
     

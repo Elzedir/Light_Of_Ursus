@@ -13,7 +13,7 @@ namespace JobSite
     [Serializable]
     public class JobSite_SO : Data_Component_SO<JobSite_Data, JobSite_Component>
     {
-        public Data<JobSite_Data>[] JobSites                             => Data;
+        public Data<JobSite_Data>[] JobSites => Data;
         public Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetData(jobSiteID);
         public Dictionary<uint, JobSite_Component> JobSite_Components => _getSceneComponents();
 

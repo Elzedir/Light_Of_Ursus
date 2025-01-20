@@ -68,6 +68,13 @@ namespace City
                 title: "Population Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: Population.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "City JobSites",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: AllJobSitesInCity.ToDictionary(
+                    jobSite => jobSite.Key.ToString(),
+                    jobSite => jobSite.Value.name));
 
             return DataToDisplay;
         }

@@ -12,7 +12,7 @@ namespace Careers
     public class Career_SO : Data_SO<Career_Data>
     {
         public Data<Career_Data>[] Careers                           => Data;
-        public Data<Career_Data>   GetCareer_Master(CareerName careerName) => GetData((uint)careerName);
+        public Data<Career_Data>   GetCareer_Data(CareerName careerName) => GetData((uint)careerName);
 
         public override uint GetDataID(int id) => (uint)Careers[id].Data_Object.CareerName;
         

@@ -9,7 +9,7 @@ namespace Careers
         static Career_SO _careerSO;
         static Career_SO Career_SO => _careerSO ??= _getCareer_SO();
 
-        public static Career_Data GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Master(careerName).Data_Object;
+        public static Career_Data GetCareer_Master(CareerName careerName) => Career_SO.GetCareer_Data(careerName).Data_Object;
         
         static Career_SO _getCareer_SO()
         {

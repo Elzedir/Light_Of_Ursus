@@ -1,10 +1,9 @@
 using System.Collections.Generic;
-using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Actor
+namespace ActorPreset
 {
     [CreateAssetMenu(fileName = "ActorDataPreset_SO", menuName = "SOList/ActorDataPreset_SO")]
     public class ActorPreset_SO : Data_SO<ActorPreset_Data>

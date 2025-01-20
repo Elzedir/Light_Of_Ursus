@@ -6,7 +6,6 @@ using UnityEngine.Serialization;
 namespace Tools
 {
     [Serializable]
-
     public abstract class Data_Class
     {
         [SerializeField] DataToDisplay _dataToDisplay;

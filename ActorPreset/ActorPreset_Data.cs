@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
+using Actor;
 using Equipment;
 using Inventory;
 using Tools;
-using UnityEngine;
 
-namespace Actor
+namespace ActorPreset
 {
     public class ActorPreset_Data : Data_Class
     {

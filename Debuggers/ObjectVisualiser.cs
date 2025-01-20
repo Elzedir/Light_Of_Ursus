@@ -146,9 +146,9 @@ namespace Debuggers
 
         void _displayActor(Actor_Component actor)
         {
-            var actorFullIdentification = actor.ActorData.FullIdentification;
+            var actorFullIdentification = actor.ActorData.Identification;
             var actorInventory          = actor.ActorData.InventoryData;
-            var actorPriorities         = actor.DecisionMakerComponent.PriorityData.PriorityQueue;
+            var actorPriorities         = actor.ActorData.Priority.PriorityQueue;
 
             if (actorFullIdentification != null)
             {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorPreset;
 using City;
 using Items;
 using Jobs;
@@ -134,8 +135,6 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
-            //PriorityData.RegenerateAllPriorities();
-
             JobSite_Component.StartCoroutine(_populate());
         }
 
@@ -205,7 +204,7 @@ namespace JobSite
 
             var citizenID = allCitizenIDs
                 .FirstOrDefault(c =>
-                    Actor_Manager.GetActor_Data(c)?.CareerData.JobSiteID == 0 &&
+                    Actor_Manager.GetActor_Data(c)?.Career.JobSiteID == 0 &&
                     _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                 );
 
@@ -242,7 +241,7 @@ namespace JobSite
             {
                 if (vocation.VocationName == VocationName.None) continue;
 
-                if (actorData.VocationData.GetVocationExperience(vocation.VocationName) <
+                if (actorData.Vocation.GetVocationExperience(vocation.VocationName) <
                     vocation.MinimumVocationExperience)
                 {
                     return false;
@@ -287,7 +286,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Add(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobSiteID(JobSiteID);
+            Actor_Manager.GetActor_Data(employeeID).Career.SetJobSiteID(JobSiteID);
         }
 
         public void HireEmployee(uint employeeID)
@@ -306,7 +305,7 @@ namespace JobSite
             }
 
             _allEmployeeIDs.Remove(employeeID);
-            Actor_Manager.GetActor_Data(employeeID).CareerData.SetJobSiteID(0);
+            Actor_Manager.GetActor_Data(employeeID).Career.SetJobSiteID(0);
 
             // Remove employee job from employee job component.
         }
@@ -320,11 +319,9 @@ namespace JobSite
 
         public bool AddEmployeeToStation(Actor_Component worker, Station_Component station, JobTaskName desiredJobTask)
         {
-            Debug.Log($"Adding employee to station: {station.StationName}");
-            
             if (desiredJobTask == JobTaskName.Idle)
             {
-                worker.ActorData.CareerData.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                worker.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
 
                 return true;
             }
@@ -349,7 +346,7 @@ namespace JobSite
                 desiredJobName = station.CoreJobName;
             }
 
-            worker.ActorData.CareerData.SetCurrentJob(new Job(desiredJobName, station.StationID,
+            worker.ActorData.Career.SetCurrentJob(new Job(desiredJobName, station.StationID,
                 openWorkPost_Data.WorkPostID));
 
             return true;
@@ -372,9 +369,9 @@ namespace JobSite
                                                                  .RemoveCurrentWorkerFromWorkPost();
                 WorkPost_Workers[stationWorkPostID] = 0;
 
-                if (worker.ActorData.CareerData.CurrentJob is null) return true;
+                if (worker.ActorData.Career.CurrentJob is null) return true;
 
-                worker.ActorData.CareerData.StopCurrentJob();
+                worker.ActorData.Career.StopCurrentJob();
                 Debug.LogError($"CurrentJob was not stopped for employeeID: {worker.ActorID}. Stopping here.");
 
                 return true;
@@ -387,7 +384,7 @@ namespace JobSite
                     return false;
                 }
 
-                var actorCareer = worker.ActorData.CareerData;
+                var actorCareer = worker.ActorData.Career;
 
                 if (actorCareer == null)
                 {
@@ -395,7 +392,7 @@ namespace JobSite
                     return false;
                 }
 
-                if (worker.ActorData.CareerData.CurrentJob == null)
+                if (worker.ActorData.Career.CurrentJob == null)
                 {
                     Debug.Log($"Employee does not have a current job.");
                     return false;
@@ -464,7 +461,7 @@ namespace JobSite
 
                     foreach (var vocation in station_Data.StationProgressData.CurrentProduct.RequiredVocations)
                     {
-                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).VocationData
+                        individualProductionRate *= Actor_Manager.GetActor_Data(kvp.Value).Vocation
                                                                  .GetProgress(vocation);
                     }
 
@@ -633,7 +630,7 @@ namespace JobSite
                 title: "Station Operators",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: WorkPost_Workers.ToDictionary(operatorID => $"{operatorID.Key}",
-                    operatorID => $"{operatorID.Value}"));
+                    operatorID => $"{(operatorID.Value != 0 ? operatorID.Value.ToString() : "-")}"));
             
             _updateDataDisplay(DataToDisplay,
                 title: "All Station IDs",

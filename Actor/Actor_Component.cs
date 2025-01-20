@@ -1,8 +1,6 @@
 using System.Collections;
 using Equipment;
 using Initialisation;
-using Managers;
-using Personality;
 using TickRates;
 using UnityEngine;
 
@@ -36,10 +34,6 @@ namespace Actor
         EquipmentComponent _equipmentComponent;
         public EquipmentComponent EquipmentComponent => _equipmentComponent ??= new EquipmentComponent(this);
         public GroundedCheckComponent GroundCheckComponent;
-        DecisionMakerComponent _decisionMakerComponent;
-
-        public DecisionMakerComponent DecisionMakerComponent =>
-            _decisionMakerComponent ??= new DecisionMakerComponent(ActorID);
 
         void Awake()
         {
@@ -96,13 +90,13 @@ namespace Actor
         {
             if (!_initialised) return;
 
-            DecisionMakerComponent.MakeDecision();
+            ActorData.Priority.MakeDecision();
         }
 
         void _updateVisuals()
         {
-            ActorMesh.mesh = ActorData.GameObjectData.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            ActorMaterial.material = ActorData.GameObjectData.ActorMaterial ??
+            ActorMesh.mesh = ActorData.SceneObject.ActorMesh ?? Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+            ActorMaterial.material = ActorData.SceneObject.ActorMaterial ??
                                      Resources.Load<Material>("Materials/Material_Red");
         }
 

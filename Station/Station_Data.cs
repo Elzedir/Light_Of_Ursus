@@ -52,7 +52,6 @@ namespace Station
             //stationName; WHen loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             // But if the station does exist, then we generate a new station with the required stationName type.
             StationDescription      = stationDescription;
-            Debug.LogWarning($"Setting JobSiteID to {jobSiteID}");
             JobSiteID               = jobSiteID;
             AllWorkPost_Data        = allWorkPost_Data;
             StationIsActive         = stationIsActive;
@@ -259,9 +258,8 @@ namespace Station
                 title: "Station WorkPosts",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: AllWorkPost_Components?.Values.ToDictionary(
-                    workPost => $"{workPost.WorkPostID} -",
-                    workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorID}" +
-                                $"{workPost.WorkPostData?.CurrentWorker}"));
+                    workPost => $"{workPost.WorkPostID}",
+                    workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorData.ActorName} ({workPost.WorkPostData?.CurrentWorker?.ActorID})"));
 
             return DataToDisplay;
         }
