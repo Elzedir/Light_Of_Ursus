@@ -11,23 +11,23 @@ namespace Actor
     {
         public readonly ActorDataPresetName ActorDataPresetName;
         
-        public readonly Career_Data       CareerData;
-        public readonly Crafting_Data     CraftingData;
-        public readonly Vocation_Data     VocationData;
-        public readonly StatsAndAbilities StatsAndAbilities;
+        public readonly Actor_Data_Career       ActorDataCareer;
+        public readonly Actor_Data_Crafting     ActorDataCrafting;
+        public readonly Actor_Data_Vocation     ActorDataVocation;
+        public readonly Actor_Data_StatsAndAbilities ActorDataStatsAndAbilities;
         public readonly Inventory_Data    InventoryData;
         public readonly Equipment_Data    EquipmentData;
 
-        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, Career_Data    careerData = null,
-                                Crafting_Data        craftingData = null,        Vocation_Data  vocationData = null,
-                                StatsAndAbilities   statsAndAbilities = null,   Inventory_Data inventoryData = null,
+        public ActorPreset_Data(ActorDataPresetName actorDataPresetName, Actor_Data_Career    actorDataCareer = null,
+                                Actor_Data_Crafting        actorDataCrafting = null,        Actor_Data_Vocation  actorDataVocation = null,
+                                Actor_Data_StatsAndAbilities   actorDataStatsAndAbilities = null,   Inventory_Data inventoryData = null,
                                 Equipment_Data       equipmentData = null)
         {
             ActorDataPresetName = actorDataPresetName;
-            CareerData          = careerData;
-            CraftingData        = craftingData;
-            VocationData        = vocationData;
-            StatsAndAbilities   = statsAndAbilities;
+            ActorDataCareer          = actorDataCareer;
+            ActorDataCrafting        = actorDataCrafting;
+            ActorDataVocation        = actorDataVocation;
+            ActorDataStatsAndAbilities   = actorDataStatsAndAbilities;
             InventoryData       = inventoryData;
             EquipmentData       = equipmentData;
         }
@@ -37,22 +37,22 @@ namespace Actor
             _updateDataDisplay(DataToDisplay,
                 title: "Actor Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: StatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: ActorDataStatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs));
             
             _updateDataDisplay(DataToDisplay,
                 title: "Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CareerData?.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: ActorDataCareer?.GetDataToDisplay(toggleMissingDataDebugs));
             
             _updateDataDisplay(DataToDisplay,
                 title: "Crafting Recipes",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CraftingData?.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: ActorDataCrafting?.GetDataToDisplay(toggleMissingDataDebugs));
             
             _updateDataDisplay(DataToDisplay,
                 title: "Vocation Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: VocationData?.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: ActorDataVocation?.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Inventory Data",
@@ -79,10 +79,10 @@ namespace Actor
         {
             return new Dictionary<string, DataToDisplay>
             {
-                { "Stats and Abilities", StatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs) },
-                { "Career Data", CareerData.GetDataToDisplay(toggleMissingDataDebugs) },
-                { "Crafting Recipes", CraftingData.GetDataToDisplay(toggleMissingDataDebugs) },
-                { "Vocation Data", VocationData.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Stats and Abilities", ActorDataStatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Career Data", ActorDataCareer.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Crafting Recipes", ActorDataCrafting.GetDataToDisplay(toggleMissingDataDebugs) },
+                { "Vocation Data", ActorDataVocation.GetDataToDisplay(toggleMissingDataDebugs) },
                 { "Inventory Data", InventoryData.GetDataToDisplay(toggleMissingDataDebugs) },
                 { "Equipment Data", EquipmentData.GetDataToDisplay(toggleMissingDataDebugs) }
             };

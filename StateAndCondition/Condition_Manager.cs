@@ -8,43 +8,49 @@ using TickRates;
 using Tools;
 using UnityEngine;
 
-namespace Managers
+namespace StateAndCondition
 {
-    public abstract class Manager_StateAndCondition
+    public abstract class StateAndCondition_Manager
     {
-        static readonly Dictionary<PrimaryStateName, State>                _allStates     = new();
-        static readonly Dictionary<ConditionName, Condition_Master> _allConditions = new();
+        const string _condition_SOPath = "ScriptableObjects/Condition_SO";
 
-        public static void Initialise()
+        static Condition_SO _allConditions;
+        static Condition_SO AllConditions => _allConditions ??= _getCondition_SO();
+
+        public static Condition_Data GetCondition_Data(ConditionName conditionName)
         {
-            _initialiseStates();
-            _initialiseConditions();
+            return AllConditions.GetCondition_Data(conditionName).Data_Object;
         }
 
-        static void _initialiseStates()
+        public static Condition GetCondition(ConditionName conditionName, uint conditionLevel)
         {
-            _addState(new State { PrimaryStateName = PrimaryStateName.IsAlive });
+            return AllConditions.GetCondition(conditionName, conditionLevel);
+        }
+
+        static Condition_SO _getCondition_SO()
+        {
+            var condition_SO = Resources.Load<Condition_SO>(_condition_SOPath);
+
+            if (condition_SO is not null) return condition_SO;
+
+            Debug.LogError("Condition_SO not found. Creating temporary Condition_SO.");
+            condition_SO = ScriptableObject.CreateInstance<Condition_SO>();
+
+            return condition_SO;
+        }
+
+        public static uint GetUnusedConditionID()
+        {
+            return AllConditions.GetUnusedConditionID();
+        }
+
+        public static void ClearSOData()
+        {
+            AllConditions.ClearSOData();
         }
         
-        static void _initialiseConditions()
-        {
-            _addCondition(new Condition_Master(ConditionName.Inspired, 100, 300));   
-        }
-
-        static void _addState(State state)
-        {
-            if (state != null && _allStates.TryAdd(state.PrimaryStateName, state)) return;
-            
-            Debug.LogError($"State: {state} is null or exists in AllStates.");
-        }
-
-        static void _addCondition(Condition_Master condition)
-        {
-            if (condition != null && _allConditions.TryAdd(condition.ConditionName, condition)) return;
-            
-            Debug.LogError($"Condition: {condition} is null or exists in AllConditions.");
-        }
-
+        .....
+        
         public static State GetState(PrimaryStateName primaryStateName)
         {
             if (_allStates.TryGetValue(primaryStateName, out var state)) return state;
@@ -62,113 +68,71 @@ namespace Managers
 
         }
     }
-
-    public class State_Master
-    {
-        public readonly PrimaryStateName PrimaryStateName;
-        public readonly bool      DefaultState;
-        
-        public State_Master(PrimaryStateName primaryStateName, bool defaultState)
-        {
-            PrimaryStateName    = primaryStateName;
-            DefaultState = defaultState;
-        }
-    }
-
-    [Serializable]
-    public class State // Permanent or Perpetual thing
-    {
-        public PrimaryStateName PrimaryStateName;
-    }
-
-    public class Condition_Master
-    {
-        public readonly ConditionName ConditionName;
-        public readonly float         DefaultConditionDuration;
-        public readonly float         MaxConditionDuration;
-
-        public Condition_Master(ConditionName conditionName, float defaultConditionDuration, float maxConditionDuration)
-        {
-            ConditionName            = conditionName;
-            DefaultConditionDuration = defaultConditionDuration;
-            MaxConditionDuration     = maxConditionDuration;
-        }
-    }
-
-    [Serializable]
-    public class Condition // Temporary and tickable thing
-    {
-        public ConditionName ConditionName;
-        public float         ConditionDuration;
-
-        public Condition(ConditionName conditionName, float conditionDuration)
-        {
-            ConditionName     = conditionName;
-            ConditionDuration = conditionDuration;
-        }
-    }
-
-    public enum ConditionName
-    {
-        None,
-
-        // Health
-        Inspired,
     
-        // Movement
-
-        // Social
-        Drunk,
-        High,
-    
-        // Combat
-        Bleeding,
-        Drowning,
-        Poisoned,
-        Stunned,
-        Paralysed,
-        Blinded,
-        Deafened,
-        Silenced,
-        Cursed,
-        Charmed,
-        Enraged,
-        Frightened,
-        Panicked,
-        Confused,
-        Dazed,
-        Distracted,
-        Dominated,
-        Burning,
-    }
-    
-    public class StatesAndConditionsData
+    public class Actor_Data_StatesAndConditions : Priority_Updater
     {
-        public StatesAndConditionsData(Actor_States actorStates, Actor_Conditions actorConditions)
+        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+        
+        public Actor_Data_StatesAndConditions(uint actorID, Actor_States states, Actor_Conditions conditions) : base (actorID, ComponentType.Actor)
         {
-            Actor_States     = actorStates;
-            Actor_Conditions = actorConditions;
+            States     = states;
+            Conditions = conditions;
         }
         
-        public StatesAndConditionsData(StatesAndConditionsData statesAndConditionsData)
+        public Actor_Data_StatesAndConditions(Actor_Data_StatesAndConditions actorDataStatesAndConditions) : base (actorDataStatesAndConditions.ActorReference.ActorID, ComponentType.Actor)
         {
-            Actor_States     = statesAndConditionsData.Actor_States;
-            Actor_Conditions = statesAndConditionsData.Actor_Conditions;
+            States     = actorDataStatesAndConditions.States;
+            Conditions = actorDataStatesAndConditions.Conditions;
         }
         
-        public void SetActorStatesAndConditions (StatesAndConditionsData statesAndConditionsData)
+        public void SetActorStatesAndConditions (Actor_Data_StatesAndConditions actorDataStatesAndConditions)
         {
-            SetActorStates(statesAndConditionsData.Actor_States);
-            SetActorConditions(statesAndConditionsData.Actor_Conditions);
+            SetActorStates(actorDataStatesAndConditions.States);
+            SetActorConditions(actorDataStatesAndConditions.Conditions);
         }
         
-        public Actor_States     Actor_States;
-        public void SetActorStates(Actor_States actorStates) => Actor_States = actorStates;
+        public Actor_States     States;
+        public void SetActorStates(Actor_States actorStates) => States = actorStates;
         
-        public Actor_Conditions Actor_Conditions;
-        public void SetActorConditions(Actor_Conditions actorConditions) => Actor_Conditions = actorConditions;
+        public Actor_Conditions Conditions;
+        public void SetActorConditions(Actor_Conditions actorConditions) => Conditions = actorConditions;
         
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Actor States", $"{States}" },
+                { "Actor Conditions", $"{Conditions}" }
+            };
+        }
+
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
+        {
+            _updateDataDisplay(DataToDisplay,
+                title: "States And Conditions",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Conditions",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Conditions.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "States",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: States.GetDataToDisplay(toggleMissingDataDebugs));
+
+            return DataToDisplay;
+        }
         
+        protected override bool _priorityChangeNeeded(object dataChanged)
+        {
+            return false;
+        }
+
+        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
+            _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
@@ -231,11 +195,11 @@ namespace Managers
         {
             if (CurrentConditions.ContainsKey(conditionName))
             {
-                CurrentConditions[conditionName] += Manager_StateAndCondition.GetCondition_Master(conditionName).DefaultConditionDuration;
+                CurrentConditions[conditionName] += StateAndCondition_Manager.GetCondition_Master(conditionName).DefaultConditionDuration;
                 return;
             }
 
-            var condition_Master = Manager_StateAndCondition.GetCondition_Master(conditionName);
+            var condition_Master = StateAndCondition_Manager.GetCondition_Master(conditionName);
 
             if (condition_Master == null) return;
 
@@ -250,7 +214,7 @@ namespace Managers
                 return;
             }
             
-            var conditionMaster = Manager_StateAndCondition.GetCondition_Master(conditionName);
+            var conditionMaster = StateAndCondition_Manager.GetCondition_Master(conditionName);
 
             CurrentConditions[conditionName] += Math.Min(
                 CurrentConditions[conditionName] + conditionMaster.DefaultConditionDuration,
@@ -275,57 +239,6 @@ namespace Managers
             get;
             set;
         } = new();
-    }
-
-    public enum PrimaryStateName
-    {
-        None, 
-
-        IsAlive,
-        
-        CanIdle,
-        CanCombat,
-        CanMove,
-        CanTalk,
-    }
-
-    public enum SubStateName
-    {
-        None, 
-        
-        IsIdle,
-        
-        CanJump,
-        IsJumping,
-        
-        Alerted,
-        Hostile,
-        IsInCombat,
-        CanDodge,
-        IsDodging,
-        CanBlock,
-        IsBlocking,
-        CanBerserk,
-        IsBerserking, 
-        
-        CanGetPregnant,
-        IsPregnant,
-        
-        CanBeDepressed,
-        IsDepressed,
-        
-        CanDrown,
-        IsDrowning,
-        CanSuffocate,
-        IsSuffocating,
-        
-        CanReanimate,
-        IsReanimated,
-        
-        InFire,
-        OnFire,
-        
-        IsTalking,
     }
 
     public class Actor_States : Priority_Updater
