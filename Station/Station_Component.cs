@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
+using ActorAction;
 using Initialisation;
 using Inventory;
 using Items;
@@ -33,7 +33,7 @@ namespace Station
         public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
         public abstract List<uint>        AllowedStoredItemIDs  { get; }
         public abstract List<uint>        DesiredStoredItemIDs  { get; }
-        public abstract List<JobTaskName> AllowedJobTasks       { get; }
+        public abstract List<ActorActionName> AllowedJobTasks       { get; }
 
         Priority_Data_Station        _priorityData;
         public Priority_Data_Station PriorityData => _priorityData ??= new Priority_Data_Station();
@@ -46,10 +46,7 @@ namespace Station
         //     Debug.Log($"Station: {StationName} JobSiteID: {Station_Data.JobSiteID}");
         // }
 
-        public void SetStationData(Station_Data stationData)
-        {
-            Station_Data = stationData;
-        }
+        public void SetStationData(Station_Data stationData) => Station_Data = stationData;
 
         void Awake()
         {
@@ -76,19 +73,20 @@ namespace Station
 
         protected abstract void _initialiseStartingInventory();
 
-        public List<Item> GetInventoryItemsToFetchFromStation()
+        public List<Item> GetInventoryItems(ActorActionName actorAction)
         {
-            return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();
+            return actorAction switch
+            {
+                ActorActionName.Fetch_Items => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
+                ActorActionName.Deliver_Items => Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations(),
+                ActorActionName.Chop_Wood => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
+                _ => new List<Item>()
+            };
         }
 
         public List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
         {
             return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
-        }
-
-        public List<Item> GetInventoryItemsToDeliverFromOtherStations()
-        {
-            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations();
         }
 
         public void SetInteractRange(float interactRange = 2)

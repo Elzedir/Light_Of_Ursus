@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Actor;
+using ActorAction;
 using Items;
 using Priority;
 using Tools;
@@ -41,6 +42,11 @@ namespace Inventory
             }
 
             return true;
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
         }
 
         public override List<Item> GetInventoryItemsToFetchFromStation()

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
-using Jobs;
 using Tools;
 using UnityEngine;
 
@@ -25,12 +23,13 @@ namespace Priority
 
         public PriorityElement Peek(uint priorityID = 1)
         {
-            if (priorityID == 1)
+            if (_currentPosition == 0)
             {
-                return _currentPosition == 0 ? null : _priorityArray[1];
+                Debug.Log($"Priority Queue should be empty: {_priorityQueue.Count} since _currentPosition: {_currentPosition}.");
+                return null;
             }
 
-            if (!_priorityQueue.TryGetValue(priorityID, out var index)) return null;
+            var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
 
             return index == 0 ? null : _priorityArray[index];
         }
@@ -42,7 +41,11 @@ namespace Priority
 
         public PriorityElement Dequeue(uint priorityID = 1)
         {
-            if (_currentPosition == 0) return null;
+            if (_currentPosition == 0)
+            {
+                Debug.Log($"Priority Queue should be empty: {_priorityQueue.Count} since _currentPosition: {_currentPosition}.");
+                return null;
+            }
 
             var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
             if (index == 0) return null;

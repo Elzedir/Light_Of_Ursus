@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
+using ActorAction;
 using Tools;
-using UnityEngine;
 
 namespace Jobs
 {
@@ -11,20 +12,20 @@ namespace Jobs
     {
         public JobName              JobName;
         public string               JobDescription;
-        public HashSet<JobTaskName> JobTasks;
+        public HashSet<ActorActionName> JobActions;
 
-        public Job_Data(JobName jobName, string jobDescription, HashSet<JobTaskName> jobTasks)
+        public Job_Data(JobName jobName, string jobDescription, HashSet<ActorActionName> jobActions)
         {
             JobName        = jobName;
             JobDescription = jobDescription;
-            JobTasks       = jobTasks;
+            JobActions       = jobActions;
         }
 
         public Job_Data(Job_Data jobData)
         {
             JobName        = jobData.JobName;
             JobDescription = jobData.JobDescription;
-            JobTasks       = jobData.JobTasks;
+            JobActions       = jobData.JobActions;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -47,7 +48,7 @@ namespace Jobs
             _updateDataDisplay(DataToDisplay,
                 title: "Job Tasks",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: JobTasks.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
+                allStringData: JobActions.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
 
             return DataToDisplay;
         }
@@ -69,8 +70,8 @@ namespace Jobs
         public ActivityPeriod ActivityPeriod;
 
         Job_Data                    _job_Data;
-        public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Master(JobName);
-        public HashSet<JobTaskName> JobTasks => Job_Data.JobTasks;
+        public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
+        public HashSet<ActorActionName> JobActions => Job_Data.JobActions;
         
         public Job(JobName jobName, uint stationID, uint workPostID)
         {
@@ -78,13 +79,5 @@ namespace Jobs
             StationID  = stationID;
             WorkPostID = workPostID;
         }
-        
-        // public IEnumerator PerformJob(ActorComponent actor)
-        // {
-        //     foreach(Task_Master task in JobTasks)
-        //     {
-        //         yield return task.GetTaskAction(actor, );
-        //     }
-        // }
     }
 }

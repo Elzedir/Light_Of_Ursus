@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Inventory;
 using Items;
 using Managers;
@@ -185,6 +186,11 @@ namespace Equipment
             Waist     = new Item(equipmentData.Waist);
             Legs      = new Item(equipmentData.Legs);
             Feet      = new Item(equipmentData.Feet);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
         }
     
         public override Dictionary<string, string> GetStringData()

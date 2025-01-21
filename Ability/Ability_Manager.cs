@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Inventory;
 using Priority;
 using Tools;
@@ -62,6 +63,12 @@ namespace Ability
             ComponentType.Actor)
         {
             CurrentAbilities = actorAbilities.CurrentAbilities;
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Have some abilities allow certain actions to be done, like people who can fly able to fly home from work.
+            return new List<ActorActionName>();
         }
 
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)

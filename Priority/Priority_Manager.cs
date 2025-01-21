@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Actor;
+using ActorAction;
 using Jobs;
 using JobSite;
 using Station;
@@ -9,20 +10,7 @@ namespace Priority
 {
     public abstract class Priority_Manager
     {
-        public static readonly List<ActorActionName> BasePriorityActorActions = new()
-        {
-            ActorActionName.Idle,
-            ActorActionName.Perform_JobTask
-        };
         
-        public static readonly List<JobTaskName> BasePriorityJobTasks = new()
-        {
-            JobTaskName.Idle,
-            JobTaskName.Fetch_Items,
-            JobTaskName.Deliver_Items,
-            JobTaskName.Chop_Wood,
-            JobTaskName.Process_Logs
-        };
     }
     
     public abstract class ComponentReference

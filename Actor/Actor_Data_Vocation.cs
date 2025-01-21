@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ActorAction;
 using Inventory;
 using Priority;
 using Recipes;
@@ -23,6 +24,12 @@ namespace Actor
             ComponentType.Actor)
         {
             ActorVocations = new Dictionary<VocationName, ActorVocation>(actorDataVocation.ActorVocations);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Able to perform actions based on vocations. For example, advanced metalworking or smithing, etc.
+            return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)

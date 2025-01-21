@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ActorAction;
 using Careers;
 using Inventory;
 using Jobs;
@@ -77,8 +78,8 @@ namespace Actor
         List<JobName> _allJobs; // For saving purposes
         public HashSet<JobName> AllJobs;
 
-        public HashSet<JobTaskName> AllJobTasks =>
-            AllJobs.SelectMany(jobName => Job_Manager.GetJob_Master(jobName).JobTasks).ToHashSet();
+        public HashSet<ActorActionName> AllJobActions =>
+            AllJobs.SelectMany(jobName => Job_Manager.GetJob_Data(jobName).JobActions).ToHashSet();
 
         public void AddJob(JobName jobName)
         {
@@ -100,8 +101,8 @@ namespace Actor
         [SerializeField] Job _currentJob;
         public Job CurrentJob => _currentJob ??= new Job(JobName.Idle, 0, 0);
 
-        public HashSet<JobTaskName> CurrentJobTasks =>
-            Job_Manager.GetJob_Master(CurrentJob.JobName).JobTasks.ToHashSet();
+        public HashSet<ActorActionName> CurrentJobActions =>
+            Job_Manager.GetJob_Data(CurrentJob.JobName).JobActions.ToHashSet();
 
         public void SetCurrentJob(Job job)
         {
@@ -133,5 +134,22 @@ namespace Actor
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
+
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            if ((!JobsActive || !HasCurrentJob()) && !GetNewCurrentJob())
+            {
+                return new List<ActorActionName> {ActorActionName.Idle};
+            }
+            
+            //* Populate list based on Job
+            return new List<ActorActionName>
+            {
+                ActorActionName.Idle,
+                ActorActionName.Craft,
+                ActorActionName.Process,
+                ActorActionName.Haul
+            };
+        }
     }
 }

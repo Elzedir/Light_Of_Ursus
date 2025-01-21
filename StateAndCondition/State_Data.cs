@@ -44,15 +44,12 @@ namespace StateAndCondition
     public class State : Data_Class
     {
         public readonly StateName StateName;
-        public readonly StateName ParentState;
-        
         public bool      CurrentState;
         
-        public State(StateName stateName, StateName parentState, bool currentState)
+        public State(StateName stateName, bool currentState)
         {
             StateName = stateName;
             CurrentState     = currentState;
-            ParentState = parentState;
         }
         
         public override Dictionary<string, string> GetStringData()

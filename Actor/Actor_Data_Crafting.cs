@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ActorAction;
 using Inventory;
 using Items;
 using Priority;
@@ -106,6 +107,16 @@ namespace Actor
 
             actorData.InventoryData.RemoveFromInventory(recipeData.RequiredIngredients);
             actorData.InventoryData.AddToInventory(recipeData.RecipeProducts);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Change so that some things will prevent you from crafting, like being in combat.
+            return new List<ActorActionName>
+            {
+                ActorActionName.Process,
+                ActorActionName.Craft
+            };
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged)

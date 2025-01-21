@@ -3,8 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using Managers;
-using StateAndCondition;
+using ActorAction;
 using Tools;
 using UnityEngine;
 
@@ -14,15 +13,14 @@ namespace Priority
     {
         public Coroutine                CurrentActionCoroutine { get; private set; }
         public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
-        ActorAction_Master                     _currentActorAction;
-        public             ActorAction_Master  GetCurrentAction() => _currentActorAction;
-        protected override PriorityType _priorityType      => PriorityType.ActorAction;
+        ActorAction_Data                     _currentActorAction;
+        public ActorAction_Data CurrentAction => _currentActorAction;
 
         public void SetCurrentAction(uint actorActionName)
         {
             _stopCurrentAction();
             
-            var actorAction = ActorAction_Manager.GetActorAction_Master((ActorActionName)actorActionName);
+            var actorAction = ActorAction_Manager.GetActorAction_Data((ActorActionName)actorActionName);
 
             _currentActorAction = actorAction;
 
@@ -33,7 +31,11 @@ namespace Priority
         {
             if (!includeOptionalPriorities)
             {
-                foreach (var actorAction in Priority_Manager.BasePriorityActorActions)
+                //* Currently just refreshing, which would mean we would have to clear and repopulate the dictionary. Eventually, make a hybrid
+                //* system where we update the actions based on StateChanges, as well as regenerations. Or make regenerations less common.
+                //* But first, get regenerations working completely.
+                
+                foreach (var actorAction in AllowedActions)
                 {
                     _regeneratePriority((uint)actorAction);
                 }
@@ -62,14 +64,14 @@ namespace Priority
             
             var priorityParameters = _getPriorityParameters(priorityID);
 
-            var priorityValue = Priority_Generator.GeneratePriority(_priorityType, priorityID, priorityParameters);
+            var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            var actorAction_Master = ActorAction_Manager.GetActorAction_Master((ActorActionName)priorityID);
+            var actorAction_Master = ActorAction_Manager.GetActorAction_Data((ActorActionName)priorityID);
             var parameters = actorAction_Master.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
 
             return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, parameters);
@@ -88,10 +90,7 @@ namespace Priority
 
         IEnumerator _performCurrentActionFromStart()
         {
-            a
-            //* Now ,we need to connect the actor Actions to the JobTasks. Either we need to consolidate JobTasks and ActorActions
-            // so that they're the same, or we need to create a way to connect them. Try make them the same. But either way, connect to
-            // performJobTask ActorAction.
+            //* Find a way to Start the coroutine of the new system
             foreach (var action in _currentActorAction.ActionList)
             {
                 yield return CurrentActionCoroutine = _actor.StartCoroutine(action);
@@ -142,43 +141,6 @@ namespace Priority
             return priorityIDs;
         }
         
-        protected override Dictionary<uint, PriorityElement> _getRelevantPriorities(ActorPriorityState actorPriorityState)
-        {
-            if (actorPriorityState is ActorPriorityState.None)
-            {
-                var allPriorities = PriorityQueue.PeekAll();
-
-                allPriorities ??= Array.Empty<PriorityElement>();
-                
-                return allPriorities.ToDictionary(priority => priority.PriorityID);
-            }
-
-            var relevantPriorities = new Dictionary<uint, PriorityElement>();
-
-            switch (actorPriorityState)
-            {
-                case ActorPriorityState.InCombat:
-                    foreach (var actorActionName in ActorBehaviour_Manager.GetActorActionsOfActorBehaviour(ActorBehaviourName.Combat))
-                    {
-                        relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
-                    }
-
-                    break;
-                case ActorPriorityState.HasJob:
-                    foreach (var actorActionName in ActorBehaviour_Manager.GetActorActionsOfActorBehaviour(ActorBehaviourName.Work))
-                    {
-                        relevantPriorities.Add((uint)actorActionName, PriorityQueue.Peek((uint)actorActionName));
-                    }
-
-                    break;
-                case ActorPriorityState.None:
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(actorPriorityState), actorPriorityState, null);
-            }
-
-            return relevantPriorities;
-        }
-        
         protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new()
         {
             {
@@ -202,7 +164,7 @@ namespace Priority
                 }
             },
         };
-        
+
         public void MakeDecision()
         {
             // Change tick rate according to number of zones to player.
@@ -210,9 +172,11 @@ namespace Priority
             // Regional region is within 1 zone distance.
             // Distant region is 2+ zones.
 
-            var priorityState = _getPriorityState();
+            var nextHighestPriorityValue = _getNextHighestPriorityValue();
 
-            if (!_mustChangeCurrentAction(priorityState, out var nextHighestPriorityValue))
+            if (nextHighestPriorityValue is null
+                || nextHighestPriorityValue.PriorityID == (uint)ActorActionName.Idle
+                || nextHighestPriorityValue.PriorityID == (uint)CurrentAction.ActionName)
             {
                 //Debug.Log("No need to change current action.");
                 return;
@@ -221,41 +185,20 @@ namespace Priority
             SetCurrentAction(nextHighestPriorityValue.PriorityID);
         }
 
-        ActorPriorityState _getPriorityState()
+        PriorityElement _getNextHighestPriorityValue()
         {
-            var actorData = _actorReferences.Actor_Component.ActorData;
-            
-            if (actorData.StatesAndConditions.States.GetState(StateName.IsInCombat))
-            {
-                return ActorPriorityState.InCombat;
-            }
-
-            if (!actorData.Career.JobsActive || !actorData.Career.HasCurrentJob())
-                return actorData.Career.GetNewCurrentJob() ? ActorPriorityState.HasJob : ActorPriorityState.None;
-            
-            return ActorPriorityState.HasJob;
-
-        }
-
-        bool _mustChangeCurrentAction(ActorPriorityState  actorPriorityState,
-                                      out PriorityElement nextHighestPriorityElement)
-        {
+            //* Do we need to regenerate all priorities here?
             RegenerateAllPriorities();
-            
-            var currentAction = GetCurrentAction();
-            nextHighestPriorityElement = _peekHighestPriority(actorPriorityState);
 
-            if (nextHighestPriorityElement is not null)
-                return currentAction == null ||
-                       (uint)currentAction.ActionName != nextHighestPriorityElement.PriorityID;
-            
-            Debug.LogWarning("There is no next highest priority.");
-            return false;
+            return PeekHighestPriority();
         }
+        
+        protected override List<ActorActionName> _getAllowedActions() => 
+            _actorReferences.Actor_Component.ActorData.GetAllowedActions();
 
         public override Dictionary<string, string> GetStringData()
         {
-            var highestPriority = _peekHighestPriority(_getPriorityState());
+            var highestPriority = PeekHighestPriority();
             
             return new Dictionary<string, string>
             {
@@ -263,8 +206,6 @@ namespace Priority
                 { "Current Actor Action", $"{_currentActorAction?.ActionName}" },
                 { "Is Performing Current Action", $"{IsPerformingAction}" },
                 { "Current Action Coroutine", $"{CurrentActionCoroutine}" },
-                { "Current Priority State", $"{_getPriorityState()}" },
-                { "Must Change Current Action", $"{_mustChangeCurrentAction(_getPriorityState(), out _)}" },
                 { "Next Highest Priority", highestPriority?.PriorityID != null 
                     ? $"{(ActorActionName)highestPriority.PriorityID}({highestPriority.PriorityID}) - {highestPriority.PriorityValue}" 
                     : "No Highest Priority" }
@@ -288,14 +229,5 @@ namespace Priority
         
         protected override string _getPriorityID(string iteration, uint priorityID) => 
             $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
-    }
-    
-    
-    public enum ActorPriorityState
-    {
-        None,
-            
-        InCombat,
-        HasJob,
     }
 }

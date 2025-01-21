@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ActorAction;
 using ActorPreset;
 using Equipment;
 using Faction;
 using Inventory;
-using Managers;
 using Priority;
 using Relationships;
-using StateAndCondition;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Actor
 {
@@ -53,6 +51,7 @@ namespace Actor
             if (actor is null)
             {
                 Debug.LogError($"Manager_Actor cannot get actor {ActorID}.");
+                return;
             }
 
             var actorFaction = Faction_Manager.GetFaction_Data(ActorFactionID);
@@ -63,7 +62,7 @@ namespace Actor
                 return;
             }
 
-            var factionGO = UnityEngine.GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
+            var factionGO = GameObject.Find($"{actorFaction.FactionID}: {actorFaction.FactionName}");
 
             if (factionGO is null)
             {
@@ -201,7 +200,25 @@ namespace Actor
                 }
             };
         }
-    }
+        
+        public List<ActorActionName> GetAllowedActions()
+        {
+            var allowedActions = new List<ActorActionName>();
+            
+            allowedActions.AddRange(Identification.GetAllowedActions());
+            allowedActions.AddRange(SceneObject.GetAllowedActions());
+            allowedActions.AddRange(Career.GetAllowedActions());
+            allowedActions.AddRange(Crafting.GetAllowedActions());
+            allowedActions.AddRange(Vocation.GetAllowedActions());
+            allowedActions.AddRange(SpeciesAndPersonality.GetAllowedActions());
+            allowedActions.AddRange(StatsAndAbilities.GetAllowedActions());
+            allowedActions.AddRange(StatesAndConditions.GetAllowedActions());
+            allowedActions.AddRange(InventoryData.GetAllowedActions());
+            allowedActions.AddRange(EquipmentData.GetAllowedActions());
+            allowedActions.AddRange(ActorQuests.GetAllowedActions());
+            
+            return allowedActions;
+        }    }
 
     public enum PriorityUpdateTrigger
     {
@@ -279,6 +296,11 @@ namespace Actor
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
+
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
+        }
     }
 
     [Serializable]
@@ -317,6 +339,11 @@ namespace Actor
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
+        }
     }
 
     [Serializable]
@@ -362,5 +389,10 @@ namespace Actor
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
             _priorityParameterList { get; set; } = new();
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
+        }
     }
 }

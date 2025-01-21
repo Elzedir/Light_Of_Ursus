@@ -11,7 +11,7 @@ namespace Jobs
     public class Job_SO : Data_SO<Job_Data>
     {
         public Data<Job_Data>[] Jobs                           => Data;
-        public Data<Job_Data>   GetJob_Master(JobName jobName) => GetData((uint)jobName);
+        public Data<Job_Data>   GetJob_Data(JobName jobName) => GetData((uint)jobName);
 
         public override uint GetDataID(int id) => (uint)Jobs[id].Data_Object.JobName;
         

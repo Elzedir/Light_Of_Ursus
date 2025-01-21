@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using ActorPreset;
 using City;
 using Items;
@@ -317,9 +318,9 @@ namespace JobSite
             // And then apply relation debuff.
         }
 
-        public bool AddEmployeeToStation(Actor_Component worker, Station_Component station, JobTaskName desiredJobTask)
+        public bool AddEmployeeToStation(Actor_Component worker, Station_Component station, ActorActionName desiredJobTask)
         {
-            if (desiredJobTask == JobTaskName.Idle)
+            if (desiredJobTask == ActorActionName.Idle)
             {
                 worker.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
 
@@ -339,7 +340,7 @@ namespace JobSite
             WorkPost_Workers[(station.StationID, openWorkPost_Data.WorkPostID)] = worker.ActorID;
             openWorkPost_Data.AddWorkerToWorkPost(worker);
 
-            var desiredJobName = JobTask_Manager.GetJobTask_Master(desiredJobTask).PrimaryJob;
+            var desiredJobName = ActorAction_Manager.GetActorAction_Data(desiredJobTask).PrimaryJob;
 
             if (desiredJobName == JobName.Any)
             {

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Items;
 using Jobs;
-using ScriptableObjects;
 using UnityEngine;
 
 namespace JobSite
@@ -11,6 +11,22 @@ namespace JobSite
     public class JobSite_Component_LumberYard : JobSite_Component
     {
         public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
+
+        public override List<ActorActionName> BaseJobActions { get; } = new()
+        {
+            {
+                ActorActionName.Chop_Wood
+            },
+            {
+                ActorActionName.Process_Logs
+            },
+            {
+                ActorActionName.Fetch_Items
+            },
+            {
+                ActorActionName.Deliver_Items
+            }
+        };
 
         protected override bool _compareProductionOutput()
         {

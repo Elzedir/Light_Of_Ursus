@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Initialisation;
 using Jobs;
 using Station;
@@ -14,6 +15,7 @@ namespace JobSite
     public abstract class JobSite_Component : MonoBehaviour
     {
         public abstract JobSiteName  JobSiteName { get; }
+        public abstract List<ActorActionName> BaseJobActions { get; }
         public          uint         JobSiteID   => JobSiteData.JobSiteID;
         public          JobSite_Data JobSiteData;
         bool                         _initialised;
@@ -82,8 +84,8 @@ namespace JobSite
         {
             JobSiteData.PriorityData.RegenerateAllPriorities();
             
-            var highestPriorityElement = JobSiteData.PriorityData.GetHighestSpecificPriority(
-                actor.ActorData.Career.AllJobTasks.Select(jobTaskName => (uint)jobTaskName).ToList(), stationID);
+            var highestPriorityElement = JobSiteData.PriorityData.GetHighestPriorityFromGroup(
+                actor.ActorData.Career.AllJobActions.Select(actorActionName => (uint)actorActionName).ToList(), stationID);
 
             if (highestPriorityElement == null)
             {
@@ -91,9 +93,9 @@ namespace JobSite
                 return true;
             }
             
-            var highestPriorityJobTask = (JobTaskName)highestPriorityElement.PriorityID;
+            var highestPriorityJobTask = (ActorActionName)highestPriorityElement.PriorityID;
             
-            if (highestPriorityJobTask == JobTaskName.Idle)
+            if (highestPriorityJobTask == ActorActionName.Idle)
             {
                 actor.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
                 return true;
@@ -106,10 +108,10 @@ namespace JobSite
             //Debug.LogWarning($"No relevant stations found for job: {highestPriorityJobTask}.");
         }
 
-        List<Station_Component> _getOrderedRelevantStationsForJob(JobTaskName jobTaskName, Actor_Component actor)
+        List<Station_Component> _getOrderedRelevantStationsForJob(ActorActionName actorActionName, Actor_Component actor)
         {
             var relevantStations = JobSiteData.AllStationComponents.Values
-                                              .Where(station => station.AllowedJobTasks.Contains(jobTaskName))
+                                              .Where(station => station.AllowedJobTasks.Contains(actorActionName))
                                               .ToList();
 
             if (relevantStations.Count != 0)
@@ -118,7 +120,7 @@ namespace JobSite
                            Vector3.Distance(actor.transform.position, station.transform.position))
                        .ToList();
 
-            Debug.LogError($"No relevant stations found for jobTask: {jobTaskName}.");
+            Debug.LogError($"No relevant stations found for jobTask: {actorActionName}.");
             return null;
         }
 
@@ -168,27 +170,29 @@ namespace JobSite
             return result;
         }
 
-        public List<Station_Component> GetRelevantStations(JobTaskName jobTaskName)
+        public List<Station_Component> GetRelevantStations(ActorActionName actorActionName)
         {
-            return jobTaskName switch
+            return actorActionName switch
             {
-                JobTaskName.Fetch_Items   => _relevantStations_Fetch(),
-                JobTaskName.Deliver_Items => _relevantStations_Deliver(),
-                JobTaskName.Chop_Wood     => _relevantStations_Chop_Wood(),
-                _                         => throw new ArgumentException($"JobTaskName: {jobTaskName} not recognised.")
+                ActorActionName.Fetch_Items   => _relevantStations_Fetch(),
+                ActorActionName.Deliver_Items => _relevantStations_Deliver(),
+                ActorActionName.Chop_Wood     => _relevantStations_Chop_Wood(),
+                _                         => throw new ArgumentException($"ActorActionName: {actorActionName} not recognised.")
             };
         }
+        
+        //* We are calling this twice in priority generator, once to get relevant stations and then once more to get the items to fetch or deliver.
 
         List<Station_Component> _relevantStations_Fetch()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItemsToFetchFromStation().Count > 0).ToList();
+                              .Where(station => station.GetInventoryItems(ActorActionName.Fetch_Items).Count > 0).ToList();
         }
 
         List<Station_Component> _relevantStations_Deliver()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItemsToDeliverFromOtherStations().Count > 0)
+                              .Where(station => station.GetInventoryItems(ActorActionName.Deliver_Items).Count > 0)
                               .ToList();
         }
 

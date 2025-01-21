@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Actor;
+using ActorAction;
 using Inventory;
 using Tools;
 using UnityEngine;
@@ -71,6 +72,7 @@ namespace Priority
 
         }
 
+        public abstract List<ActorActionName> GetAllowedActions();
         protected abstract Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList { get; set; }
     }
 }

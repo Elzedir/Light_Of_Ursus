@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using Actor;
+using ActorAction;
+using UnityEngine;
 
 namespace StateAndCondition
 {
@@ -8,11 +9,22 @@ namespace StateAndCondition
         static Dictionary<uint, State_Data> _defaultStates;
         public static Dictionary<uint, State_Data> DefaultStates => _defaultStates ??= _initialiseDefaultStates();
 
+        public State_Data GetState_Data(StateName stateName)
+        {
+            if (DefaultStates.TryGetValue((uint)stateName, out var stateData))
+            {
+                return stateData;
+            }
+            
+            Debug.LogError($"State_Data not found for: {stateName}.");
+            return null;
+        }
+        
         static Dictionary<uint, State_Data> _initialiseDefaultStates()
         {
             return new Dictionary<uint, State_Data>
             {
-                { (uint)StateName.None, new State_Data(StateName.None, false, StateName.None) },
+                { (uint)StateName.None, new State_Data( StateName.None, false, StateName.None) },
                 
                 { (uint)StateName.IsAlive, new State_Data(StateName.IsAlive, true, StateName.None) },
                 
@@ -47,26 +59,6 @@ namespace StateAndCondition
                 { (uint)StateName.IsPregnant, new State_Data(StateName.IsPregnant, false, StateName.CanGetPregnant) }
             };
         }
-
-        static readonly Dictionary<StateName, ActionMap> _stateActionMap = new()
-        {
-            {
-                StateName.CanCombat, new ActionMap
-                {
-                    EnabledGroupActions = new HashSet<ActorBehaviourName> { ActorBehaviourName.Combat },
-                    DisabledGroupActions = new HashSet<ActorBehaviourName>
-                        { ActorBehaviourName.Work, ActorBehaviourName.Recreation, }
-                }
-            },
-        };
-    }
-
-    public class ActionMap
-    {
-        public HashSet<ActorBehaviourName> EnabledGroupActions;
-        public HashSet<ActorActionName> EnabledIndividualActions;
-        public HashSet<ActorBehaviourName> DisabledGroupActions;
-        public HashSet<ActorActionName> DisabledIndividualActions;
     }
 
     public enum StateName

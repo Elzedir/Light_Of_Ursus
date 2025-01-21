@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ability;
+using ActorAction;
 using Inventory;
 using Items;
 using Managers;
@@ -27,6 +28,12 @@ namespace Actor
             Stats = new Actor_Stats(actorDataStatsAndAbilities.Stats);
             Aspects = new Actor_Aspects(actorDataStatsAndAbilities.Aspects);
             Abilities = new Actor_Abilities(actorDataStatsAndAbilities.Abilities);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Return actions based on abilities.
+            return new List<ActorActionName>();
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -101,6 +108,12 @@ namespace Actor
             ActorLevelData = new ActorLevelData(actorStats.ActorLevelData);
             ActorSpecial = new Special(actorStats.ActorSpecial);
             ActorCombatStats = new CombatStats(actorStats.ActorCombatStats);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Can't think of anything to do with stats at the moment, maybe some cosmetic stuff.
+            return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -199,6 +212,12 @@ namespace Actor
             ComponentType.Actor)
         {
             ActorAspectList = new List<AspectName>(actorAspects.ActorAspectList);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Again, maybe some random cosmetic things that they can do depending on their class.
+            return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)

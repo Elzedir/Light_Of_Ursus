@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Actor;
+using ActorAction;
 using TickRates;
 using Tools;
 using UnityEngine;
@@ -14,8 +15,10 @@ namespace Priority
         public Priority_Queue PriorityQueue => _priorityQueue ??= _createNewPriorityQueue();
 
         Dictionary<PriorityImportance, Dictionary<uint, PriorityElement>> _cachedPriorityQueue = new();
-        protected          ActorPriorityState                             _currentPriorityState;
-        protected abstract PriorityType                                   _priorityType { get; }
+        
+        List<ActorActionName> _allowedActions;
+        public List<ActorActionName> AllowedActions => _allowedActions ??= _getAllowedActions();
+        protected abstract List<ActorActionName> _getAllowedActions();
 
         public void CriticalDataChanged(PriorityUpdateTrigger                     priorityUpdateTrigger,
                                         Dictionary<PriorityParameterName, object> newParameters)
@@ -30,7 +33,7 @@ namespace Priority
             foreach (var priorityIDToUpdate in priorityIDsToUpdate)
             {
                 var newPriorityValue =
-                    Priority_Generator.GeneratePriority(_priorityType, priorityIDToUpdate, newParameters);
+                    Priority_Generator.GeneratePriority(priorityIDToUpdate, newParameters);
 
                 if (!PriorityQueue.Update(priorityIDToUpdate, newPriorityValue))
                 {
@@ -52,8 +55,9 @@ namespace Priority
         }
         public abstract    void RegenerateAllPriorities(bool includeOptionalPriorities = false);
         protected abstract void _regeneratePriority(uint priorityID);
-
-        public PriorityElement PeekHighestSpecificPriority(List<uint> priorityIDs)
+        
+        public PriorityElement PeekHighestPriority(uint priorityID = 1) => PriorityQueue.Peek(priorityID);
+        public PriorityElement PeekHighestPriorityFromGroup(List<uint> priorityIDs)
         {
             var permittedPriorities = _getPermittedPriorities(priorityIDs);
 
@@ -80,37 +84,12 @@ namespace Priority
             return PriorityQueue.Peek(highestPriority.PriorityID);
         }
 
-        protected abstract List<uint> _getPermittedPriorities(List<uint> priorityIDs);
-
-        protected PriorityElement _peekHighestPriority(ActorPriorityState actorPriorityState)
-        {
-            var overallHighestPriority = new PriorityElement(0, 0);
-
-            var relevantPriorityQueues = _getRelevantPriorities(actorPriorityState);
-
-            if (relevantPriorityQueues.Count is 0)
-            {
-                //Debug.Log("No relevant priorities found.");
-                return null;
-            }
-
-            foreach (var priority in relevantPriorityQueues.Where(priority =>
-                         priority.Value?.PriorityValue >= overallHighestPriority?.PriorityValue))
-            {
-                overallHighestPriority = priority.Value;
-            }
-
-            return overallHighestPriority;
-        }
-
-        protected abstract Dictionary<uint, PriorityElement> _getRelevantPriorities(
-            ActorPriorityState actorPriorityState);
-
-        public PriorityElement GetHighestSpecificPriority(List<uint> priorityIDs, uint priorityObjectParameterID = 0)
+        public PriorityElement GetHighestPriority(uint priorityID = 1) => PriorityQueue.Dequeue(priorityID);
+        public PriorityElement GetHighestPriorityFromGroup(List<uint> priorityIDs, uint priorityObjectParameterID = 0)
         {
             priorityIDs = _getRelevantPriorityIDs(priorityIDs, priorityObjectParameterID);
 
-            var highestPriority = PeekHighestSpecificPriority(priorityIDs);
+            var highestPriority = PeekHighestPriorityFromGroup(priorityIDs);
 
             if (highestPriority is not null) return PriorityQueue.Dequeue(highestPriority.PriorityID);
 
@@ -118,21 +97,8 @@ namespace Priority
             return null;
         }
 
+        protected abstract List<uint> _getPermittedPriorities(List<uint> priorityIDs);
         protected abstract List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID);
-
-        public PriorityElement GetHighestPriority(ActorPriorityState actorPriorityState)
-        {
-            var highestPriority = _peekHighestPriority(actorPriorityState);
-
-            return highestPriority != null
-                ? PriorityQueue.Dequeue(highestPriority.PriorityID)
-                : null;
-        }
-
-        public PriorityElement GetSpecificPriority(uint priorityID)
-        {
-            return PriorityQueue.Dequeue(priorityID);
-        }
 
         protected abstract Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID);
 

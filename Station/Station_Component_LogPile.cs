@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
+using ActorAction;
 using Items;
 using Jobs;
 using Recipes;
@@ -19,10 +20,10 @@ namespace Station
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new();
         public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<JobTaskName> AllowedJobTasks { get; } = new()
+        public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {
-            JobTaskName.Fetch_Items,
-            JobTaskName.Deliver_Items
+            ActorActionName.Fetch_Items,
+            ActorActionName.Deliver_Items
         };
 
         protected override void _initialiseStartingInventory() { }

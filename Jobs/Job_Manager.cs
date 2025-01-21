@@ -9,7 +9,7 @@ namespace Jobs
         static Job_SO _allJobs;
         static Job_SO AllJobs => _allJobs ??= _getJob_SO();
 
-        public static Job_Data GetJob_Master(JobName jobName) => AllJobs.GetJob_Master(jobName).Data_Object;
+        public static Job_Data GetJob_Data(JobName jobName) => AllJobs.GetJob_Data(jobName).Data_Object;
         
         static Job_SO _getJob_SO()
         {
@@ -31,7 +31,9 @@ namespace Jobs
 
     public enum JobName
     {
-        Idle, 
+        Idle,
+        
+        None,
         
         Any,
         

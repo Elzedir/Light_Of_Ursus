@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Inventory;
 using Priority;
 using TickRates;
@@ -142,6 +143,13 @@ namespace StateAndCondition
 
             CurrentConditions.Remove(conditionName);
         }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Restrict or allow actions depending on conditions that you have. For example, frozen or burning.
+            return new List<ActorActionName>();
+        }
+        
         protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
 
         protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList

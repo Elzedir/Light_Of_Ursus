@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ActorAction;
 using DateAndTime;
 using Inventory;
 using Priority;
@@ -57,6 +58,11 @@ namespace Actor
         public Family ActorFamily;
         public Background Background;
 
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
+        }
+
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
             return false;
@@ -98,6 +104,11 @@ namespace Actor
             ActorFamily = actorFamily;
             ActorDynasty = actorDynasty;
             Religion = religion;
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)

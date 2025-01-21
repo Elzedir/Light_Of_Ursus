@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ActorAction;
 using Inventory;
 using Priority;
 using Tools;
@@ -27,7 +28,12 @@ namespace Actor
             ActorMesh = actorDataGameObject.ActorMesh;
             ActorMaterial = actorDataGameObject.ActorMaterial;
         }
-        
+
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
+        }
+
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,

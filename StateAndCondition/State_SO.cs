@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -17,10 +18,26 @@ namespace StateAndCondition
 
         public State GetState(StateName stateName)
         {
-            var stateData = GetState_Data(stateName).Data_Object ??= GetState_Data(StateName.None).Data_Object;
+            var stateData = GetState_Data(stateName).Data_Object;
             
-            return new State(stateData.StateName, stateData.ParentState, stateData.DefaultState);
+            return new State(stateData.StateName, stateData.DefaultState);
         }
+
+        public ObservableDictionary<StateName, bool> InitialiseDefaultStates(ObservableDictionary<StateName, bool> existingStates)
+        {
+            var defaultStates = new ObservableDictionary<StateName, bool>();
+
+            foreach (var state in States)
+            {
+                if (existingStates.ContainsKey(state.Data_Object.StateName))
+                    continue;
+                
+                defaultStates.Add(state.Data_Object.StateName, state.Data_Object.DefaultState);
+            }
+
+            return defaultStates;
+        }
+        
 
         //* None doesn't show up in the interactable list in the inspector.
         public override uint GetDataID(int id) =>

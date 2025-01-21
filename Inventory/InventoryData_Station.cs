@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Items;
 using Priority;
 using UnityEngine;
@@ -119,6 +120,11 @@ namespace Inventory
             }
 
             return itemsToDeliver;
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            return new List<ActorActionName>();
         }
     }
 }

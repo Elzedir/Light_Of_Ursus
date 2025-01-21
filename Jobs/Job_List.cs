@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Actor;
+using ActorAction;
 
 namespace Jobs
 {
@@ -15,54 +17,54 @@ namespace Jobs
                     (uint)JobName.Idle, new Job_Data(
                         jobName: JobName.Idle,
                         jobDescription: "An idler",
-                        jobTasks: new HashSet<JobTaskName>
+                        jobActions: new HashSet<ActorActionName>
                         {
-                            JobTaskName.Idle,
+                            ActorActionName.Idle,
                         })
                 },
                 {
                     (uint)JobName.Logger, new Job_Data(
                         jobName: JobName.Logger,
                         jobDescription: "A logger",
-                        jobTasks: new HashSet<JobTaskName>
+                        jobActions: new HashSet<ActorActionName>
                         {
-                            JobTaskName.Chop_Wood,
-                            JobTaskName.Process_Logs,
-                            JobTaskName.Fetch_Items,
-                            JobTaskName.Deliver_Items
+                            ActorActionName.Chop_Wood,
+                            ActorActionName.Process_Logs,
+                            ActorActionName.Fetch_Items,
+                            ActorActionName.Deliver_Items
                         })
                 },
                 {
                     (uint)JobName.Sawyer, new Job_Data(
                         jobName: JobName.Sawyer,
                         jobDescription: "A sawyer",
-                        jobTasks: new HashSet<JobTaskName>
+                        jobActions: new HashSet<ActorActionName>
                         {
-                            JobTaskName.Process_Logs,
-                            JobTaskName.Chop_Wood,
-                            JobTaskName.Fetch_Items,
-                            JobTaskName.Deliver_Items
+                            ActorActionName.Process_Logs,
+                            ActorActionName.Chop_Wood,
+                            ActorActionName.Fetch_Items,
+                            ActorActionName.Deliver_Items
                         })
                 },
                 {
                     (uint)JobName.Vendor, new Job_Data(
                         jobName: JobName.Vendor,
                         jobDescription: "A vendor",
-                        jobTasks: new HashSet<JobTaskName>
+                        jobActions: new HashSet<ActorActionName>
                         {
-                            JobTaskName.Stand_At_Counter,
-                            JobTaskName.Restock_Shelves,
-                            JobTaskName.Fetch_Items,
-                            JobTaskName.Deliver_Items
+                            ActorActionName.Stand_At_Counter,
+                            ActorActionName.Restock_Shelves,
+                            ActorActionName.Fetch_Items,
+                            ActorActionName.Deliver_Items
                         })
                 },
                 {
                     (uint)JobName.Smith, new Job_Data(
                         jobName: JobName.Smith,
                         jobDescription: "Smith something",
-                        jobTasks: new HashSet<JobTaskName>
+                        jobActions: new HashSet<ActorActionName>
                         {
-                            JobTaskName.Beat_Metal
+                            ActorActionName.Beat_Metal
                         })
                 }
             };

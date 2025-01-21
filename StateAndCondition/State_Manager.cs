@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorAction;
 using Inventory;
 using Priority;
 using Tools;
@@ -14,6 +15,9 @@ namespace StateAndCondition
 
         static State_SO _allStates;
         static State_SO AllStates => _allStates ??= _getState_SO();
+
+        public static ObservableDictionary<StateName, bool> InitialiseDefaultStates(ObservableDictionary<StateName, bool> existingStates) =>
+            AllStates.InitialiseDefaultStates(existingStates);
 
         public static State GetState(StateName stateName)
         {
@@ -48,11 +52,12 @@ namespace StateAndCondition
         public Actor_Data_States(uint actorID, ObservableDictionary<StateName, bool> initialisedStates = null) :
             base(actorID, ComponentType.Actor)
         {
-            _currentStates = initialisedStates ?? new ObservableDictionary<StateName, bool>();
-            _currentStates.SetDictionaryChanged(_onStateChanged);
+            _currentStates = State_Manager.InitialiseDefaultStates(initialisedStates);
+            CurrentStates.SetDictionaryChanged(_onStateChanged);
         }
 
-        readonly ObservableDictionary<StateName, bool> _currentStates;
+        ObservableDictionary<StateName, bool> _currentStates;
+        ObservableDictionary<StateName, bool> CurrentStates => _currentStates ??= State_Manager.InitialiseDefaultStates(null);
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -103,6 +108,25 @@ namespace StateAndCondition
 
             Debug.LogError($"PrimaryState: {stateName} not found in DefaultStates.");
             return false;
+        }
+
+        //* Later will also have to remove states that are added in earlier, like inCombat will disable crafting, so this
+        //* needs to be put after crafting, or find a better way to initialise it.
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            var actionsPerState = ActorAction_List.GetActorActionStateDictionary();
+
+            return CurrentStates.Where(state => state.Value)
+                .SelectMany(state =>
+                {
+                    if (actionsPerState.TryGetValue(state.Key, out var actions))
+                        return actions
+                            .Where(action => action.Value == state.Value)
+                            .Select(action => action.Key);
+                    
+                    Debug.LogError($"State: {state.Key} has no actions.");
+                    return Enumerable.Empty<ActorActionName>();
+                }).ToList();
         }
 
         protected override bool _priorityChangeNeeded(object dataChanged) =>

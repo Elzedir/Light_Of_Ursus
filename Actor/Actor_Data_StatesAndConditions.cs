@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ActorAction;
 using Inventory;
 using Priority;
 using StateAndCondition;
@@ -62,7 +63,17 @@ namespace Actor
 
             return DataToDisplay;
         }
-        
+
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            var allowedActions = new List<ActorActionName>();
+            
+            allowedActions.AddRange(States.GetAllowedActions());
+            allowedActions.AddRange(Conditions.GetAllowedActions());
+
+            return allowedActions;
+        }
+
         protected override bool _priorityChangeNeeded(object dataChanged)
         {
             return false;

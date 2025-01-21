@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ActorAction;
 using Inventory;
 using Personality;
 using Priority;
@@ -25,6 +26,13 @@ namespace Actor
         {
             ActorSpecies = actorDataSpeciesAndPersonality.ActorSpecies;
             ActorPersonality = new ActorPersonality(actorDataSpeciesAndPersonality.ActorPersonality);
+        }
+        
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Maybe add some species specific actions, like cats grooming themselves or lizards suntanning.
+            //* And personality actions, like admiring yourself, or cleaning random items of trash.
+            return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
