@@ -2,38 +2,51 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Items;
+using Jobs;
 using JobSite;
 using Priority;
 using Station;
-using UnityEditor;
 using UnityEngine;
 
-namespace Jobs
+namespace Actor
 {
-    public abstract class JobTask_Manager
+    public abstract class ActorAction_Manager : MonoBehaviour
     {
-        public static JobTask_Master GetJobTask_Master(JobTaskName jobTaskName)
+        static Dictionary<ActorActionName, ActorAction_Data> _allActorAction_Data;
+        public static Dictionary<ActorActionName, ActorAction_Data> AllActorAction_Data =>
+            _allActorAction_Data ??= _initialiseAllActorAction_Data();
+        public static ActorAction_Data GetActorAction_Data(ActorActionName actorActionName)
         {
-            if (_allJobTask_Masters.TryGetValue(jobTaskName, out var jobTaskMaster))
+            if (AllActorAction_Data.TryGetValue(actorActionName, out var actorAction_Data))
             {
-                return jobTaskMaster;
+                return actorAction_Data;
             }
 
-            Debug.LogError($"No JobTaskMaster found for {jobTaskName}. Returning null.");
+            Debug.LogError($"ActorAction_Data not found for: {actorActionName}.");
             return null;
         }
 
-        static readonly Dictionary<JobTaskName, JobTask_Master> _allJobTask_Masters =
-            new()
+        static Dictionary<ActorActionName, ActorAction_Data> _initialiseAllActorAction_Data()
+        {
+            return new Dictionary<ActorActionName, ActorAction_Data>
             {
                 {
-                    JobTaskName.Fetch_Items, new JobTask_Master(
-                        taskName: JobTaskName.Fetch_Items,
-                        taskDescription: "Fetch Items",
+                    ActorActionName.Wander, new ActorAction_Data(
+                        actionName: ActorActionName.Wander, 
+                        actionDescription: "To wander",
+                        behaviourName: ActorBehaviourName.Recreation,
+                        requiredParameters: new List<PriorityParameterName>(),
                         primaryJob: JobName.Any,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>())
+                },
+                {
+                    ActorActionName.Fetch_Items, new ActorAction_Data(
+                        actionName: ActorActionName.Fetch_Items,
+                        actionDescription: "Fetch Items",
+                        behaviourName: ActorBehaviourName.Work,
+                        primaryJob: JobName.Any,
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _fetchItems
                         },
@@ -43,11 +56,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Deliver_Items, new JobTask_Master(
-                        taskName: JobTaskName.Deliver_Items,
-                        taskDescription: "Deliver Items",
+                    ActorActionName.Deliver_Items, new ActorAction_Data(
+                        actionName: ActorActionName.Deliver_Items,
+                        actionDescription: "Deliver Items",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Any,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _deliverItems
                         },
@@ -57,11 +71,12 @@ namespace Jobs
                         })  
                 },
                 {
-                    JobTaskName.Beat_Metal, new JobTask_Master(
-                        taskName: JobTaskName.Beat_Metal,
-                        taskDescription: "Beat Iron into Shape",
+                    ActorActionName.Beat_Metal, new ActorAction_Data(
+                        actionName: ActorActionName.Beat_Metal,
+                        actionDescription: "Beat Iron into Shape",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Smith,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _beatIron
                         },
@@ -71,11 +86,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Chop_Wood, new JobTask_Master(
-                        taskName: JobTaskName.Chop_Wood,
-                        taskDescription: "Chop Wood",
+                    ActorActionName.Chop_Wood, new ActorAction_Data(
+                        actionName: ActorActionName.Chop_Wood,
+                        actionDescription: "Chop Wood",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Logger,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _chopWood
                         },
@@ -85,11 +101,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Process_Logs, new JobTask_Master(
-                        taskName: JobTaskName.Process_Logs,
-                        taskDescription: "Process Logs",
+                    ActorActionName.Process_Logs, new ActorAction_Data(
+                        actionName: ActorActionName.Process_Logs,
+                        actionDescription: "Process Logs",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Sawyer,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _processLogs
                         },
@@ -99,11 +116,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Stand_At_Counter, new JobTask_Master(
-                        taskName: JobTaskName.Stand_At_Counter,
-                        taskDescription: "Stand at Counter",
+                    ActorActionName.Stand_At_Counter, new ActorAction_Data(
+                        actionName: ActorActionName.Stand_At_Counter,
+                        actionDescription: "Stand at Counter",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Vendor,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _standAtCounter
                         },
@@ -113,11 +131,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Restock_Shelves, new JobTask_Master(
-                        taskName: JobTaskName.Restock_Shelves,
-                        taskDescription: "Restock Shelves",
+                    ActorActionName.Restock_Shelves, new ActorAction_Data(
+                        actionName: ActorActionName.Restock_Shelves,
+                        actionDescription: "Restock Shelves",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Vendor,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _restockShelves
                         },
@@ -127,11 +146,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Defend_Ally, new JobTask_Master(
-                        taskName: JobTaskName.Defend_Ally,
-                        taskDescription: "Defend Ally",
+                    ActorActionName.Defend_Ally, new ActorAction_Data(
+                        actionName: ActorActionName.Defend_Ally,
+                        actionDescription: "Defend Ally",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Guard,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendAlly
                         },
@@ -141,11 +161,12 @@ namespace Jobs
                         })
                 },
                 {
-                    JobTaskName.Defend_Neutral, new JobTask_Master(
-                        taskName: JobTaskName.Defend_Neutral,
-                        taskDescription: "Defend Neutral",
+                    ActorActionName.Defend_Neutral, new ActorAction_Data(
+                        actionName: ActorActionName.Defend_Neutral,
+                        actionDescription: "Defend Neutral",
+                        behaviourName: ActorBehaviourName.Work,
                         primaryJob: JobName.Guard,
-                        taskList: new List<Func<Actor_Component, uint, IEnumerator>>
+                        actionList: new List<Func<Actor_Component, uint, IEnumerator>>
                         {
                             _defendNeutral
                         },
@@ -155,23 +176,24 @@ namespace Jobs
                         })
                 },
             };
-
-        static IEnumerator _beatIron(Actor_Component actor, uint jobsiteID)
+        }
+        
+        static IEnumerator _beatIron(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _chopWood(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _chopWood(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _processLogs(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _processLogs(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _fetchItems(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _fetchItems(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
             // if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
@@ -206,32 +228,118 @@ namespace Jobs
             if (actor.transform.position != position) actor.transform.position = position;
         }
 
-        static IEnumerator _standAtCounter(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _standAtCounter(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _restockShelves(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _restockShelves(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _defendAlly(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _defendAlly(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
-        static IEnumerator _defendNeutral(Actor_Component actor, uint jobsiteID)
+        static IEnumerator _defendNeutral(Actor_Component actor, uint jobSiteID)
         {
             yield return null;
         }
 
+        public static ActorBehaviourName GetActorBehaviourOfActorAction(ActorActionName actorActionName)
+        {
+            if (_behavioursByAction.TryGetValue(actorActionName, out var actionGroup))
+            {
+                return actionGroup;
+            }
+
+            Debug.LogError($"No action group found for {actorActionName}.");
+            return ActorBehaviourName.Normal;
+        }
+
+        static readonly Dictionary<ActorActionName, ActorBehaviourName> _behavioursByAction = new()
+        {
+            { ActorActionName.Idle, ActorBehaviourName.Normal },
+            { ActorActionName.Scavenge, ActorBehaviourName.Normal },
+
+            { ActorActionName.Attack, ActorBehaviourName.Combat },
+            { ActorActionName.Defend, ActorBehaviourName.Combat },
+
+            { ActorActionName.Perform_JobTask, ActorBehaviourName.Work },
+
+            { ActorActionName.Wander, ActorBehaviourName.Recreation },
+        };
+
+        public static Dictionary<PriorityParameterName, object> PopulateActionParameters(
+            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> parameters)
+        {
+            JobSite_Component jobSite_Component = null; 
+            Actor_Component   actor_Component  = null;
+
+            var requiredParameters = GetActorAction_Data(actorActionName).RequiredParameters;
+                    
+            foreach (var requiredParameter in requiredParameters)
+            {
+                if (parameters.TryGetValue(requiredParameter, out var parameter))
+                {
+                    switch (requiredParameter)
+                    {
+                        case PriorityParameterName.Jobsite_Component:
+                            jobSite_Component = parameter as JobSite_Component;
+                            break;
+                        case PriorityParameterName.Worker_Component:
+                            actor_Component = parameter as Actor_Component;
+                            break;
+                    }
+
+                    continue;
+                }
+                    
+                Debug.LogError($"Required Parameter: {requiredParameter} is null.");
+                return null;
+            }
+            
+            return actorActionName switch
+            {
+                ActorActionName.Perform_JobTask => GetActorAction_Data(actorActionName).RequiredParameters
+                    .ToDictionary(parameter => parameter, parameter => parameters[parameter]),
+                _ => null
+            };
+        }
+
+        public static ActorPriorityState GetDefaultActionHighestPriorityState(ActorActionName actorActionName)
+        {
+            if (_allDefaultActionHighestPriorityStates.TryGetValue(actorActionName, out var highestPriorityState))
+            {
+                return highestPriorityState;
+            }
+
+            Debug.LogWarning($"No default highest priority state found for {actorActionName}. Returning None.");
+            return ActorPriorityState.None;
+        }
+
+        static readonly Dictionary<ActorActionName, ActorPriorityState> _allDefaultActionHighestPriorityStates = new()
+        {
+            { ActorActionName.Attack, ActorPriorityState.InCombat },
+            { ActorActionName.Defend, ActorPriorityState.InCombat },
+
+            { ActorActionName.Perform_JobTask, ActorPriorityState.HasJob },
+
+            { ActorActionName.Wander, ActorPriorityState.None },
+            { ActorActionName.Idle, ActorPriorityState.None },
+        };
+        
+        a
+            //* Integrate PopulateTaskParameters since we made JobTasks become ActorActions.
+        
         public static Dictionary<PriorityParameterName, object> PopulateTaskParameters(
-            JobTaskName jobTaskName, Dictionary<PriorityParameterName, object> parameters)
+            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> parameters)
         {
             JobSite_Component jobSite_Component = null; 
 
-            var requiredParameters = _allJobTask_Masters[jobTaskName].RequiredParameters;
+            var requiredParameters = GetActorAction_Data(actorActionName).RequiredParameters;
                     
             foreach (var requiredParameter in requiredParameters)
             {
@@ -257,11 +365,11 @@ namespace Jobs
                 return null;
             }
             
-            return jobTaskName switch
+            return actorActionName switch
             {
-                JobTaskName.Fetch_Items => _populateFetch_Items(jobSite_Component),
-                JobTaskName.Deliver_Items => _populateDeliver_Items(jobSite_Component),
-                JobTaskName.Chop_Wood => _populateChop_Wood(jobSite_Component),
+                ActorActionName.Fetch_Items => _populateFetch_Items(jobSite_Component),
+                ActorActionName.Deliver_Items => _populateDeliver_Items(jobSite_Component),
+                ActorActionName.Chop_Wood => _populateChop_Wood(jobSite_Component),
                 _ => null
             };
         }
@@ -274,7 +382,7 @@ namespace Jobs
                 { PriorityParameterName.Total_Items, 0 }
             };
             
-            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Fetch_Items);
+            var allRelevantStations = jobSite_Component.GetRelevantStations(ActorActionName.Fetch_Items);
             
             if (allRelevantStations.Count is 0)
             {
@@ -285,7 +393,7 @@ namespace Jobs
             taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
                 Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetchFromStation()));
             
-            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Fetch_Items);
+            return _setParameters(taskParameters, allRelevantStations, ActorActionName.Fetch_Items);
         }
         
         static Dictionary<PriorityParameterName, object> _populateDeliver_Items(JobSite_Component jobSite_Component)
@@ -296,7 +404,7 @@ namespace Jobs
                 { PriorityParameterName.Total_Items, 0 }
             };
             
-            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Deliver_Items);
+            var allRelevantStations = jobSite_Component.GetRelevantStations(ActorActionName.Deliver_Items);
             
             if (allRelevantStations.Count is 0)
             {
@@ -307,7 +415,7 @@ namespace Jobs
             taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
                 Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToDeliverFromOtherStations()));
             
-            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Deliver_Items);
+            return _setParameters(taskParameters, allRelevantStations, ActorActionName.Deliver_Items);
         }
         
         static Dictionary<PriorityParameterName, object> _populateChop_Wood(JobSite_Component jobSite_Component)
@@ -318,7 +426,7 @@ namespace Jobs
                 { PriorityParameterName.Total_Items, 0 }
             };
             
-            var allRelevantStations = jobSite_Component.GetRelevantStations(JobTaskName.Chop_Wood);
+            var allRelevantStations = jobSite_Component.GetRelevantStations(ActorActionName.Chop_Wood);
             
             if (allRelevantStations.Count is 0)
             {
@@ -329,12 +437,12 @@ namespace Jobs
             taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
                 Item.GetItemListTotal_CountAllItems(station.GetInventoryItemsToFetchFromStation()));
             
-            return _setParameters(taskParameters, allRelevantStations, JobTaskName.Chop_Wood);
+            return _setParameters(taskParameters, allRelevantStations, ActorActionName.Chop_Wood);
         }
 
         static Dictionary<PriorityParameterName, object> _setParameters(
             Dictionary<PriorityParameterName, object> taskParameters, List<Station_Component> allRelevantStations,
-            JobTaskName                               jobTaskName)
+            ActorActionName                               actorActionName)
         {
             float highestPriority          = 0;
             var   currentStationParameters = new Dictionary<PriorityParameterName, object>(taskParameters);
@@ -345,7 +453,7 @@ namespace Jobs
                     station.Station_Data.InventoryData;
 
                 var stationPriority = Priority_Generator.GeneratePriority(PriorityType.JobTask,
-                    (uint)jobTaskName, currentStationParameters);
+                    (uint)actorActionName, currentStationParameters);
 
                 if (stationPriority is 0 || stationPriority < highestPriority) continue;
 
@@ -365,55 +473,54 @@ namespace Jobs
         }
     }
 
-    [Serializable]
-    public class JobTask_Master
+    // ActorAction:
+    // A spontaneous or situational action unrelated to structured jobs,
+    // often driven by immediate needs, combat, exploration, or player commands.
+    // These actions typically occur in reaction to dynamic game states.
+    public enum ActorActionName
     {
-        public JobTaskName                                    TaskName;
-        public string                                         TaskDescription;
-        public List<PriorityParameterName>                    RequiredParameters;
-        public JobName                                        PrimaryJob;
-        public List<Func<Actor_Component, uint, IEnumerator>> TaskList;
-
-        public JobTask_Master(JobTaskName                                    taskName, string taskDescription, JobName primaryJob,
-                              List<Func<Actor_Component, uint, IEnumerator>> taskList,
-                              List<PriorityParameterName>                    requiredParameters)
-        {
-            TaskName           = taskName;
-            TaskDescription    = taskDescription;
-            PrimaryJob         = primaryJob;
-            TaskList           = taskList;
-            RequiredParameters = requiredParameters;
-        }
-    }
-
-    [CustomPropertyDrawer(typeof(JobTask_Master))]
-    public class Task_Drawer : PropertyDrawer
-    {
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            var stationNameProp = property.FindPropertyRelative("TaskName");
-            var stationName     = ((StationName)stationNameProp.enumValueIndex).ToString();
-
-            label.text = !string.IsNullOrEmpty(stationName) ? stationName : "Unnamed Jobsite";
-
-            EditorGUI.PropertyField(position, property, label, true);
-        }
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
-
-        }
-    }
-
-    // Task:
-    // An action performed as part of a structured job or process,
-    // typically repetitive and contributing to resource production, crafting, or other systematic gameplay mechanics.
-    // Tasks often require specific tools, conditions, or environments.
-    public enum JobTaskName
-    {
-        // General (Can do in all situations)
+        // PriorityState None (Can do in all situations)
         Idle,
+        All,
+
+        Wander,
+
+        // PriorityState Combat
+
+        Attack,
+        Defend,
+        Cast_Spell,
+        Parry_Attack,
+
+        // PriorityState Job
+
+        Perform_JobTask,
+
+        //Deliver,
+        //Fetch,
+        Scavenge,
+
+        // PriorityState_All
+
+        Drink_Health_Potion,
+        Flee,
+        Heal_Ally,
+        Explore_Area,
+        Loot_Chest,
+        Interact_With_Object,
+        Equip_Armor,
+        Inspect_Tool,
+        Open_Door,
+        Climb_Wall,
+        Eat_Fruit,
+        Gather_Herbs,
+        Drop_Item,
+        Inspect_Inventory,
+        
+        // JobTasks:
+        // An action performed as part of a structured job or process,
+        // typically repetitive and contributing to resource production, crafting, or other systematic gameplay mechanics.
+        // Tasks often require specific tools, conditions, or environments.
 
         // Smith
         Beat_Metal,
