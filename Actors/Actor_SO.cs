@@ -43,12 +43,12 @@ namespace Actor
                 
             try
             {
-                 savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedActorData.AllActorData
+                 savedData = DataPersistence_Manager.CurrentSaveData.SavedActorData.AllActorData
                      .ToDictionary(actor => actor.ActorID, actor => actor);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
                 
                 if (ToggleMissingDataDebugs)
                 {
@@ -92,7 +92,7 @@ namespace Actor
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedActorData = new SavedActorData(Actors.Select(actor => actor.Data_Object).ToArray());
     }
 
