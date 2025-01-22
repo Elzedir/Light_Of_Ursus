@@ -48,12 +48,12 @@ namespace City
                 
             try
             {
-                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedCityData.AllCityData
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedCityData.AllCityData
                     .ToDictionary(city => city.CityID, city => city);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
                 
                 if (ToggleMissingDataDebugs)
                 {
@@ -96,7 +96,7 @@ namespace City
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedCityData = new SavedCityData(Cities.Select(city => city.Data_Object).ToArray());
     }
 

@@ -24,10 +24,7 @@ namespace Priority
         public PriorityElement Peek(uint priorityID = 1)
         {
             if (_currentPosition == 0)
-            {
-                Debug.Log($"Priority Queue should be empty: {_priorityQueue.Count} since _currentPosition: {_currentPosition}.");
                 return null;
-            }
 
             var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
 

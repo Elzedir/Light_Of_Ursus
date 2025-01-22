@@ -14,6 +14,31 @@ namespace StateAndCondition
 
         public Data<Condition_Data> GetCondition_Data(ConditionName conditionName) =>
             GetData((uint)conditionName);
+        
+        
+        public ObservableDictionary<ConditionName, float> InitialiseDefaultConditions(ObservableDictionary<ConditionName, float> existingConditions)
+        {
+            existingConditions ??= new ObservableDictionary<ConditionName, float>();
+
+            foreach (var condition in Conditions)
+            {
+                a
+                    //* For some reason, conditions and states are not initialising properly if we don't have the SO selected, compared to the others, which
+                    // can have problems initialising when they ARE selected, due to scene objects. Maybe fix this tomorrow.
+                if (condition?.DataTitle is null)
+                {
+                    Debug.LogError($"ConditionID: {condition?.DataID} has no DataTitle.");
+                    continue;   
+                }
+                
+                if (existingConditions.ContainsKey(condition.Data_Object.ConditionName))
+                    continue;
+                
+                existingConditions.Add(condition.Data_Object.ConditionName, condition.Data_Object.DefaultConditionDuration);
+            }
+
+            return existingConditions;
+        }
 
         public override uint GetDataID(int id) => (uint)Conditions[id].Data_Object.ConditionName;
 

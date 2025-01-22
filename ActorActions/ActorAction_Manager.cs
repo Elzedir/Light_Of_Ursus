@@ -7,15 +7,15 @@ using Priority;
 using Station;
 using UnityEngine;
 
-namespace ActorAction
+namespace ActorActions
 {
     public abstract class ActorAction_Manager : MonoBehaviour
     {
         public static ActorAction_Data GetActorAction_Data(ActorActionName actorActionName)
         {
-            if (ActorAction_List.AllActorAction_Data.TryGetValue(actorActionName, out var actorAction_Data))
+            if (ActorAction_List.AllActorAction_Data.TryGetValue(actorActionName, out var actorAction))
             {
-                return actorAction_Data;
+                return actorAction;
             }
 
             Debug.LogError($"ActorAction_Data not found for: {actorActionName}.");

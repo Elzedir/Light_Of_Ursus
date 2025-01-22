@@ -42,12 +42,12 @@ namespace JobSite
 
             try
             {
-                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedJobSiteData.AllJobSiteData
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedJobSiteData.AllJobSiteData
                     .ToDictionary(jobSite => jobSite.JobSiteID, jobSite => jobSite);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
                 
                 if (ToggleMissingDataDebugs)
                 {
@@ -90,7 +90,7 @@ namespace JobSite
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedJobSiteData = new SavedJobSiteData(JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
     }
 

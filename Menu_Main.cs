@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DataPersistence;
@@ -16,20 +14,22 @@ public class Menu_Main : MonoBehaviour
 
     void Start()
     {
-        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = DataPersistenceManager.DataPersistence_SO.CurrentProfile.ProfileName;
+        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text =
+            DataPersistence_Manager.CurrentProfile.ProfileName;
     }
 
     public void Continue()
     {
-        if (!DataPersistenceManager.DataPersistence_SO.HasSaveData()) { Debug.LogWarning("Manager_Data has no game data."); return; }
+        if (!DataPersistence_Manager.HasSaveData()) { Debug.LogWarning("Manager_Data has no game data."); return; }
 
-        DataPersistenceManager.DataPersistence_SO.ChangeProfile(DataPersistenceManager.DataPersistence_SO.CurrentProfile.ProfileID);
+        DataPersistence_Manager.ChangeProfile(DataPersistence_Manager.CurrentProfile.ProfileID);
         Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
     }
 
     public void NewGame()
     {
-        DataPersistenceManager.DataPersistence_SO.SetCurrentSaveData(new SaveData(DataPersistenceManager.DataPersistence_SO.CurrentProfile.ProfileID, DataPersistenceManager.DataPersistence_SO.CurrentProfile.ProfileName));
+        var currentProfile = DataPersistence_Manager.CurrentProfile;
+        DataPersistence_Manager.SetCurrentSaveData(new Save_Data(currentProfile.ProfileID, currentProfile.ProfileName));
         Manager_Game.Instance.StartNewGame();
     }
 
@@ -58,9 +58,9 @@ public class Menu_Main : MonoBehaviour
 
         GameObject switchProfilePanel= Manager_Game.FindTransformRecursively(transform.parent, "SwitchProfilePanel").gameObject;
         switchProfilePanel.SetActive(true);
-        var allProfiles = DataPersistenceManager.DataPersistence_SO.AllProfiles.Where(p => p.Value.ProfileName != "Unity").Select(p => p.Value).ToList();
+        var allProfiles = DataPersistence_Manager.AllProfiles.Where(p => p.Value.ProfileName != "Unity").Select(p => p.Value).ToList();
 
-        foreach (ProfileData profile in allProfiles)
+        foreach (Profile_Data profile in allProfiles)
         {
             GameObject profileGO = new GameObject(profile.ProfileName);
             RectTransform rectTransform = profileGO.AddComponent<RectTransform>();
@@ -82,9 +82,10 @@ public class Menu_Main : MonoBehaviour
 
     public void SwitchProfile(uint profileID)
     {
-        DataPersistenceManager.DataPersistence_SO.ChangeProfile(profileID);
+        DataPersistence_Manager.ChangeProfile(profileID);
         CloseSwitchProfile();
-        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text = DataPersistenceManager.DataPersistence_SO.CurrentProfile.ProfileName;
+        Manager_Game.FindTransformRecursively(transform, "ProfileText").GetComponent<TextMeshProUGUI>().text =
+            DataPersistence_Manager.CurrentProfile.ProfileName;
     }
 
     public void CreateNewProfile()

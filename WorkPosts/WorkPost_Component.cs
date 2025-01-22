@@ -59,9 +59,7 @@ namespace WorkPosts
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
             if (actor.ActorData.SceneObject.ActorTransform.position != position)
-            {
                 actor.ActorData.SceneObject.ActorTransform.position = position;
-            }
 
             WorkPostData.IsWorkerMovingToWorkPost = false;
         }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ActorAction;
+using ActorActions;
 using ActorPreset;
 using Equipment;
 using Faction;
@@ -129,7 +129,7 @@ namespace Actor
                 allSubData: StatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs));
             
             _updateDataDisplay(DataToDisplay,
-                title: "Stats And Abilities",
+                title: "States And Conditions",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: StatesAndConditions?.GetDataToDisplay(toggleMissingDataDebugs));
 

@@ -1,26 +1,21 @@
 using System;
-using System.Collections.Generic;
 
 namespace Tools
 {
-    public class ObservableDictionary<TKey, TValue> : Dictionary<TKey, TValue>
+    public class ObservableDictionary<TKey, TValue> : SerializableDictionary<TKey, TValue>
     {
         public Action<TKey> DictionaryChanged;
         
         public void SetDictionaryChanged(Action<TKey> dictionaryChanged) => DictionaryChanged = dictionaryChanged;
-        public void Cleanup()
-        {
-            SetDictionaryChanged(null);
-            SetDictionaryChanged(null);
-        }
+        public void Cleanup() => SetDictionaryChanged(null);
 
-        public new void Add(TKey key, TValue value)
+        public override void Add(TKey key, TValue value)
         {
             base.Add(key, value);
             DictionaryChanged?.Invoke(key);
         }
 
-        public new bool Remove(TKey key)
+        public override bool Remove(TKey key)
         {
             var result = base.Remove(key);
             
@@ -28,10 +23,11 @@ namespace Tools
             {
                 DictionaryChanged?.Invoke(key);
             }
+            
             return result;
         }
 
-        public new TValue this[TKey key]
+        public override TValue this[TKey key]
         {
             get => base[key];
             set
@@ -41,7 +37,7 @@ namespace Tools
             }
         }
 
-        public new void Clear()
+        public override  void Clear()
         {
             base.Clear();
             DictionaryChanged?.Invoke(default);

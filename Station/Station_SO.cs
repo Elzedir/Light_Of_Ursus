@@ -49,12 +49,12 @@ namespace Station
             
             try
             {
-                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedStationData.AllStationData
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedStationData.AllStationData
                     .ToDictionary(station => station.StationID, station => station);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
                 
                 if (ToggleMissingDataDebugs)
                 {
@@ -97,7 +97,7 @@ namespace Station
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedStationData = new SavedStationData(Stations.Select(station => station.Data_Object).ToArray());
     }
 

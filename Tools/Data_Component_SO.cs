@@ -12,8 +12,9 @@ namespace Tools
         where TC : MonoBehaviour
     {
         //public             HashSet<uint>              ComponentIDsToChange = new();
-        public Dictionary<uint, Data<TD>> SavedData => _getSavedData();   
+        public Dictionary<uint, Data<TD>> SavedData => _getSavedData();
         
+        //* Maybe see if we can make a common function here for _getSavedData(); 
         protected abstract Dictionary<uint, Data<TD>> _getSavedData();
         public             Dictionary<uint, TC>       SceneComponents => _getSceneComponents();
         public             Dictionary<uint, Data<TD>> SceneData       => _getSceneData();
@@ -115,6 +116,6 @@ namespace Tools
             return allData;
         }
         
-        public abstract void SaveData(SaveData saveData);
+        public abstract void SaveData(Save_Data saveData);
     }
 }

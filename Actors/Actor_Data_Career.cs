@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ActorAction;
+using ActorActions;
 using Careers;
 using Inventory;
 using Jobs;

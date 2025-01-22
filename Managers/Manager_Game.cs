@@ -2,24 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Ability;
-using Actor;
-using Careers;
-using City;
 using DataPersistence;
 using DateAndTime;
-using Faction;
 using FMODUnity;
 using Initialisation;
-using Items;
-using Jobs;
-using JobSite;
-using Personality;
-using Recipes;
-using Region;
-using Station;
 using TickRates;
-using Tools;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
@@ -119,10 +106,9 @@ namespace Managers
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (DataPersistenceManager.DataPersistence_SO.DeleteGameOnStart) DataPersistenceManager.DataPersistence_SO.DeleteTestSaveFile();
+            if (DataPersistence_Manager.DeleteGameOnStart) DataPersistence_Manager.DeleteTestSaveFile();
             
-            SaveAndLoadSO.ClearAllSOs(); // Only do on game start, but refine since it will be called on every scene load
-            // which eliminates the whole purpose of the scriptable object persisting between scenes.
+            //* We deleted ClearSO's from the SaveAndLoad SO. Check that it doesn't break anything.
             
             StartCoroutine(_initialiseManagers());
         }
@@ -149,7 +135,7 @@ namespace Managers
             
             _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
-            DataPersistenceManager.DataPersistence_SO.LoadGame("");
+            DataPersistence_Manager.LoadGame("");
             
             Manager_Initialisation.InitialiseManagers();
             
@@ -166,7 +152,7 @@ namespace Managers
             Manager_Initialisation.InitialiseStations();
 
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
-            _autoSaveCoroutine = StartCoroutine(DataPersistenceManager.DataPersistence_SO.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
+            _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
         }
         
         GameObject _createManager(string managerName, Transform parent)
@@ -186,7 +172,7 @@ namespace Managers
             Manager_Spawner.OnPuzzleStatesRestored -= OnPuzzleStatesRestored;
         }
 
-        public void SaveData(SaveData data)
+        public void SaveData(Save_Data data)
         {
             // data.CurrentProfileName = Manager_Data.Instance.GetActiveProfile().Name;
             // data.SceneName = SceneManager.GetActiveScene().name;
@@ -194,7 +180,7 @@ namespace Managers
             // data.LastScene = LastScene;
         }
 
-        public void LoadData(SaveData data)
+        public void LoadData(Save_Data data)
         {
             PlayerHasStaff = data.StaffPickedUp;
             LastScene      = data.LastScene;
@@ -217,7 +203,7 @@ namespace Managers
 
         public void LoadScene(string nextScene = null, Interactable_Puzzle puzzle = null)
         {
-            DataPersistenceManager.DataPersistence_SO.SaveGame("");
+            DataPersistence_Manager.SaveGame("");
 
             string currentScene = SceneManager.GetActiveScene().name;
 
@@ -391,7 +377,7 @@ namespace Managers
         void OnApplicationQuit()
         {
             Debug.Log("Data Saved");
-            DataPersistenceManager.DataPersistence_SO.SaveGame("ExitSave");
+            DataPersistence_Manager.SaveGame("ExitSave");
         }
     }
 }

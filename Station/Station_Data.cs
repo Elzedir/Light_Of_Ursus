@@ -168,6 +168,8 @@ namespace Station
         {
             if (!_passesStationChecks()) return;
 
+            Debug.Log(2.5);
+
             foreach (var workPost in AllWorkPost_Components.Values.Where(workPost => workPost.WorkPostData.CurrentWorker is not null))
             {
                 var progressMade = workPost.Operate(BaseProgressRatePerHour,
@@ -204,19 +206,15 @@ namespace Station
                         StationProgressData.CurrentProduct.RequiredIngredients);
                     break;
                 }
-                catch (Exception e)
+                catch
                 {
                     StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
                     
                     Debug.Log(2);
 
-                    if (StationProgressData.CurrentProduct.RecipeName != RecipeName.None ||
-                        DefaultProduct                                            == RecipeName.None)
-                    {
+                    if (StationProgressData.CurrentProduct.RecipeName != RecipeName.None 
+                        || DefaultProduct == RecipeName.None)
                         break;
-                    }
-                
-                    Console.WriteLine(e);
                 }    
             }
         

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Priority;
 using StateAndCondition;
@@ -39,8 +39,8 @@ namespace Actor
         {
             return new Dictionary<string, string>
             {
-                { "Actor States", $"{States}" },
-                { "Actor Conditions", $"{Conditions}" }
+                { States != null ? "Actor States" : "Actor States is null", "" },
+                { Conditions != null ? "Actor Conditions" : "Conditions is null", "" }
             };
         }
 

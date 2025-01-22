@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Items;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace Items
     public class Item_SO : Data_SO<Item_Data>
     {
         public Data<Item_Data>[] Items                       => Data;
-        public Data<Item_Data>   GetItem_Master(uint itemID) => GetData(itemID);
+        public Data<Item_Data>   GetItem_Data(uint itemID) => GetData(itemID);
         
         public override uint GetDataID(int id) => Items[id].Data_Object.ItemID;
         

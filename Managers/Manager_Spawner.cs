@@ -31,7 +31,7 @@ public class Manager_Spawner : MonoBehaviour
         _refreshSongParts();
     }
 
-    public void SaveData(SaveData data)
+    public void SaveData(Save_Data data)
     {
         // AssignSpawners();
 
@@ -46,12 +46,12 @@ public class Manager_Spawner : MonoBehaviour
         // }
     }
 
-    public void LoadData(SaveData data)
+    public void LoadData(Save_Data data)
     {
         StartCoroutine(OnLoadNumerator(data));
     }
 
-    IEnumerator OnLoadNumerator(SaveData data)
+    IEnumerator OnLoadNumerator(Save_Data data)
     {
         yield return new WaitForSeconds(0.1f);
 
@@ -74,7 +74,7 @@ public class Manager_Spawner : MonoBehaviour
         }
     }
 
-    public void RestorePuzzleStates(SaveData data)
+    public void RestorePuzzleStates(Save_Data data)
     {
         if (PuzzleSpawner == null) { Debug.Log("Puzzle Spawner not present in scene."); return; }
 

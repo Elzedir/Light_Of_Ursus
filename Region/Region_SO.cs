@@ -41,12 +41,12 @@ namespace Region
 
             try
             {
-                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedRegionData.AllRegionData
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedRegionData.AllRegionData
                     .ToDictionary(region => region.RegionID, region => region);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
 
                 if (ToggleMissingDataDebugs)
                 {
@@ -89,7 +89,7 @@ namespace Region
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedRegionData = new SavedRegionData(Regions.Select(region => region.Data_Object).ToArray());
     }
 

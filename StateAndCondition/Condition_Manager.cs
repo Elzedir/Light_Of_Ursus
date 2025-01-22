@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Priority;
 using TickRates;
@@ -17,6 +17,9 @@ namespace StateAndCondition
 
         static Condition_SO _allConditions;
         static Condition_SO AllConditions => _allConditions ??= _getCondition_SO();
+        
+        public static ObservableDictionary<ConditionName, float> InitialiseDefaultConditions(ObservableDictionary<ConditionName, float> existingConditions) =>
+            AllConditions.InitialiseDefaultConditions(existingConditions);
 
         public static Condition_Data GetCondition_Data(ConditionName conditionName)
         {
@@ -56,15 +59,15 @@ namespace StateAndCondition
     {
         public Actor_Data_Conditions(uint actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
         {
-            CurrentConditions                   =  currentConditions;
+            _currentConditions                   =  currentConditions;
             CurrentConditions.DictionaryChanged += OnConditionChanged;
             
-            Manager_TickRate.RegisterTicker(TickerTypeName.Actor_StateAndCondition, TickRateName.OneSecond, ActorReference.ActorID, _onTick);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Actor_Condition, TickRateName.OneSecond, ActorReference.ActorID, _onTick);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
 
-
-        public ObservableDictionary<ConditionName, float> CurrentConditions;
+        ObservableDictionary<ConditionName, float> _currentConditions;
+        public ObservableDictionary<ConditionName, float> CurrentConditions => _currentConditions ??= Condition_Manager.InitialiseDefaultConditions(null);
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -101,47 +104,41 @@ namespace StateAndCondition
                 CurrentConditions[condition.Key] -= 1;
             }
         }
-
-        public void AddCondition(ConditionName conditionName)
-        {
-            if (CurrentConditions.ContainsKey(conditionName))
-            {
-                CurrentConditions[conditionName] += Condition_Manager.GetCondition_Data(conditionName).DefaultConditionDuration;
-                return;
-            }
-
-            var condition_Master = Condition_Manager.GetCondition_Data(conditionName);
-
-            if (condition_Master == null) return;
-
-            CurrentConditions[conditionName] = condition_Master.DefaultConditionDuration;
-        }
         
-        void _updateExistingCondition(ConditionName conditionName)
+        public void SetConditionTimer(ConditionName conditionName, float setTimer = 0, float addTimer = 0, bool overruleMaxDuration = false)
         {
-            if (!CurrentConditions.ContainsKey(conditionName))
+            if (setTimer != 0 && addTimer != 0)
             {
-                Debug.LogError($"Cannot call this function for a condition that doesn't exist.");
+                Debug.LogError("Both set and add timer set.");
                 return;
             }
             
-            var conditionMaster = Condition_Manager.GetCondition_Data(conditionName);
+            if (!CurrentConditions.ContainsKey(conditionName))
+            {
+                Debug.LogError($"Condition {conditionName} not found.");
+                return;
+            }
+            
+            var condition_Data = Condition_Manager.GetCondition_Data(conditionName);
 
-            CurrentConditions[conditionName] += Math.Min(
-                CurrentConditions[conditionName] + conditionMaster.DefaultConditionDuration,
-                conditionMaster.MaxConditionDuration);
-        }
-
-        public void SetConditionTimer(ConditionName conditionName, float timer)
-        {
-            CurrentConditions[conditionName] = timer;
+            CurrentConditions[conditionName] = overruleMaxDuration
+                ? setTimer != 0
+                    ? setTimer
+                    : CurrentConditions[conditionName] + addTimer
+                : setTimer != 0
+                    ? Math.Min(setTimer, condition_Data.MaxConditionDuration)
+                    : Math.Min(CurrentConditions[conditionName] + addTimer, condition_Data.MaxConditionDuration);
         }
 
         public void RemoveCondition(ConditionName conditionName)
         {
-            if (!CurrentConditions.ContainsKey(conditionName)) return;
+            if (!CurrentConditions.ContainsKey(conditionName))
+            {
+                Debug.LogError($"Condition {conditionName} not found.");
+                return;
+            }
 
-            CurrentConditions.Remove(conditionName);
+            SetConditionTimer(conditionName);
         }
         
         public override List<ActorActionName> GetAllowedActions()

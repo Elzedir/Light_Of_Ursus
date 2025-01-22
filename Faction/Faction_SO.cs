@@ -42,12 +42,12 @@ namespace Faction
             
             try
             {
-                savedData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData.SavedFactionData.AllFactionData
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedFactionData.AllFactionData
                     .ToDictionary(faction => faction.FactionID, faction => faction);
             }
             catch
             {
-                var saveData = DataPersistenceManager.DataPersistence_SO.CurrentSaveData;
+                var saveData = DataPersistence_Manager.CurrentSaveData;
                 
                 if (ToggleMissingDataDebugs)
                 {
@@ -90,7 +90,7 @@ namespace Faction
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
-        public override void SaveData(SaveData saveData) =>
+        public override void SaveData(Save_Data saveData) =>
             saveData.SavedFactionData = new SavedFactionData(Factions.Select(x => x.Data_Object).ToArray());
     }
 

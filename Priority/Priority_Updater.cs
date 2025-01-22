@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Actor;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Tools;
 using UnityEngine;

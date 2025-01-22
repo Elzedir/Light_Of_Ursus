@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Priority;
 using Tools;
@@ -57,7 +57,7 @@ namespace StateAndCondition
         }
 
         ObservableDictionary<StateName, bool> _currentStates;
-        ObservableDictionary<StateName, bool> CurrentStates => _currentStates ??= State_Manager.InitialiseDefaultStates(null);
+        public ObservableDictionary<StateName, bool> CurrentStates => _currentStates ??= State_Manager.InitialiseDefaultStates(null);
 
         public override Dictionary<string, string> GetStringData()
         {

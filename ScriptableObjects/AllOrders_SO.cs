@@ -19,9 +19,9 @@ namespace ScriptableObjects
             AllOrderData = allOrderData;
         }
 
-        public void LoadData(SaveData saveData)
+        public void LoadData(Save_Data saveData)
         {
-            AllOrderData = saveData.SavedOrderData.AllOrderData;
+            //AllOrderData = saveData.SavedOrderData.AllOrderData;
         }
     }
 

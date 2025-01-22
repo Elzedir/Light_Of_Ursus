@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ability;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Items;
 using Managers;

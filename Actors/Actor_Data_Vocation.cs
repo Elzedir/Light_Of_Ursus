@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ActorAction;
+using ActorActions;
 using Inventory;
 using Priority;
 using Recipes;

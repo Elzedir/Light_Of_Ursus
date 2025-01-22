@@ -21,13 +21,13 @@ namespace Managers
         public static Dictionary<int, OrderData> AllOrderData;
         static        int                        _lastUnusedOrderID = 1;
 
-        public void SaveData(SaveData data)
+        public void SaveData(Save_Data data)
         {
-            data.SavedOrderData = new SavedOrderData(AllOrderData.Values.ToArray());
+            //data.SavedOrderData = new SavedOrderData(AllOrderData.Values.ToArray());
         }
-        public void LoadData(SaveData data)
+        public void LoadData(Save_Data data)
         {
-            AllOrderData = data.SavedOrderData?.AllOrderData.ToDictionary(x => x.ActorID);
+            //AllOrderData = data.SavedOrderData?.AllOrderData.ToDictionary(x => x.ActorID);
         }
 
         public void OnSceneLoaded()

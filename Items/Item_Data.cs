@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Tools;
-using UnityEngine;
 
 namespace Items
 {
     [Serializable]
     public class Item_Data : Data_Class
     {
-        // sort out the double popups when selecting an item, make it a first item when opening
         public uint   ItemID   => ItemCommonStats.ItemID;
         public string ItemName => ItemCommonStats.ItemName;
 

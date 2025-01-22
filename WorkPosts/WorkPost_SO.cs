@@ -64,7 +64,7 @@ namespace WorkPosts
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
-        public override void SaveData(SaveData saveData) { }
+        public override void SaveData(Save_Data saveData) { }
     }
 
     [CustomEditor(typeof(WorkPost_SO))]

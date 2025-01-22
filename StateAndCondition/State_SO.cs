@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -25,17 +24,23 @@ namespace StateAndCondition
 
         public ObservableDictionary<StateName, bool> InitialiseDefaultStates(ObservableDictionary<StateName, bool> existingStates)
         {
-            var defaultStates = new ObservableDictionary<StateName, bool>();
-
+            existingStates ??= new ObservableDictionary<StateName, bool>();
+            
             foreach (var state in States)
             {
+                if (state?.DataTitle is null)
+                {
+                    Debug.LogError($"StateID: {state?.DataID} has no DataTitle.");
+                    continue;   
+                }
+                
                 if (existingStates.ContainsKey(state.Data_Object.StateName))
                     continue;
                 
-                defaultStates.Add(state.Data_Object.StateName, state.Data_Object.DefaultState);
+                existingStates.Add(state.Data_Object.StateName, state.Data_Object.DefaultState);
             }
 
-            return defaultStates;
+            return existingStates;
         }
         
 

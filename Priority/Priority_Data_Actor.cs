@@ -1,30 +1,29 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using ActorAction;
+using ActorActions;
 using Tools;
 using UnityEngine;
 
 namespace Priority
 {
+    [Serializable]
     public class Priority_Data_Actor : Priority_Data
     {
         public Coroutine                CurrentActionCoroutine { get; private set; }
         public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
-        ActorAction_Data                     _currentActorAction;
-        public ActorAction_Data CurrentAction => _currentActorAction;
+        [SerializeField] ActorAction_Data _currentAction;
 
-        public void SetCurrentAction(uint actorActionName)
+        public void SetCurrentAction(ActorActionName actorActionName)
         {
             _stopCurrentAction();
             
-            var actorAction = ActorAction_Manager.GetActorAction_Data((ActorActionName)actorActionName);
+            var actorAction = ActorAction_Manager.GetActorAction_Data(actorActionName);
 
-            _currentActorAction = actorAction;
+            _currentAction = actorAction;
 
-            _actor.StartCoroutine(_performCurrentActionFromStart());
+            // _actor.StartCoroutine(_performCurrentActionFromStart());
         }
         
         public override void RegenerateAllPriorities(bool includeOptionalPriorities = false)
@@ -71,31 +70,33 @@ namespace Priority
 
         protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
         {
-            var actorAction_Master = ActorAction_Manager.GetActorAction_Data((ActorActionName)priorityID);
-            var parameters = actorAction_Master.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
+            var actorAction_Data = ActorAction_Manager.GetActorAction_Data((ActorActionName)priorityID);
+            var populatedParameters = actorAction_Data.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
 
-            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, parameters);
+            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, populatedParameters);
         }
 
         object _getParameter(PriorityParameterName parameter)
         {
             return parameter switch
             {
-                // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
+                //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
                 PriorityParameterName.Jobsite_Component => _actor.ActorData.Career.JobSite,
                 PriorityParameterName.Worker_Component => _actor,
                 _ => null
             };
         }
 
-        IEnumerator _performCurrentActionFromStart()
-        {
-            //* Find a way to Start the coroutine of the new system
-            foreach (var action in _currentActorAction.ActionList)
-            {
-                yield return CurrentActionCoroutine = _actor.StartCoroutine(action);
-            }
-        }
+        // IEnumerator _performCurrentActionFromStart()
+        // {
+        //     foreach (var action in _currentAction.ActionList)
+        //     {
+        //         yield return CurrentActionCoroutine = _actor.StartCoroutine(action(_currentAction.ActorAction_Parameters));
+        //     }
+        //     
+        //     _stopCurrentAction();
+        //     _currentAction = null;
+        // }
 
         void _stopCurrentAction()
         {
@@ -141,13 +142,11 @@ namespace Priority
             return priorityIDs;
         }
         
+        //* Check if this is valid in the current system.
         protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new()
         {
             {
-                PriorityUpdateTrigger.ChangedInventory, new List<uint>
-                {
-                    (uint)ActorActionName.Perform_JobTask
-                }
+                PriorityUpdateTrigger.ChangedInventory, new List<uint>()
             },
 
             {
@@ -174,20 +173,21 @@ namespace Priority
 
             var nextHighestPriorityValue = _getNextHighestPriorityValue();
 
-            if (nextHighestPriorityValue is null
-                || nextHighestPriorityValue.PriorityID == (uint)ActorActionName.Idle
-                || nextHighestPriorityValue.PriorityID == (uint)CurrentAction.ActionName)
+            if (nextHighestPriorityValue is null)
             {
-                //Debug.Log("No need to change current action.");
+                Debug.LogError("No next highest priority value.");
                 return;
             }
 
-            SetCurrentAction(nextHighestPriorityValue.PriorityID);
+            if (nextHighestPriorityValue.PriorityID == (uint)_currentAction.ActionName)
+                return;
+
+            SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);
         }
 
         PriorityElement _getNextHighestPriorityValue()
         {
-            //* Do we need to regenerate all priorities here?
+            //* Do we need to regenerate all priorities here? Eventually detach priority regeneration from priority getting.
             RegenerateAllPriorities();
 
             return PeekHighestPriority();
@@ -203,7 +203,7 @@ namespace Priority
             return new Dictionary<string, string>
             {
                 { "Actor ID", $"{ActorID}" },
-                { "Current Actor Action", $"{_currentActorAction?.ActionName}" },
+                { "Current Actor Action", $"{_currentAction?.ActionName}" },
                 { "Is Performing Current Action", $"{IsPerformingAction}" },
                 { "Current Action Coroutine", $"{CurrentActionCoroutine}" },
                 { "Next Highest Priority", highestPriority?.PriorityID != null 

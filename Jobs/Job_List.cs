@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Actor;
-using ActorAction;
+using ActorActions;
 
 namespace Jobs
 {

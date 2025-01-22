@@ -13,7 +13,7 @@ public class SaveAndLoadGames : MonoBehaviour
             "Would you like to save this game?",
             () =>
             {
-                DataPersistenceManager.DataPersistence_SO.SaveGame(saveSlot.GetSaveGameName());
+                DataPersistence_Manager.SaveGame(saveSlot.GetSaveGameName());
                 ActivateMenu(saveOrLoad);
             },
             () => { ActivateMenu(saveOrLoad); }
@@ -26,7 +26,7 @@ public class SaveAndLoadGames : MonoBehaviour
             "Would you like to load this game?",
             () =>
             {
-                DataPersistenceManager.DataPersistence_SO.LoadGame(saveSlot.GetSaveGameName());
+                DataPersistence_Manager.LoadGame(saveSlot.GetSaveGameName());
                 Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
             },
             () => { ActivateMenu(saveOrLoad); }
@@ -38,7 +38,7 @@ public class SaveAndLoadGames : MonoBehaviour
         Manager_Game.FindTransformRecursively(transform.parent, "ConfirmationPanel").GetComponent<SaveSlot_Confirmation>().ActivateMenu(
                 "Are you sure you want to clear this data?",
                 () => {
-                    DataPersistenceManager.DataPersistence_SO.CurrentProfile.DeleteSave(saveSlot.GetSaveGameName());
+                    DataPersistence_Manager.CurrentProfile.DeleteSave(saveSlot.GetSaveGameName());
                     ActivateMenu(saveOrLoad);
                 },
                 () => { ActivateMenu(saveOrLoad); }
@@ -54,7 +54,7 @@ public class SaveAndLoadGames : MonoBehaviour
 
         gameObject.SetActive(true);
         
-        foreach (var saveData in DataPersistenceManager.DataPersistence_SO.CurrentProfile.AllSavedData)
+        foreach (var saveData in DataPersistence_Manager.CurrentProfile.AllSavedData)
         {
             if (saveData.Key == "TheExister") continue;
 
@@ -62,7 +62,7 @@ public class SaveAndLoadGames : MonoBehaviour
         }
     }
 
-    SaveSlot _createSaveSlot(SaveData saveData, string saveOrLoad)
+    SaveSlot _createSaveSlot(Save_Data saveData, string saveOrLoad)
     {
         GameObject saveSlotGO = Instantiate(_saveSlot.gameObject, _saveSlotParent.transform);
         saveSlotGO.name = saveData.SavedProfileData.ProfileName;
@@ -87,7 +87,7 @@ public class SaveAndLoadGames : MonoBehaviour
             "Would you like to create a new save?",
             () =>
             {
-                DataPersistenceManager.DataPersistence_SO.SaveGame("");
+                DataPersistence_Manager.SaveGame("");
                 ActivateMenu("Save");
             },
             () => { ActivateMenu("Save"); }

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using ActorAction;
+using ActorActions;
 using Items;
 using Jobs;
 using UnityEngine;

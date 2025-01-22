@@ -17,7 +17,8 @@ namespace TickRates
         DeferredTicker,
         Manager,
         Actor,
-        Actor_StateAndCondition,
+        Actor_State,
+        Actor_Condition,
         Station,
         Jobsite,
     }
