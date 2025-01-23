@@ -14,7 +14,7 @@ namespace City
             return AllCities.GetCity_Data(cityID).Data_Object;
         }
         
-        public static City_Data GetCity_DataFromComponent(City_Component city_Component)
+        public static City_Data GetCity_DataFromName(City_Component city_Component)
         {
             return AllCities.GetDataFromName(city_Component.name)?.Data_Object;
         }

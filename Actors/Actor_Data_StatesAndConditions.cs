@@ -5,9 +5,9 @@ using Priority;
 using StateAndCondition;
 using Tools;
 
-namespace Actor
+namespace Actors
 {
-    public class Actor_Data_StatesAndConditions : Priority_Updater
+    public class Actor_Data_StatesAndConditions : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
@@ -73,13 +73,5 @@ namespace Actor
 
             return allowedActions;
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

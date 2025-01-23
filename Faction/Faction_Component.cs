@@ -25,7 +25,7 @@ namespace Faction
 
         void _initialise()
         {
-            var factionData = Faction_Manager.GetFaction_DataFromComponent(this);
+            var factionData = Faction_Manager.GetFaction_DataFromName(this);
             
             if (factionData is null)
             {

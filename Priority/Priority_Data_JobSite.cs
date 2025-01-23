@@ -41,9 +41,9 @@ namespace Priority
             return allowedPriorities;
         }
         
-        public override void RegenerateAllPriorities(bool includeOptionalPriorities = false)
+        public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
-            if (!includeOptionalPriorities)
+            if (!forceRegenerateAll)
             {
                 foreach (var actorAction in AllowedActions)
                 {
@@ -67,12 +67,19 @@ namespace Priority
                 return;
             }
             
-            var priorityParameters = _getPriorityParameters(priorityID);
+            priority_Parameters.JobSiteID_Source = JobSiteID; // Same as in Priority_Actor.
+            
+            //_populatePriorityParameters(ref priority_Parameters);
 
-            var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
+            var priorityValue = Priority_Generator.GeneratePriority(priorityID, priority_Parameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
+
+        // protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
+        // {
+        //     priorityParameters.JobSiteID_Source = JobSiteID;
+        // }
 
         protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
         {
@@ -83,29 +90,10 @@ namespace Priority
             return priorityIDs;
         }
 
-        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
-        {
-            var actorAction_Data = ActorAction_Manager.GetActorAction_Data((ActorActionName)priorityID);
-            var parameters = actorAction_Data.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
-            
-            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, parameters);
-        }
-        
-        object _getParameter(PriorityParameterName parameter)
-        {
-            return parameter switch
-            {
-                // PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-                PriorityParameterName.Jobsite_Component => _jobSite,
-                //PriorityParameterName.Worker_Component  => _actor,
-                _                                       => null
-            };
-        }
-
         protected override List<ActorActionName> _getAllowedActions() =>
             _jobSite.BaseJobActions;
 
-        protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
+        protected override Dictionary<DataChangedName, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
 
         public override Dictionary<string, string> GetStringData()
         {

@@ -146,7 +146,7 @@ namespace Equipment
     }
 
     [Serializable]
-    public class Equipment_Data : Priority_Updater
+    public class Equipment_Data : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
@@ -264,13 +264,5 @@ namespace Equipment
                     break;
             }
         }
-    
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

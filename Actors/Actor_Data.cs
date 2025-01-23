@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using ActorPreset;
+using Actors;
 using Equipment;
 using Faction;
 using Inventory;
@@ -39,10 +40,10 @@ namespace Actor
 
         public Actor_Data_StatesAndConditions StatesAndConditions;
         
-        public Inventory_Data InventoryData;
+        public InventoryData InventoryData;
         public Equipment_Data EquipmentData;
 
-        public QuestUpdater ActorQuests;
+        public QuestClass ActorQuests;
 
         public void InitialiseActorData()
         {
@@ -82,8 +83,8 @@ namespace Actor
             Actor_Data_Vocation vocation = null,
             Actor_Data_SpeciesAndPersonality speciesAndPersonality = null,
             Actor_Data_StatsAndAbilities statsAndAbilities = null,
-            Actor_Data_StatesAndConditions statesAndConditions = null, Inventory_Data inventoryData = null,
-            Equipment_Data equipmentData = null, Priority_Data_Actor priority = null, QuestUpdater actorQuests = null)
+            Actor_Data_StatesAndConditions statesAndConditions = null, InventoryData inventoryData = null,
+            Equipment_Data equipmentData = null, Priority_Data_Actor priority = null, QuestClass actorQuests = null)
         {
             ActorDataPresetName = actorDataPresetName;
 
@@ -220,11 +221,9 @@ namespace Actor
             return allowedActions;
         }    }
 
-    public enum PriorityUpdateTrigger
+    public enum DataChangedName
     {
         None,
-
-        #region Full Identification
 
         ChangedName,
         ChangedFaction,
@@ -232,8 +231,8 @@ namespace Actor
         ChangedBirthdate,
         ChangedFamily,
         ChangedBackground,
-
-        #endregion
+        
+        ChangedCareer,
 
         ChangedPersonality,
         ChangedBirthplace,
@@ -254,18 +253,14 @@ namespace Actor
         DroppedItems,
         PriorityCompleted,
 
-        #region States And Conditions
-
         ChangedState,
         ChangedCondition,
-
-        #endregion
     }
 
     [Serializable]
-    public class WorldStateUpdater : Priority_Updater
+    public class WorldStateClass : Priority_Class
     {
-        public WorldStateUpdater(uint actorID) : base(actorID, ComponentType.Actor)
+        public WorldStateClass(uint actorID) : base(actorID, ComponentType.Actor)
         {
         }
 
@@ -289,14 +284,6 @@ namespace Actor
             };
         }
 
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
-
         public override List<ActorActionName> GetAllowedActions()
         {
             return new List<ActorActionName>();
@@ -304,7 +291,7 @@ namespace Actor
     }
 
     [Serializable]
-    public class Relationships : Priority_Updater
+    public class Relationships : Priority_Class
     {
         public Relationships(uint actorID, List<Relation> allRelationships) : base(actorID, ComponentType.Actor)
         {
@@ -331,14 +318,6 @@ namespace Actor
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         public List<Relation> AllRelationships;
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
         
         public override List<ActorActionName> GetAllowedActions()
         {
@@ -347,15 +326,15 @@ namespace Actor
     }
 
     [Serializable]
-    public class QuestUpdater : Priority_Updater
+    public class QuestClass : Priority_Class
     {
-        public QuestUpdater(uint actorID) : base(actorID, ComponentType.Actor)
+        public QuestClass(uint actorID) : base(actorID, ComponentType.Actor)
         {
         }
 
-        public QuestUpdater(QuestUpdater questUpdater) : base(questUpdater.ActorReference.ActorID, ComponentType.Actor)
+        public QuestClass(QuestClass questClass) : base(questClass.ActorReference.ActorID, ComponentType.Actor)
         {
-            ActorQuests = new List<Quest>(questUpdater.ActorQuests);
+            ActorQuests = new List<Quest>(questClass.ActorQuests);
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -381,14 +360,6 @@ namespace Actor
         {
             ActorQuests.FirstOrDefault(q => q.QuestID == questID)?.SetQuestStage(stageID, stageProgress);
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
         
         public override List<ActorActionName> GetAllowedActions()
         {

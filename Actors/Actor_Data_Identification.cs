@@ -9,7 +9,7 @@ using Tools;
 namespace Actor
 {
     [Serializable]
-    public class Actor_Data_Identification : Priority_Updater
+    public class Actor_Data_Identification : Priority_Class
     {
         public Actor_Data_Identification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
             Date actorBirthDate = null) : base(actorID, ComponentType.Actor)
@@ -62,14 +62,6 @@ namespace Actor
         {
             return new List<ActorActionName>();
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
     
     [Serializable]
@@ -94,7 +86,7 @@ namespace Actor
     }
     
     [Serializable]
-    public class Background : Priority_Updater
+    public class Background : Priority_Class
     {
         public Background(uint actorID, string birthplace, Date birthdate, Family actorFamily, Dynasty actorDynasty,
             string religion) : base(actorID, ComponentType.Actor)
@@ -138,13 +130,5 @@ namespace Actor
         public Family ActorFamily;
         public Dynasty ActorDynasty;
         public string Religion;
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

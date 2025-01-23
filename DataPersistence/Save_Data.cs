@@ -36,7 +36,7 @@ namespace DataPersistence
         public string LastScene;
 
         public SerializableDictionary<string, string> QuestSaveData;
-        public List<QuestUpdater> QuestData;
+        public List<QuestClass> QuestData;
         
         public SerializableDictionary<string, string> PuzzleSaveData;
         public List<PuzzleData> PuzzleData;

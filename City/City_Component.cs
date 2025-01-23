@@ -27,7 +27,7 @@ namespace City
 
         void _initialise()
         {
-            var cityData = City_Manager.GetCity_DataFromComponent(this);
+            var cityData = City_Manager.GetCity_DataFromName(this);
             
             if (cityData is null)
             {
@@ -38,6 +38,8 @@ namespace City
             SetCityData(cityData);
             
             CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
+            
+            CityData.InitialiseCityData();
         }
 
         public Dictionary<uint, JobSite_Component> GetAllJobSitesInCity() =>

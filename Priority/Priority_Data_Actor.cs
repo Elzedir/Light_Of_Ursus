@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Actor;
 using ActorActions;
 using Tools;
@@ -26,19 +25,34 @@ namespace Priority
             // _actor.StartCoroutine(_performCurrentActionFromStart());
         }
         
-        public override void RegenerateAllPriorities(bool includeOptionalPriorities = false)
+        public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
-            if (!includeOptionalPriorities)
+            if (!forceRegenerateAll)
             {
                 //* Currently just refreshing, which would mean we would have to clear and repopulate the dictionary. Eventually, make a hybrid
                 //* system where we update the actions based on StateChanges, as well as regenerations. Or make regenerations less common.
                 //* But first, get regenerations working completely.
                 
-                foreach (var actorAction in AllowedActions)
+                if (dataChangedName == DataChangedName.None
+                    || !_priorityIDsToUpdateOnDataChange.TryGetValue(dataChangedName, out var priorityIDs))
                 {
-                    _regeneratePriority((uint)actorAction);
+                    if (dataChangedName != DataChangedName.None)
+                        Debug.LogError(
+                            $"DataChangedName: {dataChangedName} not found in _priorityIDsToUpdateOnDataChange.");
+                    
+                    foreach (var actorAction in AllowedActions)
+                    {
+                        _regeneratePriority((uint)actorAction);
+                    }
+
+                    return;
                 }
                 
+                foreach (var priorityID in priorityIDs)
+                {
+                    _regeneratePriority(priorityID);
+                }
+
                 return;
             }
             
@@ -61,31 +75,23 @@ namespace Priority
                     return;
             }
             
-            var priorityParameters = _getPriorityParameters(priorityID);
+            //* Need to get priority parameters somehow.
+            
+            priorityParameters.ActorID_Source= _actor.ActorID; //* Maybe change later to something earlier?
+            
+            //_populatePriorityParameters(ref priorityParameters);
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        protected override Dictionary<PriorityParameterName, object> _getPriorityParameters(uint priorityID)
-        {
-            var actorAction_Data = ActorAction_Manager.GetActorAction_Data((ActorActionName)priorityID);
-            var populatedParameters = actorAction_Data.RequiredParameters.ToDictionary(parameter => parameter, _getParameter);
-
-            return ActorAction_Manager.PopulateActionParameters((ActorActionName)priorityID, populatedParameters);
-        }
-
-        object _getParameter(PriorityParameterName parameter)
-        {
-            return parameter switch
-            {
-                //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-                PriorityParameterName.Jobsite_Component => _actor.ActorData.Career.JobSite,
-                PriorityParameterName.Worker_Component => _actor,
-                _ => null
-            };
-        }
+        // protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
+        // {
+        //     //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
+        //     priorityParameters.JobSiteID_Source = _actor.ActorData.Career.JobSite.JobSiteID;
+        //     priorityParameters.ActorID_Source = _actor.ActorID;
+        // }
 
         // IEnumerator _performCurrentActionFromStart()
         // {
@@ -143,21 +149,21 @@ namespace Priority
         }
         
         //* Check if this is valid in the current system.
-        protected override Dictionary<PriorityUpdateTrigger, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new()
+        protected override Dictionary<DataChangedName, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new()
         {
             {
-                PriorityUpdateTrigger.ChangedInventory, new List<uint>()
+                DataChangedName.ChangedInventory, new List<uint>()
             },
 
             {
-                PriorityUpdateTrigger.DroppedItems, new List<uint>
+                DataChangedName.DroppedItems, new List<uint>
                 {
                     (uint)ActorActionName.Scavenge
                 }
             },
 
             {
-                PriorityUpdateTrigger.PriorityCompleted, new List<uint>
+                DataChangedName.PriorityCompleted, new List<uint>
                 {
                     (uint)ActorActionName.Wander,
                 }

@@ -10,14 +10,14 @@ using UnityEngine;
 namespace Inventory
 {
     [Serializable]
-    public class InventoryData_Actor : Inventory_Data
+    public class InventoryData_Actor : InventoryData
     {
         public InventoryData_Actor(uint actorID, ObservableDictionary<uint, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
         {
             AllInventoryItems = allInventoryItems;
         }
         
-        public InventoryData_Actor(Inventory_Data inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)
+        public InventoryData_Actor(InventoryData inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)
         {
             AllInventoryItems = inventoryData_Actor.GetAllObservableInventoryItemsClone();
         }
@@ -26,8 +26,6 @@ namespace Inventory
         public          InventoryData_Actor GetInventoryData() => this;
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
-        protected override bool _priorityChangeNeeded(object dataChanged) => (PriorityUpdateTrigger)dataChanged == PriorityUpdateTrigger.ChangedInventory;
 
         float _availableCarryWeight;
         public float AvailableCarryWeight => _availableCarryWeight != 0 
@@ -55,13 +53,19 @@ namespace Inventory
             return null;
         }
 
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
+        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor)
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
         
         public override List<Item> GetInventoryItemsToDeliverFromOtherStations()
+        {
+            Debug.LogError("Not implemented yet.");
+            return null;
+        }
+
+        public override List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor)
         {
             Debug.LogError("Not implemented yet.");
             return null;

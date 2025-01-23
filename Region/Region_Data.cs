@@ -62,6 +62,15 @@ namespace Region
 
             ProsperityData = new ProsperityData(prosperityData);
         }
+        
+        public void InitialiseRegionData()
+        {
+            _region_Component = Region_Manager.GetRegion_Component(RegionID);
+
+            if (_region_Component is not null) return;
+            
+            Debug.LogWarning($"Region with ID {RegionID} not found in Region_SO.");
+        }
 
         public override Dictionary<string, string> GetStringData()
         {

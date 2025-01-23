@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
+using Actors;
 using Inventory;
 using Items;
 using Priority;
@@ -13,7 +14,7 @@ using UnityEngine;
 namespace Actor
 {
     [Serializable]
-    public class Actor_Data_Crafting : Priority_Updater
+    public class Actor_Data_Crafting : Priority_Class
     {
         public Actor_Data_Crafting(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
         {
@@ -118,13 +119,5 @@ namespace Actor
                 ActorActionName.Craft
             };
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

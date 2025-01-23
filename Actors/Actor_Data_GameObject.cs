@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ActorActions;
+using Actors;
 using Inventory;
 using Priority;
 using Tools;
@@ -9,7 +10,7 @@ using UnityEngine;
 namespace Actor
 {
     [Serializable]
-    public class Actor_Data_GameObject : Priority_Updater
+    public class Actor_Data_GameObject : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
@@ -102,13 +103,5 @@ namespace Actor
             ActorMesh ??= Resources.GetBuiltinResource<Mesh>("Cube.fbx"); // Later will come from species
             ActorMaterial ??= Resources.Load<Material>("Materials/Material_Red"); // Later will come from species
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

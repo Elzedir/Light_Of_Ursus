@@ -28,11 +28,8 @@ namespace StateAndCondition
             
             foreach (var state in States)
             {
-                if (state?.DataTitle is null)
-                {
-                    Debug.LogError($"StateID: {state?.DataID} has no DataTitle.");
-                    continue;   
-                }
+                if (state?.DataTitle is null || state.Data_Object?.StateName is null)
+                    continue;
                 
                 if (existingStates.ContainsKey(state.Data_Object.StateName))
                     continue;
@@ -54,7 +51,7 @@ namespace StateAndCondition
         public void UpdateAllStates(Dictionary<uint, State_Data> allStates) =>
             UpdateAllData(allStates);
 
-        protected override Dictionary<uint, Data<State_Data>> _getDefaultData() => 
+        protected override Dictionary<uint, Data<State_Data>> _getDefaultData() =>
             _convertDictionaryToData(State_List.DefaultStates);
 
         protected override Data<State_Data> _convertToData(State_Data data) =>

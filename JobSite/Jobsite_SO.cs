@@ -19,6 +19,12 @@ namespace JobSite
 
         public JobSite_Component GetJobSite_Component(uint jobSiteID)
         {
+            if (jobSiteID == 0)
+            {
+                Debug.LogError("StationID cannot be 0.");
+                return null;
+            }
+            
             if (JobSite_Components.TryGetValue(jobSiteID, out var component))
             {
                 return component;

@@ -4,11 +4,12 @@ using Tools;
 
 namespace StateAndCondition
 {
+    [Serializable]
     public class Condition_Data : Data_Class
     {
-        public readonly ConditionName ConditionName;
-        public readonly float DefaultConditionDuration;
-        public readonly float MaxConditionDuration;
+        public ConditionName ConditionName;
+        public float DefaultConditionDuration;
+        public float MaxConditionDuration;
 
         public Condition_Data(ConditionName conditionName, float defaultConditionDuration, float maxConditionDuration)
         {

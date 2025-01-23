@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Actor;
+using Actors;
 using Equipment;
 using Inventory;
 using Tools;
@@ -14,12 +15,12 @@ namespace ActorPreset
         public readonly Actor_Data_Crafting     ActorDataCrafting;
         public readonly Actor_Data_Vocation     ActorDataVocation;
         public readonly Actor_Data_StatsAndAbilities ActorDataStatsAndAbilities;
-        public readonly Inventory_Data    InventoryData;
+        public readonly InventoryData    InventoryData;
         public readonly Equipment_Data    EquipmentData;
 
         public ActorPreset_Data(ActorDataPresetName actorDataPresetName, Actor_Data_Career    actorDataCareer = null,
                                 Actor_Data_Crafting        actorDataCrafting = null,        Actor_Data_Vocation  actorDataVocation = null,
-                                Actor_Data_StatsAndAbilities   actorDataStatsAndAbilities = null,   Inventory_Data inventoryData = null,
+                                Actor_Data_StatsAndAbilities   actorDataStatsAndAbilities = null,   InventoryData inventoryData = null,
                                 Equipment_Data       equipmentData = null)
         {
             ActorDataPresetName = actorDataPresetName;

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Tools;
 
 namespace Items
@@ -166,6 +168,33 @@ namespace Items
 
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
+        
+        public static List<Item> MergeItemLists(List<Item> listA, List<Item> listB)
+        {
+            var mergedItemsDict = new ConcurrentDictionary<int, Item>();
+
+            Parallel.Invoke(
+                () => processList(listA),
+                () => processList(listB)
+            );
+
+            return mergedItemsDict.Values.ToList();
+
+            void processList(List<Item> list)
+            {
+                foreach (var item in list)
+                {
+                    mergedItemsDict.AddOrUpdate(
+                        (int)item.ItemID,
+                        new Item(item), // Create a new item
+                        (_, existingItem) =>
+                        {
+                            existingItem.ItemAmount += item.ItemAmount;
+                            return existingItem;
+                        });
+                }
+            }
+        }
 
         public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetDataToDisplay(toggleMissingDataDebugs);
 

@@ -55,7 +55,7 @@ namespace StateAndCondition
     }
 
     [Serializable]
-    public class Actor_Data_Conditions : Priority_Updater
+    public class Actor_Data_Conditions : Priority_Class
     {
         public Actor_Data_Conditions(uint actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
         {
@@ -88,7 +88,7 @@ namespace StateAndCondition
 
         void OnConditionChanged(ConditionName conditionName)
         {
-            _priorityChangeCheck(PriorityUpdateTrigger.ChangedCondition);
+            PriorityData.RegenerateAllPriorities(DataChangedName.ChangedCondition);
         }
 
         void _onTick()
@@ -146,14 +146,6 @@ namespace StateAndCondition
             //* Restrict or allow actions depending on conditions that you have. For example, frozen or burning.
             return new List<ActorActionName>();
         }
-        
-        protected override bool _priorityChangeNeeded(object conditionName) => (ConditionName)conditionName != ConditionName.None;
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>> _priorityParameterList
-        {
-            get;
-            set;
-        } = new();
     }
 }
 

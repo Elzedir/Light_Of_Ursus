@@ -18,6 +18,7 @@ namespace Tools
                 if (_data is not null && _data.Length != 0) return _data;
 
                 var data = InitialiseAllData();
+                
                 return data.Length != 0 ? data : null;
             }
         }

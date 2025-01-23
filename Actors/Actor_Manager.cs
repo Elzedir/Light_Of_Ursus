@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Ability;
+using Actor;
 using ActorPreset;
 using Careers;
 using DateAndTime;
@@ -16,7 +17,7 @@ using StateAndCondition;
 using Tools;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     public class Actor_Manager : MonoBehaviour
     {
@@ -314,7 +315,7 @@ namespace Actor
         {
             return new Actor_Abilities(
                 actorID: actorID,
-                abilityList: new Dictionary<AbilityName, float>()
+                abilityList: new SerializableDictionary<AbilityName, float>()
                 );
         }
         

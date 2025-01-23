@@ -59,7 +59,7 @@ namespace Managers
 
         Transform _manager_Parent;
 
-    
+        public static bool Initialised { get; private set; }
 
         [Header("Auto Saving Configuration")]
         [SerializeField] bool _autoSaveEnabled;
@@ -153,6 +153,10 @@ namespace Managers
 
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
+
+            yield return null;
+
+            Initialised = true;
         }
         
         GameObject _createManager(string managerName, Transform parent)

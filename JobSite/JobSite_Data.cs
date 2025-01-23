@@ -5,6 +5,7 @@ using System.Linq;
 using Actor;
 using ActorActions;
 using ActorPreset;
+using Actors;
 using City;
 using Items;
 using Jobs;
@@ -136,6 +137,14 @@ namespace JobSite
 
         public void InitialiseJobSiteData()
         {
+            _jobSite_Component = JobSite_Manager.GetJobSite_Component(JobSiteID);
+            
+            if (_jobSite_Component is null)
+            {
+                Debug.LogError($"JobSite with ID {JobSiteID} not found in JobSite_SO.");
+                return;
+            }
+            
             JobSite_Component.StartCoroutine(_populate());
         }
 
@@ -161,7 +170,7 @@ namespace JobSite
             //Usually this will only happen a few seconds after game start since things won't hire immediately after game start. Instead it will be assigned to
             // TickRate manager to onTick();
 
-            yield return null;
+            yield return new WaitForSeconds(1);
 
             // Set owner later
             //CheckOwner();

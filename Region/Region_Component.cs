@@ -25,7 +25,7 @@ namespace Region
 
         void _initialise()
         {
-            var regionData = Region_Manager.GetRegion_DataFromComponent(this);
+            var regionData = Region_Manager.GetRegion_DataFromName(this);
             
             if (regionData is null)
             {
@@ -34,6 +34,8 @@ namespace Region
             }
             
             SetRegionData(regionData);
+            
+            RegionData.InitialiseRegionData();
         }
 
         public List<City_Component> GetAllCitiesInRegion() => GetComponentsInChildren<City_Component>().ToList();

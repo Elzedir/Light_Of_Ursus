@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using ActorActions;
 using Careers;
 using Inventory;
@@ -10,10 +11,10 @@ using Priority;
 using Tools;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
-    public class Actor_Data_Career : Priority_Updater
+    public class Actor_Data_Career : Priority_Class
     {
         public Actor_Data_Career(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(
             actorID,
@@ -126,14 +127,6 @@ namespace Actor
         JobSite_Component _jobSite;
         public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         public void SetJobSiteID(uint jobSiteID) => JobSiteID = jobSiteID;
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
 
         public override List<ActorActionName> GetAllowedActions()
         {

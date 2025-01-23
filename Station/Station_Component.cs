@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
@@ -19,7 +20,7 @@ namespace Station
         public uint              StationID => Station_Data.StationID;
         public JobSite_Component JobSite   => Station_Data.JobSite_Component;
 
-        public          Station_Data Station_Data;
+        public Station_Data Station_Data;
         public abstract StationName  StationName { get; }
         public abstract StationType  StationType { get; }
 
@@ -53,6 +54,11 @@ namespace Station
             Manager_Initialisation.OnInitialiseStations += _initialise;
         }
 
+        public void Update()
+        {
+            //Debug.Log($"Component: Station:{StationID} JobSite:{Station_Data.JobSiteID}");
+        }
+
         void _initialise()
         {
             var stationData = Station_Manager.GetStation_DataFromName(this);
@@ -84,7 +90,7 @@ namespace Station
             };
         }
 
-        public List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
+        public List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
         {
             return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
         }

@@ -13,7 +13,7 @@ namespace Priority
 {
     public abstract class Priority_Generator
     {
-        protected static float _defaultMaxPriority => 10;
+        const float _defaultMaxPriority = 10;
 
         protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
             => Math.Clamp(current - target, 0, maxPriority);
@@ -161,17 +161,9 @@ namespace Priority
                 maxPriority);
         }
 
-        public static float GeneratePriority(uint priorityID,
-            Dictionary<PriorityParameterName, object> existingPriorityParameters) =>
-            _generatePriority(priorityID, existingPriorityParameters?
-                .Select(x => x)
-                .ToDictionary(x =>
-                    (uint)x.Key, x => x.Value));
-
-        static float _generatePriority(uint priorityID,
-            Dictionary<uint, object> existingPriorityParameters)
+        public static float GeneratePriority(uint priorityID, Priority_Parameters priority_Parameters)
         {
-            if (existingPriorityParameters == null)
+            if (priority_Parameters == null)
             {
                 return 0;
 
@@ -190,274 +182,108 @@ namespace Priority
                 // return 0;
             }
 
+            if (priority_Parameters.DefaultMaxPriority == 0)
+                priority_Parameters.DefaultMaxPriority = _defaultMaxPriority;
+
             switch (priorityID)
             {
                 case (uint)ActorActionName.Idle:
                     return 1;
                 case (uint)ActorActionName.Fetch_Items:
-                    return _generateFetchPriority(existingPriorityParameters);
+                    return _generateFetchPriority(priority_Parameters);
                 case (uint)ActorActionName.Deliver_Items:
-                    return _generateDeliverPriority(existingPriorityParameters);
+                    return _generateDeliverPriority(priority_Parameters);
                 case (uint)ActorActionName.Chop_Wood:
-                    return _generateChop_WoodPriority(existingPriorityParameters);
+                    return _generateChop_WoodPriority(priority_Parameters);
+                case (uint)ActorActionName.Process_Logs:
+                    return _generateProcess_LogsPriority(priority_Parameters);
                 default:
                     Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");
                     return 0;
             }
         }
 
-        static float _generateFetchPriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generateFetchPriority(Priority_Parameters priority_Parameters)
         {
-            if (!_parameterChecks(existingPriorityParameters, out var defaultMaxPriority, out var totalDistance,
-                    out var totalItems, out var inventory_Hauler, out var inventory_Target))
-            {
-                return 0;
-            }
+            if (priority_Parameters == null) return 0;
 
-            var allItemsToFetch = inventory_Target.GetInventoryItemsToFetchFromStation();
+            var allItemsToFetch = priority_Parameters.Inventory_Target.GetInventoryItemsToFetchFromStation();
             var priority_ItemQuantity = Item.GetItemListTotal_CountAllItems(allItemsToFetch) != 0
-                ? _moreItemsDesired_Total(allItemsToFetch, totalItems, defaultMaxPriority)
+                ? _moreItemsDesired_Total(allItemsToFetch, priority_Parameters.TotalItems, priority_Parameters.DefaultMaxPriority)
                 : 0;
 
-            float priority_Distance = 0;
+            if (priority_Parameters.Inventory_Hauler is null) return priority_ItemQuantity;
 
-            if (inventory_Hauler is not null)
-            {
-                var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
-                var targetPosition = inventory_Target.Reference.GameObject.transform.position;
+            var haulerPosition = priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position;
+            var targetPosition = priority_Parameters.Inventory_Target.Reference.GameObject.transform.position;
 
-                priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-                    ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, defaultMaxPriority)
-                    : 0;
-            }
-
-            var debugDataList = new DebugEntry_Data
-            (
-                new DebugEntryKey
-                (
-                    "Fetch",
-                    $"{inventory_Target.ComponentType}",
-                    inventory_Target.Reference.ComponentID
-                ),
-                new List<DebugData_Data>
-                {
-                    new(DebugDataType.Priority_Item,
-                        priority_ItemQuantity.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Distance,
-                        priority_Distance.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Total,
-                        (priority_ItemQuantity + priority_Distance).ToString(CultureInfo.InvariantCulture))
-                }
-            );
-
-            DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
+            var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance, priority_Parameters.DefaultMaxPriority)
+                : 0;
 
             return priority_ItemQuantity + priority_Distance;
         }
 
-        static float _generateDeliverPriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generateDeliverPriority(Priority_Parameters priority_Parameters)
         {
-            if (!_parameterChecks(existingPriorityParameters, out var defaultMaxPriority, out var totalDistance,
-                    out var totalItems, out var inventory_Hauler, out var inventory_Target))
-            {
-                return 0;
-            }
+            var stationType_Source = priority_Parameters.StationType_Source;
+            var stationType_All = priority_Parameters.StationType_All;
 
-            var currentStationType =
-                existingPriorityParameters.TryGetValue((uint)PriorityParameterName.CurrentStationType,
-                    out var stationType)
-                    ? stationType as StationName? ?? StationName.None
-                    : StationName.None;
-
-            var allStationTypes =
-                existingPriorityParameters.TryGetValue((uint)PriorityParameterName.AllStationTypes,
-                    out var stationTypes)
-                    ? stationTypes as HashSet<StationName>
-                    : null;
-
-            var allItemsToDeliver = inventory_Target.GetInventoryItemsToDeliverFromInventory(inventory_Hauler);
+            var allItemsToDeliver = priority_Parameters.Inventory_Target.GetInventoryItemsToDeliverFromInventory(priority_Parameters.Inventory_Hauler);
             var priority_ItemQuantity = Item.GetItemListTotal_CountAllItems(allItemsToDeliver) != 0
-                ? _moreItemsDesired_Total(allItemsToDeliver, totalItems, defaultMaxPriority, currentStationType,
-                    allStationTypes)
+                ? _moreItemsDesired_Total(
+                    allItemsToDeliver, priority_Parameters.TotalItems, priority_Parameters.DefaultMaxPriority, stationType_Source, stationType_All)
                 : 0;
 
-            float priority_Distance = 0;
+            if (priority_Parameters.Inventory_Hauler is null) return priority_ItemQuantity;
 
-            if (inventory_Hauler is not null)
-            {
-                var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
-                var targetPosition = inventory_Target.Reference.GameObject.transform.position;
+            var haulerPosition = priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position;
+            var targetPosition = priority_Parameters.Inventory_Target.Reference.GameObject.transform.position;
 
-                priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-                    ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, defaultMaxPriority)
-                    : 0;
-            }
-
-            var debugDataList = new DebugEntry_Data
-            (
-                new DebugEntryKey
-                (
-                    "Deliver",
-                    $"{inventory_Target.ComponentType}",
-                    inventory_Target.Reference.ComponentID
-                ),
-                new List<DebugData_Data>
-                {
-                    new(DebugDataType.Priority_Item, priority_ItemQuantity.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Distance, priority_Distance.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Total,
-                        (priority_ItemQuantity + priority_Distance).ToString(CultureInfo.InvariantCulture))
-                }
-            );
-
-            DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
+            var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance, priority_Parameters.DefaultMaxPriority)
+                : 0;
 
             return priority_ItemQuantity + priority_Distance;
         }
 
-        static float _generateChop_WoodPriority(Dictionary<uint, object> existingPriorityParameters)
+        static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
-            if (!_parameterChecks(existingPriorityParameters, out var defaultMaxPriority, out var totalDistance,
-                    out var totalItems, out var inventory_Hauler, out var inventory_Target))
-            {
-                Debug.LogError("Parameter checks failed for chop wood.");
-                return 0;
-            }
+            var allItemsToFetch = priority_Parameters.Inventory_Target.GetInventoryItemsToFetchFromStation();
 
-            var allItemsToFetch = inventory_Target.GetInventoryItemsToFetchFromStation();
+            var priority_ItemQuantity = _lessItemsDesired_Total(allItemsToFetch, priority_Parameters.TotalItems, priority_Parameters.DefaultMaxPriority);
 
-            var priority_ItemQuantity = _lessItemsDesired_Total(allItemsToFetch, totalItems, defaultMaxPriority);
-
+            if (priority_Parameters.Inventory_Hauler is null) return priority_ItemQuantity;
+            
             float priority_Distance = 0;
+            
+            var haulerPosition = priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position;
+            var targetPosition = priority_Parameters.Inventory_Target.Reference.GameObject.transform.position;
 
-            if (inventory_Hauler is not null)
-            {
-                var haulerPosition = inventory_Hauler.Reference.GameObject.transform.position;
-                var targetPosition = inventory_Target.Reference.GameObject.transform.position;
-
-                priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-                    ? _lessDistanceDesired_Total(haulerPosition, targetPosition, totalDistance, defaultMaxPriority)
-                    : 0;
-            }
-
-            var debugDataList = new DebugEntry_Data
-            (
-                new DebugEntryKey
-                (
-                    "Chop Wood",
-                    $"{inventory_Target.ComponentType}",
-                    inventory_Target.Reference.ComponentID
-                ),
-                new List<DebugData_Data>
-                {
-                    new(DebugDataType.Priority_Item, priority_ItemQuantity.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Distance, priority_Distance.ToString(CultureInfo.InvariantCulture)),
-                    new(DebugDataType.Priority_Total,
-                        (priority_ItemQuantity + priority_Distance).ToString(CultureInfo.InvariantCulture))
-                }
-            );
-
-            DebugVisualiser.Instance.UpdateDebugEntry(DebugSectionType.Hauling, debugDataList);
+            priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance, priority_Parameters.DefaultMaxPriority)
+                : 0;
 
             return priority_ItemQuantity + priority_Distance;
         }
 
-        static bool _parameterChecks(Dictionary<uint, object> existingPriorityParameters, out float defaultMaxPriority,
-            out float totalDistance, out long totalItems, out Inventory_Data inventory_Hauler,
-            out Inventory_Data inventory_Target)
+        static float _generateProcess_LogsPriority(Priority_Parameters priority_Parameters)
         {
-            defaultMaxPriority = 0;
-            totalDistance = 0;
-            totalItems = 0;
-            inventory_Hauler = null;
-            inventory_Target = null;
+            var actor = priority_Parameters.Inventory_Hauler;
+            var allItemsToProcess = priority_Parameters.Station_Component_Destination.Station_Data.InventoryData.GetInventoryItemsToProcess(actor);
 
-            if (existingPriorityParameters is null)
-            {
-                Debug.LogError("ExistingPriorityParameters is null.");
-                return false;
-            }
+            var priority_ItemQuantity = _moreItemsDesired_Total(allItemsToProcess, priority_Parameters.TotalItems, priority_Parameters.DefaultMaxPriority);
 
-            if (!existingPriorityParameters.TryGetValue((uint)PriorityParameterName.DefaultMaxPriority,
-                    out var defaultPriorityObject)
-                || defaultPriorityObject is not float maxPriorityValue)
-            {
-                if (_defaultMaxPriority == 0)
-                {
-                    Debug.LogError(
-                        existingPriorityParameters.ContainsKey((uint)PriorityParameterName.DefaultMaxPriority)
-                            ? "DefaultMaxPriority is not float and _defaultMaxPriority is 0."
-                            : "DefaultMaxPriority not found and _defaultMaxPriority is 0.");
-                    return false;
-                }
+            if (priority_Parameters.Inventory_Hauler is null) return priority_ItemQuantity;
 
-                maxPriorityValue = _defaultMaxPriority;
-            }
+            var haulerPosition = priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position;
+            var targetPosition = priority_Parameters.Inventory_Target.Reference.GameObject.transform.position;
 
-            defaultMaxPriority = maxPriorityValue;
+            var priority_Distance = haulerPosition != Vector3.zero && targetPosition != Vector3.zero
+                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance, priority_Parameters.DefaultMaxPriority)
+                : 0;
 
-            if (defaultMaxPriority == 0)
-            {
-                if (_defaultMaxPriority == 0)
-                {
-                    Debug.LogError("DefaultMaxPriority is 0.");
-                    return false;
-                }
-
-                defaultMaxPriority = _defaultMaxPriority;
-            }
-
-            if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Total_Distance,
-                    out var totalDistanceObject))
-            {
-                if (totalDistanceObject is not float totalDistanceValue)
-                {
-                    Debug.LogError("TotalDistance not found");
-                    return false;
-                }
-
-                totalDistance = totalDistanceValue;
-            }
-
-            if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Total_Items,
-                    out var totalItemsObject))
-            {
-                if (totalItemsObject is not long totalItemsValue)
-                {
-                    Debug.LogError("TotalItems not found");
-                    return false;
-                }
-
-                totalItems = totalItemsValue;
-            }
-
-            if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Worker_Component,
-                    out var inventory_HaulerObject))
-            {
-                if (inventory_HaulerObject is not Inventory_Data inventory_HaulerData)
-                {
-                    Debug.LogError("Inventory_Hauler not found");
-                    return false;
-                }
-
-                inventory_Hauler = inventory_HaulerData;
-            }
-
-            if (existingPriorityParameters.TryGetValue((uint)PriorityParameterName.Target_Component,
-                    out var inventory_TargetObject))
-            {
-                if (inventory_TargetObject is not Inventory_Data inventory_TargetData)
-                {
-                    Debug.LogError(existingPriorityParameters.ContainsKey((uint)PriorityParameterName.Target_Component)
-                        ? "Inventory_Target is not InventoryData"
-                        : "Inventory_Target not found");
-                    return false;
-                }
-
-                inventory_Target = inventory_TargetData;
-            }
-
-            return true;
+            return priority_ItemQuantity + priority_Distance;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace JobSite
 
         void _initialise()
         {
-            var jobSiteData = JobSite_Manager.GetJobSite_DataFromComponent(this);
+            var jobSiteData = JobSite_Manager.GetJobSite_DataFromName(this);
             
             if (jobSiteData is null)
             {
@@ -82,7 +82,7 @@ namespace JobSite
 
         public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
         {
-            JobSiteData.PriorityData.RegenerateAllPriorities();
+            JobSiteData.PriorityData.RegenerateAllPriorities(DataChangedName.None);
             
             var highestPriorityElement = JobSiteData.PriorityData.GetHighestPriorityFromGroup(
                 actor.ActorData.Career.AllJobActions.Select(actorActionName => (uint)actorActionName).ToList(), stationID);
@@ -177,6 +177,7 @@ namespace JobSite
                 ActorActionName.Fetch_Items   => _relevantStations_Fetch(),
                 ActorActionName.Deliver_Items => _relevantStations_Deliver(),
                 ActorActionName.Chop_Wood     => _relevantStations_Chop_Wood(),
+                ActorActionName.Process_Logs => _relevantStations_Process_Logs(),
                 _                         => throw new ArgumentException($"ActorActionName: {actorActionName} not recognised.")
             };
         }
@@ -200,6 +201,12 @@ namespace JobSite
         {
             return JobSiteData.AllStationComponents.Values
                        .Where(station => station.StationName == StationName.Tree && station.Station_Data.GetOpenWorkPost() is not null).ToList();   
+        }
+
+        List<Station_Component> _relevantStations_Process_Logs()
+        {
+            return JobSiteData.AllStationComponents.Values
+                              .Where(station => station.StationName == StationName.Sawmill && station.Station_Data.GetOpenWorkPost() is not null).ToList();
         }
     }
 }

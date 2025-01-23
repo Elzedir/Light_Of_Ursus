@@ -12,6 +12,11 @@ namespace Faction
     {
         public uint   FactionID;
         public string FactionName;
+        
+        Faction_Component _faction_Component;
+
+        public Faction_Component Faction_Component =>
+            _faction_Component ??= Faction_Manager.GetFaction_Component(FactionID);
 
         public HashSet<uint>             AllFactionActorIDs;
         public List<FactionRelationData> AllFactionRelations;
@@ -34,13 +39,11 @@ namespace Faction
 
         public void InitialiseFactionData()
         {
-            var factionsGO =  GameObject.Find("Factions");
+            _faction_Component = Faction_Manager.GetFaction_Component(FactionID);
 
-            if (factionsGO == null) 
-            {
-                Debug.LogError("No Factions GameObject found.");
-                return;
-            }
+            if (_faction_Component is not null) return;
+            
+            Debug.LogWarning($"Faction with ID {FactionID} not found in Faction_SO.");
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)

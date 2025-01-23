@@ -5,6 +5,7 @@ using Actor;
 using Jobs;
 using Priority;
 using StateAndCondition;
+using UnityEngine.Serialization;
 
 namespace ActorActions
 {
@@ -14,20 +15,18 @@ namespace ActorActions
         public ActorActionName ActionName;
         public string ActionDescription;
         public Dictionary<StateName, bool> RequiredStates;
-        public List<PriorityParameterName> RequiredParameters;
         public JobName PrimaryJob;
-        public List<Func<ActorAction_Parameters, IEnumerator>> ActionList;
+        public List<Func<Priority_Parameters, IEnumerator>> ActionList;
 
         public ActorAction_Data(ActorActionName actionName, string actionDescription,
-            Dictionary <StateName, bool> requiredStates, List<PriorityParameterName> requiredParameters, 
-            JobName primaryJob, List<Func<ActorAction_Parameters, IEnumerator>> actionList)
+            Dictionary <StateName, bool> requiredStates, JobName primaryJob, 
+            List<Func<Priority_Parameters, IEnumerator>> actionList = null)
         {
             ActionName = actionName;
-            ActionList = actionList;
             RequiredStates = requiredStates;
-            RequiredParameters = requiredParameters;
             ActionDescription = actionDescription;
             PrimaryJob = primaryJob;
+            ActionList = actionList ?? new List<Func<Priority_Parameters, IEnumerator>>();
         }
     }
 }

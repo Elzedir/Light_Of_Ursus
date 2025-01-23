@@ -18,7 +18,8 @@ namespace Station
         public uint        StationID;
         public string      StationDescription;
         public bool        StationIsActive;
-        public uint        JobSiteID;
+
+        public uint JobSiteID;
 
         public float BaseProgressRatePerHour = 5;
 
@@ -29,13 +30,14 @@ namespace Station
         public Dictionary<uint, WorkPost_Data> AllWorkPost_Data;
         
         Station_Component _station_Component;
+
         public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
         
         JobSite_Component        _jobSite_Component;
         public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         
-        Inventory_Data _inventoryData;
-        public Inventory_Data InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
+        InventoryData _inventoryData;
+        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
         
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
@@ -53,19 +55,27 @@ namespace Station
             // But if the station does exist, then we generate a new station with the required stationName type.
             StationDescription      = stationDescription;
             JobSiteID               = jobSiteID;
+            Debug.Log($"Data: StationID: {StationID} JobSiteID: {JobSiteID}");
             AllWorkPost_Data        = allWorkPost_Data;
             StationIsActive         = stationIsActive;
         }
 
         public void InitialiseStationData()
         {
-            var station = Station_Manager.GetStation_Component(StationID);
+            //* City and station are breaking if selected in the inspector from beginning, the rest are breaking from starting and then replaying the game
+            //* without closing the editor. So find common ground for the two. The City_Component and Station_Component are null.
+            //* For now we'll use this GetStation Fix to assign the null value.
+            
+            _station_Component = Station_Manager.GetStation_Component(StationID);
+
+            if (_station_Component is null)
+            {
+                Debug.LogError($"Station with ID {StationID} not found in Station_SO.");
+                return;
+            }
+            
             
             StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
-
-            if (station is not null) return;
-            
-            Debug.Log($"Station not found for StationID: {StationID}");
         }
 
         Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()

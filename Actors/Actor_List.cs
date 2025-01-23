@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Ability;
 using ActorPreset;
+using Actors;
 using Careers;
 using DateAndTime;
 using Equipment;
@@ -136,7 +137,7 @@ namespace Actor
                                 }),
                             actorAbilities: new Actor_Abilities(
                                 actorID: 1,
-                                abilityList: new Dictionary<AbilityName, float>
+                                abilityList: new SerializableDictionary<AbilityName, float>
                                 {
                                     { AbilityName.Eagle_Stomp, 0 },
                                     { AbilityName.Charge, 0 }
@@ -175,7 +176,7 @@ namespace Actor
                         equipmentData: new Equipment_Data(
                             actorID: 1
                         ),
-                        actorQuests: new QuestUpdater(
+                        actorQuests: new QuestClass(
                             actorID: 1
                         )
                     )

@@ -57,6 +57,15 @@ namespace City
             ProsperityData = new ProsperityData(prosperityData);
         }
 
+        public void InitialiseCityData()
+        {
+            _city_Component = City_Manager.GetCity_Component(CityID);
+
+            if (_city_Component is not null) return;
+            
+            Debug.LogWarning($"City with ID {CityID} not found in City_SO.");
+        }
+
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,

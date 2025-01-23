@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Actor
 {
     [Serializable]
-    public class Actor_Data_Vocation : Priority_Updater
+    public class Actor_Data_Vocation : Priority_Class
     {
         public Actor_Data_Vocation(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(
             actorID,
@@ -111,14 +111,6 @@ namespace Actor
 
             return progress;
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
     
     [Serializable]

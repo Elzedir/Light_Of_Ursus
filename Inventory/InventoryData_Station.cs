@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Inventory
 {
     [Serializable]
-    public class InventoryData_Station : Inventory_Data
+    public class InventoryData_Station : InventoryData
     {
         public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station)
         {
@@ -26,9 +26,6 @@ namespace Inventory
                 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
 
         List<uint> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
-
-        protected override bool _priorityChangeNeeded(object dataChanged) =>
-            (PriorityUpdateTrigger)dataChanged == PriorityUpdateTrigger.ChangedInventory;
 
         public override bool HasSpaceForItems(List<Item> items)
         {
@@ -81,16 +78,12 @@ namespace Inventory
             return itemsToFetch.Values.ToList();
         }
 
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory)
+        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor)
         {
-            var itemsToDeliver = new List<Item>();
-
-            foreach (var itemID in _getDesiredItemIDs().Where(itemID => inventory.AllInventoryItems.ContainsKey(itemID)))
-            {
-                var item = inventory.AllInventoryItems[itemID];
-
-                itemsToDeliver.Add(new Item(item));
-            }
+            var itemsToDeliver = _getDesiredItemIDs()
+                .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
+                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item))
+                .ToList();
 
             if (itemsToDeliver.Count == 0) return new List<Item>();
 
@@ -111,15 +104,25 @@ namespace Inventory
 
                 var stationInventory = station.Value.Station_Data.InventoryData;
 
-                foreach (var itemID in _getDesiredItemIDs().Where(itemID => stationInventory.AllInventoryItems.ContainsKey(itemID)))
-                {
-                    var item = stationInventory.AllInventoryItems[itemID];
-
-                    itemsToDeliver.Add(new Item(item));
-                }
+                itemsToDeliver.AddRange(_getDesiredItemIDs()
+                    .Where(itemID => stationInventory.AllInventoryItems.ContainsKey(itemID))
+                    .Select(itemID => stationInventory.AllInventoryItems[itemID]).Select(item => new Item(item)));
             }
 
             return itemsToDeliver;
+        }
+
+        public override List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor)
+        {
+            var itemsInStation = _getDesiredItemIDs()
+                .Where(itemID => AllInventoryItems.ContainsKey(itemID))
+                .Select(itemID => AllInventoryItems[itemID]).Select(item => new Item(item)).ToList();
+            
+            var itemsInActor = _getDesiredItemIDs()
+                .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
+                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item)).ToList();
+
+            return Item.MergeItemLists(itemsInStation, itemsInActor);
         }
         
         public override List<ActorActionName> GetAllowedActions()

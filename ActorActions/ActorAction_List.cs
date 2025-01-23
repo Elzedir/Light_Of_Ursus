@@ -31,9 +31,8 @@ namespace ActorActions
                                 StateName.CanIdle, true
                             }
                         },
-                        requiredParameters: new List<PriorityParameterName>(),
                         primaryJob: JobName.Any,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>())
+                        actionList: new List<Func<Priority_Parameters, IEnumerator>>())
                 },
                 {
                     ActorActionName.Fetch_Items, new ActorAction_Data(
@@ -41,13 +40,9 @@ namespace ActorActions
                         actionDescription: "Fetch Items",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Any,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
+                        actionList: new List<Func<Priority_Parameters, IEnumerator>>
                         {
                             _fetchItems
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
@@ -56,13 +51,9 @@ namespace ActorActions
                         actionDescription: "Deliver Items",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Any,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
+                        actionList: new List<Func<Priority_Parameters, IEnumerator>>
                         {
                             _deliverItems
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
@@ -70,72 +61,35 @@ namespace ActorActions
                         actionName: ActorActionName.Beat_Metal,
                         actionDescription: "Beat Iron into Shape",
                         requiredStates: new Dictionary<StateName, bool>(),
-                        primaryJob: JobName.Smith,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
-                        {
-                            _beatIron
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
+                        primaryJob: JobName.Smith)
                 },
                 {
                     ActorActionName.Chop_Wood, new ActorAction_Data(
                         actionName: ActorActionName.Chop_Wood,
                         actionDescription: "Chop Wood",
                         requiredStates: new Dictionary<StateName, bool>(),
-                        primaryJob: JobName.Logger,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>(),
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
+                        primaryJob: JobName.Logger)
                 },
                 {
                     ActorActionName.Process_Logs, new ActorAction_Data(
                         actionName: ActorActionName.Process_Logs,
                         actionDescription: "Process Logs",
                         requiredStates: new Dictionary<StateName, bool>(),
-                        primaryJob: JobName.Sawyer,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
-                        {
-                            _processLogs
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
+                        primaryJob: JobName.Sawyer)
                 },
                 {
                     ActorActionName.Stand_At_Counter, new ActorAction_Data(
                         actionName: ActorActionName.Stand_At_Counter,
                         actionDescription: "Stand at Counter",
                         requiredStates: new Dictionary<StateName, bool>(),
-                        primaryJob: JobName.Vendor,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
-                        {
-                            _standAtCounter
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
+                        primaryJob: JobName.Vendor)
                 },
                 {
                     ActorActionName.Restock_Shelves, new ActorAction_Data(
                         actionName: ActorActionName.Restock_Shelves,
                         actionDescription: "Restock Shelves",
                         requiredStates: new Dictionary<StateName, bool>(),
-                        primaryJob: JobName.Vendor,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
-                        {
-                            _restockShelves
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
-                        })
+                        primaryJob: JobName.Vendor)
                 },
                 {
                     ActorActionName.Defend_Ally, new ActorAction_Data(
@@ -143,13 +97,9 @@ namespace ActorActions
                         actionDescription: "Defend Ally",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Guard,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
+                        actionList: new List<Func<Priority_Parameters, IEnumerator>>
                         {
                             _defendAlly
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
                         })
                 },
                 {
@@ -158,41 +108,17 @@ namespace ActorActions
                         actionDescription: "Defend Neutral",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Guard,
-                        actionList: new List<Func<ActorAction_Parameters, IEnumerator>>
+                        actionList: new List<Func<Priority_Parameters, IEnumerator>>
                         {
                             _defendNeutral
-                        },
-                        requiredParameters: new List<PriorityParameterName>
-                        {
-                            PriorityParameterName.Jobsite_Component
                         })
                 },
             };
         }
 
-        static IEnumerator _beatIron(ActorAction_Parameters actorAction_Parameters)
+        static IEnumerator _fetchItems(Priority_Parameters priority_Parameters)
         {
-            yield return null;
-        }
-
-        static IEnumerator _chopWood(ActorAction_Parameters actorAction_Parameters)
-        {
-            var actor_Component = actorAction_Parameters.Actor_Component_Source;
-            var station_Source = Station_Manager.GetStation_Component(actorAction_Parameters.StationID_Source);
-            var itemsToFetch = actorAction_Parameters.Items;
-            
-            yield return _moveToWorkPost(actorAction_Parameters);
-            
-            
-        }
-
-        static IEnumerator _processLogs(ActorAction_Parameters actorAction_Parameters)
-        {
-            yield return null;
-        }
-
-        static IEnumerator _fetchItems(ActorAction_Parameters actorAction_Parameters)
-        {
+            _moveToWorkPost(priority_Parameters);
             yield return null;
             // if (Vector3.Distance(actor.transform.position, stationDestination.transform.position) > (stationDestination.BoxCollider.bounds.extents.magnitude + actor.Collider.bounds.extents.magnitude * 1.1f))
             // {
@@ -206,7 +132,7 @@ namespace ActorActions
             // StationData.InventoryData.RemoveFromFetchItemsOnHold(itemsToFetch);
         }
 
-        static IEnumerator _deliverItems(ActorAction_Parameters actorAction_Parameters)
+        static IEnumerator _deliverItems(Priority_Parameters priority_Parameters)
         {
             yield return null;
 
@@ -218,31 +144,21 @@ namespace ActorActions
             // actor.ActorData.InventoryData.RemoveFromInventory(orderItems);
             // station.StationData.InventoryData.AddToInventory(orderItems);
         }
-
-        static IEnumerator _standAtCounter(ActorAction_Parameters actorAction_Parameters)
+        
+        static IEnumerator _defendAlly(Priority_Parameters priority_Parameters)
         {
             yield return null;
         }
 
-        static IEnumerator _restockShelves(ActorAction_Parameters actorAction_Parameters)
-        {
-            yield return null;
-        }
-
-        static IEnumerator _defendAlly(ActorAction_Parameters actorAction_Parameters)
-        {
-            yield return null;
-        }
-
-        static IEnumerator _defendNeutral(ActorAction_Parameters actorAction_Parameters)
+        static IEnumerator _defendNeutral(Priority_Parameters priority_Parameters)
         {
             yield return null;
         }
         
-        static IEnumerator _moveToWorkPost(ActorAction_Parameters actorAction_Parameters)
+        static IEnumerator _moveToWorkPost(Priority_Parameters priority_Parameters)
         {
-            var actor_Component = actorAction_Parameters.Actor_Component_Source;
-            var workPost_Component = actorAction_Parameters.WorkPost_Component_Destination;
+            var actor_Component = priority_Parameters.Actor_Component_Source;
+            var workPost_Component = priority_Parameters.WorkPost_Component_Destination;
             
             yield return actor_Component.StartCoroutine(_moveToPosition(actor_Component, workPost_Component.transform.position));
         }

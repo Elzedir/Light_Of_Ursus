@@ -7,10 +7,10 @@ using Personality;
 using Priority;
 using Tools;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
-    public class Actor_Data_SpeciesAndPersonality : Priority_Updater
+    public class Actor_Data_SpeciesAndPersonality : Priority_Class
     {
         public Actor_Data_SpeciesAndPersonality(uint actorID, SpeciesName actorSpecies, ActorPersonality actorPersonality) : base(
             actorID, ComponentType.Actor)
@@ -63,14 +63,6 @@ namespace Actor
         public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
         public ActorPersonality ActorPersonality;
         public void SetPersonality(ActorPersonality actorPersonality) => ActorPersonality = actorPersonality;
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
     
     public enum SpeciesName

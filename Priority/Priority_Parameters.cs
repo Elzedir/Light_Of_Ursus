@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using Actor;
+using Actors;
+using Inventory;
 using Items;
 using JobSite;
 using Station;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 
-namespace ActorActions
+namespace Priority
 {
     [Serializable]
     public class Priority_Parameters
@@ -40,5 +43,43 @@ namespace ActorActions
         
         public Vector3 Position_Source;
         public Vector3 Position_Destination;
+        
+        public float DefaultMaxPriority;
+        public float TotalDistance;
+        public long TotalItems;
+        public InventoryData Inventory_Hauler;
+        public InventoryData Inventory_Target;
+        
+        public StationName StationType_Source;
+        public StationName StationType_Destination;
+        public HashSet<StationName> StationType_All;
+
+        public Priority_Parameters(uint actorID_Source = 0, uint actorID_Target = 0, uint jobSiteID_Source = 0,
+            uint jobSiteID_Target = 0, uint stationID_Source = 0, uint stationID_Destination = 0, uint workPostID_Source = 0,
+            uint workPostID_Destination = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
+            float defaultMaxPriority = 0, float totalDistance = 0, long totalItems = 0, InventoryData inventory_Hauler = null,
+            InventoryData inventory_Target = null, StationName stationType_Source = StationName.None, StationName stationType_Destination = StationName.None,
+            HashSet<StationName> stationType_All = null)
+        {
+            ActorID_Source = actorID_Source;
+            ActorID_Target = actorID_Target;
+            JobSiteID_Source = jobSiteID_Source;
+            JobSiteID_Target = jobSiteID_Target;
+            StationID_Source = stationID_Source;
+            StationID_Destination = stationID_Destination;
+            WorkPostID_Source = workPostID_Source;
+            WorkPostID_Destination = workPostID_Destination;
+            Items = items;
+            Position_Source = position_Source;
+            Position_Destination = position_Destination;
+            DefaultMaxPriority = defaultMaxPriority;
+            TotalDistance = totalDistance;
+            TotalItems = totalItems;
+            Inventory_Hauler = inventory_Hauler;
+            Inventory_Target = inventory_Target;
+            StationType_Source = stationType_Source;
+            StationType_Destination = stationType_Destination;
+            StationType_All = stationType_All;
+        }
     }
 }

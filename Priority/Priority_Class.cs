@@ -6,11 +6,12 @@ using UnityEngine;
 
 namespace Priority
 {
-    public abstract class Priority_Updater : Data_Class
+    //* What's the point between this and Priority_Data at this point?
+    public abstract class Priority_Class : Data_Class
     {
         public ComponentReference Reference { get; }
 
-        protected Priority_Updater (uint componentID, ComponentType componentType)
+        protected Priority_Class (uint componentID, ComponentType componentType)
         {
             switch(componentType)
             {

@@ -17,9 +17,9 @@ namespace Inventory
     }
 
     [Serializable]
-    public abstract class Inventory_Data : Priority_Updater
+    public abstract class InventoryData : Priority_Class
     {
-        protected Inventory_Data(uint componentID, ComponentType componentType) : base(componentID, componentType)
+        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType)
         {
             AllInventoryItems                   =  new ObservableDictionary<uint, Item>();
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
@@ -58,7 +58,7 @@ namespace Inventory
                 return;
             }
 
-            _priorityChangeCheck(PriorityUpdateTrigger.ChangedInventory, true);
+            PriorityData.RegenerateAllPriorities(DataChangedName.ChangedInventory);
         }
 
         public Dictionary<uint, Item> GetAllInventoryItemsClone() =>
@@ -138,7 +138,7 @@ namespace Inventory
             return true;
         }
 
-        public void TransferItemsToTarget(Inventory_Data target, List<Item> items)
+        public void TransferItemsToTarget(InventoryData target, List<Item> items)
         {
             RemoveFromInventory(items);
 
@@ -259,12 +259,9 @@ namespace Inventory
                 && existingItem.ItemAmount >= requiredItem.ItemAmount);
         }
 
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
-
         public abstract List<Item> GetInventoryItemsToFetchFromStation();
-        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory);
+        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor);
         public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
-        public abstract List<Item> GetInventoryItemsToProcess(Inventory_Data inventory_Actor);
+        public abstract List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor);
     }
 }

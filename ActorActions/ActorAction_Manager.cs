@@ -1,10 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
-using Actor;
+using Inventory;
 using Items;
-using JobSite;
 using Priority;
-using Station;
 using UnityEngine;
 
 namespace ActorActions
@@ -22,95 +19,50 @@ namespace ActorActions
             return null;
         }
 
-        public static Dictionary<PriorityParameterName, object> PopulateActionParameters(
-            ActorActionName actorActionName, Dictionary<PriorityParameterName, object> parameters)
-        {
-            JobSite_Component jobSite_Component = null;
-            Actor_Component actor_Component = null;
-
-            var requiredParameters = GetActorAction_Data(actorActionName).RequiredParameters;
-
-            foreach (var requiredParameter in requiredParameters)
-            {
-                if (parameters.TryGetValue(requiredParameter, out var parameter))
-                {
-                    if (parameter is null)
-                    {
-                        Debug.LogError($"Parameter: {requiredParameter} is null.");
-                        return null;
-                    }
-
-                    switch (requiredParameter)
-                    {
-                        case PriorityParameterName.Jobsite_Component:
-                            jobSite_Component = parameter as JobSite_Component;
-                            break;
-                        case PriorityParameterName.Worker_Component:
-                            actor_Component = parameter as Actor_Component;
-                            break;
-                    }
-
-                    continue;
-                }
-
-                Debug.LogError($"Required Parameter: {requiredParameter} is null in parameters.");
-                return null;
-            }
-
-            return _populateJobSite(actorActionName, jobSite_Component);
-        }
-
-        static Dictionary<PriorityParameterName, object> _populateJobSite(ActorActionName actorAction, JobSite_Component jobSite_Component)
-        {
-            var taskParameters = new Dictionary<PriorityParameterName, object>
-            {
-                { PriorityParameterName.Jobsite_Component, jobSite_Component },
-                { PriorityParameterName.Total_Items, 0 }
-            };
-
-            var allRelevantStations = jobSite_Component.GetRelevantStations(actorAction);
-
-            if (allRelevantStations.Count is 0)
-            {
-                Debug.LogWarning("No stations to fetch from.");
-                return null;
-            }
-
-            taskParameters[PriorityParameterName.Total_Items] = allRelevantStations.Sum(station =>
-                Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorAction)));
-
-            return _setParameters(taskParameters, allRelevantStations, actorAction);
-        }
-
-        static Dictionary<PriorityParameterName, object> _setParameters(
-            Dictionary<PriorityParameterName, object> taskParameters, List<Station_Component> allRelevantStations,
+        public static Priority_Parameters GetHighestPriorityStation(Priority_Parameters priority_Parameters, 
             ActorActionName actorActionName)
         {
+            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
+            
+            if (allRelevantStations.Count is 0)
+            {
+                Debug.LogError("No stations to fetch from.");
+                return null;
+            }
+            
+            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
+                Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
+            
+            if (priority_Parameters.TotalItems is 0)
+            {
+                Debug.LogError("No items to fetch from all stations.");
+                return null;
+            }
+            
             float highestPriority = 0;
-            var currentStationParameters = new Dictionary<PriorityParameterName, object>(taskParameters);
-
+            InventoryData highestPriorityStation = null;
+            
             foreach (var station in allRelevantStations)
             {
-                currentStationParameters[PriorityParameterName.Target_Component] =
-                    station.Station_Data.InventoryData;
+                priority_Parameters.Inventory_Target = station.Station_Data.InventoryData;
                 var stationPriority =
-                    Priority_Generator.GeneratePriority((uint)actorActionName, currentStationParameters);
+                    Priority_Generator.GeneratePriority((uint)actorActionName, priority_Parameters);
 
                 if (stationPriority is 0 || stationPriority < highestPriority) continue;
 
                 highestPriority = stationPriority;
-                taskParameters[PriorityParameterName.Target_Component] = station.Station_Data.InventoryData;
+                highestPriorityStation = station.Station_Data.InventoryData;
             }
-
-            foreach (var parameter in taskParameters)
+            
+            if (highestPriorityStation is null)
             {
-                if (parameter.Value is not null && parameter.Value is not 0) continue;
-
-                Debug.LogError($"Parameter: {parameter.Key} is null or 0.");
+                Debug.LogWarning("No station with items to fetch from.");
                 return null;
             }
+            
+            priority_Parameters.Inventory_Target = highestPriorityStation;
 
-            return taskParameters;
+            return priority_Parameters;
         }
     }
 
@@ -163,6 +115,8 @@ namespace ActorActions
         //* Change the system so that only these three, or minimal ones, are used, instead of having a different one for every station.
         //* Have them determined by task and station together. So sawmill process is logs, sawmill craft is arrows and poles.
 
+        Perform_Station_Task,
+        
         Haul,
         Craft,
         Process,

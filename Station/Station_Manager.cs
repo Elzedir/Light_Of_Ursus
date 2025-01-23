@@ -12,25 +12,17 @@ namespace Station
         static Station_SO _station_SO;
         static Station_SO Station_SO => _station_SO ??= _getStation_SO();
         
-        public static Station_Data GetStation_Data(uint stationID)
-        {
-            return Station_SO.GetStation_Data(stationID).Data_Object;
-        }
+        public static Station_Data GetStation_Data(uint stationID) => 
+            Station_SO.GetStation_Data(stationID).Data_Object;
         
-        public static Station_Data GetStation_DataFromName(Station_Component stationComponent)
-        {
-            return Station_SO.GetDataFromName(stationComponent.name)?.Data_Object;
-        }
+        public static Station_Data GetStation_DataFromName(Station_Component stationComponent) =>
+            Station_SO.GetDataFromName(stationComponent.name)?.Data_Object;
         
-        public static Station_Component GetStation_Component(uint stationID)
-        {
-            return Station_SO.GetStation_Component(stationID);
-        }
+        public static Station_Component GetStation_Component(uint stationID) => 
+            Station_SO.GetStation_Component(stationID);
         
-        public static void UpdateStation(uint stationID, Station_Data stationData)
-        {
+        public static void UpdateStation(uint stationID, Station_Data stationData) => 
             Station_SO.UpdateStation(stationID, stationData);
-        }
         
         static Station_SO _getStation_SO()
         {

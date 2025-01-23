@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Actor;
+using Actors;
 using Jobs;
 using JobSite;
 using Station;
@@ -50,25 +51,6 @@ namespace Priority
         public override GameObject           GameObject                => JobSite.gameObject;
         
         public override Priority_Data GetPriorityComponent() => JobSite.JobSiteData.PriorityData;
-    }
-    
-    public enum PriorityParameterName
-    {
-        None,
-
-        // At some point, figure out how we want to apply maxPriority, maybe per parameter? Like every TotalItems, TotalDistance, etc. has an attached maxPriority.
-        DefaultMaxPriority,
-        
-        Jobsite_Component,
-        Worker,
-        CurrentStationType,
-        AllStationTypes,
-        
-        Worker_Component,
-        Target_Component,
-        
-        Total_Items,
-        Total_Distance,
     }
 
     public enum PriorityImportance

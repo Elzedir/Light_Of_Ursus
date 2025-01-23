@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Managers;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +14,8 @@ namespace Tools
         public abstract Data_SO<T> SO { get; }
 
         double _lastRefreshTime;
-        double _lastRefreshTime2;
+        
+        Data<T>[] _nonNullDataObjects;
 
         public override void OnInspectorGUI()
         {
@@ -25,49 +27,54 @@ namespace Tools
 
             SO.ToggleMissingDataDebugs = GUILayout.Toggle(SO.ToggleMissingDataDebugs, "Toggle Missing Data Debugs");
 
-            if (EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
-            {
-                SO.RefreshData();
-                _lastRefreshTime = EditorApplication.timeSinceStartup;
-            }
-
+            _refreshData();
+            
+            EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
+            
+            _nonNullDataObjects ??= Array.Empty<Data<T>>();
+            
             if (SO.Data.Length is 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
             }
-
-            EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
-
-            var nonNullDataObjects = Array.Empty<Data<T>>();
-
+                
             for (var i = 0; i < 2; i++)
             {
-                nonNullDataObjects = SO.Data.Where(data_Object =>
+                _nonNullDataObjects = SO.Data.Where(data_Object =>
                     data_Object != null &&
                     data_Object.DataID != 0).ToArray();
 
-                if (nonNullDataObjects.Length == 0)
+                if (_nonNullDataObjects.Length == 0)
                 {
-                    SO.RefreshData(true);
+                    _refreshData(true);
                 }
             }
 
             SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
-                GUILayout.Height(Mathf.Min(200, nonNullDataObjects.Length * 20)));
+                GUILayout.Height(Mathf.Min(200, _nonNullDataObjects.Length * 20)));
             _selectedBaseIndex =
-                GUILayout.SelectionGrid(_selectedBaseIndex, _getBaseObjectNames(nonNullDataObjects), 1);
+                GUILayout.SelectionGrid(_selectedBaseIndex, _getBaseObjectNames(_nonNullDataObjects), 1);
             EditorGUILayout.EndScrollView();
 
-            if (_selectedBaseIndex < 0 || _selectedBaseIndex >= nonNullDataObjects.Length) return;
+            if (_selectedBaseIndex < 0 || _selectedBaseIndex >= _nonNullDataObjects.Length) return;
 
-            var selectedDataObject = nonNullDataObjects[_selectedBaseIndex];
+            var selectedDataObject = _nonNullDataObjects[_selectedBaseIndex];
             _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 50, false );
         }
 
         static string[] _getBaseObjectNames(Data<T>[] baseObjects)
         {
             return baseObjects.Select(base_Object => $"{base_Object.DataTitle}").ToArray();
+        }
+        
+        void _refreshData(bool reinitialise = false)
+        {
+            if (!(EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
+                || Application.isPlaying && !Manager_Game.Initialised) return;
+            
+            SO.RefreshData(reinitialise);
+            _lastRefreshTime = EditorApplication.timeSinceStartup;
         }
 
         static void _drawDataToDisplay(DataToDisplay dataToDisplay, int iteration, bool showToggle = true)

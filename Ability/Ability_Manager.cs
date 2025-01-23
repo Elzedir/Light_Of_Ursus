@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Inventory;
 using Priority;
@@ -51,18 +50,18 @@ namespace Ability
     }
 
     [Serializable]
-    public class Actor_Abilities : Priority_Updater
+    public class Actor_Abilities : Priority_Class
     {
-        public Actor_Abilities(uint actorID, Dictionary<AbilityName, float> abilityList = null) : base(actorID,
+        public Actor_Abilities(uint actorID, SerializableDictionary<AbilityName, float> abilityList = null) : base(actorID,
             ComponentType.Actor)
         {
-            CurrentAbilities = abilityList ?? new Dictionary<AbilityName, float>();
+            _currentAbilities = abilityList ?? new SerializableDictionary<AbilityName, float>();
         }
 
         public Actor_Abilities(Actor_Abilities actorAbilities) : base(actorAbilities.Reference.ComponentID,
             ComponentType.Actor)
         {
-            CurrentAbilities = actorAbilities.CurrentAbilities;
+            _currentAbilities = actorAbilities.CurrentAbilities;
         }
         
         public override List<ActorActionName> GetAllowedActions()
@@ -88,10 +87,7 @@ namespace Ability
                 ability => $"{ability.Value}");
         }
 
-        public             Dictionary<AbilityName, float> CurrentAbilities;
-        protected override bool                           _priorityChangeNeeded(object dataChanged) => false;
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
+        SerializableDictionary<AbilityName, float> _currentAbilities;
+        public SerializableDictionary<AbilityName, float> CurrentAbilities => _currentAbilities; //??= InitialiseAbilities();
     }
 }

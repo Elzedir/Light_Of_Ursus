@@ -47,7 +47,7 @@ namespace StateAndCondition
         }
     }
 
-    public class Actor_Data_States : Priority_Updater
+    public class Actor_Data_States : Priority_Class
     {
         public Actor_Data_States(uint actorID, ObservableDictionary<StateName, bool> initialisedStates = null) :
             base(actorID, ComponentType.Actor)
@@ -76,9 +76,9 @@ namespace StateAndCondition
             return DataToDisplay;
         }
 
-        void _onStateChanged(StateName primaryStateName)
+        void _onStateChanged(StateName stateName)
         {
-            _priorityChangeCheck(PriorityUpdateTrigger.ChangedState);
+            PriorityData.RegenerateAllPriorities(DataChangedName.ChangedState);
         }
 
         public void SetState(StateName stateName, bool state)
@@ -128,11 +128,5 @@ namespace StateAndCondition
                     return Enumerable.Empty<ActorActionName>();
                 }).ToList();
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged) =>
-            (StateName)dataChanged != StateName.None;
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 }

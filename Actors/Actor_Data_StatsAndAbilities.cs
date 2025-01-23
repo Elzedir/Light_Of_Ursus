@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ability;
+using Actor;
 using ActorActions;
 using Inventory;
 using Items;
@@ -11,10 +12,10 @@ using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
-    public class Actor_Data_StatsAndAbilities : Priority_Updater
+    public class Actor_Data_StatsAndAbilities : Priority_Class
     {
         public Actor_Data_StatsAndAbilities(uint actorID, Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities) : base(actorID, ComponentType.Actor)
         {
@@ -73,26 +74,18 @@ namespace Actor
         
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        [FormerlySerializedAs("Actor_Stats")] public Actor_Stats Stats;
+        public Actor_Stats Stats;
         public void SetActorStats(Actor_Stats actorStats) => Stats = actorStats;
 
-        [FormerlySerializedAs("Actor_Aspects")] public Actor_Aspects Aspects;
+        public Actor_Aspects Aspects;
         public void SetActorAspects(Actor_Aspects actor_Aspects) => Aspects = actor_Aspects;
 
-        [FormerlySerializedAs("Actor_Abilities")] public Actor_Abilities Abilities;
+        public Actor_Abilities Abilities;
         public void SetActorAbilities(Actor_Abilities actor_Abilities) => Abilities = actor_Abilities;
-        
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
     
     [Serializable]
-    public class Actor_Stats : Priority_Updater
+    public class Actor_Stats : Priority_Class
     {
         public Actor_Stats(uint actorID, ActorLevelData actorLevelData, Special actorSpecial,
             CombatStats actorCombatStats) :
@@ -189,18 +182,10 @@ namespace Actor
                     break;
             }
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]
-    public class Actor_Aspects : Priority_Updater
+    public class Actor_Aspects : Priority_Class
     {
         public Actor_Aspects(uint actorID, List<AspectName> actorAspectList = null) : base(actorID, ComponentType.Actor)
         {
@@ -281,14 +266,6 @@ namespace Actor
 
             ActorAspectList[index] = aspect;
         }
-
-        protected override bool _priorityChangeNeeded(object dataChanged)
-        {
-            return false;
-        }
-
-        protected override Dictionary<PriorityUpdateTrigger, Dictionary<PriorityParameterName, object>>
-            _priorityParameterList { get; set; } = new();
     }
 
     [Serializable]

@@ -14,7 +14,7 @@ namespace Region
             return AllRegions.GetRegion_Data(regionID).Data_Object;
         }
 
-        public static Region_Data GetRegion_DataFromComponent(Region_Component region_Component)
+        public static Region_Data GetRegion_DataFromName(Region_Component region_Component)
         {
             return AllRegions.GetDataFromName(region_Component.name)?.Data_Object;
         }
