@@ -5,13 +5,12 @@ using Items;
 using JobSite;
 using Station;
 using UnityEngine;
-using UnityEngine.Serialization;
 using WorkPosts;
 
 namespace ActorActions
 {
     [Serializable]
-    public class ActorAction_Parameters
+    public class Priority_Parameters
     {
         public uint ActorID_Source;
         public Actor_Component Actor_Component_Source => Actor_Manager.GetActor_Component(ActorID_Source);

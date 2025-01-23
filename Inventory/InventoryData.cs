@@ -265,5 +265,6 @@ namespace Inventory
         public abstract List<Item> GetInventoryItemsToFetchFromStation();
         public abstract List<Item> GetInventoryItemsToDeliverFromInventory(Inventory_Data inventory);
         public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
+        public abstract List<Item> GetInventoryItemsToProcess(Inventory_Data inventory_Actor);
     }
 }
