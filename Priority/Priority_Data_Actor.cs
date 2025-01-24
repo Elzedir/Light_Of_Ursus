@@ -29,12 +29,8 @@ namespace Priority
         {
             if (!forceRegenerateAll)
             {
-                //* Currently just refreshing, which would mean we would have to clear and repopulate the dictionary. Eventually, make a hybrid
-                //* system where we update the actions based on StateChanges, as well as regenerations. Or make regenerations less common.
-                //* But first, get regenerations working completely.
-                
                 if (dataChangedName == DataChangedName.None
-                    || !_priorityIDsToUpdateOnDataChange.TryGetValue(dataChangedName, out var priorityIDs))
+                    || !ActorActionsToRegenerate.TryGetValue(dataChangedName, out var actionsToRegenerate))
                 {
                     if (dataChangedName != DataChangedName.None)
                         Debug.LogError(
@@ -48,9 +44,9 @@ namespace Priority
                     return;
                 }
                 
-                foreach (var priorityID in priorityIDs)
+                foreach (var actorAction in actionsToRegenerate)
                 {
-                    _regeneratePriority(priorityID);
+                    _regeneratePriority((uint)actorAction);
                 }
 
                 return;
@@ -74,24 +70,20 @@ namespace Priority
                     PriorityQueue.Update(priorityID, 1);
                     return;
             }
-            
-            //* Need to get priority parameters somehow.
-            
-            priorityParameters.ActorID_Source= _actor.ActorID; //* Maybe change later to something earlier?
-            
-            //_populatePriorityParameters(ref priorityParameters);
+
+            var priorityParameters = _getPriorityParameters();
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        // protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
-        // {
-        //     //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-        //     priorityParameters.JobSiteID_Source = _actor.ActorData.Career.JobSite.JobSiteID;
-        //     priorityParameters.ActorID_Source = _actor.ActorID;
-        // }
+        protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
+        {
+            //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
+            priorityParameters.JobSiteID_Source = _actor.ActorData.Career.JobSite.JobSiteID;
+            priorityParameters.ActorID_Source = _actor.ActorID;
+        }
 
         // IEnumerator _performCurrentActionFromStart()
         // {
@@ -147,28 +139,6 @@ namespace Priority
         {
             return priorityIDs;
         }
-        
-        //* Check if this is valid in the current system.
-        protected override Dictionary<DataChangedName, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new()
-        {
-            {
-                DataChangedName.ChangedInventory, new List<uint>()
-            },
-
-            {
-                DataChangedName.DroppedItems, new List<uint>
-                {
-                    (uint)ActorActionName.Scavenge
-                }
-            },
-
-            {
-                DataChangedName.PriorityCompleted, new List<uint>
-                {
-                    (uint)ActorActionName.Wander,
-                }
-            },
-        };
 
         public void MakeDecision()
         {
@@ -194,7 +164,7 @@ namespace Priority
         PriorityElement _getNextHighestPriorityValue()
         {
             //* Do we need to regenerate all priorities here? Eventually detach priority regeneration from priority getting.
-            RegenerateAllPriorities();
+            RegenerateAllPriorities(DataChangedName.None);
 
             return PeekHighestPriority();
         }
