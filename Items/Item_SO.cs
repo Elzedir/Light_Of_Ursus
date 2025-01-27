@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -11,47 +12,10 @@ namespace Items
     public class Item_SO : Data_SO<Item_Data>
     {
         public Data<Item_Data>[] Items                       => Data;
-        public Data<Item_Data>   GetItem_Data(uint itemID) => GetData(itemID);
+        public Data<Item_Data>   GetItem_Data(ulong itemID) => GetData(itemID);
         
-        public override uint GetDataID(int id) => Items[id].Data_Object.ItemID;
-        
-        protected override Dictionary<uint, Data<Item_Data>> _getDefaultData() => 
-            _convertDictionaryToData(DefaultItems);
-        
-        static        Dictionary<uint, Item_Data> _defaultItems;
-        public static Dictionary<uint, Item_Data> DefaultItems => _defaultItems ??= _initialiseDefaultItems();
-        
-        static Dictionary<uint, Item_Data> _initialiseDefaultItems()
-        {
-            var defaultItems = new Dictionary<uint, Item_Data>();
-
-            foreach (var item in List_Weapon.DefaultWeapons)
-            {
-                defaultItems.Add(item.Key, item.Value);
-            }
-
-            foreach (var item in List_Armour.DefaultArmour)
-            {
-                defaultItems.Add(item.Key, item.Value);
-            }
-
-            foreach (var item in List_Consumable.DefaultConsumables)
-            {
-                defaultItems.Add(item.Key, item.Value);
-            }
-
-            foreach (var rawMaterial in List_RawMaterial.DefaultRawMaterials)
-            {
-                defaultItems.Add(rawMaterial.Key, rawMaterial.Value);
-            }
-
-            foreach (var processedMaterial in List_ProcessedMaterial.DefaultProcessedMaterials)
-            {
-                defaultItems.Add(processedMaterial.Key, processedMaterial.Value);
-            }
-
-            return defaultItems;
-        }
+        protected override Dictionary<ulong, Data<Item_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Item_List.DefaultItems);
         
         protected override Data<Item_Data> _convertToData(Item_Data data)
         {

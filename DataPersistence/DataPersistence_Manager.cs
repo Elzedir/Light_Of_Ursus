@@ -25,12 +25,12 @@ namespace DataPersistence
         
         public static Save_Data CurrentSaveData => DataPersistence_SO.CurrentSaveData;
         public static Profile_Data CurrentProfile => DataPersistence_SO.CurrentProfile;
-        public static Dictionary<uint, Profile_Data> AllProfiles => DataPersistence_SO.AllProfiles;
+        public static Dictionary<ulong, Profile_Data> AllProfiles => DataPersistence_SO.AllProfiles;
         public static bool DeleteGameOnStart => DataPersistence_SO.DeleteGameOnStart;
         
         public static void SaveGame(string saveDataName) => DataPersistence_SO.SaveGame(saveDataName);
         public static void LoadGame(string saveDataName) => DataPersistence_SO.LoadGame(saveDataName);
-        public static void ChangeProfile(uint profileID) => DataPersistence_SO.ChangeProfile(profileID);
+        public static void ChangeProfile(ulong profileID) => DataPersistence_SO.ChangeProfile(profileID);
         public static void SetCurrentSaveData(Save_Data saveData) => DataPersistence_SO.SetCurrentSaveData(saveData);
         public static void DeleteTestSaveFile() => DataPersistence_SO.DeleteTestSaveFile();
         public static bool HasSaveData() => DataPersistence_SO.HasSaveData();

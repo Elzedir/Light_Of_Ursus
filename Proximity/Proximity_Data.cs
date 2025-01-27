@@ -17,16 +17,16 @@ namespace Proximity
             _assignEnemies();
         }
 
-        Dictionary<uint, GameObject> _getRelevantProximityGameObjects()
+        Dictionary<ulong, GameObject> _getRelevantProximityGameObjects()
         {
-            var proximityGameObjects = new Dictionary<uint, GameObject>();
+            var relevantProximityGameObjects = new Dictionary<ulong, GameObject>();
 
-            foreach (var proximityGameObject in Proximity_Manager.Proximity_GameObjects)
+            foreach (var actor in Proximity_Manager.S_Proximity_Actors)
             {
                 
             }
             
-            return proximityGameObjects;
+            return relevantProximityGameObjects;
         }
         
         void _assignAllies()

@@ -14,7 +14,7 @@ namespace Actor
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public Actor_Data_GameObject(uint actorID, Transform actorTransform = null, Mesh actorMesh = null,
+        public Actor_Data_GameObject(ulong actorID, Transform actorTransform = null, Mesh actorMesh = null,
             Material actorMaterial = null) : base(actorID, ComponentType.Actor)
         {
             _actorTransform = actorTransform;

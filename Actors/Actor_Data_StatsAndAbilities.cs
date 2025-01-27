@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Ability;
+using Abilities;
 using Actor;
 using ActorActions;
 using Inventory;
@@ -17,7 +17,7 @@ namespace Actors
     [Serializable]
     public class Actor_Data_StatsAndAbilities : Priority_Class
     {
-        public Actor_Data_StatsAndAbilities(uint actorID, Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities) : base(actorID, ComponentType.Actor)
+        public Actor_Data_StatsAndAbilities(ulong actorID, Actor_Stats actorStats, Actor_Aspects actorAspects, Actor_Abilities actorAbilities) : base(actorID, ComponentType.Actor)
         {
             Stats = actorStats ?? new Actor_Stats(0, new ActorLevelData(), new Special(), new CombatStats());
             Aspects = actorAspects ?? new Actor_Aspects(0);
@@ -87,7 +87,7 @@ namespace Actors
     [Serializable]
     public class Actor_Stats : Priority_Class
     {
-        public Actor_Stats(uint actorID, ActorLevelData actorLevelData, Special actorSpecial,
+        public Actor_Stats(ulong actorID, ActorLevelData actorLevelData, Special actorSpecial,
             CombatStats actorCombatStats) :
             base(actorID, ComponentType.Actor)
         {
@@ -143,7 +143,7 @@ namespace Actors
                                                  .InventoryData
                                                  .GetAllInventoryItemsClone().Values.ToList());
 
-        public void AddExperience(uint experience)
+        public void AddExperience(ulong experience)
         {
             ActorLevelData.TotalExperience += experience;
 
@@ -187,7 +187,7 @@ namespace Actors
     [Serializable]
     public class Actor_Aspects : Priority_Class
     {
-        public Actor_Aspects(uint actorID, List<AspectName> actorAspectList = null) : base(actorID, ComponentType.Actor)
+        public Actor_Aspects(ulong actorID, List<AspectName> actorAspectList = null) : base(actorID, ComponentType.Actor)
         {
             ActorAspectList = actorAspectList ?? new List<AspectName>
                 { AspectName.None, AspectName.None, AspectName.None };
@@ -271,7 +271,7 @@ namespace Actors
     [Serializable]
     public class ActorLevelData
     {
-        public ActorLevelData(uint totalExperience = 0)
+        public ActorLevelData(ulong totalExperience = 0)
         {
             TotalExperience = totalExperience;
         }
@@ -296,11 +296,11 @@ namespace Actors
             };
         }
 
-        public uint ActorLevel => Manager_CharacterLevels.GetLevelFromExperience(TotalExperience);
-        public uint TotalExperience;
-        public uint TotalSkillPoints => Manager_CharacterLevels.GetTotalSkillPointsFromExperience(TotalExperience);
-        public uint UsedSkillPoints; // Can change this to be calculated by used skill points from the other class.
-        public uint TotalSpecialPoints => Manager_CharacterLevels.GetTotalSpecialPointsFromExperience(TotalExperience);
-        public uint UsedSpecialPoints; // Can change this to be calculated by used skill points from the other class.
+        public ulong ActorLevel => Manager_CharacterLevels.GetLevelFromExperience(TotalExperience);
+        public ulong TotalExperience;
+        public ulong TotalSkillPoints => Manager_CharacterLevels.GetTotalSkillPointsFromExperience(TotalExperience);
+        public ulong UsedSkillPoints; // Can change this to be calculated by used skill points from the other class.
+        public ulong TotalSpecialPoints => Manager_CharacterLevels.GetTotalSpecialPointsFromExperience(TotalExperience);
+        public ulong UsedSpecialPoints; // Can change this to be calculated by used skill points from the other class.
     }
 }

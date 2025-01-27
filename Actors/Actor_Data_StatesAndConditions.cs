@@ -11,7 +11,7 @@ namespace Actors
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
-        public Actor_Data_StatesAndConditions(uint actorID, Actor_Data_States states, Actor_Data_Conditions conditions) : base (actorID, ComponentType.Actor)
+        public Actor_Data_StatesAndConditions(ulong actorID, Actor_Data_States states, Actor_Data_Conditions conditions) : base (actorID, ComponentType.Actor)
         {
             States     = states;
             Conditions = conditions;

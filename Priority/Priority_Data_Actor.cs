@@ -38,7 +38,7 @@ namespace Priority
                     
                     foreach (var actorAction in AllowedActions)
                     {
-                        _regeneratePriority((uint)actorAction);
+                        _regeneratePriority((ulong)actorAction);
                     }
 
                     return;
@@ -46,7 +46,7 @@ namespace Priority
                 
                 foreach (var actorAction in actionsToRegenerate)
                 {
-                    _regeneratePriority((uint)actorAction);
+                    _regeneratePriority((ulong)actorAction);
                 }
 
                 return;
@@ -54,19 +54,19 @@ namespace Priority
             
             foreach (ActorActionName actorAction in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((uint)actorAction);
+                _regeneratePriority((ulong)actorAction);
             }
         }
 
-        protected override void _regeneratePriority(uint priorityID)
+        protected override void _regeneratePriority(ulong priorityID)
         {
             switch (priorityID)
             {
-                case (uint)ActorActionName.All:
+                case (ulong)ActorActionName.All:
                     Debug.LogError(
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in _regeneratePriority.");
                     return;
-                case (uint)ActorActionName.Idle:
+                case (ulong)ActorActionName.Idle:
                     PriorityQueue.Update(priorityID, 1);
                     return;
             }
@@ -106,23 +106,23 @@ namespace Priority
 
         readonly ComponentReference_Actor _actorReferences;
 
-        public    uint           ActorID => _actorReferences.ActorID;
+        public    ulong           ActorID => _actorReferences.ActorID;
         protected Actor_Component _actor  => _actorReferences.Actor_Component;
 
-        public Priority_Data_Actor(uint actorID)
+        public Priority_Data_Actor(ulong actorID)
         {
             _actorReferences = new ComponentReference_Actor(actorID);
 
             //AllPriorities.DictionaryChanged += SetCurrentAction;
         }
 
-        protected override List<uint> _getPermittedPriorities(List<uint> priorityIDs)
+        protected override List<ulong> _getPermittedPriorities(List<ulong> priorityIDs)
         {
-            var allowedPriorities = new List<uint>();
+            var allowedPriorities = new List<ulong>();
 
             foreach (var priorityID in priorityIDs)
             {
-                if (priorityID is (uint)ActorActionName.All or (uint)ActorActionName.Idle)
+                if (priorityID is (ulong)ActorActionName.All or (ulong)ActorActionName.Idle)
                 {
                     Debug.LogError(
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in PeekHighestSpecificPriority.");
@@ -135,7 +135,7 @@ namespace Priority
             return allowedPriorities;
         }
 
-        protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
+        protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)
         {
             return priorityIDs;
         }
@@ -155,7 +155,7 @@ namespace Priority
                 return;
             }
 
-            if (nextHighestPriorityValue.PriorityID == (uint)_currentAction.ActionName)
+            if (nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
                 return;
 
             SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);
@@ -198,12 +198,12 @@ namespace Priority
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertUintIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertulongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }
         
-        protected override string _getPriorityID(string iteration, uint priorityID) => 
+        protected override string _getPriorityID(string iteration, ulong priorityID) => 
             $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
     }
 }

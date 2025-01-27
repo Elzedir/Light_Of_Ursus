@@ -1,45 +1,66 @@
+using System;
 using System.Collections.Generic;
+using Actor;
+using IDs;
+using Managers;
 using UnityEngine;
 
 namespace Proximity
 {
     public abstract class Proximity_Manager
     {
-        static Dictionary<uint, GameObject> _proximity_GameObjects;
-        public static Dictionary<uint, GameObject> Proximity_GameObjects => _proximity_GameObjects ??= PopulateProximity_GameObjects();  
+        static Dictionary<ulong, Actor_Component> s_proximity_GameObjects;
+        public static Dictionary<ulong, Actor_Component> S_Proximity_GameObjects => s_proximity_GameObjects ??= PopulateProximity_GameObjects();
         
-        //* We should then make all IDs consistent across the game so we can do this more easily. We can do a check where each gameObjectType is assigned an
-        //* ID range, so we can check the ID range and then assign the gameObject type. Assign per 100 000 or something like that and we can scale up the IDs
-        //* as we scale up the game. For example, just add 1 000 000, 
-        //* So, items: 0 - 99 999, characters 100 000 - 199 999. Then if they fill, then items becomes 1 099 999, characters 1 100 000 - 1 199 999.
+        static Dictionary<ulong, Actor_Component> s_proximity_Actors;
+        public static Dictionary<ulong, Actor_Component> S_Proximity_Actors => s_proximity_Actors ??= PopulateProximity_GameObjects(IDType.Actor);
         
-        BoxCollider _priority_Collider;
-        public BoxCollider Priority_Collider => _priority_Collider ??= _getPriority_Collider();
+        static SphereCollider s_proximity_Collider_5M;
+        static SphereCollider S_Proximity_Collider_5M => s_proximity_Collider_5M ??= _getPriority_Collider();
         
-        //* Instead of this, why not create a BoxCollider that goes over the player. It enables, collects all GameObjects in it, and then disables.
-        //* Every one in the scene that is enabled then iterates through that list and assigns variables to it, like closestEnemy, closestAlly, lowestHealthEnemy,
-        //* lowestHealthAlly, etc. Then we populate priority with those variables. Check the efficieny of that.
+        static Vector3 _playerPosition => Manager_Game.S_Instance.Player.transform.position;
         
-        //* Eventually upgrade the boxCollider to a grid priorityArea, with each subsequent collider updating less and less frequently. So within 1 metre of the player, 5 metres, 10 metres, etc.
-        BoxCollider _getPriority_Collider()
+        //* Eventually upgrade the boxCollider to a grid priorityArea, with each subsequent collider updating less and less frequently.
+        //* So within 5 metres of the player, 10 metres, 20, etc.
+        
+        static SphereCollider _getPriority_Collider()
         {
-            //* Put a BoxCollider in the scene, that when populating game Objects, it centres on the player's location and then gets
-            //* all GameObjects within the collider. 
-            return null;
-        }
-        
-        public static Dictionary<uint, GameObject> PopulateProximity_GameObjects(bool refresh = false)
-        {
-            if (_proximity_GameObjects is null || refresh)
+            var collider_5M = Manager_Game
+                .FindTransformRecursively(GameObject.Find("GameObjects").transform, "Proximity_Collider_5m")?.gameObject
+                .AddComponent<SphereCollider>();
+
+            if (collider_5M is null)
             {
-                _proximity_GameObjects = new Dictionary<uint, GameObject>();
+                throw new NullReferenceException("Proximity_Collider_5m not found.");
             }
             
-            //Physics.OverlapSphere(ClosestAlly.transform.position, 10f); Maybe this, or something else.
+            collider_5M.radius = 5;
+            collider_5M.isTrigger = true;
             
-            //* Populate the dictionary with all GameObjects in the scene.
+            return collider_5M;
+        }
+        
+        public static Dictionary<ulong, GameObject> PopulateProximity_GameObjects(bool refresh = false)
+        {
+            s_proximity_Actors ??= new Dictionary<ulong, GameObject>();
             
-            return _proximity_GameObjects; //* Will there be an issue with returning itself to assign itself?
+            if (refresh) s_proximity_Actors.Clear();
+
+            S_Proximity_Collider_5M.transform.position = _playerPosition;
+            
+            var hitColliders = new Collider[100000];
+            
+            var numColliders = Physics.OverlapSphereNonAlloc(S_Proximity_Collider_5M.transform.position, S_Proximity_Collider_5M.radius, hitColliders);
+            
+            for (var i = 0; i < numColliders; i++)
+            {
+                var collider = hitColliders[i];
+                var key = ID_Manager.GetGameObjectID(collider.gameObject);
+        
+                s_proximity_Actors[key] = collider.gameObject;
+            }
+
+            return s_proximity_Actors;
         }
     }
 }

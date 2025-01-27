@@ -14,7 +14,7 @@ namespace Region
     [Serializable]
     public class Region_Data : Data_Class
     {
-        public uint   RegionID;
+        public ulong   RegionID;
         public string RegionName;
         public int    RegionFactionID;
         public string RegionDescription;
@@ -25,11 +25,11 @@ namespace Region
         public ProsperityData ProsperityData;
 
         public           FactionName     Faction;
-        [SerializeField] List<uint>      _allCityIDs;
+        [SerializeField] List<ulong>      _allCityIDs;
         int                              _currentLength;
-        Dictionary<uint, City_Component> _allCitiesInRegion;
+        Dictionary<ulong, City_Component> _allCitiesInRegion;
         
-        public Dictionary<uint, City_Component> AllCitiesInRegion
+        public Dictionary<ulong, City_Component> AllCitiesInRegion
         {
             get
             {
@@ -41,7 +41,7 @@ namespace Region
             }
         }
 
-        public uint GetNearestCityInRegion(Vector3 position)
+        public ulong GetNearestCityInRegion(Vector3 position)
         {
             return AllCitiesInRegion
                    .OrderBy(city => Vector3.Distance(position, city.Value.transform.position))
@@ -51,8 +51,8 @@ namespace Region
         // Call when a new city is formed.
         public void RefreshAllCities() => _currentLength = 0;
 
-        public Region_Data(uint       regionID,   string regionName, string regionDescription, int regionFactionID,
-                           List<uint> allCityIDs, ProsperityData prosperityData = null)
+        public Region_Data(ulong       regionID,   string regionName, string regionDescription, int regionFactionID,
+                           List<ulong> allCityIDs, ProsperityData prosperityData = null)
         {
             RegionID          = regionID;
             RegionName        = regionName;

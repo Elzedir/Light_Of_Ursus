@@ -6,14 +6,14 @@ namespace Items
 {
     public abstract class List_RawMaterial
     {
-        static Dictionary<uint, Item_Data> _defaultRawMaterials;
+        static Dictionary<ulong, Item_Data> _defaultRawMaterials;
 
-        public static Dictionary<uint, Item_Data> DefaultRawMaterials =>
+        public static Dictionary<ulong, Item_Data> DefaultRawMaterials =>
             _defaultRawMaterials ??= _initialiseDefaultRawMaterials();
 
-        static Dictionary<uint, Item_Data> _initialiseDefaultRawMaterials()
+        static Dictionary<ulong, Item_Data> _initialiseDefaultRawMaterials()
         {
-            var allRawMaterials = new Dictionary<uint, Item_Data>();
+            var allRawMaterials = new Dictionary<ulong, Item_Data>();
 
             foreach (var material in _metals())
             {
@@ -78,9 +78,9 @@ namespace Items
             return allRawMaterials;
         }
 
-        static Dictionary<uint, Item_Data> _metals()
+        static Dictionary<ulong, Item_Data> _metals()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1000,
@@ -188,9 +188,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _woods()
+        static Dictionary<ulong, Item_Data> _woods()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1100,
@@ -286,9 +286,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _stones()
+        static Dictionary<ulong, Item_Data> _stones()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1200,
@@ -378,9 +378,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _gems()
+        static Dictionary<ulong, Item_Data> _gems()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1300,
@@ -470,9 +470,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _herbs()
+        static Dictionary<ulong, Item_Data> _herbs()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1400,
@@ -562,9 +562,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _fibers()
+        static Dictionary<ulong, Item_Data> _fibers()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1500,
@@ -654,9 +654,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _leathers()
+        static Dictionary<ulong, Item_Data> _leathers()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1600,
@@ -746,9 +746,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _ores()
+        static Dictionary<ulong, Item_Data> _ores()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1700,
@@ -838,9 +838,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _fuels()
+        static Dictionary<ulong, Item_Data> _fuels()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1800,
@@ -930,9 +930,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _flora()
+        static Dictionary<ulong, Item_Data> _flora()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1900,
@@ -1022,9 +1022,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _animalProducts()
+        static Dictionary<ulong, Item_Data> _animalProducts()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     2000,
@@ -1114,9 +1114,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _liquids()
+        static Dictionary<ulong, Item_Data> _liquids()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     2100,

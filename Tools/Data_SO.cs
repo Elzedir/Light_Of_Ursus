@@ -28,9 +28,9 @@ namespace Tools
             if (reinitialise) InitialiseAllData();
         }
 
-        Dictionary<uint, int> _dataIndexLookup;
+        Dictionary<ulong, int> _dataIndexLookup;
 
-        public Dictionary<uint, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
+        public Dictionary<ulong, int> DataIndexLookup => _dataIndexLookup ??= _buildIndexLookup();
         
         int _currentIndex;
 
@@ -48,24 +48,32 @@ namespace Tools
             return Data ?? throw new NullReferenceException("Data is null.");
         }
 
-        protected Dictionary<uint, int> _buildIndexLookup()
+        protected Dictionary<ulong, int> _buildIndexLookup()
         {
-            var newIndexLookup = new Dictionary<uint, int>();
+            var newIndexLookup = new Dictionary<ulong, int>();
 
             for (var i = 0; i < Data.Length; i++)
             {
-                if (Data[i]?.Data_Object is null)
+                if (Data[i]?.DataID is null or 0)
+                {
+                    Debug.Log($"DataID: {Data[i]?.DataID} is null or 0.");
                     continue;
+                }
+                
+                //* Changed this from GetID() to DataID. Check that it doesn't break anything.
 
-                newIndexLookup[GetDataID(i)] = i;
+                newIndexLookup[Data[i].DataID] = i;
             }
 
             return newIndexLookup;
         }
 
-        public abstract uint GetDataID(int id);
+        public List<ulong> GetAllDataIDs()
+        {
+            return Data.Select(data => data.DataID).ToList();
+        }
 
-        public Data<TD> GetData(uint dataID)
+        public Data<TD> GetData(ulong dataID)
         {
             try
             {
@@ -84,7 +92,7 @@ namespace Tools
             }
         }
 
-        void _addData(uint dataID, Data<TD> data)
+        void _addData(ulong dataID, Data<TD> data)
         {
             if (DataIndexLookup.ContainsKey(dataID))
             {
@@ -102,7 +110,7 @@ namespace Tools
             _currentIndex++;
         }
 
-        public void RemoveData(uint dataID)
+        public void RemoveData(ulong dataID)
         {
             if (!DataIndexLookup.TryGetValue(dataID, out var index))
             {
@@ -125,10 +133,14 @@ namespace Tools
 
             for (var i = 0; i < Data.Length; i++)
             {
-                if (Data[i] is null) continue;
+                if (Data[i]?.DataID is null or 0)
+                {
+                    Debug.Log($"DataID: {Data[i]?.DataID} is null or 0.");
+                    continue;
+                }
 
                 Data[newSize] = Data[i];
-                DataIndexLookup[GetDataID(i)] = newSize;
+                DataIndexLookup[Data[i].DataID] = newSize;
                 newSize++;
             }
 
@@ -136,7 +148,7 @@ namespace Tools
             _currentIndex = newSize;
         }
 
-        public void UpdateAllData(Dictionary<uint, TD> newData, bool clearDataFirst = false)
+        public void UpdateAllData(Dictionary<ulong, TD> newData, bool clearDataFirst = false)
         {
             if (clearDataFirst) ClearSOData();
 
@@ -146,7 +158,7 @@ namespace Tools
             }
         }
 
-        public void UpdateData(uint dataID, TD data)
+        public void UpdateData(ulong dataID, TD data)
         {
             if (DataIndexLookup.TryGetValue(dataID, out var index))
             {
@@ -161,8 +173,8 @@ namespace Tools
         public Vector2 ScrollPosition;
         protected abstract Data<TD> _convertToData(TD data);
 
-        protected Dictionary<uint, Data<TD>> _convertDictionaryToData(
-            Dictionary<uint, TD> dictionary)
+        protected Dictionary<ulong, Data<TD>> _convertDictionaryToData(
+            Dictionary<ulong, TD> dictionary)
         {
             return dictionary.ToDictionary(key => key.Key, value => _convertToData(value.Value));
         }
@@ -174,13 +186,13 @@ namespace Tools
             _currentIndex = 0;
         }
 
-        protected Dictionary<uint, Data<TD>> _defaultData;
-        public Dictionary<uint, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
-        protected abstract Dictionary<uint, Data<TD>> _getDefaultData();
+        protected Dictionary<ulong, Data<TD>> _defaultData;
+        public Dictionary<ulong, Data<TD>> DefaultData => _defaultData ??= _getDefaultData();
+        protected abstract Dictionary<ulong, Data<TD>> _getDefaultData();
 
-        protected virtual Dictionary<uint, Data<TD>> _getAllInitialisationData()
+        protected virtual Dictionary<ulong, Data<TD>> _getAllInitialisationData()
         {
-            var allData = new Dictionary<uint, Data<TD>>();
+            var allData = new Dictionary<ulong, Data<TD>>();
 
             foreach (var (key, value) in DefaultData)
             {
@@ -194,13 +206,13 @@ namespace Tools
     [Serializable]
     public class Data<T> where T : class
     {
-        public readonly uint DataID;
+        public readonly ulong DataID;
         public readonly string DataTitle;
 
         public T Data_Object;
         public Func<bool, DataToDisplay> GetDataToDisplay;
 
-        public Data(uint dataID, T data_Object,
+        public Data(ulong dataID, T data_Object,
             string dataTitle, Func<bool, DataToDisplay> getDataToDisplay)
         {
             DataID = dataID;

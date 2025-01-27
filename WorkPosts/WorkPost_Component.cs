@@ -10,8 +10,8 @@ namespace WorkPosts
     
     public class WorkPost_Component : MonoBehaviour
     {
-        public uint WorkPostID                 => WorkPostData.WorkPostID;
-        public uint CurrentWorkerID            => WorkPostData.CurrentWorker.ActorID;
+        public ulong WorkPostID                 => WorkPostData.WorkPostID;
+        public ulong CurrentWorkerID            => WorkPostData.CurrentWorker.ActorID;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
         
         public WorkPost_Data WorkPostData;

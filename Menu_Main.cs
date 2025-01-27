@@ -23,14 +23,14 @@ public class Menu_Main : MonoBehaviour
         if (!DataPersistence_Manager.HasSaveData()) { Debug.LogWarning("Manager_Data has no game data."); return; }
 
         DataPersistence_Manager.ChangeProfile(DataPersistence_Manager.CurrentProfile.ProfileID);
-        Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
+        Manager_Game.S_Instance.LoadScene(Manager_Game.S_Instance.SceneName);
     }
 
     public void NewGame()
     {
         var currentProfile = DataPersistence_Manager.CurrentProfile;
         DataPersistence_Manager.SetCurrentSaveData(new Save_Data(currentProfile.ProfileID, currentProfile.ProfileName));
-        Manager_Game.Instance.StartNewGame();
+        Manager_Game.S_Instance.StartNewGame();
     }
 
     public void LoadGame()
@@ -175,7 +175,7 @@ public class Menu_Main : MonoBehaviour
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            Manager_Game.Instance.ChangeGameState(GameState.Puzzle);
+            Manager_Game.S_Instance.ChangeGameState(GameState.Puzzle);
             Manager_Puzzle.Instance.Puzzle = puzzle;
             Manager_Puzzle.Instance.LoadPuzzle();
 

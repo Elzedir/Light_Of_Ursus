@@ -14,10 +14,10 @@ namespace JobSite
     public class JobSite_SO : Data_Component_SO<JobSite_Data, JobSite_Component>
     {
         public Data<JobSite_Data>[] JobSites => Data;
-        public Data<JobSite_Data>        GetJobSite_Data(uint      jobSiteID) => GetData(jobSiteID);
-        public Dictionary<uint, JobSite_Component> JobSite_Components => _getSceneComponents();
+        public Data<JobSite_Data>        GetJobSite_Data(ulong      jobSiteID) => GetData(jobSiteID);
+        public Dictionary<ulong, JobSite_Component> JobSite_Components => _getSceneComponents();
 
-        public JobSite_Component GetJobSite_Component(uint jobSiteID)
+        public JobSite_Component GetJobSite_Component(ulong jobSiteID)
         {
             if (jobSiteID == 0)
             {
@@ -34,17 +34,15 @@ namespace JobSite
             return null;
         }
 
-        public override uint GetDataID(int id) => JobSites[id].Data_Object.JobSiteID;
+        public void UpdateJobSite(ulong jobSiteID, JobSite_Data jobSite_Component) => UpdateData(jobSiteID, jobSite_Component);
+        public void UpdateAllJobSites(Dictionary<ulong, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
 
-        public void UpdateJobSite(uint jobSiteID, JobSite_Data jobSite_Component) => UpdateData(jobSiteID, jobSite_Component);
-        public void UpdateAllJobSites(Dictionary<uint, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
-
-        protected override Dictionary<uint, Data<JobSite_Data>> _getDefaultData() =>
+        protected override Dictionary<ulong, Data<JobSite_Data>> _getDefaultData() =>
             _convertDictionaryToData(JobSite_List.DefaultJobSites);
 
-        protected override Dictionary<uint, Data<JobSite_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<JobSite_Data>> _getSavedData()
         {
-            Dictionary<uint, JobSite_Data> savedData = new();
+            Dictionary<ulong, JobSite_Data> savedData = new();
 
             try
             {
@@ -72,20 +70,8 @@ namespace JobSite
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<JobSite_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<JobSite_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.JobSiteData));
-        
-        static uint _lastUnusedJobSiteID = 1;
-        
-        public uint GetUnusedJobSiteID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedJobSiteID))
-            {
-                _lastUnusedJobSiteID++;
-            }
-
-            return _lastUnusedJobSiteID;
-        }
         
         protected override Data<JobSite_Data> _convertToData(JobSite_Data data)
         {

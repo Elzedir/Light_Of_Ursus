@@ -72,18 +72,6 @@ namespace City
         
         protected override Dictionary<ulong, Data<City_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.CityData));
-
-        static ulong _lastUnusedCityID = 1;
-
-        public ulong GetUnusedCityID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedCityID))
-            {
-                _lastUnusedCityID++;
-            }
-
-            return _lastUnusedCityID;
-        }
         
         protected override Data<City_Data> _convertToData(City_Data data)
         {

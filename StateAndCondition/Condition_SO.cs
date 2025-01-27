@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -13,7 +14,7 @@ namespace StateAndCondition
         public Data<Condition_Data>[] Conditions => Data;
 
         public Data<Condition_Data> GetCondition_Data(ConditionName conditionName) =>
-            GetData((uint)conditionName);
+            GetData((ulong)conditionName);
         
         
         public ObservableDictionary<ConditionName, float> InitialiseDefaultConditions(ObservableDictionary<ConditionName, float> existingConditions)
@@ -39,36 +40,22 @@ namespace StateAndCondition
             return existingConditions;
         }
 
-        public override uint GetDataID(int id) => (uint)Conditions[id].Data_Object.ConditionName;
-
-        public void UpdateCondition(uint conditionID, Condition_Data condition_Data) =>
+        public void UpdateCondition(ulong conditionID, Condition_Data condition_Data) =>
             UpdateData(conditionID, condition_Data);
 
-        public void UpdateAllConditions(Dictionary<uint, Condition_Data> allConditions) =>
+        public void UpdateAllConditions(Dictionary<ulong, Condition_Data> allConditions) =>
             UpdateAllData(allConditions);
 
-        protected override Dictionary<uint, Data<Condition_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Condition_Data>> _getDefaultData() => 
             _convertDictionaryToData(Condition_List.DefaultConditions);
 
         protected override Data<Condition_Data> _convertToData(Condition_Data data)
         {
             return new Data<Condition_Data>(
-                dataID: (uint)data.ConditionName,
+                dataID: (ulong)data.ConditionName,
                 data_Object: data, 
-                dataTitle: $"{(uint)data.ConditionName}: {data.ConditionName}",
+                dataTitle: $"{(ulong)data.ConditionName}: {data.ConditionName}",
                 getDataToDisplay: data.GetDataToDisplay);
-        }
-
-        static uint _lastUnusedConditionID = 1;
-
-        public uint GetUnusedConditionID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedConditionID))
-            {
-                _lastUnusedConditionID++;
-            }
-
-            return _lastUnusedConditionID;
         }
     }
 

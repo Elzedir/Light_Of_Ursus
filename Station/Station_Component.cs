@@ -17,7 +17,7 @@ namespace Station
     [RequireComponent(typeof(BoxCollider))]
     public abstract class Station_Component : MonoBehaviour, IInteractable
     {
-        public uint              StationID => Station_Data.StationID;
+        public ulong              StationID => Station_Data.StationID;
         public JobSite_Component JobSite   => Station_Data.JobSite_Component;
 
         public Station_Data Station_Data;
@@ -32,8 +32,8 @@ namespace Station
         public abstract JobName           CoreJobName           { get; }
         public abstract RecipeName        DefaultProduct        { get; }
         public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
-        public abstract List<uint>        AllowedStoredItemIDs  { get; }
-        public abstract List<uint>        DesiredStoredItemIDs  { get; }
+        public abstract List<ulong>        AllowedStoredItemIDs  { get; }
+        public abstract List<ulong>        DesiredStoredItemIDs  { get; }
         public abstract List<ActorActionName> AllowedJobTasks       { get; }
 
         Priority_Data_Station        _priorityData;

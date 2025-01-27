@@ -63,9 +63,9 @@ namespace Tools
             }
         }
 
-        private uint GetNewID(HashSet<uint> existingIDs)
+        private ulong GetNewID(HashSet<ulong> existingIDs)
         {
-            uint newID = 1;
+            ulong newID = 1;
             while (existingIDs.Contains(newID))
             {
                 newID++;
@@ -76,7 +76,7 @@ namespace Tools
         // private void CheckAndFixStationIDs()
         // {
         //     var stations = FindObjectsByType<Station_Component>(FindObjectsSortMode.None);
-        //     var existingIDs = new HashSet<uint>();
+        //     var existingIDs = new HashSet<ulong>();
         //     var duplicateStations = new List<Station_Component>();
         //
         //     foreach (var station in stations)
@@ -95,7 +95,7 @@ namespace Tools
         //
         //     foreach (var station in duplicateStations)
         //     {
-        //         uint newStationID = GetNewID(existingIDs);
+        //         ulong newStationID = GetNewID(existingIDs);
         //         station.Station_Data.StationID = newStationID;
         //         existingIDs.Add(newStationID);
         //
@@ -111,7 +111,7 @@ namespace Tools
         private void CheckAndFixJobsiteIDs()
         {
             var jobsites          = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
-            var existingIDs       = new HashSet<uint>();
+            var existingIDs       = new HashSet<ulong>();
             var duplicateJobsites = new List<JobSite_Component>();
 
             foreach (var jobsite in jobsites)
@@ -130,7 +130,7 @@ namespace Tools
 
             foreach (var jobsite in duplicateJobsites)
             {
-                uint newJobsiteID = GetNewID(existingIDs);
+                ulong newJobsiteID = GetNewID(existingIDs);
                 jobsite.JobSiteData.JobSiteID = newJobsiteID;
                 existingIDs.Add(newJobsiteID);
 
@@ -146,7 +146,7 @@ namespace Tools
         private void CheckAndFixCityIDs()
         {
             var cities          = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
-            var existingIDs     = new HashSet<uint>();
+            var existingIDs     = new HashSet<ulong>();
             var duplicateCities = new List<City_Component>();
 
             foreach (var city in cities)
@@ -165,7 +165,7 @@ namespace Tools
 
             foreach (var city in duplicateCities)
             {
-                uint newCityID = GetNewID(existingIDs);
+                ulong newCityID = GetNewID(existingIDs);
                 city.CityData.CityID = newCityID;
                 existingIDs.Add(newCityID);
 
@@ -181,7 +181,7 @@ namespace Tools
         private void CheckAndFixRegionIDs()
         {
             var regions          = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
-            var existingIDs      = new HashSet<uint>();
+            var existingIDs      = new HashSet<ulong>();
             var duplicateRegions = new List<Region_Component>();
 
             foreach (var region in regions)
@@ -200,7 +200,7 @@ namespace Tools
 
             foreach (var region in duplicateRegions)
             {
-                uint newRegionID = GetNewID(existingIDs);
+                ulong newRegionID = GetNewID(existingIDs);
                 region.RegionData.RegionID = newRegionID;
                 existingIDs.Add(newRegionID);
 
@@ -216,7 +216,7 @@ namespace Tools
         private void CheckAndFixActorIDs()
         {
             var actors          = FindObjectsByType<Actor_Component>(FindObjectsSortMode.None);
-            var existingIDs     = new HashSet<uint>();
+            var existingIDs     = new HashSet<ulong>();
             var duplicateActors = new List<Actor_Component>();
 
             foreach (var actor in actors)
@@ -251,7 +251,7 @@ namespace Tools
         private void CheckAndFixFactionIDs()
         {
             var factions          = FindObjectsByType<Faction_Component>(FindObjectsSortMode.None);
-            var existingIDs       = new HashSet<uint>();
+            var existingIDs       = new HashSet<ulong>();
             var duplicateFactions = new List<Faction_Component>();
 
             foreach (var faction in factions)
@@ -270,7 +270,7 @@ namespace Tools
 
             foreach (var faction in duplicateFactions)
             {
-                uint newFactionID = GetNewID(existingIDs);
+                ulong newFactionID = GetNewID(existingIDs);
                 faction.FactionData.FactionID = newFactionID;
                 existingIDs.Add(newFactionID);
 

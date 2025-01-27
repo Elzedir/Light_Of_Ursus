@@ -12,7 +12,7 @@ namespace Inventory
     [Serializable]
     public class InventoryData_Actor : InventoryData
     {
-        public InventoryData_Actor(uint actorID, ObservableDictionary<uint, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
+        public InventoryData_Actor(ulong actorID, ObservableDictionary<ulong, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
         {
             AllInventoryItems = allInventoryItems;
         }

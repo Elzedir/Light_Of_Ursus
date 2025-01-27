@@ -12,23 +12,23 @@ namespace Priority
 {
     public class Priority_Data_JobSite : Priority_Data
     {
-        public Priority_Data_JobSite(uint jobSiteID)
+        public Priority_Data_JobSite(ulong jobSiteID)
         {
             _jobSiteReferences = new ComponentReference_Jobsite(jobSiteID);
         }
 
         readonly ComponentReference_Jobsite _jobSiteReferences;
 
-        public uint                     JobSiteID     => _jobSiteReferences.JobsiteID;
+        public ulong                     JobSiteID     => _jobSiteReferences.JobsiteID;
         JobSite_Component                _jobSite      => _jobSiteReferences.JobSite;
 
-        protected override List<uint> _getPermittedPriorities(List<uint> priorityIDs)
+        protected override List<ulong> _getPermittedPriorities(List<ulong> priorityIDs)
         {
-            var allowedPriorities = new List<uint>();
+            var allowedPriorities = new List<ulong>();
 
             foreach (var priorityID in priorityIDs)
             {
-                if (priorityID is (uint)ActorActionName.Idle)
+                if (priorityID is (ulong)ActorActionName.Idle)
                 {
                     Debug.LogError(
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in PeekHighestSpecificPriority.");
@@ -47,7 +47,7 @@ namespace Priority
             {
                 foreach (var actorAction in AllowedActions)
                 {
-                    _regeneratePriority((uint)actorAction);
+                    _regeneratePriority((ulong)actorAction);
                 }
                 
                 return;
@@ -55,13 +55,13 @@ namespace Priority
             
             foreach (ActorActionName jobTask in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((uint)jobTask);
+                _regeneratePriority((ulong)jobTask);
             }
         }
 
-        protected override void _regeneratePriority(uint priorityID)
+        protected override void _regeneratePriority(ulong priorityID)
         {
-            if (priorityID == (uint)ActorActionName.Idle)
+            if (priorityID == (ulong)ActorActionName.Idle)
             {
                 PriorityQueue.Update(priorityID, 1);
                 return;
@@ -81,7 +81,7 @@ namespace Priority
         //     priorityParameters.JobSiteID_Source = JobSiteID;
         // }
 
-        protected override List<uint> _getRelevantPriorityIDs(List<uint> priorityIDs, uint limiterID)
+        protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)
         {
             if (limiterID != 0)
                 return priorityIDs.Where(priorityID =>
@@ -92,8 +92,6 @@ namespace Priority
 
         protected override List<ActorActionName> _getAllowedActions() =>
             _jobSite.BaseJobActions;
-
-        protected override Dictionary<DataChangedName, List<uint>> _priorityIDsToUpdateOnDataChange { get; } = new();
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -119,12 +117,12 @@ namespace Priority
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertUintIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertulongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }
 
-        protected override string _getPriorityID(string iteration, uint priorityID) =>
+        protected override string _getPriorityID(string iteration, ulong priorityID) =>
             $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
     }
 }

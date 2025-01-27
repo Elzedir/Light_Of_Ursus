@@ -8,26 +8,26 @@ namespace Items
     [Serializable]
     public class Item_CommonStats : Data_Class
     {
-        public uint                ItemID;
+        public ulong                ItemID;
         public string              ItemName;
         public ItemType            ItemType;
         public List<EquipmentSlot> EquipmentSlots;
-        public uint                MaxStackSize;
-        public uint                ItemLevel;
+        public ulong                MaxStackSize;
+        public ulong                ItemLevel;
         public ItemQualityName     ItemQuality;
-        public uint                ItemValue;
+        public ulong                ItemValue;
         public float               ItemWeight;
         public bool                ItemEquippable;
 
         public Item_CommonStats(
-            uint                itemID         = 0,
+            ulong                itemID         = 0,
             string              itemName       = "",
             ItemType            itemType       = ItemType.Misc,
             List<EquipmentSlot> equipmentSlots = null,
-            uint                maxStackSize   = 0,
-            uint                itemLevel      = 0,
+            ulong                maxStackSize   = 0,
+            ulong                itemLevel      = 0,
             ItemQualityName     itemQuality    = ItemQualityName.Junk,
-            uint                itemValue      = 0,
+            ulong                itemValue      = 0,
             float               itemWeight     = 0,
             bool                itemEquippable = false
         )

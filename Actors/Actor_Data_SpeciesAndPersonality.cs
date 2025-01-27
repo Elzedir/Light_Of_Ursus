@@ -12,7 +12,7 @@ namespace Actors
     [Serializable]
     public class Actor_Data_SpeciesAndPersonality : Priority_Class
     {
-        public Actor_Data_SpeciesAndPersonality(uint actorID, SpeciesName actorSpecies, ActorPersonality actorPersonality) : base(
+        public Actor_Data_SpeciesAndPersonality(ulong actorID, SpeciesName actorSpecies, ActorPersonality actorPersonality) : base(
             actorID, ComponentType.Actor)
         {
             ActorSpecies = actorSpecies;

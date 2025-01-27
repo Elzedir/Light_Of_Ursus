@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Ability;
-using ActorPreset;
-using Actors;
+using Abilities;
+using Actor;
+using ActorPresets;
 using Careers;
 using DateAndTime;
 using Equipment;
@@ -14,16 +14,16 @@ using Recipes;
 using StateAndCondition;
 using Tools;
 
-namespace Actor
+namespace Actors
 {
     public abstract class Actor_List
     {
-        static Dictionary<uint, Actor_Data> _defaultActors;
-        public static Dictionary<uint, Actor_Data> DefaultActors => _defaultActors ??= _initialiseDefaultActors();
+        static Dictionary<ulong, Actor_Data> s_defaultActors;
+        public static Dictionary<ulong, Actor_Data> DefaultActors => s_defaultActors ??= _initialiseDefaultActors();
 
-        static Dictionary<uint, Actor_Data> _initialiseDefaultActors()
+        static Dictionary<ulong, Actor_Data> _initialiseDefaultActors()
         {
-            return new Dictionary<uint, Actor_Data>
+            return new Dictionary<ulong, Actor_Data>
             {
                 {
                     1, new Actor_Data(
@@ -163,7 +163,7 @@ namespace Actor
                         ),
                         inventoryData: new InventoryData_Actor(
                             actorID: 1,
-                            allInventoryItems: new ObservableDictionary<uint, Item>
+                            allInventoryItems: new ObservableDictionary<ulong, Item>
                             {
                                 {
                                     1, new Item(1, 1)

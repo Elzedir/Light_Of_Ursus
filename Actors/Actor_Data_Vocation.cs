@@ -13,7 +13,7 @@ namespace Actor
     [Serializable]
     public class Actor_Data_Vocation : Priority_Class
     {
-        public Actor_Data_Vocation(uint actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(
+        public Actor_Data_Vocation(ulong actorID, Dictionary<VocationName, ActorVocation> actorVocations = null) : base(
             actorID,
             ComponentType.Actor)
         {

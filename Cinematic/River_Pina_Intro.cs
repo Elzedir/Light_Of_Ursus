@@ -17,7 +17,7 @@ public class River_Pina_Intro : Cinematic
     {
         if (collision.TryGetComponent<Player>(out Player player) && !_cinematicPlayed)
         {
-            Manager_Game.Instance.ChangeGameState(GameState.Cinematic);
+            Manager_Game.S_Instance.ChangeGameState(GameState.Cinematic);
             StartCoroutine(MovePlayer(player));
             _cinematicPlayed = true;
         }
@@ -49,6 +49,6 @@ public class River_Pina_Intro : Cinematic
             yield return new WaitForSeconds(point.WaitTime);
         }
 
-        Manager_Game.Instance.ChangeGameState(GameState.Playing);
+        Manager_Game.S_Instance.ChangeGameState(GameState.Playing);
     }
 }

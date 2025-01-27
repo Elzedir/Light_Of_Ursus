@@ -38,13 +38,13 @@ public class Menu_Escape : Menu_Base
     {
         gameObject.SetActive(true);
         _isOpen = true;
-        Manager_Game.Instance.ChangeGameState(GameState.Paused);
+        Manager_Game.S_Instance.ChangeGameState(GameState.Paused);
     }
     public override void CloseMenu()
     {
         gameObject.SetActive(false);
         _isOpen = false;
-        Manager_Game.Instance.ChangeGameState(GameState.Playing);
+        Manager_Game.S_Instance.ChangeGameState(GameState.Playing);
     }
 
     public void SaveGameOpen()

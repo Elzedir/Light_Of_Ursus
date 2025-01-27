@@ -11,12 +11,12 @@ namespace WorkPosts
     [Serializable]
     public class WorkPost_Data : Data_Class
     {
-        public readonly uint WorkPostID;
-        [SerializeField] uint    _stationID;
+        public readonly ulong WorkPostID;
+        [SerializeField] ulong    _stationID;
         Station_Component        _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(_stationID);
 
-        [SerializeField] uint           _currentWorkerID;
+        [SerializeField] ulong           _currentWorkerID;
         Actor_Component        _currentWorker;
 
         public Actor_Component CurrentWorker => _currentWorker ??=
@@ -26,7 +26,7 @@ namespace WorkPosts
         
         public bool            IsWorkerMovingToWorkPost;
 
-        public WorkPost_Data(uint workPostID, uint stationID, uint currentWorkerID)
+        public WorkPost_Data(ulong workPostID, ulong stationID, ulong currentWorkerID)
         {
             WorkPostID      = workPostID;
             _stationID      = stationID;

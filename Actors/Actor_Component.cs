@@ -12,7 +12,7 @@ namespace Actor
     public class Actor_Component : MonoBehaviour
     {
         public bool IsPlayer => GetComponent<Player>() is not null;
-        public uint ActorID => ActorData.ActorID;
+        public ulong ActorID => ActorData.ActorID;
         public bool IsSpawned 
         { 
             get => ActorData.IsSpawned;

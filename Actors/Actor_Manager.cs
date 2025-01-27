@@ -1,11 +1,12 @@
 using System.Collections.Generic;
-using Ability;
+using Abilities;
 using Actor;
-using ActorPreset;
+using ActorPresets;
 using Careers;
 using DateAndTime;
 using Equipment;
 using Faction;
+using IDs;
 using Inventory;
 using Items;
 using Jobs;
@@ -19,7 +20,7 @@ using UnityEngine;
 
 namespace Actors
 {
-    public class Actor_Manager : MonoBehaviour
+    public abstract class Actor_Manager
     {
         const string _actor_SOPath = "ScriptableObjects/Actor_SO";
         
@@ -36,7 +37,7 @@ namespace Actors
         //     AllActors.PopulateSceneData();
         // }
         
-        public static Actor_Data GetActor_Data(uint actorID)
+        public static Actor_Data GetActor_Data(ulong actorID)
         {
             return AllActors.GetActor_Data(actorID).Data_Object;
         }
@@ -46,9 +47,14 @@ namespace Actors
             return AllActors.GetDataFromName(actor_Component.name)?.Data_Object;
         }
         
-        public static Actor_Component GetActor_Component(uint actorID)
+        public static Actor_Component GetActor_Component(ulong actorID)
         {
             return AllActors.GetActor_Component(actorID);
+        }
+        
+        public static List<ulong> GetAllActorIDs()
+        {
+            return AllActors.GetAllDataIDs();
         }
         
         static Actor_SO _getActor_SO()
@@ -74,11 +80,6 @@ namespace Actors
             return nearestActor;
         }
 
-        public static uint GetUnusedActorID()
-        {
-            return AllActors.GetUnusedActorID();
-        }
-
         public static Actor_Component SpawnNewActor(Vector3 spawnPoint, ActorDataPresetName actorDataPreset)
         {
             var actor = _createNewActorGO(spawnPoint).AddComponent<Actor_Component>();
@@ -95,7 +96,7 @@ namespace Actors
         }
 
         // Maybe stagger the spawning so they don't all spawn immediately but either in batches or per seconds.
-        static Actor_Component _spawnExistingActor(Vector3 spawnPoint, uint actorID, bool despawnActorIfExists = false)
+        static Actor_Component _spawnExistingActor(Vector3 spawnPoint, ulong actorID, bool despawnActorIfExists = false)
         {
             if (despawnActorIfExists) _despawnActor(actorID);
 
@@ -115,7 +116,7 @@ namespace Actors
             return actor;
         }
 
-        static void _despawnActor(uint actorID)
+        static void _despawnActor(ulong actorID)
         {
             var actor = GetActor_Component(actorID);
 
@@ -126,7 +127,7 @@ namespace Actors
             }
 
             actor.IsSpawned = false;
-            Destroy(actor.gameObject);
+            Object.Destroy(actor.gameObject);
         }
 
         static GameObject _createNewActorGO(Vector3 spawnPoint)
@@ -228,7 +229,7 @@ namespace Actors
 
             var inventoryData = new InventoryData_Actor(
                 actorID: fullIdentification.ActorID,
-                new ObservableDictionary<uint, Item>()
+                new ObservableDictionary<ulong, Item>()
             );
 
             var equipmentData = new Equipment_Data(
@@ -264,19 +265,20 @@ namespace Actors
             return actor.ActorData;
         }
 
-        static uint _getUnusedActorID()
+        static ulong _getUnusedActorID()
         {
-            return AllActors.GetUnusedActorID();
+            //* Maybe can put in rules later with ID numbers being in certain ranges again, like per species or anything.
+            return ID_Manager.GetNewID(IDType.Actor);
         }
 
-        static ActorName _getRandomActorName(uint actorID)
+        static ActorName _getRandomActorName(ulong actorID)
         {
             // Get name based on culture, religion, species, etc.
 
             return new ActorName($"Test_{actorID}", "of Tester");
         }
 
-        static uint _getRandomFaction()
+        static ulong _getRandomFaction()
         {
             // Take race and things into account for faction
 
@@ -293,7 +295,7 @@ namespace Actors
             return new ActorPersonality(Personality_Manager.GetRandomPersonalityTraits(null, 3));
         }
 
-        static Actor_Stats _getNewActorStats(uint actorID)
+        static Actor_Stats _getNewActorStats(ulong actorID)
         {
             return new Actor_Stats(
                 actorID: actorID,
@@ -303,7 +305,7 @@ namespace Actors
                 );
         }
         
-        static Actor_Aspects _getNewActorAspects(uint actorID)
+        static Actor_Aspects _getNewActorAspects(ulong actorID)
         {
             return new Actor_Aspects(
                 actorID: actorID,
@@ -311,7 +313,7 @@ namespace Actors
                 );
         }
         
-        static Actor_Abilities _getNewActorAbilities(uint actorID)
+        static Actor_Abilities _getNewActorAbilities(ulong actorID)
         {
             return new Actor_Abilities(
                 actorID: actorID,
@@ -319,7 +321,7 @@ namespace Actors
                 );
         }
         
-        static Actor_Data_States _getNewActorStates(uint actorID)
+        static Actor_Data_States _getNewActorStates(ulong actorID)
         {
             return new Actor_Data_States(
                 actorID: actorID,
@@ -327,7 +329,7 @@ namespace Actors
                 );
         }
 
-        static Actor_Data_Conditions _getNewActorConditions(uint actorID)
+        static Actor_Data_Conditions _getNewActorConditions(ulong actorID)
         {
             return new Actor_Data_Conditions(
                 actorID: actorID,

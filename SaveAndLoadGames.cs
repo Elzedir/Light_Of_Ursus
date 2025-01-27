@@ -27,7 +27,7 @@ public class SaveAndLoadGames : MonoBehaviour
             () =>
             {
                 DataPersistence_Manager.LoadGame(saveSlot.GetSaveGameName());
-                Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
+                Manager_Game.S_Instance.LoadScene(Manager_Game.S_Instance.SceneName);
             },
             () => { ActivateMenu(saveOrLoad); }
         );

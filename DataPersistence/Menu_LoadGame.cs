@@ -42,7 +42,7 @@ namespace DataPersistence
                 Manager_Game.FindTransformRecursively(transform.parent, "ConfirmationPanel").GetComponent<SaveSlot_Confirmation>().ActivateMenu(
                     "Would you like to load this game?",
                     () => {
-                        Manager_Game.Instance.LoadScene(Manager_Game.Instance.SceneName);
+                        Manager_Game.S_Instance.LoadScene(Manager_Game.S_Instance.SceneName);
                     },
                     () => {
                         ActivateMenu(_menuMain);

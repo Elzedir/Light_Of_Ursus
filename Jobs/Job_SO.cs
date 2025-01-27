@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -11,19 +12,17 @@ namespace Jobs
     public class Job_SO : Data_SO<Job_Data>
     {
         public Data<Job_Data>[] Jobs                           => Data;
-        public Data<Job_Data>   GetJob_Data(JobName jobName) => GetData((uint)jobName);
-
-        public override uint GetDataID(int id) => (uint)Jobs[id].Data_Object.JobName;
+        public Data<Job_Data>   GetJob_Data(JobName jobName) => GetData((ulong)jobName);
         
-        protected override Dictionary<uint, Data<Job_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Job_Data>> _getDefaultData() => 
             _convertDictionaryToData(Job_List.DefaultJobs);
         
         protected override Data<Job_Data> _convertToData(Job_Data data)
         {
             return new Data<Job_Data>(
-                dataID: (uint)data.JobName,
+                dataID: (ulong)data.JobName,
                 data_Object: data,
-                dataTitle: $"{(uint)data.JobName}: {data.JobName}",
+                dataTitle: $"{(ulong)data.JobName}: {data.JobName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
     }

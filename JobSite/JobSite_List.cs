@@ -5,12 +5,12 @@ namespace JobSite
 {
     public abstract class JobSite_List
     {
-        static Dictionary<uint, JobSite_Data> _defaultJobSites;
-        public static Dictionary<uint, JobSite_Data> DefaultJobSites => _defaultJobSites ??= _initialiseDefaultJobSites();
+        static Dictionary<ulong, JobSite_Data> _defaultJobSites;
+        public static Dictionary<ulong, JobSite_Data> DefaultJobSites => _defaultJobSites ??= _initialiseDefaultJobSites();
         
-        static Dictionary<uint, JobSite_Data> _initialiseDefaultJobSites()
+        static Dictionary<ulong, JobSite_Data> _initialiseDefaultJobSites()
         {
-            return new Dictionary<uint, JobSite_Data>
+            return new Dictionary<ulong, JobSite_Data>
             {
                 {
                     1, new JobSite_Data(
@@ -20,11 +20,11 @@ namespace JobSite
                         cityID: 1,
                         jobSiteDescription: "JobSite 1 Description",
                         ownerID: 0,
-                        allStationIDs: new List<uint>
+                        allStationIDs: new List<ulong>
                         {
                             1, 2, 3
                         },
-                        allEmployeeIDs: new List<uint>(),
+                        allEmployeeIDs: new List<ulong>(),
                         prosperityData: new ProsperityData(
                             currentProsperity: 50,
                             maxProsperity: 100,

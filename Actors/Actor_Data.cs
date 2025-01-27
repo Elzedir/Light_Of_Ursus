@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
-using ActorPreset;
+using ActorPresets;
 using Actors;
 using Equipment;
 using Faction;
@@ -18,8 +18,8 @@ namespace Actor
     public class Actor_Data : Data_Class
     {
         public bool IsSpawned;
-        public uint ActorID => Identification.ActorID;
-        public uint ActorFactionID => Identification.ActorFactionID;
+        public ulong ActorID => Identification.ActorID;
+        public ulong ActorFactionID => Identification.ActorFactionID;
         public string ActorName => Identification.ActorName.GetName();
 
         Actor_Component _actor;
@@ -260,7 +260,7 @@ namespace Actor
     [Serializable]
     public class WorldStateClass : Priority_Class
     {
-        public WorldStateClass(uint actorID) : base(actorID, ComponentType.Actor)
+        public WorldStateClass(ulong actorID) : base(actorID, ComponentType.Actor)
         {
         }
 
@@ -293,7 +293,7 @@ namespace Actor
     [Serializable]
     public class Relationships : Priority_Class
     {
-        public Relationships(uint actorID, List<Relation> allRelationships) : base(actorID, ComponentType.Actor)
+        public Relationships(ulong actorID, List<Relation> allRelationships) : base(actorID, ComponentType.Actor)
         {
             AllRelationships = allRelationships;
         }
@@ -328,7 +328,7 @@ namespace Actor
     [Serializable]
     public class QuestClass : Priority_Class
     {
-        public QuestClass(uint actorID) : base(actorID, ComponentType.Actor)
+        public QuestClass(ulong actorID) : base(actorID, ComponentType.Actor)
         {
         }
 

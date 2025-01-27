@@ -12,7 +12,7 @@ namespace Inventory
     [Serializable]
     public class InventoryData_Station : InventoryData
     {
-        public InventoryData_Station(uint stationID) : base(stationID, ComponentType.Station)
+        public InventoryData_Station(ulong stationID) : base(stationID, ComponentType.Station)
         {
         }
 
@@ -21,11 +21,11 @@ namespace Inventory
 
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
 
-        public uint
+        public ulong
             MaxInventorySpace =
                 10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
 
-        List<uint> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
+        List<ulong> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
 
         public override bool HasSpaceForItems(List<Item> items)
         {

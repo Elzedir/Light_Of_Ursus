@@ -19,9 +19,9 @@ namespace Inventory
     [Serializable]
     public abstract class InventoryData : Priority_Class
     {
-        protected InventoryData(uint componentID, ComponentType componentType) : base(componentID, componentType)
+        protected InventoryData(ulong componentID, ComponentType componentType) : base(componentID, componentType)
         {
-            AllInventoryItems                   =  new ObservableDictionary<uint, Item>();
+            AllInventoryItems                   =  new ObservableDictionary<ulong, Item>();
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
         }
 
@@ -48,9 +48,9 @@ namespace Inventory
         bool _skipNextPriorityCheck;
         public void SkipNextPriorityCheck() => _skipNextPriorityCheck = true;
         public List<Item> AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList();
-        public ObservableDictionary<uint, Item> AllInventoryItems;
+        public ObservableDictionary<ulong, Item> AllInventoryItems;
 
-        void OnInventoryChanged(uint componentID)
+        void OnInventoryChanged(ulong componentID)
         {
             if (_skipNextPriorityCheck)
             {
@@ -61,13 +61,13 @@ namespace Inventory
             PriorityData.RegenerateAllPriorities(DataChangedName.ChangedInventory);
         }
 
-        public Dictionary<uint, Item> GetAllInventoryItemsClone() =>
+        public Dictionary<ulong, Item> GetAllInventoryItemsClone() =>
             AllInventoryItems.ToDictionary(entry => entry.Key, entry => new Item(entry.Value));
 
-        public ObservableDictionary<uint, Item> GetAllObservableInventoryItemsClone()
+        public ObservableDictionary<ulong, Item> GetAllObservableInventoryItemsClone()
         {
             var inventoryClone = GetAllInventoryItemsClone();
-            var observableInventoryClone = new ObservableDictionary<uint, Item>();
+            var observableInventoryClone = new ObservableDictionary<ulong, Item>();
             
             foreach (var (key, value) in inventoryClone)
             {
@@ -77,13 +77,13 @@ namespace Inventory
             return observableInventoryClone;
         }
 
-        public void SetInventory(ObservableDictionary<uint, Item> allInventoryItems, bool skipPriorityCheck = false)
+        public void SetInventory(ObservableDictionary<ulong, Item> allInventoryItems, bool skipPriorityCheck = false)
         {
             if (skipPriorityCheck) SkipNextPriorityCheck();
             AllInventoryItems = allInventoryItems;
         }
 
-        public          Item GetItemFromInventory(uint   itemID) => new(AllInventoryItems.GetValueOrDefault(itemID));
+        public          Item GetItemFromInventory(ulong   itemID) => new(AllInventoryItems.GetValueOrDefault(itemID));
         public abstract bool HasSpaceForItems(List<Item> items);
 
         public void AddToInventory(List<Item> items)
@@ -178,7 +178,7 @@ namespace Inventory
                 }
                 else
                 {
-                    for (int i = 0; i < item.ItemAmount; i++)
+                    for (ulong i = 0; i < item.ItemAmount; i++)
                     {
                         Interactable_Item.CreateNewItem(new Item(item.ItemID, 1), dropPosition);
                     }
@@ -190,7 +190,7 @@ namespace Inventory
             // Later will have things like having available space, etc.
         }
 
-        public List<Item> InventoryContainsReturnedItems(HashSet<uint> itemIDs)
+        public List<Item> InventoryContainsReturnedItems(HashSet<ulong> itemIDs)
         {
             List<Item> returnedItems = new();
 
@@ -240,7 +240,7 @@ namespace Inventory
             return missingItems;
         }
 
-        public bool InventoryContainsAnyItems(List<uint> itemIDs)
+        public bool InventoryContainsAnyItems(List<ulong> itemIDs)
         {
             return itemIDs.Any(itemID => AllInventoryItems.ContainsKey(itemID));
         }

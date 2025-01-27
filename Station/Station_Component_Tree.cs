@@ -18,8 +18,8 @@ namespace Station
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
-        public override List<uint>       AllowedStoredItemIDs { get; } = new();
-        public override List<uint>       DesiredStoredItemIDs { get; } = new();
+        public override List<ulong>       AllowedStoredItemIDs { get; } = new();
+        public override List<ulong>       DesiredStoredItemIDs { get; } = new();
 
         public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {

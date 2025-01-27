@@ -16,7 +16,7 @@ namespace JobSite
     {
         public abstract JobSiteName  JobSiteName { get; }
         public abstract List<ActorActionName> BaseJobActions { get; }
-        public          uint         JobSiteID   => JobSiteData.JobSiteID;
+        public          ulong         JobSiteID   => JobSiteData.JobSiteID;
         public          JobSite_Data JobSiteData;
         bool                         _initialised;
 
@@ -25,7 +25,7 @@ namespace JobSite
             JobSiteData = jobSiteData;
         }
 
-        public Dictionary<uint, Station_Component> GetAllStationsInJobSite() =>
+        public Dictionary<ulong, Station_Component> GetAllStationsInJobSite() =>
             GetComponentsInChildren<Station_Component>().ToDictionary(station => station.StationID);
 
         public float IdealRatio;
@@ -80,12 +80,12 @@ namespace JobSite
         protected abstract void         _adjustProduction(float      idealRatio);
         protected abstract VocationName _getRelevantVocation(JobName positionName);
 
-        public bool GetNewCurrentJob(Actor_Component actor, uint stationID = 0)
+        public bool GetNewCurrentJob(Actor_Component actor, ulong stationID = 0)
         {
             JobSiteData.PriorityData.RegenerateAllPriorities(DataChangedName.None);
             
             var highestPriorityElement = JobSiteData.PriorityData.GetHighestPriorityFromGroup(
-                actor.ActorData.Career.AllJobActions.Select(actorActionName => (uint)actorActionName).ToList(), stationID);
+                actor.ActorData.Career.AllJobActions.Select(actorActionName => (ulong)actorActionName).ToList(), stationID);
 
             if (highestPriorityElement == null)
             {
@@ -124,7 +124,7 @@ namespace JobSite
             return null;
         }
 
-        protected void _assignAllEmployeesToStations(Dictionary<uint, Actor_Component> allEmployees)
+        protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
             JobSiteData.RemoveAllWorkersFromAllStations();
 
@@ -152,11 +152,11 @@ namespace JobSite
             }
         }
 
-        protected List<Dictionary<uint, Actor_Component>> _getAllCombinations(
-            Dictionary<uint, Actor_Component> employees)
+        protected List<Dictionary<ulong, Actor_Component>> _getAllCombinations(
+            Dictionary<ulong, Actor_Component> employees)
         {
-            var result           = new List<Dictionary<uint, Actor_Component>>();
-            var employeeKeys     = new List<uint>(employees.Keys);
+            var result           = new List<Dictionary<ulong, Actor_Component>>();
+            var employeeKeys     = new List<ulong>(employees.Keys);
             var combinationCount = (int)Mathf.Pow(2, employeeKeys.Count);
 
             for (var i = 1; i < combinationCount; i++)

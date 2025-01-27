@@ -15,7 +15,7 @@ namespace JobSite
         static JobSite_SO _jobSite_SO;
         static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
         
-        public static JobSite_Data GetJobSite_Data(uint jobSiteID)
+        public static JobSite_Data GetJobSite_Data(ulong jobSiteID)
         {
             return JobSite_SO.GetJobSite_Data(jobSiteID).Data_Object;
         }
@@ -25,10 +25,12 @@ namespace JobSite
             return JobSite_SO.GetDataFromName(jobSite_Component.name)?.Data_Object;
         }
         
-        public static JobSite_Component GetJobSite_Component(uint jobSiteID)
+        public static JobSite_Component GetJobSite_Component(ulong jobSiteID)
         {
             return JobSite_SO.GetJobSite_Component(jobSiteID);
         }
+        
+        public static List<ulong> GetAllJobSiteIDs() => JobSite_SO.GetAllDataIDs();
         
         static JobSite_SO _getJobSite_SO()
         {
@@ -63,11 +65,6 @@ namespace JobSite
             }
 
             return nearestJobSite;
-        }
-
-        public static uint GetUnusedJobSiteID()
-        {
-            return JobSite_SO.GetUnusedJobSiteID();
         }
         
         public static Dictionary<JobSiteName, List<JobName>> EmployeeCanUseList = new()

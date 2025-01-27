@@ -4,12 +4,12 @@ namespace Items
 {
     public abstract class List_Consumable
     {
-        static Dictionary<uint, Item_Data> _defaultConsumables;
-        public static Dictionary<uint, Item_Data> DefaultConsumables => _defaultConsumables ??= _initialiseDefaultConsumables();
+        static Dictionary<ulong, Item_Data> _defaultConsumables;
+        public static Dictionary<ulong, Item_Data> DefaultConsumables => _defaultConsumables ??= _initialiseDefaultConsumables();
         
-        static Dictionary<uint, Item_Data> _initialiseDefaultConsumables()
+        static Dictionary<ulong, Item_Data> _initialiseDefaultConsumables()
         {
-            var defaultConsumables = new Dictionary<uint, Item_Data>();
+            var defaultConsumables = new Dictionary<ulong, Item_Data>();
 
             foreach (var item in _potions())
             {
@@ -19,9 +19,9 @@ namespace Items
             return defaultConsumables;
         }
 
-        static Dictionary<uint, Item_Data> _potions()
+        static Dictionary<ulong, Item_Data> _potions()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     202,

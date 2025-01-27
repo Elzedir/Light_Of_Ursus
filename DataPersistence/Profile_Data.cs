@@ -12,7 +12,7 @@ namespace DataPersistence
     [Serializable]
     public class Profile_Data
     {
-        public uint ProfileID;
+        public ulong ProfileID;
         public string ProfileName;
         Dictionary<string, Save_Data> _allSavedData;
 
@@ -23,7 +23,7 @@ namespace DataPersistence
         readonly string _encryptionCodeWord = "word";
         readonly string _backupExtension = ".bak";
 
-        public Profile_Data(uint profileID, string profileName, int autoSaveCounter, bool useEncryption)
+        public Profile_Data(ulong profileID, string profileName, int autoSaveCounter, bool useEncryption)
         {
             ProfileID = profileID;
             ProfileName = profileName;
@@ -262,7 +262,7 @@ namespace DataPersistence
             var factionDataPath =
                 _toJSON(savePath, "Factions", "AllFactionsSaveData.json", saveData.SavedFactionData);
 
-            var factionActorIDs = new HashSet<uint>();
+            var factionActorIDs = new HashSet<ulong>();
 
             foreach (var factionData in saveData.SavedFactionData.AllFactionData)
             {

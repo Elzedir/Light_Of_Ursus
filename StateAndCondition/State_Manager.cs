@@ -36,11 +36,6 @@ namespace StateAndCondition
             return state_SO;
         }
 
-        public static uint GetUnusedStateID()
-        {
-            return AllStates.GetUnusedStateID();
-        }
-
         public static void ClearSOData()
         {
             AllStates.ClearSOData();
@@ -49,7 +44,7 @@ namespace StateAndCondition
 
     public class Actor_Data_States : Priority_Class
     {
-        public Actor_Data_States(uint actorID, ObservableDictionary<StateName, bool> initialisedStates = null) :
+        public Actor_Data_States(ulong actorID, ObservableDictionary<StateName, bool> initialisedStates = null) :
             base(actorID, ComponentType.Actor)
         {
             _currentStates = State_Manager.InitialiseDefaultStates(initialisedStates);

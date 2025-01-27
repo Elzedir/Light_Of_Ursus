@@ -6,15 +6,15 @@ namespace Recipes
 {
     public abstract class Recipe_List
     {
-        static        Dictionary<uint, Recipe_Data> _defaultRecipes;
-        public static Dictionary<uint, Recipe_Data> DefaultRecipes => _defaultRecipes ??= _initialiseDefaultRecipes();
+        static        Dictionary<ulong, Recipe_Data> _defaultRecipes;
+        public static Dictionary<ulong, Recipe_Data> DefaultRecipes => _defaultRecipes ??= _initialiseDefaultRecipes();
 
-        static Dictionary<uint, Recipe_Data> _initialiseDefaultRecipes()
+        static Dictionary<ulong, Recipe_Data> _initialiseDefaultRecipes()
         {
-            return new Dictionary<uint, Recipe_Data>
+            return new Dictionary<ulong, Recipe_Data>
             {
                 {
-                    (uint)RecipeName.None, new Recipe_Data(
+                    (ulong)RecipeName.None, new Recipe_Data(
                         recipeName: RecipeName.None,
                         recipeDescription: "Select a recipe",
                         requiredProgress: 0,
@@ -25,7 +25,7 @@ namespace Recipes
                         possibleQualities: new List<CraftingQuality>())
                 },
                 {
-                    (uint)RecipeName.Log, new Recipe_Data(
+                    (ulong)RecipeName.Log, new Recipe_Data(
                         recipeName: RecipeName.Log,
                         recipeDescription: "Chop a log",
                         requiredProgress: 10,
@@ -36,7 +36,7 @@ namespace Recipes
                         possibleQualities: new List<CraftingQuality> { new(1, ItemQualityName.Common) })
                 },
                 {
-                    (uint)RecipeName.Plank, new Recipe_Data(
+                    (ulong)RecipeName.Plank, new Recipe_Data(
                         recipeName: RecipeName.Plank,
                         recipeDescription: "Craft a plank",
                         requiredProgress: 10,

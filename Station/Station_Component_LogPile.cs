@@ -18,8 +18,8 @@ namespace Station
 
         public override RecipeName       DefaultProduct       => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new();
-        public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
+        public override List<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
+        public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {
             ActorActionName.Fetch_Items,

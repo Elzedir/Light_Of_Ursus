@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     [CreateAssetMenu(fileName = "Actor_SO", menuName = "SOList/Actor_SO")]
     [Serializable]
     public class Actor_SO : Data_Component_SO<Actor_Data, Actor_Component>
     {
         public Data<Actor_Data>[] Actors                      => Data;
-        public Data<Actor_Data>   GetActor_Data(uint actorID) => GetData(actorID);
-        public Dictionary<uint, Actor_Component> Actor_Components => _getSceneComponents();
+        public Dictionary<ulong, Actor_Component> Actor_Components => _getSceneComponents();
         
-        public Actor_Component GetActor_Component(uint actorID)
+        public Data<Actor_Data>   GetActor_Data(ulong actorID) => GetData(actorID);
+        
+        public Actor_Component GetActor_Component(ulong actorID)
         {
             if (Actor_Components.TryGetValue(actorID, out var component))
             {
@@ -27,19 +29,17 @@ namespace Actor
             return null;
         }
 
-        public override uint GetDataID(int id) => Actors[id].Data_Object.ActorID;
-
-        public void UpdateActor(uint actorID, Actor_Data actor_Data) => 
+        public void UpdateActor(ulong actorID, Actor_Data actor_Data) => 
             UpdateData(actorID, actor_Data);
         
-        public void UpdateAllActors(Dictionary<uint, Actor_Data> allActors) => UpdateAllData(allActors);
+        public void UpdateAllActors(Dictionary<ulong, Actor_Data> allActors) => UpdateAllData(allActors);
 
-        protected override Dictionary<uint, Data<Actor_Data>> _getDefaultData() =>
+        protected override Dictionary<ulong, Data<Actor_Data>> _getDefaultData() =>
             _convertDictionaryToData(Actor_List.DefaultActors);
 
-        protected override Dictionary<uint, Data<Actor_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Actor_Data>> _getSavedData()
         {
-            Dictionary<uint, Actor_Data> savedData = new();
+            Dictionary<ulong, Actor_Data> savedData = new();
                 
             try
             {
@@ -67,21 +67,8 @@ namespace Actor
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<Actor_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<Actor_Data>> _getSceneData() =>
             _convertDictionaryToData(Actor_Components.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ActorData));
-        
-
-        static uint _lastUnusedActorID = 1;
-
-        public uint GetUnusedActorID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedActorID))
-            {
-                _lastUnusedActorID++;
-            }
-
-            return _lastUnusedActorID;
-        }
         
         protected override Data<Actor_Data> _convertToData(Actor_Data data)
         {

@@ -4,17 +4,17 @@ namespace StateAndCondition
 {
     public class Condition_List
     {
-        static Dictionary<uint, Condition_Data> _defaultConditions;
+        static Dictionary<ulong, Condition_Data> _defaultConditions;
 
-        public static Dictionary<uint, Condition_Data> DefaultConditions =>
+        public static Dictionary<ulong, Condition_Data> DefaultConditions =>
             _defaultConditions ??= _initialiseDefaultConditions();
 
-        static Dictionary<uint, Condition_Data> _initialiseDefaultConditions()
+        static Dictionary<ulong, Condition_Data> _initialiseDefaultConditions()
         {
-            return new Dictionary<uint, Condition_Data>
+            return new Dictionary<ulong, Condition_Data>
             {
                 {
-                    (uint)ConditionName.Inspired, new Condition_Data(
+                    (ulong)ConditionName.Inspired, new Condition_Data(
                         conditionName: ConditionName.Inspired, 
                         defaultConditionDuration: 100, 
                         maxConditionDuration: 300)

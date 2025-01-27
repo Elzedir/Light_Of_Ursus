@@ -40,12 +40,12 @@ namespace DataPersistence
         
         public void SetCurrentProfile(Profile_Data profileData) => _currentProfile = profileData;
 
-        Dictionary<uint, Profile_Data> _allProfiles;
-        public Dictionary<uint, Profile_Data> AllProfiles =>_allProfiles ??= LoadAllProfiles();
+        Dictionary<ulong, Profile_Data> _allProfiles;
+        public Dictionary<ulong, Profile_Data> AllProfiles =>_allProfiles ??= LoadAllProfiles();
 
-        uint _lastUnusedProfileID = 2;
+        ulong _lastUnusedProfileID = 2;
 
-        public uint GetRandomProfileID()
+        public ulong GetRandomProfileID()
         {
             while (AllProfiles.ContainsKey(_lastUnusedProfileID))
             {
@@ -55,7 +55,7 @@ namespace DataPersistence
             return _lastUnusedProfileID;
         }
 
-        public void ChangeProfile(uint profileID)
+        public void ChangeProfile(ulong profileID)
         {
             SetCurrentProfile(AllProfiles[profileID]);
 
@@ -121,9 +121,9 @@ namespace DataPersistence
             return allProfilesLatestSave;
         }
 
-        public Dictionary<uint, Profile_Data> LoadAllProfiles()
+        public Dictionary<ulong, Profile_Data> LoadAllProfiles()
         {
-            Dictionary<uint, Profile_Data> allProfiles = new();
+            Dictionary<ulong, Profile_Data> allProfiles = new();
 
             foreach (var directoryInfo in new DirectoryInfo(Application.persistentDataPath).EnumerateDirectories()
                          .Where(d => d.Name != "Unity"))

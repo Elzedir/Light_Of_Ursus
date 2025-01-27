@@ -6,12 +6,12 @@ namespace Items
 {
     public abstract class List_Armour
     {
-        static Dictionary<uint, Item_Data> _defaultArmour;
-        public static Dictionary<uint, Item_Data> DefaultArmour => _defaultArmour ??= _initialiseDefaultArmour();
+        static Dictionary<ulong, Item_Data> _defaultArmour;
+        public static Dictionary<ulong, Item_Data> DefaultArmour => _defaultArmour ??= _initialiseDefaultArmour();
         
-        static Dictionary<uint, Item_Data> _initialiseDefaultArmour()
+        static Dictionary<ulong, Item_Data> _initialiseDefaultArmour()
         {
-            var defaultArmour = new Dictionary<uint, Item_Data>();
+            var defaultArmour = new Dictionary<ulong, Item_Data>();
 
             foreach (var item in _heavy())
             {
@@ -21,9 +21,9 @@ namespace Items
             return defaultArmour;
         }
 
-        static Dictionary<uint, Item_Data> _heavy()
+        static Dictionary<ulong, Item_Data> _heavy()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     100,

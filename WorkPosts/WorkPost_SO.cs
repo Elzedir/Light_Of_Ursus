@@ -15,10 +15,10 @@ namespace WorkPosts
         // Not really a point to this class?
         
         public Data<WorkPost_Data>[]         WorkPosts                            => Data;
-        public Data<WorkPost_Data>           GetWorkPost_Data(uint      workPostID) => GetData(workPostID);
-        public Dictionary<uint, WorkPost_Component> WorkPostComponents => _getSceneComponents();
+        public Data<WorkPost_Data>           GetWorkPost_Data(ulong      workPostID) => GetData(workPostID);
+        public Dictionary<ulong, WorkPost_Component> WorkPostComponents => _getSceneComponents();
 
-        public WorkPost_Component GetWorkPost_Component(uint workPostID)
+        public WorkPost_Component GetWorkPost_Component(ulong workPostID)
         {
             if (WorkPostComponents.TryGetValue(workPostID, out var component))
             {
@@ -29,31 +29,17 @@ namespace WorkPosts
             return null;
         }
 
-        public override uint GetDataID(int id) => WorkPosts[id].Data_Object.WorkPostID;
+        public void UpdateWorkPost(ulong workPostID, WorkPost_Data workPost_Data) => UpdateData(workPostID, workPost_Data);
+        public void UpdateAllWorkPosts(Dictionary<ulong, WorkPost_Data> allWorkPosts) => UpdateAllData(allWorkPosts);
 
-        public void UpdateWorkPost(uint workPostID, WorkPost_Data workPost_Data) => UpdateData(workPostID, workPost_Data);
-        public void UpdateAllWorkPosts(Dictionary<uint, WorkPost_Data> allWorkPosts) => UpdateAllData(allWorkPosts);
+        protected override Dictionary<ulong, Data<WorkPost_Data>> _getDefaultData() => 
+            _convertDictionaryToData(new Dictionary<ulong, WorkPost_Data>());
 
-        protected override Dictionary<uint, Data<WorkPost_Data>> _getDefaultData() => 
-            _convertDictionaryToData(new Dictionary<uint, WorkPost_Data>());
+        protected override Dictionary<ulong, Data<WorkPost_Data>> _getSavedData() =>
+            _convertDictionaryToData(new Dictionary<ulong, WorkPost_Data>());
 
-        protected override Dictionary<uint, Data<WorkPost_Data>> _getSavedData() =>
-            _convertDictionaryToData(new Dictionary<uint, WorkPost_Data>());
-
-        protected override Dictionary<uint, Data<WorkPost_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<WorkPost_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.WorkPostData));
-
-        static uint _lastUnusedWorkPostID = 1;
-
-        public uint GetUnusedWorkPostID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedWorkPostID))
-            {
-                _lastUnusedWorkPostID++;
-            }
-
-            return _lastUnusedWorkPostID;
-        }
          
         protected override Data<WorkPost_Data> _convertToData(WorkPost_Data data)
         {

@@ -10,18 +10,18 @@ namespace Priority
     {
         int                            _currentPosition;
         PriorityElement[]              _priorityArray;
-        readonly Dictionary<uint, int> _priorityQueue;
+        readonly Dictionary<ulong, int> _priorityQueue;
 
-        public Action<uint> OnPriorityRemoved;
+        public Action<ulong> OnPriorityRemoved;
 
         public Priority_Queue(int maxPriorities)
         {
             _currentPosition = 0;
             _priorityArray   = new PriorityElement[maxPriorities];
-            _priorityQueue   = new Dictionary<uint, int>();
+            _priorityQueue   = new Dictionary<ulong, int>();
         }
 
-        public PriorityElement Peek(uint priorityID = 1)
+        public PriorityElement Peek(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
                 return null;
@@ -36,7 +36,7 @@ namespace Priority
             return _currentPosition == 0 ? null : _priorityArray.Skip(1).ToArray();
         }
 
-        public PriorityElement Dequeue(uint priorityID = 1)
+        public PriorityElement Dequeue(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
             {
@@ -64,7 +64,7 @@ namespace Priority
             return priorityValue;
         }
 
-        bool _enqueue(uint priorityID, float priority)
+        bool _enqueue(ulong priorityID, float priority)
         {
             if (_priorityQueue.TryGetValue(priorityID, out var index) && index != 0)
             {
@@ -89,7 +89,7 @@ namespace Priority
             return true;
         }
 
-        public bool Update(uint priorityID, float newPriority)
+        public bool Update(ulong priorityID, float newPriority)
         {
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
                 return _enqueue(priorityID, newPriority);
@@ -110,7 +110,7 @@ namespace Priority
             return true;
         }
 
-        public bool Remove(uint priorityID)
+        public bool Remove(ulong priorityID)
         {
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
                 return false;
@@ -225,12 +225,12 @@ namespace Priority
 
     public class PriorityElement
     {
-        public readonly uint         PriorityID;
+        public readonly ulong         PriorityID;
         public float PriorityValue { get; private set; }
 
         // We'll save this in case we need to exclude any values. Or Debug anything.
 
-        public PriorityElement(uint priorityID, float priorityValue)
+        public PriorityElement(ulong priorityID, float priorityValue)
         {
             PriorityID       = priorityID;
             PriorityValue    = priorityValue;

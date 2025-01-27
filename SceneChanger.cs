@@ -21,6 +21,6 @@ public class SceneChanger : MonoBehaviour
         if (string.IsNullOrEmpty(SceneName)) { Debug.Log("String is null."); return; }
         if (SceneManager.GetSceneByName(SceneName) == null) { Debug.Log("Scene name does not exist."); return; }
         
-        Manager_Game.Instance.LoadScene(SceneName);
+        Manager_Game.S_Instance.LoadScene(SceneName);
     }
 }

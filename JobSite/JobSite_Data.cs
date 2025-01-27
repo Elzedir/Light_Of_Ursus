@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using ActorActions;
-using ActorPreset;
+using ActorPresets;
 using Actors;
 using City;
 using Items;
@@ -23,7 +23,7 @@ namespace JobSite
     [Serializable]
     public class JobSite_Data : Data_Class
     {
-        public uint        JobSiteID;
+        public ulong        JobSiteID;
         public JobSiteName JobSiteName;
 
         JobSite_Component _jobSite_Component;
@@ -31,26 +31,26 @@ namespace JobSite
         public JobSite_Component JobSite_Component =>
             _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
 
-        public uint JobSiteFactionID;
-        public uint CityID;
+        public ulong JobSiteFactionID;
+        public ulong CityID;
 
         public bool   JobSiteIsActive = true;
         public void   SetJobSiteIsActive(bool jobSiteIsActive) => JobSiteIsActive = jobSiteIsActive;
         public string JobSiteDescription;
-        public uint   OwnerID;
+        public ulong   OwnerID;
 
-        [SerializeField] List<uint> _allEmployeeIDs;
+        [SerializeField] List<ulong> _allEmployeeIDs;
 
-        Dictionary<uint, Actor_Component>        _allEmployees;
-        public Dictionary<uint, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
+        Dictionary<ulong, Actor_Component>        _allEmployees;
+        public Dictionary<ulong, Actor_Component> AllEmployees => _allEmployees ??= _populateAllEmployees();
 
         int _currentAllStationsLength;
 
         // Call when a new city is formed.
         public void                         RefreshAllStations() => _currentAllStationsLength = 0;
-        Dictionary<uint, Station_Component> _allStation_Components;
+        Dictionary<ulong, Station_Component> _allStation_Components;
 
-        public Dictionary<uint, Station_Component> AllStationComponents
+        public Dictionary<ulong, Station_Component> AllStationComponents
         {
             get
             {
@@ -68,16 +68,16 @@ namespace JobSite
         Priority_Data_JobSite _priorityData;
         public Priority_Data_JobSite PriorityData => _priorityData ??= new Priority_Data_JobSite(JobSiteID);
 
-        Dictionary<(uint, uint), uint> _workPost_Workers;
+        Dictionary<(ulong, ulong), ulong> _workPost_Workers;
 
-        public Dictionary<(uint StationID, uint WorkPostID), uint> WorkPost_Workers =>
+        public Dictionary<(ulong StationID, ulong WorkPostID), ulong> WorkPost_Workers =>
             _workPost_Workers ??= _populateWorkPost_Workers();
 
-        Dictionary<(uint, uint), uint> _populateWorkPost_Workers()
+        Dictionary<(ulong, ulong), ulong> _populateWorkPost_Workers()
         {
-            if (!Application.isPlaying) return new Dictionary<(uint, uint), uint>();
+            if (!Application.isPlaying) return new Dictionary<(ulong, ulong), ulong>();
             
-            var allEmployeePositions = new Dictionary<(uint, uint), uint>();
+            var allEmployeePositions = new Dictionary<(ulong, ulong), ulong>();
 
             foreach (var station in AllStationComponents)
             {
@@ -90,9 +90,9 @@ namespace JobSite
             return allEmployeePositions;
         }
 
-        public JobSite_Data(uint           jobSiteID, JobSiteName jobSiteName, uint jobSiteFactionID, uint cityID,
-                            string         jobSiteDescription, uint ownerID, List<uint> allStationIDs,
-                            List<uint>     allEmployeeIDs,
+        public JobSite_Data(ulong           jobSiteID, JobSiteName jobSiteName, ulong jobSiteFactionID, ulong cityID,
+                            string         jobSiteDescription, ulong ownerID, List<ulong> allStationIDs,
+                            List<ulong> allEmployeeIDs,
                             ProsperityData prosperityData)
         {
             JobSiteID          = jobSiteID;
@@ -108,9 +108,9 @@ namespace JobSite
             _priorityData = new Priority_Data_JobSite(JobSiteID);
         }
 
-        Dictionary<uint, Actor_Component> _populateAllEmployees()
+        Dictionary<ulong, Actor_Component> _populateAllEmployees()
         {
-            var allEmployees = new Dictionary<uint, Actor_Component>();
+            var allEmployees = new Dictionary<ulong, Actor_Component>();
 
             foreach (var employeeID in _allEmployeeIDs)
             {
@@ -130,8 +130,8 @@ namespace JobSite
 
         public ProsperityData ProsperityData;
 
-        public List<uint>                                           AllStationIDs;
-        public Dictionary<(uint ActorID, uint OrderID), Order_Base> AllOrders = new();
+        public List<ulong>                                           AllStationIDs;
+        public Dictionary<(ulong ActorID, ulong OrderID), Order_Base> AllOrders = new();
 
         // Work out how to do quotas and set production rate
 
@@ -195,7 +195,7 @@ namespace JobSite
         //     // And change all affected things, like perks, job settings, etc.
         // }
 
-        public void SetOwner(uint ownerID)
+        public void SetOwner(ulong ownerID)
         {
             OwnerID = ownerID;
         }
@@ -243,7 +243,7 @@ namespace JobSite
             return actor;
         }
 
-        protected bool _hasMinimumVocationRequired(uint citizenID, List<VocationRequirement> vocationRequirements)
+        protected bool _hasMinimumVocationRequired(ulong citizenID, List<VocationRequirement> vocationRequirements)
         {
             var actorData = Actor_Manager.GetActor_Data(citizenID);
 
@@ -287,7 +287,7 @@ namespace JobSite
             return vocationRequirements;
         }
 
-        public void AddEmployeeToJobsite(uint employeeID)
+        public void AddEmployeeToJobsite(ulong employeeID)
         {
             if (_allEmployeeIDs.Contains(employeeID))
             {
@@ -299,14 +299,14 @@ namespace JobSite
             Actor_Manager.GetActor_Data(employeeID).Career.SetJobSiteID(JobSiteID);
         }
 
-        public void HireEmployee(uint employeeID)
+        public void HireEmployee(ulong employeeID)
         {
             AddEmployeeToJobsite(employeeID);
 
             // And then apply relevant relation buff
         }
 
-        public void RemoveEmployeeFromJobsite(uint employeeID)
+        public void RemoveEmployeeFromJobsite(ulong employeeID)
         {
             if (!_allEmployeeIDs.Contains(employeeID))
             {
@@ -320,7 +320,7 @@ namespace JobSite
             // Remove employee job from employee job component.
         }
 
-        public void FireEmployee(uint employeeID)
+        public void FireEmployee(ulong employeeID)
         {
             RemoveEmployeeFromJobsite(employeeID);
 
@@ -429,7 +429,7 @@ namespace JobSite
             }
         }
 
-        public uint GetWorkPostIDFromWorkerID(uint workerID)
+        public ulong GetWorkPostIDFromWorkerID(ulong workerID)
         {
             return WorkPost_Workers.FirstOrDefault(x => x.Value == workerID).Key.WorkPostID;
         }
@@ -686,12 +686,12 @@ namespace JobSite
     {
         public List<Item> AllProducedItems;
         public List<Item> EstimatedProductionRatePerHour;
-        public uint       JobSiteID;
+        public ulong       JobSiteID;
 
         JobSite_Component        _jobSite;
         public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
 
-        public ProductionData(List<Item> allProducedItems, uint jobSiteID)
+        public ProductionData(List<Item> allProducedItems, ulong jobSiteID)
         {
             AllProducedItems = allProducedItems;
             JobSiteID        = jobSiteID;

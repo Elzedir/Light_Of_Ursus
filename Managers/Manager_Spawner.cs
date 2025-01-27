@@ -99,7 +99,7 @@ public class Manager_Spawner : MonoBehaviour
 
     void _refreshSongParts()
     {
-        if (Manager_Game.Instance.SceneName == "Main_Menu" || Manager_Game.Instance.SceneName == "Puzzle") return;
+        if (Manager_Game.S_Instance.SceneName == "Main_Menu" || Manager_Game.S_Instance.SceneName == "Puzzle") return;
 
         if (PuzzleSpawner == null) return;
 
@@ -109,7 +109,7 @@ public class Manager_Spawner : MonoBehaviour
         {
             if (child.GetComponent<Interactable_Puzzle>().PuzzleData.PuzzleState.PuzzleCompleted)
             {
-                Manager_Game.Instance.Manager_Audio.LocalParameters[i].SetValue(1);
+                Manager_Game.S_Instance.Manager_Audio.LocalParameters[i].SetValue(1);
             }
 
             i++;

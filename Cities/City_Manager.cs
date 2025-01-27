@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace City
@@ -23,6 +24,8 @@ namespace City
         {
             return AllCities.GetCity_Component(cityID);
         }
+        
+        public static List<ulong> GetAllCityIDs() => AllCities.GetAllDataIDs();
         
         static City_SO _getCity_SO()
         {
@@ -53,11 +56,6 @@ namespace City
             }
 
             return nearestCity;
-        }
-
-        public static ulong GetUnusedCityID()
-        {
-            return AllCities.GetUnusedCityID();
         }
         
         public static void ClearSOData()

@@ -5,7 +5,7 @@ using Equipment;
 using Inventory;
 using Tools;
 
-namespace ActorPreset
+namespace ActorPresets
 {
     public class ActorPreset_Data : Data_Class
     {

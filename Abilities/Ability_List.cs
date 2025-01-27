@@ -6,7 +6,7 @@ using Managers;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Ability
+namespace Abilities
 {
     public abstract class Ability_List
     {

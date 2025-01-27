@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Ability
+namespace Abilities
 {
     [CreateAssetMenu(fileName = "Ability_SO", menuName = "SOList/Ability_SO")]
     [Serializable]
@@ -16,9 +15,9 @@ namespace Ability
         public Data<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
             GetData((ulong)abilityName);
 
-        public Ability GetAbility(AbilityName abilityName, ulong currentLevel)
+        public Abilities.Ability GetAbility(AbilityName abilityName, ulong currentLevel)
         {
-            return new Ability(abilityName, currentLevel);
+            return new Abilities.Ability(abilityName, currentLevel);
         }
 
         public void UpdateAbility(ulong abilityID, Ability_Data ability_Data) =>
@@ -37,18 +36,6 @@ namespace Ability
                 data_Object: data, 
                 dataTitle: $"{(ulong)data.AbilityName}: {data.AbilityName}",
                 getDataToDisplay: data.GetDataToDisplay);
-        }
-
-        static ulong _lastUnusedAbilityID = 1;
-
-        public ulong GetUnusedAbilityID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedAbilityID))
-            {
-                _lastUnusedAbilityID++;
-            }
-
-            return _lastUnusedAbilityID;
         }
     }
 

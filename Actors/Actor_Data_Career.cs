@@ -16,7 +16,7 @@ namespace Actors
     [Serializable]
     public class Actor_Data_Career : Priority_Class
     {
-        public Actor_Data_Career(uint actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(
+        public Actor_Data_Career(ulong actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(
             actorID,
             ComponentType.Actor)
         {
@@ -114,7 +114,7 @@ namespace Actors
 
         public void StopCurrentJob() => _currentJob = null;
 
-        public bool GetNewCurrentJob(uint stationID = 0)
+        public bool GetNewCurrentJob(ulong stationID = 0)
         {
             return CareerName != CareerName.Wanderer &&
                    JobSite.GetNewCurrentJob(ActorReference.Actor_Component, stationID);
@@ -123,10 +123,10 @@ namespace Actors
         public bool JobsActive = true;
         public void ToggleDoJobs(bool jobsActive) => JobsActive = jobsActive;
 
-        public uint JobSiteID;
+        public ulong JobSiteID;
         JobSite_Component _jobSite;
         public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
-        public void SetJobSiteID(uint jobSiteID) => JobSiteID = jobSiteID;
+        public void SetJobSiteID(ulong jobSiteID) => JobSiteID = jobSiteID;
 
         public override List<ActorActionName> GetAllowedActions()
         {

@@ -11,16 +11,16 @@ namespace Tools
         where TD : class
         where TC : MonoBehaviour
     {
-        //public             HashSet<uint>              ComponentIDsToChange = new();
-        public Dictionary<uint, Data<TD>> SavedData => _getSavedData();
+        //public             HashSet<ulong>              ComponentIDsToChange = new();
+        public Dictionary<ulong, Data<TD>> SavedData => _getSavedData();
         
         //* Maybe see if we can make a common function here for _getSavedData(); 
-        protected abstract Dictionary<uint, Data<TD>> _getSavedData();
-        public             Dictionary<uint, TC>       SceneComponents => _getSceneComponents();
-        public             Dictionary<uint, Data<TD>> SceneData       => _getSceneData();
-        protected abstract Dictionary<uint, Data<TD>> _getSceneData();
+        protected abstract Dictionary<ulong, Data<TD>> _getSavedData();
+        public             Dictionary<ulong, TC>       SceneComponents => _getSceneComponents();
+        public             Dictionary<ulong, Data<TD>> SceneData       => _getSceneData();
+        protected abstract Dictionary<ulong, Data<TD>> _getSceneData();
         
-        protected Dictionary<uint, TC> _getSceneComponents(bool repopulate = false)
+        protected Dictionary<ulong, TC> _getSceneComponents(bool repopulate = false)
         {
             // if (repopulate)
             // {
@@ -51,7 +51,7 @@ namespace Tools
                    .Select(component =>
                    {
                        var match = regex.Match(component.name);
-                       return match.Success && uint.TryParse(match.Value, out var id)
+                       return match.Success && ulong.TryParse(match.Value, out var id)
                            ? new { Id = id, Component = component }
                            : null;
                    })
@@ -70,7 +70,7 @@ namespace Tools
                 dataID = regex.Match(componentName).Value;
             }
 
-            if (uint.TryParse(dataID, out var id))
+            if (ulong.TryParse(dataID, out var id))
             {
                 return GetData(id);
             }
@@ -99,9 +99,9 @@ namespace Tools
             }
         }
         
-        protected override Dictionary<uint, Data<TD>> _getAllInitialisationData()
+        protected override Dictionary<ulong, Data<TD>> _getAllInitialisationData()
         {
-            var allData = new Dictionary<uint, Data<TD>>();
+            var allData = new Dictionary<ulong, Data<TD>>();
             
             foreach (var (key, value) in DefaultData)
             {

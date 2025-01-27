@@ -10,7 +10,7 @@ namespace Items
     [Serializable]
     public class Item_Data : Data_Class
     {
-        public uint   ItemID   => ItemCommonStats.ItemID;
+        public ulong   ItemID   => ItemCommonStats.ItemID;
         public string ItemName => ItemCommonStats.ItemName;
 
         public Item_CommonStats         ItemCommonStats;
@@ -138,16 +138,16 @@ namespace Items
     [Serializable]
     public class Item : Data_Class
     {
-        public uint   ItemID;
+        public ulong   ItemID;
         public string ItemName => DataItem.ItemCommonStats.ItemName;
-        public uint   ItemAmount;
-        public uint   ItemAmountOnHold;
-        public uint   MaxStackSize => DataItem.ItemCommonStats.MaxStackSize;
+        public ulong   ItemAmount;
+        public ulong   ItemAmountOnHold;
+        public ulong   MaxStackSize => DataItem.ItemCommonStats.MaxStackSize;
 
         Item_Data        _dataItem;
         public Item_Data DataItem => _dataItem ??= Item_Manager.GetItem_Data(ItemID);
 
-        public Item(uint itemID, uint itemAmount)
+        public Item(ulong itemID, ulong itemAmount)
         {
             ItemID       = itemID;
             ItemAmount   = itemAmount;
@@ -160,11 +160,11 @@ namespace Items
             ItemAmountOnHold = item.ItemAmountOnHold;
         }
 
-        public static uint GetItemListTotal_CountAllItems(List<Item> items)
-            => (uint)items.Sum(item => item.ItemAmount);
+        public static ulong GetItemListTotal_CountAllItems(List<Item> items)
+            => (ulong)items.Sum(item => (int)item.ItemAmount);
 
-        public static uint GetItemListTotal_CountSpecificItem(List<Item> items, uint itemID)
-            => (uint)items.Where(item => item.ItemID == itemID).Sum(item => item.ItemAmount);
+        public static ulong GetItemListTotal_CountSpecificItem(List<Item> items, ulong itemID)
+            => (ulong)items.Where(item => item.ItemID == itemID).Sum(item => (int)item.ItemAmount);
 
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);

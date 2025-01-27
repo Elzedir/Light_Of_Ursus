@@ -9,7 +9,7 @@ namespace Faction
 {
     public class Faction_Component : MonoBehaviour
     {
-        public uint FactionID => FactionData.FactionID;
+        public ulong FactionID => FactionData.FactionID;
         
         public Faction_Data FactionData;
 

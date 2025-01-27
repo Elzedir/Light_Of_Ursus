@@ -5,19 +5,19 @@ using Careers;
 using Jobs;
 using Recipes;
 
-namespace ActorPreset
+namespace ActorPresets
 {
     public abstract class ActorPreset_List
     {
-        static Dictionary<uint, ActorPreset_Data> _defaultActorDataPresets;
-        public static Dictionary<uint, ActorPreset_Data> DefaultActorDataPresets => _defaultActorDataPresets ??= _initialiseDefaultActorDataPresets();
+        static Dictionary<ulong, ActorPreset_Data> _defaultActorDataPresets;
+        public static Dictionary<ulong, ActorPreset_Data> DefaultActorDataPresets => _defaultActorDataPresets ??= _initialiseDefaultActorDataPresets();
         
-        static Dictionary<uint, ActorPreset_Data> _initialiseDefaultActorDataPresets()
+        static Dictionary<ulong, ActorPreset_Data> _initialiseDefaultActorDataPresets()
         {
-            return new Dictionary<uint, ActorPreset_Data>
+            return new Dictionary<ulong, ActorPreset_Data>
             {
                 {
-                    (uint)ActorDataPresetName.Wanderer_Journeyman, new ActorPreset_Data
+                    (ulong)ActorDataPresetName.Wanderer_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Wanderer_Journeyman,
                         actorDataCareer: new Actor_Data_Career
@@ -29,7 +29,7 @@ namespace ActorPreset
                     )
                 },
                 {
-                    (uint)ActorDataPresetName.Logger_Journeyman, new ActorPreset_Data
+                    (ulong)ActorDataPresetName.Logger_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Logger_Journeyman,
                         actorDataCareer: new Actor_Data_Career
@@ -67,7 +67,7 @@ namespace ActorPreset
                     )
                 },
                 {
-                    (uint)ActorDataPresetName.Smith_Journeyman, new ActorPreset_Data
+                    (ulong)ActorDataPresetName.Smith_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Smith_Journeyman,
                         actorDataCareer: new Actor_Data_Career

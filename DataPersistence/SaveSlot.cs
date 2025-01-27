@@ -9,8 +9,8 @@ namespace DataPersistence
     public class SaveSlot : MonoBehaviour
     {
         [Header("Profile")]
-        [SerializeField] uint _saveSlotID = 0;
-        public uint GetSaveSlotID() => _saveSlotID;
+        [SerializeField] ulong _saveSlotID = 0;
+        public ulong GetSaveSlotID() => _saveSlotID;
         [SerializeField] string _saveSlotName = "";
         public string GetSaveGameName() => _saveSlotName;
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Equipment;
 using UnityEngine;
 
@@ -20,7 +21,9 @@ namespace Items
         static Item_SO _allItems;
         static Item_SO AllItems => _allItems ??= _getItem_SO();
 
-        public static Item_Data GetItem_Data(uint itemID) => AllItems.GetItem_Data(itemID).Data_Object;
+        public static Item_Data GetItem_Data(ulong itemID) => AllItems.GetItem_Data(itemID).Data_Object;
+        
+        public static List<ulong> GetAllItemIDs() => AllItems.GetAllDataIDs();
 
         static Item_SO _getItem_SO()
         {

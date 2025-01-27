@@ -15,11 +15,11 @@ namespace Station
     [Serializable]
     public class Station_Data : Data_Class
     {
-        public uint        StationID;
+        public ulong        StationID;
         public string      StationDescription;
         public bool        StationIsActive;
 
-        public uint JobSiteID;
+        public ulong JobSiteID;
 
         public float BaseProgressRatePerHour = 5;
 
@@ -27,7 +27,7 @@ namespace Station
         public RecipeName  DefaultProduct => Station_Component.DefaultProduct;
 
         [SerializeField] List<WorkPost_Data> _allWorkPostData;
-        public Dictionary<uint, WorkPost_Data> AllWorkPost_Data;
+        public Dictionary<ulong, WorkPost_Data> AllWorkPost_Data;
         
         Station_Component _station_Component;
 
@@ -42,13 +42,13 @@ namespace Station
         StationProgressData        _stationProgressData;
         public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
         
-        Dictionary<uint, WorkPost_Component> _allWorkPostComponents;
-        public Dictionary<uint, WorkPost_Component> AllWorkPost_Components => _allWorkPostComponents ??= _populateWorkPlace_Components();
+        Dictionary<ulong, WorkPost_Component> _allWorkPostComponents;
+        public Dictionary<ulong, WorkPost_Component> AllWorkPost_Components => _allWorkPostComponents ??= _populateWorkPlace_Components();
         public bool IsStationBeingOperated =>
             AllWorkPost_Data.Values.Any(workPost => workPost.CurrentWorker != null);
 
-        public Station_Data(uint                            stationID,        StationName            stationName,        string stationDescription, uint jobSiteID,
-                            Dictionary<uint, WorkPost_Data> allWorkPost_Data, bool   stationIsActive = true)
+        public Station_Data(ulong                            stationID,        StationName            stationName,        string stationDescription, ulong jobSiteID,
+                            Dictionary<ulong, WorkPost_Data> allWorkPost_Data, bool   stationIsActive = true)
         {
             StationID               = stationID;
             //stationName; WHen loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
@@ -78,7 +78,7 @@ namespace Station
             StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
         }
 
-        Dictionary<uint, WorkPost_Component> _populateWorkPlace_Components()
+        Dictionary<ulong, WorkPost_Component> _populateWorkPlace_Components()
         {
             if (!Application.isPlaying)
             {
@@ -92,7 +92,7 @@ namespace Station
                 Object.DestroyImmediate(child.gameObject);
             }
             
-            AllWorkPost_Data ??= new Dictionary<uint, WorkPost_Data>();
+            AllWorkPost_Data ??= new Dictionary<ulong, WorkPost_Data>();
             var workPostDefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
             
             if (AllWorkPost_Data.Count > workPostDefaultValues.Count)
@@ -101,7 +101,7 @@ namespace Station
                 AllWorkPost_Data.Clear();
             }
             
-            for (uint i = 0; i < workPostDefaultValues.Count; i++)
+            for (ulong i = 0; i < (ulong)workPostDefaultValues.Count; i++)
             {
                 if (!AllWorkPost_Data.TryGetValue(i, out var data) || data == null)
                 {
@@ -117,7 +117,7 @@ namespace Station
             return null;
         }
 
-        Dictionary<uint, WorkPost_Component> _createWorkPost(List<WorkPost_Data> allWorkPost_Data)
+        Dictionary<ulong, WorkPost_Component> _createWorkPost(List<WorkPost_Data> allWorkPost_Data)
         {
             var workPost_DefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
 
@@ -127,7 +127,7 @@ namespace Station
                 return null;
             }
             
-            var workPost_Components = new Dictionary<uint, WorkPost_Component>();
+            var workPost_Components = new Dictionary<ulong, WorkPost_Component>();
 
             for (var i = 0; i < allWorkPost_Data.Count; i++)
             {

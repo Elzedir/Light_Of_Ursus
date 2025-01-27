@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Region
@@ -9,7 +10,7 @@ namespace Region
         static Region_SO _allRegions;
         static Region_SO AllRegions => _allRegions ??= _getRegion_SO();
         
-        public static Region_Data GetRegion_Data(uint regionID)
+        public static Region_Data GetRegion_Data(ulong regionID)
         {
             return AllRegions.GetRegion_Data(regionID).Data_Object;
         }
@@ -19,10 +20,12 @@ namespace Region
             return AllRegions.GetDataFromName(region_Component.name)?.Data_Object;
         }
         
-        public static Region_Component GetRegion_Component(uint regionID)
+        public static Region_Component GetRegion_Component(ulong regionID)
         {
             return AllRegions.GetRegion_Component(regionID);
         }
+        
+        public static List<ulong> GetAllRegionIDs() => AllRegions.GetAllDataIDs(); 
         
         static Region_SO _getRegion_SO()
         {
@@ -53,11 +56,6 @@ namespace Region
             }
 
             return nearestRegion;
-        }
-
-        public static uint GetUnusedRegionID()
-        {
-            return AllRegions.GetUnusedRegionID();
         }
         
         public static void ClearSOData()

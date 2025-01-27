@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Ability;
 using Actor;
 using DataPersistence;
 using Managers;
@@ -66,9 +65,9 @@ public class Player : Controller, IDataPersistence
 
         PlayerMove();
 
-        if (_hasStaff != Manager_Game.Instance.PlayerHasStaff) { _hasStaff = Manager_Game.Instance.PlayerHasStaff; _animator.SetBool("HasStaff", _hasStaff); }
+        if (_hasStaff != Manager_Game.S_Instance.PlayerHasStaff) { _hasStaff = Manager_Game.S_Instance.PlayerHasStaff; _animator.SetBool("HasStaff", _hasStaff); }
 
-        if (Manager_Game.Instance.CurrentState != GameState.Playing) return;
+        if (Manager_Game.S_Instance.CurrentState != GameState.Playing) return;
 
         // if (!_moved) _animator.SetFloat("Speed", 0);
         TargetCheck();

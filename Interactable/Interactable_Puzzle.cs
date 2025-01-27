@@ -40,7 +40,7 @@ public class Interactable_Puzzle : MonoBehaviour, IInteractable
     {
         if (actor.TryGetComponent(out Player player) && !PuzzleData.PuzzleState.PuzzleCompleted)
         { 
-            Manager_Game.Instance.LoadScene("Puzzle", this); 
+            Manager_Game.S_Instance.LoadScene("Puzzle", this); 
         }
 
         yield break;

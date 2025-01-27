@@ -20,8 +20,8 @@ namespace Station
 
         public override RecipeName       DefaultProduct       => RecipeName.Plank;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Plank };
-        public override List<uint>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<uint>       DesiredStoredItemIDs { get; } = new() { 1100 };
+        public override List<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
+        public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100 };
         public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {
             ActorActionName.Process_Logs,

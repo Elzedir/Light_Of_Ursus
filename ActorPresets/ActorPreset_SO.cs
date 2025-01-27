@@ -3,17 +3,15 @@ using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace ActorPreset
+namespace ActorPresets
 {
     [CreateAssetMenu(fileName = "ActorDataPreset_SO", menuName = "SOList/ActorDataPreset_SO")]
     public class ActorPreset_SO : Data_SO<ActorPreset_Data>
     {
         public Data<ActorPreset_Data>[] ActorDataPresets => Data;
-        public Data<ActorPreset_Data>   GetActorDataPreset(ActorDataPresetName actorDataPresetName) => GetData((uint)actorDataPresetName);
-
-        public override uint GetDataID(int id) => (uint)ActorDataPresets[id].Data_Object.ActorDataPresetName; // Use the ActorDataPresetName
+        public Data<ActorPreset_Data>   GetActorDataPreset(ActorDataPresetName actorDataPresetName) => GetData((ulong)actorDataPresetName);
         
-        protected override Dictionary<uint, Data<ActorPreset_Data>> _getDefaultData()
+        protected override Dictionary<ulong, Data<ActorPreset_Data>> _getDefaultData()
         {
             return _convertDictionaryToData(ActorPreset_List.DefaultActorDataPresets);
         }
@@ -21,9 +19,9 @@ namespace ActorPreset
         protected override Data<ActorPreset_Data> _convertToData(ActorPreset_Data data)
         {
             return new Data<ActorPreset_Data>(
-                dataID: (uint)data.ActorDataPresetName,
+                dataID: (ulong)data.ActorDataPresetName,
                 data_Object: data,
-                dataTitle: $"{(uint)data.ActorDataPresetName}: {data.ActorDataPresetName}",
+                dataTitle: $"{(ulong)data.ActorDataPresetName}: {data.ActorDataPresetName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
     }

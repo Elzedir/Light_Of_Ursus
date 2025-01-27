@@ -7,9 +7,9 @@ namespace Managers
 
     public abstract class Manager_CharacterLevels
     {
-        public static CharacterLevelData GetLevelUpData(uint level) => _allLevelUpData[level];
+        public static CharacterLevelData GetLevelUpData(ulong level) => _allLevelUpData[level];
 
-        static readonly Dictionary<uint, CharacterLevelData> _allLevelUpData = new()
+        static readonly Dictionary<ulong, CharacterLevelData> _allLevelUpData = new()
         {
             {
                 1, new CharacterLevelData(1, 0, LevelUpBonusType.Health, 10, 1, 10)
@@ -73,9 +73,9 @@ namespace Managers
             }
         };
         
-        public static uint GetLevelFromExperience(uint totalExperience)
+        public static ulong GetLevelFromExperience(ulong totalExperience)
         {
-            uint level = 1;
+            ulong level = 1;
 
             while (true)
             {
@@ -86,10 +86,10 @@ namespace Managers
             return level;
         }
         
-        public static uint GetTotalSkillPointsFromExperience(uint totalExperience)
+        public static ulong GetTotalSkillPointsFromExperience(ulong totalExperience)
         {
-            uint level              = 1;
-            uint totalSkillPoints   = 0;
+            ulong level              = 1;
+            ulong totalSkillPoints   = 0;
             
             while (true)
             {
@@ -101,10 +101,10 @@ namespace Managers
             return totalSkillPoints;
         }
         
-        public static uint GetTotalSpecialPointsFromExperience(uint totalExperience)
+        public static ulong GetTotalSpecialPointsFromExperience(ulong totalExperience)
         {
-            uint level              = 1;
-            uint totalSpecialPoints = 0;
+            ulong level              = 1;
+            ulong totalSpecialPoints = 0;
             
             while (true)
             {
@@ -120,20 +120,20 @@ namespace Managers
     [Serializable]
     public class CharacterLevelData
     {
-        public uint             Level;
-        public uint             TotalExperienceRequired;
+        public ulong             Level;
+        public ulong             TotalExperienceRequired;
         public LevelUpBonusType BonusType;
-        public uint             BonusStatPoints;
-        public uint             SkillPoints;
-        public uint             SpecialPoints;
+        public ulong             BonusStatPoints;
+        public ulong             SkillPoints;
+        public ulong             SpecialPoints;
 
         public CharacterLevelData(
-            uint             level,
-            uint             totalExperienceRequired,
+            ulong             level,
+            ulong             totalExperienceRequired,
             LevelUpBonusType bonusType,
-            uint             bonusStatPoints,
-            uint             skillPoints,
-            uint             specialPoints
+            ulong             bonusStatPoints,
+            ulong             skillPoints,
+            ulong             specialPoints
         )
         {
             Level                   = level;

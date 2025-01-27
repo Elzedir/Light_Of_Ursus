@@ -9,7 +9,7 @@ namespace Region
 {
     public class Region_Component : MonoBehaviour
     {
-        public uint RegionID => RegionData.RegionID;
+        public ulong RegionID => RegionData.RegionID;
         
         public Region_Data               RegionData;
 

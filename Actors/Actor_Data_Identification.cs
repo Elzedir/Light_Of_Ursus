@@ -11,7 +11,7 @@ namespace Actor
     [Serializable]
     public class Actor_Data_Identification : Priority_Class
     {
-        public Actor_Data_Identification(uint actorID, ActorName actorName, uint actorFactionID, uint actorCityID,
+        public Actor_Data_Identification(ulong actorID, ActorName actorName, ulong actorFactionID, ulong actorCityID,
             Date actorBirthDate = null) : base(actorID, ComponentType.Actor)
         {
             ActorID = actorID;
@@ -49,10 +49,10 @@ namespace Actor
             { "Actor City ID", $"{ActorCityID}" }
         };
 
-        public uint ActorID;
+        public ulong ActorID;
         public ActorName ActorName;
-        public uint ActorFactionID;
-        public uint ActorCityID;
+        public ulong ActorFactionID;
+        public ulong ActorCityID;
         public Date ActorBirthDate;
         public float ActorAge => ActorBirthDate.GetAge();
         public Family ActorFamily;
@@ -88,7 +88,7 @@ namespace Actor
     [Serializable]
     public class Background : Priority_Class
     {
-        public Background(uint actorID, string birthplace, Date birthdate, Family actorFamily, Dynasty actorDynasty,
+        public Background(ulong actorID, string birthplace, Date birthdate, Family actorFamily, Dynasty actorDynasty,
             string religion) : base(actorID, ComponentType.Actor)
         {
             Birthplace = birthplace;

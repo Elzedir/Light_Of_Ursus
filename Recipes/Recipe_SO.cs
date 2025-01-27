@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -11,19 +12,17 @@ namespace Recipes
     public class Recipe_SO : Data_SO<Recipe_Data>
     {
         public Data<Recipe_Data>[] Recipes => Data;
-        public Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetData((uint)recipeName);
-        
-        public override uint GetDataID(int id) => (uint)Recipes[id].Data_Object.RecipeName;
+        public Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetData((ulong)recipeName);
 
-        protected override Dictionary<uint, Data<Recipe_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Recipe_Data>> _getDefaultData() => 
             _convertDictionaryToData(Recipe_List.DefaultRecipes);
 
         protected override Data<Recipe_Data> _convertToData(Recipe_Data data)
         {
             return new Data<Recipe_Data>(
-                dataID: (uint)data.RecipeName, 
+                dataID: (ulong)data.RecipeName, 
                 data_Object: data,
-                dataTitle: $"{(uint)data.RecipeName}: {data.RecipeName}",
+                dataTitle: $"{(ulong)data.RecipeName}: {data.RecipeName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
     }

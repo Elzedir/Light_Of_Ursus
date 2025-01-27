@@ -6,15 +6,15 @@ namespace Jobs
 {
     public abstract class Job_List
     {
-        static Dictionary<uint, Job_Data> _defaultJobs;
-        public static Dictionary<uint, Job_Data> DefaultJobs => _defaultJobs ??= _initialiseDefaultJobs();
+        static Dictionary<ulong, Job_Data> _defaultJobs;
+        public static Dictionary<ulong, Job_Data> DefaultJobs => _defaultJobs ??= _initialiseDefaultJobs();
         
-        static Dictionary<uint, Job_Data> _initialiseDefaultJobs()
+        static Dictionary<ulong, Job_Data> _initialiseDefaultJobs()
         {
-            return new Dictionary<uint, Job_Data>
+            return new Dictionary<ulong, Job_Data>
             {
                 {
-                    (uint)JobName.Idle, new Job_Data(
+                    (ulong)JobName.Idle, new Job_Data(
                         jobName: JobName.Idle,
                         jobDescription: "An idler",
                         jobActions: new HashSet<ActorActionName>
@@ -23,7 +23,7 @@ namespace Jobs
                         })
                 },
                 {
-                    (uint)JobName.Logger, new Job_Data(
+                    (ulong)JobName.Logger, new Job_Data(
                         jobName: JobName.Logger,
                         jobDescription: "A logger",
                         jobActions: new HashSet<ActorActionName>
@@ -35,7 +35,7 @@ namespace Jobs
                         })
                 },
                 {
-                    (uint)JobName.Sawyer, new Job_Data(
+                    (ulong)JobName.Sawyer, new Job_Data(
                         jobName: JobName.Sawyer,
                         jobDescription: "A sawyer",
                         jobActions: new HashSet<ActorActionName>
@@ -47,7 +47,7 @@ namespace Jobs
                         })
                 },
                 {
-                    (uint)JobName.Vendor, new Job_Data(
+                    (ulong)JobName.Vendor, new Job_Data(
                         jobName: JobName.Vendor,
                         jobDescription: "A vendor",
                         jobActions: new HashSet<ActorActionName>
@@ -59,7 +59,7 @@ namespace Jobs
                         })
                 },
                 {
-                    (uint)JobName.Smith, new Job_Data(
+                    (ulong)JobName.Smith, new Job_Data(
                         jobName: JobName.Smith,
                         jobDescription: "Smith something",
                         jobActions: new HashSet<ActorActionName>

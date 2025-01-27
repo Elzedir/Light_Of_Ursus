@@ -48,13 +48,13 @@ public class Manager_Cutscene : MonoBehaviour
 
         yield return null;
 
-        Manager_Game.Instance.ChangeGameState(GameState.Cinematic);
+        Manager_Game.S_Instance.ChangeGameState(GameState.Cinematic);
 
         director.Play();
 
         yield return new WaitForSeconds((float)director.duration);
 
-        Manager_Game.Instance.ChangeGameState(GameState.Playing);
+        Manager_Game.S_Instance.ChangeGameState(GameState.Playing);
     }
 
     void _initialiseScriptedCutscenes()

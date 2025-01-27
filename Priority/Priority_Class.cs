@@ -11,7 +11,7 @@ namespace Priority
     {
         public ComponentReference Reference { get; }
 
-        protected Priority_Class (uint componentID, ComponentType componentType)
+        protected Priority_Class (ulong componentID, ComponentType componentType)
         {
             switch(componentType)
             {

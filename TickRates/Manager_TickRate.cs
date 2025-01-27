@@ -28,7 +28,7 @@ namespace TickRates
         //Maybe save next tick times since last save and load them on scene load.
         
         static          Dictionary<TickRateName, float>                                            _nextTickTimes = new();
-        static readonly Dictionary<TickerTypeName, Dictionary<TickRateName, Dictionary<uint, Action>>> _allTickerTypes    = new();
+        static readonly Dictionary<TickerTypeName, Dictionary<TickRateName, Dictionary<ulong, Action>>> _allTickerTypes    = new();
         
         //TickableSpreader _tickableSpreader;
 
@@ -80,7 +80,7 @@ namespace TickRates
             };
         }
 
-        public static void RegisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID, Action tickerAction, bool unregisterExisting = false)
+        public static void RegisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, ulong tickerID, Action tickerAction, bool unregisterExisting = false)
         {
             if (unregisterExisting) UnregisterTicker(tickerTypeName, tickRateName, tickerID);
             
@@ -96,7 +96,7 @@ namespace TickRates
             tickerGroup[tickerID] = tickerAction;
         }
 
-        public static void UnregisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, uint tickerID)
+        public static void UnregisterTicker(TickerTypeName tickerTypeName, TickRateName tickRateName, ulong tickerID)
         {
             var tickerGroup = _tickerCheck(tickerTypeName, tickRateName);
 
@@ -109,17 +109,17 @@ namespace TickRates
             tickerGroup.Remove(tickerID);
         }
 
-        static Dictionary<uint, Action> _tickerCheck(TickerTypeName tickerTypeName, TickRateName tickRateName)
+        static Dictionary<ulong, Action> _tickerCheck(TickerTypeName tickerTypeName, TickRateName tickRateName)
         {
             if (!_allTickerTypes.TryGetValue(tickerTypeName, out var tickerRate))
             {
-                tickerRate = new Dictionary<TickRateName, Dictionary<uint, Action>>();
+                tickerRate = new Dictionary<TickRateName, Dictionary<ulong, Action>>();
                 _allTickerTypes.Add(tickerTypeName, tickerRate);
             }
             
             if (!tickerRate.TryGetValue(tickRateName, out var tickerGroup))
             {
-                tickerGroup = new Dictionary<uint, Action>();
+                tickerGroup = new Dictionary<ulong, Action>();
                 tickerRate.Add(tickRateName, tickerGroup);
             }
             
@@ -177,12 +177,12 @@ namespace TickRates
     public class TickGroup
     {
         public TickRateName TickerType;
-        public Dictionary<uint, Action> Tickers;
+        public Dictionary<ulong, Action> Tickers;
         
         public TickGroup(TickRateName tickRateName)
         {
             TickerType = tickRateName;
-            Tickers   = new Dictionary<uint, Action>();
+            Tickers   = new Dictionary<ulong, Action>();
         }
     }
 

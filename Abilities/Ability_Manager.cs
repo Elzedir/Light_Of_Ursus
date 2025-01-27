@@ -7,7 +7,7 @@ using Priority;
 using Tools;
 using UnityEngine;
 
-namespace Ability
+namespace Abilities
 {
     public abstract class Ability_Manager
     {
@@ -21,7 +21,7 @@ namespace Ability
             return AllAbilities.GetAbility_Master(abilityName).Data_Object;
         }
 
-        public static Ability GetAbility(AbilityName abilityName, ulong abilityLevel)
+        public static Abilities.Ability GetAbility(AbilityName abilityName, ulong abilityLevel)
         {
             return AllAbilities.GetAbility(abilityName, abilityLevel);
         }
@@ -36,11 +36,6 @@ namespace Ability
             ability_SO = ScriptableObject.CreateInstance<Ability_SO>();
 
             return ability_SO;
-        }
-
-        public static ulong GetUnusedAbilityID()
-        {
-            return AllAbilities.GetUnusedAbilityID();
         }
 
         public static void ClearSOData()

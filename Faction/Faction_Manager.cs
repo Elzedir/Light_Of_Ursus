@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Actor;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace Faction
         static Faction_SO _allFactions;
         static Faction_SO AllFactions => _allFactions ??= _getFaction_SO();
         
-        public static Faction_Data GetFaction_Data(uint factionID)
+        public static Faction_Data GetFaction_Data(ulong factionID)
         {
             return AllFactions.GetFaction_Data(factionID).Data_Object;
         }
@@ -20,10 +21,12 @@ namespace Faction
             return AllFactions.GetDataFromName(faction_Component.name)?.Data_Object;
         }
         
-        public static Faction_Component GetFaction_Component(uint factionID)
+        public static Faction_Component GetFaction_Component(ulong factionID)
         {
             return AllFactions.GetFaction_Component(factionID);
         }
+        
+        public static List<ulong> GetAllFactionIDs() => AllFactions.GetAllDataIDs();
         
         static Faction_SO _getFaction_SO()
         {
@@ -37,12 +40,7 @@ namespace Faction
             return faction_SO;
         }
 
-        public static uint GetUnusedFactionID()
-        {
-            return AllFactions.GetUnusedFactionID();
-        }
-
-        public static void AllocateActorToFactionGO(Actor_Component actor, uint factionID)
+        public static void AllocateActorToFactionGO(Actor_Component actor, ulong factionID)
         {
             var faction = GetFaction_Component(factionID);
  
@@ -120,7 +118,7 @@ namespace Faction
     //
     //         var factionIDsWithoutGOs = existingFactionIDs.Where(fID => existingFactionGOs.All(fgo => fgo.name != $"{fID}: {factionsSO.AllFactionData[(int)fID].FactionName}")).ToList();
     //
-    //         var factionIDsToRemove = new List<uint>();
+    //         var factionIDsToRemove = new List<ulong>();
     //         foreach (var factionID in factionIDsWithoutGOs)
     //         {
     //             Debug.LogWarning($"Creating FactionGO and FactionComponent for FactionID: {factionID}: {factionsSO.AllFactionData[(int)factionID].FactionName}");
@@ -136,7 +134,7 @@ namespace Faction
     //         existingObjectsCheck();
     //
     //         var factionIDsWithoutComponents         = existingFactionIDs.Where(fID => existingFactionComponents.All(fc => fc.FactionData.FactionID != fID)).ToList();
-    //         var factionIDsWithoutComponentsToRemove = new List<uint>();
+    //         var factionIDsWithoutComponentsToRemove = new List<ulong>();
     //         foreach (var factionID in factionIDsWithoutComponents)
     //         {
     //             var existingFactionGO = existingFactionGOs.FirstOrDefault(fgo => fgo.name == $"{factionID}: {factionsSO.AllFactionData[(int)factionID].FactionName}");
@@ -265,7 +263,7 @@ namespace Faction
     //         }
     //     }
     //
-    //     void _createFactionGO(GameObject factionsGO, uint factionID, string factionName, Faction_SO factionsSO)
+    //     void _createFactionGO(GameObject factionsGO, ulong factionID, string factionName, Faction_SO factionsSO)
     //     {
     //         var factionGO = new GameObject($"{factionID}: {factionName}");
     //         factionGO.transform.SetParent(factionsGO.transform);

@@ -6,7 +6,7 @@ using Managers;
 using Tools;
 using UnityEngine;
 
-namespace Ability
+namespace Abilities
 {
     [Serializable]
     public class Ability_Data : Data_Class

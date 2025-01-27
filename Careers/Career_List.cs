@@ -5,15 +5,15 @@ namespace Careers
 {
     public abstract class Career_List
     {
-        static        Dictionary<uint, Career_Data> _defaultCareers;
-        public static Dictionary<uint, Career_Data> DefaultCareers => _defaultCareers ??= _initialiseDefaultCareers();
+        static        Dictionary<ulong, Career_Data> _defaultCareers;
+        public static Dictionary<ulong, Career_Data> DefaultCareers => _defaultCareers ??= _initialiseDefaultCareers();
 
-        static Dictionary<uint, Career_Data> _initialiseDefaultCareers()
+        static Dictionary<ulong, Career_Data> _initialiseDefaultCareers()
         {
-            return new Dictionary<uint, Career_Data>
+            return new Dictionary<ulong, Career_Data>
             {
                 {
-                    (uint)CareerName.Wanderer, new Career_Data
+                    (ulong)CareerName.Wanderer, new Career_Data
                     (
                         careerName: CareerName.Wanderer,
                         careerDescription: "A wanderer",
@@ -22,7 +22,7 @@ namespace Careers
                 },
 
                 {
-                    (uint)CareerName.Lumberjack, new Career_Data
+                    (ulong)CareerName.Lumberjack, new Career_Data
                     (
                         careerName: CareerName.Lumberjack,
                         careerDescription: "A lumberjack",
@@ -31,7 +31,7 @@ namespace Careers
                 },
 
                 {
-                    (uint)CareerName.Smith,
+                    (ulong)CareerName.Smith,
                     new Career_Data(
                         careerName: CareerName.Smith,
                         careerDescription: "A smith",

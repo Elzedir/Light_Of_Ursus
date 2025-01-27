@@ -28,10 +28,10 @@ namespace Managers
 
     public class Manager_Game : MonoBehaviour, IDataPersistence
     {
-        static        Manager_Game _instance;
+        static        Manager_Game s_instance;
 
-        public static Manager_Game Instance =>
-            _instance ??= GameObject.Find("Manager_Game").GetComponent<Manager_Game>();
+        public static Manager_Game S_Instance =>
+            s_instance ??= GameObject.Find("Manager_Game").GetComponent<Manager_Game>();
 
         Manager_Audio _manager_Audio;
 
@@ -373,7 +373,7 @@ namespace Managers
         static void _getObstacles(Vector3 moverPosition, string layerName, List<Vector3> obstaclePositions)
         {
             var        layerMask = 1 << LayerMask.NameToLayer(layerName);
-            var colliders = Physics.OverlapSphere(moverPosition, Mathf.Max(Instance.GroundCollider.bounds.size.x, Instance.GroundCollider.bounds.size.z), layerMask);
+            var colliders = Physics.OverlapSphere(moverPosition, Mathf.Max(S_Instance.GroundCollider.bounds.size.x, S_Instance.GroundCollider.bounds.size.z), layerMask);
 
             obstaclePositions.AddRange(colliders.Select(collider => collider.transform.position));
         }

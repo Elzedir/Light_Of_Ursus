@@ -26,7 +26,7 @@ namespace StateAndCondition
             return AllConditions.GetCondition_Data(conditionName).Data_Object;
         }
 
-        public static Condition GetCondition(ConditionName conditionName, uint conditionDuration)
+        public static Condition GetCondition(ConditionName conditionName, ulong conditionDuration)
         {
             return new Condition(conditionName, conditionDuration);
         }
@@ -43,11 +43,6 @@ namespace StateAndCondition
             return condition_SO;
         }
 
-        public static uint GetUnusedConditionID()
-        {
-            return AllConditions.GetUnusedConditionID();
-        }
-
         public static void ClearSOData()
         {
             AllConditions.ClearSOData();
@@ -57,7 +52,7 @@ namespace StateAndCondition
     [Serializable]
     public class Actor_Data_Conditions : Priority_Class
     {
-        public Actor_Data_Conditions(uint actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
+        public Actor_Data_Conditions(ulong actorID, ObservableDictionary<ConditionName, float> currentConditions) : base(actorID, ComponentType.Actor)
         {
             _currentConditions                   =  currentConditions;
             CurrentConditions.DictionaryChanged += OnConditionChanged;

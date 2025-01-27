@@ -15,28 +15,28 @@ namespace Priority
     [Serializable]
     public class Priority_Parameters
     {
-        public uint ActorID_Source;
+        public ulong ActorID_Source;
         public Actor_Component Actor_Component_Source => Actor_Manager.GetActor_Component(ActorID_Source);
         
-        public uint ActorID_Target;
+        public ulong ActorID_Target;
         public Actor_Component Actor_Component_Target => Actor_Manager.GetActor_Component(ActorID_Target);
         
-        public uint JobSiteID_Source;
+        public ulong JobSiteID_Source;
         public JobSite_Component JobSite_Component_Source => JobSite_Manager.GetJobSite_Component(JobSiteID_Source);
         
-        public uint JobSiteID_Target;
+        public ulong JobSiteID_Target;
         public JobSite_Component JobSite_Component_Target => JobSite_Manager.GetJobSite_Component(JobSiteID_Target);
         
-        public uint StationID_Source;
+        public ulong StationID_Source;
         public Station_Component Station_Component_Source => Station_Manager.GetStation_Component(StationID_Source);
         
-        public uint StationID_Destination;
+        public ulong StationID_Destination;
         public Station_Component Station_Component_Destination => Station_Manager.GetStation_Component(StationID_Destination);
         
-        public uint WorkPostID_Source;
+        public ulong WorkPostID_Source;
         public WorkPost_Component WorkPost_Component_Source => Station_Component_Source.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Source, null);
 
-        public uint WorkPostID_Destination;
+        public ulong WorkPostID_Destination;
         public WorkPost_Component WorkPost_Component_Destination => Station_Component_Destination.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Destination, null); 
         
         public List<Item> Items;
@@ -54,9 +54,9 @@ namespace Priority
         public StationName StationType_Destination;
         public HashSet<StationName> StationType_All;
 
-        public Priority_Parameters(uint actorID_Source = 0, uint actorID_Target = 0, uint jobSiteID_Source = 0,
-            uint jobSiteID_Target = 0, uint stationID_Source = 0, uint stationID_Destination = 0, uint workPostID_Source = 0,
-            uint workPostID_Destination = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
+        public Priority_Parameters(ulong actorID_Source = 0, ulong actorID_Target = 0, ulong jobSiteID_Source = 0,
+            ulong jobSiteID_Target = 0, ulong stationID_Source = 0, ulong stationID_Destination = 0, ulong workPostID_Source = 0,
+            ulong workPostID_Destination = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
             float defaultMaxPriority = 0, float totalDistance = 0, long totalItems = 0, InventoryData inventory_Hauler = null,
             InventoryData inventory_Target = null, StationName stationType_Source = StationName.None, StationName stationType_Destination = StationName.None,
             HashSet<StationName> stationType_All = null)

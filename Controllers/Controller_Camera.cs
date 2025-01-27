@@ -67,7 +67,7 @@ public class Controller_Camera : MonoBehaviour
 
     void Update()
     {
-        if (Manager_Game.Instance.CurrentState == GameState.Cinematic && _lookAt != null) _lookAt = null;
+        if (Manager_Game.S_Instance.CurrentState == GameState.Cinematic && _lookAt != null) _lookAt = null;
 
         //if (Manager_Game.Instance.CurrentState == GameState.Playing)
         //{
@@ -81,7 +81,7 @@ public class Controller_Camera : MonoBehaviour
         //    _handleCameraRotation();
         //}
         
-        if (Manager_Game.Instance.CurrentState == GameState.Puzzle)
+        if (Manager_Game.S_Instance.CurrentState == GameState.Puzzle)
         {
             if (_lookAt == null) _lookAt = GameObject.Find("Focus").transform;
         }

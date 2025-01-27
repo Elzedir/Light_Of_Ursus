@@ -19,8 +19,8 @@ namespace Managers
     {
         static        AllOrders_SO               _displayAllOrders;
         public static AllOrders_SO               DisplayAllOrders { get { return _displayAllOrders ??= Resources.Load<AllOrders_SO>("ScriptableObjects/AllOrders_SO"); } }
-        public static Dictionary<int, OrderData> AllOrderData;
-        static        int                        _lastUnusedOrderID = 1;
+        public static Dictionary<ulong, OrderData> AllOrderData;
+        static        ulong                        _lastUnusedOrderID = 1;
 
         public void SaveData(Save_Data data)
         {
@@ -77,7 +77,7 @@ namespace Managers
             DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
         }
 
-        public static void GetOrderData(int orderID)
+        public static void GetOrderData(ulong orderID)
         {
             if (!AllOrderData.ContainsKey(orderID))
             {
@@ -88,7 +88,7 @@ namespace Managers
             DisplayAllOrders.AllOrderData = AllOrderData.Values.ToArray();
         }
 
-        public static int GetOrderBaseID()
+        public static ulong GetOrderBaseID()
         {
             while(AllOrderData.ContainsKey(_lastUnusedOrderID))
             {
@@ -102,10 +102,10 @@ namespace Managers
     [Serializable]
     public class OrderData
     {
-        public int ActorID;
-        public OrderData(int actorID) => ActorID = actorID;
+        public ulong ActorID;
+        public OrderData(ulong actorID) => ActorID = actorID;
 
-        int                     _lastUnusedOrderID = 1;
+        ulong                     _lastUnusedOrderID = 1;
         public List<Order_Base> AllCurrentOrders   = new();
         public List<Order_Base> AllCompletedOrders = new();
 
@@ -158,7 +158,7 @@ namespace Managers
             }
         }
 
-        public void ExecuteOrder(int orderID)
+        public void ExecuteOrder(ulong orderID)
         {
             if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
             {
@@ -203,7 +203,7 @@ namespace Managers
             AllCurrentOrders.Insert(index, order);
         }
 
-        public void CompleteOrder(int orderID)
+        public void CompleteOrder(ulong orderID)
         {
             if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
             {
@@ -215,7 +215,7 @@ namespace Managers
             AllCurrentOrders.RemoveAll(o => o.OrderID == orderID);
         }
 
-        public void RemoveCurrentOrder(int orderID)
+        public void RemoveCurrentOrder(ulong orderID)
         {
             if (!AllCurrentOrders.Any(o => o.OrderID == orderID))
             {
@@ -236,12 +236,12 @@ namespace Managers
             AllCurrentOrders.Clear();
         }
 
-        public Order_Base GetOrderById(int orderID)
+        public Order_Base GetOrderById(ulong orderID)
         {
             return AllCurrentOrders.FirstOrDefault(o => o.OrderID == orderID);
         }
 
-        public int GetOrderID()
+        public ulong GetOrderID()
         {
             // Later put in a way to clear them if the orders number over 1000 or 10 000, to prevent overflow.
             while(AllCurrentOrders.Any(o => o.OrderID == _lastUnusedOrderID))
@@ -272,18 +272,18 @@ namespace Managers
     [Serializable]
     public class Order_Base
     {
-        public uint              OrderID;
+        public ulong              OrderID;
         public OrderType         OrderType;
-        public uint              ActorID;
+        public ulong              ActorID;
         Actor_Component          _actor;
         public Actor_Component   Actor { get { return _actor ??= Actor_Manager.GetActor_Component(ActorID); } }
-        public uint              StationID_Source;
+        public ulong              StationID_Source;
         Station_Component        _station_Source;
         public Station_Component Station_Source { get { return _station_Source ??= Station_Manager.GetStation_Component(StationID_Source); } }
-        public uint              StationID_Destination;
+        public ulong              StationID_Destination;
         Station_Component        _station_Destination;
         public Station_Component Station_Destination { get { return _station_Destination ??= Station_Manager.GetStation_Component(StationID_Destination); } }
-        public uint              JobsiteID;
+        public ulong              JobsiteID;
         JobSite_Component        _jobSite;
         public JobSite_Component JobSite { get { return _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID); } }
         public OrderStatus       OrderStatus;
@@ -296,7 +296,7 @@ namespace Managers
         protected Coroutine _orderCoroutine;
         protected Coroutine _actorMoveCoroutine;
 
-        public Order_Base(OrderType orderType, uint actorID, uint stationID_Source, uint stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
+        public Order_Base(OrderType orderType, ulong actorID, ulong stationID_Source, ulong stationID_Destination, OrderStatus orderStatus, List<Item> orderItems)
         {
             OrderType = orderType;
             ActorID   = actorID;
@@ -310,7 +310,7 @@ namespace Managers
             //Actor.ActorData.OrderData.AddCurrentOrder(this);
         }
 
-        public void ChangeActor(uint actorID)
+        public void ChangeActor(ulong actorID)
         {
             //Actor.ActorData.OrderData.RemoveCurrentOrder(OrderID);
             ActorID = actorID;
@@ -318,13 +318,13 @@ namespace Managers
             //Actor.ActorData.OrderData.AddCurrentOrder(this);
         }
     
-        public void ChangeStationSource(uint stationID)
+        public void ChangeStationSource(ulong stationID)
         {
             StationID_Source = stationID;
             _station_Source  = null;
         }
 
-        public void ChangeStationDestination(uint stationID)
+        public void ChangeStationDestination(ulong stationID)
         {
             StationID_Destination = stationID;
             _station_Destination  = null;
@@ -529,10 +529,10 @@ namespace Managers
     public abstract class Order_Request
     {
         public abstract OrderType     OrderType { get; }
-        public          int           StationID;
+        public          ulong           StationID;
         public          RequestStatus RequestStatus;
 
-        public Order_Request(int stationID)
+        public Order_Request(ulong stationID)
         {
             if (stationID == 0)
             {
@@ -555,7 +555,7 @@ namespace Managers
         public override OrderType  OrderType => OrderType.Haul_Fetch;
         public          List<Item> Items = new();
 
-        public Order_Request_Haul_Fetch(int stationID, List<Item> items) : base(stationID)
+        public Order_Request_Haul_Fetch(ulong stationID, List<Item> items) : base(stationID)
         {
             if (items.Count <= 0)
             {
@@ -592,7 +592,7 @@ namespace Managers
         public override OrderType  OrderType => OrderType.Haul_Deliver;
         public          List<Item> Items = new();
 
-        public Order_Request_Haul_Deliver(int stationID, List<Item> items) : base(stationID)
+        public Order_Request_Haul_Deliver(ulong stationID, List<Item> items) : base(stationID)
         {
             if (items.Count <= 0)
             {
@@ -629,7 +629,7 @@ namespace Managers
         public override OrderType     OrderType => OrderType.Hire;
         public          List<JobName> DesiredEmployeePositions;
 
-        public Order_Request_Hire(int stationID, List<JobName> desiredEmployeePositions) : base(stationID)
+        public Order_Request_Hire(ulong stationID, List<JobName> desiredEmployeePositions) : base(stationID)
         {
             if (desiredEmployeePositions.Count <= 0)
             {

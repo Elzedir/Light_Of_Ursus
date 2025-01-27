@@ -10,7 +10,7 @@ namespace Faction
     [Serializable]
     public class Faction_Data : Data_Class
     {
-        public uint   FactionID;
+        public ulong   FactionID;
         public string FactionName;
         
         Faction_Component _faction_Component;
@@ -18,10 +18,10 @@ namespace Faction
         public Faction_Component Faction_Component =>
             _faction_Component ??= Faction_Manager.GetFaction_Component(FactionID);
 
-        public HashSet<uint>             AllFactionActorIDs;
+        public HashSet<ulong>             AllFactionActorIDs;
         public List<FactionRelationData> AllFactionRelations;
 
-        public Faction_Data(uint factionID, string factionName, HashSet<uint> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
+        public Faction_Data(ulong factionID, string factionName, HashSet<ulong> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
         {
             FactionID           = factionID;
             FactionName         = factionName;

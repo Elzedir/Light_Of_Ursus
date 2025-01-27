@@ -160,7 +160,7 @@ namespace Equipment
         public Item Legs;
         public Item Feet;
 
-        public Equipment_Data(uint actorID, Item head = null, Item neck = null, Item chest = null, Item leftHand = null,
+        public Equipment_Data(ulong actorID, Item head = null, Item neck = null, Item chest = null, Item leftHand = null,
             Item rightHand = null, Item[] rings = null, Item waist = null, Item legs = null,
             Item feet      = null) : base(actorID, ComponentType.Actor)
         {

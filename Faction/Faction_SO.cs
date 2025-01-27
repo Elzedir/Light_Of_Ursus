@@ -14,10 +14,10 @@ namespace Faction
     public class Faction_SO : Data_Component_SO<Faction_Data, Faction_Component>
     {
         public Data<Faction_Data>[]                      Factions                             => Data;
-        public Data<Faction_Data>                        GetFaction_Data(uint      factionID) => GetData(factionID);
-        public Dictionary<uint, Faction_Component> Faction_Components => _getSceneComponents();
+        public Data<Faction_Data>                        GetFaction_Data(ulong      factionID) => GetData(factionID);
+        public Dictionary<ulong, Faction_Component> Faction_Components => _getSceneComponents();
 
-        public Faction_Component GetFaction_Component(uint factionID)
+        public Faction_Component GetFaction_Component(ulong factionID)
         {
             if (Faction_Components.TryGetValue(factionID, out var component))
             {
@@ -28,17 +28,15 @@ namespace Faction
             return null;
         }
 
-        public override uint GetDataID(int id) => Factions[id].Data_Object.FactionID;
+        public void UpdateFaction(ulong factionID, Faction_Data faction_Data) => UpdateData(factionID, faction_Data);
+        public void UpdateAllFactions(Dictionary<ulong, Faction_Data> allFactions) => UpdateAllData(allFactions);
 
-        public void UpdateFaction(uint factionID, Faction_Data faction_Data) => UpdateData(factionID, faction_Data);
-        public void UpdateAllFactions(Dictionary<uint, Faction_Data> allFactions) => UpdateAllData(allFactions);
-
-        protected override Dictionary<uint, Data<Faction_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Faction_Data>> _getDefaultData() => 
             _convertDictionaryToData(Faction_List.DefaultFactions);
 
-        protected override Dictionary<uint, Data<Faction_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Faction_Data>> _getSavedData()
         {
-            Dictionary<uint, Faction_Data> savedData = new();
+            Dictionary<ulong, Faction_Data> savedData = new();
             
             try
             {
@@ -66,20 +64,8 @@ namespace Faction
             return _convertDictionaryToData(savedData);
         }
         
-        protected override Dictionary<uint, Data<Faction_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<Faction_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FactionData));
-
-        static uint _lastUnusedFactionID = 1;
-
-        public uint GetUnusedFactionID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedFactionID))
-            {
-                _lastUnusedFactionID++;
-            }
-
-            return _lastUnusedFactionID;
-        }
 
         protected override Data<Faction_Data> _convertToData(Faction_Data data)
         {

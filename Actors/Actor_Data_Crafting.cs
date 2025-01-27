@@ -16,7 +16,7 @@ namespace Actor
     [Serializable]
     public class Actor_Data_Crafting : Priority_Class
     {
-        public Actor_Data_Crafting(uint actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
+        public Actor_Data_Crafting(ulong actorID, List<RecipeName> knownRecipes = null) : base(actorID, ComponentType.Actor)
         {
             KnownRecipes = knownRecipes ?? new List<RecipeName>();
         }
@@ -39,7 +39,7 @@ namespace Actor
 
         public override Dictionary<string, string> GetStringData()
         {
-            return KnownRecipes.ToDictionary(recipe => $"{(uint)recipe}", recipe => $"{recipe}");
+            return KnownRecipes.ToDictionary(recipe => $"{(ulong)recipe}", recipe => $"{recipe}");
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;

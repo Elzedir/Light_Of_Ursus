@@ -161,7 +161,7 @@ namespace Priority
                 maxPriority);
         }
 
-        public static float GeneratePriority(uint priorityID, Priority_Parameters priority_Parameters)
+        public static float GeneratePriority(ulong priorityID, Priority_Parameters priority_Parameters)
         {
             if (priority_Parameters == null)
             {
@@ -187,15 +187,15 @@ namespace Priority
 
             switch (priorityID)
             {
-                case (uint)ActorActionName.Idle:
+                case (ulong)ActorActionName.Idle:
                     return 1;
-                case (uint)ActorActionName.Fetch_Items:
+                case (ulong)ActorActionName.Fetch_Items:
                     return _generateFetchPriority(priority_Parameters);
-                case (uint)ActorActionName.Deliver_Items:
+                case (ulong)ActorActionName.Deliver_Items:
                     return _generateDeliverPriority(priority_Parameters);
-                case (uint)ActorActionName.Chop_Wood:
+                case (ulong)ActorActionName.Chop_Wood:
                     return _generateChop_WoodPriority(priority_Parameters);
-                case (uint)ActorActionName.Process_Logs:
+                case (ulong)ActorActionName.Process_Logs:
                     return _generateProcess_LogsPriority(priority_Parameters);
                 default:
                     Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");

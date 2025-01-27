@@ -388,7 +388,7 @@ public class VoxelGrid
 
     public static void InitialiseVoxelGridTest(float width = 100, float height = 4, float depth = 100)
     {
-        Collider groundCollider = Manager_Game.Instance.GroundCollider;
+        Collider groundCollider = Manager_Game.S_Instance.GroundCollider;
         bool hasGroundCollider = groundCollider != null;
 
         if (hasGroundCollider)

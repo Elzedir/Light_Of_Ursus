@@ -34,7 +34,7 @@ namespace Careers
                 title: "Career Base Jobs",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: CareerBaseJobs.ToDictionary(
-                    job => $"{(uint)job}",
+                    job => $"{(ulong)job}",
                     job => $"{job}"));
             
             return DataToDisplay;
@@ -44,7 +44,7 @@ namespace Careers
         {
             return new Dictionary<string, string>
             {
-                { "Career ID", $"{(uint)CareerName}" },
+                { "Career ID", $"{(ulong)CareerName}" },
                 { "Career Name", $"{CareerName}" },
                 { "Career Description", CareerDescription }
             };

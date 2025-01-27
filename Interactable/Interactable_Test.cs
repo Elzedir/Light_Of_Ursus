@@ -41,14 +41,14 @@ namespace Interactable
         {
             if (!_swordEquipped)
             {
-                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
+                if (Manager_Game.S_Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(4, new Item(1, 1)))
                 {
                     _swordEquipped = true;
                 }
             }
             else
             {
-                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(4))
+                if (Manager_Game.S_Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(4))
                 {
                     _swordEquipped = false;
                 }
@@ -60,14 +60,14 @@ namespace Interactable
         {
             if (!_shieldEquipped)
             {
-                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
+                if (Manager_Game.S_Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.EquipItem(3, new Item(2, 1)))
                 {
                     _shieldEquipped = true;
                 }
             }
             else
             {
-                if (Manager_Game.Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(3))
+                if (Manager_Game.S_Instance.Player.transform.gameObject.GetComponent<Actor_Component>().EquipmentComponent.UnequipItem(3))
                 {
                     _shieldEquipped = false;
                 }

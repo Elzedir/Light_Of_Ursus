@@ -32,7 +32,7 @@ namespace Jobs
         {
             return new Dictionary<string, string>
             {
-                { "Job ID", $"{(uint)JobName}" },
+                { "Job ID", $"{(ulong)JobName}" },
                 { "Job Name", JobName.ToString() },
                 { "Job Description", JobDescription }
             };
@@ -48,7 +48,7 @@ namespace Jobs
             _updateDataDisplay(DataToDisplay,
                 title: "Job Tasks",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: JobActions.ToDictionary(jobTask => $"{(uint)jobTask}", jobTask => $"{jobTask}"));
+                allStringData: JobActions.ToDictionary(jobTask => $"{(ulong)jobTask}", jobTask => $"{jobTask}"));
 
             return DataToDisplay;
         }
@@ -58,10 +58,10 @@ namespace Jobs
     public class Job
     {
         public readonly JobName JobName;
-        public          uint    StationID;
-        public          uint    WorkPostID;
+        public          ulong    StationID;
+        public          ulong    WorkPostID;
 
-        public void SetStationAndWorkPostID((uint StationID, uint WorkPostID) stationAndWorkPostID)
+        public void SetStationAndWorkPostID((ulong StationID, ulong WorkPostID) stationAndWorkPostID)
         {
             StationID  = stationAndWorkPostID.StationID;
             WorkPostID = stationAndWorkPostID.WorkPostID;
@@ -73,7 +73,7 @@ namespace Jobs
         public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
         public HashSet<ActorActionName> JobActions => Job_Data.JobActions;
         
-        public Job(JobName jobName, uint stationID, uint workPostID)
+        public Job(JobName jobName, ulong stationID, ulong workPostID)
         {
             JobName    = jobName;
             StationID  = stationID;

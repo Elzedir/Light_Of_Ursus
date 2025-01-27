@@ -1,7 +1,6 @@
-using Actor;
 using UnityEngine;
 
-namespace ActorPreset
+namespace ActorPresets
 {
     public abstract class ActorPreset_Manager
     {

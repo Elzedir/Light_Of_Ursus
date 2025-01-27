@@ -19,7 +19,7 @@ namespace Relationships
             return relation;
         }
 
-        static float _compareFaction(uint a, uint b)
+        static float _compareFaction(ulong a, ulong b)
         {
             Faction_Data factionDataA = Faction_Manager.GetFaction_Data(a);
 
@@ -37,11 +37,11 @@ namespace Relationships
     [Serializable]
     public class FactionRelationData
     {
-        public uint FactionID_A;
-        public uint FactionID_B;
+        public ulong FactionID_A;
+        public ulong FactionID_B;
         public int  FactionRelation;
 
-        public FactionRelationData(uint factionID_A, uint factionID_B, int factionRelations)
+        public FactionRelationData(ulong factionID_A, ulong factionID_B, int factionRelations)
         {
             FactionID_A     = factionID_A;
             FactionRelation = factionRelations;

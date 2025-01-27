@@ -5,12 +5,12 @@ namespace Region
 {
     public abstract class Region_List
     {
-        static Dictionary<uint, Region_Data> _defaultRegions;
-        public static Dictionary<uint, Region_Data> DefaultRegions => _defaultRegions ??= _initialiseDefaultRegions();
+        static Dictionary<ulong, Region_Data> _defaultRegions;
+        public static Dictionary<ulong, Region_Data> DefaultRegions => _defaultRegions ??= _initialiseDefaultRegions();
         
-        static Dictionary<uint, Region_Data> _initialiseDefaultRegions()
+        static Dictionary<ulong, Region_Data> _initialiseDefaultRegions()
         {
-            return new Dictionary<uint, Region_Data>
+            return new Dictionary<ulong, Region_Data>
             {
                 {
                     1, new Region_Data(
@@ -18,7 +18,7 @@ namespace Region
                         regionName: "The Heartlands",
                         regionDescription: "The land of hearts",
                         regionFactionID: 0,
-                        allCityIDs: new List<uint>
+                        allCityIDs: new List<ulong>
                         {
                             1
                         },

@@ -13,10 +13,10 @@ namespace Region
     public class Region_SO : Data_Component_SO<Region_Data, Region_Component>
     {
         public Data<Region_Data>[]         Regions                            => Data;
-        public Data<Region_Data>           GetRegion_Data(uint      regionID) => GetData(regionID);
-        public Dictionary<uint, Region_Component> RegionComponents => _getSceneComponents();
+        public Data<Region_Data>           GetRegion_Data(ulong      regionID) => GetData(regionID);
+        public Dictionary<ulong, Region_Component> RegionComponents => _getSceneComponents();
         
-        public Region_Component GetRegion_Component(uint regionID)
+        public Region_Component GetRegion_Component(ulong regionID)
         {
             if (RegionComponents.TryGetValue(regionID, out var component))
             {
@@ -27,17 +27,15 @@ namespace Region
             return null;
         }
 
-        public override uint GetDataID(int id) => Regions[id].Data_Object.RegionID;
+        public void UpdateRegion(ulong regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
+        public void UpdateAllRegions(Dictionary<ulong, Region_Data> allRegions) => UpdateAllData(allRegions);
 
-        public void UpdateRegion(uint regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
-        public void UpdateAllRegions(Dictionary<uint, Region_Data> allRegions) => UpdateAllData(allRegions);
-
-        protected override Dictionary<uint, Data<Region_Data>> _getDefaultData() =>
+        protected override Dictionary<ulong, Data<Region_Data>> _getDefaultData() =>
             _convertDictionaryToData(Region_List.DefaultRegions);
 
-        protected override Dictionary<uint, Data<Region_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Region_Data>> _getSavedData()
         {
-            Dictionary<uint, Region_Data> savedData = new();
+            Dictionary<ulong, Region_Data> savedData = new();
 
             try
             {
@@ -65,20 +63,8 @@ namespace Region
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<Region_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<Region_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.RegionData));
-
-        static uint _lastUnusedRegionID = 1;
-
-        public uint GetUnusedRegionID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedRegionID))
-            {
-                _lastUnusedRegionID++;
-            }
-
-            return _lastUnusedRegionID;
-        }
          
         protected override Data<Region_Data> _convertToData(Region_Data data)
         {

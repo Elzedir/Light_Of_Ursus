@@ -41,7 +41,7 @@ namespace DataPersistence
         public SerializableDictionary<string, string> PuzzleSaveData;
         public List<PuzzleData> PuzzleData;
 
-        public Save_Data(uint currentProfileID, string currentProfileName)
+        public Save_Data(ulong currentProfileID, string currentProfileName)
         {
             SavedProfileData = new SavedProfileData(currentProfileID, currentProfileName);
         }
@@ -51,12 +51,12 @@ namespace DataPersistence
     public class SavedProfileData
     {
         public long LastUpdated;
-        public uint SaveDataID;
+        public ulong SaveDataID;
         public string SaveDataName;
-        public uint ProfileID;
+        public ulong ProfileID;
         public string ProfileName;
 
-        public SavedProfileData(uint profileID, string profileName)
+        public SavedProfileData(ulong profileID, string profileName)
         {
             ProfileID = profileID;
             ProfileName = profileName;

@@ -104,7 +104,7 @@ public class Manager_Puzzle : MonoBehaviour
         _puzzleActive = false;
         GameObject.Find(Puzzle.PuzzleSet.ToString()).SetActive(false);
 
-        if (completed) { Manager_Game.Instance.LoadScene(puzzle: Puzzle); } else Manager_Game.Instance.LoadScene();
+        if (completed) { Manager_Game.S_Instance.LoadScene(puzzle: Puzzle); } else Manager_Game.S_Instance.LoadScene();
     }
 
     public event Action OnTakeHit;

@@ -31,7 +31,7 @@ namespace ActorActions
             }
             
             priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
-                Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
+                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
             
             if (priority_Parameters.TotalItems is 0)
             {
@@ -46,7 +46,7 @@ namespace ActorActions
             {
                 priority_Parameters.Inventory_Target = station.Station_Data.InventoryData;
                 var stationPriority =
-                    Priority_Generator.GeneratePriority((uint)actorActionName, priority_Parameters);
+                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
 
                 if (stationPriority is 0 || stationPriority < highestPriority) continue;
 

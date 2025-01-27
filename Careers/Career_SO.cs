@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DataPersistence;
 using Tools;
 using UnityEditor;
@@ -12,19 +13,17 @@ namespace Careers
     public class Career_SO : Data_SO<Career_Data>
     {
         public Data<Career_Data>[] Careers                           => Data;
-        public Data<Career_Data>   GetCareer_Data(CareerName careerName) => GetData((uint)careerName);
-
-        public override uint GetDataID(int id) => (uint)Careers[id].Data_Object.CareerName;
+        public Data<Career_Data>   GetCareer_Data(CareerName careerName) => GetData((ulong)careerName);
         
-        protected override Dictionary<uint, Data<Career_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Career_Data>> _getDefaultData() => 
             _convertDictionaryToData(Career_List.DefaultCareers);
         
         protected override Data<Career_Data> _convertToData(Career_Data data)
         {
             return new Data<Career_Data>(
-                dataID: (uint)data.CareerName,
+                dataID: (ulong)data.CareerName,
                 data_Object: data,
-                dataTitle: $"{(uint)data.CareerName}: {data.CareerName}",
+                dataTitle: $"{(ulong)data.CareerName}: {data.CareerName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
     }

@@ -37,7 +37,7 @@ namespace JobSite
 
             var mergedItems = producedItems
                               .GroupBy(item => item.ItemID)
-                              .Select(group => new Item(group.Key, (uint)group.Sum(item => item.ItemAmount)))
+                              .Select(group => new Item(group.Key, (ulong)group.Sum(item => (int)item.ItemAmount)))
                               .ToList();
 
             var duplicateItems = producedItems
@@ -77,8 +77,8 @@ namespace JobSite
 
         protected override void _adjustProduction(float idealRatio)
         {
-            var   allEmployees        = new Dictionary<uint, Actor_Component>(JobSiteData.AllEmployees);
-            var   bestCombination     = new Dictionary<uint, Actor_Component>();
+            var   allEmployees        = new Dictionary<ulong, Actor_Component>(JobSiteData.AllEmployees);
+            var   bestCombination     = new Dictionary<ulong, Actor_Component>();
             var bestRatioDifference = float.MaxValue;
 
             var allCombinations = _getAllCombinations(allEmployees);
@@ -92,7 +92,7 @@ namespace JobSite
 
                 var mergedEstimatedProduction = estimatedProduction
                                                 .GroupBy(item => item.ItemID)
-                                                .Select(group => new Item(group.Key, (uint)group.Sum(item => item.ItemAmount)))
+                                                .Select(group => new Item(group.Key, (ulong)group.Sum(item => (int)item.ItemAmount)))
                                                 .ToList();
 
                 float estimatedLogProduction   = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
@@ -110,7 +110,7 @@ namespace JobSite
                 Debug.Log($"Combination {i} the is best ratio");
 
                 bestRatioDifference = ratioDifference;
-                bestCombination     = new Dictionary<uint, Actor_Component>(combination);
+                bestCombination     = new Dictionary<ulong, Actor_Component>(combination);
             }
 
             _assignAllEmployeesToStations(bestCombination);

@@ -13,10 +13,10 @@ namespace Station
     public class Station_SO : Data_Component_SO<Station_Data, Station_Component>
     {
         public Data<Station_Data>[]         Stations                        => Data;
-        public Data<Station_Data>           GetStation_Data(uint stationID) => GetData(stationID);
-        public Dictionary<uint, Station_Component> Station_Components => _getSceneComponents();
+        public Data<Station_Data>           GetStation_Data(ulong stationID) => GetData(stationID);
+        public Dictionary<ulong, Station_Component> Station_Components => _getSceneComponents();
 
-        public Station_Component GetStation_Component(uint stationID)
+        public Station_Component GetStation_Component(ulong stationID)
         {
             if (stationID == 0)
             {
@@ -33,19 +33,17 @@ namespace Station
             return null;
         }
 
-        public override uint GetDataID(int id) => Stations[id].Data_Object.StationID;
-
-        public void UpdateStation(uint stationID, Station_Data station_Data) =>
+        public void UpdateStation(ulong stationID, Station_Data station_Data) =>
             UpdateData(stationID, station_Data);
 
-        public void UpdateAllStations(Dictionary<uint, Station_Data> allStations) => UpdateAllData(allStations);
+        public void UpdateAllStations(Dictionary<ulong, Station_Data> allStations) => UpdateAllData(allStations);
 
-        protected override Dictionary<uint, Data<Station_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Station_Data>> _getDefaultData() => 
             _convertDictionaryToData(Station_List.DefaultStations);
 
-        protected override Dictionary<uint, Data<Station_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Station_Data>> _getSavedData()
         {
-            Dictionary<uint, Station_Data> savedData = new();
+            Dictionary<ulong, Station_Data> savedData = new();
             
             try
             {
@@ -73,20 +71,8 @@ namespace Station
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<uint, Data<Station_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<Station_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Station_Data));
-
-        static uint _lastUnusedStationID = 1;
-
-        public uint GetUnusedStationID()
-        {
-            while (DataIndexLookup.ContainsKey(_lastUnusedStationID))
-            {
-                _lastUnusedStationID++;
-            }
-
-            return _lastUnusedStationID;
-        }
 
         protected override Data<Station_Data> _convertToData(Station_Data data)
         {

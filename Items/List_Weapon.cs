@@ -29,12 +29,12 @@ namespace Items
 
     public abstract class List_Weapon
     {
-        static Dictionary<uint, Item_Data> _defaultWeapons;
-        public static Dictionary<uint, Item_Data> DefaultWeapons => _defaultWeapons ??= _initialiseDefaultWeapons();
+        static Dictionary<ulong, Item_Data> _defaultWeapons;
+        public static Dictionary<ulong, Item_Data> DefaultWeapons => _defaultWeapons ??= _initialiseDefaultWeapons();
 
-        static Dictionary<uint, Item_Data> _initialiseDefaultWeapons()
+        static Dictionary<ulong, Item_Data> _initialiseDefaultWeapons()
         {
-            var allWeapons = new Dictionary<uint, Item_Data>();
+            var allWeapons = new Dictionary<ulong, Item_Data>();
 
             foreach (var weapon in _defaultShortBows())
             {
@@ -54,9 +54,9 @@ namespace Items
             return allWeapons;
         }
 
-        static Dictionary<uint, Item_Data> _defaultShortBows()
+        static Dictionary<ulong, Item_Data> _defaultShortBows()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     3,
@@ -104,9 +104,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _defaultShortSwords()
+        static Dictionary<ulong, Item_Data> _defaultShortSwords()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     1,
@@ -155,9 +155,9 @@ namespace Items
             };
         }
 
-        static Dictionary<uint, Item_Data> _defaultShields()
+        static Dictionary<ulong, Item_Data> _defaultShields()
         {
-            return new Dictionary<uint, Item_Data>
+            return new Dictionary<ulong, Item_Data>
             {
                 {
                     2,
