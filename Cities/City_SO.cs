@@ -14,10 +14,10 @@ namespace City
     public class City_SO : Data_Component_SO<City_Data, City_Component>
     {
         public Data<City_Data>[]                         Cities                         => Data;
-        public Data<City_Data>                           GetCity_Data(uint      cityID) => GetData(cityID);
-        public Dictionary<uint, City_Component> City_Components => _getSceneComponents();
+        public Data<City_Data>                           GetCity_Data(ulong      cityID) => GetData(cityID);
+        public Dictionary<ulong, City_Component> City_Components => _getSceneComponents();
 
-        public City_Component GetCity_Component(uint cityID)
+        public City_Component GetCity_Component(ulong cityID)
         {
             if (cityID == 0)
             {
@@ -33,18 +33,16 @@ namespace City
             Debug.LogError($"City with ID {cityID} not found in City_SO.");
             return null;
         }
+        
+        public void UpdateCity(ulong cityID, City_Data city_Data) => UpdateData(cityID, city_Data);
+        public void UpdateAllCities(Dictionary<ulong, City_Data> allCities) => UpdateAllData(allCities);
 
-        public override uint GetDataID(int id) => Cities[id].Data_Object.CityID;
-
-        public void UpdateCity(uint cityID, City_Data city_Data) => UpdateData(cityID, city_Data);
-        public void UpdateAllCities(Dictionary<uint, City_Data> allCities) => UpdateAllData(allCities);
-
-        protected override Dictionary<uint, Data<City_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<City_Data>> _getDefaultData() => 
             _convertDictionaryToData(City_List.DefaultCities);
 
-        protected override Dictionary<uint, Data<City_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<City_Data>> _getSavedData()
         {
-            Dictionary<uint, City_Data> savedData = new();
+            Dictionary<ulong, City_Data> savedData = new();
                 
             try
             {
@@ -72,12 +70,12 @@ namespace City
             return _convertDictionaryToData(savedData);
         }
         
-        protected override Dictionary<uint, Data<City_Data>> _getSceneData() =>
+        protected override Dictionary<ulong, Data<City_Data>> _getSceneData() =>
             _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.CityData));
 
-        static uint _lastUnusedCityID = 1;
+        static ulong _lastUnusedCityID = 1;
 
-        public uint GetUnusedCityID()
+        public ulong GetUnusedCityID()
         {
             while (DataIndexLookup.ContainsKey(_lastUnusedCityID))
             {

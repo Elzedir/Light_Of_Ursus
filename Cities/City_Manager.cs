@@ -9,7 +9,7 @@ namespace City
         static City_SO _allCities;
         static City_SO AllCities => _allCities ??= _getCity_SO();
         
-        public static City_Data GetCity_Data(uint cityID)
+        public static City_Data GetCity_Data(ulong cityID)
         {
             return AllCities.GetCity_Data(cityID).Data_Object;
         }
@@ -19,7 +19,7 @@ namespace City
             return AllCities.GetDataFromName(city_Component.name)?.Data_Object;
         }
         
-        public static City_Component GetCity_Component(uint cityID)
+        public static City_Component GetCity_Component(ulong cityID)
         {
             return AllCities.GetCity_Component(cityID);
         }
@@ -55,7 +55,7 @@ namespace City
             return nearestCity;
         }
 
-        public static uint GetUnusedCityID()
+        public static ulong GetUnusedCityID()
         {
             return AllCities.GetUnusedCityID();
         }

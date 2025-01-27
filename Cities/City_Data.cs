@@ -12,13 +12,13 @@ namespace City
     [Serializable]
     public class City_Data : Data_Class
     {
-        public uint   CityID;
+        public ulong   CityID;
         public string CityName;
-        public uint   CityFactionID;
-        public uint   RegionID;
+        public ulong   CityFactionID;
+        public ulong   RegionID;
         public string CityDescription;
 
-        [SerializeField] List<uint> _allJobSiteIDs;
+        [SerializeField] List<ulong> _allJobSiteIDs;
         
         City_Component        _city_Component;
         public City_Component City_Component => _city_Component ??= City_Manager.GetCity_Component(CityID);
@@ -28,8 +28,8 @@ namespace City
         public ProsperityData ProsperityData;
         
         int                              _currentLength;
-        Dictionary<uint, JobSite_Component> _allJobSitesInCity;
-        public Dictionary<uint, JobSite_Component> AllJobSitesInCity
+        Dictionary<ulong, JobSite_Component> _allJobSitesInCity;
+        public Dictionary<ulong, JobSite_Component> AllJobSitesInCity
         {
             get
             {
@@ -43,8 +43,8 @@ namespace City
         // Call when a new city is formed.
         public void RefreshAllJobSites() => _currentLength = 0;
 
-        public City_Data(uint       cityID, string cityName, string cityDescription, uint cityFactionID, uint regionID,
-                         List<uint> allJobSiteIDs, PopulationData population, ProsperityData prosperityData = null)
+        public City_Data(ulong       cityID, string cityName, string cityDescription, ulong cityFactionID, ulong regionID,
+                         List<ulong> allJobSiteIDs, PopulationData population, ProsperityData prosperityData = null)
         {
             CityID          = cityID;
             CityName        = cityName;
@@ -125,11 +125,11 @@ namespace City
         public float      CurrentPopulation;
         public float      MaxPopulation;
         public float      ExpectedPopulation;
-        public List<uint> AllCitizenIDList;
+        public List<ulong> AllCitizenIDList;
 
-        public HashSet<uint> AllCitizenIDs = new();
+        public HashSet<ulong> AllCitizenIDs = new();
         
-        public PopulationData(List<uint> allCitizenIDList, float maxPopulation, float expectedPopulation)
+        public PopulationData(List<ulong> allCitizenIDList, float maxPopulation, float expectedPopulation)
         {
             foreach (var citizenID in allCitizenIDList)
             {

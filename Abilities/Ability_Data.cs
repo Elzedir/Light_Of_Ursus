@@ -13,12 +13,12 @@ namespace Ability
     {
         public readonly AbilityName                             AbilityName;
         public          string                                  AbilityDescription;
-        public          uint                                    MaxLevel;
+        public          ulong                                    MaxLevel;
         public          List<(float, DamageType)>               BaseDamage;
         public          AnimationClip                           AnimationClip;
         public readonly List<(string Name, IEnumerator Action)> AbilityActions;
 
-        public Ability_Data(AbilityName                 abilityName, string        abilityDescription, uint maxLevel,
+        public Ability_Data(AbilityName                 abilityName, string        abilityDescription, ulong maxLevel,
                             List<(float, DamageType)>   baseDamage,  AnimationClip animationClip,
                             List<(string, IEnumerator)> abilityActions)
         {
@@ -57,7 +57,7 @@ namespace Ability
         {
             return new Dictionary<string, string>
             {
-                { "Ability ID", $"{(uint)AbilityName}" },
+                { "Ability ID", $"{(ulong)AbilityName}" },
                 { "Ability Name", $"{AbilityName}" },
                 { "Ability Description", $"{AbilityDescription}" },
                 { "Ability Actions", $"{AbilityActions?.Count}" },
@@ -72,12 +72,12 @@ namespace Ability
     public class Ability
     {
         public readonly AbilityName AbilityName;
-        public          uint        CurrentLevel;
+        public          ulong        CurrentLevel;
 
         Ability_Data        _abilityData;
         public Ability_Data AbilityData => _abilityData ?? Ability_Manager.GetAbility_Master(AbilityName);
 
-        public Ability(AbilityName abilityName, uint currentLevel)
+        public Ability(AbilityName abilityName, ulong currentLevel)
         {
             AbilityName  = abilityName;
             CurrentLevel = currentLevel;

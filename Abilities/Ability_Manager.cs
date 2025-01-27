@@ -21,7 +21,7 @@ namespace Ability
             return AllAbilities.GetAbility_Master(abilityName).Data_Object;
         }
 
-        public static Ability GetAbility(AbilityName abilityName, uint abilityLevel)
+        public static Ability GetAbility(AbilityName abilityName, ulong abilityLevel)
         {
             return AllAbilities.GetAbility(abilityName, abilityLevel);
         }
@@ -38,7 +38,7 @@ namespace Ability
             return ability_SO;
         }
 
-        public static uint GetUnusedAbilityID()
+        public static ulong GetUnusedAbilityID()
         {
             return AllAbilities.GetUnusedAbilityID();
         }
@@ -52,7 +52,7 @@ namespace Ability
     [Serializable]
     public class Actor_Abilities : Priority_Class
     {
-        public Actor_Abilities(uint actorID, SerializableDictionary<AbilityName, float> abilityList = null) : base(actorID,
+        public Actor_Abilities(ulong actorID, SerializableDictionary<AbilityName, float> abilityList = null) : base(actorID,
             ComponentType.Actor)
         {
             _currentAbilities = abilityList ?? new SerializableDictionary<AbilityName, float>();

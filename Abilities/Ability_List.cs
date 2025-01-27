@@ -10,15 +10,15 @@ namespace Ability
 {
     public abstract class Ability_List
     {
-        static Dictionary<uint, Ability_Data> _defaultAbilities;
-        public static Dictionary<uint, Ability_Data> DefaultAbilities => _defaultAbilities ??= _initialiseDefaultAbilities();
+        static Dictionary<ulong, Ability_Data> _defaultAbilities;
+        public static Dictionary<ulong, Ability_Data> DefaultAbilities => _defaultAbilities ??= _initialiseDefaultAbilities();
         
-        static Dictionary<uint, Ability_Data> _initialiseDefaultAbilities()
+        static Dictionary<ulong, Ability_Data> _initialiseDefaultAbilities()
         {
-            return new Dictionary<uint, Ability_Data>
+            return new Dictionary<ulong, Ability_Data>
             {
                 {
-                    (uint)AbilityName.Eagle_Stomp, new Ability_Data(
+                    (ulong)AbilityName.Eagle_Stomp, new Ability_Data(
                         abilityName: AbilityName.Eagle_Stomp,
                         abilityDescription: "Fly high, little one.",
                         maxLevel: 10,
@@ -31,7 +31,7 @@ namespace Ability
                     )
                 },
                 {
-                    (uint)AbilityName.Charge, new Ability_Data(
+                    (ulong)AbilityName.Charge, new Ability_Data(
                         abilityName: AbilityName.Charge,
                         abilityDescription: "A charge.",
                         maxLevel: 10,

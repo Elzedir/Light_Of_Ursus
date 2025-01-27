@@ -10,7 +10,7 @@ namespace City
 {
     public class City_Component : MonoBehaviour
     {
-        public uint               CityID    => CityData.CityID;
+        public ulong               CityID    => CityData.CityID;
         public City_Data          CityData;
 
         public GameObject CitySpawnZone;
@@ -42,7 +42,7 @@ namespace City
             CityData.InitialiseCityData();
         }
 
-        public Dictionary<uint, JobSite_Component> GetAllJobSitesInCity() =>
+        public Dictionary<ulong, JobSite_Component> GetAllJobSitesInCity() =>
             GetComponentsInChildren<JobSite_Component>().ToDictionary(jobsite => jobsite.JobSiteID);
     }
 }

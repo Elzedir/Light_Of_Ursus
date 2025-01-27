@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -13,36 +14,34 @@ namespace Ability
         public Data<Ability_Data>[] Abilities => Data;
 
         public Data<Ability_Data> GetAbility_Master(AbilityName abilityName) =>
-            GetData((uint)abilityName);
+            GetData((ulong)abilityName);
 
-        public Ability GetAbility(AbilityName abilityName, uint currentLevel)
+        public Ability GetAbility(AbilityName abilityName, ulong currentLevel)
         {
             return new Ability(abilityName, currentLevel);
         }
 
-        public override uint GetDataID(int id) => (uint)Abilities[id].Data_Object.AbilityName;
-
-        public void UpdateAbility(uint abilityID, Ability_Data ability_Data) =>
+        public void UpdateAbility(ulong abilityID, Ability_Data ability_Data) =>
             UpdateData(abilityID, ability_Data);
 
-        public void UpdateAllAbilities(Dictionary<uint, Ability_Data> allAbilities) =>
+        public void UpdateAllAbilities(Dictionary<ulong, Ability_Data> allAbilities) =>
             UpdateAllData(allAbilities);
 
-        protected override Dictionary<uint, Data<Ability_Data>> _getDefaultData() => 
+        protected override Dictionary<ulong, Data<Ability_Data>> _getDefaultData() => 
             _convertDictionaryToData(Ability_List.DefaultAbilities);
 
         protected override Data<Ability_Data> _convertToData(Ability_Data data)
         {
             return new Data<Ability_Data>(
-                dataID: (uint)data.AbilityName,
+                dataID: (ulong)data.AbilityName,
                 data_Object: data, 
-                dataTitle: $"{(uint)data.AbilityName}: {data.AbilityName}",
+                dataTitle: $"{(ulong)data.AbilityName}: {data.AbilityName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
-        static uint _lastUnusedAbilityID = 1;
+        static ulong _lastUnusedAbilityID = 1;
 
-        public uint GetUnusedAbilityID()
+        public ulong GetUnusedAbilityID()
         {
             while (DataIndexLookup.ContainsKey(_lastUnusedAbilityID))
             {
