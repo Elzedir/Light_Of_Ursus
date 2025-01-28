@@ -27,6 +27,7 @@ namespace DataPersistence
         public static Profile_Data CurrentProfile => DataPersistence_SO.CurrentProfile;
         public static Dictionary<ulong, Profile_Data> AllProfiles => DataPersistence_SO.AllProfiles;
         public static bool DeleteGameOnStart => DataPersistence_SO.DeleteGameOnStart;
+        public static bool ClearAllSOsOnStart => DataPersistence_SO.ClearAllSOsOnStart;
         
         public static void SaveGame(string saveDataName) => DataPersistence_SO.SaveGame(saveDataName);
         public static void LoadGame(string saveDataName) => DataPersistence_SO.LoadGame(saveDataName);

@@ -24,8 +24,8 @@ namespace Actors
     {
         const string _actor_SOPath = "ScriptableObjects/Actor_SO";
         
-        static Actor_SO _allActors;
-        static Actor_SO AllActors => _allActors ??= _getActor_SO();
+        static Actor_SO s_allActors;
+        static Actor_SO S_AllActors => s_allActors ??= _getActor_SO();
 
         // public static void OnSceneLoaded()
         // {
@@ -39,22 +39,22 @@ namespace Actors
         
         public static Actor_Data GetActor_Data(ulong actorID)
         {
-            return AllActors.GetActor_Data(actorID).Data_Object;
+            return S_AllActors.GetActor_Data(actorID).Data_Object;
         }
         
         public static Actor_Data GetActor_DataFromComponent(Actor_Component actor_Component)
         {
-            return AllActors.GetDataFromName(actor_Component.name)?.Data_Object;
+            return S_AllActors.GetDataFromName(actor_Component.name)?.Data_Object;
         }
         
         public static Actor_Component GetActor_Component(ulong actorID)
         {
-            return AllActors.GetActor_Component(actorID);
+            return S_AllActors.GetActor_Component(actorID);
         }
         
         public static List<ulong> GetAllActorIDs()
         {
-            return AllActors.GetAllDataIDs();
+            return S_AllActors.GetAllDataIDs();
         }
         
         static Actor_SO _getActor_SO()
@@ -86,7 +86,7 @@ namespace Actors
 
             actor.SetActorData(_generateNewActorData(actor, actorDataPreset));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
+            S_AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             actor.Initialise();
 
@@ -100,7 +100,7 @@ namespace Actors
         {
             if (despawnActorIfExists) _despawnActor(actorID);
 
-            var actor = AllActors.GetActor_Component(actorID);
+            var actor = S_AllActors.GetActor_Component(actorID);
             
             if (actor != null && actor.IsSpawned) return actor;
 
@@ -181,7 +181,7 @@ namespace Actors
                 // Change this so that it generates correct CityID
             );
 
-            var gameObjectData = new Actor_Data_GameObject(
+            var gameObjectData = new Actor_Data_SceneObject(
                 actorID: fullIdentification.ActorID,
                 actorTransform: actor.transform,
                 actorMesh: null,
@@ -208,10 +208,15 @@ namespace Actors
                 actorVocations: actorDataPreset?.ActorDataVocation.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
                 );
             
-            var speciesAndPersonality = new Actor_Data_SpeciesAndPersonality(
+            var species = new Actor_Data_Species(
                 actorID: fullIdentification.ActorID,
-                actorSpecies: _getRandomSpecies(),
-                actorPersonality: _getRandomPersonality()
+                actorSpecies: _getRandomSpecies()
+            );
+            
+            var personality = new Actor_Data_Personality(
+                actorID: fullIdentification.ActorID,
+                actorPersonality: _getRandomPersonality(),
+                actorSpecies: species.ActorSpecies
             );
             
             var statsAndAbilities = new Actor_Data_StatsAndAbilities(
@@ -244,6 +249,10 @@ namespace Actors
                 legs: null,
                 feet: null
             );
+            
+            var proximityData = new Actor_Data_Proximity(
+                actorID: fullIdentification.ActorID
+            );
 
             actor.SetActorData(new Actor_Data(
                 actorDataPresetName,
@@ -252,15 +261,17 @@ namespace Actors
                 careerData,
                 craftingData,
                 vocationData,
-                speciesAndPersonality,
+                species,
+                personality,
                 statsAndAbilities,
                 statesAndConditions,
                 inventoryData,
                 equipmentData,
-                priorityData
+                priorityData,
+                proximityData
                 ));
 
-            AllActors.UpdateActor(actor.ActorID, actor.ActorData);
+            S_AllActors.UpdateActor(actor.ActorID, actor.ActorData);
 
             return actor.ActorData;
         }
@@ -290,9 +301,9 @@ namespace Actors
             return SpeciesName.Human;
         }
 
-        static ActorPersonality _getRandomPersonality()
+        static List<PersonalityTraitName> _getRandomPersonality()
         {
-            return new ActorPersonality(Personality_Manager.GetRandomPersonalityTraits(null, 3));
+            return Personality_Manager.GetRandomPersonalityTraits(null, 3);
         }
 
         static Actor_Stats _getNewActorStats(ulong actorID)
@@ -339,7 +350,7 @@ namespace Actors
         
         public static void ClearSOData()
         {
-            AllActors.ClearSOData();
+            S_AllActors.ClearSOData();
         }
     }
 }

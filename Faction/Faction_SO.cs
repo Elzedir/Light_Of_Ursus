@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using DataPersistence;
 using Tools;
 using UnityEditor;
@@ -32,7 +31,7 @@ namespace Faction
         public void UpdateAllFactions(Dictionary<ulong, Faction_Data> allFactions) => UpdateAllData(allFactions);
 
         protected override Dictionary<ulong, Data<Faction_Data>> _getDefaultData() => 
-            _convertDictionaryToData(Faction_List.DefaultFactions);
+            _convertDictionaryToData(Faction_List.S_DefaultFactions);
 
         protected override Dictionary<ulong, Data<Faction_Data>> _getSavedData()
         {

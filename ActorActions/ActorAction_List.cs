@@ -5,22 +5,33 @@ using Actor;
 using Jobs;
 using Priority;
 using StateAndCondition;
-using Station;
 using UnityEngine;
 
 namespace ActorActions
 {
     public abstract class ActorAction_List
     {
-        static Dictionary<ActorActionName, ActorAction_Data> _allActorAction_Data;
-
-        public static Dictionary<ActorActionName, ActorAction_Data> AllActorAction_Data =>
-            _allActorAction_Data ??= _initialiseAllActorAction_Data();
+        static Dictionary<ActorActionName, ActorAction_Data> s_allActorAction_Data;
+        
+        public static Dictionary<ActorActionName, ActorAction_Data> S_AllActorAction_Data =>
+            s_allActorAction_Data ??= _initialiseAllActorAction_Data();
 
         static Dictionary<ActorActionName, ActorAction_Data> _initialiseAllActorAction_Data()
         {
             return new Dictionary<ActorActionName, ActorAction_Data>
             {
+                {
+                    ActorActionName.Idle, new ActorAction_Data(
+                        actionName: ActorActionName.Idle,
+                        actionDescription: "To idle",
+                        requiredStates: new Dictionary<StateName, bool>
+                        {
+                            {
+                                StateName.CanIdle, true
+                            }
+                        },
+                        primaryJob: JobName.Any)
+                },
                 {
                     ActorActionName.Wander, new ActorAction_Data(
                         actionName: ActorActionName.Wander,
@@ -170,21 +181,16 @@ namespace ActorActions
             if (actor_Component.transform.position != position) actor_Component.transform.position = position;
         }
 
-        static Dictionary<StateName, Dictionary<ActorActionName, bool>> _actorActionStateDictionary;
+        static Dictionary<StateName, Dictionary<ActorActionName, bool>> s_actorActionStateDictionary;
 
-        public static Dictionary<StateName, Dictionary<ActorActionName, bool>> ActorActionStateDictionary =>
-            _actorActionStateDictionary ??= _initialiseActorActionStateDictionary();
-
-        public static Dictionary<StateName, Dictionary<ActorActionName, bool>> GetActorActionStateDictionary()
-        {
-            return ActorActionStateDictionary;
-        }
+        public static Dictionary<StateName, Dictionary<ActorActionName, bool>> S_ActorActionStateDictionary =>
+            s_actorActionStateDictionary ??= _initialiseActorActionStateDictionary();
 
         static Dictionary<StateName, Dictionary<ActorActionName, bool>> _initialiseActorActionStateDictionary()
         {
             var actorActionStateDictionary = new Dictionary<StateName, Dictionary<ActorActionName, bool>>();
 
-            foreach (var actorActionData in AllActorAction_Data)
+            foreach (var actorActionData in S_AllActorAction_Data)
             {
                 foreach (var state in actorActionData.Value.RequiredStates)
                 {

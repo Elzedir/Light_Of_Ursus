@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
+using Actors;
 using JobSite;
 using Station;
 using Tools;
@@ -45,6 +45,9 @@ namespace Priority
         {
             if (!forceRegenerateAll)
             {
+                a
+                    //* For some reason, Fetch, Deliver, Chop Wood and Process are not being added to AllowedActions, or are not
+                    // Generating priority in the end. Check why. Idle, Wander, and one other is being added though, so it's partially working.
                 foreach (var actorAction in AllowedActions)
                 {
                     _regeneratePriority((ulong)actorAction);
@@ -67,25 +70,29 @@ namespace Priority
                 return;
             }
             
-            priority_Parameters.JobSiteID_Source = JobSiteID; // Same as in Priority_Actor.
-            
-            //_populatePriorityParameters(ref priority_Parameters);
+            var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
 
-            var priorityValue = Priority_Generator.GeneratePriority(priorityID, priority_Parameters);
+            //* If it works, change the highest priority thing to be named right.
+            priorityParameters = ActorAction_Manager.GetHighestPriorityStation(priorityParameters, (ActorActionName)priorityID);
+
+            var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        // protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
-        // {
-        //     priorityParameters.JobSiteID_Source = JobSiteID;
-        // }
+        protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
+        {
+            return new Priority_Parameters
+            (
+                jobSiteID_Source: JobSiteID
+            );
+        }
 
         protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)
         {
             if (limiterID != 0)
                 return priorityIDs.Where(priorityID =>
-                    Station_Manager.GetStation_Component(limiterID).AllowedJobTasks.Contains((ActorActionName)priorityID)).ToList();// This should be ActorActionName
+                    Station_Manager.GetStation_Component(limiterID).AllowedJobTasks.Contains((ActorActionName)priorityID)).ToList();
             
             return priorityIDs;
         }

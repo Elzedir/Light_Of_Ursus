@@ -28,6 +28,7 @@ namespace Priority
         Actor_Component                    _actor;
         protected override object         _component => _actor ??= Actor_Manager.GetActor_Component(ComponentID);
         public             Actor_Component Actor_Component      => _component as Actor_Component;
+        public Actor_Data ActorData => Actor_Component.ActorData;
         public override GameObject GameObject => Actor_Component.gameObject;
         public override Priority_Data GetPriorityComponent() => Actor_Component.ActorData.Priority;
     }
@@ -38,6 +39,7 @@ namespace Priority
         Station_Component                    _station;
         protected override object            _component => _station ??= Station_Manager.GetStation_Component(StationID);
         public             Station_Component Station    => _component as Station_Component;
+        public Station_Data StationData => Station.Station_Data;
         public override GameObject           GameObject                => Station.gameObject;
         public override Priority_Data GetPriorityComponent() => Station.JobSite.JobSiteData.PriorityData;
     }
@@ -48,6 +50,7 @@ namespace Priority
         JobSite_Component                    _jobSite;
         protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         public             JobSite_Component JobSite    => _component as JobSite_Component;
+        public JobSite_Data JobSiteData => JobSite.JobSiteData;
         public override GameObject           GameObject                => JobSite.gameObject;
         
         public override Priority_Data GetPriorityComponent() => JobSite.JobSiteData.PriorityData;

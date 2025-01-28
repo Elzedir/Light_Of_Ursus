@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using City;
+using Faction;
 using Managers;
+using Region;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Region
+namespace Regions
 {
     [Serializable]
     public class Region_Data : Data_Class

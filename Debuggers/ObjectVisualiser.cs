@@ -10,8 +10,8 @@ using Time = UnityEngine.Time;
 
 namespace Debuggers
 {
-    // public class ObjectVisualiser : MonoBehaviour
-    // {
+    public class ObjectVisualiser : MonoBehaviour
+    {
     //     static ObjectVisualiser _instance;
     //
     //     public static ObjectVisualiser Instance =>
@@ -410,5 +410,5 @@ namespace Debuggers
     //         Destroy(section.gameObject);
     //         _allObjectSections.Remove(objectSectionType);
     //     }
-    // }
+    }
 }

@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using Relationships;
 
 namespace Faction
 {
     public abstract class Faction_List
     {
-        static Dictionary<ulong, Faction_Data> _defaultFactions;
-        public static Dictionary<ulong, Faction_Data> DefaultFactions => _defaultFactions ??= _initialiseDefaultFactions();
+        static Dictionary<ulong, Faction_Data> s_defaultFactions;
+        public static Dictionary<ulong, Faction_Data> S_DefaultFactions => s_defaultFactions ??= _initialiseDefaultFactions();
         
         static Dictionary<ulong, Faction_Data> _initialiseDefaultFactions()
         {
@@ -14,18 +13,18 @@ namespace Faction
             {
                 {
                     1, new Faction_Data(
-                        factionID: 1,
-                        factionName: "Wanderers",
-                        allFactionActorIDs: new HashSet<ulong>(),
-                        allFactionRelations: new List<FactionRelationData>()
+                        factionID: (ulong)FactionName.Wanderers,
+                        factionName: $"{FactionName.Wanderers}",
+                        allFactionActorIDs: new List<ulong>(),
+                        allFactionRelations: new Dictionary<ulong, float>()
                     )
                 },
                 {
                     2, new Faction_Data(
                         factionID: 2,
                         factionName: "Player Faction",
-                        allFactionActorIDs: new HashSet<ulong>(),
-                        allFactionRelations: new List<FactionRelationData>()
+                        allFactionActorIDs: new List<ulong>(),
+                        allFactionRelations: new Dictionary<ulong, float>()
                     )
                 }
             };

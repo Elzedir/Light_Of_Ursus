@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using ActorActions;
+using Actors;
 using Initialisation;
 using Jobs;
 using Station;
@@ -120,7 +121,7 @@ namespace JobSite
                            Vector3.Distance(actor.transform.position, station.transform.position))
                        .ToList();
 
-            Debug.LogError($"No relevant stations found for jobTask: {actorActionName}.");
+            Debug.LogError($"No relevant stations found for actorAction: {actorActionName}.");
             return null;
         }
 
@@ -178,6 +179,7 @@ namespace JobSite
                 ActorActionName.Deliver_Items => _relevantStations_Deliver(),
                 ActorActionName.Chop_Wood     => _relevantStations_Chop_Wood(),
                 ActorActionName.Process_Logs => _relevantStations_Process_Logs(),
+                ActorActionName.Wander        => new List<Station_Component>(),
                 _                         => throw new ArgumentException($"ActorActionName: {actorActionName} not recognised.")
             };
         }

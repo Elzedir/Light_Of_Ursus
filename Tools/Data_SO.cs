@@ -56,11 +56,11 @@ namespace Tools
             {
                 if (Data[i]?.DataID is null or 0)
                 {
-                    Debug.Log($"DataID: {Data[i]?.DataID} is null or 0.");
+                    //Debug.Log($"DataID: {Data[i]?.DataID} is null or 0.");
                     continue;
                 }
                 
-                //* Changed this from GetID() to DataID. Check that it doesn't break anything.
+                //* Changed this from GetID() to DataID. Check that it doesn't break anything. (I think 25/01)
 
                 newIndexLookup[Data[i].DataID] = i;
             }
@@ -70,11 +70,19 @@ namespace Tools
 
         public List<ulong> GetAllDataIDs()
         {
-            return Data.Select(data => data.DataID).ToList();
+            return Data
+                .Where(data => data?.DataID != null)
+                .Select(data => data.DataID).ToList();
         }
 
         public Data<TD> GetData(ulong dataID)
         {
+            if (dataID == 0)
+            {
+                Debug.LogWarning($"DataID: {dataID} is not desired. Change expected ID to be non-zero.");
+                return null;
+            }
+            
             try
             {
                 return Data[DataIndexLookup[dataID]];

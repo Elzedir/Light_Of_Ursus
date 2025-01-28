@@ -51,11 +51,10 @@ namespace Station
                             Dictionary<ulong, WorkPost_Data> allWorkPost_Data, bool   stationIsActive = true)
         {
             StationID               = stationID;
-            //stationName; WHen loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
-            // But if the station does exist, then we generate a new station with the required stationName type.
+            //* stationName; When loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
+            //* But if the station does exist, then we generate a new station with the required stationName type.
             StationDescription      = stationDescription;
             JobSiteID               = jobSiteID;
-            Debug.Log($"Data: StationID: {StationID} JobSiteID: {JobSiteID}");
             AllWorkPost_Data        = allWorkPost_Data;
             StationIsActive         = stationIsActive;
         }
@@ -73,9 +72,9 @@ namespace Station
                 Debug.LogError($"Station with ID {StationID} not found in Station_SO.");
                 return;
             }
-            
-            
-            StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
+
+            if (DefaultProduct != RecipeName.None)
+                StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
         }
 
         Dictionary<ulong, WorkPost_Component> _populateWorkPlace_Components()

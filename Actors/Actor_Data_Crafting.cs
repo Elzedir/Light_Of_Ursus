@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using ActorActions;
-using Actors;
 using Inventory;
 using Items;
 using Priority;
@@ -11,7 +11,7 @@ using Recipes;
 using Tools;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
     public class Actor_Data_Crafting : Priority_Class
@@ -115,8 +115,8 @@ namespace Actor
             //* Change so that some things will prevent you from crafting, like being in combat.
             return new List<ActorActionName>
             {
-                ActorActionName.Process,
-                ActorActionName.Craft
+                // ActorActionName.Process,
+                // ActorActionName.Craft
             };
         }
     }

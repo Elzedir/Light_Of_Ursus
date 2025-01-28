@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using ActorActions;
+using Actors;
 using Tools;
 using UnityEngine;
 
@@ -38,6 +39,7 @@ namespace Priority
                     
                     foreach (var actorAction in AllowedActions)
                     {
+                        Debug.LogWarning($"Regenerating priority for {actorAction}");
                         _regeneratePriority((ulong)actorAction);
                     }
 
@@ -71,18 +73,18 @@ namespace Priority
                     return;
             }
 
-            var priorityParameters = _getPriorityParameters();
+            var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
+            
+            priorityParameters = ActorAction_Manager.GetHighestPriorityStation(priorityParameters, (ActorActionName)priorityID);
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        protected override void _populatePriorityParameters(ref Priority_Parameters priorityParameters)
+        protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {
-            //* PriorityParameterName.Target_Component => find a way to see which target we'd be talking about.
-            priorityParameters.JobSiteID_Source = _actor.ActorData.Career.JobSite.JobSiteID;
-            priorityParameters.ActorID_Source = _actor.ActorID;
+            return _actor.ActorData.GetPriorityParameters(actorActionName);
         }
 
         // IEnumerator _performCurrentActionFromStart()
@@ -155,7 +157,7 @@ namespace Priority
                 return;
             }
 
-            if (nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
+            if (_currentAction != null && nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
                 return;
 
             SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);

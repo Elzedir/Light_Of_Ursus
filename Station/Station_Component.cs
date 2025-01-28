@@ -92,7 +92,15 @@ namespace Station
 
         public List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
         {
-            return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
+            if (inventory != null) return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
+            
+            Debug.LogError("Inventory is null.");
+            return new List<Item>();
+        }
+        
+        public List<Item> GetInventoryItemsToFetchFromStation()
+        {
+            return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();
         }
 
         public void SetInteractRange(float interactRange = 2)

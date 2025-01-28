@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Careers;
 using Inventory;
@@ -139,9 +138,9 @@ namespace Actors
             return new List<ActorActionName>
             {
                 ActorActionName.Idle,
-                ActorActionName.Craft,
-                ActorActionName.Process,
-                ActorActionName.Haul
+                // ActorActionName.Craft,
+                // ActorActionName.Process,
+                // ActorActionName.Haul
             };
         }
     }

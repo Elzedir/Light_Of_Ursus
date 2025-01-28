@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using ActorActions;
+using Actors;
 using Inventory;
 using Priority;
 using Tools;
@@ -16,7 +17,8 @@ namespace StateAndCondition
         static State_SO _allStates;
         static State_SO AllStates => _allStates ??= _getState_SO();
 
-        public static ObservableDictionary<StateName, bool> InitialiseDefaultStates(ObservableDictionary<StateName, bool> existingStates) =>
+        public static ObservableDictionary<StateName, bool> InitialiseDefaultStates(
+            ObservableDictionary<StateName, bool> existingStates) =>
             AllStates.InitialiseDefaultStates(existingStates);
 
         public static State GetState(StateName stateName)
@@ -52,7 +54,9 @@ namespace StateAndCondition
         }
 
         ObservableDictionary<StateName, bool> _currentStates;
-        public ObservableDictionary<StateName, bool> CurrentStates => _currentStates ??= State_Manager.InitialiseDefaultStates(null);
+
+        public ObservableDictionary<StateName, bool> CurrentStates =>
+            _currentStates ??= State_Manager.InitialiseDefaultStates(null);
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -81,13 +85,13 @@ namespace StateAndCondition
             if (!_currentStates.TryAdd(stateName, state))
                 _currentStates[stateName] = state;
         }
-        
+
         //* Currently, getState does not take into account parent state, maybe include that.
 
         public bool GetState(StateName stateName)
         {
             if (_currentStates.TryGetValue(stateName, out var state)) return state;
-            
+
             var defaultState = State_Manager.GetState(stateName);
 
             if (defaultState.StateName != StateName.None)
@@ -109,17 +113,15 @@ namespace StateAndCondition
         //* needs to be put after crafting, or find a better way to initialise it.
         public override List<ActorActionName> GetAllowedActions()
         {
-            var actionsPerState = ActorAction_List.GetActorActionStateDictionary();
-
             return CurrentStates.Where(state => state.Value)
                 .SelectMany(state =>
                 {
-                    if (actionsPerState.TryGetValue(state.Key, out var actions))
+                    if (ActorAction_List.S_ActorActionStateDictionary.TryGetValue(state.Key, out var actions))
                         return actions
                             .Where(action => action.Value == state.Value)
                             .Select(action => action.Key);
-                    
-                    Debug.LogError($"State: {state.Key} has no actions.");
+
+                    //Debug.LogError($"State: {state.Key} has no actions.");
                     return Enumerable.Empty<ActorActionName>();
                 }).ToList();
         }

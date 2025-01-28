@@ -9,11 +9,11 @@ using UnityEngine;
 namespace Actors
 {
     [Serializable]
-    public class Actor_Data_GameObject : Priority_Class
+    public class Actor_Data_SceneObject : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        public Actor_Data_GameObject(ulong actorID, Transform actorTransform = null, Mesh actorMesh = null,
+        public Actor_Data_SceneObject(ulong actorID, Transform actorTransform = null, Mesh actorMesh = null,
             Material actorMaterial = null) : base(actorID, ComponentType.Actor)
         {
             _actorTransform = actorTransform;
@@ -21,12 +21,12 @@ namespace Actors
             ActorMaterial = actorMaterial ?? Resources.Load<Material>("Materials/Material_Red");
         }
 
-        public Actor_Data_GameObject(Actor_Data_GameObject actorDataGameObject) : base(actorDataGameObject.ActorReference.ActorID,
+        public Actor_Data_SceneObject(Actor_Data_SceneObject actorDataSceneObject) : base(actorDataSceneObject.ActorReference.ActorID,
             ComponentType.Actor)
         {
-            _actorTransform = actorDataGameObject.ActorTransform;
-            ActorMesh = actorDataGameObject.ActorMesh;
-            ActorMaterial = actorDataGameObject.ActorMaterial;
+            _actorTransform = actorDataSceneObject.ActorTransform;
+            ActorMesh = actorDataSceneObject.ActorMesh;
+            ActorMaterial = actorDataSceneObject.ActorMaterial;
         }
 
         public override List<ActorActionName> GetAllowedActions()

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Actor;
 using ActorActions;
+using Actors;
 using Tools;
 using UnityEngine;
 
@@ -59,6 +60,7 @@ namespace Priority
             return PriorityQueue.Peek(highestPriority.PriorityID);
         }
 
+        protected abstract Priority_Parameters _getPriorityParameters(ActorActionName actorActionName);
         public PriorityElement GetHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
         public PriorityElement GetHighestPriorityFromGroup(List<ulong> priorityIDs, ulong priorityObjectParameterID = 0)
         {
@@ -120,7 +122,7 @@ namespace Priority
                 {
                     DataChangedName.ChangedState, new List<ActorActionName>
                     {
-                        ActorActionName.Wander,
+                        //ActorActionName.Wander,
                         ActorActionName.Idle
                     }
                 }

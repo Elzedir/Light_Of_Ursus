@@ -2,11 +2,25 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Abilities;
+using ActorPresets;
+using Actors;
+using Careers;
+using City;
 using DataPersistence;
 using DateAndTime;
+using Faction;
 using FMODUnity;
 using Initialisation;
+using Items;
+using Jobs;
+using JobSite;
+using Recipes;
+using Region;
+using StateAndCondition;
+using Station;
 using TickRates;
+using Tools;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
@@ -107,9 +121,26 @@ namespace Managers
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (DataPersistence_Manager.DeleteGameOnStart) DataPersistence_Manager.DeleteTestSaveFile();
+            if (DataPersistence_Manager.ClearAllSOsOnStart)
+            {
+                Ability_Manager.ClearSOData();
+                Actor_Manager.ClearSOData();
+                ActorPreset_Manager.ClearSOData();
+                Career_Manager.ClearSOData();
+                City_Manager.ClearSOData();
+                Condition_Manager.ClearSOData();
+                Faction_Manager.ClearSOData();
+                Item_Manager.ClearSOData();
+                Job_Manager.ClearSOData();
+                JobSite_Manager.ClearSOData();
+                Recipe_Manager.ClearSOData();
+                Region_Manager.ClearSOData();
+                State_Manager.ClearSOData();
+                Station_Manager.ClearSOData();
+            }
             
-            //* We deleted ClearSO's from the SaveAndLoad SO. Check that it doesn't break anything.
-            
+            //* We deleted ClearSO's from the SaveAndLoad SO. Check that it doesn't break anything. Back in temporarily.
+
             StartCoroutine(_initialiseManagers());
         }
 

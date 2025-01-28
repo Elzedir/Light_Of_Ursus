@@ -35,7 +35,7 @@ namespace Actors
                                 name: "Test",
                                 surname: "One"
                             ),
-                            actorFactionID: 0,
+                            actorFactionID: 1,
                             actorCityID: 1,
                             actorBirthDate: new Date
                             (
@@ -43,7 +43,7 @@ namespace Actors
                                 month: 1,
                                 day: 1
                             )),
-                        sceneObject: new Actor_Data_GameObject
+                        sceneObject: new Actor_Data_SceneObject
                         (
                             actorID: 1
                         ),
@@ -82,15 +82,19 @@ namespace Actors
                                         vocationExperience: 20000)
                                 }
                             }),
-                        speciesAndPersonality: new Actor_Data_SpeciesAndPersonality(
+                        species: new Actor_Data_Species(
                             actorID: 1,
-                            actorSpecies: SpeciesName.Human,
-                            actorPersonality: new ActorPersonality(
-                                new List<PersonalityTraitName>
-                                {
-                                    PersonalityTraitName.Brave
-                                })
+                            actorSpecies: SpeciesName.Human
                         ),
+                        personality: new Actor_Data_Personality(
+                            actorID: 1,
+                            actorPersonality: new List<PersonalityTraitName>
+                            {
+                                PersonalityTraitName.Brave,
+                                PersonalityTraitName.Humble
+                            },
+                            actorSpecies: SpeciesName.Human
+                            ),
                         statsAndAbilities: new Actor_Data_StatsAndAbilities(
                             actorID: 1,
                             actorStats: new Actor_Stats(

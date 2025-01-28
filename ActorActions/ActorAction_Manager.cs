@@ -10,7 +10,7 @@ namespace ActorActions
     {
         public static ActorAction_Data GetActorAction_Data(ActorActionName actorActionName)
         {
-            if (ActorAction_List.AllActorAction_Data.TryGetValue(actorActionName, out var actorAction))
+            if (ActorAction_List.S_AllActorAction_Data.TryGetValue(actorActionName, out var actorAction))
             {
                 return actorAction;
             }
@@ -117,9 +117,9 @@ namespace ActorActions
 
         Perform_Station_Task,
         
-        Haul,
-        Craft,
-        Process,
+        // Haul,
+        // Craft, //* Put these in later on, maybe change to only these three after it's working.
+        // Process,
         
         // Smith
         Beat_Metal,

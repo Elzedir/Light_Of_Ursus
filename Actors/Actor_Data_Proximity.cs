@@ -2,17 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
+using ActorActions;
 using Faction;
 using Inventory;
 using Priority;
+using Proximity;
+using Tools;
 using UnityEngine;
 
-namespace Proximity
+namespace Actors
 {
     //* Maybe we can make this more efficent by using the availableActions for the actor, and only getting variables that would be
     //* relevant for the actor. So if he is not in combat, closest enemy would not be needed, and so on. If he doesn't have the medic job,
     //* closest neutral, friend or ally to heal would not be needed, reducing the amount of checks needed.
-    public class Actor_Data_Proximity : Priority_Class //* Just for the references right now, change later.
+    public class Actor_Data_Proximity : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
@@ -89,6 +92,33 @@ namespace Proximity
                 .ToDictionary(
                     actor => actor.Key,
                     actor => actor.Value);
+
         
+        //* I have to check what this fully does again
+        public override List<ActorActionName> GetAllowedActions()
+        {
+            //* Maybe add some personality specific actions, like lashing out if wrathful, or receding if depressive.
+            //* or admiring yourself, or cleaning random items of trash.
+            return new List<ActorActionName>();
+        }
+        
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
+        {
+            _updateDataDisplay(DataToDisplay,
+                title: "Proximity",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
+
+            return DataToDisplay;
+        }
+
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Closest Ally", $"{ClosestAlly}" },
+                { "Closest Enemy", $"{ClosestEnemy}" }
+            };
+        }
     }
 }

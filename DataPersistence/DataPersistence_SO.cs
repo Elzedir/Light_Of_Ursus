@@ -13,6 +13,7 @@ namespace DataPersistence
     public class DataPersistence_SO : ScriptableObject
     {
         public bool DeleteGameOnStart;
+        public bool ClearAllSOsOnStart;
 
         [Header("Debugging")] public bool DisableDataPersistence;
         public bool CreateNewSaveFileIfNull = true;

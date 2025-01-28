@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Actors;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -37,60 +36,6 @@ namespace Personality
             }
 
             return existingPersonalityTraits;
-        }
-        
-        public static float GetPersonalityRelation(List<PersonalityTraitName> a, List<PersonalityTraitName> b)
-        {
-            // Currently VERY open to double adding. Fix later.
-            
-            var relation = 0f;
-
-            foreach (var traitA in a)
-            {
-                foreach (var traitB in b)
-                {
-                    if (Personality_List.PersonalityRelations.TryGetValue(traitA, out var relationData) && relationData.traitName == traitB)
-                    {
-                        relation += relationData.relation;
-                    }
-                    
-                    if (Personality_List.PersonalityRelations.TryGetValue(traitB, out relationData) && relationData.traitName == traitA)
-                    {
-                        relation += relationData.relation;
-                    }
-                }
-            }
-
-            return relation;
-        }
-    }
-
-    [Serializable]
-    public class ActorPersonality
-    {
-        public string                        PersonalityTitle;
-        public string                        PersonalityDescription;
-        // HashSets can't be serialised, change. Maybe save list and load a hashset so they can't add multiple of the same trait
-        // from the save files.
-        List<PersonalityTraitName> _personalityTraits;
-        public List<PersonalityTraitName> PersonalityTraits;
-
-        public ActorPersonality(List<PersonalityTraitName> personalityTraits)
-        {
-            PersonalityTraits = personalityTraits ?? Personality_Manager.GetRandomPersonalityTraits(null, 3);
-        }
-
-        public Dictionary<string, string> SubData => new()
-        {
-            { "Personality Title", $"{PersonalityTitle}" },
-            { "PersonalityDescription", $"{PersonalityDescription}" }
-        };
-        
-        public ActorPersonality(ActorPersonality actorPersonality)
-        {
-            PersonalityTitle       = actorPersonality.PersonalityTitle;
-            PersonalityDescription = actorPersonality.PersonalityDescription;
-            PersonalityTraits      = actorPersonality.PersonalityTraits;
         }
     }
 

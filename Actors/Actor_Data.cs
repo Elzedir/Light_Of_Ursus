@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using ActorActions;
 using ActorPresets;
-using Actors;
 using Equipment;
 using Faction;
 using Inventory;
 using Priority;
-using Relationships;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
     public class Actor_Data : Data_Class
@@ -29,17 +29,18 @@ namespace Actor
 
         public Actor_Data_Identification Identification;
         public Priority_Data_Actor Priority;
-        
-        public Actor_Data_GameObject SceneObject;
+
+        public Actor_Data_SceneObject SceneObject;
         public Actor_Data_Career Career;
         public Actor_Data_Crafting Crafting;
         public Actor_Data_Vocation Vocation;
-        public Actor_Data_SpeciesAndPersonality SpeciesAndPersonality;
-
+        public Actor_Data_Species Species;
+        public Actor_Data_Personality Personality;
         public Actor_Data_StatsAndAbilities StatsAndAbilities;
-
         public Actor_Data_StatesAndConditions StatesAndConditions;
-        
+
+        public Actor_Data_Proximity Proximity;
+
         public InventoryData InventoryData;
         public Equipment_Data EquipmentData;
 
@@ -78,13 +79,18 @@ namespace Actor
         // Make an ability to make a deep copy of every class here and every class that needs to be saved.
 
         public Actor_Data(ActorDataPresetName actorDataPresetName, Actor_Data_Identification identification = null,
-            Actor_Data_GameObject sceneObject = null,
+            Actor_Data_SceneObject sceneObject = null,
             Actor_Data_Career career = null, Actor_Data_Crafting crafting = null,
             Actor_Data_Vocation vocation = null,
-            Actor_Data_SpeciesAndPersonality speciesAndPersonality = null,
+            Actor_Data_Species species = null,
+            Actor_Data_Personality personality = null,
             Actor_Data_StatsAndAbilities statsAndAbilities = null,
-            Actor_Data_StatesAndConditions statesAndConditions = null, InventoryData inventoryData = null,
-            Equipment_Data equipmentData = null, Priority_Data_Actor priority = null, QuestClass actorQuests = null)
+            Actor_Data_StatesAndConditions statesAndConditions = null, 
+            InventoryData inventoryData = null,
+            Equipment_Data equipmentData = null, 
+            Priority_Data_Actor priority = null,
+            Actor_Data_Proximity proximity = null,
+            QuestClass actorQuests = null)
         {
             ActorDataPresetName = actorDataPresetName;
 
@@ -93,12 +99,14 @@ namespace Actor
             Career = career;
             Crafting = crafting;
             Vocation = vocation;
-            SpeciesAndPersonality = speciesAndPersonality;
+            Species = species;
+            Personality = personality;
             StatsAndAbilities = statsAndAbilities;
             StatesAndConditions = statesAndConditions;
             InventoryData = inventoryData;
             EquipmentData = equipmentData;
             Priority = priority;
+            Proximity = proximity;
             ActorQuests = actorQuests;
         }
 
@@ -108,7 +116,7 @@ namespace Actor
                 title: "Base Actor Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
-            
+
             _updateDataDisplay(DataToDisplay,
                 title: "Full Identification",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
@@ -120,15 +128,20 @@ namespace Actor
                 allSubData: SceneObject?.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
-                title: "Species And Personality",
+                title: "Species",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: SpeciesAndPersonality?.GetDataToDisplay(toggleMissingDataDebugs));
+                allSubData: Species?.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Personality",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Personality?.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Stats And Abilities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: StatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs));
-            
+
             _updateDataDisplay(DataToDisplay,
                 title: "States And Conditions",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
@@ -148,15 +161,20 @@ namespace Actor
                 title: "Equipment Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: EquipmentData?.GetDataToDisplay(toggleMissingDataDebugs));
-            
+
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: Priority?.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Proximity Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Proximity?.GetDataToDisplay(toggleMissingDataDebugs));
 
             return DataToDisplay;
         }
-        
+
         public override Dictionary<string, string> GetStringData()
         {
             return new Dictionary<string, string>
@@ -180,8 +198,12 @@ namespace Actor
                     SceneObject.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
-                    "Species And Personality",
-                    SpeciesAndPersonality.GetDataToDisplay(toggleMissingDataDebugs)
+                    "Species",
+                    Species.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Personality",
+                    Personality.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Stats And Abilities",
@@ -198,28 +220,54 @@ namespace Actor
                 {
                     "Equipment Data",
                     EquipmentData.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Priority Data",
+                    Priority.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Proximity Data",
+                    Proximity.GetDataToDisplay(toggleMissingDataDebugs)
                 }
             };
         }
-        
+
         public List<ActorActionName> GetAllowedActions()
         {
             var allowedActions = new List<ActorActionName>();
-            
+
             allowedActions.AddRange(Identification.GetAllowedActions());
             allowedActions.AddRange(SceneObject.GetAllowedActions());
             allowedActions.AddRange(Career.GetAllowedActions());
             allowedActions.AddRange(Crafting.GetAllowedActions());
             allowedActions.AddRange(Vocation.GetAllowedActions());
-            allowedActions.AddRange(SpeciesAndPersonality.GetAllowedActions());
+            allowedActions.AddRange(Species.GetAllowedActions());
             allowedActions.AddRange(StatsAndAbilities.GetAllowedActions());
             allowedActions.AddRange(StatesAndConditions.GetAllowedActions());
             allowedActions.AddRange(InventoryData.GetAllowedActions());
             allowedActions.AddRange(EquipmentData.GetAllowedActions());
-            allowedActions.AddRange(ActorQuests.GetAllowedActions());
-            
+
             return allowedActions;
-        }    }
+        }
+
+        public Priority_Parameters GetPriorityParameters(ActorActionName actorActionName)
+        {
+            return new Priority_Parameters(
+                actorID_Source: ActorID, 
+                jobSiteID_Source: Career.JobSiteID);
+        }
+
+        public float GetActorRelation(Actor_Data otherActor)
+        {
+            float relation = 0;
+
+            relation += Faction_Manager.GetFaction_Data(ActorFactionID).GetFactionRelationship_Value(otherActor.ActorFactionID);
+            relation += Personality.ComparePersonality(otherActor.Personality);
+
+            return relation;
+        }
+
+    }
 
     public enum DataChangedName
     {
@@ -244,7 +292,7 @@ namespace Actor
         ChangedMesh,
         ChangedMaterial,
         ToggledDoJobs,
-        ChangedJobsite,
+        ChangedJobSite,
         ChangedStation,
         ChangedOperatingArea,
         ChangedEmployeePosition,
@@ -284,41 +332,6 @@ namespace Actor
             };
         }
 
-        public override List<ActorActionName> GetAllowedActions()
-        {
-            return new List<ActorActionName>();
-        }
-    }
-
-    [Serializable]
-    public class Relationships : Priority_Class
-    {
-        public Relationships(ulong actorID, List<Relation> allRelationships) : base(actorID, ComponentType.Actor)
-        {
-            AllRelationships = allRelationships;
-        }
-        
-        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
-        {
-            _updateDataDisplay(DataToDisplay,
-                title: "Relationships",
-                toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: GetStringData());
-
-            return DataToDisplay;
-        }
-        
-        public override Dictionary<string, string> GetStringData()
-        {
-            return new Dictionary<string, string>
-            {
-                {"No data yet... ", "Yet"}
-            };
-        }
-
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-        public List<Relation> AllRelationships;
-        
         public override List<ActorActionName> GetAllowedActions()
         {
             return new List<ActorActionName>();

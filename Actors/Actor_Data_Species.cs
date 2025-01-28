@@ -1,44 +1,37 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ActorActions;
 using Inventory;
-using Personality;
 using Priority;
 using Tools;
 
 namespace Actors
 {
     [Serializable]
-    public class Actor_Data_SpeciesAndPersonality : Priority_Class
+    public class Actor_Data_Species : Priority_Class
     {
-        public Actor_Data_SpeciesAndPersonality(ulong actorID, SpeciesName actorSpecies, Actor_Data_Personality actorDataPersonality) : base(
+        public Actor_Data_Species(ulong actorID, SpeciesName actorSpecies) : base(
             actorID, ComponentType.Actor)
         {
             ActorSpecies = actorSpecies;
-            Actor_Data_Personality = actorDataPersonality ??
-                               new Actor_Data_Personality(
-                                   Personality_Manager.GetRandomPersonalityTraits(null, 3, ActorSpecies));
         }
 
-        public Actor_Data_SpeciesAndPersonality(Actor_Data_SpeciesAndPersonality actorDataSpeciesAndPersonality) : base(
-            actorDataSpeciesAndPersonality.ActorReference.ActorID, ComponentType.Actor)
+        public Actor_Data_Species(Actor_Data_Species actorDataSpecies) : base(
+            actorDataSpecies.ActorReference.ActorID, ComponentType.Actor)
         {
-            ActorSpecies = actorDataSpeciesAndPersonality.ActorSpecies;
-            Actor_Data_Personality = new Actor_Data_Personality(actorDataSpeciesAndPersonality.ActorPersonality);
+            ActorSpecies = actorDataSpecies.ActorSpecies;
         }
         
         public override List<ActorActionName> GetAllowedActions()
         {
             //* Maybe add some species specific actions, like cats grooming themselves or lizards suntanning.
-            //* And personality actions, like admiring yourself, or cleaning random items of trash.
             return new List<ActorActionName>();
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,
-                title: "Species And Personality",
+                title: "Species",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
@@ -47,14 +40,10 @@ namespace Actors
 
         public override Dictionary<string, string> GetStringData()
         {
-            var speciesData = new Dictionary<string, string>
+            return new Dictionary<string, string>
             {
                 { "Actor Species", $"{ActorSpecies}" }
             };
-
-            var personalityData = Actor_Data_Personality.SubData;
-
-            return speciesData.Concat(personalityData).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;

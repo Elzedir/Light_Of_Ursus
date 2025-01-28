@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Relationships;
 using Tools;
 using UnityEngine;
 
@@ -14,14 +13,13 @@ namespace Faction
         public string FactionName;
         
         Faction_Component _faction_Component;
-
         public Faction_Component Faction_Component =>
             _faction_Component ??= Faction_Manager.GetFaction_Component(FactionID);
 
-        public HashSet<ulong>             AllFactionActorIDs;
-        public List<FactionRelationData> AllFactionRelations;
+        public List<ulong>             AllFactionActorIDs;
+        public Dictionary<ulong, float> AllFactionRelations;
 
-        public Faction_Data(ulong factionID, string factionName, HashSet<ulong> allFactionActorIDs, List<FactionRelationData> allFactionRelations)
+        public Faction_Data(ulong factionID, string factionName, List<ulong> allFactionActorIDs, Dictionary<ulong, float> allFactionRelations)
         {
             FactionID           = factionID;
             FactionName         = factionName;
@@ -56,12 +54,16 @@ namespace Faction
             _updateDataDisplay(DataToDisplay,
                 title: "Faction Actors",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllFactionActorIDs.ToDictionary(actorID => $"{actorID}", actorID => $"{actorID}"));
-            
+                allStringData: AllFactionActorIDs.ToDictionary(
+                    actorID => $"{actorID}", 
+                    actorID => $"{actorID}"));
+
             _updateDataDisplay(DataToDisplay,
                 title: "Faction Relations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllFactionRelations.ToDictionary(relation => $"{relation.FactionID_B}:", relation => $"{relation.FactionRelation}"));
+                allStringData: AllFactionRelations.ToDictionary(
+                    faction => $"{faction.Key}:",
+                    relation => $"{relation.Value}"));
 
             return DataToDisplay;
         }
@@ -73,6 +75,32 @@ namespace Faction
                 { "Faction ID", $"{FactionID}" },
                 { "Faction Name", FactionName }
             };
+        }
+        
+        public float GetFactionRelationship_Value(ulong factionID)
+        {
+            if (AllFactionRelations.TryGetValue(factionID, out var relationshipValue)) return relationshipValue;
+            
+            Debug.LogError($"Faction with ID {factionID} not found in AllFactionRelations for Faction {FactionName}.");
+            return 0;
+        }
+        
+        public FactionRelationshipName GetFactionRelationship_Name(ulong factionID)
+        {
+            if (factionID == FactionID) return FactionRelationshipName.Ally;
+
+            if (AllFactionRelations.TryGetValue(factionID, out var relationshipValue))
+                return relationshipValue switch
+                {
+                    > 75 => FactionRelationshipName.Ally,
+                    > 25 => FactionRelationshipName.Friend,
+                    > -25 => FactionRelationshipName.Neutral,
+                    > -75 => FactionRelationshipName.Hostile,
+                    _ => FactionRelationshipName.Enemy
+                };
+            
+            Debug.LogError($"Faction with ID {factionID} not found in AllFactionRelations for Faction {FactionName}.");
+            return FactionRelationshipName.Neutral;
         }
     }
 }
