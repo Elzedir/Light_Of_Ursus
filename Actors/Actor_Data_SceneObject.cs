@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using ActorActions;
-using Actors;
 using Inventory;
 using Priority;
 using Tools;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     [Serializable]
     public class Actor_Data_GameObject : Priority_Class

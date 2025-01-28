@@ -12,12 +12,12 @@ namespace Actors
     [Serializable]
     public class Actor_Data_SpeciesAndPersonality : Priority_Class
     {
-        public Actor_Data_SpeciesAndPersonality(ulong actorID, SpeciesName actorSpecies, ActorPersonality actorPersonality) : base(
+        public Actor_Data_SpeciesAndPersonality(ulong actorID, SpeciesName actorSpecies, Actor_Data_Personality actorDataPersonality) : base(
             actorID, ComponentType.Actor)
         {
             ActorSpecies = actorSpecies;
-            ActorPersonality = actorPersonality ??
-                               new ActorPersonality(
+            Actor_Data_Personality = actorDataPersonality ??
+                               new Actor_Data_Personality(
                                    Personality_Manager.GetRandomPersonalityTraits(null, 3, ActorSpecies));
         }
 
@@ -25,7 +25,7 @@ namespace Actors
             actorDataSpeciesAndPersonality.ActorReference.ActorID, ComponentType.Actor)
         {
             ActorSpecies = actorDataSpeciesAndPersonality.ActorSpecies;
-            ActorPersonality = new ActorPersonality(actorDataSpeciesAndPersonality.ActorPersonality);
+            Actor_Data_Personality = new Actor_Data_Personality(actorDataSpeciesAndPersonality.ActorPersonality);
         }
         
         public override List<ActorActionName> GetAllowedActions()
@@ -52,7 +52,7 @@ namespace Actors
                 { "Actor Species", $"{ActorSpecies}" }
             };
 
-            var personalityData = ActorPersonality.SubData;
+            var personalityData = Actor_Data_Personality.SubData;
 
             return speciesData.Concat(personalityData).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
@@ -61,8 +61,6 @@ namespace Actors
 
         public SpeciesName ActorSpecies;
         public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
-        public ActorPersonality ActorPersonality;
-        public void SetPersonality(ActorPersonality actorPersonality) => ActorPersonality = actorPersonality;
     }
     
     public enum SpeciesName
