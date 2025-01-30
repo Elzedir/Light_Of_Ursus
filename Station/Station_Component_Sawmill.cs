@@ -25,8 +25,8 @@ namespace Station
         public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {
             ActorActionName.Process_Logs,
-            ActorActionName.Fetch_Items,
-            ActorActionName.Deliver_Items
+            ActorActionName.Haul_Fetch,
+            ActorActionName.Haul_Deliver
         };
 
         protected override void _initialiseStartingInventory() { }

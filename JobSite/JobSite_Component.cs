@@ -16,15 +16,10 @@ namespace JobSite
     public abstract class JobSite_Component : MonoBehaviour
     {
         public abstract JobSiteName  JobSiteName { get; }
-        public abstract List<ActorActionName> BaseJobActions { get; }
+        public abstract HashSet<ActorActionName> BaseJobActions { get; }
         public          ulong         JobSiteID   => JobSiteData.JobSiteID;
         public          JobSite_Data JobSiteData;
         bool                         _initialised;
-
-        public void SetJobSiteData(JobSite_Data jobSiteData)
-        {
-            JobSiteData = jobSiteData;
-        }
 
         public Dictionary<ulong, Station_Component> GetAllStationsInJobSite() =>
             GetComponentsInChildren<Station_Component>().ToDictionary(station => station.StationID);
@@ -48,7 +43,7 @@ namespace JobSite
                 return;
             }
             
-            SetJobSiteData(jobSiteData);
+            JobSiteData = jobSiteData;
             JobSiteData.InitialiseJobSiteData();
 
             _setTickRate(TickRateName.TenSeconds, false);
@@ -175,8 +170,8 @@ namespace JobSite
         {
             return actorActionName switch
             {
-                ActorActionName.Fetch_Items   => _relevantStations_Fetch(),
-                ActorActionName.Deliver_Items => _relevantStations_Deliver(),
+                ActorActionName.Haul_Fetch   => _relevantStations_Fetch(),
+                ActorActionName.Haul_Deliver => _relevantStations_Deliver(),
                 ActorActionName.Chop_Wood     => _relevantStations_Chop_Wood(),
                 ActorActionName.Process_Logs => _relevantStations_Process_Logs(),
                 ActorActionName.Wander        => new List<Station_Component>(),
@@ -189,26 +184,26 @@ namespace JobSite
         List<Station_Component> _relevantStations_Fetch()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItems(ActorActionName.Fetch_Items).Count > 0).ToList();
+                              .Where(station => station.GetInventoryItems(ActorActionName.Haul_Fetch).Count > 0).ToList();
         }
 
         List<Station_Component> _relevantStations_Deliver()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.GetInventoryItems(ActorActionName.Deliver_Items).Count > 0)
+                              .Where(station => station.GetInventoryItems(ActorActionName.Haul_Deliver).Count > 0)
                               .ToList();
         }
 
         List<Station_Component> _relevantStations_Chop_Wood()
         {
             return JobSiteData.AllStationComponents.Values
-                       .Where(station => station.StationName == StationName.Tree && station.Station_Data.GetOpenWorkPost() is not null).ToList();   
+                       .Where(station => station.StationName == StationName.Tree).ToList();   
         }
 
         List<Station_Component> _relevantStations_Process_Logs()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.StationName == StationName.Sawmill && station.Station_Data.GetOpenWorkPost() is not null).ToList();
+                              .Where(station => station.StationName == StationName.Sawmill).ToList();
         }
     }
 }

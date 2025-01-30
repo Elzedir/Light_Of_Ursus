@@ -195,11 +195,6 @@ namespace JobSite
         //     // And change all affected things, like perks, job settings, etc.
         // }
 
-        public void SetOwner(ulong ownerID)
-        {
-            OwnerID = ownerID;
-        }
-
         protected Actor_Component _findEmployeeFromCity(JobName positionName)
         {
             var city = City_Manager.GetCity_Component(CityID);
@@ -238,7 +233,7 @@ namespace JobSite
 
             var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
 
-            AddEmployeeToJobsite(actor.ActorData.ActorID);
+            AddEmployeeToJobSite(actor.ActorData.ActorID);
 
             return actor;
         }
@@ -287,7 +282,7 @@ namespace JobSite
             return vocationRequirements;
         }
 
-        public void AddEmployeeToJobsite(ulong employeeID)
+        public void AddEmployeeToJobSite(ulong employeeID)
         {
             if (_allEmployeeIDs.Contains(employeeID))
             {
@@ -301,12 +296,12 @@ namespace JobSite
 
         public void HireEmployee(ulong employeeID)
         {
-            AddEmployeeToJobsite(employeeID);
+            AddEmployeeToJobSite(employeeID);
 
             // And then apply relevant relation buff
         }
 
-        public void RemoveEmployeeFromJobsite(ulong employeeID)
+        public void RemoveEmployeeFromJobSite(ulong employeeID)
         {
             if (!_allEmployeeIDs.Contains(employeeID))
             {
@@ -322,7 +317,7 @@ namespace JobSite
 
         public void FireEmployee(ulong employeeID)
         {
-            RemoveEmployeeFromJobsite(employeeID);
+            RemoveEmployeeFromJobSite(employeeID);
 
             // And then apply relation debuff.
         }
@@ -360,6 +355,11 @@ namespace JobSite
                 openWorkPost_Data.WorkPostID));
 
             return true;
+        }
+        
+        public ulong GetStationIDFromWorkerID(ulong workerID)
+        {
+            return WorkPost_Workers.FirstOrDefault(x => x.Value == workerID).Key.StationID;
         }
 
         public bool RemoveWorkerFromCurrentStation(Actor_Component worker)
@@ -463,6 +463,9 @@ namespace JobSite
                 float totalProductionRate = 0;
 
                 var station_Data = AllStationComponents[swp.Key.StationID].Station_Data;
+                
+                if (station_Data.StationProgressData.CurrentProduct is null)
+                    continue;
 
                 foreach (var kvp in WorkPost_Workers.Where(keyValuePair =>
                              keyValuePair.Key.StationID == station_Data.StationID && keyValuePair.Value != 0))
@@ -484,10 +487,9 @@ namespace JobSite
 
                 for (var i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
                 {
-                    foreach (var item in station_Data.StationProgressData.CurrentProduct.RecipeProducts)
-                    {
-                        estimatedProductionItems.Add(new Item(item));
-                    }
+                    estimatedProductionItems.AddRange(
+                        station_Data.StationProgressData.CurrentProduct.RecipeProducts
+                            .Select(item => new Item(item)));
                 }
 
             }

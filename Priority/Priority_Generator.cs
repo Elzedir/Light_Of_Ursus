@@ -170,14 +170,16 @@ namespace Priority
             {
                 case (ulong)ActorActionName.Idle:
                     return 1;
-                case (ulong)ActorActionName.Fetch_Items:
+                case (ulong)ActorActionName.Haul_Fetch:
                     return _generateFetchPriority(priority_Parameters);
-                case (ulong)ActorActionName.Deliver_Items:
+                case (ulong)ActorActionName.Haul_Deliver:
                     return _generateDeliverPriority(priority_Parameters);
                 case (ulong)ActorActionName.Chop_Wood:
                     return _generateChop_WoodPriority(priority_Parameters);
                 case (ulong)ActorActionName.Process_Logs:
                     return _generateProcess_LogsPriority(priority_Parameters);
+                case (ulong)ActorActionName.Wander:
+                    return 0;
                 default:
                     Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");
                     return 0;

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Actor;
 using ActorActions;
 using Actors;
 using Tools;
@@ -14,9 +13,9 @@ namespace Priority
         Priority_Queue        _priorityQueue;
         public Priority_Queue PriorityQueue => _priorityQueue ??= _createNewPriorityQueue();
         
-        List<ActorActionName> _allowedActions;
-        public List<ActorActionName> AllowedActions => _allowedActions ??= _getAllowedActions();
-        protected abstract List<ActorActionName> _getAllowedActions();
+        HashSet<ActorActionName> _allowedActions;
+        public HashSet<ActorActionName> AllowedActions => _allowedActions ??= _getAllowedActions();
+        protected abstract HashSet<ActorActionName> _getAllowedActions();
 
         Priority_Queue _createNewPriorityQueue()
         {
@@ -78,7 +77,7 @@ namespace Priority
         protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
         //protected abstract void _populatePriorityParameters(ref Priority_Parameters priorityParameters);
         
-        protected DataToDisplay _convertulongIDToStringID(DataToDisplay dataToDisplay)
+        protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
         {
             var regex = new Regex(@"PriorityID\((\d+)\)\s-\s(\d+)", RegexOptions.Compiled);
             

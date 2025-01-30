@@ -23,10 +23,15 @@ namespace ActorActions
             ActorActionName actorActionName)
         {
             var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
+
+            if (priority_Parameters.Actor_Component_Source is not null && !priority_Parameters.Actor_Component_Source.ActorData.Career.HasCurrentJob())
+            {
+                allRelevantStations = allRelevantStations.Where(station => station.Station_Data.GetOpenWorkPost() is not null).ToList();
+            }
             
             if (allRelevantStations.Count is 0)
             {
-                Debug.LogError("No stations to fetch from.");
+                Debug.LogError($"No relevant station for {actorActionName}.");
                 return null;
             }
             
@@ -111,15 +116,10 @@ namespace ActorActions
         // typically repetitive and contributing to resource production, crafting, or other systematic gameplay mechanics.
         // Tasks often require specific tools, conditions, or environments.
         
-        a,
         //* Change the system so that only these three, or minimal ones, are used, instead of having a different one for every station.
         //* Have them determined by task and station together. So sawmill process is logs, sawmill craft is arrows and poles.
 
         Perform_Station_Task,
-        
-        // Haul,
-        // Craft, //* Put these in later on, maybe change to only these three after it's working.
-        // Process,
         
         // Smith
         Beat_Metal,
@@ -165,8 +165,8 @@ namespace ActorActions
         Harvest_Crops,
 
         // Hauler
-        Deliver_Items,
-        Fetch_Items,
+        Haul_Deliver,
+        Haul_Fetch,
 
         // Cook
         Cook_Food,

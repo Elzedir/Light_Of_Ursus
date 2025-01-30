@@ -83,8 +83,8 @@ namespace Station
         {
             return actorAction switch
             {
-                ActorActionName.Fetch_Items => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
-                ActorActionName.Deliver_Items => Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations(),
+                ActorActionName.Haul_Fetch => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
+                ActorActionName.Haul_Deliver => Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations(),
                 ActorActionName.Chop_Wood => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
                 _ => new List<Item>()
             };

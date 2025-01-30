@@ -22,8 +22,8 @@ namespace Station
         public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<ActorActionName> AllowedJobTasks { get; } = new()
         {
-            ActorActionName.Fetch_Items,
-            ActorActionName.Deliver_Items
+            ActorActionName.Haul_Fetch,
+            ActorActionName.Haul_Deliver
         };
 
         protected override void _initialiseStartingInventory() { }

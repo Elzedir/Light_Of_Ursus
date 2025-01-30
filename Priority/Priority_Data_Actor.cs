@@ -39,7 +39,6 @@ namespace Priority
                     
                     foreach (var actorAction in AllowedActions)
                     {
-                        Debug.LogWarning($"Regenerating priority for {actorAction}");
                         _regeneratePriority((ulong)actorAction);
                     }
 
@@ -171,7 +170,7 @@ namespace Priority
             return PeekHighestPriority();
         }
         
-        protected override List<ActorActionName> _getAllowedActions() => 
+        protected override HashSet<ActorActionName> _getAllowedActions() => 
             _actorReferences.Actor_Component.ActorData.GetAllowedActions();
 
         public override Dictionary<string, string> GetStringData()
@@ -200,7 +199,7 @@ namespace Priority
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertulongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertUlongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }

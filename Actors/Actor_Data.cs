@@ -123,7 +123,7 @@ namespace Actors
                 allSubData: Identification?.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
-                title: "Game Object Properties",
+                title: "Scene Object Properties",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: SceneObject?.GetDataToDisplay(toggleMissingDataDebugs));
 
@@ -136,6 +136,21 @@ namespace Actors
                 title: "Personality",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: Personality?.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Career Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Career?.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Crafting Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Crafting?.GetDataToDisplay(toggleMissingDataDebugs));
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Vocation Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: Vocation?.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Stats And Abilities",
@@ -146,12 +161,7 @@ namespace Actors
                 title: "States And Conditions",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allSubData: StatesAndConditions?.GetDataToDisplay(toggleMissingDataDebugs));
-
-            _updateDataDisplay(DataToDisplay,
-                title: "Career Data",
-                toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: Career?.GetDataToDisplay(toggleMissingDataDebugs));
-
+            
             _updateDataDisplay(DataToDisplay,
                 title: "Inventory Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
@@ -191,70 +201,88 @@ namespace Actors
             {
                 {
                     "Full Identification",
-                    Identification.GetDataToDisplay(toggleMissingDataDebugs)
+                    Identification?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
-                    "Game Object Data",
-                    SceneObject.GetDataToDisplay(toggleMissingDataDebugs)
+                    "Scene Object Data",
+                    SceneObject?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Species",
-                    Species.GetDataToDisplay(toggleMissingDataDebugs)
+                    Species?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Personality",
-                    Personality.GetDataToDisplay(toggleMissingDataDebugs)
-                },
-                {
-                    "Stats And Abilities",
-                    StatsAndAbilities.GetDataToDisplay(toggleMissingDataDebugs)
+                    Personality?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Career Data",
-                    Career.GetDataToDisplay(toggleMissingDataDebugs)
+                    Career?.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Crafting Data",
+                    Crafting?.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Vocation Data",
+                    Vocation?.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "Stats And Abilities",
+                    StatsAndAbilities?.GetDataToDisplay(toggleMissingDataDebugs)
+                },
+                {
+                    "States And Conditions",
+                    StatesAndConditions?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Inventory Data",
-                    InventoryData.GetDataToDisplay(toggleMissingDataDebugs)
+                    InventoryData?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Equipment Data",
-                    EquipmentData.GetDataToDisplay(toggleMissingDataDebugs)
+                    EquipmentData?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Priority Data",
-                    Priority.GetDataToDisplay(toggleMissingDataDebugs)
+                    Priority?.GetDataToDisplay(toggleMissingDataDebugs)
                 },
                 {
                     "Proximity Data",
-                    Proximity.GetDataToDisplay(toggleMissingDataDebugs)
+                    Proximity?.GetDataToDisplay(toggleMissingDataDebugs)
                 }
             };
         }
 
-        public List<ActorActionName> GetAllowedActions()
+        public HashSet<ActorActionName> GetAllowedActions()
         {
-            var allowedActions = new List<ActorActionName>();
+            var allowedActions = new HashSet<ActorActionName>();
 
-            allowedActions.AddRange(Identification.GetAllowedActions());
-            allowedActions.AddRange(SceneObject.GetAllowedActions());
-            allowedActions.AddRange(Career.GetAllowedActions());
-            allowedActions.AddRange(Crafting.GetAllowedActions());
-            allowedActions.AddRange(Vocation.GetAllowedActions());
-            allowedActions.AddRange(Species.GetAllowedActions());
-            allowedActions.AddRange(StatsAndAbilities.GetAllowedActions());
-            allowedActions.AddRange(StatesAndConditions.GetAllowedActions());
-            allowedActions.AddRange(InventoryData.GetAllowedActions());
-            allowedActions.AddRange(EquipmentData.GetAllowedActions());
+            foreach (var action in Identification.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in SceneObject.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Species.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Personality.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in StatsAndAbilities.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in StatesAndConditions.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Career.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Crafting.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Vocation.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in InventoryData.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in EquipmentData.GetAllowedActions()) allowedActions.Add(action);
+            foreach (var action in Proximity.GetAllowedActions()) allowedActions.Add(action);
 
             return allowedActions;
         }
 
         public Priority_Parameters GetPriorityParameters(ActorActionName actorActionName)
         {
+            var stationID_Source = Career.JobSite?.JobSiteData?.GetStationIDFromWorkerID(ActorID) ?? 0;
+            
             return new Priority_Parameters(
-                actorID_Source: ActorID, 
-                jobSiteID_Source: Career.JobSiteID);
+                actorID_Source: ActorID,
+                jobSiteID_Source: Career.JobSiteID,
+                stationID_Source: stationID_Source
+                );
         }
 
         public float GetActorRelation(Actor_Data otherActor)

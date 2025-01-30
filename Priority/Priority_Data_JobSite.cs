@@ -45,9 +45,6 @@ namespace Priority
         {
             if (!forceRegenerateAll)
             {
-                a
-                    //* For some reason, Fetch, Deliver, Chop Wood and Process are not being added to AllowedActions, or are not
-                    // Generating priority in the end. Check why. Idle, Wander, and one other is being added though, so it's partially working.
                 foreach (var actorAction in AllowedActions)
                 {
                     _regeneratePriority((ulong)actorAction);
@@ -97,7 +94,7 @@ namespace Priority
             return priorityIDs;
         }
 
-        protected override List<ActorActionName> _getAllowedActions() =>
+        protected override HashSet<ActorActionName> _getAllowedActions() =>
             _jobSite.BaseJobActions;
 
         public override Dictionary<string, string> GetStringData()
@@ -124,7 +121,7 @@ namespace Priority
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertulongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertUlongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }

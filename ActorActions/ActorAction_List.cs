@@ -46,8 +46,8 @@ namespace ActorActions
                         actionList: new List<Func<Priority_Parameters, IEnumerator>>())
                 },
                 {
-                    ActorActionName.Fetch_Items, new ActorAction_Data(
-                        actionName: ActorActionName.Fetch_Items,
+                    ActorActionName.Haul_Fetch, new ActorAction_Data(
+                        actionName: ActorActionName.Haul_Fetch,
                         actionDescription: "Fetch Items",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Any,
@@ -57,8 +57,8 @@ namespace ActorActions
                         })
                 },
                 {
-                    ActorActionName.Deliver_Items, new ActorAction_Data(
-                        actionName: ActorActionName.Deliver_Items,
+                    ActorActionName.Haul_Deliver, new ActorAction_Data(
+                        actionName: ActorActionName.Haul_Deliver,
                         actionDescription: "Deliver Items",
                         requiredStates: new Dictionary<StateName, bool>(),
                         primaryJob: JobName.Any,

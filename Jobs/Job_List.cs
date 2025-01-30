@@ -30,8 +30,8 @@ namespace Jobs
                         {
                             ActorActionName.Chop_Wood,
                             ActorActionName.Process_Logs,
-                            ActorActionName.Fetch_Items,
-                            ActorActionName.Deliver_Items
+                            ActorActionName.Haul_Fetch,
+                            ActorActionName.Haul_Deliver
                         })
                 },
                 {
@@ -42,8 +42,8 @@ namespace Jobs
                         {
                             ActorActionName.Process_Logs,
                             ActorActionName.Chop_Wood,
-                            ActorActionName.Fetch_Items,
-                            ActorActionName.Deliver_Items
+                            ActorActionName.Haul_Fetch,
+                            ActorActionName.Haul_Deliver
                         })
                 },
                 {
@@ -54,8 +54,8 @@ namespace Jobs
                         {
                             ActorActionName.Stand_At_Counter,
                             ActorActionName.Restock_Shelves,
-                            ActorActionName.Fetch_Items,
-                            ActorActionName.Deliver_Items
+                            ActorActionName.Haul_Fetch,
+                            ActorActionName.Haul_Deliver
                         })
                 },
                 {

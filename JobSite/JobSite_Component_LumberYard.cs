@@ -12,7 +12,7 @@ namespace JobSite
     {
         public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
 
-        public override List<ActorActionName> BaseJobActions { get; } = new()
+        public override HashSet<ActorActionName> BaseJobActions { get; } = new()
         {
             {
                 ActorActionName.Chop_Wood
@@ -21,10 +21,10 @@ namespace JobSite
                 ActorActionName.Process_Logs
             },
             {
-                ActorActionName.Fetch_Items
+                ActorActionName.Haul_Fetch
             },
             {
-                ActorActionName.Deliver_Items
+                ActorActionName.Haul_Deliver
             }
         };
 
