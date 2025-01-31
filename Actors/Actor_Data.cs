@@ -274,17 +274,6 @@ namespace Actors
             return allowedActions;
         }
 
-        public Priority_Parameters GetPriorityParameters(ActorActionName actorActionName)
-        {
-            var stationID_Source = Career.JobSite?.JobSiteData?.GetStationIDFromWorkerID(ActorID) ?? 0;
-            
-            return new Priority_Parameters(
-                actorID_Source: ActorID,
-                jobSiteID_Source: Career.JobSiteID,
-                stationID_Source: stationID_Source
-                );
-        }
-
         public float GetActorRelation(Actor_Data otherActor)
         {
             float relation = 0;

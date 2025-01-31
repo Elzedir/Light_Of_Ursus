@@ -169,7 +169,7 @@ namespace ActorActions
         static IEnumerator _moveToWorkPost(Priority_Parameters priority_Parameters)
         {
             var actor_Component = priority_Parameters.Actor_Component_Source;
-            var workPost_Component = priority_Parameters.WorkPost_Component_Destination;
+            var workPost_Component = priority_Parameters.WorkPost_Component_Target;
             
             yield return actor_Component.StartCoroutine(_moveToPosition(actor_Component, workPost_Component.transform.position));
         }

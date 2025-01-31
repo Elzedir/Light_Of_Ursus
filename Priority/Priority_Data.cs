@@ -3,6 +3,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
 using Actors;
+using Inventory;
+using Items;
 using Tools;
 using UnityEngine;
 
@@ -76,6 +78,14 @@ namespace Priority
         protected abstract List<ulong> _getPermittedPriorities(List<ulong> priorityIDs);
         protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
         //protected abstract void _populatePriorityParameters(ref Priority_Parameters priorityParameters);
+
+        protected abstract ulong _getActorID_Source();
+        protected abstract ulong _getActorID_Target();
+        protected abstract ulong _getJobSiteID_Source();
+        protected abstract ulong _getJobSiteID_Target();
+        protected abstract ulong _getStationID_Source();
+        protected abstract ulong _getStationID_Target(ActorActionName actorActionName);
+        protected abstract InventoryData _getInventory_Target();
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
         {

@@ -1,7 +1,3 @@
-using System.Linq;
-using Inventory;
-using Items;
-using Priority;
 using UnityEngine;
 
 namespace ActorActions
@@ -17,57 +13,6 @@ namespace ActorActions
 
             Debug.LogError($"ActorAction_Data not found for: {actorActionName}.");
             return null;
-        }
-
-        public static Priority_Parameters GetHighestPriorityStation(Priority_Parameters priority_Parameters, 
-            ActorActionName actorActionName)
-        {
-            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
-
-            if (priority_Parameters.Actor_Component_Source is not null && !priority_Parameters.Actor_Component_Source.ActorData.Career.HasCurrentJob())
-            {
-                allRelevantStations = allRelevantStations.Where(station => station.Station_Data.GetOpenWorkPost() is not null).ToList();
-            }
-            
-            if (allRelevantStations.Count is 0)
-            {
-                Debug.LogError($"No relevant station for {actorActionName}.");
-                return null;
-            }
-            
-            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
-                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
-            
-            if (priority_Parameters.TotalItems is 0)
-            {
-                Debug.LogError("No items to fetch from all stations.");
-                return null;
-            }
-            
-            float highestPriority = 0;
-            InventoryData highestPriorityStation = null;
-            
-            foreach (var station in allRelevantStations)
-            {
-                priority_Parameters.Inventory_Target = station.Station_Data.InventoryData;
-                var stationPriority =
-                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
-
-                if (stationPriority is 0 || stationPriority < highestPriority) continue;
-
-                highestPriority = stationPriority;
-                highestPriorityStation = station.Station_Data.InventoryData;
-            }
-            
-            if (highestPriorityStation is null)
-            {
-                Debug.LogWarning("No station with items to fetch from.");
-                return null;
-            }
-            
-            priority_Parameters.Inventory_Target = highestPriorityStation;
-
-            return priority_Parameters;
         }
     }
 

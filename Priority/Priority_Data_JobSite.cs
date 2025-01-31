@@ -68,10 +68,6 @@ namespace Priority
             }
             
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
-
-            //* If it works, change the highest priority thing to be named right.
-            priorityParameters = ActorAction_Manager.GetHighestPriorityStation(priorityParameters, (ActorActionName)priorityID);
-
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
             PriorityQueue.Update(priorityID, priorityValue);
@@ -79,6 +75,8 @@ namespace Priority
 
         protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {
+            _getInventoryTarget(priorityParameters, actorActionName);
+            
             return new Priority_Parameters
             (
                 jobSiteID_Source: JobSiteID

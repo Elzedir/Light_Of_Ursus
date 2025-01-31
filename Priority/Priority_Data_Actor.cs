@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Actor;
 using ActorActions;
 using Actors;
+using Inventory;
 using Tools;
 using UnityEngine;
 
@@ -73,17 +74,93 @@ namespace Priority
             }
 
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
-            
-            priorityParameters = ActorAction_Manager.GetHighestPriorityStation(priorityParameters, (ActorActionName)priorityID);
+
+            Debug.Log($"PriorityID: {(ActorActionName)priorityID}");
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
+
+            Debug.Log($"PriorityID: {(ActorActionName)priorityID} - {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
         protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {
-            return _actor.ActorData.GetPriorityParameters(actorActionName);
+            return new Priority_Parameters(
+                    actorID_Source: _getActorID_Source(),
+                    actorID_Target: _getActorID_Target(),
+                    jobSiteID_Source: _getJobSiteID_Source(),
+                    jobSiteID_Target: _getJobSiteID_Target(),
+                    stationID_Source: _getStationID_Source(),
+                    stationID_Target: _getStationID_Target(actorActionName)
+                );
+        }
+
+        protected override ulong _getActorID_Source()
+        {
+            return ActorID;
+        }
+
+        protected override ulong _getJobSiteID_Source()
+        {
+            return _actor.ActorData.Career.JobSiteID;
+        }
+
+        protected override ulong _getStationID_Source()
+        {
+            return _actor.ActorData.Career.JobSite?.JobSiteData.GetStationIDFromWorkerID(ActorID) ?? 0;
+        }
+
+        protected override ulong _getStationID_Target(ActorActionName actorActionName)
+        {
+            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
+
+            if (priority_Parameters.ActorID_Source is not 0 
+                && !priority_Parameters.Actor_Component_Source.ActorData.Career.HasCurrentJob())
+            {
+                allRelevantStations = allRelevantStations
+                    .Where(station => station.Station_Data.GetOpenWorkPost() is not null).ToList();
+            }
+
+            if (allRelevantStations.Count is 0)
+            {
+                Debug.LogError($"No relevant station for {actorActionName}.");
+                return 0;
+            }
+
+            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
+                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
+
+            if (priority_Parameters.TotalItems is 0)
+            {
+                Debug.LogError("No items to fetch from all stations.");
+                return 0;
+            }
+
+            float highestPriority = 0;
+            InventoryData highestPriorityStation = null;
+
+            foreach (var station in allRelevantStations)
+            {
+                priority_Parameters.Inventory_Target = station.Station_Data.InventoryData;
+                var stationPriority =
+                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
+
+                if (stationPriority is 0 || stationPriority < highestPriority) continue;
+
+                highestPriority = stationPriority;
+                highestPriorityStation = station.Station_Data.InventoryData;
+            }
+
+            if (highestPriorityStation is null)
+            {
+                Debug.LogWarning("No station with items to fetch from.");
+                return 0;
+            }
+
+            priority_Parameters.Inventory_Target = highestPriorityStation;
+
+            return true;
         }
 
         // IEnumerator _performCurrentActionFromStart()
@@ -158,6 +235,8 @@ namespace Priority
 
             if (_currentAction != null && nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
                 return;
+            
+            Debug.Log($"Actor: {ActorID} performing action: {(ActorActionName)nextHighestPriorityValue.PriorityID}.");
 
             SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);
         }

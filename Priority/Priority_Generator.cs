@@ -212,7 +212,7 @@ namespace Priority
                     Item.GetItemListTotal_CountAllItems(items) != 0
                     ? _moreItemsDesired_Total(
                         items, totalItems, maxPriority, 
-                        priority_Parameters.StationType_Source,
+                        priority_Parameters.StationName_Source,
                         priority_Parameters.StationType_All)
                     : 0
             );
@@ -221,6 +221,8 @@ namespace Priority
         static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
             var allItems = priority_Parameters.Inventory_Target.GetInventoryItemsToFetchFromStation();
+            
+            Debug.LogWarning($"Chop_Wood Items: {allItems.Count}");
 
             return GeneratePriority(priority_Parameters, allItems, _lessItemsDesired_Total);
         }
@@ -228,7 +230,7 @@ namespace Priority
         static float _generateProcess_LogsPriority(Priority_Parameters priority_Parameters)
         {
             var allItems =
-                priority_Parameters.Station_Component_Destination.Station_Data.InventoryData.GetInventoryItemsToProcess(
+                priority_Parameters.Station_Component_Target.Station_Data.InventoryData.GetInventoryItemsToProcess(
                     priority_Parameters.Inventory_Hauler);
 
             return GeneratePriority(priority_Parameters, allItems,

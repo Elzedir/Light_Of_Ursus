@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actor;
 using Actors;
 using Inventory;
@@ -30,14 +31,14 @@ namespace Priority
         public ulong StationID_Source;
         public Station_Component Station_Component_Source => Station_Manager.GetStation_Component(StationID_Source);
         
-        public ulong StationID_Destination;
-        public Station_Component Station_Component_Destination => Station_Manager.GetStation_Component(StationID_Destination);
+        public ulong StationID_Target;
+        public Station_Component Station_Component_Target => Station_Manager.GetStation_Component(StationID_Target);
         
         public ulong WorkPostID_Source;
         public WorkPost_Component WorkPost_Component_Source => Station_Component_Source.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Source, null);
 
-        public ulong WorkPostID_Destination;
-        public WorkPost_Component WorkPost_Component_Destination => Station_Component_Destination.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Destination, null); 
+        public ulong WorkPostID_Target;
+        public WorkPost_Component WorkPost_Component_Target => Station_Component_Target.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Target, null); 
         
         public List<Item> Items;
         
@@ -47,39 +48,34 @@ namespace Priority
         public float DefaultMaxPriority;
         public float TotalDistance;
         public long TotalItems;
-        public InventoryData Inventory_Hauler;
-        public InventoryData Inventory_Target;
+        public InventoryData Inventory_Hauler => Actor_Component_Source.ActorData.InventoryData;
+        public InventoryData Inventory_Target => Station_Component_Target.Station_Data.InventoryData;
         
-        public StationName StationType_Source;
-        public StationName StationType_Destination;
-        public HashSet<StationName> StationType_All;
+        public StationName StationName_Source => StationID_Source != 0 ? Station_Component_Source.StationName : StationName.None;
+        public StationName StationName_Target => StationID_Target != 0 ? Station_Component_Target.StationName : StationName.None;
+
+        public HashSet<StationName> StationType_All => JobSite_Component_Source.JobSiteData.AllStationComponents.Values
+            .Select(station => station.StationName).ToHashSet();
 
         public Priority_Parameters(ulong actorID_Source = 0, ulong actorID_Target = 0, ulong jobSiteID_Source = 0,
-            ulong jobSiteID_Target = 0, ulong stationID_Source = 0, ulong stationID_Destination = 0, ulong workPostID_Source = 0,
-            ulong workPostID_Destination = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
-            float defaultMaxPriority = 0, float totalDistance = 0, long totalItems = 0, InventoryData inventory_Hauler = null,
-            InventoryData inventory_Target = null, StationName stationType_Source = StationName.None, StationName stationType_Destination = StationName.None,
-            HashSet<StationName> stationType_All = null)
+            ulong jobSiteID_Target = 0, ulong stationID_Source = 0, ulong stationID_Target = 0, ulong workPostID_Source = 0,
+            ulong workPostID_Target = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
+            float defaultMaxPriority = 0, float totalDistance = 0, long totalItems = 0)
         {
             ActorID_Source = actorID_Source;
             ActorID_Target = actorID_Target;
             JobSiteID_Source = jobSiteID_Source;
             JobSiteID_Target = jobSiteID_Target;
             StationID_Source = stationID_Source;
-            StationID_Destination = stationID_Destination;
+            StationID_Target = stationID_Target;
             WorkPostID_Source = workPostID_Source;
-            WorkPostID_Destination = workPostID_Destination;
+            WorkPostID_Target = workPostID_Target;
             Items = items;
             Position_Source = position_Source;
             Position_Destination = position_Destination;
             DefaultMaxPriority = defaultMaxPriority;
             TotalDistance = totalDistance;
             TotalItems = totalItems;
-            Inventory_Hauler = inventory_Hauler;
-            Inventory_Target = inventory_Target;
-            StationType_Source = stationType_Source;
-            StationType_Destination = stationType_Destination;
-            StationType_All = stationType_All;
         }
     }
 }

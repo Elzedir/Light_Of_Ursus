@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     public abstract class Actor_Aspect_List
     {
-        static Dictionary<(AspectName, AspectName, AspectName), ClassTitle> _defaultAspects;
+        static Dictionary<(AspectName, AspectName, AspectName), ClassTitle> s_defaultAspects;
 
         public static Dictionary<(AspectName, AspectName, AspectName), ClassTitle> DefaultAspects =>
-            _defaultAspects ??= _initialiseDefaultAspects();
+            s_defaultAspects ??= _initialiseDefaultAspects();
 
         public static ClassTitle GetCharacterTitle(List<AspectName> aspectList)
         {
