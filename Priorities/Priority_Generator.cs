@@ -161,7 +161,10 @@ namespace Priority
         public static float GeneratePriority(ulong priorityID, Priority_Parameters priority_Parameters)
         {
             if (priority_Parameters == null)
-                return 0;
+            {
+                Debug.LogError("Priority_Parameters is null.");
+                return 0;   
+            }
 
             if (priority_Parameters.DefaultMaxPriority == 0)
                 priority_Parameters.DefaultMaxPriority = _defaultMaxPriority;

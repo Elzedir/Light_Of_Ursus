@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Actor;
 using ActorActions;
 using Actors;
-using Inventory;
+using Items;
 using Tools;
 using UnityEngine;
 
@@ -86,32 +87,45 @@ namespace Priority
 
         protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {
-            return new Priority_Parameters(
-                    actorID_Source: _getActorID_Source(),
-                    actorID_Target: _getActorID_Target(),
-                    jobSiteID_Source: _getJobSiteID_Source(),
-                    jobSiteID_Target: _getJobSiteID_Target(),
-                    stationID_Source: _getStationID_Source(),
-                    stationID_Target: _getStationID_Target(actorActionName)
-                );
+            var priorityParameters = new Priority_Parameters();
+
+            _setActorID_Source(priorityParameters);
+            _setJobSiteID_Source(priorityParameters);
+            _setStationID_Source(priorityParameters);
+            
+            _setActorID_Target(actorActionName, priorityParameters);
+            _setJobSiteID_Target(actorActionName, priorityParameters);
+            _setStationID_Target(actorActionName, priorityParameters);
+
+            return priorityParameters;
         }
 
-        protected override ulong _getActorID_Source()
+        protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
         {
-            return ActorID;
+            priority_Parameters.ActorID_Source = ActorID;
         }
 
-        protected override ulong _getJobSiteID_Source()
+        protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
         {
-            return _actor.ActorData.Career.JobSiteID;
+            priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.JobSiteID;
         }
 
-        protected override ulong _getStationID_Source()
+        protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
         {
-            return _actor.ActorData.Career.JobSite?.JobSiteData.GetStationIDFromWorkerID(ActorID) ?? 0;
+            priority_Parameters.StationID_Source = _actor.ActorData.Career.JobSite?.JobSiteData.GetStationIDFromWorkerID(ActorID) ?? 0;
         }
 
-        protected override ulong _getStationID_Target(ActorActionName actorActionName)
+        protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            throw new NotImplementedException("ActorID_Target not implemented for GetActor_Target.");
+        }
+
+        protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            throw new NotImplementedException("JobSiteID_Target not implemented for GetJobSite_Target.");
+        }
+
+        protected override void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
             var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
 
@@ -125,7 +139,8 @@ namespace Priority
             if (allRelevantStations.Count is 0)
             {
                 Debug.LogError($"No relevant station for {actorActionName}.");
-                return 0;
+                priority_Parameters.StationID_Target = 0;
+                return;
             }
 
             priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
@@ -134,33 +149,33 @@ namespace Priority
             if (priority_Parameters.TotalItems is 0)
             {
                 Debug.LogError("No items to fetch from all stations.");
-                return 0;
+                priority_Parameters.StationID_Target = 0;
+                return;
             }
 
-            float highestPriority = 0;
-            InventoryData highestPriorityStation = null;
+            float highestPriorityValue = 0;
+            ulong highestPriorityStationID = 0;
 
             foreach (var station in allRelevantStations)
             {
-                priority_Parameters.Inventory_Target = station.Station_Data.InventoryData;
+                priority_Parameters.StationID_Target = station.StationID;
                 var stationPriority =
                     Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
 
-                if (stationPriority is 0 || stationPriority < highestPriority) continue;
+                if (stationPriority is 0 || stationPriority < highestPriorityValue) continue;
 
-                highestPriority = stationPriority;
-                highestPriorityStation = station.Station_Data.InventoryData;
+                highestPriorityValue = stationPriority;
+                highestPriorityStationID = station.StationID;
             }
 
-            if (highestPriorityStation is null)
+            if (highestPriorityStationID is 0)
             {
                 Debug.LogWarning("No station with items to fetch from.");
-                return 0;
+                priority_Parameters.StationID_Target = 0;
+                return;
             }
 
-            priority_Parameters.Inventory_Target = highestPriorityStation;
-
-            return true;
+            priority_Parameters.StationID_Target = highestPriorityStationID;
         }
 
         // IEnumerator _performCurrentActionFromStart()

@@ -79,13 +79,12 @@ namespace Priority
         protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
         //protected abstract void _populatePriorityParameters(ref Priority_Parameters priorityParameters);
 
-        protected abstract ulong _getActorID_Source();
-        protected abstract ulong _getActorID_Target();
-        protected abstract ulong _getJobSiteID_Source();
-        protected abstract ulong _getJobSiteID_Target();
-        protected abstract ulong _getStationID_Source();
-        protected abstract ulong _getStationID_Target(ActorActionName actorActionName);
-        protected abstract InventoryData _getInventory_Target();
+        protected abstract void _setActorID_Source(Priority_Parameters priority_Parameters);
+        protected abstract void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+        protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);
+        protected abstract void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+        protected abstract void _setStationID_Source(Priority_Parameters priority_Parameters);
+        protected abstract void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
         {
