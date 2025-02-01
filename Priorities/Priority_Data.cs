@@ -5,6 +5,7 @@ using ActorActions;
 using Actors;
 using Inventory;
 using Items;
+using Priorities;
 using Tools;
 using UnityEngine;
 
@@ -60,8 +61,6 @@ namespace Priority
 
             return PriorityQueue.Peek(highestPriority.PriorityID);
         }
-
-        protected abstract Priority_Parameters _getPriorityParameters(ActorActionName actorActionName);
         public PriorityElement GetHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
         public PriorityElement GetHighestPriorityFromGroup(List<ulong> priorityIDs, ulong priorityObjectParameterID = 0)
         {
@@ -79,6 +78,21 @@ namespace Priority
         protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
         //protected abstract void _populatePriorityParameters(ref Priority_Parameters priorityParameters);
 
+        protected Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
+        {
+            var priorityParameters = new Priority_Parameters();
+
+            _setActorID_Source(priorityParameters);
+            _setJobSiteID_Source(priorityParameters);
+            _setStationID_Source(priorityParameters);
+            
+            _setActorID_Target(actorActionName, priorityParameters);
+            _setJobSiteID_Target(actorActionName, priorityParameters);
+            _setStationID_Target(actorActionName, priorityParameters);
+
+            return priorityParameters;
+        }
+        
         protected abstract void _setActorID_Source(Priority_Parameters priority_Parameters);
         protected abstract void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);

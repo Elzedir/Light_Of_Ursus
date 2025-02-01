@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Actor;
 using Jobs;
+using Priorities;
 using Priority;
 using StateAndCondition;
 using UnityEngine;
@@ -168,10 +169,11 @@ namespace ActorActions
         
         static IEnumerator _moveToWorkPost(Priority_Parameters priority_Parameters)
         {
-            var actor_Component = priority_Parameters.Actor_Component_Source;
-            var workPost_Component = priority_Parameters.WorkPost_Component_Target;
-            
-            yield return actor_Component.StartCoroutine(_moveToPosition(actor_Component, workPost_Component.transform.position));
+            yield return null;
+            // var actor_Component = priority_Parameters.Actor_Component_Source;
+            // //var workPost_Component = priority_Parameters.WorkPost_Component_Target;
+            //
+            // yield return actor_Component.StartCoroutine(_moveToPosition(actor_Component, workPost_Component.transform.position));
         }
         
         static IEnumerator _moveToPosition(Actor_Component actor_Component, Vector3 position)

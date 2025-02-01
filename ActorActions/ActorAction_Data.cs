@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Actor;
 using Jobs;
+using Priorities;
 using Priority;
 using StateAndCondition;
 using UnityEngine.Serialization;

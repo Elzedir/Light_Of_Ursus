@@ -8,10 +8,8 @@ using Items;
 using JobSite;
 using Station;
 using UnityEngine;
-using UnityEngine.Serialization;
-using WorkPosts;
 
-namespace Priority
+namespace Priorities
 {
     [Serializable]
     public class Priority_Parameters
@@ -32,13 +30,7 @@ namespace Priority
         public Station_Component Station_Component_Source => Station_Manager.GetStation_Component(StationID_Source);
         
         public ulong StationID_Target;
-        public Station_Component Station_Component_Target => Station_Manager.GetStation_Component(StationID_Target);
-        
-        public ulong WorkPostID_Source;
-        public WorkPost_Component WorkPost_Component_Source => Station_Component_Source.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Source, null);
-
-        public ulong WorkPostID_Target;
-        public WorkPost_Component WorkPost_Component_Target => Station_Component_Target.Station_Data.AllWorkPost_Components.GetValueOrDefault(WorkPostID_Target, null); 
+        public Station_Component Station_Component_Target => Station_Manager.GetStation_Component(StationID_Target); 
         
         public List<Item> Items;
         
@@ -48,34 +40,13 @@ namespace Priority
         public float DefaultMaxPriority;
         public float TotalDistance;
         public long TotalItems;
+        
         public InventoryData Inventory_Hauler => Actor_Component_Source.ActorData.InventoryData;
         public InventoryData Inventory_Target => Station_Component_Target.Station_Data.InventoryData;
         
         public StationName StationName_Source => StationID_Source != 0 ? Station_Component_Source.StationName : StationName.None;
         public StationName StationName_Target => StationID_Target != 0 ? Station_Component_Target.StationName : StationName.None;
-
         public HashSet<StationName> StationType_All => JobSite_Component_Source.JobSiteData.AllStationComponents.Values
             .Select(station => station.StationName).ToHashSet();
-
-        public Priority_Parameters(ulong actorID_Source = 0, ulong actorID_Target = 0, ulong jobSiteID_Source = 0,
-            ulong jobSiteID_Target = 0, ulong stationID_Source = 0, ulong stationID_Target = 0, ulong workPostID_Source = 0,
-            ulong workPostID_Target = 0, List<Item> items = null, Vector3 position_Source = default, Vector3 position_Destination = default,
-            float defaultMaxPriority = 0, float totalDistance = 0, long totalItems = 0)
-        {
-            ActorID_Source = actorID_Source;
-            ActorID_Target = actorID_Target;
-            JobSiteID_Source = jobSiteID_Source;
-            JobSiteID_Target = jobSiteID_Target;
-            StationID_Source = stationID_Source;
-            StationID_Target = stationID_Target;
-            WorkPostID_Source = workPostID_Source;
-            WorkPostID_Target = workPostID_Target;
-            Items = items;
-            Position_Source = position_Source;
-            Position_Destination = position_Destination;
-            DefaultMaxPriority = defaultMaxPriority;
-            TotalDistance = totalDistance;
-            TotalItems = totalItems;
-        }
     }
 }

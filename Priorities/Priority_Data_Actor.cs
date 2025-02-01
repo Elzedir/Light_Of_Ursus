@@ -5,10 +5,11 @@ using Actor;
 using ActorActions;
 using Actors;
 using Items;
+using Priority;
 using Tools;
 using UnityEngine;
 
-namespace Priority
+namespace Priorities
 {
     [Serializable]
     public class Priority_Data_Actor : Priority_Data
@@ -85,21 +86,6 @@ namespace Priority
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
-        {
-            var priorityParameters = new Priority_Parameters();
-
-            _setActorID_Source(priorityParameters);
-            _setJobSiteID_Source(priorityParameters);
-            _setStationID_Source(priorityParameters);
-            
-            _setActorID_Target(actorActionName, priorityParameters);
-            _setJobSiteID_Target(actorActionName, priorityParameters);
-            _setStationID_Target(actorActionName, priorityParameters);
-
-            return priorityParameters;
-        }
-
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.ActorID_Source = ActorID;
@@ -117,12 +103,12 @@ namespace Priority
 
         protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            throw new NotImplementedException("ActorID_Target not implemented for GetActor_Target.");
+            priority_Parameters.ActorID_Target = 0;
         }
 
         protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            throw new NotImplementedException("JobSiteID_Target not implemented for GetJobSite_Target.");
+            priority_Parameters.JobSiteID_Target = 0;
         }
 
         protected override void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)

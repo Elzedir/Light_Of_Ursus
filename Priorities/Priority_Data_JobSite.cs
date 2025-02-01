@@ -4,6 +4,7 @@ using System.Linq;
 using ActorActions;
 using Actors;
 using JobSite;
+using Priorities;
 using Station;
 using Tools;
 using UnityEngine;
@@ -73,14 +74,34 @@ namespace Priority
             PriorityQueue.Update(priorityID, priorityValue);
         }
 
-        protected override Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
+        protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
         {
-            _getInventoryTarget(priorityParameters, actorActionName);
-            
-            return new Priority_Parameters
-            (
-                jobSiteID_Source: JobSiteID
-            );
+            priority_Parameters.ActorID_Source = 0;
+        }
+
+        protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.JobSiteID_Source = JobSiteID;
+        }
+
+        protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.StationID_Source = 0;
+        }
+
+        protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.ActorID_Target = 0;
+        }
+
+        protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.JobSiteID_Target = 0;
+        }
+
+        protected override void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.StationID_Target = 0;
         }
 
         protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)

@@ -12,6 +12,7 @@ using Items;
 using Jobs;
 using Managers;
 using Personality;
+using Priorities;
 using Priority;
 using Recipes;
 using StateAndCondition;

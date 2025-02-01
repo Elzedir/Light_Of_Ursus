@@ -186,7 +186,7 @@ namespace Items
                 {
                     mergedItemsDict.AddOrUpdate(
                         (int)item.ItemID,
-                        new Item(item), // Create a new item
+                        new Item(item),
                         (_, existingItem) =>
                         {
                             existingItem.ItemAmount += item.ItemAmount;
