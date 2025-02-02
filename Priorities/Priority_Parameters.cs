@@ -42,6 +42,7 @@ namespace Priorities
         public long TotalItems;
         
         public InventoryData Inventory_Hauler => Actor_Component_Source.ActorData.InventoryData;
+        public InventoryData Inventory_Source => Station_Component_Source.Station_Data.InventoryData;
         public InventoryData Inventory_Target => Station_Component_Target.Station_Data.InventoryData;
         
         public StationName StationName_Source => StationID_Source != 0 ? Station_Component_Source.StationName : StationName.None;

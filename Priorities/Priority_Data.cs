@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
 using Actors;
-using Inventory;
 using Items;
 using Priorities;
 using Tools;
@@ -84,7 +83,7 @@ namespace Priority
 
             _setActorID_Source(priorityParameters);
             _setJobSiteID_Source(priorityParameters);
-            _setStationID_Source(priorityParameters);
+            _setStationID_Source(actorActionName, priorityParameters);
             
             _setActorID_Target(actorActionName, priorityParameters);
             _setJobSiteID_Target(actorActionName, priorityParameters);
@@ -97,8 +96,51 @@ namespace Priority
         protected abstract void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
-        protected abstract void _setStationID_Source(Priority_Parameters priority_Parameters);
-        protected abstract void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+        protected abstract void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+
+        void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            _setHighestPriorityStation(actorActionName, priority_Parameters);
+        }
+
+        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        {
+            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
+            
+            if (allRelevantStations.Count is 0)
+            {
+                Debug.LogError($"No relevant station for {actorActionName}.");
+                priority_Parameters.StationID_Target = 0;
+                return;
+            }
+
+            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
+                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
+
+            float highestPriorityValue = 0;
+            ulong highestPriorityStationID = 0;
+
+            foreach (var station in allRelevantStations)
+            {
+                priority_Parameters.StationID_Target = station.StationID;
+                var stationPriority =
+                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
+
+                if (stationPriority is 0 || stationPriority < highestPriorityValue) continue;
+
+                highestPriorityValue = stationPriority;
+                highestPriorityStationID = station.StationID;
+            }
+
+            if (highestPriorityStationID is 0)
+            {
+                Debug.LogWarning("No station with items to fetch from.");
+                priority_Parameters.StationID_Target = 0;
+                return;
+            }
+
+            priority_Parameters.StationID_Target = highestPriorityStationID;
+        }
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
         {

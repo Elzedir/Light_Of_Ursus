@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
+using Items;
 using JobSite;
 using Priorities;
 using Station;
@@ -83,10 +84,12 @@ namespace Priority
         {
             priority_Parameters.JobSiteID_Source = JobSiteID;
         }
+        
+        //* Currently the same code for SetStationID_Target, check to change in the future.
 
-        protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
+        protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.StationID_Source = 0;
+            _setHighestPriorityStation(actorActionName, priority_Parameters);
         }
 
         protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
@@ -97,11 +100,6 @@ namespace Priority
         protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
-        }
-
-        protected override void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
-        {
-            priority_Parameters.StationID_Target = 0;
         }
 
         protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)

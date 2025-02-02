@@ -197,13 +197,15 @@ namespace JobSite
         List<Station_Component> _relevantStations_Chop_Wood()
         {
             return JobSiteData.AllStationComponents.Values
-                       .Where(station => station.StationName == StationName.Tree).ToList();   
+                       .Where(station => station.StationName == StationName.Tree 
+                                         && station.Station_Data.GetOpenWorkPost() is not null).ToList();   
         }
 
         List<Station_Component> _relevantStations_Process_Logs()
         {
             return JobSiteData.AllStationComponents.Values
-                              .Where(station => station.StationName == StationName.Sawmill).ToList();
+                              .Where(station => station.StationName == StationName.Sawmill 
+                                                && station.Station_Data.GetOpenWorkPost() is not null).ToList();
         }
     }
 }

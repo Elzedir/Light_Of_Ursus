@@ -13,39 +13,45 @@ namespace Priority
     {
         const float _defaultMaxPriority = 10;
 
-        protected static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
+        static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
             => Math.Clamp(current - target, 0, maxPriority);
 
-        protected static float _addPriorityIfBelowTarget(float current, float target, float maxPriority)
+        static float _addPriorityIfBelowTarget(float current, float target, float maxPriority)
             => Math.Clamp(target - current, 0, maxPriority);
 
-        protected static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority)
+        static float _addPriorityIfNotEqualTarget(float current, float target, float maxPriority)
             => Math.Clamp(Math.Abs(current - target), 0, maxPriority);
 
         protected static float _addPriorityIfOutsideRange(float current, float min, float max, float maxPriority)
-            => (current < min || current > max)
-                ? Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
-                : 0;
+            => current > min || current < max
+                ? 0
+                : Math.Clamp(Math.Min(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority);
 
         protected static float _addPriorityIfInsideRange(float current, float min, float max, float maxPriority)
-            => (current > min || current < max)
-                ? Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority)
-                : 0;
+            => current < min || current > max
+                ? 0
+                : Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority);
 
-        protected static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage,
+        
+        a
+            //* Test these priority calculations.They don't seem right. Especially when total is 0...
+        
+        static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage,
             float maxPriority)
-            => total == 0 ? 0 : Math.Clamp((current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
+            => total == 0 
+                ? Math.Clamp((current - targetPercentage / 100) * maxPriority, 0, maxPriority) 
+                : Math.Clamp((current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
 
-        protected static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage,
+        static float _addPriorityIfBelowPercent(float current, float total, float targetPercentage,
             float maxPriority)
             => total == 0
-                ? maxPriority
+                ? Math.Clamp((targetPercentage / 100 - current) * maxPriority, 0, maxPriority)
                 : Math.Clamp((targetPercentage / 100 - current / total) * maxPriority, 0, maxPriority);
 
-        protected static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage,
+        static float _addPriorityIfNotEqualPercent(float current, float total, float targetPercentage,
             float maxPriority)
             => total == 0
-                ? 0
+                ? Math.Clamp(Math.Abs(current - targetPercentage / 100) * maxPriority, 0, maxPriority)
                 : Math.Clamp(Math.Abs(current / total - targetPercentage / 100) * maxPriority, 0, maxPriority);
 
         protected static float _addPriorityIfOutsidePercentRange(float current, float total, float min, float max,
@@ -224,7 +230,7 @@ namespace Priority
 
         static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems = priority_Parameters.Inventory_Target.GetInventoryItemsToFetchFromStation();
+            var allItems = priority_Parameters.Inventory_Source.GetInventoryItemsToFetchFromStation();
             
             Debug.LogWarning($"Chop_Wood Items: {allItems.Count}");
 

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Actor;
 using ActorActions;
 using Actors;
-using Items;
 using Priority;
 using Tools;
 using UnityEngine;
@@ -96,7 +94,7 @@ namespace Priorities
             priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.JobSiteID;
         }
 
-        protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
+        protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
             priority_Parameters.StationID_Source = _actor.ActorData.Career.JobSite?.JobSiteData.GetStationIDFromWorkerID(ActorID) ?? 0;
         }
@@ -110,70 +108,6 @@ namespace Priorities
         {
             priority_Parameters.JobSiteID_Target = 0;
         }
-
-        protected override void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
-        {
-            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
-
-            if (priority_Parameters.ActorID_Source is not 0 
-                && !priority_Parameters.Actor_Component_Source.ActorData.Career.HasCurrentJob())
-            {
-                allRelevantStations = allRelevantStations
-                    .Where(station => station.Station_Data.GetOpenWorkPost() is not null).ToList();
-            }
-
-            if (allRelevantStations.Count is 0)
-            {
-                Debug.LogError($"No relevant station for {actorActionName}.");
-                priority_Parameters.StationID_Target = 0;
-                return;
-            }
-
-            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
-                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
-
-            if (priority_Parameters.TotalItems is 0)
-            {
-                Debug.LogError("No items to fetch from all stations.");
-                priority_Parameters.StationID_Target = 0;
-                return;
-            }
-
-            float highestPriorityValue = 0;
-            ulong highestPriorityStationID = 0;
-
-            foreach (var station in allRelevantStations)
-            {
-                priority_Parameters.StationID_Target = station.StationID;
-                var stationPriority =
-                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
-
-                if (stationPriority is 0 || stationPriority < highestPriorityValue) continue;
-
-                highestPriorityValue = stationPriority;
-                highestPriorityStationID = station.StationID;
-            }
-
-            if (highestPriorityStationID is 0)
-            {
-                Debug.LogWarning("No station with items to fetch from.");
-                priority_Parameters.StationID_Target = 0;
-                return;
-            }
-
-            priority_Parameters.StationID_Target = highestPriorityStationID;
-        }
-
-        // IEnumerator _performCurrentActionFromStart()
-        // {
-        //     foreach (var action in _currentAction.ActionList)
-        //     {
-        //         yield return CurrentActionCoroutine = _actor.StartCoroutine(action(_currentAction.ActorAction_Parameters));
-        //     }
-        //     
-        //     _stopCurrentAction();
-        //     _currentAction = null;
-        // }
 
         void _stopCurrentAction()
         {
