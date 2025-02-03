@@ -75,11 +75,7 @@ namespace Priorities
 
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
 
-            Debug.Log($"PriorityID: {(ActorActionName)priorityID}");
-
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
-
-            Debug.Log($"PriorityID: {(ActorActionName)priorityID} - {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue);
         }

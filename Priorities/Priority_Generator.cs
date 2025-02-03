@@ -31,9 +31,7 @@ namespace Priority
             => current < min || current > max
                 ? 0
                 : Math.Clamp(Math.Max(Math.Abs(current - min), Math.Abs(current - max)), 0, maxPriority);
-
         
-        a
             //* Test these priority calculations.They don't seem right. Especially when total is 0...
         
         static float _addPriorityIfAbovePercent(float current, float total, float targetPercentage,
@@ -168,10 +166,7 @@ namespace Priority
         public static float GeneratePriority(ulong priorityID, Priority_Parameters priority_Parameters)
         {
             if (priority_Parameters == null)
-            {
-                Debug.LogError("Priority_Parameters is null.");
-                return 0;   
-            }
+                throw new Exception("Priority_Parameters is null.");
 
             if (priority_Parameters.DefaultMaxPriority == 0)
                 priority_Parameters.DefaultMaxPriority = _defaultMaxPriority;
@@ -198,7 +193,7 @@ namespace Priority
 
         static float _generateFetchPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems = priority_Parameters.Inventory_Target.GetInventoryItemsToFetchFromStation();
+            var allItems = priority_Parameters.Inventory_Target?.GetInventoryItemsToFetchFromStation() ?? new List<Item>();
 
             return GeneratePriority(
                 priority_Parameters,
@@ -212,8 +207,8 @@ namespace Priority
         static float _generateDeliverPriority(Priority_Parameters priority_Parameters)
         {
             var allItems =
-                priority_Parameters.Inventory_Target.GetInventoryItemsToDeliverFromInventory(priority_Parameters
-                    .Inventory_Hauler);
+                priority_Parameters.Inventory_Target?.GetInventoryItemsToDeliverFromInventory(priority_Parameters
+                    .Inventory_Hauler) ?? new List<Item>();
 
             return GeneratePriority(
                 priority_Parameters,
@@ -230,18 +225,15 @@ namespace Priority
 
         static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems = priority_Parameters.Inventory_Source.GetInventoryItemsToFetchFromStation();
-            
-            Debug.LogWarning($"Chop_Wood Items: {allItems.Count}");
+            var allItems = priority_Parameters.Inventory_Source?.GetInventoryItemsToFetchFromStation() ?? new List<Item>();
 
             return GeneratePriority(priority_Parameters, allItems, _lessItemsDesired_Total);
         }
 
         static float _generateProcess_LogsPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems =
-                priority_Parameters.Station_Component_Target.Station_Data.InventoryData.GetInventoryItemsToProcess(
-                    priority_Parameters.Inventory_Hauler);
+            var allItems = priority_Parameters.Inventory_Source?
+                .GetInventoryItemsToProcess(priority_Parameters.Inventory_Hauler) ?? new List<Item>();
 
             return GeneratePriority(priority_Parameters, allItems,
                 (items, totalItems, maxPriority) => 
@@ -264,8 +256,13 @@ namespace Priority
 
         static float CalculateDistancePriority(Priority_Parameters priority_Parameters)
         {
-            var haulerPosition = priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position;
-            var targetPosition = priority_Parameters.Inventory_Target.Reference.GameObject.transform.position;
+            var haulerPosition = priority_Parameters.Inventory_Hauler != null 
+            ? priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position
+            : Vector3.zero;
+
+            var targetPosition = priority_Parameters.Inventory_Target != null
+            ? priority_Parameters.Inventory_Target.Reference.GameObject.transform.position
+            : Vector3.zero;
 
             return haulerPosition != Vector3.zero && targetPosition != Vector3.zero
                 ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance,

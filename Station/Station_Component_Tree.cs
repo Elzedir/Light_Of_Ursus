@@ -21,13 +21,6 @@ namespace Station
         public override List<ulong>       AllowedStoredItemIDs { get; } = new();
         public override List<ulong>       DesiredStoredItemIDs { get; } = new();
 
-        public override List<ActorActionName> AllowedJobTasks { get; } = new()
-        {
-            ActorActionName.Chop_Wood,
-            ActorActionName.Haul_Fetch,
-            ActorActionName.Haul_Deliver
-        };
-
         protected override void _initialiseStartingInventory()
         {
             if (Station_Data.InventoryData.AllInventoryItems.Count == 0)

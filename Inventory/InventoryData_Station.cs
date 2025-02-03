@@ -80,12 +80,14 @@ namespace Inventory
 
         public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor)
         {
-            var itemsToDeliver = _getDesiredItemIDs()
+            var itemsToDeliver = inventory_Actor != null
+                ? _getDesiredItemIDs()
                 .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
                 .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item))
-                .ToList();
+                .ToList()
+                : new List<Item>();
 
-            if (itemsToDeliver.Count == 0) return new List<Item>();
+            if (itemsToDeliver.Count == 0) return itemsToDeliver;
 
             for (var i = 0; i < itemsToDeliver.Count; i++)
                 if (!HasSpaceForItems(new List<Item> { itemsToDeliver[i] }))
@@ -118,9 +120,11 @@ namespace Inventory
                 .Where(itemID => AllInventoryItems.ContainsKey(itemID))
                 .Select(itemID => AllInventoryItems[itemID]).Select(item => new Item(item)).ToList();
             
-            var itemsInActor = _getDesiredItemIDs()
+            var itemsInActor = inventory_Actor != null 
+                ? _getDesiredItemIDs()
                 .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
-                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item)).ToList();
+                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item)).ToList()
+                : new List<Item>();
 
             return Item.MergeItemLists(itemsInStation, itemsInActor);
         }

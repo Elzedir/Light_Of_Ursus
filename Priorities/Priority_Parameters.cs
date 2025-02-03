@@ -15,22 +15,11 @@ namespace Priorities
     public class Priority_Parameters
     {
         public ulong ActorID_Source;
-        public Actor_Component Actor_Component_Source => Actor_Manager.GetActor_Component(ActorID_Source);
-        
         public ulong ActorID_Target;
-        public Actor_Component Actor_Component_Target => Actor_Manager.GetActor_Component(ActorID_Target);
-        
         public ulong JobSiteID_Source;
-        public JobSite_Component JobSite_Component_Source => JobSite_Manager.GetJobSite_Component(JobSiteID_Source);
-        
         public ulong JobSiteID_Target;
-        public JobSite_Component JobSite_Component_Target => JobSite_Manager.GetJobSite_Component(JobSiteID_Target);
-        
         public ulong StationID_Source;
-        public Station_Component Station_Component_Source => Station_Manager.GetStation_Component(StationID_Source);
-        
         public ulong StationID_Target;
-        public Station_Component Station_Component_Target => Station_Manager.GetStation_Component(StationID_Target); 
         
         public List<Item> Items;
         
@@ -41,13 +30,52 @@ namespace Priorities
         public float TotalDistance;
         public long TotalItems;
         
-        public InventoryData Inventory_Hauler => Actor_Component_Source.ActorData.InventoryData;
-        public InventoryData Inventory_Source => Station_Component_Source.Station_Data.InventoryData;
-        public InventoryData Inventory_Target => Station_Component_Target.Station_Data.InventoryData;
+        public Actor_Component Actor_Component_Source => ActorID_Source != 0
+        ? Actor_Manager.GetActor_Component(ActorID_Source)
+        : null;
         
-        public StationName StationName_Source => StationID_Source != 0 ? Station_Component_Source.StationName : StationName.None;
-        public StationName StationName_Target => StationID_Target != 0 ? Station_Component_Target.StationName : StationName.None;
-        public HashSet<StationName> StationType_All => JobSite_Component_Source.JobSiteData.AllStationComponents.Values
-            .Select(station => station.StationName).ToHashSet();
+        public Actor_Component Actor_Component_Target => ActorID_Target != 0
+            ? Actor_Manager.GetActor_Component(ActorID_Target)
+            : null;
+        
+        public JobSite_Component JobSite_Component_Source =>  JobSiteID_Source != 0
+            ? JobSite_Manager.GetJobSite_Component(JobSiteID_Source)
+            : null;
+        
+        public JobSite_Component JobSite_Component_Target =>  JobSiteID_Target != 0
+            ? JobSite_Manager.GetJobSite_Component(JobSiteID_Target)
+            : null;
+        
+        public Station_Component Station_Component_Source =>  StationID_Source != 0
+            ? Station_Manager.GetStation_Component(StationID_Source)
+            : null;
+        
+        public Station_Component Station_Component_Target =>  StationID_Target != 0
+            ? Station_Manager.GetStation_Component(StationID_Target)
+            : null; 
+        
+        public InventoryData Inventory_Hauler => ActorID_Source != 0 
+            ? Actor_Component_Source.ActorData.InventoryData 
+            : null;
+        
+        public InventoryData Inventory_Source => StationID_Source != 0 
+            ? Station_Component_Source.Station_Data.InventoryData 
+            : null;
+        
+        public InventoryData Inventory_Target => StationID_Target != 0 
+            ? Station_Component_Target.Station_Data.InventoryData 
+            : null;
+        
+        public StationName StationName_Source => StationID_Source != 0 
+            ? Station_Component_Source.StationName 
+            : StationName.None;
+        
+        public StationName StationName_Target => StationID_Target != 0 
+            ? Station_Component_Target.StationName 
+            : StationName.None;
+        
+        public HashSet<StationName> StationType_All => JobSiteID_Source != 0 
+            ? JobSite_Component_Source.JobSiteData.AllStationComponents.Values.Select(station => station.StationName).ToHashSet() 
+            : null;
     }
 }

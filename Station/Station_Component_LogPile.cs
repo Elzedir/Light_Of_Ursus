@@ -1,12 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
-using ActorActions;
 using Items;
 using Jobs;
 using Recipes;
 using UnityEngine;
-using WorkPosts;
 
 namespace Station
 {
@@ -14,17 +12,20 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;
+
+        protected override List<JobName> _getDefaultStationJobs()
+        {
+            return new List<Job>
+            {
+                new Job(JobName.Sawyer)
+            };
+        }
         public override JobName CoreJobName => JobName.Sawyer;
 
         public override RecipeName       DefaultProduct       => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new();
         public override List<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<ActorActionName> AllowedJobTasks { get; } = new()
-        {
-            ActorActionName.Haul_Fetch,
-            ActorActionName.Haul_Deliver
-        };
 
         protected override void _initialiseStartingInventory() { }
 

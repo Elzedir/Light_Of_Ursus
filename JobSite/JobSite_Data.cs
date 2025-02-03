@@ -73,6 +73,8 @@ namespace JobSite
         public Dictionary<(ulong StationID, ulong WorkPostID), ulong> WorkPost_Workers =>
             _workPost_Workers ??= _populateWorkPost_Workers();
 
+        public Dictionary<> JobSiteJobs;
+
         Dictionary<(ulong, ulong), ulong> _populateWorkPost_Workers()
         {
             if (!Application.isPlaying) return new Dictionary<(ulong, ulong), ulong>();
@@ -326,7 +328,7 @@ namespace JobSite
         {
             if (desiredJobTask == ActorActionName.Idle)
             {
-                worker.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
+                worker.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, JobSiteID));
 
                 return true;
             }

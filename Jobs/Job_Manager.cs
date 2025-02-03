@@ -34,8 +34,9 @@ namespace Jobs
         Idle,
         
         None,
-        
         Any,
+        
+        Unemployed,
         
         Wanderer,
         

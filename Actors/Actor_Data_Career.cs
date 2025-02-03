@@ -7,7 +7,6 @@ using Inventory;
 using Jobs;
 using JobSite;
 using Priority;
-using Station;
 using Tools;
 using UnityEngine;
 
@@ -23,13 +22,8 @@ namespace Actors
         public CareerName CareerName;
         public HashSet<JobName> AllJobs; //* Figure out how we make use of this later.
         
-        public bool JobsActive = true;
-        public ulong JobSiteID;
-        JobSite_Component _jobSite;
-        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
-        
         [SerializeField] Job _currentJob;
-        public Job CurrentJob => _currentJob ??= new Job(JobName.Idle, 0, 0);
+        public Job CurrentJob => _currentJob ??= new Job(JobName.Unemployed, 0);
         public HashSet<ActorActionName> CurrentJobActions =>
             Job_Manager.GetJob_Data(CurrentJob.JobName).JobActions.ToHashSet();
         
@@ -67,7 +61,6 @@ namespace Actors
             return new Dictionary<string, string>
             {
                 { "Career Name", $"{CareerName}" },
-                { "Jobs Active", $"{JobsActive}" },
                 { "JobSiteID", $"{JobSiteID}" },
                 { "Current Job", $"{CurrentJob?.JobName}" }
             };
@@ -120,21 +113,7 @@ namespace Actors
 
         public override List<ActorActionName> GetAllowedActions()
         {
-            return CareerName switch
-            {
-                CareerName.Lumberjack => new List<ActorActionName>
-                {
-                    ActorActionName.Haul_Deliver,
-                    ActorActionName.Haul_Fetch,
-                    ActorActionName.Chop_Wood,
-                    ActorActionName.Process_Logs
-                },
-                CareerName.Wanderer => new List<ActorActionName>
-                {
-                    ActorActionName.Wander
-                },
-                _ => new List<ActorActionName>()
-            };
+            return CurrentJob.JobActions;
         }
     }
 }

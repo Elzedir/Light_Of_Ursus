@@ -89,7 +89,7 @@ namespace Priority
 
         protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            _setHighestPriorityStation(actorActionName, priority_Parameters);
+            _setHighestPriorityStation(actorActionName, priority_Parameters, true);
         }
 
         protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)

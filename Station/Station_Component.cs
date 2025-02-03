@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
@@ -23,9 +22,10 @@ namespace Station
         public Station_Data Station_Data;
         public abstract StationName  StationName { get; }
         public abstract StationType  StationType { get; }
-
-        //Maybe change this so that it checks if there is a worker in the station rather than just assigned to it,
-        // since the worker could be away from the post.
+        List<Job> _defaultStationJobs;
+        public List<Job> DefaultStationJobs => _defaultStationJobs ??= _getDefaultStationJobs();
+        
+        protected abstract List<Job> _getDefaultStationJobs();
 
         public float InteractRange { get; private set; }
 
@@ -34,7 +34,6 @@ namespace Station
         public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
         public abstract List<ulong>        AllowedStoredItemIDs  { get; }
         public abstract List<ulong>        DesiredStoredItemIDs  { get; }
-        public abstract List<ActorActionName> AllowedJobTasks       { get; }
 
         Priority_Data_Station        _priorityData;
         public Priority_Data_Station PriorityData => _priorityData ??= new Priority_Data_Station();
@@ -52,11 +51,6 @@ namespace Station
         void Awake()
         {
             Manager_Initialisation.OnInitialiseStations += _initialise;
-        }
-
-        public void Update()
-        {
-            //Debug.Log($"Component: Station:{StationID} JobSite:{Station_Data.JobSiteID}");
         }
 
         void _initialise()

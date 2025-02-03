@@ -100,17 +100,21 @@ namespace Priority
 
         void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            _setHighestPriorityStation(actorActionName, priority_Parameters);
+            _setHighestPriorityStation(actorActionName, priority_Parameters, false);
         }
 
-        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters, bool isStation_Source)
         {
-            var allRelevantStations = priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
+            var allRelevantStations =
+                priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName, isStation_Source);
             
             if (allRelevantStations.Count is 0)
             {
-                Debug.LogError($"No relevant station for {actorActionName}.");
-                priority_Parameters.StationID_Target = 0;
+                // Debug.LogError(isStation_Source 
+                //     ? $"No relevant station_Source for {actorActionName}."
+                //     : $"No relevant station_Target for {actorActionName}.");
+                
+                _setStationID(priority_Parameters, isStation_Source, 0);
                 return;
             }
 
@@ -122,7 +126,8 @@ namespace Priority
 
             foreach (var station in allRelevantStations)
             {
-                priority_Parameters.StationID_Target = station.StationID;
+                _setStationID(priority_Parameters, isStation_Source, station.StationID);
+                
                 var stationPriority =
                     Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
 
@@ -134,12 +139,23 @@ namespace Priority
 
             if (highestPriorityStationID is 0)
             {
-                Debug.LogWarning("No station with items to fetch from.");
-                priority_Parameters.StationID_Target = 0;
+                // Debug.LogError(isStation_Source 
+                //     ? $"All station_Sources ({allRelevantStations.Count}) have 0 priority for action: {actorActionName}."
+                //     : $"All station_Targets ({allRelevantStations.Count}) have 0 priority for action: {actorActionName}.");
+                
+                _setStationID(priority_Parameters, isStation_Source, 0);
                 return;
             }
-
-            priority_Parameters.StationID_Target = highestPriorityStationID;
+            
+            _setStationID(priority_Parameters, isStation_Source, highestPriorityStationID);
+        }
+        
+        void _setStationID(Priority_Parameters priority_Parameters, bool isStation_Source, ulong stationID)
+        {
+            if (isStation_Source)
+                priority_Parameters.StationID_Source = stationID;
+            else
+                priority_Parameters.StationID_Target = stationID;
         }
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)

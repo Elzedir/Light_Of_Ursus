@@ -9,19 +9,19 @@ namespace Station
     {
         const  string     _station_SOPath = "ScriptableObjects/Station_SO";
         
-        static Station_SO _station_SO;
-        static Station_SO Station_SO => _station_SO ??= _getStation_SO();
+        static Station_SO s_allStations;
+        static Station_SO AllStations => s_allStations ??= _getStation_SO();
         
         public static Station_Data GetStation_Data(ulong stationID) => 
-            Station_SO.GetStation_Data(stationID).Data_Object;
+            AllStations.GetStation_Data(stationID).Data_Object;
         
         public static Station_Data GetStation_DataFromName(Station_Component stationComponent) =>
-            Station_SO.GetDataFromName(stationComponent.name)?.Data_Object;
+            AllStations.GetDataFromName(stationComponent.name)?.Data_Object;
         
         public static Station_Component GetStation_Component(ulong stationID) => 
-            Station_SO.GetStation_Component(stationID);
+            AllStations.GetStation_Component(stationID);
         
-        public static List<ulong> GetAllStationIDs() => Station_SO.GetAllDataIDs();
+        public static List<ulong> GetAllStationIDs() => AllStations.GetAllDataIDs();
         
         static Station_SO _getStation_SO()
         {
@@ -41,7 +41,7 @@ namespace Station
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var station in Station_SO.Station_Components.Values.Where(s => s.StationName == stationName))
+            foreach (var station in AllStations.Station_Components.Values.Where(s => s.StationName == stationName))
             {
                 var distance = Vector3.Distance(position, station.transform.position);
 
@@ -67,49 +67,10 @@ namespace Station
             {StationName.Campfire, new List<JobName> { JobName.Cook} },
             {StationName.Tanning_Station, new List<JobName> { JobName.Tanner} }
         };
-
-        public static StationType GetStationType(StationName stationNAme)
-        {
-            if (_stationTypesByName.TryGetValue(stationNAme, out var type)) return type;
-            
-            Debug.Log($"StationType for {stationNAme} not found.");
-            return StationType.None;
-        }
-
-        static readonly Dictionary<StationName, StationType> _stationTypesByName = new()
-        {
-            {
-                StationName.Iron_Node, StationType.Resource
-            },
-            {
-                StationName.Anvil, StationType.Crafter
-            },
-            {
-                StationName.Tree, StationType.Resource
-            },
-            {
-                StationName.Sawmill, StationType.Crafter
-            },
-            {
-                StationName.Log_Pile, StationType.Storage
-            },
-            {
-                StationName.Fishing_Spot, StationType.Resource
-            },
-            {
-                StationName.Farming_Plot, StationType.Resource
-            },
-            {
-                StationName.Campfire, StationType.Crafter
-            },
-            {
-                StationName.Tanning_Station, StationType.Crafter
-            }
-        };
         
         public static void ClearSOData()
         {
-            Station_SO.ClearSOData();
+            AllStations.ClearSOData();
         }
     }
 
