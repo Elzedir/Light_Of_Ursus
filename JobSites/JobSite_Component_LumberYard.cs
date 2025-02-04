@@ -12,22 +12,6 @@ namespace JobSite
     {
         public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
 
-        public override HashSet<ActorActionName> BaseJobActions { get; } = new()
-        {
-            {
-                ActorActionName.Chop_Wood
-            },
-            {
-                ActorActionName.Process_Logs
-            },
-            {
-                ActorActionName.Haul_Fetch
-            },
-            {
-                ActorActionName.Haul_Deliver
-            }
-        };
-
         protected override bool _compareProductionOutput()
         {
             // Temporary, maybe change to cost of items over product of items

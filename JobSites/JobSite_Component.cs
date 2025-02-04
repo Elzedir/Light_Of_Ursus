@@ -15,14 +15,17 @@ namespace JobSite
 {
     public abstract class JobSite_Component : MonoBehaviour
     {
+        public JobSite_Data JobSite_Data;
+        
         public abstract JobSiteName JobSiteName { get; }
-        public abstract HashSet<ActorActionName> BaseJobActions { get; }
-        public ulong JobSiteID => JobSiteData.JobSiteID;
-        public JobSite_Data JobSiteData;
-        bool _initialised;
+        public ulong JobSiteID => JobSite_Data.JobSiteID;
 
-        public Dictionary<ulong, Station_Component> GetAllStationsInJobSite() =>
-            GetComponentsInChildren<Station_Component>().ToDictionary(station => station.StationID);
+        public Job GetActorJob(ulong actorID)
+        {
+            return JobSite_Data.GetActorJob(actorID);
+        }
+        
+        bool _initialised;
 
         public float IdealRatio;
         public void SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
@@ -43,8 +46,8 @@ namespace JobSite
                 return;
             }
 
-            JobSiteData = jobSiteData;
-            JobSiteData.InitialiseJobSiteData();
+            JobSite_Data = jobSiteData;
+            JobSite_Data.InitialiseJobSiteData();
 
             _setTickRate(TickRateName.TenSeconds, false);
             _initialised = true;
@@ -66,7 +69,7 @@ namespace JobSite
         {
             if (!_initialised) return;
 
-            JobSiteData.ProductionData.GetEstimatedProductionRatePerHour();
+            JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             _compareProductionOutput();
         }
@@ -75,61 +78,15 @@ namespace JobSite
 
         protected abstract void _adjustProduction(float idealRatio);
         protected abstract VocationName _getRelevantVocation(JobName positionName);
-
-        public bool GetNewCurrentJob(Actor_Component actor, ulong stationID = 0)
-        {
-            JobSiteData.PriorityData.RegenerateAllPriorities(DataChangedName.None);
-
-            var highestPriorityElement = JobSiteData.PriorityData.GetHighestPriorityFromGroup(
-                actor.ActorData.Career.AllJobActions.Select(actorActionName => (ulong)actorActionName).ToList(),
-                stationID);
-
-            if (highestPriorityElement == null)
-            {
-                actor.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
-                return true;
-            }
-
-            var highestPriorityJobTask = (ActorActionName)highestPriorityElement.PriorityID;
-
-            if (highestPriorityJobTask == ActorActionName.Idle)
-            {
-                actor.ActorData.Career.SetCurrentJob(new Job(JobName.Idle, 0, 0));
-                return true;
-            }
-
-            var relevantStations = _getOrderedRelevantStationsForJob(highestPriorityJobTask, actor);
-
-            return relevantStations.Any(station =>
-                JobSiteData.AddEmployeeToStation(actor, station, highestPriorityJobTask));
-
-            //Debug.LogWarning($"No relevant stations found for job: {highestPriorityJobTask}.");
-        }
-
-        List<Station_Component> _getOrderedRelevantStationsForJob(ActorActionName actorActionName,
-            Actor_Component actor)
-        {
-            var relevantStations = JobSiteData.AllStationComponents.Values
-                .Where(station => station.AllowedJobTasks.Contains(actorActionName))
-                .ToList();
-
-            if (relevantStations.Count != 0)
-                return relevantStations
-                    .OrderBy(station =>
-                        Vector3.Distance(actor.transform.position, station.transform.position))
-                    .ToList();
-
-            Debug.LogError($"No relevant stations found for actorAction: {actorActionName}.");
-            return null;
-        }
+        public void AssignActorToNewCurrentJob(Actor_Component actor) => JobSite_Data.AssignActorToNewCurrentJob(actor);
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
-            JobSiteData.RemoveAllWorkersFromAllStations();
+            JobSite_Data.RemoveAllWorkersFromAllStations();
 
             var tempEmployees = allEmployees.Select(employee => employee.Value).ToList();
 
-            foreach (var station in JobSiteData.AllStationComponents.Values)
+            foreach (var station in JobSite_Data.AllStations.Values)
             {
                 var employeesForStation = tempEmployees
                     .OrderByDescending(actor =>
@@ -140,7 +97,7 @@ namespace JobSite
 
                 foreach (var employee in employeesForStation)
                 {
-                    GetNewCurrentJob(employee, station.StationID);
+                    AssignActorToNewCurrentJob(employee);
                     tempEmployees.Remove(employee);
                 }
 
@@ -217,23 +174,23 @@ namespace JobSite
         }
 
         List<Station_Component> _relevantStations_Fetch() =>
-            JobSiteData.AllStationComponents.Values
+            JobSite_Data.AllStations.Values
                 .Where(station => station.GetInventoryItems(ActorActionName.Haul_Fetch).Count > 0)
                 .ToList();
 
         List<Station_Component> _relevantStations_Deliver() =>
-            JobSiteData.AllStationComponents.Values
+            JobSite_Data.AllStations.Values
                 .Where(station => station.GetInventoryItems(ActorActionName.Haul_Deliver).Count > 0)
                 .ToList();
 
         List<Station_Component> _relevantStations_Chop_Wood() =>
-            JobSiteData.AllStationComponents.Values
+            JobSite_Data.AllStations.Values
                 .Where(station => station.StationName == StationName.Tree &&
                                   station.Station_Data.GetOpenWorkPost() is not null)
                 .ToList();
 
         List<Station_Component> _relevantStations_Process_Logs() =>
-            JobSiteData.AllStationComponents.Values
+            JobSite_Data.AllStations.Values
                 .Where(station => station.StationName == StationName.Sawmill &&
                                   station.Station_Data.GetOpenWorkPost() is not null)
                 .ToList();

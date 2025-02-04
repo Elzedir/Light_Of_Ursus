@@ -38,7 +38,7 @@ namespace JobSite
         public void UpdateAllJobSites(Dictionary<ulong, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
 
         protected override Dictionary<ulong, Data<JobSite_Data>> _getDefaultData() =>
-            _convertDictionaryToData(JobSite_List.DefaultJobSites);
+            _convertDictionaryToData(JobSite_List.S_DefaultJobSites);
 
         protected override Dictionary<ulong, Data<JobSite_Data>> _getSavedData()
         {
@@ -71,7 +71,7 @@ namespace JobSite
         }
 
         protected override Dictionary<ulong, Data<JobSite_Data>> _getSceneData() =>
-            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.JobSiteData));
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.JobSite_Data));
         
         protected override Data<JobSite_Data> _convertToData(JobSite_Data data)
         {

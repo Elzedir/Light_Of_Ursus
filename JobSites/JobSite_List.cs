@@ -1,12 +1,15 @@
 using System.Collections.Generic;
+using Jobs;
 using Managers;
+using Priorities;
+using Tools;
 
 namespace JobSite
 {
     public abstract class JobSite_List
     {
-        static Dictionary<ulong, JobSite_Data> _defaultJobSites;
-        public static Dictionary<ulong, JobSite_Data> DefaultJobSites => _defaultJobSites ??= _initialiseDefaultJobSites();
+        static Dictionary<ulong, JobSite_Data> s_defaultJobSites;
+        public static Dictionary<ulong, JobSite_Data> S_DefaultJobSites => s_defaultJobSites ??= _initialiseDefaultJobSites();
         
         static Dictionary<ulong, JobSite_Data> _initialiseDefaultJobSites()
         {
@@ -15,21 +18,21 @@ namespace JobSite
                 {
                     1, new JobSite_Data(
                         jobSiteID: 1,
-                        jobSiteName: JobSiteName.Lumber_Yard,
                         jobSiteFactionID: 0,
                         cityID: 1,
-                        jobSiteDescription: "JobSite 1 Description",
                         ownerID: 0,
-                        allStationIDs: new List<ulong>
+                        jobSiteName: JobSiteName.Lumber_Yard,
+                        allEmployeeIDs: new List<ulong>(),
+                        allStationIDs:new List<ulong>
                         {
                             1, 2, 3
                         },
-                        allEmployeeIDs: new List<ulong>(),
+                        productionData: new ProductionData(1),
                         prosperityData: new ProsperityData(
                             currentProsperity: 50,
                             maxProsperity: 100,
-                            baseProsperityGrowthPerDay: 1
-                        ))
+                            baseProsperityGrowthPerDay: 1),
+                        priorityData: new Priority_Data_JobSite(1))
                 }
             };
         }
