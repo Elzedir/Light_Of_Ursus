@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CustomMesh { Arrow, Pyramid }
+public enum CustomMesh { None, Arrow, Pyramid }
 public static class Manager_Mesh
 {
     public static Mesh GenerateArrow(float stemLength = 2, float stemWidth = 0.5f, float tipLength = 1f, float tipWidth = 1f)

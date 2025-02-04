@@ -41,6 +41,8 @@ public class Manager_WorldStates
 
 public enum WorldStateStatus 
 { 
+    None,
+    
     Default,
     Alive, Dead,
     Free, Captured,

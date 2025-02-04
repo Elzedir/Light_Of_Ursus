@@ -109,6 +109,8 @@ namespace Personality
 
     public enum PersonalityTraitName
     {
+        None,
+        
         Arrogant, 
         Ambitious, 
         Brave, 
@@ -126,6 +128,8 @@ namespace Personality
     
     public enum UniquePersonalities
     {
+        None,
+        
         Bleeding_Heart
     }
 }

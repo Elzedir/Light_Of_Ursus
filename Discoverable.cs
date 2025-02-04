@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
-public enum DiscoverState { Undiscovered, Discovered, Revealed }
-public enum DiscoverStyle { Time, Pattern }
+public enum DiscoverState { None, Undiscovered, Discovered, Revealed }
+public enum DiscoverStyle { None, Time, Pattern }
 
 public class Discoverable : MonoBehaviour
 {

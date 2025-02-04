@@ -11,6 +11,8 @@ namespace Managers
 
     public enum DamageType
     {
+        None,
+        
         Normal, 
         Practice,
         Blunt, 

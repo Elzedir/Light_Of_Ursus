@@ -1,13 +1,12 @@
 using System.Collections.Generic;
-using Actor;
 using ActorActions;
 
 namespace Jobs
 {
     public abstract class Job_List
     {
-        static Dictionary<ulong, Job_Data> _defaultJobs;
-        public static Dictionary<ulong, Job_Data> DefaultJobs => _defaultJobs ??= _initialiseDefaultJobs();
+        static Dictionary<ulong, Job_Data> s_defaultJobs;
+        public static Dictionary<ulong, Job_Data> S_DefaultJobs => s_defaultJobs ??= _initialiseDefaultJobs();
         
         static Dictionary<ulong, Job_Data> _initialiseDefaultJobs()
         {
@@ -28,9 +27,7 @@ namespace Jobs
                         jobDescription: "A logger",
                         jobActions: new List<ActorActionName>
                         {
-                            ActorActionName.Chop_Wood,
-                            ActorActionName.Haul_Fetch,
-                            ActorActionName.Haul_Deliver
+                            ActorActionName.Chop_Wood
                         })
                 },
                 {
@@ -39,7 +36,15 @@ namespace Jobs
                         jobDescription: "A sawyer",
                         jobActions: new List<ActorActionName>
                         {
-                            ActorActionName.Process_Logs,
+                            ActorActionName.Process_Logs
+                        })
+                },
+                {
+                    (ulong)JobName.Hauler, new Job_Data(
+                        jobName: JobName.Hauler,
+                        jobDescription: "A hauler",
+                        jobActions: new List<ActorActionName>
+                        {
                             ActorActionName.Haul_Fetch,
                             ActorActionName.Haul_Deliver
                         })
@@ -51,9 +56,7 @@ namespace Jobs
                         jobActions: new List<ActorActionName>
                         {
                             ActorActionName.Stand_At_Counter,
-                            ActorActionName.Restock_Shelves,
-                            ActorActionName.Haul_Fetch,
-                            ActorActionName.Haul_Deliver
+                            ActorActionName.Restock_Shelves
                         })
                 },
                 {

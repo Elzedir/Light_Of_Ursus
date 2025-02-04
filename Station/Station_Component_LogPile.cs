@@ -1,6 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actor;
+using Actors;
 using Items;
 using Jobs;
 using Recipes;
@@ -12,17 +13,10 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;
+        
+        public override JobName CoreJobName => JobName.Hauler;
 
-        protected override List<JobName> _getDefaultStationJobs()
-        {
-            return new List<Job>
-            {
-                new Job(JobName.Sawyer)
-            };
-        }
-        public override JobName CoreJobName => JobName.Sawyer;
-
-        public override RecipeName       DefaultProduct       => RecipeName.None; // Fix hauling so that it doesn't need a recipe.
+        public override RecipeName       DefaultProduct       => RecipeName.No_Recipe; // Fix hauling so that it doesn't need a recipe.
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new();
         public override List<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };

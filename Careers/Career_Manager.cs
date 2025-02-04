@@ -32,7 +32,9 @@ namespace Careers
     public enum CareerName 
     {
         None,
+        
         Wanderer,
+        
         Lumberjack,
         Smith
     }

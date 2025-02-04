@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Actor;
+using Actors;
 using Items;
 using UnityEngine;
 

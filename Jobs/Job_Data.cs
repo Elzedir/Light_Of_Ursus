@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Actor;
 using ActorActions;
+using Actors;
 using Tools;
+using UnityEngine;
 
 namespace Jobs
 {
@@ -54,12 +57,34 @@ namespace Jobs
     }
     
     [Serializable]
-    public class Job
+    public class Job : Data_Class
     {
-        public readonly JobName JobName;
+        public JobName JobName;
         public ulong JobSiteID;
         public ulong StationID;
         public ulong WorkPostID;
+        [SerializeField] ulong _actorID;
+        public bool            IsWorkerMovingToWorkPost;
+
+        public ulong ActorID
+        {
+            get => _actorID;
+            set
+            {
+                _actorID = value;
+                _actor = _actorID != 0
+                    ? Actor_Manager.GetActor_Component(value)
+                    : null;
+                
+                IsWorkerMovingToWorkPost = false;
+            }
+        }
+
+        Actor_Component _actor;
+        public Actor_Component Actor => _actor ??=
+            _actorID != 0
+                ? Actor_Manager.GetActor_Component(_actorID)
+                : null;
 
         public ActivityPeriod ActivityPeriod;
         
@@ -67,18 +92,45 @@ namespace Jobs
         public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
         public List<ActorActionName> JobActions => Job_Data.JobActions;
         
-        public void SetStationAndWorkPostID((ulong StationID, ulong WorkPostID) stationAndWorkPostID)
-        {
-            StationID  = stationAndWorkPostID.StationID;
-            WorkPostID = stationAndWorkPostID.WorkPostID;
-        }
-        
-        public Job(JobName jobName, ulong jobSiteID, ulong stationID = 0, ulong workPostID = 0)
+        public Job(JobName jobName, ulong jobSiteID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)
         {
             JobName    = jobName;
             JobSiteID = jobSiteID;
+            ActorID = actorID;
             StationID  = stationID;
             WorkPostID = workPostID;
+        }
+        
+        public Job(Job job)
+        {
+            JobName    = job.JobName;
+            JobSiteID = job.JobSiteID;
+            ActorID = job.ActorID;
+            StationID  = job.StationID;
+            WorkPostID = job.WorkPostID;
+        }
+        
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Job ID", $"{(ulong)JobName}" },
+                { "Job Name", $"{JobName}" },
+                { "Job Site ID", $"{JobSiteID}" },
+                { "Station ID", $"{StationID}" },
+                { "Actor ID", $"{ActorID}" },
+                { "Is Worker Moving To WorkPost", $"{IsWorkerMovingToWorkPost}" }
+            };
+        }
+
+        public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
+        {
+            _updateDataDisplay(DataToDisplay,
+                title: "Base Job Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allStringData: GetStringData());
+
+            return DataToDisplay;
         }
     }
 }

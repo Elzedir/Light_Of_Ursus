@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using Actor;
+using Actors;
+using Cities;
 using City;
 using Faction;
-using JobSite;
+using JobSites;
 using Region;
+using Regions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -116,13 +119,13 @@ namespace Tools
 
             foreach (var jobsite in jobsites)
             {
-                if (jobsite.JobSiteData == null)
+                if (jobsite.JobSite_Data == null)
                 {
                     Debug.LogWarning($"Jobsite: {jobsite.name} does not have JobsiteData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(jobsite.JobSiteData.JobSiteID))
+                if (!existingIDs.Add(jobsite.JobSite_Data.JobSiteID))
                 {
                     duplicateJobsites.Add(jobsite);
                 }
@@ -131,7 +134,7 @@ namespace Tools
             foreach (var jobsite in duplicateJobsites)
             {
                 ulong newJobsiteID = GetNewID(existingIDs);
-                jobsite.JobSiteData.JobSiteID = newJobsiteID;
+                jobsite.JobSite_Data.JobSiteID = newJobsiteID;
                 existingIDs.Add(newJobsiteID);
 
                 EditorUtility.SetDirty(jobsite);

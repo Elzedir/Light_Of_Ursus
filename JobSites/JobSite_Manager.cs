@@ -1,36 +1,33 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using DataPersistence;
-using Initialisation;
 using Jobs;
 using UnityEngine;
 
-namespace JobSite
+namespace JobSites
 {
     public abstract class JobSite_Manager
     {
         const  string     _jobSite_SOPath = "ScriptableObjects/JobSite_SO";
         
-        static JobSite_SO _jobSite_SO;
-        static JobSite_SO JobSite_SO => _jobSite_SO ??= _getJobSite_SO();
+        static JobSite_SO s_jobSite_SO;
+        static JobSite_SO S_JobSite_SO => s_jobSite_SO ??= _getJobSite_SO();
         
         public static JobSite_Data GetJobSite_Data(ulong jobSiteID)
         {
-            return JobSite_SO.GetJobSite_Data(jobSiteID).Data_Object;
+            return S_JobSite_SO.GetJobSite_Data(jobSiteID).Data_Object;
         }
         
         public static JobSite_Data GetJobSite_DataFromName(JobSite_Component jobSite_Component)
         {
-            return JobSite_SO.GetDataFromName(jobSite_Component.name)?.Data_Object;
+            return S_JobSite_SO.GetDataFromName(jobSite_Component.name)?.Data_Object;
         }
         
         public static JobSite_Component GetJobSite_Component(ulong jobSiteID)
         {
-            return JobSite_SO.GetJobSite_Component(jobSiteID);
+            return S_JobSite_SO.GetJobSite_Component(jobSiteID);
         }
         
-        public static List<ulong> GetAllJobSiteIDs() => JobSite_SO.GetAllDataIDs();
+        public static List<ulong> GetAllJobSiteIDs() => S_JobSite_SO.GetAllDataIDs();
         
         static JobSite_SO _getJobSite_SO()
         {
@@ -54,7 +51,7 @@ namespace JobSite
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var jobSite in JobSite_SO.JobSite_Components.Values.Where(j => j.JobSiteName == jobSiteName))
+            foreach (var jobSite in S_JobSite_SO.JobSite_Components.Values.Where(j => j.JobSiteName == jobSiteName))
             {
                 var distance = Vector3.Distance(position, jobSite.transform.position);
 
@@ -84,7 +81,7 @@ namespace JobSite
         
         public static void ClearSOData()
         {
-            JobSite_SO.ClearSOData();
+            S_JobSite_SO.ClearSOData();
         }
     }
     

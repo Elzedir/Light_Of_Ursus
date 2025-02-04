@@ -9,8 +9,8 @@ namespace ActorPresets
 {
     public abstract class ActorPreset_List
     {
-        static Dictionary<ulong, ActorPreset_Data> _defaultActorDataPresets;
-        public static Dictionary<ulong, ActorPreset_Data> DefaultActorDataPresets => _defaultActorDataPresets ??= _initialiseDefaultActorDataPresets();
+        static Dictionary<ulong, ActorPreset_Data> s_defaultActorDataPresets;
+        public static Dictionary<ulong, ActorPreset_Data> S_DefaultActorDataPresets => s_defaultActorDataPresets ??= _initialiseDefaultActorDataPresets();
         
         static Dictionary<ulong, ActorPreset_Data> _initialiseDefaultActorDataPresets()
         {
@@ -24,7 +24,7 @@ namespace ActorPresets
                         (
                             actorID: 0,
                             careerName: CareerName.Wanderer,
-                            jobsNotFromCareer: new HashSet<JobName>()
+                            jobSiteID: 0
                         )
                     )
                 },
@@ -36,7 +36,7 @@ namespace ActorPresets
                         (
                             actorID: 0,
                             careerName: CareerName.Lumberjack,
-                            jobsNotFromCareer: new HashSet<JobName>()
+                            jobSiteID: 0
                         ),
 
                         actorDataCrafting: new Actor_Data_Crafting
@@ -74,7 +74,7 @@ namespace ActorPresets
                         (
                             actorID: 0,
                             careerName: CareerName.Smith,
-                            jobsNotFromCareer: new HashSet<JobName>()
+                            jobSiteID: 0
                         ),
 
                         actorDataCrafting: new Actor_Data_Crafting
@@ -102,8 +102,8 @@ namespace ActorPresets
             };
         }
         
-        static Dictionary<JobName, ActorDataPresetName> _actorDataPresetNameByJobName;
-        public static Dictionary<JobName, ActorDataPresetName> ActorDataPresetNameByJobName => _actorDataPresetNameByJobName ??= _initialiseActorDataPresetNameByJobName();
+        static Dictionary<JobName, ActorDataPresetName> s_actorDataPresetNameByJobName;
+        public static Dictionary<JobName, ActorDataPresetName> S_ActorDataPresetNameByJobName => s_actorDataPresetNameByJobName ??= _initialiseActorDataPresetNameByJobName();
             
         static Dictionary<JobName, ActorDataPresetName> _initialiseActorDataPresetNameByJobName()
         {

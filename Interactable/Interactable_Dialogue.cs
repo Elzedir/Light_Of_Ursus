@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actor;
+using Actors;
 using UnityEngine;
 
 public class Interactable_Dialogue : MonoBehaviour, IInteractable

@@ -39,7 +39,7 @@ namespace Station
         public void UpdateAllStations(Dictionary<ulong, Station_Data> allStations) => UpdateAllData(allStations);
 
         protected override Dictionary<ulong, Data<Station_Data>> _getDefaultData() => 
-            _convertDictionaryToData(Station_List.DefaultStations);
+            _convertDictionaryToData(Station_List.S_DefaultStations);
 
         protected override Dictionary<ulong, Data<Station_Data>> _getSavedData()
         {

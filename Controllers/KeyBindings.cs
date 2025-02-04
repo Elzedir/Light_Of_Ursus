@@ -6,6 +6,8 @@ namespace Controllers
 {
     public enum ActionKey
     {
+        None,
+        
         Move_Up, Move_Down, Move_Left, Move_Right,
         Arrow_Up, Arrow_Down, Arrow_Left, Arrow_Right,
         Mouse0, Mouse1,

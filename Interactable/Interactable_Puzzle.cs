@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using Actor;
+using Actors;
 using Managers;
 
 

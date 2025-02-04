@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Actors;
 using Initialisation;
@@ -11,7 +10,7 @@ using TickRates;
 using UnityEngine;
 using Station_Component = Station.Station_Component;
 
-namespace JobSite
+namespace JobSites
 {
     public abstract class JobSite_Component : MonoBehaviour
     {
@@ -48,9 +47,26 @@ namespace JobSite
 
             JobSite_Data = jobSiteData;
             JobSite_Data.InitialiseJobSiteData();
-
-            _setTickRate(TickRateName.TenSeconds, false);
+            
+            RegisterAllTickers();
+            
             _initialised = true;
+        }
+
+        public void RegisterAllTickers()
+        {
+            _setTickRate(TickRateName.TenSeconds, false);
+            
+            _registerStations();
+        }
+
+        void _registerStations()
+        {
+            foreach (var station in JobSite_Data.AllStations.Values)
+            {
+                Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.OnTick);
+                station.Station_Data.CurrentTickRateName = TickRateName.OneSecond;
+            }
         }
 
         TickRateName _currentTickRateName;
@@ -60,12 +76,12 @@ namespace JobSite
             if (_currentTickRateName == tickRateName) return;
 
             if (unregister) Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, _currentTickRateName, JobSiteID);
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, tickRateName, JobSiteID, _onTick);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, tickRateName, JobSiteID, OnTick);
             // Register prosperity tick here. Do it for everything that has a ticker. A top down ticker.
             _currentTickRateName = tickRateName;
         }
 
-        void _onTick()
+        public void OnTick()
         {
             if (!_initialised) return;
 
@@ -88,6 +104,8 @@ namespace JobSite
 
             foreach (var station in JobSite_Data.AllStations.Values)
             {
+                a
+                    // Breaking here.
                 var employeesForStation = tempEmployees
                     .OrderByDescending(actor =>
                         actor.ActorData.Vocation.GetVocationExperience(

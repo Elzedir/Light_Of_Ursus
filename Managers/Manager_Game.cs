@@ -15,7 +15,7 @@ using FMODUnity;
 using Initialisation;
 using Items;
 using Jobs;
-using JobSite;
+using JobSites;
 using Recipes;
 using Region;
 using StateAndCondition;
@@ -32,6 +32,8 @@ namespace Managers
     [Serializable]
     public enum GameState
     {
+        None,
+        
         MainMenu,
         Playing,
         Paused,

@@ -97,6 +97,7 @@ namespace Station
     public enum StationType
     {
         None,
+        
         Resource,
         Crafter,
         Storage

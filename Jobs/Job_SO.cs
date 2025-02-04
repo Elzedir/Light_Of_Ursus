@@ -15,7 +15,7 @@ namespace Jobs
         public Data<Job_Data>   GetJob_Data(JobName jobName) => GetData((ulong)jobName);
         
         protected override Dictionary<ulong, Data<Job_Data>> _getDefaultData() => 
-            _convertDictionaryToData(Job_List.DefaultJobs);
+            _convertDictionaryToData(Job_List.S_DefaultJobs);
         
         protected override Data<Job_Data> _convertToData(Job_Data data)
         {

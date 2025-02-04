@@ -2,7 +2,8 @@ using System.Collections.Generic;
 using Actor;
 using Actors;
 using Jobs;
-using JobSite;
+using JobSites;
+using Priorities;
 using Station;
 using UnityEngine;
 
@@ -41,7 +42,7 @@ namespace Priority
         public             Station_Component Station    => _component as Station_Component;
         public Station_Data StationData => Station.Station_Data;
         public override GameObject           GameObject                => Station.gameObject;
-        public override Priority_Data GetPriorityComponent() => Station.JobSite.JobSiteData.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Station.JobSite.JobSite_Data.PriorityData;
     }
     public class ComponentReference_Jobsite : ComponentReference
     {
@@ -50,10 +51,10 @@ namespace Priority
         JobSite_Component                    _jobSite;
         protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
         public             JobSite_Component JobSite    => _component as JobSite_Component;
-        public JobSite_Data JobSiteData => JobSite.JobSiteData;
+        public JobSite_Data JobSiteData => JobSite.JobSite_Data;
         public override GameObject           GameObject                => JobSite.gameObject;
         
-        public override Priority_Data GetPriorityComponent() => JobSite.JobSiteData.PriorityData;
+        public override Priority_Data GetPriorityComponent() => JobSite.JobSite_Data.PriorityData;
     }
 
     public enum PriorityImportance

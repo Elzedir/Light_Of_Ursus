@@ -54,6 +54,8 @@ namespace Actors
     
     public enum SpeciesName
     {
+        None,
+        
         Default,
         Demon,
         Human,

@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using City;
 using Initialisation;
-using JobSite;
+using JobSites;
 using Managers;
 using UnityEngine;
 
-namespace City
+namespace Cities
 {
     public class City_Component : MonoBehaviour
     {

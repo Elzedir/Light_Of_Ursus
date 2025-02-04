@@ -8,7 +8,7 @@ using DataPersistence;
 using Initialisation;
 using Items;
 using Jobs;
-using JobSite;
+using JobSites;
 using ScriptableObjects;
 using Station;
 using UnityEngine;
@@ -256,6 +256,7 @@ namespace Managers
     public enum OrderType
     {
         None,
+        
         Haul_Fetch,
         Haul_Deliver,
         Craft,
@@ -264,6 +265,8 @@ namespace Managers
 
     public enum OrderStatus
     {
+        None,
+        
         Pending,
         Active,
         Complete
@@ -478,7 +481,7 @@ namespace Managers
 
             var jobsite = JobSite_Manager.GetJobSite_Component(JobsiteID);
 
-            foreach (var station in jobsite.JobSiteData.AllStationComponents.Values)
+            foreach (var station in jobsite.JobSite_Data.AllStations.Values)
             {
                 if (station.AllowedStoredItemIDs.Contains(1100) || station.AllowedStoredItemIDs.Contains(2300))
                 {
@@ -521,6 +524,8 @@ namespace Managers
 
     public enum RequestStatus
     {
+        None,
+        
         Pending,
         Accepted,
         Cancelled

@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Inventory;
-using JobSite;
+using Jobs;
+using JobSites;
 using Recipes;
 using TickRates;
 using Tools;
@@ -15,74 +16,72 @@ namespace Station
     [Serializable]
     public class Station_Data : Data_Class
     {
-        public ulong        StationID;
-        public string      StationDescription;
-        public bool        StationIsActive;
-
+        public ulong StationID;
         public ulong JobSiteID;
 
+        bool _initialised;
+        
         public float BaseProgressRatePerHour = 5;
+        
+        Station_Component _station_Component;
+        JobSite_Component _jobSite_Component;
+        public TickRateName CurrentTickRateName;
+        
+        public SerializableDictionary<ulong, WorkPost_Component> AllWorkPosts;
+        
+        public InventoryData_Station InventoryData;
+        public StationProgressData StationProgressData;
 
         public StationName StationName    => Station_Component.StationName;
         public RecipeName  DefaultProduct => Station_Component.DefaultProduct;
 
-        [SerializeField] List<WorkPost_Data> _allWorkPostData;
-        public Dictionary<ulong, WorkPost_Data> AllWorkPost_Data;
-        
-        Station_Component _station_Component;
-
         public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
-        
-        JobSite_Component        _jobSite_Component;
         public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         
-        InventoryData _inventoryData;
-        public InventoryData InventoryData => _inventoryData ??= new InventoryData_Station(StationID);
-        
-        StationProgressData        _stationProgressData;
-        public StationProgressData StationProgressData => _stationProgressData ??= new StationProgressData();
-        
-        Dictionary<ulong, WorkPost_Component> _allWorkPostComponents;
-        public Dictionary<ulong, WorkPost_Component> AllWorkPost_Components => _allWorkPostComponents ??= _populateWorkPlace_Components();
-        public bool IsStationBeingOperated =>
-            AllWorkPost_Data.Values.Any(workPost => workPost.CurrentWorker != null);
-
-        public Station_Data(ulong                            stationID,        StationName            stationName,        string stationDescription, ulong jobSiteID,
-                            Dictionary<ulong, WorkPost_Data> allWorkPost_Data, bool   stationIsActive = true)
+        public Station_Data(ulong stationID, ulong jobSiteID, StationName stationName, StationProgressData stationProgressData = null, InventoryData_Station inventoryData = null)
         {
-            StationID               = stationID;
             //* stationName; When loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             //* But if the station does exist, then we generate a new station with the required stationName type.
-            StationDescription      = stationDescription;
-            JobSiteID               = jobSiteID;
-            AllWorkPost_Data        = allWorkPost_Data;
-            StationIsActive         = stationIsActive;
+            StationID = stationID;
+            JobSiteID = jobSiteID;
+            StationProgressData = stationProgressData ?? new StationProgressData();
+            InventoryData = inventoryData ?? new InventoryData_Station(StationID, null);
+            _populateAllWorkPosts();
+        }
+        
+        public Station_Data(Station_Data stationData)
+        {
+            StationID = stationData.StationID;
+            JobSiteID = stationData.JobSiteID;
+            InventoryData = stationData.InventoryData;
+            StationProgressData = stationData.StationProgressData;
+            _populateAllWorkPosts();
         }
 
         public void InitialiseStationData()
         {
+            //* Maybe a reference error, like the ticker and StationData.
+            
             //* City and station are breaking if selected in the inspector from beginning, the rest are breaking from starting and then replaying the game
             //* without closing the editor. So find common ground for the two. The City_Component and Station_Component are null.
             //* For now we'll use this GetStation Fix to assign the null value.
-            
-            _station_Component = Station_Manager.GetStation_Component(StationID);
 
-            if (_station_Component is null)
+            if (Station_Component is null)
             {
                 Debug.LogError($"Station with ID {StationID} not found in Station_SO.");
                 return;
             }
 
-            if (DefaultProduct != RecipeName.None)
+            if (DefaultProduct != RecipeName.No_Recipe)
                 StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
+            
+            _initialised = true;
         }
 
-        Dictionary<ulong, WorkPost_Component> _populateWorkPlace_Components()
+        void _populateAllWorkPosts()
         {
             if (!Application.isPlaying)
-            {
-                return null;
-            }
+                return;
             
             foreach (Transform child in Station_Component.transform)
             {
@@ -91,135 +90,100 @@ namespace Station
                 Object.DestroyImmediate(child.gameObject);
             }
             
-            AllWorkPost_Data ??= new Dictionary<ulong, WorkPost_Data>();
-            var workPostDefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
-            
-            if (AllWorkPost_Data.Count > workPostDefaultValues.Count)
-            {
-                Debug.LogError($"WorkPost_Data count is greater than WorkPost_DefaultValues count for Station: {StationID}: {StationName}. Resetting to 0.");
-                AllWorkPost_Data.Clear();
-            }
-            
-            for (ulong i = 0; i < (ulong)workPostDefaultValues.Count; i++)
-            {
-                if (!AllWorkPost_Data.TryGetValue(i, out var data) || data == null)
-                {
-                    AllWorkPost_Data[i] = new WorkPost_Data(i, StationID, 0);
-                }
-            }
-
-            var workPlace_Components = _createWorkPost(AllWorkPost_Data.Values.ToList());
-
-            if (workPlace_Components is not null) return workPlace_Components;
-
-            Debug.Log($"WorkPlace_Components not found for StationName: {StationName}");
-            return null;
-        }
-
-        Dictionary<ulong, WorkPost_Component> _createWorkPost(List<WorkPost_Data> allWorkPost_Data)
-        {
             var workPost_DefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
 
             if (workPost_DefaultValues is null)
             {
                 Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
-                return null;
+                return;
             }
             
-            var workPost_Components = new Dictionary<ulong, WorkPost_Component>();
+            AllWorkPosts = new SerializableDictionary<ulong, WorkPost_Component>();
 
-            for (var i = 0; i < allWorkPost_Data.Count; i++)
+            for (var i = 0; i < workPost_DefaultValues.Count; i++)
             {
-                var workPost_Data = allWorkPost_Data[i];
-                var transformValue = workPost_DefaultValues[i % workPost_DefaultValues.Count];
+                var defaultValues = workPost_DefaultValues[i % workPost_DefaultValues.Count];
 
-                if (transformValue is null)
+                if (defaultValues is null)
                 {
                     Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
-                    return null;
+                    return;
                 }
+                
+                var job = new Job(
+                    jobName: defaultValues.JobName,
+                    jobSiteID: JobSiteID,
+                    actorID: 0,
+                    stationID: StationID,
+                    workPostID: (ulong)i);
 
-                var workPost_Component = new GameObject($"WorkPost_{workPost_Data.WorkPostID}").AddComponent<WorkPost_Component>();
+                var workPost_Component = new GameObject($"WorkPost_{job.WorkPostID}").AddComponent<WorkPost_Component>();
                 
                 workPost_Component.transform.SetParent(Station_Component.transform);
-                workPost_Component.SetWorkPostData(workPost_Data);
             
-                workPost_Component.transform.localPosition = transformValue.Position;
-                workPost_Component.transform.localRotation = transformValue.Rotation;
-                workPost_Component.transform.localScale    = transformValue.Scale;
+                workPost_Component.transform.localPosition = defaultValues.Position;
+                workPost_Component.transform.localRotation = defaultValues.Rotation;
+                workPost_Component.transform.localScale    = defaultValues.Scale;
                 
                 var workPost_Collider = workPost_Component.gameObject.AddComponent<BoxCollider>();
                 workPost_Collider.isTrigger = true;
-                workPost_Component.Initialise();
+                workPost_Component.Initialise(job);
                 
-                workPost_Components[workPost_Data.WorkPostID] = workPost_Component;
+                AllWorkPosts[job.WorkPostID] = workPost_Component;
             }
-            
-            return workPost_Components;
         }
 
-        public WorkPost_Component GetOpenWorkPost()
-        {
-            return AllWorkPost_Components.Values.FirstOrDefault(workPost => workPost.WorkPostData.CurrentWorker is null);
-        }
-        
-        bool                _initialised;
-        public TickRateName CurrentTickRateName;
+        public WorkPost_Component GetOpenWorkPost(JobName jobName = JobName.None) => 
+            jobName == JobName.None
+                ? AllWorkPosts.Values.FirstOrDefault(workPost => workPost.Job.Actor is null)
+                : AllWorkPosts.Values.Where(workPost => workPost.Job.JobName == jobName)
+                    .FirstOrDefault(workPost => workPost.Job.Actor is null);
         
         public void OnTick()
         {
             if (!_initialised) return;
-
+            
             _operateStation();
         }
 
         void _operateStation()
         {
             if (!_passesStationChecks()) return;
-
-            Debug.Log(2.5);
-
-            foreach (var workPost in AllWorkPost_Components.Values.Where(workPost => workPost.WorkPostData.CurrentWorker is not null))
+            
+            foreach (var workPost in AllWorkPosts.Values)
             {
+                if (workPost.Job.Actor is null) continue;
+                
                 var progressMade = workPost.Operate(BaseProgressRatePerHour,
                     StationProgressData.CurrentProduct);
                 
                 var itemCrafted = StationProgressData.Progress(progressMade);
-                
-                Debug.Log(3);
 
                 if (!itemCrafted) continue;
 
                 // For now is the final person who adds the last progress, but change to a cumulative system later.
                 Station_Component.CraftItem(
                     StationProgressData.CurrentProduct.RecipeName,
-                    workPost.WorkPostData.CurrentWorker
+                    workPost.Job.Actor
                 );
             }
         }
 
         bool _passesStationChecks()
         {
-            if (!StationIsActive) 
-                return false;
-            
-            Debug.Log(1);
-
             var success = false;
 
             for (var i = 0; i < 2; i++)
             {
                 try
                 {
-                    success = InventoryData.InventoryContainsAllItems(
-                        StationProgressData.CurrentProduct.RequiredIngredients);
+                    success = DefaultProduct == RecipeName.No_Recipe 
+                              || InventoryData.InventoryContainsAllItems(StationProgressData.CurrentProduct.RequiredIngredients);
                     break;
                 }
                 catch
                 {
                     StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
-                    
-                    Debug.Log(2);
 
                     if (StationProgressData.CurrentProduct.RecipeName != RecipeName.None 
                         || DefaultProduct == RecipeName.None)
@@ -236,8 +200,6 @@ namespace Station
             {
                 { "Station ID", $"{StationID}" },
                 { "Station Name", $"{StationName}" },
-                { "Station Description", $"{StationDescription}" },
-                { "Station IsActive", $"{StationIsActive}" },
                 { "JobSite ID", $"{JobSiteID}" },
                 { "Default Product", $"{DefaultProduct}" },
                 { "Base Progress Rate Per Hour", $"{BaseProgressRatePerHour}" }
@@ -264,9 +226,9 @@ namespace Station
             _updateDataDisplay(DataToDisplay,
                 title: "Station WorkPosts",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllWorkPost_Components?.Values.ToDictionary(
+                allStringData: AllWorkPosts?.Values.ToDictionary(
                     workPost => $"{workPost.WorkPostID}",
-                    workPost => $"{workPost.WorkPostData?.CurrentWorker?.ActorData.ActorName} ({workPost.WorkPostData?.CurrentWorker?.ActorID})"));
+                    workPost => $"{workPost.Job?.Actor?.ActorData.ActorName} ({workPost.Job?.Actor?.ActorID})"));
 
             return DataToDisplay;
         }

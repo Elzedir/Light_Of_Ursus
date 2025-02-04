@@ -92,7 +92,7 @@ namespace Priorities
 
         protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.StationID_Source = _actor.ActorData.Career.JobSite?.JobSiteData.GetStationIDFromWorkerID(ActorID) ?? 0;
+            priority_Parameters.StationID_Source = _actor.ActorData.Career.JobSite?.JobSite_Data.GetActorJob(ActorID)?.StationID ?? 0;
         }
 
         protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
@@ -166,8 +166,6 @@ namespace Priorities
 
             if (_currentAction != null && nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
                 return;
-            
-            Debug.Log($"Actor: {ActorID} performing action: {(ActorActionName)nextHighestPriorityValue.PriorityID}.");
 
             SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);
         }

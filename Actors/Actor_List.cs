@@ -51,7 +51,8 @@ namespace Actors
                         career: new Actor_Data_Career
                         (
                             actorID: 1,
-                            careerName: CareerName.Lumberjack
+                            careerName: CareerName.Lumberjack,
+                            jobSiteID: 0
                         ),
                         priority: new Priority_Data_Actor
                         (

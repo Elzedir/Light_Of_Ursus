@@ -1,12 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actor;
-using ActorActions;
+using Actors;
 using Items;
 using Jobs;
 using Recipes;
 using UnityEngine;
-using WorkPosts;
 
 namespace Station
 {
@@ -14,6 +13,7 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Tree;
         public override StationType      StationType          => StationType.Resource;
+        
         public override JobName CoreJobName => JobName.Logger;
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
@@ -58,10 +58,23 @@ namespace Station
                 return;
             }
 
-            Station_Data.InventoryData.RemoveFromInventory(cost);
+            //Station_Data.InventoryData.RemoveFromInventory(cost);
+            Station_Data.InventoryData.RemoveFromInventory(new List<Item>());
+            
             // Have another system where the tree loses durability instead or something.
             // Later allow it to partially remove logs to chop the tree down completely.
-            Station_Data.InventoryData.AddToInventory(yield);
+
+            foreach (var item in yield)
+            {
+                Debug.Log($"Adding {item.ItemName} to inventory.");
+            }
+            
+            actor.ActorData.InventoryData.AddToInventory(yield);
+            
+            foreach (var item in actor.ActorData.InventoryData.AllInventoryItems)
+            {
+                Debug.Log($"Actor inventory contains {item.Value.ItemName}({item.Key}) - {item.Value.ItemAmount}.");
+            }
         }
 
         public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)

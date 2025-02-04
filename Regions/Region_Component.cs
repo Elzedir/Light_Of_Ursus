@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using City;
+using Cities;
 using Initialisation;
-using Regions;
+using Region;
 using UnityEngine;
 
-namespace Region
+namespace Regions
 {
     public class Region_Component : MonoBehaviour
     {

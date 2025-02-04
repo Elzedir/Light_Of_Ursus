@@ -22,7 +22,8 @@ namespace ActorActions
     // These actions typically occur in reaction to dynamic game states.
     public enum ActorActionName
     {
-        // PriorityState None (Can do in all situations)
+        None,
+        
         Idle,
         All,
 

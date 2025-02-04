@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
-public enum MazeType { Standard, Chase, Collect, Doors }
+public enum MazeType { None, Standard, Chase, Collect, Doors }
 public class Spawner_Maze : MonoBehaviour
 {
     List<MazeType> _mousemazeTypes;

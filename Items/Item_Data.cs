@@ -222,6 +222,8 @@ namespace Items
 
     public enum ItemQualityName
     {
+        None, 
+        
         Junk,
         Rusted,
         Poor,

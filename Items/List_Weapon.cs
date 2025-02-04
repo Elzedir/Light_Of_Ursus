@@ -7,6 +7,7 @@ namespace Items
     public enum WeaponType
     {
         None,
+        
         OneHandedMelee,
         TwoHandedMelee,
         OneHandedRanged,
@@ -20,6 +21,7 @@ namespace Items
     public enum WeaponClass
     {
         None,
+        
         Axe,
         Shield,
         ShortBow,

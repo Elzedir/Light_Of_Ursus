@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using Jobs;
 using Managers;
 using Priorities;
-using Tools;
 
-namespace JobSite
+namespace JobSites
 {
     public abstract class JobSite_List
     {

@@ -31,6 +31,7 @@ public class Manager_Title
 public enum TitleName
 {
     None,
+    
     The_Noob
 }
 

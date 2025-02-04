@@ -13,7 +13,6 @@ using Jobs;
 using Managers;
 using Personality;
 using Priorities;
-using Priority;
 using Recipes;
 using StateAndCondition;
 using Tools;
@@ -192,7 +191,7 @@ namespace Actors
             var careerData = new Actor_Data_Career(
                 actorID: fullIdentification.ActorID,
                 careerName: actorDataPreset?.ActorDataCareer.CareerName     ?? CareerName.Wanderer,
-                jobsNotFromCareer: actorDataPreset?.ActorDataCareer.AllJobs ?? new HashSet<JobName>()
+                jobSiteID: actorDataPreset?.ActorDataCareer.JobSiteID       ?? 0
             );
             
             var craftingData = new Actor_Data_Crafting(

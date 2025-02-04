@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ActorActions;
 using Careers;
 using Inventory;
 using Jobs;
-using JobSite;
+using JobSites;
 using Priority;
 using Tools;
 using UnityEngine;
@@ -16,34 +15,43 @@ namespace Actors
     public class Actor_Data_Career : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
-        //* Need to rework the whole Career JobSiteID, assigning thing.
         
         public CareerName CareerName;
-        public HashSet<JobName> AllJobs; //* Figure out how we make use of this later.
+        
+        [SerializeField] ulong _jobSiteID;
+        
+        JobSite_Component _jobSite;
         
         [SerializeField] Job _currentJob;
-        public Job CurrentJob => _currentJob ??= new Job(JobName.Unemployed, 0);
-        public HashSet<ActorActionName> CurrentJobActions =>
-            Job_Manager.GetJob_Data(CurrentJob.JobName).JobActions.ToHashSet();
+
+        public ulong JobSiteID
+        {
+            get => _jobSiteID;
+            set
+            {
+                _jobSiteID = value;
+                _jobSite = _jobSiteID is not 0 
+                    ? JobSite_Manager.GetJobSite_Component(value) 
+                    : null;
+            }
+        }
         
-        public Actor_Data_Career(ulong actorID, CareerName careerName, HashSet<JobName> jobsNotFromCareer = null) : base(
-            actorID,
-            ComponentType.Actor)
+        public JobSite_Component JobSite => JobSiteID != 0
+            ? _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID)
+            : null;
+        
+        public Job CurrentJob => _currentJob ??= JobSite.GetActorJob(ActorReference.ActorID);
+        
+        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong jobSiteID) : base(actorID, ComponentType.Actor)
         {
             CareerName = careerName;
-            AllJobs = jobsNotFromCareer ?? new HashSet<JobName>();
-
-            foreach (var job in Career_Manager.GetCareer_Master(careerName).CareerBaseJobs)
-            {
-                AddJob(job);
-            }
+            JobSiteID = jobSiteID;
         }
 
         public Actor_Data_Career(Actor_Data_Career actorDataCareer) : base(actorDataCareer.ActorReference.ActorID, ComponentType.Actor)
         {
             CareerName = actorDataCareer.CareerName;
-            AllJobs = new HashSet<JobName>(actorDataCareer.AllJobs);
+            JobSiteID = actorDataCareer.JobSiteID;
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -66,54 +74,9 @@ namespace Actors
             };
         }
 
-        public void SetCareer(CareerName careerName, bool changeAllCareerJobs = true)
-        {
-            CareerName = careerName;
-
-            if (!changeAllCareerJobs) return;
-
-            AllJobs.Clear();
-
-            var careerJobs = Career_Manager.GetCareer_Master(careerName).CareerBaseJobs;
-
-            foreach (var job in careerJobs)
-            {
-                AddJob(job);
-            }
-        }
-
-        public HashSet<ActorActionName> AllJobActions => AllJobs
-            .SelectMany(jobName => Job_Manager.GetJob_Data(jobName).JobActions).ToHashSet();
-
-        public void AddJob(JobName jobName)
-        {
-            // Find a way to use actorData to exclude jobs that are not allowed due to status and conditions like paralyzed, or
-            // personalities.
-
-            if (AllJobs.Add(jobName)) return;
-
-            //Debug.LogWarning($"Job {jobName} already exists in AllActorJobs.");
-        }
-
-        public void RemoveJob(JobName jobName)
-        {
-            if (AllJobs.Remove(jobName)) return;
-
-            Debug.LogWarning($"Job {jobName} does not exist in AllActorJobs.");
-        }
-
-        public void SetCurrentJob(Job job) => _currentJob = job;
-        public bool HasCurrentJob() => CurrentJob != null && CurrentJob.JobName != JobName.Idle;
-        public void StopCurrentJob() => _currentJob = null;
-        public bool GetNewCurrentJob(ulong stationID = 0) => 
-            CareerName != CareerName.Wanderer 
-            && JobSite.GetNewCurrentJob(ActorReference.Actor_Component, stationID);
-        
-        public void SetJobSiteID(ulong jobSiteID) => JobSiteID = jobSiteID;
-
         public override List<ActorActionName> GetAllowedActions()
         {
-            return CurrentJob.JobActions;
+            return CurrentJob?.JobActions ?? new List<ActorActionName> { ActorActionName.Idle };
         }
     }
 }

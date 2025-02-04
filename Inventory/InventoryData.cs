@@ -13,6 +13,8 @@ namespace Inventory
 {
     public enum ComponentType
     {
+        None,
+        
         Actor,
         Station
     }
@@ -20,11 +22,7 @@ namespace Inventory
     [Serializable]
     public abstract class InventoryData : Priority_Class
     {
-        protected InventoryData(ulong componentID, ComponentType componentType) : base(componentID, componentType)
-        {
-            AllInventoryItems                   =  new ObservableDictionary<ulong, Item>();
-            AllInventoryItems.DictionaryChanged += OnInventoryChanged;
-        }
+        protected InventoryData(ulong componentID, ComponentType componentType) : base(componentID, componentType) { }
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -51,7 +49,7 @@ namespace Inventory
         public List<Item> AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList();
         public ObservableDictionary<ulong, Item> AllInventoryItems;
 
-        void OnInventoryChanged(ulong componentID)
+        protected void OnInventoryChanged(ulong componentID)
         {
             if (_skipNextPriorityCheck)
             {

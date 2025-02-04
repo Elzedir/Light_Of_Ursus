@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Jobs;
 using Station;
 using UnityEngine;
 
@@ -6,12 +7,14 @@ namespace WorkPosts
 {
     public abstract class WorkPost_List
     {
-        static Dictionary<StationName, List<WorkPost_TransformValue>> _defaultWorkPosts;
-        public static Dictionary<StationName, List<WorkPost_TransformValue>> DefaultWorkPosts => _defaultWorkPosts ??= _initialiseDefaultWorkPosts();
+        static Dictionary<StationName, List<WorkPost_DefaultValue>> s_workPost_DefaultValues;
+
+        public static Dictionary<StationName, List<WorkPost_DefaultValue>> S_WorkPosts_DefaultValues =>
+            s_workPost_DefaultValues ??= _initialiseWorkPost_DefaultValues();
         
-        public static List<WorkPost_TransformValue> GetWorkPlace_DefaultValues(StationName stationName)
+        public static List<WorkPost_DefaultValue> GetWorkPlace_DefaultValues(StationName stationName)
         {
-            if (DefaultWorkPosts.TryGetValue(stationName, out var positions))
+            if (S_WorkPosts_DefaultValues.TryGetValue(stationName, out var positions))
             {
                 return positions;
             }
@@ -20,30 +23,34 @@ namespace WorkPosts
             return null;
         }
 
-        static Dictionary<StationName, List<WorkPost_TransformValue>> _initialiseDefaultWorkPosts()
+        static Dictionary<StationName, List<WorkPost_DefaultValue>> _initialiseWorkPost_DefaultValues()
         {
-            return new Dictionary<StationName, List<WorkPost_TransformValue>>
+            return new Dictionary<StationName, List<WorkPost_DefaultValue>>
             {
                 {
-                    StationName.Tree, new List<WorkPost_TransformValue>
+                    StationName.Tree, new List<WorkPost_DefaultValue>
                     {
 
                         new(
+                            jobName: JobName.Logger,
                             position: new Vector3(1.5f, -0.8f, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(1, 0.333f, 1)),
 
                         new(
+                            jobName: JobName.Logger,
                             position: new Vector3(0, -0.8f, 1.5f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(1, 0.333f, 1)),
 
                         new(
+                            jobName: JobName.Logger,
                             position: new Vector3(-1.5f, -0.8f, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(1, 0.333f, 1)),
 
                         new(
+                            jobName: JobName.Logger,
                             position: new Vector3(0, -0.8f, -1.5f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(1, 0.333f, 1))
@@ -51,25 +58,29 @@ namespace WorkPosts
                     }
                 },
                 {
-                    StationName.Sawmill, new List<WorkPost_TransformValue>
+                    StationName.Sawmill, new List<WorkPost_DefaultValue>
                     {
 
                         new(
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.333f, 1, 1)),
 
                         new(
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0, 0, 1),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.333f, 1, 1)),
 
                         new(
+                            jobName: JobName.Sawyer,
                             position: new Vector3(-0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.333f, 1, 1)),
 
                         new(
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0, 0, -1),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.333f, 1, 1))
@@ -77,25 +88,29 @@ namespace WorkPosts
                     }
                 },
                 {
-                    StationName.Log_Pile, new List<WorkPost_TransformValue>
+                    StationName.Log_Pile, new List<WorkPost_DefaultValue>
                     {
 
                         new(
+                            jobName: JobName.Hauler,
                             position: new Vector3(0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
+                            jobName: JobName.Hauler,
                             position: new Vector3(0, 0, 0.75f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
+                            jobName: JobName.Hauler,
                             position: new Vector3(-0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
+                            jobName: JobName.Hauler,
                             position: new Vector3(0, 0, -0.75f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f))
@@ -103,6 +118,22 @@ namespace WorkPosts
                     }
                 }
             };
+        }
+    }
+    
+    public class WorkPost_DefaultValue
+    {
+        public JobName JobName;
+        public Vector3 Position;
+        public Quaternion Rotation;
+        public Vector3 Scale;
+        
+        public WorkPost_DefaultValue(JobName jobName, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            JobName = jobName;
+            Position = position;
+            Rotation = rotation;
+            Scale    = scale;
         }
     }
 }

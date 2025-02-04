@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actor;
-using ActorActions;
+using Actors;
 using Items;
 using Jobs;
 using UnityEngine;
 
-namespace JobSite
+namespace JobSites
 {
     public class JobSite_Component_LumberYard : JobSite_Component
     {
@@ -17,7 +18,7 @@ namespace JobSite
             // Temporary, maybe change to cost of items over product of items
             SetIdealRatio(3f);
 
-            var producedItems = JobSiteData.ProductionData.GetEstimatedProductionRatePerHour();
+            var producedItems = JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             var mergedItems = producedItems
                               .GroupBy(item => item.ItemID)
@@ -61,7 +62,7 @@ namespace JobSite
 
         protected override void _adjustProduction(float idealRatio)
         {
-            var   allEmployees        = new Dictionary<ulong, Actor_Component>(JobSiteData.AllEmployees);
+            var   allEmployees        = new Dictionary<ulong, Actor_Component>(JobSite_Data.AllEmployees);
             var   bestCombination     = new Dictionary<ulong, Actor_Component>();
             var bestRatioDifference = float.MaxValue;
 
@@ -72,7 +73,7 @@ namespace JobSite
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = JobSiteData.GetEstimatedProductionRatePerHour();
+                var estimatedProduction = JobSite_Data.GetEstimatedProductionRatePerHour();
 
                 var mergedEstimatedProduction = estimatedProduction
                                                 .GroupBy(item => item.ItemID)

@@ -273,6 +273,7 @@ namespace Actors
     public enum AspectName
     {
         None,
+        
         Defiance, // Defence, Fortification, Fortitude
         Essence, // Sorcery, Magic
         Esthesis, // Songcraft, Artistry
@@ -292,6 +293,7 @@ namespace Actors
     public enum ClassTitle
     {
         None,
+        
         ErrUmmWellFck,
         Aspectless,
         Abolisher,

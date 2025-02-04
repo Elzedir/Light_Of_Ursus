@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Actor;
+using Actors;
 using UnityEngine;
 
 namespace Faction
@@ -62,6 +63,7 @@ namespace Faction
     public enum FactionName
     {
         None,
+        
         Wanderers,
         Passive,
         Player,
@@ -74,6 +76,7 @@ namespace Faction
     public enum FactionRelationshipName
     {
         None,
+        
         Neutral,
         Ally,
         Friend,

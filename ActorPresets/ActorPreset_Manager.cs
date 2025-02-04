@@ -34,6 +34,8 @@ namespace ActorPresets
 
     public enum ActorDataPresetName
     {
+        None,
+        
         No_Preset,
         
         Wanderer_Beginner,

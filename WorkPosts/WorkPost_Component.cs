@@ -1,39 +1,39 @@
+using System;
 using System.Collections;
-using Actor;
 using Actors;
+using Jobs;
 using Recipes;
 using UnityEngine;
 
 namespace WorkPosts
 {
     [RequireComponent(typeof(BoxCollider))]
-    
     public class WorkPost_Component : MonoBehaviour
     {
-        public ulong WorkPostID                 => WorkPostData.WorkPostID;
-        public ulong CurrentWorkerID            => WorkPostData.CurrentWorker.ActorID;
+        public Job Job;
+        public ulong WorkPostID                 => Job.WorkPostID;
+        public Actor_Component CurrentWorker            => Job.Actor;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
         
-        public WorkPost_Data WorkPostData;
-        public void          SetWorkPostData(WorkPost_Data workPostData) => WorkPostData = workPostData;
         BoxCollider          _workPostCollider;
         public BoxCollider   WorkPostCollider => _workPostCollider ??= GetComponent<BoxCollider>();
 
-        public void Initialise()
+        public void Initialise(Job job)
         {
+            Job = job;
+            
             if (WorkPostCollider.isTrigger) return;
             
-            //Debug.LogError($"Set IsTrigger to true for {WorkPostID}: {name} BoxCollider");
             WorkPostCollider.isTrigger = true;
         }
 
         public float Operate(float baseProgressRate, Recipe_Data recipe)
         {
-            if (CurrentWorkerID is 0 || WorkPostData.IsWorkerMovingToWorkPost) return 0;
+            if (CurrentWorker.ActorID is 0 || Job.IsWorkerMovingToWorkPost) return 0;
 
-            if (WorkPostCollider.bounds.Contains(WorkPostData.CurrentWorker.transform.position)) return _produce(baseProgressRate, recipe);
+            if (WorkPostCollider.bounds.Contains(Job.Actor.transform.position)) return _produce(baseProgressRate, recipe);
             
-            StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorkerID), transform.position));
+            StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorker.ActorID), transform.position));
 
             return 0;
         }
@@ -45,7 +45,7 @@ namespace WorkPosts
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= WorkPostData.CurrentWorker.ActorData.Vocation.GetProgress(vocation);
+                productionRate *= CurrentWorker.ActorData.Vocation.GetProgress(vocation);
             }
 
             return productionRate;
@@ -53,16 +53,16 @@ namespace WorkPosts
 
         IEnumerator _moveWorkerToWorkPost(Actor_Component actor, Vector3 position)
         {
-            if (WorkPostData.IsWorkerMovingToWorkPost) yield break;
+            if (Job.IsWorkerMovingToWorkPost) yield break;
 
-            WorkPostData.IsWorkerMovingToWorkPost = true;
+            Job.IsWorkerMovingToWorkPost = true;
 
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
             if (actor.ActorData.SceneObject.ActorTransform.position != position)
                 actor.ActorData.SceneObject.ActorTransform.position = position;
 
-            WorkPostData.IsWorkerMovingToWorkPost = false;
+            Job.IsWorkerMovingToWorkPost = false;
         }
     }
 }

@@ -5,6 +5,7 @@ using Actor;
 using ActorActions;
 using Items;
 using Priority;
+using Tools;
 using UnityEngine;
 
 namespace Inventory
@@ -12,8 +13,10 @@ namespace Inventory
     [Serializable]
     public class InventoryData_Station : InventoryData
     {
-        public InventoryData_Station(ulong stationID) : base(stationID, ComponentType.Station)
+        public InventoryData_Station(ulong stationID, ObservableDictionary<ulong, Item> allInventoryItems) : base(stationID, ComponentType.Station)
         {
+            AllInventoryItems                   =  allInventoryItems ?? new ObservableDictionary<ulong, Item>();
+            AllInventoryItems.DictionaryChanged += OnInventoryChanged;
         }
 
         public override ComponentType         ComponentType      => ComponentType.Station;
@@ -100,7 +103,7 @@ namespace Inventory
         {
             var itemsToDeliver = new List<Item>();
 
-            foreach (var station in StationReference.Station.JobSite.JobSiteData.AllStationComponents)
+            foreach (var station in StationReference.Station.JobSite.JobSite_Data.AllStations)
             {
                 if (station.Key == Reference.ComponentID) continue;
 

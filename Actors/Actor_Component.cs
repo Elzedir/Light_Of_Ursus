@@ -1,11 +1,11 @@
+using System;
 using System.Collections;
-using Actors;
 using Equipment;
 using Initialisation;
 using TickRates;
 using UnityEngine;
 
-namespace Actor
+namespace Actors
 {
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(BoxCollider))]
@@ -13,6 +13,7 @@ namespace Actor
     {
         public bool IsPlayer => GetComponent<Player>() is not null;
         public ulong ActorID => ActorData.ActorID;
+        public string ActorName => ActorData.ActorName;
         public bool IsSpawned 
         { 
             get => ActorData.IsSpawned;
@@ -56,6 +57,13 @@ namespace Actor
             SetActorData(actorData);
             
             Initialise();
+            
+            RegisterAllTickers();
+        }
+        
+        public void RegisterAllTickers()
+        {
+            Manager_TickRate.RegisterTicker(TickerTypeName.Actor_Condition, TickRateName.OneSecond, ActorID, ActorData.StatesAndConditions.Conditions.OnTick);
         }
 
         public void Initialise()
@@ -83,11 +91,11 @@ namespace Actor
             if (_currentTickRateName == tickRateName) return;
 
             if (unregister) Manager_TickRate.UnregisterTicker(TickerTypeName.Actor, _currentTickRateName, ActorID);
-            Manager_TickRate.RegisterTicker(TickerTypeName.Actor, tickRateName, ActorID, _onTick);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Actor, tickRateName, ActorID, OnTick);
             _currentTickRateName = tickRateName;
         }
 
-        void _onTick()
+        public void OnTick()
         {
             if (!_initialised) return;
 

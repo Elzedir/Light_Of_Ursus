@@ -14,7 +14,8 @@ namespace Inventory
     {
         public InventoryData_Actor(ulong actorID, ObservableDictionary<ulong, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
         {
-            AllInventoryItems = allInventoryItems;
+            AllInventoryItems = allInventoryItems ?? new ObservableDictionary<ulong, Item>();
+            AllInventoryItems.DictionaryChanged += OnInventoryChanged;
         }
         
         public InventoryData_Actor(InventoryData inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)

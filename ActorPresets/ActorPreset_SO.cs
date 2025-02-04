@@ -13,7 +13,7 @@ namespace ActorPresets
         
         protected override Dictionary<ulong, Data<ActorPreset_Data>> _getDefaultData()
         {
-            return _convertDictionaryToData(ActorPreset_List.DefaultActorDataPresets);
+            return _convertDictionaryToData(ActorPreset_List.S_DefaultActorDataPresets);
         }
         
         protected override Data<ActorPreset_Data> _convertToData(ActorPreset_Data data)

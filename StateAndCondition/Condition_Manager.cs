@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Actors;
 using Inventory;
@@ -16,15 +15,15 @@ namespace StateAndCondition
     {
         const string _condition_SOPath = "ScriptableObjects/Condition_SO";
 
-        static Condition_SO _allConditions;
-        static Condition_SO AllConditions => _allConditions ??= _getCondition_SO();
+        static Condition_SO s_allConditions;
+        static Condition_SO S_AllConditions => s_allConditions ??= _getCondition_SO();
         
         public static ObservableDictionary<ConditionName, float> InitialiseDefaultConditions(ObservableDictionary<ConditionName, float> existingConditions) =>
-            AllConditions.InitialiseDefaultConditions(existingConditions);
+            S_AllConditions.InitialiseDefaultConditions(existingConditions);
 
         public static Condition_Data GetCondition_Data(ConditionName conditionName)
         {
-            return AllConditions.GetCondition_Data(conditionName).Data_Object;
+            return S_AllConditions.GetCondition_Data(conditionName).Data_Object;
         }
 
         public static Condition GetCondition(ConditionName conditionName, ulong conditionDuration)
@@ -46,7 +45,7 @@ namespace StateAndCondition
 
         public static void ClearSOData()
         {
-            AllConditions.ClearSOData();
+            S_AllConditions.ClearSOData();
         }
     }
 
@@ -57,8 +56,6 @@ namespace StateAndCondition
         {
             _currentConditions                   =  currentConditions;
             CurrentConditions.DictionaryChanged += OnConditionChanged;
-            
-            Manager_TickRate.RegisterTicker(TickerTypeName.Actor_Condition, TickRateName.OneSecond, ActorReference.ActorID, _onTick);
         }
         public          ComponentReference_Actor ActorReference    => Reference as ComponentReference_Actor;
 
@@ -87,7 +84,7 @@ namespace StateAndCondition
             PriorityData.RegenerateAllPriorities(DataChangedName.ChangedCondition);
         }
 
-        void _onTick()
+        public void OnTick()
         {
             foreach (var condition in CurrentConditions)
             {

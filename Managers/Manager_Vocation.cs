@@ -6,6 +6,7 @@ using UnityEngine;
 public enum VocationName
 {
     None,
+    
     Farming,
     Logging,
     Sawying,
@@ -63,6 +64,8 @@ public class Manager_Vocation
 
 public enum VocationTitle
 {
+    None,
+    
     Beginner,
     Novice,
     Apprentice,

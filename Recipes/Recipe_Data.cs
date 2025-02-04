@@ -128,6 +128,8 @@ namespace Recipes
     public enum RecipeName
     {
         None,
+        
+        No_Recipe,
         Plank,
         Log,
         Iron_Ingot,

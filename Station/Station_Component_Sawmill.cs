@@ -1,12 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actor;
-using ActorActions;
+using Actors;
 using Items;
 using Jobs;
 using Recipes;
 using UnityEngine;
-using WorkPosts;
 
 namespace Station
 {
@@ -14,9 +13,11 @@ namespace Station
     {
         public override StationName      StationName          => StationName.Sawmill;
         public override StationType      StationType          => StationType.Crafter;
+        
         public override JobName CoreJobName => JobName.Sawyer;
         public          float            PercentageStorageFilled    = 0;
-        public          float            PercentageStorageThreshold = 50; // The percent at which you should transfer products to storage.
+        //= The percent at which you should transfer products to storage.
+        public          float            PercentageStorageThreshold = 50; 
 
         public override RecipeName       DefaultProduct       => RecipeName.Plank;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Plank };

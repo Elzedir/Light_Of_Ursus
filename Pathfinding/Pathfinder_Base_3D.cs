@@ -724,7 +724,7 @@ public class VoxelGrid
     }
 }
 
-public enum VoxelType { Open, Ground, Obstacle, Air, Water }
+public enum VoxelType { None, Open, Ground, Obstacle, Air, Water }
 
 public class Voxel_Base
 {
@@ -1081,7 +1081,7 @@ public class PriorityQueue_3D
         _priorityQueue[tempQueue.Voxel] = indexB;
     }
 }
-public enum MoverType { Ground, Fly, Dig, Swim }
+public enum MoverType { None, Ground, Fly, Dig, Swim }
 
 public interface PathfinderMover_3D
 {

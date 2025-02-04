@@ -6,10 +6,10 @@ namespace Jobs
     {
         const string  _job_SOPath = "ScriptableObjects/Job_SO";
         
-        static Job_SO _allJobs;
-        static Job_SO AllJobs => _allJobs ??= _getJob_SO();
+        static Job_SO s_allJobs;
+        static Job_SO S_AllJobs => s_allJobs ??= _getJob_SO();
 
-        public static Job_Data GetJob_Data(JobName jobName) => AllJobs.GetJob_Data(jobName).Data_Object;
+        public static Job_Data GetJob_Data(JobName jobName) => S_AllJobs.GetJob_Data(jobName).Data_Object;
         
         static Job_SO _getJob_SO()
         {
@@ -25,20 +25,23 @@ namespace Jobs
         
         public static void ClearSOData()
         {
-            AllJobs.ClearSOData();
+            S_AllJobs.ClearSOData();
         }
     }
 
     public enum JobName
     {
+        None,
+        
         Idle,
         
-        None,
         Any,
         
         Unemployed,
         
         Wanderer,
+        
+        Hauler,
         
         Vendor,
         
@@ -64,7 +67,7 @@ namespace Jobs
         Tanner
     }
     
-    public enum ActivityPeriodName { Cathemeral, Nocturnal, Diurnal, Crepuscular }
+    public enum ActivityPeriodName { None, Cathemeral, Nocturnal, Diurnal, Crepuscular }
 
     public abstract class ActivityPeriod
     {

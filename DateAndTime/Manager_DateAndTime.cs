@@ -180,8 +180,8 @@ namespace DateAndTime
         // }
     }
 
-    public enum DayName { Mon, Tumon, Tu, Wetu, Wed, Thured, Thur, Frith, Fri, Satri, Satu, Sunsa, Sun, Monsun }
-    public enum MonthName { Janbruach, Aprayne, Julaugber, Octevmadec }
+    public enum DayName { None, Mon, Tumon, Tu, Wetu, Wed, Thured, Thur, Frith, Fri, Satri, Satu, Sunsa, Sun, Monsun }
+    public enum MonthName { None, Janbruach, Aprayne, Julaugber, Octevmadec }
 
     public class Date
     {
@@ -238,50 +238,50 @@ namespace DateAndTime
     
     public abstract class CurrentTime
     {
-        static bool _halfTime;
-        static uint _currentMinute;
-        static uint _currentHour;
+        static bool s_halfTime;
+        static uint s_currentMinute;
+        static uint s_currentHour;
         
         public static void Initialise(uint totalMinutes)
         {
-            _currentHour   = totalMinutes / 60;
-            _currentMinute = totalMinutes % 60;
+            s_currentHour   = totalMinutes / 60;
+            s_currentMinute = totalMinutes % 60;
             
             Manager_TickRate.RegisterTicker(TickerTypeName.DateAndTime, TickRateName.OneSecond, 1, _onTick);
         }
 
         static void _onTick()
         {
-            if (_halfTime)
+            if (s_halfTime)
             {
-                _currentMinute++;
+                s_currentMinute++;
 
-                if (_currentMinute >= 60)
+                if (s_currentMinute >= 60)
                 {
-                    _currentMinute = 0;
+                    s_currentMinute = 0;
 
-                    _currentHour++;
+                    s_currentHour++;
 
-                    if (_currentHour >= 24)
+                    if (s_currentHour >= 24)
                     {
-                        _currentHour = 0;
+                        s_currentHour = 0;
                         Manager_DateAndTime.ProgressDay();
                     }
                 }
 
                 Manager_DateAndTime.ProgressTime();
 
-                _halfTime = false;
+                s_halfTime = false;
             }
             else
             {
-                _halfTime = true;
+                s_halfTime = true;
             }
         }
         
         public static string GetCurrentTimeAsString()
         {
-            return $"{_currentHour:00}:{_currentMinute:00}";   
+            return $"{s_currentHour:00}:{s_currentMinute:00}";   
         }
     }
 }

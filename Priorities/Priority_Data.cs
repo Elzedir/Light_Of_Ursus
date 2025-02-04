@@ -1,15 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
 using Actors;
 using Items;
-using Priorities;
+using Priority;
 using Tools;
 using UnityEngine;
 
-namespace Priority
+namespace Priorities
 {
+    [Serializable]
     public abstract class Priority_Data : Data_Class
     {
         Priority_Queue        _priorityQueue;
@@ -75,7 +77,6 @@ namespace Priority
 
         protected abstract List<ulong> _getPermittedPriorities(List<ulong> priorityIDs);
         protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
-        //protected abstract void _populatePriorityParameters(ref Priority_Parameters priorityParameters);
 
         protected Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {

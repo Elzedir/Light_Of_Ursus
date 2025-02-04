@@ -5,7 +5,7 @@ using Actor;
 using Actors;
 using Inventory;
 using Items;
-using JobSite;
+using JobSites;
 using Station;
 using UnityEngine;
 
@@ -75,7 +75,7 @@ namespace Priorities
             : StationName.None;
         
         public HashSet<StationName> StationType_All => JobSiteID_Source != 0 
-            ? JobSite_Component_Source.JobSiteData.AllStationComponents.Values.Select(station => station.StationName).ToHashSet() 
+            ? JobSite_Component_Source.JobSite_Data.AllStations.Values.Select(station => station.StationName).ToHashSet() 
             : null;
     }
 }

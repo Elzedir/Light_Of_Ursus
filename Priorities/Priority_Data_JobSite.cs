@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
-using Items;
-using JobSite;
-using Priorities;
+using JobSites;
+using Priority;
 using Station;
 using Tools;
 using UnityEngine;
 
-namespace Priority
+namespace Priorities
 {
+    [Serializable]
     public class Priority_Data_JobSite : Priority_Data
     {
         public Priority_Data_JobSite(ulong jobSiteID)
@@ -106,13 +106,12 @@ namespace Priority
         {
             if (limiterID != 0)
                 return priorityIDs.Where(priorityID =>
-                    Station_Manager.GetStation_Component(limiterID).AllowedJobTasks.Contains((ActorActionName)priorityID)).ToList();
+                    Station_Manager.GetStation_Component(limiterID).AllowedActions.Contains((ActorActionName)priorityID)).ToList();
             
             return priorityIDs;
         }
 
-        protected override HashSet<ActorActionName> _getAllowedActions() =>
-            _jobSite.BaseJobActions;
+        protected override HashSet<ActorActionName> _getAllowedActions() => _jobSite.JobSite_Data.AllowedActions;
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -121,7 +120,7 @@ namespace Priority
             return new Dictionary<string, string>
             {
                 { "JobSiteID", $"{JobSiteID}" },
-                { "JobSite", $"{_jobSite.JobSiteData.JobSiteName}" },
+                { "JobSite", $"{_jobSite.JobSite_Data.JobSiteName}" },
                 { "Next Highest Priority", highestPriority?.PriorityID != null 
                     ? $"{(ActorActionName)highestPriority.PriorityID}({highestPriority.PriorityID}) - {highestPriority.PriorityValue}" 
                     : "No Highest Priority" }

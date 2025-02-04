@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Managers
 {
-    public enum LevelUpBonusType { Health, Mana, Stamina, SkillSet, Ultimate }
+    public enum LevelUpBonusType { None, Health, Mana, Stamina, SkillSet, Ultimate }
 
     public abstract class Manager_CharacterLevels
     {
