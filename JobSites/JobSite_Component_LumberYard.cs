@@ -12,7 +12,7 @@ namespace JobSites
     public class JobSite_Component_LumberYard : JobSite_Component
     {
         public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
-
+        
         protected override bool _compareProductionOutput()
         {
             // Temporary, maybe change to cost of items over product of items
@@ -20,25 +20,16 @@ namespace JobSites
 
             var producedItems = JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
-            var mergedItems = producedItems
-                              .GroupBy(item => item.ItemID)
-                              .Select(group => new Item(group.Key, (ulong)group.Sum(item => (int)item.ItemAmount)))
-                              .ToList();
+            //* Later, add a general application of this, rather than typing it out every time.
+            float logProduction = producedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
+            float plankProduction = producedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
 
-            var duplicateItems = producedItems
-                                 .GroupBy(item => item.ItemID)
-                                 .Where(group => group.Count() > 1)
-                                 .Select(group => group.Key)
-                                 .ToList();
-
-            foreach (var itemId in duplicateItems)
+            if (plankProduction == 0)
             {
-                Debug.Log($"Item {itemId} were not merged correctly.");
+                Debug.Log("Plank production is 0.");
+                return false;
             }
-
-            float logProduction   = mergedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
-            float plankProduction = mergedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
-
+            
             var currentRatio = logProduction / plankProduction;
 
             var percentageDifference = Mathf.Abs(((currentRatio / IdealRatio) * 100) - 100);

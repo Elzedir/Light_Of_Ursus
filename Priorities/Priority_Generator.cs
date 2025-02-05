@@ -175,10 +175,8 @@ namespace Priority
             {
                 case (ulong)ActorActionName.Idle:
                     return 1;
-                case (ulong)ActorActionName.Haul_Fetch:
-                    return _generateFetchPriority(priority_Parameters);
-                case (ulong)ActorActionName.Haul_Deliver:
-                    return _generateDeliverPriority(priority_Parameters);
+                case (ulong)ActorActionName.Haul:
+                    return _generateHaulPriority(priority_Parameters);
                 case (ulong)ActorActionName.Chop_Wood:
                     return _generateChop_WoodPriority(priority_Parameters);
                 case (ulong)ActorActionName.Process_Logs:
@@ -191,9 +189,47 @@ namespace Priority
             }
         }
 
-        static float _generateFetchPriority(Priority_Parameters priority_Parameters)
+        static float _generateHaulPriority(Priority_Parameters priority_Parameters)
         {
+            var inventory_HaulerItems = priority_Parameters.Inventory_Hauler?.GetInventoryItemsToDeliverFromInventory(
+                priority_Parameters.Inventory_Target) ?? new List<Item>();
+
+            var inventory_FetchStations = priority_Parameters.Inventory_Hauler.GetInventoryStationsToFetchFrom(priority_Parameters.JobSite_Component_Source);
+            var inventory_DeliverStations = priority_Parameters.Inventory_Hauler?.GetInventoryStationsToDeliverTo(priority_Parameters.JobSite_Component_Source);
+
+            var highestPriority = 0;
+            
+            foreach (var deliverStation in inventory_DeliverStations)
+            {
+                foreach (var fetchStation in inventory_FetchStations)
+                {
+                    if (Vector3.Distance(fetchStation.transform.postiion,
+                            priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position)
+                        < Vector3.Distance(deliverStation.transform.position,
+                            priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position))
+                        continue;
+                    
+                    // Generate priority for the JobSite with mainly distance and partially items.
+                }
+            }
+            
             var allItems = priority_Parameters.Inventory_Target?.GetInventoryItemsToFetchFromStation() ?? new List<Item>();
+            
+            var allItems =
+                priority_Parameters.Inventory_Target?.GetInventoryItemsToDeliverFromInventory(priority_Parameters
+                    .Inventory_Hauler) ?? new List<Item>();
+
+            return GeneratePriority(
+                priority_Parameters,
+                allItems,
+                (items, totalItems, maxPriority) => 
+                    Item.GetItemListTotal_CountAllItems(items) != 0
+                        ? _moreItemsDesired_Total(
+                            items, totalItems, maxPriority, 
+                            priority_Parameters.StationName_Source,
+                            priority_Parameters.StationType_All)
+                        : 0
+            );
 
             return GeneratePriority(
                 priority_Parameters,
@@ -204,29 +240,13 @@ namespace Priority
             );
         }
 
-        static float _generateDeliverPriority(Priority_Parameters priority_Parameters)
-        {
-            var allItems =
-                priority_Parameters.Inventory_Target?.GetInventoryItemsToDeliverFromInventory(priority_Parameters
-                    .Inventory_Hauler) ?? new List<Item>();
-
-            return GeneratePriority(
-                priority_Parameters,
-                allItems,
-                (items, totalItems, maxPriority) => 
-                    Item.GetItemListTotal_CountAllItems(items) != 0
-                    ? _moreItemsDesired_Total(
-                        items, totalItems, maxPriority, 
-                        priority_Parameters.StationName_Source,
-                        priority_Parameters.StationType_All)
-                    : 0
-            );
-        }
-
         static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
             var allItems = priority_Parameters.Inventory_Source?.GetInventoryItemsToFetchFromStation() ?? new List<Item>();
 
+            //* Decrease the priority of Chop_Wood by how many logs you have in your inventory. For now, we will do it as a one to one,
+            //* But later, we can change it to be a percentage of the total storage space, or a previously stated percentage value.
+            
             return GeneratePriority(priority_Parameters, allItems, _lessItemsDesired_Total);
         }
 

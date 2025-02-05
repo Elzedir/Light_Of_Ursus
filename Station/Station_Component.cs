@@ -26,13 +26,15 @@ namespace Station
 
         public float InteractRange { get; private set; }
 
-        public abstract JobName           CoreJobName           { get; }
-        public HashSet<ActorActionName> AllowedActions => Station_Data.AllWorkPosts.Values.SelectMany(workPost => workPost.Job.JobActions).ToHashSet();
+        //* Remove this, and instead add all allowedJobs to be determined by workPosts, not stations, since there could be different
+        //* jobs on different workPosts.
+        public abstract JobName           DefaultJobName           { get; }
         public abstract RecipeName        DefaultProduct        { get; }
         public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
+        public HashSet<ActorActionName> AllowedActions => Station_Data.AllWorkPosts.Values.SelectMany(workPost => workPost.Job.JobActions).ToHashSet();
         public abstract List<ulong>        AllowedStoredItemIDs  { get; }
         public abstract List<ulong>        DesiredStoredItemIDs  { get; }
-
+        
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
 
@@ -70,7 +72,7 @@ namespace Station
         {
             return actorAction switch
             {
-                ActorActionName.Haul_Fetch => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
+                ActorActionName.Haul => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
                 ActorActionName.Haul_Deliver => Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations(),
                 ActorActionName.Chop_Wood => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
                 _ => new List<Item>()

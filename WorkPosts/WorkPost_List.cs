@@ -92,25 +92,25 @@ namespace WorkPosts
                     {
 
                         new(
-                            jobName: JobName.Hauler,
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
-                            jobName: JobName.Hauler,
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0, 0, 0.75f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
-                            jobName: JobName.Hauler,
+                            jobName: JobName.Sawyer,
                             position: new Vector3(-0.75f, 0, 0),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f)),
 
                         new(
-                            jobName: JobName.Hauler,
+                            jobName: JobName.Sawyer,
                             position: new Vector3(0, 0, -0.75f),
                             rotation: new Quaternion(0, 0, 0, 0),
                             scale: new Vector3(0.5f, 1f, 0.5f))
@@ -123,6 +123,7 @@ namespace WorkPosts
     
     public class WorkPost_DefaultValue
     {
+        //* Change JobName to AllPossibleJobs
         public JobName JobName;
         public Vector3 Position;
         public Quaternion Rotation;

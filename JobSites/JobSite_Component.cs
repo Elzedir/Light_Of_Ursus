@@ -104,13 +104,12 @@ namespace JobSites
 
             foreach (var station in JobSite_Data.AllStations.Values)
             {
-                a
-                    // Breaking here.
                 var employeesForStation = tempEmployees
                     .OrderByDescending(actor =>
-                        actor.ActorData.Vocation.GetVocationExperience(
-                            _getRelevantVocation(actor.ActorData.Career
-                                .CurrentJob.JobName)))
+                        actor.ActorData.Career.CurrentJob != null
+                            ? actor.ActorData.Vocation.GetVocationExperience(
+                                _getRelevantVocation(actor.ActorData.Career.CurrentJob.JobName))
+                            : 0)
                     .ToList();
 
                 foreach (var employee in employeesForStation)
@@ -144,61 +143,32 @@ namespace JobSites
             return result;
         }
 
-        public List<Station_Component> GetRelevantStations(ActorActionName actorActionName, bool isStation_Source)
+        public List<Station_Component> GetRelevantStations(ActorActionName actorActionName)
         {
-            if (isStation_Source)
-            {
-                return Source_Stations.TryGetValue(actorActionName, out var stations_Source)
-                    ? stations_Source()
-                    : throw new ArgumentException(
-                        $"ActorActionName: {actorActionName} not recognised for Station_Source.");
-            }
-
-            return Target_Stations.TryGetValue(actorActionName, out var stations_Target)
-                ? stations_Target()
-                : throw new ArgumentException($"ActorActionName: {actorActionName} not recognised for Station_Target.");
+            return RelevantStations.TryGetValue(actorActionName, out var stations_Source)
+                ? stations_Source()
+                : throw new ArgumentException(
+                    $"ActorActionName: {actorActionName} not recognised for Station_Source.");
         }
 
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _source_Stations;
-        public Dictionary<ActorActionName, Func<List<Station_Component>>> Source_Stations =>
-            _source_Stations ??= _getSourceStations();
+        Dictionary<ActorActionName, Func<List<Station_Component>>> _relevantStations;
+        public Dictionary<ActorActionName, Func<List<Station_Component>>> RelevantStations =>
+            _relevantStations ??= _getRelevantStations();
 
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _target_Stations;
-        public Dictionary<ActorActionName, Func<List<Station_Component>>> Target_Stations =>
-            _target_Stations ??= _getTargetStations();
-
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _getSourceStations()
+        Dictionary<ActorActionName, Func<List<Station_Component>>> _getRelevantStations()
         {
             return new Dictionary<ActorActionName, Func<List<Station_Component>>>
             {
-                { ActorActionName.Haul_Fetch, _relevantStations_Fetch },
-                { ActorActionName.Haul_Deliver, () => new List<Station_Component>() },
+                { ActorActionName.Haul, _relevantStations_Haul },
                 { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood },
                 { ActorActionName.Process_Logs, _relevantStations_Process_Logs },
                 { ActorActionName.Wander, () => new List<Station_Component>() }
             };
         }
 
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _getTargetStations()
-        {
-            return new Dictionary<ActorActionName, Func<List<Station_Component>>>
-            {
-                { ActorActionName.Haul_Fetch, () => new List<Station_Component>() },
-                { ActorActionName.Haul_Deliver, _relevantStations_Deliver },
-                { ActorActionName.Chop_Wood, () => new List<Station_Component>() },
-                { ActorActionName.Process_Logs, () => new List<Station_Component>() },
-                { ActorActionName.Wander, () => new List<Station_Component>() }
-            };
-        }
-
-        List<Station_Component> _relevantStations_Fetch() =>
+        List<Station_Component> _relevantStations_Haul() => 
             JobSite_Data.AllStations.Values
-                .Where(station => station.GetInventoryItems(ActorActionName.Haul_Fetch).Count > 0)
-                .ToList();
-
-        List<Station_Component> _relevantStations_Deliver() =>
-            JobSite_Data.AllStations.Values
-                .Where(station => station.GetInventoryItems(ActorActionName.Haul_Deliver).Count > 0)
+                .Where(station => station.GetInventoryItems(ActorActionName.Haul).Count > 0)
                 .ToList();
 
         List<Station_Component> _relevantStations_Chop_Wood() =>

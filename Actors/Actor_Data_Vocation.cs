@@ -100,12 +100,10 @@ namespace Actor
             var currentExperience = GetVocationExperience(vocationRequirement.VocationName);
 
             if (currentExperience < vocationRequirement.MinimumVocationExperience)
-            {
                 return 0;
-            }
 
-            var progress = ((currentExperience - vocationRequirement.ExpectedVocationExperience) /
-                            Math.Max(currentExperience, 1));
+            var progress = (currentExperience - vocationRequirement.ExpectedVocationExperience) /
+                            Math.Max(currentExperience, 1);
 
             if (progress < 0) return 1 / Math.Abs(progress);
 

@@ -12,7 +12,6 @@ using Managers;
 using Priorities;
 using Recipes;
 using Station;
-using TickRates;
 using Tools;
 using UnityEngine;
 
@@ -346,9 +345,9 @@ namespace JobSites
             }
         }
 
-        public List<Item> GetEstimatedProductionRatePerHour()
+        public HashSet<Item> GetEstimatedProductionRatePerHour()
         {
-            var estimatedProductionItems = new List<Item>();
+            var estimatedProductionItems = new Dictionary<ulong, Item>();
 
             // Then modify production rate by any area modifiers (Land type, events, etc.)
 
@@ -372,21 +371,22 @@ namespace JobSites
                     }
 
                     totalProductionRate += individualProductionRate;
-                    // Don't forget to add in estimations for travel time.    
+                    // Don't forget to add in estimations for travel time.
 
                     float requiredProgress = station.Station_Data.StationProgressData.CurrentProduct.RequiredProgress;
                     var estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
 
-                    for (var i = 0; i < Mathf.FloorToInt(estimatedProductionCount); i++)
+                    foreach (var product in station.Station_Data.StationProgressData.CurrentProduct.RecipeProducts)
                     {
-                        estimatedProductionItems.AddRange(
-                            station.Station_Data.StationProgressData.CurrentProduct.RecipeProducts
-                                .Select(item => new Item(item)));
-                    }   
+                        if (!estimatedProductionItems.TryGetValue(product.ItemID, out var item)) 
+                            estimatedProductionItems[product.ItemID] = new Item(product);
+                        else
+                            item.ItemAmount += (ulong)estimatedProductionCount;
+                    }
                 }
             }
 
-            return estimatedProductionItems;
+            return estimatedProductionItems.Values.ToHashSet();
         }
 
         // public void AllocateEmployeesToStations()
@@ -457,8 +457,8 @@ namespace JobSites
                     if (AllEmployees.Count >= desiredEmployeeCount) break;
                     if (workPost.Job.ActorID != 0) continue;
 
-                    var newEmployee = _findEmployeeFromCity(station.CoreJobName) ??
-                                      _generateNewEmployee(station.CoreJobName);
+                    var newEmployee = _findEmployeeFromCity(station.DefaultJobName) ??
+                                      _generateNewEmployee(station.DefaultJobName);
 
                     JobSite_Component.AssignActorToNewCurrentJob(newEmployee);
             
@@ -543,7 +543,7 @@ namespace JobSites
     public class ProductionData : Data_Class
     {
         public List<Item> AllProducedItems;
-        public List<Item> EstimatedProductionRatePerHour;
+        public HashSet<Item> EstimatedProductionRatePerHour;
         public ulong JobSiteID;
 
         JobSite_Component _jobSite;
@@ -588,7 +588,7 @@ namespace JobSites
             return DataToDisplay;
         }
 
-        public List<Item> GetEstimatedProductionRatePerHour()
+        public HashSet<Item> GetEstimatedProductionRatePerHour()
         {
             return EstimatedProductionRatePerHour = JobSite.JobSite_Data.GetEstimatedProductionRatePerHour();
         }

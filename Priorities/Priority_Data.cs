@@ -106,6 +106,8 @@ namespace Priorities
 
         protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters, bool isStation_Source)
         {
+            //* Recheck this allocation
+            
             var allRelevantStations =
                 priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName, isStation_Source);
             
@@ -205,6 +207,12 @@ namespace Priorities
                     {
                         //ActorActionName.Wander,
                         ActorActionName.Idle
+                    }
+                },
+                {
+                    DataChangedName.ChangedInventory, new List<ActorActionName>
+                    {
+                        
                     }
                 }
             };

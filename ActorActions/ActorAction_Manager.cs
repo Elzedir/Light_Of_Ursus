@@ -111,8 +111,7 @@ namespace ActorActions
         Harvest_Crops,
 
         // Hauler
-        Haul_Deliver,
-        Haul_Fetch,
+        Haul,
 
         // Cook
         Cook_Food,

@@ -14,7 +14,7 @@ namespace Station
         public override StationName      StationName          => StationName.Tree;
         public override StationType      StationType          => StationType.Resource;
         
-        public override JobName CoreJobName => JobName.Logger;
+        public override JobName DefaultJobName => JobName.Logger;
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
         public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };

@@ -14,7 +14,7 @@ namespace Station
         public override StationName      StationName          => StationName.Sawmill;
         public override StationType      StationType          => StationType.Crafter;
         
-        public override JobName CoreJobName => JobName.Sawyer;
+        public override JobName DefaultJobName => JobName.Sawyer;
         public          float            PercentageStorageFilled    = 0;
         //= The percent at which you should transfer products to storage.
         public          float            PercentageStorageThreshold = 50; 
