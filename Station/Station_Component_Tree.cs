@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Actors;
 using Items;
 using Jobs;
@@ -17,9 +18,9 @@ namespace Station
         public override JobName DefaultJobName => JobName.Logger;
 
         public override RecipeName       DefaultProduct       => RecipeName.Log;
-        public override List<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
-        public override List<ulong>       AllowedStoredItemIDs { get; } = new();
-        public override List<ulong>       DesiredStoredItemIDs { get; } = new();
+        public override HashSet<RecipeName> DefaultAllowedRecipes       { get; } = new() { RecipeName.Log };
+        public override HashSet<ulong>       AllowedStoredItemIDs { get; } = new();
+        public override HashSet<ulong>       DesiredStoredItemIDs { get; } = new();
 
         protected override void _initialiseStartingInventory()
         {
@@ -41,10 +42,10 @@ namespace Station
                 return;
             }
 
-            var recipeData = Recipe_Manager.GetRecipe_Master(recipeName);
+            var recipeData = Recipe_Manager.GetRecipe_Data(recipeName);
 
             var cost  = GetCost(recipeData.RequiredIngredients, actor);
-            var yield = GetYield(recipeData.RecipeProducts, actor);
+            var yield = GetYield(recipeData.RecipeProductList.ToHashSet(), actor);
 
             if (!Station_Data.InventoryData.InventoryContainsAllItems(cost))
             {
@@ -52,13 +53,12 @@ namespace Station
                 return;
             }
 
-            if (!Station_Data.InventoryData.HasSpaceForItems(yield))
+            if (!Station_Data.InventoryData.HasSpaceForItemList(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
                 return;
             }
-
-            //Station_Data.InventoryData.RemoveFromInventory(cost);
+            
             Station_Data.InventoryData.RemoveFromInventory(new List<Item>());
             
             // Have another system where the tree loses durability instead or something.
@@ -77,22 +77,22 @@ namespace Station
             }
         }
 
-        public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
-        {
-            return new List<Item>();
-
-            // Base resource cost on actor relevant skill
-        }
-
         public override IEnumerator Interact(Actor_Component actor)
         {
             Debug.LogError("No Interact method implemented for Tree.");
             yield return null;
         }
-
-        public override List<Item> GetYield(List<Item> products, Actor_Component actor)
+        
+        public override Dictionary<ulong, ulong> GetCost(Dictionary<ulong, ulong> ingredients, Actor_Component actor)
         {
-            return new List<Item> { new Item(1100, 1) }; // For now
+            return new Dictionary<ulong, ulong>();
+
+            // Base resource cost on actor relevant skill
+        }
+
+        public override Dictionary<ulong, ulong> GetYield(Dictionary<ulong, ulong> products, Actor_Component actor)
+        {
+            return new Dictionary<ulong, ulong> { { 1100, 1 } }; // For now
 
             // Base resource yield on actor relevant skill
         }

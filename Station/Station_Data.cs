@@ -73,7 +73,7 @@ namespace Station
             }
 
             if (DefaultProduct != RecipeName.No_Recipe)
-                StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
+                StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Data(DefaultProduct);
             
             _initialised = true;
         }
@@ -183,7 +183,7 @@ namespace Station
                 }
                 catch
                 {
-                    StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Master(DefaultProduct);
+                    StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Data(DefaultProduct);
 
                     if (StationProgressData.CurrentProduct.RecipeName != RecipeName.None 
                         || DefaultProduct == RecipeName.None)

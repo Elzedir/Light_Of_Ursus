@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Actors;
 using Interactable;
 using Items;
-using Priority;
+using Priorities;
 using Tools;
 using UnityEngine;
 
@@ -47,7 +46,8 @@ namespace Inventory
         bool _skipNextPriorityCheck;
         public void SkipNextPriorityCheck() => _skipNextPriorityCheck = true;
         public List<Item> AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList();
-        public ObservableDictionary<ulong, Item> AllInventoryItems;
+        [SerializeField] ObservableDictionary<ulong, Item> _allInventoryItems;
+        public ObservableDictionary<ulong, Item> AllInventoryItems => _allInventoryItems;
 
         protected void OnInventoryChanged(ulong componentID)
         {
@@ -79,12 +79,30 @@ namespace Inventory
         public void SetInventory(ObservableDictionary<ulong, Item> allInventoryItems, bool skipPriorityCheck = false)
         {
             if (skipPriorityCheck) SkipNextPriorityCheck();
-            AllInventoryItems = allInventoryItems;
+
+            if (allInventoryItems is null)
+            {
+                Debug.LogWarning("All inventory items is null. Creating new inventory.");
+                allInventoryItems = new ObservableDictionary<ulong, Item>();
+            }
+            
+            AllInventoryItems.Clear();
+
+            foreach (var item in allInventoryItems.Values.Where(item => !AllInventoryItems.TryAdd(item.ItemID, item)))
+                Debug.LogError($"Failed to add item {item.ItemID} to inventory.");
         }
 
-        public          Item GetItemFromInventory(ulong   itemID) => new(AllInventoryItems.GetValueOrDefault(itemID));
-        public abstract bool HasSpaceForItems(List<Item> items);
+        public bool HasSpaceForAllItemList(Dictionary<ulong, ulong> items = null)
+            => items?.All(
+                item => HasSpaceForAllItem(new Item(item.Key, item.Value))) ?? false;
+        public List<Item> HasSpaceForItemList(Dictionary<ulong, ulong> items = null)
+            => items?.Select(
+                item => HasSpaceForItem(new Item(item.Key, item.Value)))
+                .Where(item => item != null).ToList();
+        public abstract bool HasSpaceForAllItem(Item item = null);
+        public abstract Item HasSpaceForItem(Item item = null);
 
+        //* Later, allow overburdening, to a percentage.
         public void AddToInventory(List<Item> items)
         {
             foreach (var _ in items.Where(itemToAdd => !_addItem(itemToAdd)))
@@ -103,41 +121,41 @@ namespace Inventory
 
             if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
             {
-                AllInventoryItems.Add(item.ItemID, item);
+                AllInventoryItems.Add(item.ItemID, HasSpaceForItem(item));
 
                 return true;
             }
 
-            existingItem.ItemAmount += item.ItemAmount;
+            existingItem.ItemAmount += HasSpaceForItem(item).ItemAmount;
 
             return true;
         }
 
-        public void RemoveFromInventory(List<Item> items)
+        public void RemoveFromInventory(Dictionary<ulong, ulong> items)
         {
-            foreach (var _ in items.Where(itemToRemove => !_removeItem(itemToRemove)))
+            foreach (var _ in items.Where(itemToRemove => !_removeItem(itemToRemove.Key, itemToRemove.Value)))
             {
                 break;
             }
         }
 
-        bool _removeItem(Item item)
+        bool _removeItem(ulong itemID, ulong itemAmount)
         {
-            if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
+            if (!AllInventoryItems.TryGetValue(itemID, out var existingItem))
             {
                 //Debug.LogWarning($"Item {item.ItemID} - {item.ItemAmount} not found in inventory.");
 
                 return false;
             }
 
-            existingItem.ItemAmount -= item.ItemAmount;
+            existingItem.ItemAmount -= itemAmount;
 
-            if (existingItem.ItemAmount <= 0) AllInventoryItems.Remove(item.ItemID);
+            if (existingItem.ItemAmount <= 0) AllInventoryItems.Remove(itemID);
 
             return true;
         }
 
-        public void TransferItemsToTarget(InventoryData target, List<Item> items)
+        public void TransferItemsToTarget(InventoryData target, Dictionary<ulong, ulong> items)
         {
             RemoveFromInventory(items);
 
@@ -239,28 +257,23 @@ namespace Inventory
             return missingItems;
         }
 
-        public bool InventoryContainsAnyItems(List<ulong> itemIDs)
-        {
-            return itemIDs.Any(itemID => AllInventoryItems.ContainsKey(itemID));
-        }
+        public bool InventoryContainsAnyItemIDs(List<ulong> itemIDs) => 
+            itemIDs.Any(
+                itemID => AllInventoryItems.ContainsKey(itemID));
 
-        public bool InventoryContainsAnyItems(List<Item> items)
-        {
-            return items.Any(item =>
-                AllInventoryItems.TryGetValue(item.ItemID, out var existingItem) &&
-                existingItem.ItemAmount >= item.ItemAmount);
-        }
+        public bool InventoryContainsAnyItems(Dictionary<ulong, ulong> items) =>
+            items.Any(
+                item => AllInventoryItems.TryGetValue(item.Key, out var existingItem) 
+                        && existingItem.ItemAmount >= item.Value);
 
-        public bool InventoryContainsAllItems(List<Item> requiredItems)
-        {
-            return requiredItems.All(requiredItem =>
-                AllInventoryItems.TryGetValue(requiredItem.ItemID, out var existingItem)
-                && existingItem.ItemAmount >= requiredItem.ItemAmount);
-        }
+        public bool InventoryContainsAllItems(Dictionary<ulong, ulong> items) =>
+            items.All(
+                item => AllInventoryItems.TryGetValue(item.Key, out var existingItem)
+                                && existingItem.ItemAmount >= item.Value);
 
-        public abstract List<Item> GetInventoryItemsToFetchFromStation();
-        public abstract List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor);
-        public abstract List<Item> GetInventoryItemsToDeliverFromOtherStations();
-        public abstract List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor);
+        public abstract Dictionary<ulong, ulong> GetItemsToFetchFromStation();
+        public abstract Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true);
+        public abstract Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true);
+        public abstract Dictionary<ulong, ulong> GetInventoryItemsToProcess(InventoryData inventory_Actor);
     }
 }

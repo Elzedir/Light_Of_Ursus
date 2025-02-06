@@ -30,10 +30,10 @@ namespace Station
         //* jobs on different workPosts.
         public abstract JobName           DefaultJobName           { get; }
         public abstract RecipeName        DefaultProduct        { get; }
-        public abstract List<RecipeName>  DefaultAllowedRecipes { get; }
+        public abstract HashSet<RecipeName>  DefaultAllowedRecipes { get; }
         public HashSet<ActorActionName> AllowedActions => Station_Data.AllWorkPosts.Values.SelectMany(workPost => workPost.Job.JobActions).ToHashSet();
-        public abstract List<ulong>        AllowedStoredItemIDs  { get; }
-        public abstract List<ulong>        DesiredStoredItemIDs  { get; }
+        public abstract HashSet<ulong>        AllowedStoredItemIDs  { get; }
+        public abstract HashSet<ulong>        DesiredStoredItemIDs  { get; }
         
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
@@ -68,29 +68,22 @@ namespace Station
 
         protected abstract void _initialiseStartingInventory();
 
-        public List<Item> GetInventoryItems(ActorActionName actorAction)
-        {
-            return actorAction switch
-            {
-                ActorActionName.Haul => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
-                ActorActionName.Haul_Deliver => Station_Data.InventoryData.GetInventoryItemsToDeliverFromOtherStations(),
-                ActorActionName.Chop_Wood => Station_Data.InventoryData.GetInventoryItemsToFetchFromStation(),
-                _ => new List<Item>()
-            };
-        }
+        public Dictionary<ulong, ulong> GetInventoryItemsToFetch() => 
+            Station_Data.InventoryData.GetItemsToFetchFromStation();
 
-        public List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory)
+        public Dictionary<ulong, Dictionary<ulong, ulong>> GetInventoryItemsToDeliver() =>
+            Station_Data.InventoryData.GetItemsToDeliverFromOtherStations();
+
+        public Dictionary<ulong, ulong> GetInventoryItemsToDeliverFromActor(InventoryData actor)
         {
-            if (inventory != null) return Station_Data.InventoryData.GetInventoryItemsToDeliverFromInventory(inventory);
+            if (actor != null) return Station_Data.InventoryData.GetItemsToDeliverFromActor(actor);
             
-            Debug.LogError("Inventory is null.");
-            return new List<Item>();
+            Debug.LogError("Actor is null.");
+            return new Dictionary<ulong, ulong>();
         }
         
-        public List<Item> GetInventoryItemsToFetchFromStation()
-        {
-            return Station_Data.InventoryData.GetInventoryItemsToFetchFromStation();
-        }
+        public Dictionary<ulong, ulong> GetInventoryItemsToFetchFromStation() =>
+            Station_Data.InventoryData.GetItemsToFetchFromStation();
 
         public void SetInteractRange(float interactRange = 2)
         {
@@ -106,8 +99,8 @@ namespace Station
 
         public abstract void CraftItem(RecipeName recipeName, Actor_Component actor);
 
-        public abstract List<Item> GetCost(List<Item> ingredients, Actor_Component actor);
+        public abstract Dictionary<ulong, ulong> GetCost(Dictionary<ulong, ulong> ingredients, Actor_Component actor);
 
-        public abstract List<Item> GetYield(List<Item> ingredients, Actor_Component actor);
+        public abstract Dictionary<ulong, ulong> GetYield(Dictionary<ulong, ulong> ingredients, Actor_Component actor);
     }
 }

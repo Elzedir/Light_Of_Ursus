@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Items;
-using Priority;
 using Tools;
 using UnityEngine;
 
@@ -15,7 +13,7 @@ namespace Inventory
     {
         public InventoryData_Station(ulong stationID, ObservableDictionary<ulong, Item> allInventoryItems) : base(stationID, ComponentType.Station)
         {
-            AllInventoryItems                   =  allInventoryItems ?? new ObservableDictionary<ulong, Item>();
+            SetInventory(allInventoryItems ?? new ObservableDictionary<ulong, Item>());
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
         }
 
@@ -24,117 +22,142 @@ namespace Inventory
 
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
 
-        public ulong
-            MaxInventorySpace =
-                10; // Implement a way to change the size depending on the station. Maybe StationComponent default value.
+        //* Implement a way to change the size depending on the station. Maybe StationComponent default value.
+        public ulong MaxInventorySpace = 10; 
 
-        List<ulong> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
+        HashSet<ulong> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
 
-        public override bool HasSpaceForItems(List<Item> items)
+        public override bool HasSpaceForAllItem(Item item = null) =>
+            item != null
+                ? item.ItemAmount <= MaxInventorySpace
+                : MaxInventorySpace > 0;
+        
+        public override Item HasSpaceForItem(Item item = null) =>
+            item != null
+                ? new Item(item.ItemID, item.ItemAmount > MaxInventorySpace 
+                    ? MaxInventorySpace 
+                    : item.ItemAmount)
+                : null;
+
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromStation()
         {
-            if (Item.GetItemListTotal_CountAllItems(items) <= MaxInventorySpace) return true;
+            var itemsToFetch = new Dictionary<ulong, ulong>();
 
-            //Debug.Log("Not enough space in inventory.");
-            return false;
-        }
-
-        public override List<Item> GetInventoryItemsToFetchFromStation()
-        {
-            for (var i = 0; i < AllInventoryItems.Count; i++)
+            foreach (var item in AllInventoryItems.Values)
             {
-                var item = AllInventoryItems.ElementAt(i);
-
-                if (item.Value.ItemAmount >= 1) continue; // Clear items with 0 quantity.
-
-                AllInventoryItems.Remove(item.Key);
-            }
-
-            var itemsToFetch = GetAllInventoryItemsClone();
-
-            foreach (var itemID in _getDesiredItemIDs()) itemsToFetch.Remove(itemID);
-
-            if (itemsToFetch.Count == 0) return new List<Item>();
-
-            foreach (var itemOnHold in itemsToFetch.Values)
-            {
-                if (itemOnHold.ItemAmountOnHold > itemOnHold.ItemAmount)
+                if (_getDesiredItemIDs().Contains(item.ItemID)) continue;
+                
+                if (item.ItemAmountOnHold > item.ItemAmount)
                 {
-                    Debug.LogError($"Item quantity on hold - ID: {itemOnHold.ItemID} Qty: {itemOnHold.ItemAmount} " +
+                    Debug.LogError($"Item quantity on hold - ID: {item.ItemID} Qty: {item.ItemAmount} " +
                                    "is somehow greater than " +
-                                   $"item quantity in inventory - ID: {itemOnHold.ItemID} Qty: {itemOnHold.ItemAmount}." +
+                                   $"item quantity in inventory - ID: {item.ItemID} Qty: {item.ItemAmount}." +
                                    $"Setting item quantity on hold to item quantity in inventory.");
 
-                    itemOnHold.ItemAmountOnHold = itemOnHold.ItemAmount;
-                    itemsToFetch.Remove(itemOnHold.ItemID);
+                    item.ItemAmountOnHold = item.ItemAmount;
                     continue;
                 }
 
-                if (itemOnHold.ItemAmountOnHold == itemOnHold.ItemAmount)
-                {
-                    itemsToFetch.Remove(itemOnHold.ItemID);
-                    continue;
-                }
+                if (item.ItemAmountOnHold == item.ItemAmount) continue;
 
-                itemOnHold.ItemAmount -= itemOnHold.ItemAmountOnHold;
+                itemsToFetch.Add(item.ItemID, item.ItemAmount - item.ItemAmountOnHold);
             }
 
-            return itemsToFetch.Values.ToList();
+            return itemsToFetch;
         }
 
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor)
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true)
         {
-            var itemsToDeliver = inventory_Actor != null
-                ? _getDesiredItemIDs()
-                .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
-                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item))
-                .ToList()
-                : new List<Item>();
-
-            if (itemsToDeliver.Count == 0) return itemsToDeliver;
-
-            for (var i = 0; i < itemsToDeliver.Count; i++)
-                if (!HasSpaceForItems(new List<Item> { itemsToDeliver[i] }))
-                    itemsToDeliver.RemoveAt(i);
-
-            return itemsToDeliver;
-        }
-
-        public override List<Item> GetInventoryItemsToDeliverFromOtherStations()
-        {
-            var itemsToDeliver = new List<Item>();
-
-            foreach (var station in StationReference.Station.JobSite.JobSite_Data.AllStations)
+            if (HasSpaceForItemList() is null)
             {
-                if (station.Key == Reference.ComponentID) continue;
+                Debug.LogError("Not enough space in inventory.");
+                return new Dictionary<ulong, Dictionary<ulong, ulong>>();
+            }
+            
+            var stationsAndItemsToFetchFrom = new Dictionary<ulong, Dictionary<ulong, ulong>>();
 
-                var stationInventory = station.Value.Station_Data.InventoryData;
+            foreach (var stationToFetchFrom in StationReference.Station.JobSite.JobSite_Data.AllStations)
+            {
+                if (stationToFetchFrom.Key == StationReference.StationID) continue;
 
-                itemsToDeliver.AddRange(_getDesiredItemIDs()
-                    .Where(itemID => stationInventory.AllInventoryItems.ContainsKey(itemID))
-                    .Select(itemID => stationInventory.AllInventoryItems[itemID]).Select(item => new Item(item)));
+                stationsAndItemsToFetchFrom.TryAdd(stationToFetchFrom.Key, new Dictionary<ulong, ulong>());
+                
+                var itemsToFetch = stationToFetchFrom.Value.Station_Data.InventoryData.GetItemsToFetchFromStation();
+
+                foreach (var desiredItemID in _getDesiredItemIDs())
+                {
+                    itemsToFetch.TryGetValue(desiredItemID, out var amountToFetch);
+                    
+                    if (amountToFetch == 0) continue;
+                    
+                    if (!stationsAndItemsToFetchFrom[stationToFetchFrom.Key].TryAdd(desiredItemID, amountToFetch)) 
+                        stationsAndItemsToFetchFrom[stationToFetchFrom.Key][desiredItemID] += amountToFetch;
+                }
+            }
+
+            if (stationsAndItemsToFetchFrom.Count == 0 || !limitToAvailableInventoryCapacity) return stationsAndItemsToFetchFrom;
+
+            foreach (var stationToFetch in stationsAndItemsToFetchFrom.ToList())
+            {
+                foreach (var itemToFetch in stationToFetch.Value.ToList())
+                {
+                    if (HasSpaceForItem(new Item(itemToFetch.Key, itemToFetch.Value)) != null )
+                        stationsAndItemsToFetchFrom[stationToFetch.Key].Remove(itemToFetch.Key);
+                }
+            }
+
+            return stationsAndItemsToFetchFrom;
+        }
+
+        public override Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true)
+        {
+            if (HasSpaceForItemList() is null)
+            {
+                Debug.LogError("Not enough space in inventory.");
+                return new Dictionary<ulong, ulong>();
+            }
+            
+            var itemsToDeliver = new Dictionary<ulong, ulong>();
+
+            foreach (var desiredItemID in _getDesiredItemIDs())
+            {
+                inventory_Actor.AllInventoryItems.TryGetValue(desiredItemID, out var itemToFetch);
+                
+                if (itemToFetch == null) continue;
+                
+                if (!itemsToDeliver.TryAdd(desiredItemID, itemToFetch.ItemAmount)) 
+                    itemToFetch.ItemAmount += itemToFetch.ItemAmount;
+            }
+
+            if (itemsToDeliver.Count == 0 || !limitToAvailableInventoryCapacity) return itemsToDeliver;
+
+            foreach (var itemToFetch in itemsToDeliver.ToList())
+            {
+                if (HasSpaceForItem(new Item(itemToFetch.Key, itemToFetch.Value)) != null)
+                    itemsToDeliver.Remove(itemToFetch.Key);
             }
 
             return itemsToDeliver;
         }
 
-        public override List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor)
+        public override Dictionary<ulong, ulong> GetInventoryItemsToProcess(InventoryData inventory_Actor)
         {
-            var itemsInStation = _getDesiredItemIDs()
-                .Where(itemID => AllInventoryItems.ContainsKey(itemID))
-                .Select(itemID => AllInventoryItems[itemID]).Select(item => new Item(item)).ToList();
+            var itemsToProcess = new Dictionary<ulong, ulong>();
             
-            var itemsInActor = inventory_Actor != null 
-                ? _getDesiredItemIDs()
-                .Where(itemID => inventory_Actor.AllInventoryItems.ContainsKey(itemID))
-                .Select(itemID => inventory_Actor.AllInventoryItems[itemID]).Select(item => new Item(item)).ToList()
-                : new List<Item>();
+            foreach (var itemID in _getDesiredItemIDs())
+            {
+                if (AllInventoryItems.ContainsKey(itemID))
+                    itemsToProcess.Add(itemID, AllInventoryItems[itemID].ItemAmount);        
+                
+                if (inventory_Actor == null || !inventory_Actor.AllInventoryItems.ContainsKey(itemID)) continue;
+                
+                if (itemsToProcess.TryAdd(itemID, inventory_Actor.AllInventoryItems[itemID].ItemAmount)) 
+                    itemsToProcess[itemID] += inventory_Actor.AllInventoryItems[itemID].ItemAmount;
+            }
 
-            return Item.MergeItemLists(itemsInStation, itemsInActor);
+            return itemsToProcess;
         }
         
-        public override List<ActorActionName> GetAllowedActions()
-        {
-            return new List<ActorActionName>();
-        }
+        public override List<ActorActionName> GetAllowedActions() => new();
     }
 }

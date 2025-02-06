@@ -102,6 +102,9 @@ namespace JobSites
 
             var tempEmployees = allEmployees.Select(employee => employee.Value).ToList();
 
+            a
+                //* Check this again
+            
             foreach (var station in JobSite_Data.AllStations.Values)
             {
                 var employeesForStation = tempEmployees
@@ -145,31 +148,57 @@ namespace JobSites
 
         public List<Station_Component> GetRelevantStations(ActorActionName actorActionName)
         {
-            return RelevantStations.TryGetValue(actorActionName, out var stations_Source)
-                ? stations_Source()
+            return RelevantStations.TryGetValue(actorActionName, out var relevantStations)
+                ? relevantStations
                 : throw new ArgumentException(
                     $"ActorActionName: {actorActionName} not recognised for Station_Source.");
         }
 
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _relevantStations;
-        public Dictionary<ActorActionName, Func<List<Station_Component>>> RelevantStations =>
+        Dictionary<ActorActionName, List<Station_Component>> _relevantStations;
+        public Dictionary<ActorActionName, List<Station_Component>> RelevantStations =>
             _relevantStations ??= _getRelevantStations();
 
-        Dictionary<ActorActionName, Func<List<Station_Component>>> _getRelevantStations()
+        Dictionary<ActorActionName, List<Station_Component>> _getRelevantStations()
         {
-            return new Dictionary<ActorActionName, Func<List<Station_Component>>>
+            return new Dictionary<ActorActionName, List<Station_Component>>
             {
-                { ActorActionName.Haul, _relevantStations_Haul },
-                { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood },
-                { ActorActionName.Process_Logs, _relevantStations_Process_Logs },
-                { ActorActionName.Wander, () => new List<Station_Component>() }
+                { ActorActionName.Idle, _relevantStations_Idle() },
+                { ActorActionName.Haul, _relevantStations_Haul() },
+                { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood() },
+                { ActorActionName.Process_Logs, _relevantStations_Process_Logs() },
+                { ActorActionName.Wander, new List<Station_Component>() }
             };
         }
 
-        List<Station_Component> _relevantStations_Haul() => 
-            JobSite_Data.AllStations.Values
-                .Where(station => station.GetInventoryItems(ActorActionName.Haul).Count > 0)
+        //* Later, replace with recreational stations 
+        List<Station_Component> _relevantStations_Idle() => new();
+
+        List<Station_Component> _relevantStations_Haul()
+        {
+            var allFetchStations = JobSite_Data.AllStations.Values
+                .Where(station => station.GetInventoryItemsToFetch().Count > 0)
                 .ToList();
+            
+            var allDeliverStations = JobSite_Data.AllStations.Values
+                .Where(station => station.GetInventoryItemsToDeliver().Count > 0)
+                .ToList();
+            
+            foreach (var deliverStation in allDeliverStations)
+            {
+                foreach (var fetchStation in allFetchStations)
+                {
+                    //* Or rather than continuing, just scale priority based on how much more the distance is to the fetch than
+                    //* than it is to the deliver.
+                    if (Vector3.Distance(fetchStation.transform.postiion,
+                            priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position)
+                        < Vector3.Distance(deliverStation.transform.position,
+                            priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position))
+                        continue;
+                    
+                    // Generate priority for the JobSite with mainly distance and partially items.
+                }
+            }
+        }
 
         List<Station_Component> _relevantStations_Chop_Wood() =>
             JobSite_Data.AllStations.Values

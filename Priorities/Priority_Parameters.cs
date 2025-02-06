@@ -14,6 +14,8 @@ namespace Priorities
     [Serializable]
     public class Priority_Parameters
     {
+        public float DefaultPriorityValue = 0;
+        
         public ulong ActorID_Source;
         public ulong ActorID_Target;
         public ulong JobSiteID_Source;

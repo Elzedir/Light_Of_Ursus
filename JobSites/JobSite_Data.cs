@@ -367,7 +367,7 @@ namespace JobSites
                     foreach (var vocation in station.Station_Data.StationProgressData.CurrentProduct.RequiredVocations)
                     {
                         individualProductionRate *= Actor_Manager.GetActor_Data(workPost.Job.ActorID).Vocation
-                            .GetProgress(vocation);
+                            .GetProgress(vocation.Value);
                     }
 
                     totalProductionRate += individualProductionRate;
@@ -378,8 +378,8 @@ namespace JobSites
 
                     foreach (var product in station.Station_Data.StationProgressData.CurrentProduct.RecipeProducts)
                     {
-                        if (!estimatedProductionItems.TryGetValue(product.ItemID, out var item)) 
-                            estimatedProductionItems[product.ItemID] = new Item(product);
+                        if (!estimatedProductionItems.TryGetValue(product.Key, out var item)) 
+                            estimatedProductionItems[product.Key] = new Item(product.Key, product.Value);
                         else
                             item.ItemAmount += (ulong)estimatedProductionCount;
                     }

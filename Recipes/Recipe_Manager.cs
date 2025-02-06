@@ -8,10 +8,10 @@ namespace Recipes
     {
         const string _recipe_SOPath = "ScriptableObjects/Recipe_SO";
 
-        static Recipe_SO _allRecipes;
-        public static Recipe_SO AllRecipes => _allRecipes ??= _getRecipe_SO();
+        static Recipe_SO s_allRecipes;
+        public static Recipe_SO S_AllRecipes => s_allRecipes ??= _getRecipe_SO();
 
-        public static Recipe_Data GetRecipe_Master(RecipeName recipeName) => AllRecipes.GetRecipe_Master(recipeName).Data_Object;
+        public static Recipe_Data GetRecipe_Data(RecipeName recipeName) => S_AllRecipes.GetRecipe_Master(recipeName).Data_Object;
 
         static Recipe_SO _getRecipe_SO()
         {
@@ -27,15 +27,15 @@ namespace Recipes
         
         public static void ClearSOData()
         {
-            AllRecipes.ClearSOData();
+            S_AllRecipes.ClearSOData();
         }
     }
 
     [Serializable]
     public class CraftingQuality
     {
-        public int             QualityLevel;
         public ItemQualityName QualityName;
+        public int QualityLevel;
 
         public CraftingQuality(int qualityLevel, ItemQualityName qualityName)
         {

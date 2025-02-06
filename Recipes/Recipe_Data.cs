@@ -4,7 +4,6 @@ using System.Linq;
 using Items;
 using Station;
 using Tools;
-using UnityEngine;
 
 namespace Recipes
 {
@@ -12,44 +11,36 @@ namespace Recipes
     public class Recipe_Data : Data_Class
     {
         public RecipeName RecipeName;
-        public string     RecipeDescription;
+        public string RecipeDescription;
 
         public int RequiredProgress;
-        List<Item> _requiredIngredients;
+        public StationName RequiredStation;
+        
+        public Dictionary<ulong, ulong> RequiredIngredients;
+        public Dictionary<ulong, ulong> RecipeProducts;
+        
+        public Dictionary<ulong, CraftingQuality> PossibleQualities;
+        public Dictionary<ulong, VocationRequirement> RequiredVocations;
+        
+        public List<Item> RequiredIngredientList => Item.GetListItemFromDictionary(RequiredIngredients);
+        public List<Item> RecipeProductList => Item.GetListItemFromDictionary(RecipeProducts);
 
-        public List<Item> RequiredIngredients =>
-            (_requiredIngredients ??= new List<Item>()).Count is 0
-                ? new List<Item>()
-                : _requiredIngredients.Select(item => new Item(item)).ToList();
-
-
-        public StationName               RequiredStation;
-        public List<VocationRequirement> RequiredVocations;
-
-        List<Item> _recipeProducts;
-
-        public List<Item> RecipeProducts =>
-            (_recipeProducts ??= new List<Item>()).Count is 0
-                ? new List<Item>()
-                : _recipeProducts.Select(item => new Item(item)).ToList();
-
-
-        public List<CraftingQuality> PossibleQualities;
-
-        public Recipe_Data(RecipeName recipeName, string recipeDescription,
-                           int requiredProgress, List<Item> requiredIngredients, StationName requiredStation,
-                           List<VocationRequirement> requiredVocations,
-                           List<Item> recipeProducts, List<CraftingQuality> possibleQualities)
+        public Recipe_Data(
+            RecipeName recipeName, string recipeDescription, int requiredProgress, StationName requiredStation,
+            Dictionary<ulong, ulong> requiredIngredients,
+            Dictionary<ulong, VocationRequirement> requiredVocations,
+            Dictionary<ulong, ulong> recipeProducts,
+            Dictionary<ulong, CraftingQuality> possibleQualities)
         {
-            RecipeName        = recipeName;
+            RecipeName = recipeName;
             RecipeDescription = recipeDescription;
 
-            RequiredProgress     = requiredProgress;
-            _requiredIngredients = new List<Item>(requiredIngredients);
-            RequiredStation      = requiredStation;
-            RequiredVocations    = requiredVocations;
+            RequiredProgress = requiredProgress;
+            RequiredStation = requiredStation;
+            RequiredIngredients = requiredIngredients;
+            RequiredVocations = requiredVocations;
 
-            _recipeProducts   = new List<Item>(recipeProducts);
+            RecipeProducts = recipeProducts;
             PossibleQualities = possibleQualities;
         }
 
@@ -75,60 +66,66 @@ namespace Recipes
                 title: "Required Ingredients",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: RequiredIngredients?.ToDictionary(
-                    item => $"{item.ItemID}:",
-                    item => $"Qty: {item.ItemAmount}"));
+                    itemID => $"Item: {itemID.Key}:",
+                    itemAmount => $"Amount: {itemAmount.Value}"));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Required Vocations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: RequiredVocations?.ToDictionary(
-                    vocation => $"{vocation.VocationName}:",
-                    vocation => $"Min: {vocation.MinimumVocationExperience} " +
-                                $"Expected: {vocation.ExpectedVocationExperience}"));
+                    vocation => $"{(VocationName)vocation.Key}:",
+                    vocation =>
+                        $"Min: {vocation.Value.MinimumVocationExperience} " +
+                        $"Expected: {vocation.Value.ExpectedVocationExperience}"));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Recipe Products",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: RecipeProducts?.ToDictionary(item => $"{item.ItemID}:", item => $"Qty: {item.ItemAmount}"));
-            
+                allStringData: RecipeProducts?.ToDictionary(
+                    item => $"Item: {item.Key}:",
+                    item => $"Amount: {item.Value}"));
+
             _updateDataDisplay(DataToDisplay,
                 title: "Possible Qualities",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: PossibleQualities?.ToDictionary(quality => $"{quality.QualityName}:", quality => $"{quality.QualityLevel}"));
+                allStringData: PossibleQualities?.ToDictionary(
+                    qualityName => $"{(ItemQualityName)qualityName.Key}:",
+                    qualityLevel => $"{qualityLevel.Value.QualityLevel}"));
 
             return DataToDisplay;
         }
     }
-    
+
     [Serializable]
     public class Recipe
     {
         public readonly RecipeName RecipeName;
-        public          int        CurrentProgress;
+        public int CurrentProgress;
 
         // This is still only references, change it so that it creates new instances of the objects.
-        
-        public string                    RecipeDescription   => RecipeData.RecipeDescription;
-        public int                       RequiredProgress    => RecipeData.RequiredProgress;
-        public List<Item>                RequiredIngredients => RecipeData.RequiredIngredients;
-        public StationName               RequiredStation     => RecipeData.RequiredStation;
-        public List<VocationRequirement> RequiredVocations   => RecipeData.RequiredVocations;
-        public List<Item>                RecipeProducts      => RecipeData.RecipeProducts;
+
+        public string RecipeDescription => RecipeData.RecipeDescription;
+        public int RequiredProgress => RecipeData.RequiredProgress;
+        Dictionary<ulong, ulong> RequiredIngredients => RecipeData.RequiredIngredients;
+        public StationName RequiredStation => RecipeData.RequiredStation;
+        Dictionary<ulong, VocationRequirement> RequiredVocations => RecipeData.RequiredVocations;
+        Dictionary<ulong, ulong> RecipeProducts => RecipeData.RecipeProducts;
+        Dictionary<ulong, CraftingQuality> PossibleQualities => RecipeData.PossibleQualities;
 
         Recipe_Data _recipeData;
-        public Recipe_Data RecipeData => _recipeData ??= Recipe_Manager.GetRecipe_Master(RecipeName);
-            
+        public Recipe_Data RecipeData => _recipeData ??= Recipe_Manager.GetRecipe_Data(RecipeName);
+
         public Recipe(RecipeName recipeName)
         {
-            RecipeName      = recipeName;
+            RecipeName = recipeName;
             CurrentProgress = 0;
         }
     }
-    
+
     public enum RecipeName
     {
         None,
-        
+
         No_Recipe,
         Plank,
         Log,

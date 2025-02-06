@@ -166,8 +166,14 @@ namespace Items
         public static ulong GetItemListTotal_CountSpecificItem(List<Item> items, ulong itemID)
             => (ulong)items.Where(item => item.ItemID == itemID).Sum(item => (int)item.ItemAmount);
 
+        public static float GetItemWeight(Item item)
+            => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight;
+        
         public static float GetItemListTotal_Weight(List<Item> items)
             => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
+
+        public static List<Item> GetListItemFromDictionary(Dictionary<ulong, ulong> itemDictionary)
+            => itemDictionary.Select(item => new Item(item.Key, item.Value)).ToList();
         
         public static List<Item> MergeItemLists(List<Item> listA, List<Item> listB)
         {

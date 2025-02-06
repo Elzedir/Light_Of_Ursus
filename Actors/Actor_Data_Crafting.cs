@@ -2,11 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Inventory;
-using Items;
-using Priority;
+using Priorities;
 using Recipes;
 using Tools;
 using UnityEngine;
@@ -57,29 +55,14 @@ namespace Actors
 
         public IEnumerator CraftItemAll(RecipeName recipeName)
         {
-            var recipe = Recipe_Manager.GetRecipe_Master(recipeName);
+            var recipe_Data = Recipe_Manager.GetRecipe_Data(recipeName);
 
             var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
-            while (_inventoryContainsAllIngredients(actorData, recipe.RequiredIngredients))
+            while (actorData.InventoryData.InventoryContainsAllItems(recipe_Data.RequiredIngredients))
             {
                 yield return CraftItem(recipeName);
             }
-        }
-
-        bool _inventoryContainsAllIngredients(Actor_Data actorData, List<Item> ingredients)
-        {
-            foreach (var ingredient in ingredients)
-            {
-                var inventoryItem = actorData.InventoryData.GetItemFromInventory(ingredient.ItemID);
-
-                if (inventoryItem == null || inventoryItem.ItemAmount < ingredient.ItemAmount)
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         public IEnumerator CraftItem(RecipeName recipeName)
@@ -90,24 +73,23 @@ namespace Actors
                 yield break;
             }
 
-            Recipe_Data recipeData = Recipe_Manager.GetRecipe_Master(recipeName);
+            var recipe_Data = Recipe_Manager.GetRecipe_Data(recipeName);
+            var actor_Data = Actor_Manager.GetActor_Data(ActorReference.ActorID);
 
-            var actorData = Actor_Manager.GetActor_Data(ActorReference.ActorID);
-
-            if (!_inventoryContainsAllIngredients(actorData, recipeData.RequiredIngredients))
+            if (!actor_Data.InventoryData.InventoryContainsAllItems(recipe_Data.RequiredIngredients))
             {
                 Debug.Log("Inventory does not contain all ingredients.");
                 yield break;
             }
 
-            if (!actorData.InventoryData.HasSpaceForItems(recipeData.RecipeProducts))
+            if (!actor_Data.InventoryData.HasSpaceForAllItemList(recipe_Data.RecipeProductList))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;
             }
 
-            actorData.InventoryData.RemoveFromInventory(recipeData.RequiredIngredients);
-            actorData.InventoryData.AddToInventory(recipeData.RecipeProducts);
+            actor_Data.InventoryData.RemoveFromInventory(recipe_Data.RequiredIngredientList);
+            actor_Data.InventoryData.AddToInventory(recipe_Data.RecipeProductList);
         }
         
         public override List<ActorActionName> GetAllowedActions()

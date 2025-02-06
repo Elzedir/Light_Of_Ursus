@@ -6,26 +6,14 @@ using Actors;
 using Priority;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Priorities
 {
     [Serializable]
     public class Priority_Data_Actor : Priority_Data
     {
-        public Coroutine                CurrentActionCoroutine { get; private set; }
-        public bool                     IsPerformingAction     => CurrentActionCoroutine != null;
-        [SerializeField] ActorAction_Data _currentAction;
-
-        public void SetCurrentAction(ActorActionName actorActionName)
-        {
-            _stopCurrentAction();
-            
-            var actorAction = ActorAction_Manager.GetActorAction_Data(actorActionName);
-
-            _currentAction = actorAction;
-
-            // _actor.StartCoroutine(_performCurrentActionFromStart());
-        }
+        public Priority_Element CurrentAction;
         
         public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
@@ -69,7 +57,7 @@ namespace Priorities
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in _regeneratePriority.");
                     return;
                 case (ulong)ActorActionName.Idle:
-                    PriorityQueue.Update(priorityID, 1);
+                    PriorityQueue.Update(priorityID, 1, new Priority_Parameters { DefaultPriorityValue = 1});
                     return;
             }
 
@@ -77,7 +65,7 @@ namespace Priorities
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueue.Update(priorityID, priorityValue);
+            PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
@@ -103,14 +91,6 @@ namespace Priorities
         protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
-        }
-
-        void _stopCurrentAction()
-        {
-            if (CurrentActionCoroutine == null) return;
-            
-            _actor.StopCoroutine(CurrentActionCoroutine);
-            CurrentActionCoroutine = null;
         }
 
         readonly ComponentReference_Actor _actorReferences;
@@ -155,8 +135,11 @@ namespace Priorities
             // Local region is same zone.
             // Regional region is within 1 zone distance.
             // Distant region is 2+ zones.
-
-            var nextHighestPriorityValue = _getNextHighestPriorityValue();
+            
+            //* Change the regeneration of priorities here to be more efficient, but for now, always regenerate.
+            RegenerateAllPriorities(DataChangedName.None);
+            
+            var nextHighestPriorityValue = PeekHighestPriority();
 
             if (nextHighestPriorityValue is null)
             {
@@ -164,18 +147,10 @@ namespace Priorities
                 return;
             }
 
-            if (_currentAction != null && nextHighestPriorityValue.PriorityID == (ulong)_currentAction.ActionName)
+            if (CurrentAction != null && nextHighestPriorityValue.PriorityID == CurrentAction.PriorityID)
                 return;
 
-            SetCurrentAction((ActorActionName)nextHighestPriorityValue.PriorityID);
-        }
-
-        PriorityElement _getNextHighestPriorityValue()
-        {
-            //* Do we need to regenerate all priorities here? Eventually detach priority regeneration from priority getting.
-            RegenerateAllPriorities(DataChangedName.None);
-
-            return PeekHighestPriority();
+            CurrentAction = DequeueHighestPriority();
         }
         
         protected override HashSet<ActorActionName> _getAllowedActions() => 
@@ -183,17 +158,12 @@ namespace Priorities
 
         public override Dictionary<string, string> GetStringData()
         {
-            var highestPriority = PeekHighestPriority();
-            
             return new Dictionary<string, string>
             {
                 { "Actor ID", $"{ActorID}" },
-                { "Current Actor Action", $"{_currentAction?.ActionName}" },
-                { "Is Performing Current Action", $"{IsPerformingAction}" },
-                { "Current Action Coroutine", $"{CurrentActionCoroutine}" },
-                { "Next Highest Priority", highestPriority?.PriorityID != null 
-                    ? $"{(ActorActionName)highestPriority.PriorityID}({highestPriority.PriorityID}) - {highestPriority.PriorityValue}" 
-                    : "No Highest Priority" }
+                { "Current Actor Action", CurrentAction?.PriorityID != null 
+                    ? $"{ (ActorActionName)CurrentAction.PriorityID}({CurrentAction.PriorityID})" 
+                    : "No current actor action" }
             };
         }
 

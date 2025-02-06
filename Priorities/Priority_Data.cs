@@ -35,8 +35,8 @@ namespace Priorities
         public abstract    void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false);
         protected abstract void _regeneratePriority(ulong priorityID);
         
-        public PriorityElement PeekHighestPriority(ulong priorityID = 1) => PriorityQueue.Peek(priorityID);
-        public PriorityElement PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
+        public Priority_Element PeekHighestPriority(ulong priorityID = 1) => PriorityQueue.Peek(priorityID);
+        public Priority_Element PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
             var permittedPriorities = _getPermittedPriorities(priorityIDs);
 
@@ -46,7 +46,7 @@ namespace Priorities
                 return null;
             }
 
-            var highestPriority = new PriorityElement(0, 0);
+            var highestPriority = new Priority_Element(0, 0, new Priority_Parameters());
 
             foreach (var priority in permittedPriorities)
             {
@@ -62,8 +62,8 @@ namespace Priorities
 
             return PriorityQueue.Peek(highestPriority.PriorityID);
         }
-        public PriorityElement GetHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
-        public PriorityElement GetHighestPriorityFromGroup(List<ulong> priorityIDs, ulong priorityObjectParameterID = 0)
+        public Priority_Element DequeueHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
+        public Priority_Element GetHighestPriorityFromGroup(List<ulong> priorityIDs, ulong priorityObjectParameterID = 0)
         {
             priorityIDs = _getRelevantPriorityIDs(priorityIDs, priorityObjectParameterID);
 
@@ -97,26 +97,20 @@ namespace Priorities
         protected abstract void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
-        protected abstract void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+        protected virtual void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters) { }
 
         void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            _setHighestPriorityStation(actorActionName, priority_Parameters, false);
+            _setHighestPriorityStation(actorActionName, priority_Parameters);
         }
 
-        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters, bool isStation_Source)
+        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            //* Recheck this allocation
-            
             var allRelevantStations =
-                priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName, isStation_Source);
+                priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
             
             if (allRelevantStations.Count is 0)
             {
-                // Debug.LogError(isStation_Source 
-                //     ? $"No relevant station_Source for {actorActionName}."
-                //     : $"No relevant station_Target for {actorActionName}.");
-                
                 _setStationID(priority_Parameters, isStation_Source, 0);
                 return;
             }
@@ -142,10 +136,6 @@ namespace Priorities
 
             if (highestPriorityStationID is 0)
             {
-                // Debug.LogError(isStation_Source 
-                //     ? $"All station_Sources ({allRelevantStations.Count}) have 0 priority for action: {actorActionName}."
-                //     : $"All station_Targets ({allRelevantStations.Count}) have 0 priority for action: {actorActionName}.");
-                
                 _setStationID(priority_Parameters, isStation_Source, 0);
                 return;
             }

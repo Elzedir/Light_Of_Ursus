@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using ActorActions;
 using Inventory;
-using Priorities;
 using Tools;
 using UnityEngine;
 
-namespace Priority
+namespace Priorities
 {
     //* What's the point between this and Priority_Data at this point?
     public abstract class Priority_Class : Data_Class

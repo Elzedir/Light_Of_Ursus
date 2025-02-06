@@ -5,6 +5,7 @@ using Actor;
 using ActorActions;
 using Faction;
 using Inventory;
+using Priorities;
 using Priority;
 using Proximity;
 using Tools;

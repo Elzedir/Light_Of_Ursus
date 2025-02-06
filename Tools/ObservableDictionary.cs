@@ -2,6 +2,7 @@ using System;
 
 namespace Tools
 {
+    [Serializable]
     public class ObservableDictionary<TKey, TValue> : SerializableDictionary<TKey, TValue>
     {
         public Action<TKey> DictionaryChanged;

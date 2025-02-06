@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Actor;
 using ActorActions;
 using Items;
-using Priority;
 using Tools;
 using UnityEngine;
 
@@ -14,13 +12,13 @@ namespace Inventory
     {
         public InventoryData_Actor(ulong actorID, ObservableDictionary<ulong, Item> allInventoryItems) : base(actorID, ComponentType.Actor)
         {
-            AllInventoryItems = allInventoryItems ?? new ObservableDictionary<ulong, Item>();
+            SetInventory(allInventoryItems ?? new ObservableDictionary<ulong, Item>());
             AllInventoryItems.DictionaryChanged += OnInventoryChanged;
         }
         
         public InventoryData_Actor(InventoryData inventoryData_Actor) : base(inventoryData_Actor.Reference.ComponentID, ComponentType.Actor)
         {
-            AllInventoryItems = inventoryData_Actor.GetAllObservableInventoryItemsClone();
+            SetInventory(inventoryData_Actor.GetAllObservableInventoryItemsClone());
         }
         
         public override ComponentType       ComponentType      => ComponentType.Actor;
@@ -32,41 +30,47 @@ namespace Inventory
         public float AvailableCarryWeight => _availableCarryWeight != 0 
             ? _availableCarryWeight 
             : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
-        public override bool HasSpaceForItems(List<Item> items)
-        {
-            if (Item.GetItemListTotal_Weight(items) > AvailableCarryWeight)
-            {
-                Debug.Log("Too heavy for inventory.");
-                return false;
-            }
 
-            return true;
+        public override bool HasSpaceForAllItem(Item item = null) =>
+            item != null
+                ? Item.GetItemWeight(item) <= AvailableCarryWeight
+                : AvailableCarryWeight > 0;
+
+        public override Item HasSpaceForItem(Item item = null)
+        {
+            var itemWeight = Item.GetItemWeight(item);
+            
+            return item != null
+                ? new Item(item.ItemID, itemWeight > AvailableCarryWeight 
+                    ? (ulong)(item.ItemAmount * (itemWeight / AvailableCarryWeight)) 
+                    : item.ItemAmount)
+                : null;
         }
-        
+
         public override List<ActorActionName> GetAllowedActions()
         {
             return new List<ActorActionName>();
         }
 
-        public override List<Item> GetInventoryItemsToFetchFromStation()
-        {
-            Debug.LogError("Not implemented yet.");
-            return null;
-        }
-
-        public override List<Item> GetInventoryItemsToDeliverFromInventory(InventoryData inventory_Actor)
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromStation()
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
         
-        public override List<Item> GetInventoryItemsToDeliverFromOtherStations()
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true)
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
 
-        public override List<Item> GetInventoryItemsToProcess(InventoryData inventory_Actor)
+        public override Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true)
+        {
+            Debug.LogError("Not implemented yet.");
+            return null;
+        }
+
+        public override Dictionary<ulong, ulong> GetInventoryItemsToProcess(InventoryData inventory_Actor)
         {
             Debug.LogError("Not implemented yet.");
             return null;

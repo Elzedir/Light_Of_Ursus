@@ -63,16 +63,10 @@ namespace Priorities
 
         protected override void _regeneratePriority(ulong priorityID)
         {
-            if (priorityID == (ulong)ActorActionName.Idle)
-            {
-                PriorityQueue.Update(priorityID, 1);
-                return;
-            }
-            
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueue.Update(priorityID, priorityValue);
+            PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
@@ -83,13 +77,6 @@ namespace Priorities
         protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Source = JobSiteID;
-        }
-        
-        //* Currently the same code for SetStationID_Target, check to change in the future.
-
-        protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
-        {
-            _setHighestPriorityStation(actorActionName, priority_Parameters, true);
         }
 
         protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)

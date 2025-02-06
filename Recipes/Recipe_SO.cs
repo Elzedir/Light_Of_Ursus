@@ -15,7 +15,7 @@ namespace Recipes
         public Data<Recipe_Data>   GetRecipe_Master(RecipeName recipeName) => GetData((ulong)recipeName);
 
         protected override Dictionary<ulong, Data<Recipe_Data>> _getDefaultData() => 
-            _convertDictionaryToData(Recipe_List.DefaultRecipes);
+            _convertDictionaryToData(Recipe_List.S_DefaultRecipes);
 
         protected override Data<Recipe_Data> _convertToData(Recipe_Data data)
         {

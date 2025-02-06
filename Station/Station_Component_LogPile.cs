@@ -17,9 +17,9 @@ namespace Station
         public override JobName DefaultJobName => JobName.Sawyer;
 
         public override RecipeName       DefaultProduct       => RecipeName.No_Recipe; // Fix hauling so that it doesn't need a recipe.
-        public override List<RecipeName> DefaultAllowedRecipes       { get; } = new();
-        public override List<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
-        public override List<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
+        public override HashSet<RecipeName> DefaultAllowedRecipes       { get; } = new();
+        public override HashSet<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
+        public override HashSet<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
 
         protected override void _initialiseStartingInventory() { }
 
@@ -34,16 +34,16 @@ namespace Station
             yield return null;
         }
 
-        public override List<Item> GetCost(List<Item> ingredients, Actor_Component actor)
+        public override Dictionary<ulong, ulong> GetCost(Dictionary<ulong, ulong> ingredients, Actor_Component actor)
         {
-            return new List<Item>(); // For now
+            return new Dictionary<ulong, ulong>(); // For now
 
             // Base resource cost on actor relevant skill
         }
 
-        public override List<Item> GetYield(List<Item> products, Actor_Component actor)
+        public override Dictionary<ulong, ulong> GetYield(Dictionary<ulong, ulong> products, Actor_Component actor)
         {
-            return new List<Item>(); // For now
+            return new Dictionary<ulong, ulong>(); // For now
 
             // Base resource yield on actor relevant skill
         }

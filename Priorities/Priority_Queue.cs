@@ -4,12 +4,12 @@ using System.Linq;
 using Tools;
 using UnityEngine;
 
-namespace Priority
+namespace Priorities
 {
     public class Priority_Queue : Data_Class
     {
         int                            _currentPosition;
-        PriorityElement[]              _priorityArray;
+        Priority_Element[]              _priorityArray;
         readonly Dictionary<ulong, int> _priorityQueue;
 
         public Action<ulong> OnPriorityRemoved;
@@ -17,11 +17,11 @@ namespace Priority
         public Priority_Queue(int maxPriorities)
         {
             _currentPosition = 0;
-            _priorityArray   = new PriorityElement[maxPriorities];
+            _priorityArray   = new Priority_Element[maxPriorities];
             _priorityQueue   = new Dictionary<ulong, int>();
         }
 
-        public PriorityElement Peek(ulong priorityID = 1)
+        public Priority_Element Peek(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
                 return null;
@@ -31,12 +31,12 @@ namespace Priority
             return index == 0 ? null : _priorityArray[index];
         }
 
-        public PriorityElement[] PeekAll()
+        public Priority_Element[] PeekAll()
         {
             return _currentPosition == 0 ? null : _priorityArray.Skip(1).ToArray();
         }
 
-        public PriorityElement Dequeue(ulong priorityID = 1)
+        public Priority_Element Dequeue(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
             {
@@ -64,13 +64,13 @@ namespace Priority
             return priorityValue;
         }
 
-        bool _enqueue(ulong priorityID, float priority)
+        bool _enqueue(ulong priorityID, float priorityValue, Priority_Parameters priorityParameters)
         {
             if (_priorityQueue.TryGetValue(priorityID, out var index) && index != 0)
             {
                 Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
 
-                if (Update(priorityID, priority))
+                if (Update(priorityID, priorityValue, priorityParameters))
                     return true;
 
                 Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
@@ -78,23 +78,23 @@ namespace Priority
 
             }
 
-            var priorityValue = new PriorityElement(priorityID, priority);
+            var priorityElement = new Priority_Element(priorityID, priorityValue, priorityParameters);
             _currentPosition++;
             _priorityQueue[priorityID] = _currentPosition;
             if (_currentPosition == _priorityArray.Length)
                 Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
-            _priorityArray[_currentPosition] = priorityValue;
+            _priorityArray[_currentPosition] = priorityElement;
             _moveUp(_currentPosition);
 
             return true;
         }
 
-        public bool Update(ulong priorityID, float newPriority)
+        public bool Update(ulong priorityID, float newPriority, Priority_Parameters priorityParameters)
         {
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
-                return _enqueue(priorityID, newPriority);
+                return _enqueue(priorityID, newPriority, priorityParameters);
 
-            _priorityArray[index].UpdatePriority(newPriority);
+            _priorityArray[index].UpdatePriorityValue(newPriority, priorityParameters);
 
             if (index == _currentPosition || index == 1) return true;
 
@@ -223,22 +223,25 @@ namespace Priority
         }
     }
 
-    public class PriorityElement
+    public class Priority_Element
     {
         public readonly ulong         PriorityID;
+        public Priority_Parameters           PriorityParameters { get; private set; }
         public float PriorityValue { get; private set; }
 
         // We'll save this in case we need to exclude any values. Or Debug anything.
 
-        public PriorityElement(ulong priorityID, float priorityValue)
+        public Priority_Element(ulong priorityID, float priorityValue, Priority_Parameters priorityParameters)
         {
             PriorityID       = priorityID;
             PriorityValue    = priorityValue;
+            PriorityParameters = priorityParameters;
         }
 
-        public void UpdatePriority(float value)
+        public void UpdatePriorityValue(float value, Priority_Parameters priorityParameters)
         {
             PriorityValue = value;
+            PriorityParameters = priorityParameters;
         }
     }
 }
