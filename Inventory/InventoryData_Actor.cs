@@ -31,20 +31,27 @@ namespace Inventory
             ? _availableCarryWeight 
             : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
 
-        public override bool HasSpaceForAllItem(Item item = null) =>
-            item != null
-                ? Item.GetItemWeight(item) <= AvailableCarryWeight
+        public override bool HasSpaceForItem(ulong itemID, ulong itemAmount) =>
+            itemID != 0
+                ? Item.GetItemWeight(new Item(itemID, itemAmount)) <= AvailableCarryWeight
                 : AvailableCarryWeight > 0;
 
-        public override Item HasSpaceForItem(Item item = null)
+        public override Item GetUnaddedItem(ulong itemID, ulong itemAmount)
         {
+            if (itemID is 0) return null;
+            
+            var item = new Item(itemID, itemAmount);
+
             var itemWeight = Item.GetItemWeight(item);
             
-            return item != null
-                ? new Item(item.ItemID, itemWeight > AvailableCarryWeight 
-                    ? (ulong)(item.ItemAmount * (itemWeight / AvailableCarryWeight)) 
-                    : item.ItemAmount)
-                : null;
+            if (itemWeight <= AvailableCarryWeight) 
+                return null;
+            
+            var fitAmount = (ulong)(item.ItemAmount * (AvailableCarryWeight / itemWeight));
+
+            return fitAmount == 0 
+                ? item 
+                : new Item(item.ItemID, item.ItemAmount - fitAmount);
         }
 
         public override List<ActorActionName> GetAllowedActions()

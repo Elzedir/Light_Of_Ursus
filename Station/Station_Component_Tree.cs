@@ -1,9 +1,6 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Actors;
-using Items;
 using Jobs;
 using Recipes;
 using UnityEngine;
@@ -22,11 +19,7 @@ namespace Station
         public override HashSet<ulong>       AllowedStoredItemIDs { get; } = new();
         public override HashSet<ulong>       DesiredStoredItemIDs { get; } = new();
 
-        protected override void _initialiseStartingInventory()
-        {
-            if (Station_Data.InventoryData.AllInventoryItems.Count == 0)
-                Station_Data.InventoryData.AddToInventory(new List<Item>());
-        }
+        protected override void _initialiseStartingInventory() { }
 
         public override void CraftItem(RecipeName recipeName, Actor_Component actor)
         {
@@ -45,7 +38,7 @@ namespace Station
             var recipeData = Recipe_Manager.GetRecipe_Data(recipeName);
 
             var cost  = GetCost(recipeData.RequiredIngredients, actor);
-            var yield = GetYield(recipeData.RecipeProductList.ToHashSet(), actor);
+            var yield = GetYield(recipeData.RecipeProducts, actor);
 
             if (!Station_Data.InventoryData.InventoryContainsAllItems(cost))
             {
@@ -53,20 +46,18 @@ namespace Station
                 return;
             }
 
-            if (!Station_Data.InventoryData.HasSpaceForItemList(yield))
+            if (actor.ActorData.InventoryData.HasSpaceForItemList(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
                 return;
             }
-            
-            Station_Data.InventoryData.RemoveFromInventory(new List<Item>());
             
             // Have another system where the tree loses durability instead or something.
             // Later allow it to partially remove logs to chop the tree down completely.
 
             foreach (var item in yield)
             {
-                Debug.Log($"Adding {item.ItemName} to inventory.");
+                Debug.Log($"Adding {item.Key} Qty: {item.Value} to inventory.");
             }
             
             actor.ActorData.InventoryData.AddToInventory(yield);

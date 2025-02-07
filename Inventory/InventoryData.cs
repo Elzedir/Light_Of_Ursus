@@ -92,41 +92,39 @@ namespace Inventory
                 Debug.LogError($"Failed to add item {item.ItemID} to inventory.");
         }
 
-        public bool HasSpaceForAllItemList(Dictionary<ulong, ulong> items = null)
+        public bool HasSpaceForItemList(Dictionary<ulong, ulong> items = null)
             => items?.All(
-                item => HasSpaceForAllItem(new Item(item.Key, item.Value))) ?? false;
-        public List<Item> HasSpaceForItemList(Dictionary<ulong, ulong> items = null)
+                item => HasSpaceForItem(item.Key, item.Value)) ?? HasSpaceForItem(0, 0);
+        public abstract bool HasSpaceForItem(ulong itemID, ulong itemAmount);
+        
+        public List<Item> GetUnaddedItemList(Dictionary<ulong, ulong> items = null)
             => items?.Select(
-                item => HasSpaceForItem(new Item(item.Key, item.Value)))
-                .Where(item => item != null).ToList();
-        public abstract bool HasSpaceForAllItem(Item item = null);
-        public abstract Item HasSpaceForItem(Item item = null);
+                    item => GetUnaddedItem(item.Key, item.Value))
+                .Where(item => item != null).ToList() ?? new List<Item>();
+        public abstract Item GetUnaddedItem(ulong itemID, ulong itemAmount);
 
         //* Later, allow overburdening, to a percentage.
-        public void AddToInventory(List<Item> items)
-        {
-            foreach (var _ in items.Where(itemToAdd => !_addItem(itemToAdd)))
-            {
-                break;
-            }
-        }
+        public List<Item> AddToInventory(Dictionary<ulong, ulong> items) => 
+            items.Select(item => _addItem(item.Key, item.Value)).ToList();
 
-        bool _addItem(Item item)
+        Item _addItem(ulong itemID, ulong itemAmount)
         {
-            if (item.ItemAmount == 0)
+            if (itemAmount == 0)
             {
                 Debug.LogError("Trying to add item with 0 quantity.");
-                return false;
+                return new Item(itemID, itemAmount);
             }
 
-            if (!AllInventoryItems.TryGetValue(item.ItemID, out var existingItem))
+            var itemToAdd = GetUnaddedItem(itemID, itemAmount);
+
+            if (!AllInventoryItems.TryGetValue(itemID, out var existingItem))
             {
-                AllInventoryItems.Add(item.ItemID, HasSpaceForItem(item));
+                AllInventoryItems.Add(itemToAdd.ItemID, itemToAdd);
 
-                return true;
+                return itemToAdd;
             }
 
-            existingItem.ItemAmount += HasSpaceForItem(item).ItemAmount;
+            existingItem.ItemAmount += GetUnaddedItem(new Item(itemID, itemAmount)).ItemAmount;
 
             return true;
         }
@@ -155,11 +153,11 @@ namespace Inventory
             return true;
         }
 
-        public void TransferItemsToTarget(InventoryData target, Dictionary<ulong, ulong> items)
+        public Item TransferItemsToTarget(InventoryData target, Dictionary<ulong, ulong> items)
         {
             RemoveFromInventory(items);
 
-            target.AddToInventory(items);
+            return target.AddToInventory(items);
         }
 
         public bool DropItems(List<Item> items, Vector3 dropPosition, bool itemsNotInInventory = false,

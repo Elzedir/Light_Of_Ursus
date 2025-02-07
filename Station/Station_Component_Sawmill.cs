@@ -43,7 +43,7 @@ namespace Station
             var yield = GetYield(recipeMaster.RecipeProducts, actor);
         
             if (!Station_Data.InventoryData.InventoryContainsAllItems(cost)) { Debug.Log("Station does not have required items."); return; }
-            if (Station_Data.InventoryData.HasSpaceForItemList(yield) == null) { Debug.Log("Station does not have space for yield items."); return; }
+            if (Station_Data.InventoryData.GetUnaddedItemList(yield) == null) { Debug.Log("Station does not have space for yield items."); return; }
 
             Station_Data.InventoryData.RemoveFromInventory(cost);
             Station_Data.InventoryData.AddToInventory(yield);

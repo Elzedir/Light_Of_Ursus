@@ -27,16 +27,16 @@ namespace Inventory
 
         HashSet<ulong> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
 
-        public override bool HasSpaceForAllItem(Item item = null) =>
-            item != null
-                ? item.ItemAmount <= MaxInventorySpace
+        public override bool HasSpaceForItem(ulong itemID, ulong itemAmount) =>
+            itemID != 0
+                ? itemAmount <= MaxInventorySpace
                 : MaxInventorySpace > 0;
-        
-        public override Item HasSpaceForItem(Item item = null) =>
-            item != null
-                ? new Item(item.ItemID, item.ItemAmount > MaxInventorySpace 
-                    ? MaxInventorySpace 
-                    : item.ItemAmount)
+
+        public override Item GetUnaddedItem(ulong itemID, ulong itemAmount) =>
+            itemID != 0
+                ? itemAmount <= MaxInventorySpace
+                    ? null
+                    : new Item(itemID, itemAmount - MaxInventorySpace)
                 : null;
 
         public override Dictionary<ulong, ulong> GetItemsToFetchFromStation()
@@ -68,7 +68,7 @@ namespace Inventory
 
         public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true)
         {
-            if (HasSpaceForItemList() is null)
+            if (!HasSpaceForItemList())
             {
                 Debug.LogError("Not enough space in inventory.");
                 return new Dictionary<ulong, Dictionary<ulong, ulong>>();
@@ -101,7 +101,7 @@ namespace Inventory
             {
                 foreach (var itemToFetch in stationToFetch.Value.ToList())
                 {
-                    if (HasSpaceForItem(new Item(itemToFetch.Key, itemToFetch.Value)) != null )
+                    if (HasSpaceForItem(itemToFetch.Key, itemToFetch.Value))
                         stationsAndItemsToFetchFrom[stationToFetch.Key].Remove(itemToFetch.Key);
                 }
             }
@@ -111,7 +111,7 @@ namespace Inventory
 
         public override Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true)
         {
-            if (HasSpaceForItemList() is null)
+            if (!HasSpaceForItemList())
             {
                 Debug.LogError("Not enough space in inventory.");
                 return new Dictionary<ulong, ulong>();
@@ -124,16 +124,20 @@ namespace Inventory
                 inventory_Actor.AllInventoryItems.TryGetValue(desiredItemID, out var itemToFetch);
                 
                 if (itemToFetch == null) continue;
-                
-                if (!itemsToDeliver.TryAdd(desiredItemID, itemToFetch.ItemAmount)) 
-                    itemToFetch.ItemAmount += itemToFetch.ItemAmount;
+
+                if (!itemsToDeliver.TryAdd(desiredItemID, itemToFetch.ItemAmount))
+                {
+                    var unaddedItem = GetUnaddedItem(itemToFetch.ItemID, itemToFetch.ItemAmount);
+                    
+                    .ItemAmount += itemToFetch.ItemAmount;   
+                }
             }
 
             if (itemsToDeliver.Count == 0 || !limitToAvailableInventoryCapacity) return itemsToDeliver;
 
             foreach (var itemToFetch in itemsToDeliver.ToList())
             {
-                if (HasSpaceForItem(new Item(itemToFetch.Key, itemToFetch.Value)) != null)
+                if (HasSpaceForItem(itemToFetch.Key, itemToFetch.Value))
                     itemsToDeliver.Remove(itemToFetch.Key);
             }
 

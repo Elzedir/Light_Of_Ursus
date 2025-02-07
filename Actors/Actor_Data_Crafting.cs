@@ -82,14 +82,14 @@ namespace Actors
                 yield break;
             }
 
-            if (!actor_Data.InventoryData.HasSpaceForAllItemList(recipe_Data.RecipeProductList))
+            if (!actor_Data.InventoryData.HasSpaceForItemList(recipe_Data.RecipeProducts))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;
             }
 
-            actor_Data.InventoryData.RemoveFromInventory(recipe_Data.RequiredIngredientList);
-            actor_Data.InventoryData.AddToInventory(recipe_Data.RecipeProductList);
+            actor_Data.InventoryData.RemoveFromInventory(recipe_Data.RequiredIngredients);
+            actor_Data.InventoryData.AddToInventory(recipe_Data.RecipeProducts);
         }
         
         public override List<ActorActionName> GetAllowedActions()
