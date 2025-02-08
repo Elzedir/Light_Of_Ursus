@@ -79,12 +79,12 @@ namespace Priorities
             priority_Parameters.JobSiteID_Source = JobSiteID;
         }
 
-        protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected override void _setActorID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.ActorID_Target = 0;
         }
 
-        protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected override void _setJobSiteID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
         }

@@ -82,7 +82,7 @@ namespace Actors
                 yield break;
             }
 
-            if (!actor_Data.InventoryData.HasSpaceForItemList(recipe_Data.RecipeProducts))
+            if (!actor_Data.InventoryData.HasSpaceForAllItemList(recipe_Data.RecipeProducts))
             {
                 Debug.Log("Inventory does not have space for produced items.");
                 yield break;

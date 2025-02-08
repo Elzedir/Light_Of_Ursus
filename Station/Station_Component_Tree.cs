@@ -46,7 +46,7 @@ namespace Station
                 return;
             }
 
-            if (actor.ActorData.InventoryData.HasSpaceForItemList(yield))
+            if (!actor.ActorData.InventoryData.HasSpaceForAllItemList(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
                 return;
@@ -54,18 +54,8 @@ namespace Station
             
             // Have another system where the tree loses durability instead or something.
             // Later allow it to partially remove logs to chop the tree down completely.
-
-            foreach (var item in yield)
-            {
-                Debug.Log($"Adding {item.Key} Qty: {item.Value} to inventory.");
-            }
             
             actor.ActorData.InventoryData.AddToInventory(yield);
-            
-            foreach (var item in actor.ActorData.InventoryData.AllInventoryItems)
-            {
-                Debug.Log($"Actor inventory contains {item.Value.ItemName}({item.Key}) - {item.Value.ItemAmount}.");
-            }
         }
 
         public override IEnumerator Interact(Actor_Component actor)

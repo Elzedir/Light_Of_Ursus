@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Station;
 using Tools;
 
 namespace Items
@@ -139,13 +140,13 @@ namespace Items
     public class Item : Data_Class
     {
         public ulong   ItemID;
-        public string ItemName => DataItem.ItemCommonStats.ItemName;
+        public string ItemName => Item_Data.ItemCommonStats.ItemName;
         public ulong   ItemAmount;
         public ulong   ItemAmountOnHold;
-        public ulong   MaxStackSize => DataItem.ItemCommonStats.MaxStackSize;
+        public ulong   MaxStackSize => Item_Data.ItemCommonStats.MaxStackSize;
 
-        Item_Data        _dataItem;
-        public Item_Data DataItem => _dataItem ??= Item_Manager.GetItem_Data(ItemID);
+        Item_Data        _item_Data;
+        public Item_Data Item_Data => _item_Data ??= Item_Manager.GetItem_Data(ItemID);
 
         public Item(ulong itemID, ulong itemAmount)
         {
@@ -167,10 +168,10 @@ namespace Items
             => (ulong)items.Where(item => item.ItemID == itemID).Sum(item => (int)item.ItemAmount);
 
         public static float GetItemWeight(Item item)
-            => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight;
+            => item.ItemAmount * item.Item_Data.ItemCommonStats.ItemWeight;
         
         public static float GetItemListTotal_Weight(List<Item> items)
-            => items.Sum(item => item.ItemAmount * item.DataItem.ItemCommonStats.ItemWeight);
+            => items.Sum(item => item.ItemAmount * item.Item_Data.ItemCommonStats.ItemWeight);
 
         public static List<Item> GetListItemFromDictionary(Dictionary<ulong, ulong> itemDictionary)
             => itemDictionary.Select(item => new Item(item.Key, item.Value)).ToList();
@@ -202,7 +203,7 @@ namespace Items
             }
         }
 
-        public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => DataItem.GetDataToDisplay(toggleMissingDataDebugs);
+        public DataToDisplay DataSO_Object_Data(bool toggleMissingDataDebugs) => Item_Data.GetDataToDisplay(toggleMissingDataDebugs);
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -220,7 +221,7 @@ namespace Items
             _updateDataDisplay(DataToDisplay,
                 title: "Common Stats",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: DataItem.ItemCommonStats.GetStringData());
+                allStringData: Item_Data.ItemCommonStats.GetStringData());
 
             return DataToDisplay;
         }

@@ -26,6 +26,9 @@ namespace Tools
             }
 
             SO.ToggleMissingDataDebugs = GUILayout.Toggle(SO.ToggleMissingDataDebugs, "Toggle Missing Data Debugs");
+            
+            a
+                //* Fix the bug of this interfering with the normal loading of the game.
 
             _refreshData();
             

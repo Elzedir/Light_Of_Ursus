@@ -85,41 +85,17 @@ namespace Priorities
             return _addPriorityIfNotEqualTarget(Item.GetItemListTotal_CountAllItems(items), target, maxPriority);
         }
 
-        protected static float _moreItemsDesired_Total(List<Item> items, float total, float maxPriority,
-            StationName currentStationType = StationName.None,
-            HashSet<StationName> allStationTypes = null)
+        protected static float _moreItemsDesired_Percent(List<Item> items, float total, float maxPriority)
         {
-            if (allStationTypes == null)
-            {
-                return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
-            }
-
-            var priority = 0f;
-
-            foreach (var item in items)
-            {
-                var masterItem = Item_Manager.GetItem_Data(item.ItemID);
-
-                var allStationTypesList = allStationTypes.ToList();
-
-                if (!masterItem.ItemPriorityStats.IsHighestPriorityStation(currentStationType, allStationTypesList))
-                {
-                    // Debug.Log($"StationType: {currentStationType} is not the highest priority station type for item: {item.ItemName}");
-                    continue;
-                }
-
-                priority += _addPriorityIfAbovePercent(item.ItemAmount, total, 0, maxPriority);
-            }
-
-            return priority;
+            return _addPriorityIfAbovePercent(Item.GetItemListTotal_CountAllItems(items), total, 0, maxPriority);
         }
 
-        protected static float _lessItemsDesired_Total(List<Item> items, float total, float maxPriority)
+        protected static float _lessItemsDesired_Percent(List<Item> items, float total, float maxPriority)
         {
             return _addPriorityIfBelowPercent(Item.GetItemListTotal_CountAllItems(items), total, 100, maxPriority);
         }
 
-        protected static float _exactItemsDesired_Total(List<Item> items, float total, float maxPriority)
+        protected static float _exactItemsDesired_Percent(List<Item> items, float total, float maxPriority)
         {
             return _addPriorityIfNotEqualPercent(Item.GetItemListTotal_CountAllItems(items), total, 100, maxPriority);
         }
@@ -142,20 +118,20 @@ namespace Priorities
             return _addPriorityIfNotEqualTarget(Vector3.Distance(currentPosition, targetPosition), target, maxPriority);
         }
 
-        protected static float _moreDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+        protected static float _moreDistanceDesired_Percent(Vector3 currentPosition, Vector3 targetPosition, float total,
             float maxPriority)
         {
             return _addPriorityIfAbovePercent(Vector3.Distance(currentPosition, targetPosition), total, 0, maxPriority);
         }
 
-        protected static float _lessDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+        protected static float _lessDistanceDesired_Percent(Vector3 currentPosition, Vector3 targetPosition, float total,
             float maxPriority)
         {
             return _addPriorityIfBelowPercent(Vector3.Distance(currentPosition, targetPosition), total, 100,
                 maxPriority);
         }
 
-        protected static float _exactDistanceDesired_Total(Vector3 currentPosition, Vector3 targetPosition, float total,
+        protected static float _exactDistanceDesired_Percent(Vector3 currentPosition, Vector3 targetPosition, float total,
             float maxPriority)
         {
             return _addPriorityIfNotEqualPercent(Vector3.Distance(currentPosition, targetPosition), total, 100,
@@ -190,84 +166,162 @@ namespace Priorities
 
         static float _generateHaulPriority(Priority_Parameters priority_Parameters)
         {
-            var inventory_HaulerItems = priority_Parameters.Inventory_Hauler?.GetItemsToDeliverFromActor(
-                priority_Parameters.Inventory_Target) ?? new List<Item>();
+            float highestPriority = 0;
+            var allStationNames = priority_Parameters.JobSite_Component_Source.GetStationNames();
             
-            var allItems = priority_Parameters.Inventory_Target?.GetItemsToFetchFromStation() ?? new List<Item>();
+            if (priority_Parameters.Inventory_Hauler is null)
+            {
+                foreach (var stationToFetchFrom in priority_Parameters.AllStation_Sources)
+                {
+                    foreach (var stationToDeliverTo in priority_Parameters.AllStation_Targets)
+                    {
+                        var itemsToDeliver = stationToDeliverTo
+                            .GetItemsToDeliverToThisStation(stationToFetchFrom.Station_Data.InventoryData);
+                        
+                        var correctItemsToDeliver = itemsToDeliver
+                            .Where(item => new Item(item.Key, item.Value)
+                                .Item_Data.ItemPriorityStats
+                                .IsHighestPriorityStation(stationToDeliverTo.StationName, allStationNames))
+                            .ToDictionary(x => x.Key, x => x.Value);
+                        
+                        if (correctItemsToDeliver.Count == 0) continue;
+                        
+                        priority_Parameters.Items = Item.GetListItemFromDictionary(correctItemsToDeliver);
+                        priority_Parameters.Position_Source = stationToFetchFrom.transform.position;
+                        priority_Parameters.Position_Destination = stationToDeliverTo.transform.position;
+                        
+                        var priority = GeneratePriority(priority_Parameters, Item.GetListItemFromDictionary(itemsToDeliver),
+                            _moreItemsDesired_Percent, _lessDistanceDesired_Percent);
+
+                        if (priority <= highestPriority) continue;
+                        
+                        highestPriority = priority;
+                    }
+                }
+                
+                return highestPriority;
+            }
             
-            var allItems =
-                priority_Parameters.Inventory_Target?.GetItemsToDeliverFromActor(priority_Parameters
-                    .Inventory_Hauler) ?? new List<Item>();
+            foreach (var stationToFetchFrom in priority_Parameters.AllStation_Sources)
+            {
+                foreach (var stationToDeliverTo in priority_Parameters.AllStation_Targets)
+                {
+                    var itemsToDeliverFromActor = priority_Parameters.Inventory_Hauler
+                        .GetItemsToDeliverFromThisActor(stationToDeliverTo.Station_Data.InventoryData);
+                    
+                    var itemsToDeliverFromStation = stationToDeliverTo
+                        .GetItemsToDeliverToThisStation(stationToFetchFrom.Station_Data.InventoryData);
 
-            return GeneratePriority(
-                priority_Parameters,
-                allItems,
-                (items, totalItems, maxPriority) => 
-                    Item.GetItemListTotal_CountAllItems(items) != 0
-                        ? _moreItemsDesired_Total(
-                            items, totalItems, maxPriority, 
-                            priority_Parameters.StationName_Source,
-                            priority_Parameters.StationType_All)
-                        : 0
-            );
+                    var itemsToDeliver = itemsToDeliverFromActor
+                        .Concat(itemsToDeliverFromStation)
+                        .ToDictionary(x => x.Key, x => x.Value);
+                        
+                    var correctItemsToDeliver = itemsToDeliver
+                        .Where(item => new Item(item.Key, item.Value)
+                            .Item_Data.ItemPriorityStats
+                            .IsHighestPriorityStation(stationToDeliverTo.StationName, allStationNames))
+                        .ToDictionary(x => x.Key, x => x.Value);
+                        
+                    if (correctItemsToDeliver.Count == 0) continue;
+                        
+                    priority_Parameters.Items = Item.GetListItemFromDictionary(correctItemsToDeliver);
+                    priority_Parameters.Position_Source = stationToFetchFrom.transform.position;
+                    priority_Parameters.Position_Destination = stationToDeliverTo.transform.position;
+                        
+                    var priority = GeneratePriority(priority_Parameters, Item.GetListItemFromDictionary(itemsToDeliver),
+                        _moreItemsDesired_Percent, _lessDistanceDesired_Percent);
 
-            return GeneratePriority(
-                priority_Parameters,
-                allItems,
-                (items, totalItems, maxPriority) => Item.GetItemListTotal_CountAllItems(items) != 0
-                    ? _moreItemsDesired_Total(items, totalItems, maxPriority)
-                    : 0
-            );
+                    if (priority <= highestPriority) continue;
+                        
+                    highestPriority = priority;
+                }
+            }
+                
+            return highestPriority;
         }
 
         static float _generateChop_WoodPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems = priority_Parameters.Inventory_Source?.GetItemsToFetchFromStation() ?? new List<Item>();
-
-            //* Decrease the priority of Chop_Wood by how many logs you have in your inventory. For now, we will do it as a one to one,
-            //* But later, we can change it to be a percentage of the total storage space, or a previously stated percentage value.
+            float highestPriority = 0;
             
-            return GeneratePriority(priority_Parameters, allItems, _lessItemsDesired_Total);
+            foreach(var station in priority_Parameters.AllStation_Sources)
+            {
+                if (station.StationName != StationName.Tree)
+                {
+                    Debug.LogError($"Station {station.StationName} is not a tree.");
+                    continue;
+                }
+                
+                priority_Parameters.Position_Source = priority_Parameters.Inventory_Hauler?.Reference.GameObject.transform.position ?? Vector3.zero;
+                priority_Parameters.Position_Destination = station.transform.position;
+                
+                var priority = GeneratePriority(
+                    priority_Parameters, 
+                    new List<Item>(), 
+                    _lessItemsDesired_Percent, 
+                    _lessDistanceDesired_Percent);
+                
+                //* For now, temporary solution to reduce priority by the number of logs the character has.
+                //* But later, we can change it to be a percentage of the total storage space, or a previously stated percentage value.
+
+                if (priority_Parameters.Inventory_Hauler is not null
+                    && priority_Parameters.Inventory_Hauler.AllInventoryItems.TryGetValue(1100, out var existingLogs))
+                    priority -= Math.Max(0, existingLogs.ItemAmount);
+
+                if (priority <= highestPriority) continue;
+                
+                highestPriority = priority;
+            }
+            
+            return highestPriority;
         }
 
         static float _generateProcess_LogsPriority(Priority_Parameters priority_Parameters)
         {
-            var allItems = priority_Parameters.Inventory_Source?
-                .GetInventoryItemsToProcess(priority_Parameters.Inventory_Hauler) ?? new List<Item>();
+            float highestPriority = 0;
+            
+            foreach (var station in priority_Parameters.AllStation_Sources)
+            {
+                if (station.StationName != StationName.Sawmill)
+                {
+                    Debug.LogError($"Station {station.StationName} is not a sawmill.");
+                    continue;
+                }
+                
+                priority_Parameters.Position_Source = station.transform.position;
+                priority_Parameters.Position_Destination = priority_Parameters.Inventory_Hauler?.Reference.GameObject.transform.position ?? Vector3.zero;
 
-            return GeneratePriority(priority_Parameters, allItems,
-                (items, totalItems, maxPriority) => 
-                    _moreItemsDesired_Total(items, totalItems, maxPriority)
-            );
+                if (priority_Parameters.Inventory_Hauler is null) return 0;
+                
+                var itemsToProcess = Item.GetListItemFromDictionary(station.GetItemsToDeliverToThisStation(priority_Parameters.Inventory_Hauler));
+
+                var priority = GeneratePriority(
+                    priority_Parameters,
+                    itemsToProcess,
+                    _moreItemsDesired_Percent,
+                    _lessDistanceDesired_Percent);
+                
+                if (priority <= highestPriority) continue;
+                
+                highestPriority = priority;
+            }
+
+            return highestPriority;
         }
 
         static float GeneratePriority(Priority_Parameters priority_Parameters, List<Item> allItems,
-            Func<List<Item>, float, float, float> calculateItemPriority)
+            Func<List<Item>, float, float, float> calculateItemPriority, Func<Vector3, Vector3, float, float, float> calculateDistancePriority)
         {
-            var priority_ItemQuantity = calculateItemPriority(allItems, priority_Parameters.TotalItems,
-                priority_Parameters.DefaultMaxPriority);
-
-            if (priority_Parameters.Inventory_Hauler is null) return priority_ItemQuantity;
-
-            var priority_Distance = CalculateDistancePriority(priority_Parameters);
-
-            return priority_ItemQuantity + priority_Distance;
-        }
-
-        static float CalculateDistancePriority(Priority_Parameters priority_Parameters)
-        {
-            var haulerPosition = priority_Parameters.Inventory_Hauler != null 
-            ? priority_Parameters.Inventory_Hauler.Reference.GameObject.transform.position
-            : Vector3.zero;
-
-            var targetPosition = priority_Parameters.Inventory_Target != null
-            ? priority_Parameters.Inventory_Target.Reference.GameObject.transform.position
-            : Vector3.zero;
-
-            return haulerPosition != Vector3.zero && targetPosition != Vector3.zero
-                ? _lessDistanceDesired_Total(haulerPosition, targetPosition, priority_Parameters.TotalDistance,
-                    priority_Parameters.DefaultMaxPriority)
-                : 0;
+            return calculateItemPriority(
+                       allItems, 
+                       priority_Parameters.TotalItems, 
+                       priority_Parameters.DefaultMaxPriority) 
+                   + 
+                   calculateDistancePriority(
+                       priority_Parameters.Position_Source, 
+                       priority_Parameters.Position_Destination,
+                       priority_Parameters.TotalDistance,
+                       priority_Parameters.DefaultMaxPriority);
         }
     }
 }

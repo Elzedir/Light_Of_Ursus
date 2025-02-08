@@ -5,7 +5,6 @@ using ActorActions;
 using Actors;
 using Initialisation;
 using Inventory;
-using Items;
 using Jobs;
 using JobSites;
 using Recipes;
@@ -68,23 +67,19 @@ namespace Station
 
         protected abstract void _initialiseStartingInventory();
 
-        public Dictionary<ulong, ulong> GetInventoryItemsToFetch() => 
-            Station_Data.InventoryData.GetItemsToFetchFromStation();
+        public Dictionary<ulong, ulong> GetItemsToFetchFromThisStation() => 
+            Station_Data.InventoryData.GetItemsToFetchFromThisStation();
 
-        public Dictionary<ulong, Dictionary<ulong, ulong>> GetInventoryItemsToDeliver() =>
-            Station_Data.InventoryData.GetItemsToDeliverFromOtherStations();
+        public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations() =>
+            Station_Data.InventoryData.GetItemsToDeliverToThisStationFromAllStations();
 
-        public Dictionary<ulong, ulong> GetInventoryItemsToDeliverFromActor(InventoryData actor)
+        public Dictionary<ulong, ulong> GetItemsToDeliverToThisStation(InventoryData otherInventory)
         {
-            if (actor != null) return Station_Data.InventoryData.GetItemsToDeliverFromActor(actor);
+            if (otherInventory != null) return Station_Data.InventoryData.GetItemsToDeliverFromThisActor(otherInventory);
             
-            Debug.LogError("Actor is null.");
+            Debug.LogError("Other inventory is null.");
             return new Dictionary<ulong, ulong>();
         }
-        
-        public Dictionary<ulong, ulong> GetInventoryItemsToFetchFromStation() =>
-            Station_Data.InventoryData.GetItemsToFetchFromStation();
-
         public void SetInteractRange(float interactRange = 2)
         {
             InteractRange = interactRange;

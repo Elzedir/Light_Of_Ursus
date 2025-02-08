@@ -31,27 +31,37 @@ namespace Inventory
             ? _availableCarryWeight 
             : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
 
-        public override bool HasSpaceForItem(ulong itemID, ulong itemAmount) =>
+        public override bool HasSpaceForAllItem(ulong itemID, ulong itemAmount) =>
             itemID != 0
                 ? Item.GetItemWeight(new Item(itemID, itemAmount)) <= AvailableCarryWeight
                 : AvailableCarryWeight > 0;
 
-        public override Item GetUnaddedItem(ulong itemID, ulong itemAmount)
+        public override (Item AddedItem, Item ReturnedItem) HasSpaceForItem(ulong itemID, ulong itemAmount)
         {
-            if (itemID is 0) return null;
-            
+            if (itemID is 0 || itemAmount is 0)
+            {
+                Debug.LogError($"Item ID: {itemID} or Item Amount: {itemAmount} is 0.");
+                return (null, null);
+            }
+
             var item = new Item(itemID, itemAmount);
-
             var itemWeight = Item.GetItemWeight(item);
-            
-            if (itemWeight <= AvailableCarryWeight) 
-                return null;
-            
-            var fitAmount = (ulong)(item.ItemAmount * (AvailableCarryWeight / itemWeight));
 
-            return fitAmount == 0 
-                ? item 
-                : new Item(item.ItemID, item.ItemAmount - fitAmount);
+            if (itemWeight == 0) Debug.LogError($"Item weight: {itemWeight} is 0 for item ID: {itemID}.");
+            
+            if (itemWeight <= AvailableCarryWeight) return (new Item(itemID, itemAmount), null);
+            
+            var fitAmount = (ulong)(AvailableCarryWeight / (double)itemWeight);
+            var amountToAdd = Math.Min(fitAmount, itemAmount);
+
+            var returnedAmount = itemAmount - amountToAdd;
+            
+            return (amountToAdd > 0 
+                    ? new Item(itemID, amountToAdd) 
+                    : null, 
+                returnedAmount > 0 
+                    ? new Item(itemID, returnedAmount) 
+                    : null);
         }
 
         public override List<ActorActionName> GetAllowedActions()
@@ -59,25 +69,19 @@ namespace Inventory
             return new List<ActorActionName>();
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToFetchFromStation()
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisStation()
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
         
-        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations(bool limitToAvailableInventoryCapacity = true)
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true)
-        {
-            Debug.LogError("Not implemented yet.");
-            return null;
-        }
-
-        public override Dictionary<ulong, ulong> GetInventoryItemsToProcess(InventoryData inventory_Actor)
+        public override Dictionary<ulong, ulong> GetItemsToDeliverFromThisActor(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
         {
             Debug.LogError("Not implemented yet.");
             return null;

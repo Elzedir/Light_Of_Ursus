@@ -8,6 +8,7 @@ using Items;
 using JobSites;
 using Station;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Priorities
 {
@@ -20,8 +21,12 @@ namespace Priorities
         public ulong ActorID_Target;
         public ulong JobSiteID_Source;
         public ulong JobSiteID_Target;
-        public ulong StationID_Source;
-        public ulong StationID_Target;
+        
+        public Station_Component HighestPriorityStation_Source;
+        public Station_Component HighestPriorityStation_Target;
+        
+        [FormerlySerializedAs("AllStationID_Sources")] public List<Station_Component> AllStation_Sources;
+        [FormerlySerializedAs("AllStationID_Targets")] public List<Station_Component> AllStation_Targets;
         
         public List<Item> Items;
         
@@ -48,36 +53,8 @@ namespace Priorities
             ? JobSite_Manager.GetJobSite_Component(JobSiteID_Target)
             : null;
         
-        public Station_Component Station_Component_Source =>  StationID_Source != 0
-            ? Station_Manager.GetStation_Component(StationID_Source)
-            : null;
-        
-        public Station_Component Station_Component_Target =>  StationID_Target != 0
-            ? Station_Manager.GetStation_Component(StationID_Target)
-            : null; 
-        
         public InventoryData Inventory_Hauler => ActorID_Source != 0 
             ? Actor_Component_Source.ActorData.InventoryData 
-            : null;
-        
-        public InventoryData Inventory_Source => StationID_Source != 0 
-            ? Station_Component_Source.Station_Data.InventoryData 
-            : null;
-        
-        public InventoryData Inventory_Target => StationID_Target != 0 
-            ? Station_Component_Target.Station_Data.InventoryData 
-            : null;
-        
-        public StationName StationName_Source => StationID_Source != 0 
-            ? Station_Component_Source.StationName 
-            : StationName.None;
-        
-        public StationName StationName_Target => StationID_Target != 0 
-            ? Station_Component_Target.StationName 
-            : StationName.None;
-        
-        public HashSet<StationName> StationType_All => JobSiteID_Source != 0 
-            ? JobSite_Component_Source.JobSite_Data.AllStations.Values.Select(station => station.StationName).ToHashSet() 
             : null;
     }
 }

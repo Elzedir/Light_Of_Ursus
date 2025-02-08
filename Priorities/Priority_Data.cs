@@ -4,8 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
 using Actors;
-using Items;
-using Priority;
+using Station;
 using Tools;
 using UnityEngine;
 
@@ -84,71 +83,36 @@ namespace Priorities
 
             _setActorID_Source(priorityParameters);
             _setJobSiteID_Source(priorityParameters);
-            _setStationID_Source(actorActionName, priorityParameters);
+            _setStationID_Source(priorityParameters);
             
-            _setActorID_Target(actorActionName, priorityParameters);
-            _setJobSiteID_Target(actorActionName, priorityParameters);
-            _setStationID_Target(actorActionName, priorityParameters);
+            _setActorID_Target(priorityParameters);
+            _setJobSiteID_Target(priorityParameters);
+            
+            _setAllStationIDs(actorActionName, priorityParameters);
 
             return priorityParameters;
         }
         
         protected abstract void _setActorID_Source(Priority_Parameters priority_Parameters);
-        protected abstract void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
+        protected abstract void _setActorID_Target(Priority_Parameters priority_Parameters);
         protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);
-        protected abstract void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters);
-        protected virtual void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters) { }
+        protected abstract void _setJobSiteID_Target(Priority_Parameters priority_Parameters);
+        protected virtual void _setStationID_Source(Priority_Parameters priority_Parameters) { }
 
-        void _setStationID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
-        {
-            _setHighestPriorityStation(actorActionName, priority_Parameters);
-        }
-
-        protected void _setHighestPriorityStation(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected void _setAllStationIDs(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
             var allRelevantStations =
                 priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
             
-            if (allRelevantStations.Count is 0)
+            if (allRelevantStations.StationTargets.Count is 0 && allRelevantStations.StationSources.Count is 0)
             {
-                _setStationID(priority_Parameters, isStation_Source, 0);
-                return;
-            }
-
-            priority_Parameters.TotalItems = allRelevantStations.Sum(station =>
-                (int)Item.GetItemListTotal_CountAllItems(station.GetInventoryItems(actorActionName)));
-
-            float highestPriorityValue = 0;
-            ulong highestPriorityStationID = 0;
-
-            foreach (var station in allRelevantStations)
-            {
-                _setStationID(priority_Parameters, isStation_Source, station.StationID);
-                
-                var stationPriority =
-                    Priority_Generator.GeneratePriority((ulong)actorActionName, priority_Parameters);
-
-                if (stationPriority is 0 || stationPriority < highestPriorityValue) continue;
-
-                highestPriorityValue = stationPriority;
-                highestPriorityStationID = station.StationID;
-            }
-
-            if (highestPriorityStationID is 0)
-            {
-                _setStationID(priority_Parameters, isStation_Source, 0);
+                priority_Parameters.AllStation_Sources = new List<Station_Component>();
+                priority_Parameters.AllStation_Targets = new List<Station_Component>();
                 return;
             }
             
-            _setStationID(priority_Parameters, isStation_Source, highestPriorityStationID);
-        }
-        
-        void _setStationID(Priority_Parameters priority_Parameters, bool isStation_Source, ulong stationID)
-        {
-            if (isStation_Source)
-                priority_Parameters.StationID_Source = stationID;
-            else
-                priority_Parameters.StationID_Target = stationID;
+            priority_Parameters.AllStation_Sources ??= allRelevantStations.StationSources;
+            priority_Parameters.AllStation_Targets ??= allRelevantStations.StationTargets;
         }
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)

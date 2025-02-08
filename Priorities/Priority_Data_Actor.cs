@@ -4,6 +4,7 @@ using Actor;
 using ActorActions;
 using Actors;
 using Priority;
+using Station;
 using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -78,17 +79,22 @@ namespace Priorities
             priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.JobSiteID;
         }
 
-        protected override void _setStationID_Source(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.StationID_Source = _actor.ActorData.Career.JobSite?.JobSite_Data.GetActorJob(ActorID)?.StationID ?? 0;
+            var stationID = _actor.ActorData.Career.JobSite?.JobSite_Data.GetActorJob(ActorID)?.StationID;
+            var actorStation = stationID.HasValue ? Station_Manager.GetStation_Component(stationID.Value) : null;
+
+            priority_Parameters.AllStation_Sources = actorStation is not null 
+                ? new List<Station_Component> { actorStation } 
+                : null;
         }
 
-        protected override void _setActorID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected override void _setActorID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.ActorID_Target = 0;
         }
 
-        protected override void _setJobSiteID_Target(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
+        protected override void _setJobSiteID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
         }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Priorities;
-using Priority;
 using Station;
 using Tools;
 using UnityEngine;
@@ -46,7 +45,7 @@ namespace Items
             return DataToDisplay;
         }
 
-        public PriorityImportance GetHighestStationPriority(List<StationName> allStations)
+        PriorityImportance _getHighestStationPriority(HashSet<StationName> allStations)
         {
             foreach (var priority in Priority_Stations.Keys)
             {
@@ -66,9 +65,9 @@ namespace Items
             return PriorityImportance.None;
         }
 
-        public bool IsHighestPriorityStation(StationName currentStation, List<StationName> allStations)
+        public bool IsHighestPriorityStation(StationName currentStation, HashSet<StationName> allStationNames)
         {
-            PriorityImportance highestPriority = GetHighestStationPriority(allStations);
+            var highestPriority = _getHighestStationPriority(allStationNames);
 
             return Priority_Stations[highestPriority].Contains(currentStation);
         }

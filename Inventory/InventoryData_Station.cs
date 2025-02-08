@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ActorActions;
 using Items;
 using Tools;
@@ -25,27 +24,59 @@ namespace Inventory
         //* Implement a way to change the size depending on the station. Maybe StationComponent default value.
         public ulong MaxInventorySpace = 10; 
 
-        HashSet<ulong> _getDesiredItemIDs() => StationReference.Station.DesiredStoredItemIDs;
-
-        public override bool HasSpaceForItem(ulong itemID, ulong itemAmount) =>
+        public override bool HasSpaceForAllItem(ulong itemID, ulong itemAmount) =>
             itemID != 0
                 ? itemAmount <= MaxInventorySpace
                 : MaxInventorySpace > 0;
 
-        public override Item GetUnaddedItem(ulong itemID, ulong itemAmount) =>
-            itemID != 0
-                ? itemAmount <= MaxInventorySpace
-                    ? null
-                    : new Item(itemID, itemAmount - MaxInventorySpace)
-                : null;
+        public override (Item AddedItem, Item ReturnedItem) HasSpaceForItem(ulong itemID, ulong itemAmount)
+        {
+            if (itemID == 0 || itemAmount == 0)
+            {
+                Debug.LogError($"Item ID: {itemID} or Item Amount: {itemAmount} is 0.");
+                return (null, null);
+            }
 
-        public override Dictionary<ulong, ulong> GetItemsToFetchFromStation()
+            if (itemAmount > MaxInventorySpace)
+            {
+                Debug.LogError($"Item amount: {itemAmount} is greater than inventory space: {MaxInventorySpace}.");
+                return (null, null);
+            }
+
+            if (!AllInventoryItems.TryGetValue(itemID, out var item))
+            {
+                var amountToAdd = Math.Min(itemAmount, MaxInventorySpace);
+                var returnedAmount = itemAmount - amountToAdd;
+
+                return (new Item(itemID, amountToAdd), 
+                    returnedAmount > 0 
+                    ? new Item(itemID, returnedAmount) 
+                    : null);
+            }
+
+            if (item.ItemAmount + itemAmount <= MaxInventorySpace)
+            {
+                item.ItemAmount += itemAmount;
+                return (item, null);
+            }
+
+            var amountToAddToExisting = MaxInventorySpace - item.ItemAmount;
+            item.ItemAmount = MaxInventorySpace;
+
+            var returnedAmountFinal = itemAmount - amountToAddToExisting;
+
+            return (item, returnedAmountFinal > 0 
+                ? new Item(itemID, returnedAmountFinal) 
+                : null);
+        }
+
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisStation()
         {
             var itemsToFetch = new Dictionary<ulong, ulong>();
 
             foreach (var item in AllInventoryItems.Values)
             {
-                if (_getDesiredItemIDs().Contains(item.ItemID)) continue;
+                if (StationReference.Station.DesiredStoredItemIDs.Contains(item.ItemID)) continue;
                 
                 if (item.ItemAmountOnHold > item.ItemAmount)
                 {
@@ -66,11 +97,11 @@ namespace Inventory
             return itemsToFetch;
         }
 
-        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverFromOtherStations(bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations(bool limitToAvailableInventoryCapacity = true)
         {
-            if (!HasSpaceForItemList())
+            if (!HasSpaceForAllItemList())
             {
-                Debug.LogError("Not enough space in inventory.");
+                Debug.LogError("No space in inventory.");
                 return new Dictionary<ulong, Dictionary<ulong, ulong>>();
             }
             
@@ -79,87 +110,73 @@ namespace Inventory
             foreach (var stationToFetchFrom in StationReference.Station.JobSite.JobSite_Data.AllStations)
             {
                 if (stationToFetchFrom.Key == StationReference.StationID) continue;
-
-                stationsAndItemsToFetchFrom.TryAdd(stationToFetchFrom.Key, new Dictionary<ulong, ulong>());
                 
-                var itemsToFetch = stationToFetchFrom.Value.Station_Data.InventoryData.GetItemsToFetchFromStation();
+                var itemsToFetch = stationToFetchFrom.Value.Station_Data.InventoryData.GetItemsToFetchFromThisStation();
+                
+                if (itemsToFetch.Count == 0) continue;
+                
+                stationsAndItemsToFetchFrom.TryAdd(stationToFetchFrom.Key, new Dictionary<ulong, ulong>());
 
-                foreach (var desiredItemID in _getDesiredItemIDs())
+                foreach (var desiredItemID in StationReference.Station.DesiredStoredItemIDs)
                 {
                     itemsToFetch.TryGetValue(desiredItemID, out var amountToFetch);
                     
                     if (amountToFetch == 0) continue;
                     
-                    if (!stationsAndItemsToFetchFrom[stationToFetchFrom.Key].TryAdd(desiredItemID, amountToFetch)) 
-                        stationsAndItemsToFetchFrom[stationToFetchFrom.Key][desiredItemID] += amountToFetch;
+                    if (!limitToAvailableInventoryCapacity)
+                    {
+                        if (!stationsAndItemsToFetchFrom[stationToFetchFrom.Key].TryAdd(desiredItemID, amountToFetch))
+                            stationsAndItemsToFetchFrom[stationToFetchFrom.Key][desiredItemID] += amountToFetch;
+                    
+                        continue;
+                    }
+                
+                    var addedItem = HasSpaceForItem(desiredItemID, amountToFetch).AddedItem;
+                    
+                    if (addedItem?.ItemID is null or 0 || addedItem.ItemAmount == 0) continue;
+                    
+                    if (!stationsAndItemsToFetchFrom[stationToFetchFrom.Key].TryAdd(addedItem.ItemID, addedItem.ItemAmount)) 
+                        stationsAndItemsToFetchFrom[stationToFetchFrom.Key][addedItem.ItemID] += addedItem.ItemAmount;
                 }
             }
-
-            if (stationsAndItemsToFetchFrom.Count == 0 || !limitToAvailableInventoryCapacity) return stationsAndItemsToFetchFrom;
-
-            foreach (var stationToFetch in stationsAndItemsToFetchFrom.ToList())
-            {
-                foreach (var itemToFetch in stationToFetch.Value.ToList())
-                {
-                    if (HasSpaceForItem(itemToFetch.Key, itemToFetch.Value))
-                        stationsAndItemsToFetchFrom[stationToFetch.Key].Remove(itemToFetch.Key);
-                }
-            }
-
+            
             return stationsAndItemsToFetchFrom;
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToDeliverFromActor(InventoryData inventory_Actor, bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, ulong> GetItemsToDeliverFromThisActor(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
         {
-            if (!HasSpaceForItemList())
+            if (!HasSpaceForAllItemList())
             {
-                Debug.LogError("Not enough space in inventory.");
+                Debug.LogError("No space in inventory.");
                 return new Dictionary<ulong, ulong>();
             }
             
             var itemsToDeliver = new Dictionary<ulong, ulong>();
 
-            foreach (var desiredItemID in _getDesiredItemIDs())
+            foreach (var desiredItemID in StationReference.Station.DesiredStoredItemIDs)
             {
-                inventory_Actor.AllInventoryItems.TryGetValue(desiredItemID, out var itemToFetch);
-                
-                if (itemToFetch == null) continue;
+                if (!otherInventory.AllInventoryItems.TryGetValue(desiredItemID, out var itemToFetch))
+                    continue;
 
-                if (!itemsToDeliver.TryAdd(desiredItemID, itemToFetch.ItemAmount))
+                if (!limitToAvailableInventoryCapacity)
                 {
-                    var unaddedItem = GetUnaddedItem(itemToFetch.ItemID, itemToFetch.ItemAmount);
+                    if (!itemsToDeliver.TryAdd(itemToFetch.ItemID, itemToFetch.ItemAmount))
+                    {
+                        Debug.LogError($"ItemID: {itemToFetch.ItemID} somehow already exists in itemsToDeliver.");
+                    }
                     
-                    .ItemAmount += itemToFetch.ItemAmount;   
+                    continue;
                 }
+                
+                var addedItem = HasSpaceForItem(itemToFetch.ItemID, itemToFetch.ItemAmount).AddedItem;
+                
+                if (addedItem?.ItemID is null or 0 || addedItem.ItemAmount == 0) continue;
+
+                if (!itemsToDeliver.TryAdd(addedItem.ItemID, addedItem.ItemAmount))
+                    Debug.LogError($"ItemID: {addedItem.ItemID} somehow already exists in itemsToDeliver.");
             }
-
-            if (itemsToDeliver.Count == 0 || !limitToAvailableInventoryCapacity) return itemsToDeliver;
-
-            foreach (var itemToFetch in itemsToDeliver.ToList())
-            {
-                if (HasSpaceForItem(itemToFetch.Key, itemToFetch.Value))
-                    itemsToDeliver.Remove(itemToFetch.Key);
-            }
-
-            return itemsToDeliver;
-        }
-
-        public override Dictionary<ulong, ulong> GetInventoryItemsToProcess(InventoryData inventory_Actor)
-        {
-            var itemsToProcess = new Dictionary<ulong, ulong>();
             
-            foreach (var itemID in _getDesiredItemIDs())
-            {
-                if (AllInventoryItems.ContainsKey(itemID))
-                    itemsToProcess.Add(itemID, AllInventoryItems[itemID].ItemAmount);        
-                
-                if (inventory_Actor == null || !inventory_Actor.AllInventoryItems.ContainsKey(itemID)) continue;
-                
-                if (itemsToProcess.TryAdd(itemID, inventory_Actor.AllInventoryItems[itemID].ItemAmount)) 
-                    itemsToProcess[itemID] += inventory_Actor.AllInventoryItems[itemID].ItemAmount;
-            }
-
-            return itemsToProcess;
+            return itemsToDeliver;
         }
         
         public override List<ActorActionName> GetAllowedActions() => new();
