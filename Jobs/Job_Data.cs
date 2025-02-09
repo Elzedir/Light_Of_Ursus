@@ -4,6 +4,7 @@ using System.Linq;
 using Actor;
 using ActorActions;
 using Actors;
+using Station;
 using Tools;
 using UnityEngine;
 
@@ -90,6 +91,8 @@ namespace Jobs
         
         Job_Data                    _job_Data;
         public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
+        Station_Component _station;
+        public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
         public List<ActorActionName> JobActions => Job_Data.JobActions;
         
         public Job(JobName jobName, ulong jobSiteID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)

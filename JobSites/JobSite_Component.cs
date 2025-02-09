@@ -64,8 +64,8 @@ namespace JobSites
         {
             foreach (var station in JobSite_Data.AllStations.Values)
             {
-                Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.OnTick);
                 station.Station_Data.CurrentTickRateName = TickRateName.OneSecond;
+                Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.OnTick);
             }
         }
 
@@ -88,6 +88,8 @@ namespace JobSites
             JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             _compareProductionOutput();
+            
+            JobSite_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
         }
 
         protected abstract bool _compareProductionOutput();
@@ -145,24 +147,23 @@ namespace JobSites
         public (List<Station_Component> StationSources, List<Station_Component> StationTargets) GetRelevantStations(ActorActionName actorActionName)
         {
             return RelevantStations.TryGetValue(actorActionName, out var relevantStations)
-                ? relevantStations
+                ? relevantStations()
                 : throw new ArgumentException(
                     $"ActorActionName: {actorActionName} not recognised for Station_Source.");
         }
 
-        Dictionary<ActorActionName, (List<Station_Component> stationSources, List<Station_Component> stationTargets)> _relevantStations;
-        public Dictionary<ActorActionName, (List<Station_Component> stationSources, List<Station_Component> stationTargets)> RelevantStations =>
-            _relevantStations ??= _getRelevantStations();
+        Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> _relevantStations;
+        public Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> RelevantStations => _getRelevantStations();
 
-        Dictionary<ActorActionName, (List<Station_Component> stationSources, List<Station_Component> stationTargets)> _getRelevantStations()
+        Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> _getRelevantStations()
         {
-            return new Dictionary<ActorActionName, (List<Station_Component> stationSources, List<Station_Component> stationTargets)>
+            return new Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>>
             {
-                { ActorActionName.Idle, _relevantStations_Idle() },
-                { ActorActionName.Haul, _relevantStations_Haul() },
-                { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood() },
-                { ActorActionName.Process_Logs, _relevantStations_Process_Logs() },
-                { ActorActionName.Wander, (new List<Station_Component>(), new List<Station_Component>()) }
+                { ActorActionName.Idle, _relevantStations_Idle },
+                { ActorActionName.Haul, _relevantStations_Haul },
+                { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood },
+                { ActorActionName.Process_Logs, _relevantStations_Process_Logs },
+                { ActorActionName.Wander, () => (new List<Station_Component>(), new List<Station_Component>()) }
             };
         }
 

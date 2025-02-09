@@ -19,40 +19,23 @@ namespace Tools
 
         public override void OnInspectorGUI()
         {
-            if (SO?.Data is null)
-            {
-                EditorGUILayout.LabelField($"{SO} is null or {SO?.Data} is null", EditorStyles.boldLabel);
-                return;
-            }
-
             SO.ToggleMissingDataDebugs = GUILayout.Toggle(SO.ToggleMissingDataDebugs, "Toggle Missing Data Debugs");
             
-            a
-                //* Fix the bug of this interfering with the normal loading of the game.
-
-            _refreshData();
+            if (!Manager_Game.Initialised) return;
             
-            EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
-            
-            _nonNullDataObjects ??= Array.Empty<Data<T>>();
-            
-            if (SO.Data.Length is 0)
+            if (SO?.Data.Length is null or 0)
             {
                 EditorGUILayout.LabelField("No BaseObjects Found", EditorStyles.boldLabel);
                 return;
             }
+            
+            EditorGUILayout.LabelField("All BaseObjects", EditorStyles.boldLabel);
+            
+            _nonNullDataObjects ??= Array.Empty<Data<T>>();
                 
-            for (var i = 0; i < 2; i++)
-            {
-                _nonNullDataObjects = SO.Data.Where(data_Object =>
-                    data_Object != null &&
-                    data_Object.DataID != 0).ToArray();
-
-                if (_nonNullDataObjects.Length == 0)
-                {
-                    _refreshData(true);
-                }
-            }
+            _nonNullDataObjects = SO.Data.Where(data_Object =>
+                data_Object != null &&
+                data_Object.DataID != 0).ToArray();
 
             SO.ScrollPosition = EditorGUILayout.BeginScrollView(SO.ScrollPosition,
                 GUILayout.Height(Mathf.Min(200, _nonNullDataObjects.Length * 20)));
@@ -69,15 +52,6 @@ namespace Tools
         static string[] _getBaseObjectNames(Data<T>[] baseObjects)
         {
             return baseObjects.Select(base_Object => $"{base_Object.DataTitle}").ToArray();
-        }
-        
-        void _refreshData(bool reinitialise = false)
-        {
-            if (!(EditorApplication.timeSinceStartup - _lastRefreshTime >= 1)
-                || Application.isPlaying && !Manager_Game.Initialised) return;
-            
-            SO.RefreshData(reinitialise);
-            _lastRefreshTime = EditorApplication.timeSinceStartup;
         }
 
         static void _drawDataToDisplay(DataToDisplay dataToDisplay, int iteration, bool showToggle = true)

@@ -353,13 +353,18 @@ namespace JobSites
 
             foreach (var station in AllStations.Values)
             {
+                //* Eventually find a way to group all non-production station types together and skip them all.
+                //* Currently only works for LogPile.
+                if (station.StationName == StationName.Log_Pile) continue;
+                
                 foreach (var workPost in station.Station_Data.AllWorkPosts.Values)
                 {
                     if (workPost.Job.ActorID == 0) continue;
 
                     float totalProductionRate = 0;
 
-                    if (station.Station_Data.StationProgressData.CurrentProduct is null)
+                    if (station.Station_Data.StationProgressData.CurrentProduct is null
+                        || station.Station_Data.StationProgressData.CurrentProduct.RecipeName == RecipeName.None)
                         continue;
 
                     var individualProductionRate = station.Station_Data.BaseProgressRatePerHour;

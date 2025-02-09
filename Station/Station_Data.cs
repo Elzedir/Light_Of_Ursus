@@ -156,16 +156,12 @@ namespace Station
                 
                 var progressMade = workPost.Operate(BaseProgressRatePerHour,
                     StationProgressData.CurrentProduct);
+
+                if (!StationProgressData.ItemCrafted(progressMade)) continue;
                 
-                var itemCrafted = StationProgressData.Progress(progressMade);
-
-                if (!itemCrafted) continue;
-
-                // For now is the final person who adds the last progress, but change to a cumulative system later.
-                Station_Component.CraftItem(
-                    StationProgressData.CurrentProduct.RecipeName,
-                    workPost.Job.Actor
-                );
+                if (Station_Component.CanCraftItem(
+                        StationProgressData.CurrentProduct.RecipeName, workPost.Job.Actor))
+                    StationProgressData.ResetProgress();
             }
         }
 
@@ -267,10 +263,10 @@ namespace Station
             return DataToDisplay;
         }
 
-        public bool Progress(float progress)
+        public bool ItemCrafted(float progress)
         {
             if (progress == 0 || CurrentProduct.RecipeName == RecipeName.None) return false;
-
+            if (CurrentProgress >= CurrentProduct.RequiredProgress) return true;
             if (CurrentProduct.RequiredProgress == 0)
             {
                 Debug.LogError($"For Recipe {CurrentProduct.RecipeName} CurrentProgress: {CurrentProgress} ProgressRate: {progress} MaxProgress: {CurrentProduct.RequiredProgress}");
@@ -280,12 +276,13 @@ namespace Station
             CurrentProgress += progress;
             CurrentQuality  += progress;
 
-            if (CurrentProgress < CurrentProduct.RequiredProgress) return false;
-        
+            return CurrentProgress >= CurrentProduct.RequiredProgress;
+        }
+
+        public void ResetProgress()
+        {
             CurrentProgress = 0;
             CurrentQuality  = 0;
-            return true;
-
         }
     }
 }

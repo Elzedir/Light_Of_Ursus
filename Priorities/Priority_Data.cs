@@ -34,6 +34,7 @@ namespace Priorities
         public abstract    void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false);
         protected abstract void _regeneratePriority(ulong priorityID);
         
+        //* Isn't rearranging the highest priority, Chop_Tree is staying the highest even with 0 priority.
         public Priority_Element PeekHighestPriority(ulong priorityID = 1) => PriorityQueue.Peek(priorityID);
         public Priority_Element PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
@@ -106,8 +107,8 @@ namespace Priorities
             
             if (allRelevantStations.StationTargets.Count is 0 && allRelevantStations.StationSources.Count is 0)
             {
-                priority_Parameters.AllStation_Sources = new List<Station_Component>();
-                priority_Parameters.AllStation_Targets = new List<Station_Component>();
+                priority_Parameters.AllStation_Sources ??= new List<Station_Component>();
+                priority_Parameters.AllStation_Targets ??= new List<Station_Component>();
                 return;
             }
             

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Jobs
@@ -9,7 +10,12 @@ namespace Jobs
         static Job_SO s_allJobs;
         static Job_SO S_AllJobs => s_allJobs ??= _getJob_SO();
 
-        public static Job_Data GetJob_Data(JobName jobName) => S_AllJobs.GetJob_Data(jobName).Data_Object;
+        public static List<Job_Data> AllJobData()
+        {
+            return S_AllJobs.AllJobData();
+        }
+
+        public static Job_Data GetJob_Data(JobName jobName) => S_AllJobs.GetJob_Data(jobName)?.Data_Object;   
         
         static Job_SO _getJob_SO()
         {

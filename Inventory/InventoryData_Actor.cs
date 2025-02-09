@@ -26,10 +26,7 @@ namespace Inventory
 
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
 
-        float _availableCarryWeight;
-        public float AvailableCarryWeight => _availableCarryWeight != 0 
-            ? _availableCarryWeight 
-            : ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
+        public float AvailableCarryWeight => ActorReference.Actor_Component.ActorData.StatsAndAbilities.Stats.AvailableCarryWeight;
 
         public override bool HasSpaceForAllItem(ulong itemID, ulong itemAmount) =>
             itemID != 0
@@ -69,19 +66,19 @@ namespace Inventory
             return new List<ActorActionName>();
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisStation()
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisInventory()
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
         
-        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations(bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisInventoryFromAllStations(bool limitToAvailableInventoryCapacity = true)
         {
             Debug.LogError("Not implemented yet.");
             return null;
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToDeliverFromThisActor(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, ulong> GetItemsToDeliverToThisInventory(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
         {
             Debug.LogError("Not implemented yet.");
             return null;

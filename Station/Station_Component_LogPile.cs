@@ -6,6 +6,7 @@ using Items;
 using Jobs;
 using Recipes;
 using UnityEngine;
+using WorkPosts;
 
 namespace Station
 {
@@ -23,9 +24,10 @@ namespace Station
 
         protected override void _initialiseStartingInventory() { }
 
-        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        public override bool CanCraftItem(RecipeName recipeName, Actor_Component actor)
         {
             Debug.LogError("Log Pile does not craft items.");
+            return false;
         }
 
         public override IEnumerator Interact(Actor_Component actor)
@@ -46,6 +48,13 @@ namespace Station
             return new Dictionary<ulong, ulong>(); // For now
 
             // Base resource yield on actor relevant skill
+        }
+
+        public override float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        {
+            //* Haul
+            
+            return 0;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using Actors;
 using Jobs;
 using Recipes;
+using Station;
 using UnityEngine;
 
 namespace WorkPosts
@@ -29,32 +30,23 @@ namespace WorkPosts
 
         public float Operate(float baseProgressRate, Recipe_Data recipe)
         {
-            if (CurrentWorker.ActorID is 0 || Job.IsWorkerMovingToWorkPost) return 0;
-
-            if (WorkPostCollider.bounds.Contains(Job.Actor.transform.position)) return _produce(baseProgressRate, recipe);
-            
-            StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorker.ActorID), transform.position));
-
-            return 0;
-        }
-        
-        float _produce(float baseProgressRate, Recipe_Data recipe)
-        {
-            var productionRate = baseProgressRate;
-            // Then modify production rate by any area modifiers (Land type, events, etc.)
-
-            foreach (var vocation in recipe.RequiredVocations)
+            if (CurrentWorker.ActorID is 0)
             {
-                productionRate *= CurrentWorker.ActorData.Vocation.GetProgress(vocation.Value);
+                Debug.LogWarning("No worker assigned to work post.");
+                return 0;
             }
 
-            return productionRate;
+            if (WorkPostCollider.bounds.Contains(Job.Actor.transform.position)) return Job.Station.Produce(this, baseProgressRate, recipe);
+
+            if (!Job.IsWorkerMovingToWorkPost)
+                StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorker.ActorID),
+                    transform.position));
+
+            return 0;
         }
 
         IEnumerator _moveWorkerToWorkPost(Actor_Component actor, Vector3 position)
         {
-            if (Job.IsWorkerMovingToWorkPost) yield break;
-
             Job.IsWorkerMovingToWorkPost = true;
 
             yield return actor.StartCoroutine(actor.BasicMove(position));

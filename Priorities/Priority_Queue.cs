@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ActorActions;
 using Tools;
 using UnityEngine;
 
@@ -93,11 +94,17 @@ namespace Priorities
         {
             if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
                 return _enqueue(priorityID, newPriority, priorityParameters);
+            
+            Debug.Log($"PriorityID: {(ActorActionName)priorityID} found in PriorityQueue.");
 
             _priorityArray[index].UpdatePriorityValue(newPriority, priorityParameters);
 
             if (index == _currentPosition || index == 1) return true;
-
+            
+            Debug.Log($"PriorityID: {(ActorActionName)priorityID} updated from index: {index} to {_currentPosition}.");
+                
+            Debug.Log($"{(ActorActionName)_priorityArray[index].PriorityID} _priorityArray[index].PriorityValue: {_priorityArray[index].PriorityValue} >= {(ActorActionName)_priorityArray[index / 2].PriorityID} _priorityArray[index / 2].PriorityValue: {_priorityArray[index / 2].PriorityValue}.");
+            
             if (_priorityArray[index].PriorityValue >= _priorityArray[index / 2].PriorityValue)
             {
                 _moveDown(index);
@@ -106,6 +113,8 @@ namespace Priorities
             {
                 _moveUp(index);
             }
+            
+            Debug.Log($"PriorityID: {(ActorActionName)priorityID} updated from index: {index} to {_currentPosition}.");
 
             return true;
         }
@@ -128,6 +137,9 @@ namespace Priorities
 
             return true;
         }
+        
+        a
+            //* Fix priority Queue tomorrow, understand how it works completely.
 
         void _moveDown(int index)
         {
@@ -135,7 +147,11 @@ namespace Priorities
             {
                 var childL = index * 2;
 
-                if (childL > _currentPosition) return;
+                if (childL > _currentPosition)
+                {
+                    Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
+                    return;
+                }
 
                 var childR = index * 2 + 1;
                 int largerChild;
@@ -153,10 +169,16 @@ namespace Priorities
                     largerChild = childR;
                 }
 
-                if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue) return;
+                if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue)
+                {
+                    Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
+                    return;
+                }
 
                 _swap(index, largerChild);
                 index = largerChild;
+                
+                Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
             }
         }
 

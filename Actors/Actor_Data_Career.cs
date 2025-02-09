@@ -77,7 +77,9 @@ namespace Actors
 
         public override List<ActorActionName> GetAllowedActions()
         {
-            return CurrentJob?.JobActions ?? new List<ActorActionName> { ActorActionName.Idle };
+            return CurrentJob is not null && CurrentJob.JobName != JobName.None 
+                ? CurrentJob.JobActions
+                : new List<ActorActionName> { ActorActionName.Idle };
         }
     }
 }

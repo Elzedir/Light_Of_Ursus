@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Actor;
 using ActorActions;
 using Actors;
-using Priority;
 using Station;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Priorities
 {
@@ -61,10 +58,14 @@ namespace Priorities
                     PriorityQueue.Update(priorityID, 1, new Priority_Parameters { DefaultPriorityValue = 1});
                     return;
             }
+            
+            //* Chop_Wood's desire to haul is 10 but Log_Pile is 0.
 
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
+            
+            if (priorityID == (ulong)ActorActionName.Haul) Debug.Log($"Haul priority value: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
         }
@@ -153,8 +154,14 @@ namespace Priorities
                 return;
             }
 
+            var currentAction = CurrentAction?.PriorityID != null ? (ActorActionName)CurrentAction.PriorityID : ActorActionName.None;
+            
+            Debug.Log($"Actor: {ActorID} - Current Action: {currentAction} - Next Action: {(ActorActionName)nextHighestPriorityValue.PriorityID}");
+
             if (CurrentAction != null && nextHighestPriorityValue.PriorityID == CurrentAction.PriorityID)
                 return;
+            
+            Debug.Log($"Actor: {ActorID} - Current Action: {currentAction} - Next Action: {(ActorActionName)nextHighestPriorityValue.PriorityID}");
 
             CurrentAction = DequeueHighestPriority();
         }

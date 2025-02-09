@@ -206,11 +206,13 @@ namespace Priorities
             {
                 foreach (var stationToDeliverTo in priority_Parameters.AllStation_Targets)
                 {
-                    var itemsToDeliverFromActor = priority_Parameters.Inventory_Hauler
-                        .GetItemsToDeliverFromThisActor(stationToDeliverTo.Station_Data.InventoryData);
+                    var itemsToDeliverFromActor = stationToDeliverTo.Station_Data.InventoryData
+                        .GetItemsToDeliverToThisInventory(priority_Parameters.Inventory_Hauler) 
+                                                  ?? new Dictionary<ulong, ulong>();
                     
                     var itemsToDeliverFromStation = stationToDeliverTo
-                        .GetItemsToDeliverToThisStation(stationToFetchFrom.Station_Data.InventoryData);
+                        .GetItemsToDeliverToThisStation(stationToFetchFrom.Station_Data.InventoryData) 
+                                                    ?? new Dictionary<ulong, ulong>();
 
                     var itemsToDeliver = itemsToDeliverFromActor
                         .Concat(itemsToDeliverFromStation)
@@ -261,11 +263,13 @@ namespace Priorities
                     _lessItemsDesired_Percent, 
                     _lessDistanceDesired_Percent);
                 
+                //* This isn't working, not decreasing priority as logs are collected. Also, do the same for JobSite, so that logs 
+                //* are considered across the jobSite.
+                    
                 //* For now, temporary solution to reduce priority by the number of logs the character has.
                 //* But later, we can change it to be a percentage of the total storage space, or a previously stated percentage value.
 
-                if (priority_Parameters.Inventory_Hauler is not null
-                    && priority_Parameters.Inventory_Hauler.AllInventoryItems.TryGetValue(1100, out var existingLogs))
+                if (station.Station_Data.InventoryData.AllInventoryItems.TryGetValue(1100, out var existingLogs))
                     priority -= Math.Max(0, existingLogs.ItemAmount);
 
                 if (priority <= highestPriority) continue;
@@ -290,10 +294,10 @@ namespace Priorities
                 
                 priority_Parameters.Position_Source = station.transform.position;
                 priority_Parameters.Position_Destination = priority_Parameters.Inventory_Hauler?.Reference.GameObject.transform.position ?? Vector3.zero;
-
-                if (priority_Parameters.Inventory_Hauler is null) return 0;
                 
-                var itemsToProcess = Item.GetListItemFromDictionary(station.GetItemsToDeliverToThisStation(priority_Parameters.Inventory_Hauler));
+                var itemsToProcess = priority_Parameters.Inventory_Hauler is null 
+                    ? Item.GetListItemFromDictionary(station.GetItemsToDeliverToThisStation(priority_Parameters.Inventory_Hauler))
+                    : Item.GetListItemFromDictionary(station.GetItemsToDeliverToThisStation(station.Station_Data.InventoryData));
 
                 var priority = GeneratePriority(
                     priority_Parameters,

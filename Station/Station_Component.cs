@@ -9,6 +9,7 @@ using Jobs;
 using JobSites;
 using Recipes;
 using UnityEngine;
+using WorkPosts;
 
 namespace Station
 {
@@ -68,17 +69,16 @@ namespace Station
         protected abstract void _initialiseStartingInventory();
 
         public Dictionary<ulong, ulong> GetItemsToFetchFromThisStation() => 
-            Station_Data.InventoryData.GetItemsToFetchFromThisStation();
+            Station_Data.InventoryData.GetItemsToFetchFromThisInventory();
 
         public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations() =>
-            Station_Data.InventoryData.GetItemsToDeliverToThisStationFromAllStations();
+            Station_Data.InventoryData.GetItemsToDeliverToThisInventoryFromAllStations();
 
         public Dictionary<ulong, ulong> GetItemsToDeliverToThisStation(InventoryData otherInventory)
         {
-            if (otherInventory != null) return Station_Data.InventoryData.GetItemsToDeliverFromThisActor(otherInventory);
-            
-            Debug.LogError("Other inventory is null.");
-            return new Dictionary<ulong, ulong>();
+            return otherInventory != null
+                ? Station_Data.InventoryData.GetItemsToDeliverToThisInventory(otherInventory)
+                : new Dictionary<ulong, ulong>();
         }
         public void SetInteractRange(float interactRange = 2)
         {
@@ -90,9 +90,11 @@ namespace Station
             return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
         }
 
+        public abstract float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe);
+
         public abstract IEnumerator Interact(Actor_Component actor);
 
-        public abstract void CraftItem(RecipeName recipeName, Actor_Component actor);
+        public abstract bool CanCraftItem(RecipeName recipeName, Actor_Component actor);
 
         public abstract Dictionary<ulong, ulong> GetCost(Dictionary<ulong, ulong> ingredients, Actor_Component actor);
 

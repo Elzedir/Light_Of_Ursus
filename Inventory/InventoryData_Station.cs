@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ActorActions;
 using Items;
+using Station;
 using Tools;
 using UnityEngine;
 
@@ -22,12 +23,13 @@ namespace Inventory
         public ComponentReference_Station StationReference => Reference as ComponentReference_Station;
 
         //* Implement a way to change the size depending on the station. Maybe StationComponent default value.
-        public ulong MaxInventorySpace = 10; 
+        public ulong MaxInventorySpace = 100; 
+        public ulong AvailableInventorySpace => MaxInventorySpace - (ulong)AllInventoryItems.Values.Count;
 
         public override bool HasSpaceForAllItem(ulong itemID, ulong itemAmount) =>
             itemID != 0
-                ? itemAmount <= MaxInventorySpace
-                : MaxInventorySpace > 0;
+                ? itemAmount <= AvailableInventorySpace
+                : AvailableInventorySpace > 0;
 
         public override (Item AddedItem, Item ReturnedItem) HasSpaceForItem(ulong itemID, ulong itemAmount)
         {
@@ -36,41 +38,22 @@ namespace Inventory
                 Debug.LogError($"Item ID: {itemID} or Item Amount: {itemAmount} is 0.");
                 return (null, null);
             }
+            
+            if (itemAmount <= AvailableInventorySpace) return (new Item(itemID, itemAmount), null);
+            
+            var amountToAdd = Math.Min(AvailableInventorySpace, itemAmount);
 
-            if (itemAmount > MaxInventorySpace)
-            {
-                Debug.LogError($"Item amount: {itemAmount} is greater than inventory space: {MaxInventorySpace}.");
-                return (null, null);
-            }
-
-            if (!AllInventoryItems.TryGetValue(itemID, out var item))
-            {
-                var amountToAdd = Math.Min(itemAmount, MaxInventorySpace);
-                var returnedAmount = itemAmount - amountToAdd;
-
-                return (new Item(itemID, amountToAdd), 
-                    returnedAmount > 0 
+            var returnedAmount = itemAmount - amountToAdd;
+            
+            return (amountToAdd > 0 
+                    ? new Item(itemID, amountToAdd) 
+                    : null, 
+                returnedAmount > 0 
                     ? new Item(itemID, returnedAmount) 
                     : null);
-            }
-
-            if (item.ItemAmount + itemAmount <= MaxInventorySpace)
-            {
-                item.ItemAmount += itemAmount;
-                return (item, null);
-            }
-
-            var amountToAddToExisting = MaxInventorySpace - item.ItemAmount;
-            item.ItemAmount = MaxInventorySpace;
-
-            var returnedAmountFinal = itemAmount - amountToAddToExisting;
-
-            return (item, returnedAmountFinal > 0 
-                ? new Item(itemID, returnedAmountFinal) 
-                : null);
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisStation()
+        public override Dictionary<ulong, ulong> GetItemsToFetchFromThisInventory()
         {
             var itemsToFetch = new Dictionary<ulong, ulong>();
 
@@ -97,7 +80,7 @@ namespace Inventory
             return itemsToFetch;
         }
 
-        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations(bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisInventoryFromAllStations(bool limitToAvailableInventoryCapacity = true)
         {
             if (!HasSpaceForAllItemList())
             {
@@ -111,7 +94,7 @@ namespace Inventory
             {
                 if (stationToFetchFrom.Key == StationReference.StationID) continue;
                 
-                var itemsToFetch = stationToFetchFrom.Value.Station_Data.InventoryData.GetItemsToFetchFromThisStation();
+                var itemsToFetch = stationToFetchFrom.Value.Station_Data.InventoryData.GetItemsToFetchFromThisInventory();
                 
                 if (itemsToFetch.Count == 0) continue;
                 
@@ -143,7 +126,7 @@ namespace Inventory
             return stationsAndItemsToFetchFrom;
         }
 
-        public override Dictionary<ulong, ulong> GetItemsToDeliverFromThisActor(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
+        public override Dictionary<ulong, ulong> GetItemsToDeliverToThisInventory(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true)
         {
             if (!HasSpaceForAllItemList())
             {

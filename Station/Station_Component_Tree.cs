@@ -4,6 +4,7 @@ using Actors;
 using Jobs;
 using Recipes;
 using UnityEngine;
+using WorkPosts;
 
 namespace Station
 {
@@ -21,41 +22,37 @@ namespace Station
 
         protected override void _initialiseStartingInventory() { }
 
-        public override void CraftItem(RecipeName recipeName, Actor_Component actor)
+        public override bool CanCraftItem(RecipeName recipeName, Actor_Component actor)
         {
             if (!actor.ActorData.Crafting.KnownRecipes.Contains(recipeName))
             {
                 Debug.Log($"KnownRecipes does not contain RecipeName: {recipeName}");
-                return;
+                return false;
             }
 
             if (!DefaultAllowedRecipes.Contains(recipeName))
             {
                 Debug.Log($"AllowedRecipes does not contain RecipeName: {recipeName}");
-                return;
+                return false;
             }
 
             var recipeData = Recipe_Manager.GetRecipe_Data(recipeName);
-
-            var cost  = GetCost(recipeData.RequiredIngredients, actor);
+            
             var yield = GetYield(recipeData.RecipeProducts, actor);
-
-            if (!Station_Data.InventoryData.InventoryContainsAllItems(cost))
-            {
-                Debug.Log($"Inventory does not contain cost items.");
-                return;
-            }
 
             if (!actor.ActorData.InventoryData.HasSpaceForAllItemList(yield))
             {
                 Debug.Log($"Inventory does not have space for yield items.");
-                return;
+                return false;
             }
             
-            // Have another system where the tree loses durability instead or something.
-            // Later allow it to partially remove logs to chop the tree down completely.
+            //* Have another system where the tree loses durability instead or something.
+            //* Later allow it to partially remove logs to chop the tree down completely.
             
-            actor.ActorData.InventoryData.AddToInventory(yield);
+            //* Visually, have the logs accumulate at a collection point next to the tree, like a collection WorkPost or something.
+            Station_Data.InventoryData.AddToInventory(yield);
+
+            return true;
         }
 
         public override IEnumerator Interact(Actor_Component actor)
@@ -76,6 +73,21 @@ namespace Station
             return new Dictionary<ulong, ulong> { { 1100, 1 } }; // For now
 
             // Base resource yield on actor relevant skill
+        }
+        
+        public override float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        {
+            var productionRate = baseProgressRate;
+            // Then modify production rate by any area modifiers (Land type, events, etc.)
+
+            if (recipe.RecipeName is RecipeName.None) return productionRate;
+
+            foreach (var vocation in recipe.RequiredVocations)
+            {
+                productionRate *= workPost.CurrentWorker.ActorData.Vocation.GetProgress(vocation.Value);
+            }
+
+            return productionRate;
         }
     }
 }

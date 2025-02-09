@@ -13,6 +13,11 @@ namespace Jobs
     {
         public Data<Job_Data>[] Jobs                           => Data;
         public Data<Job_Data>   GetJob_Data(JobName jobName) => GetData((ulong)jobName);
+
+        public List<Job_Data> AllJobData()
+        {
+            return Data.Select(data => data?.Data_Object).ToList();
+        }
         
         protected override Dictionary<ulong, Data<Job_Data>> _getDefaultData() => 
             _convertDictionaryToData(Job_List.S_DefaultJobs);

@@ -298,8 +298,8 @@ namespace Inventory
                 item => AllInventoryItems.TryGetValue(item.Key, out var existingItem)
                                 && existingItem.ItemAmount >= item.Value);
 
-        public abstract Dictionary<ulong, ulong> GetItemsToFetchFromThisStation();
-        public abstract Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations(bool limitToAvailableInventoryCapacity = true);
-        public abstract Dictionary<ulong, ulong> GetItemsToDeliverFromThisActor(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true);
+        public abstract Dictionary<ulong, ulong> GetItemsToFetchFromThisInventory();
+        public abstract Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisInventoryFromAllStations(bool limitToAvailableInventoryCapacity = true);
+        public abstract Dictionary<ulong, ulong> GetItemsToDeliverToThisInventory(InventoryData otherInventory, bool limitToAvailableInventoryCapacity = true);
     }
 }

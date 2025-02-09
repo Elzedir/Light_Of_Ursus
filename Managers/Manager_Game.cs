@@ -188,7 +188,7 @@ namespace Managers
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
 
-            yield return null;
+            yield return new WaitForSeconds(5);
 
             Initialised = true;
         }
