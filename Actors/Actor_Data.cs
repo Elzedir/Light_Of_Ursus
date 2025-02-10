@@ -258,6 +258,8 @@ namespace Actors
         public HashSet<ActorActionName> GetAllowedActions()
         {
             var allowedActions = new HashSet<ActorActionName>();
+            
+            //* When actorData_SO is open, only have two actions, wander and Idle.
 
             foreach (var action in Identification.GetAllowedActions()) allowedActions.Add(action);
             foreach (var action in SceneObject.GetAllowedActions()) allowedActions.Add(action);

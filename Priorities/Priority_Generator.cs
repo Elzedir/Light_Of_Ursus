@@ -286,6 +286,10 @@ namespace Priorities
             
             foreach (var station in priority_Parameters.AllStation_Sources)
             {
+                a
+                    
+                    //* Log_Pile should be hauling, not Sawmill. And people in Log_Pile shouldn't have Process Logs action.
+                
                 if (station.StationName != StationName.Sawmill)
                 {
                     Debug.LogError($"Station {station.StationName} is not a sawmill.");

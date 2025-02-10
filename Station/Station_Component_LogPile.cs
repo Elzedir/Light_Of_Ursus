@@ -15,7 +15,7 @@ namespace Station
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;
         
-        public override JobName DefaultJobName => JobName.Sawyer;
+        public override JobName DefaultJobName => JobName.Hauler;
 
         public override RecipeName       DefaultProduct       => RecipeName.No_Recipe; // Fix hauling so that it doesn't need a recipe.
         public override HashSet<RecipeName> DefaultAllowedRecipes       { get; } = new();

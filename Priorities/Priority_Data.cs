@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
@@ -119,28 +121,44 @@ namespace Priorities
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
         {
             var regex = new Regex(@"PriorityID\((\d+)\)\s-\s(\d+)", RegexOptions.Compiled);
-            
-            foreach(var (key, value) in dataToDisplay.AllStringData.ToList())
+    
+            foreach (var (key, value) in dataToDisplay.AllStringData.ToList())
             {
                 if (!key.Contains("Priority Queue")) continue;
                 
-                foreach(var (innerKey, innerValue) in value.ToList())
+                //= Using a temporary dictionary to keep the order.
+
+                var updates = new Dictionary<string, string>();
+                var keysToRemove = new List<string>();
+        
+                foreach (var (innerKey, innerValue) in value)
                 {
                     var match = regex.Match(innerKey);
                     if (!match.Success) continue;
 
                     var iteration = match.Groups[1].Value;
                     var priorityIDString = match.Groups[2].Value;
-                    
+
                     if (ulong.TryParse(priorityIDString, out var priorityID))
                     {
-                        dataToDisplay.AllStringData[key][_getPriorityID(iteration, priorityID)] = innerValue;
-                        dataToDisplay.AllStringData[key].Remove($"PriorityID({iteration}) - {priorityID}");
+                        var newKey = _getPriorityID(iteration, priorityID);
+                        updates[newKey] = innerValue;
+                        keysToRemove.Add(innerKey);
                     }
                     else
                     {
                         Debug.LogError($"Failed to parse PriorityID from {innerKey}");
                     }
+                }
+                
+                foreach (var (newKey, newValue) in updates)
+                {
+                    dataToDisplay.AllStringData[key][newKey] = newValue;
+                }
+                
+                foreach (var oldKey in keysToRemove)
+                {
+                    dataToDisplay.AllStringData[key].Remove(oldKey);
                 }
             }
             

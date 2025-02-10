@@ -129,6 +129,6 @@ namespace Priorities
         }
 
         protected override string _getPriorityID(string iteration, ulong priorityID) =>
-            $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
+            $"PriorityID({iteration}) - {(ActorActionName)priorityID}({priorityID})";
     }
 }

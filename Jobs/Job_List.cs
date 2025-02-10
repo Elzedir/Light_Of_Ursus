@@ -27,8 +27,7 @@ namespace Jobs
                         jobDescription: "A logger",
                         jobActions: new List<ActorActionName>
                         {
-                            ActorActionName.Chop_Wood,
-                            ActorActionName.Haul
+                            ActorActionName.Chop_Wood
                         })
                 },
                 {
@@ -37,20 +36,18 @@ namespace Jobs
                         jobDescription: "A sawyer",
                         jobActions: new List<ActorActionName>
                         {
-                            ActorActionName.Process_Logs,
+                            ActorActionName.Process_Logs
+                        })
+                },
+                {
+                    (ulong)JobName.Hauler, new Job_Data(
+                        jobName: JobName.Hauler,
+                        jobDescription: "A hauler",
+                        jobActions: new List<ActorActionName>
+                        {
                             ActorActionName.Haul
                         })
                 },
-                // {
-                //     (ulong)JobName.Hauler, new Job_Data(
-                //         jobName: JobName.Hauler,
-                //         jobDescription: "A hauler",
-                //         jobActions: new List<ActorActionName>
-                //         {
-                //             ActorActionName.Haul_Fetch,
-                //             ActorActionName.Haul_Deliver
-                //         })
-                // },
                 {
                     (ulong)JobName.Vendor, new Job_Data(
                         jobName: JobName.Vendor,

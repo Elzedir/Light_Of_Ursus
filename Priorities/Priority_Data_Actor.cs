@@ -154,14 +154,8 @@ namespace Priorities
                 return;
             }
 
-            var currentAction = CurrentAction?.PriorityID != null ? (ActorActionName)CurrentAction.PriorityID : ActorActionName.None;
-            
-            Debug.Log($"Actor: {ActorID} - Current Action: {currentAction} - Next Action: {(ActorActionName)nextHighestPriorityValue.PriorityID}");
-
             if (CurrentAction != null && nextHighestPriorityValue.PriorityID == CurrentAction.PriorityID)
                 return;
-            
-            Debug.Log($"Actor: {ActorID} - Current Action: {currentAction} - Next Action: {(ActorActionName)nextHighestPriorityValue.PriorityID}");
 
             CurrentAction = DequeueHighestPriority();
         }
@@ -196,6 +190,6 @@ namespace Priorities
         }
         
         protected override string _getPriorityID(string iteration, ulong priorityID) => 
-            $"PriorityID({iteration}) - {(ActorActionName)priorityID}";
+            $"PriorityID({iteration}) - {(ActorActionName)priorityID}({priorityID})";
     }
 }

@@ -11,7 +11,7 @@ namespace Priorities
     {
         int                            _currentPosition;
         Priority_Element[]              _priorityArray;
-        readonly Dictionary<ulong, int> _priorityQueue;
+        readonly Dictionary<ulong, int> _lookupTable;
 
         public Action<ulong> OnPriorityRemoved;
 
@@ -19,7 +19,7 @@ namespace Priorities
         {
             _currentPosition = 0;
             _priorityArray   = new Priority_Element[maxPriorities];
-            _priorityQueue   = new Dictionary<ulong, int>();
+            _lookupTable   = new Dictionary<ulong, int>();
         }
 
         public Priority_Element Peek(ulong priorityID = 1)
@@ -27,34 +27,40 @@ namespace Priorities
             if (_currentPosition == 0)
                 return null;
 
-            var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
+            var index = priorityID == 1 ? 1 : _lookupTable.GetValueOrDefault(priorityID, 0);
 
-            return index == 0 ? null : _priorityArray[index];
+            return index != 0 ? _priorityArray[index] : null;
         }
 
         public Priority_Element[] PeekAll()
         {
-            return _currentPosition == 0 ? null : _priorityArray.Skip(1).ToArray();
+            if (_currentPosition == 0) return null;
+
+            return _priorityArray
+                .Skip(1)
+                .Take(_currentPosition)
+                .OrderByDescending(pe => pe.PriorityValue)
+                .ToArray();
         }
 
         public Priority_Element Dequeue(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
             {
-                Debug.Log($"Priority Queue should be empty: {_priorityQueue.Count} since _currentPosition: {_currentPosition}.");
+                Debug.Log($"Priority Queue should be empty: {_lookupTable.Count} since _currentPosition: {_currentPosition}.");
                 return null;
             }
 
-            var index = priorityID == 1 ? 1 : _priorityQueue.GetValueOrDefault(priorityID, 0);
+            var index = priorityID == 1 ? 1 : _lookupTable.GetValueOrDefault(priorityID, 0);
             if (index == 0) return null;
 
             var priorityValue = _priorityArray[index];
-            _priorityQueue[priorityValue.PriorityID] = 0;
+            _lookupTable[priorityValue.PriorityID] = 0;
 
             if (index != _currentPosition)
             {
                 _priorityArray[index]                            = _priorityArray[_currentPosition];
-                _priorityQueue[_priorityArray[index].PriorityID] = index;
+                _lookupTable[_priorityArray[index].PriorityID] = index;
             }
 
             _currentPosition--;
@@ -67,7 +73,7 @@ namespace Priorities
 
         bool _enqueue(ulong priorityID, float priorityValue, Priority_Parameters priorityParameters)
         {
-            if (_priorityQueue.TryGetValue(priorityID, out var index) && index != 0)
+            if (_lookupTable.TryGetValue(priorityID, out var index) && index != 0)
             {
                 Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
 
@@ -81,9 +87,11 @@ namespace Priorities
 
             var priorityElement = new Priority_Element(priorityID, priorityValue, priorityParameters);
             _currentPosition++;
-            _priorityQueue[priorityID] = _currentPosition;
+            _lookupTable[priorityID] = _currentPosition;
+            
             if (_currentPosition == _priorityArray.Length)
                 Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
+            
             _priorityArray[_currentPosition] = priorityElement;
             _moveUp(_currentPosition);
 
@@ -92,42 +100,30 @@ namespace Priorities
 
         public bool Update(ulong priorityID, float newPriority, Priority_Parameters priorityParameters)
         {
-            if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
+            if (!_lookupTable.TryGetValue(priorityID, out var index) || index == 0)
                 return _enqueue(priorityID, newPriority, priorityParameters);
-            
-            Debug.Log($"PriorityID: {(ActorActionName)priorityID} found in PriorityQueue.");
 
             _priorityArray[index].UpdatePriorityValue(newPriority, priorityParameters);
 
             if (index == _currentPosition || index == 1) return true;
             
-            Debug.Log($"PriorityID: {(ActorActionName)priorityID} updated from index: {index} to {_currentPosition}.");
-                
-            Debug.Log($"{(ActorActionName)_priorityArray[index].PriorityID} _priorityArray[index].PriorityValue: {_priorityArray[index].PriorityValue} >= {(ActorActionName)_priorityArray[index / 2].PriorityID} _priorityArray[index / 2].PriorityValue: {_priorityArray[index / 2].PriorityValue}.");
-            
             if (_priorityArray[index].PriorityValue >= _priorityArray[index / 2].PriorityValue)
-            {
-                _moveDown(index);
-            }
-            else
-            {
                 _moveUp(index);
-            }
+            else
+                _moveDown(index);
             
-            Debug.Log($"PriorityID: {(ActorActionName)priorityID} updated from index: {index} to {_currentPosition}.");
-
             return true;
         }
 
         public bool Remove(ulong priorityID)
         {
-            if (!_priorityQueue.TryGetValue(priorityID, out var index) || index == 0)
+            if (!_lookupTable.TryGetValue(priorityID, out var index) || index == 0)
                 return false;
 
             if (index != _currentPosition)
             {
                 _priorityArray[index]                            = _priorityArray[_currentPosition];
-                _priorityQueue[_priorityArray[index].PriorityID] = index;
+                _lookupTable[_priorityArray[index].PriorityID] = index;
             }
 
             _currentPosition--;
@@ -137,9 +133,6 @@ namespace Priorities
 
             return true;
         }
-        
-        a
-            //* Fix priority Queue tomorrow, understand how it works completely.
 
         void _moveDown(int index)
         {
@@ -147,11 +140,7 @@ namespace Priorities
             {
                 var childL = index * 2;
 
-                if (childL > _currentPosition)
-                {
-                    Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
-                    return;
-                }
+                if (childL > _currentPosition) return;
 
                 var childR = index * 2 + 1;
                 int largerChild;
@@ -169,16 +158,10 @@ namespace Priorities
                     largerChild = childR;
                 }
 
-                if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue)
-                {
-                    Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
-                    return;
-                }
+                if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue) return;
 
                 _swap(index, largerChild);
                 index = largerChild;
-                
-                Debug.Log($"PriorityID: {(ActorActionName)_priorityArray[index].PriorityID} moved down to index: {index}.");
             }
         }
 
@@ -201,19 +184,17 @@ namespace Priorities
         {
             var tempPriorityValueA = _priorityArray[indexA];
             _priorityArray[indexA]                            = _priorityArray[indexB];
-            _priorityQueue[_priorityArray[indexB].PriorityID] = indexA;
+            _lookupTable[_priorityArray[indexB].PriorityID] = indexA;
             _priorityArray[indexB]                            = tempPriorityValueA;
-            _priorityQueue[tempPriorityValueA.PriorityID]     = indexB;
+            _lookupTable[tempPriorityValueA.PriorityID]     = indexB;
         }
 
         public override Dictionary<string, string> GetStringData()
         {
             var stringData = new Dictionary<string, string>();
             
-            foreach(var priority in _priorityArray)
+            foreach(var priority in PeekAll())
             {
-                if (priority is null) continue;
-
                 var iteration = 0;
                 
                 while (stringData.ContainsKey($"PriorityID({iteration}) - {priority.PriorityID}") && iteration < 4)
