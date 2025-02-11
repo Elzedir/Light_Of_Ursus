@@ -3,7 +3,6 @@ using System.Collections;
 using Actors;
 using Jobs;
 using Recipes;
-using Station;
 using UnityEngine;
 
 namespace WorkPosts
@@ -12,6 +11,8 @@ namespace WorkPosts
     public class WorkPost_Component : MonoBehaviour
     {
         public Job Job;
+        
+        public WorkPost_DefaultValue WorkPost_DefaultValues => WorkPost_List.GetWorkPost_DefaultValue(Job.Station.StationName, Job.WorkPostID);
         public ulong WorkPostID                 => Job.WorkPostID;
         public Actor_Component CurrentWorker            => Job.Actor;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.

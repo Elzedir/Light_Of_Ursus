@@ -5,6 +5,7 @@ using System.Linq;
 using ActorActions;
 using ActorPresets;
 using Actors;
+using Cities;
 using City;
 using Items;
 using Jobs;
@@ -27,22 +28,26 @@ namespace JobSites
 
         public JobSiteName JobSiteName;
         
-        JobSite_Component _jobSite_Component;
+        JobSite_Component _jobSite;
+        City_Component _city;
         
-        public SerializableDictionary<ulong, Actor_Component> AllEmployees;
-        public SerializableDictionary<ulong, Station_Component> AllStations;
+        public SerializableDictionary<(ulong, ulong), Job> AllJobs;
+        Dictionary<ulong, (ulong, ulong)> _actorToJobMap;
         
         public ProductionData ProductionData;
         public ProsperityData ProsperityData;
         public Priority_Data_JobSite PriorityData;
 
-        public HashSet<ActorActionName> AllowedActions => AllStations.Values.SelectMany(station => station.AllowedActions).ToHashSet();
+        public HashSet<ActorActionName> AllowedActions => AllJobs.Values.SelectMany(job => job.JobActions).ToHashSet();
         
-        public JobSite_Component JobSite_Component =>
-            _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        public JobSite_Component JobSite =>
+            _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID) 
+                         ?? throw new NullReferenceException($"JobSite with ID {JobSiteID} not found in JobSite_SO.");
+        public City_Component City =>
+            _city ??= City_Manager.GetCity_Component(CityID) 
+                      ?? throw new NullReferenceException($"City with ID {CityID} not found in City_SO.");
 
-        public JobSite_Data(ulong jobSiteID, ulong jobSiteFactionID, ulong cityID, ulong ownerID,
-            JobSiteName jobSiteName, List<ulong> allEmployeeIDs, List<ulong> allStationIDs,
+        public JobSite_Data(ulong jobSiteID, ulong jobSiteFactionID, ulong cityID, ulong ownerID, JobSiteName jobSiteName, 
             ProductionData productionData, ProsperityData prosperityData, Priority_Data_JobSite priorityData)
         {
             JobSiteID = jobSiteID;
@@ -52,81 +57,31 @@ namespace JobSites
             OwnerID = ownerID;
             
             if (!Application.isPlaying) return;
-            
-            _populateAllEmployees(allEmployeeIDs);
-            _populateAllStations(allStationIDs);
-            
-            ProductionData = productionData ?? new ProductionData(JobSiteID);
-            ProsperityData = prosperityData ?? new ProsperityData(50, 100, 1);
-            PriorityData = priorityData ?? new Priority_Data_JobSite(JobSiteID);
-        }
 
-        public JobSite_Data(JobSite_Data jobSite_Data)
-        {
-            JobSiteID = jobSite_Data.JobSiteID;
-            JobSiteName = jobSite_Data.JobSiteName;
-            JobSiteFactionID = jobSite_Data.JobSiteFactionID;
-            CityID = jobSite_Data.CityID;
-            OwnerID = jobSite_Data.OwnerID;
+            //* Find a way to implement pre-existing jobs
+            _populateAllJobs();
             
-            if (!Application.isPlaying) return;
-            
-            AllEmployees = jobSite_Data.AllEmployees;
-            AllStations = jobSite_Data.AllStations;
-            
-            ProductionData = jobSite_Data.ProductionData;
-            ProsperityData = jobSite_Data.ProsperityData;
-            PriorityData = jobSite_Data.PriorityData;
+            ProductionData = new ProductionData(productionData);
+            ProsperityData = new ProsperityData(prosperityData);
+            PriorityData = new Priority_Data_JobSite(JobSiteID);
         }
         
-        void _populateAllEmployees(List<ulong> allEmployeeIDs)
+        void _populateAllJobs()
         {
-            AllEmployees = new SerializableDictionary<ulong, Actor_Component>();
-
-            foreach (var employeeID in allEmployeeIDs)
+            foreach (var station in JobSite.GetComponentsInChildren<Station_Component>())
             {
-                var employee = Actor_Manager.GetActor_Component(employeeID);
-
-                if (employee is null)
+                foreach(var workPost in station.Station_Data.PopulateAllWorkPosts())
                 {
-                    Debug.Log($"Employee with ID {employeeID} not found.");
-                    continue;
+                    AllJobs.Add((station.StationID, workPost.Value.WorkPostID), workPost.Value.Job);
                 }
-
-                AllEmployees.Add(employeeID, employee);
-            }
-        }
-
-        void _populateAllStations(List<ulong> allStationIDs)
-        {
-            AllStations = new SerializableDictionary<ulong, Station_Component>();
-            
-            foreach (var station in JobSite_Component.GetComponentsInChildren<Station_Component>())
-            {
-                AllStations.Add(station.StationID, station);
-            }
-            
-            foreach (var stationID in allStationIDs)
-            {
-                if (AllStations.ContainsKey(stationID)) continue;
-                
-                var station = Station_Manager.GetStation_Component(stationID);
-
-                if (station is null)
-                {
-                    Debug.Log($"Station with ID {stationID} not found.");
-                    continue;
-                }
-
-                AllStations.Add(stationID, station);
             }
         }
 
         public void InitialiseJobSiteData()
         {
-            _jobSite_Component = JobSite_Manager.GetJobSite_Component(JobSiteID);
+            _jobSite = JobSite_Manager.GetJobSite_Component(JobSiteID);
 
-            if (_jobSite_Component is null)
+            if (_jobSite is null)
             {
                 Debug.LogError($"JobSite with ID {JobSiteID} not found in JobSite_SO.");
                 return;
@@ -146,55 +101,38 @@ namespace JobSites
         
         public Job GetActorJob(ulong actorID)
         {
-            foreach (var station in AllStations.Values)
+            if (_actorToJobMap.TryGetValue(actorID, out var jobKey))
             {
-                foreach (var workPost in station.Station_Data.AllWorkPosts.Values)
-                {
-                    if (workPost.Job.ActorID == actorID)
-                        return workPost.Job;
-                }
+                return AllJobs[jobKey];
             }
 
+            Debug.LogError($"Actor with ID {actorID} not found in JobSite with ID {JobSiteID}.");
             return null;
         }
 
         protected Actor_Component _findEmployeeFromCity(JobName positionName)
         {
-            var city = City_Manager.GetCity_Component(CityID);
+            var allCitizenIDs = City.CityData.Population.AllCitizenIDs;
 
-            var allCitizenIDs = city?.CityData?.Population?.AllCitizenIDs;
-
-            if (allCitizenIDs == null || !allCitizenIDs.Any())
-            {
-                //Debug.Log("No citizens found in the city.");
-                return null;
-            }
+            if (allCitizenIDs == null || !allCitizenIDs.Any()) return null;
 
             var citizenID = allCitizenIDs
                 .FirstOrDefault(c =>
-                    Actor_Manager.GetActor_Data(c)?.Career.JobSiteID == 0 &&
+                    Actor_Manager.GetActor_Data(c)?.Career.CurrentJob == null &&
                     _hasMinimumVocationRequired(c, _getVocationAndMinimumExperienceRequired(positionName))
                 );
 
-            if (citizenID == 0)
-            {
-                //Debug.LogWarning($"No suitable citizen found for position: {position} in city with ID {CityID}.");
-                return null;
-            }
-
-            var actor = Actor_Manager.GetActor_Component(actorID: citizenID);
-
-            return actor;
+            return citizenID != 0 
+                ? Actor_Manager.GetActor_Component(actorID: citizenID) 
+                : null;
         }
 
         protected Actor_Component _generateNewEmployee(JobName jobName)
         {
-            var city = City_Manager.GetCity_Component(CityID);
-
             // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
             var actorPresetName = ActorPreset_List.S_ActorDataPresetNameByJobName[jobName];
 
-            var actor = Actor_Manager.SpawnNewActor(city.CitySpawnZone.transform.position, actorPresetName);
+            var actor = Actor_Manager.SpawnNewActor(City.CitySpawnZone.transform.position, actorPresetName);
 
             AddEmployeeToJobSite(actor);
 
@@ -262,15 +200,14 @@ namespace JobSites
         List<Station_Component> _getOrderedRelevantStationsForJob(ActorActionName actorActionName,
             Actor_Component actor)
         {
-            var relevantStations = AllStations.Values
-                .Where(station => station.AllowedActions.Contains(actorActionName))
+            var relevantStations = AllJobs.Values
+                .Where(job => job.JobActions.Contains(actorActionName))
                 .ToList();
 
             if (relevantStations.Count != 0)
                 return relevantStations
-                    .OrderBy(station =>
-                        Vector3.Distance(actor.transform.position, station.transform.position))
-                    .ToList();
+                    .OrderBy(job => Vector3.Distance(actor.transform.position, job.Station.transform.position))
+                    .Select(job => job.Station).ToList();
 
             Debug.LogError($"No relevant stations found for actorAction: {actorActionName}.");
             return null;
@@ -278,14 +215,15 @@ namespace JobSites
 
         public void AddEmployeeToJobSite(Actor_Component actor)
         {
-            if (AllEmployees.ContainsKey(actor.ActorID))
+            if (GetActorJob(actor.ActorID) is { } job)
             {
-                Debug.LogWarning($"EmployeeID: {actor.ActorID} already exists in employee list.");
+                Debug.LogError($"Actor with ID {actor.ActorID} already has a job at station with ID {job.StationID}.");
                 return;
             }
 
-            AllEmployees.Add(actor.ActorID, actor);
-            actor.ActorData.Career.JobSiteID = JobSiteID;
+            a
+            //* Find a way to add them to a waiting area.
+            AllJobs.Add((0, 0), new Job(JobName.None, JobSiteID, actor.ActorID));
         }
 
         public void HireEmployee(Actor_Component actor)
@@ -297,14 +235,13 @@ namespace JobSites
 
         public void RemoveEmployeeFromJobSite(Actor_Component actor)
         {
-            if (!AllEmployees.ContainsKey(actor.ActorID))
+            if (GetActorJob(actor.ActorID) is not { } job)
             {
-                Debug.LogWarning($"EmployeeID: {actor.ActorID} is not in employee list.");
+                Debug.LogError($"Actor with ID {actor.ActorID} not found in JobSite with ID {JobSiteID}.");
                 return;
             }
-
-            AllEmployees.Remove(actor.ActorID);
-            actor.ActorData.Career.JobSiteID = 0;
+            
+            AllJobs.Remove((job.StationID, job.WorkPostID));
         }
 
         public void FireEmployee(Actor_Component actor)
@@ -337,11 +274,11 @@ namespace JobSites
             }
         }
 
-        public void RemoveAllWorkersFromAllStations()
+        public void RemoveAllWorkersFromAllJobs()
         {
-            foreach (var station in AllStations.Values)
+            foreach (var job in AllJobs.Values)
             {
-                RemoveAllWorkersFromStation(station);
+                RemoveAllWorkersFromStation(job.Station);
             }
         }
 
@@ -351,25 +288,25 @@ namespace JobSites
 
             // Then modify production rate by any area modifiers (Land type, events, etc.)
 
-            foreach (var station in AllStations.Values)
+            foreach (var job in AllJobs.Values)
             {
                 //* Eventually find a way to group all non-production station types together and skip them all.
                 //* Currently only works for LogPile.
-                if (station.StationName == StationName.Log_Pile) continue;
+                if (job.Station.StationName == StationName.Log_Pile) continue;
                 
-                foreach (var workPost in station.Station_Data.AllWorkPosts.Values)
+                foreach (var workPost in job.Station.Station_Data.AllWorkPosts.Values)
                 {
                     if (workPost.Job.ActorID == 0) continue;
 
                     float totalProductionRate = 0;
 
-                    if (station.Station_Data.StationProgressData.CurrentProduct is null
-                        || station.Station_Data.StationProgressData.CurrentProduct.RecipeName == RecipeName.None)
+                    if (job.Station.Station_Data.StationProgressData.CurrentProduct is null
+                        || job.Station.Station_Data.StationProgressData.CurrentProduct.RecipeName == RecipeName.None)
                         continue;
 
-                    var individualProductionRate = station.Station_Data.BaseProgressRatePerHour;
+                    var individualProductionRate = job.Station.Station_Data.BaseProgressRatePerHour;
 
-                    foreach (var vocation in station.Station_Data.StationProgressData.CurrentProduct.RequiredVocations)
+                    foreach (var vocation in job.Station.Station_Data.StationProgressData.CurrentProduct.RequiredVocations)
                     {
                         individualProductionRate *= Actor_Manager.GetActor_Data(workPost.Job.ActorID).Vocation
                             .GetProgress(vocation.Value);
@@ -378,10 +315,10 @@ namespace JobSites
                     totalProductionRate += individualProductionRate;
                     // Don't forget to add in estimations for travel time.
 
-                    float requiredProgress = station.Station_Data.StationProgressData.CurrentProduct.RequiredProgress;
+                    float requiredProgress = job.Station.Station_Data.StationProgressData.CurrentProduct.RequiredProgress;
                     var estimatedProductionCount = totalProductionRate > 0 ? totalProductionRate / requiredProgress : 0;
 
-                    foreach (var product in station.Station_Data.StationProgressData.CurrentProduct.RecipeProducts)
+                    foreach (var product in job.Station.Station_Data.StationProgressData.CurrentProduct.RecipeProducts)
                     {
                         if (!estimatedProductionItems.TryGetValue(product.Key, out var item)) 
                             estimatedProductionItems[product.Key] = new Item(product.Key, product.Value);
@@ -423,35 +360,36 @@ namespace JobSites
         // }
 
         public Station_Component GetNearestRelevantStationInJobSite(Vector3 position, List<StationName> stationNames)
-            => AllStations
-                .Where(station => stationNames.Contains(station.Value.StationName))
-                .OrderBy(station => Vector3.Distance(position, station.Value.transform.position))
-                .FirstOrDefault().Value;
+            => AllJobs
+                .Where(job => stationNames.Contains(job.Value.Station.StationName))
+                .OrderBy(station => Vector3.Distance(position, station.Value.Station.transform.position))
+                .Select(station => station.Value.Station)
+                .FirstOrDefault();
         
         public IEnumerator FillEmptyJobSitePositions()
         {
             yield return new WaitForSeconds(2);
             
             var prosperityRatio = ProsperityData.GetProsperityPercentage();
-            var maxEmployeeCount = AllStations.Values.Sum(station => station.Station_Data.AllWorkPosts.Count);
+            var maxEmployeeCount = AllJobs.Values.Sum(job => job.Station.Station_Data.AllWorkPosts.Count);
             var desiredEmployeeCount = Mathf.RoundToInt(maxEmployeeCount * prosperityRatio);
 
-            if (AllEmployees.Count >= Mathf.Min(maxEmployeeCount, desiredEmployeeCount))
+            if (AllJobs.Count >= Mathf.Min(maxEmployeeCount, desiredEmployeeCount))
             {
-                Debug.Log($"Employee Count: {AllEmployees.Count}/{desiredEmployeeCount} (Max: {maxEmployeeCount})");
+                Debug.Log($"Employee Count: {AllJobs.Count}/{desiredEmployeeCount} (Max: {maxEmployeeCount})");
                 yield break;
             }
 
-            if (AllStations.Count == 0)
+            if (AllJobs.Count == 0)
             {
                 Debug.LogWarning("No stations found in JobSite.");
                 yield break;
             }
 
-            var stationQueue = new Queue<Station_Component>(AllStations.Values);
+            var stationQueue = new Queue<Station_Component>(AllJobs.Values.Select(station => station.Station));
             var iteration = 0;
     
-            while (AllEmployees.Count < desiredEmployeeCount)
+            while (AllJobs.Count < desiredEmployeeCount)
             {
                 if (stationQueue.Count == 0) break;
 
@@ -459,13 +397,13 @@ namespace JobSites
 
                 foreach (var workPost in station.Station_Data.AllWorkPosts.Values)
                 {
-                    if (AllEmployees.Count >= desiredEmployeeCount) break;
+                    if (AllJobs.Count >= desiredEmployeeCount) break;
                     if (workPost.Job.ActorID != 0) continue;
 
-                    var newEmployee = _findEmployeeFromCity(station.DefaultJobName) ??
-                                      _generateNewEmployee(station.DefaultJobName);
+                    var newEmployee = _findEmployeeFromCity(workPost.WorkPost_DefaultValues.JobName) ??
+                                      _generateNewEmployee(workPost.WorkPost_DefaultValues.JobName);
 
-                    JobSite_Component.AssignActorToNewCurrentJob(newEmployee);
+                    JobSite.AssignActorToNewCurrentJob(newEmployee);
             
                     stationQueue.Enqueue(station);
             
@@ -473,7 +411,7 @@ namespace JobSites
                     
                     if (iteration <= 99) continue;
                     
-                    Debug.LogError($"Iteration limit reached. Desired: {desiredEmployeeCount}, Current: {AllEmployees.Count}");
+                    Debug.LogError($"Iteration limit reached. Desired: {desiredEmployeeCount}, Current: {AllJobs.Count}");
                     yield break;
                 }
             }
@@ -499,16 +437,19 @@ namespace JobSites
                 allStringData: GetStringData());
 
             _updateDataDisplay(DataToDisplay,
-                title: "Employee Data",
+                title: "All Employees",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllEmployees.ToDictionary(actor => $"{actor.Key}",
-                    actor => $"{actor.Value.ActorName}({actor.Value.ActorID})"));
+                allStringData: AllJobs
+                    .Where(job => job.Value.ActorID != 0)
+                    .ToDictionary(
+                        job => $"{job.Value.ActorID}",
+                        job => $"{job.Value.Actor.ActorName}({job.Value.ActorID})"));
 
             _updateDataDisplay(DataToDisplay,
                 title: "All Stations",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllStations.ToDictionary(station => $"{station.Key}", 
-                    station => $"{station.Value.StationName}({station.Value.StationID})"));
+                allStringData: AllJobs.ToDictionary(job => $"{job.Value.StationID}", 
+                    station => $"{station.Value.Station.StationName}({station.Value.StationID})"));
 
             _updateDataDisplay(DataToDisplay,
                 title: "Production Data",

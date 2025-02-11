@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ActorActions;
 using Actors;
 using Station;
@@ -58,14 +59,10 @@ namespace Priorities
                     PriorityQueue.Update(priorityID, 1, new Priority_Parameters { DefaultPriorityValue = 1});
                     return;
             }
-            
-            //* Chop_Wood's desire to haul is 10 but Log_Pile is 0.
 
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
-            
-            if (priorityID == (ulong)ActorActionName.Haul) Debug.Log($"Haul priority value: {priorityValue}");
 
             PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
         }

@@ -217,7 +217,10 @@ namespace Priorities
                     var itemsToDeliver = itemsToDeliverFromActor
                         .Concat(itemsToDeliverFromStation)
                         .ToDictionary(x => x.Key, x => x.Value);
-                        
+                    
+                    //* Change it so that it will allocate the highestPriorityStation only when it is empty, that if it is full,
+                    //* then it will allocate the next highest priority station type.
+                    
                     var correctItemsToDeliver = itemsToDeliver
                         .Where(item => new Item(item.Key, item.Value)
                             .Item_Data.ItemPriorityStats
@@ -262,15 +265,12 @@ namespace Priorities
                     new List<Item>(), 
                     _lessItemsDesired_Percent, 
                     _lessDistanceDesired_Percent);
-                
-                //* This isn't working, not decreasing priority as logs are collected. Also, do the same for JobSite, so that logs 
-                //* are considered across the jobSite.
                     
                 //* For now, temporary solution to reduce priority by the number of logs the character has.
                 //* But later, we can change it to be a percentage of the total storage space, or a previously stated percentage value.
 
                 if (station.Station_Data.InventoryData.AllInventoryItems.TryGetValue(1100, out var existingLogs))
-                    priority -= Math.Max(0, existingLogs.ItemAmount);
+                    priority = Math.Min(2, priority - Math.Max(0, existingLogs.ItemAmount));
 
                 if (priority <= highestPriority) continue;
                 
@@ -286,9 +286,7 @@ namespace Priorities
             
             foreach (var station in priority_Parameters.AllStation_Sources)
             {
-                a
-                    
-                    //* Log_Pile should be hauling, not Sawmill. And people in Log_Pile shouldn't have Process Logs action.
+                //* Log_Pile should be hauling, not Sawmill. And people in Log_Pile shouldn't have Process Logs action.
                 
                 if (station.StationName != StationName.Sawmill)
                 {

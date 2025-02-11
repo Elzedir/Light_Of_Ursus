@@ -5,7 +5,6 @@ using Inventory;
 using Jobs;
 using JobSites;
 using Recipes;
-using TickRates;
 using Tools;
 using UnityEngine;
 using WorkPosts;
@@ -25,7 +24,6 @@ namespace Station
         
         Station_Component _station_Component;
         JobSite_Component _jobSite_Component;
-        public TickRateName CurrentTickRateName;
         
         public SerializableDictionary<ulong, WorkPost_Component> AllWorkPosts;
         
@@ -46,7 +44,6 @@ namespace Station
             JobSiteID = jobSiteID;
             StationProgressData = stationProgressData ?? new StationProgressData();
             InventoryData = inventoryData ?? new InventoryData_Station(StationID, null);
-            _populateAllWorkPosts();
         }
         
         public Station_Data(Station_Data stationData)
@@ -55,7 +52,6 @@ namespace Station
             JobSiteID = stationData.JobSiteID;
             InventoryData = stationData.InventoryData;
             StationProgressData = stationData.StationProgressData;
-            _populateAllWorkPosts();
         }
 
         public void InitialiseStationData()
@@ -78,10 +74,10 @@ namespace Station
             _initialised = true;
         }
 
-        void _populateAllWorkPosts()
+        public SerializableDictionary<ulong, WorkPost_Component> PopulateAllWorkPosts()
         {
             if (!Application.isPlaying)
-                return;
+                return null;
             
             foreach (Transform child in Station_Component.transform)
             {
@@ -89,41 +85,26 @@ namespace Station
 
                 Object.DestroyImmediate(child.gameObject);
             }
-            
-            var workPost_DefaultValues = WorkPost_List.GetWorkPlace_DefaultValues(StationName);
 
-            if (workPost_DefaultValues is null)
-            {
-                Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
-                return;
-            }
-            
+            var workPost_DefaultValues = WorkPost_List.GetWorkPost_DefaultValues(StationName);
             AllWorkPosts = new SerializableDictionary<ulong, WorkPost_Component>();
 
-            for (var i = 0; i < workPost_DefaultValues.Count; i++)
+            foreach (var defaultValue in workPost_DefaultValues)
             {
-                var defaultValues = workPost_DefaultValues[i % workPost_DefaultValues.Count];
-
-                if (defaultValues is null)
-                {
-                    Debug.Log($"WorkPost_TransformValue not found for StationName: {StationName}");
-                    return;
-                }
-                
                 var job = new Job(
-                    jobName: defaultValues.JobName,
+                    jobName: defaultValue.JobName,
                     jobSiteID: JobSiteID,
                     actorID: 0,
                     stationID: StationID,
-                    workPostID: (ulong)i);
+                    workPostID: defaultValue.WorkPostID);
 
                 var workPost_Component = new GameObject($"WorkPost_{job.WorkPostID}").AddComponent<WorkPost_Component>();
                 
                 workPost_Component.transform.SetParent(Station_Component.transform);
             
-                workPost_Component.transform.localPosition = defaultValues.Position;
-                workPost_Component.transform.localRotation = defaultValues.Rotation;
-                workPost_Component.transform.localScale    = defaultValues.Scale;
+                workPost_Component.transform.localPosition = defaultValue.Position;
+                workPost_Component.transform.localRotation = defaultValue.Rotation;
+                workPost_Component.transform.localScale    = defaultValue.Scale;
                 
                 var workPost_Collider = workPost_Component.gameObject.AddComponent<BoxCollider>();
                 workPost_Collider.isTrigger = true;
@@ -131,6 +112,17 @@ namespace Station
                 
                 AllWorkPosts[job.WorkPostID] = workPost_Component;
             }
+
+            return AllWorkPosts;
+        }
+
+        public WorkPost_Component GetWorkPost(ulong workPostID)
+        {
+            if (AllWorkPosts.TryGetValue(workPostID, out var workPost))
+                return workPost;
+            
+            Debug.LogError($"WorkPost with ID {workPostID} not found in Station {StationName}.");
+            return null;
         }
 
         public WorkPost_Component GetOpenWorkPost(JobName jobName = JobName.None) => 

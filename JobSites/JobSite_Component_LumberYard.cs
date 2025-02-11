@@ -53,7 +53,17 @@ namespace JobSites
 
         protected override void _adjustProduction(float idealRatio)
         {
-            var   allEmployees        = new Dictionary<ulong, Actor_Component>(JobSite_Data.AllEmployees);
+            var   allEmployees        = new Dictionary<ulong, Actor_Component>();
+            
+            //* Improve this
+
+            foreach (var job in JobSite_Data.AllJobs.Values)
+            {
+                if (job.Actor is null) continue;
+                
+                allEmployees.Add(job.Actor.ActorID, job.Actor);
+            }
+            
             var   bestCombination     = new Dictionary<ulong, Actor_Component>();
             var bestRatioDifference = float.MaxValue;
 

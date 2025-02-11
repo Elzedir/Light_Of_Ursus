@@ -6,9 +6,7 @@ using Inventory;
 using Jobs;
 using JobSites;
 using Priorities;
-using Priority;
 using Tools;
-using UnityEngine;
 
 namespace Actors
 {
@@ -18,41 +16,20 @@ namespace Actors
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
         public CareerName CareerName;
+        public Job CurrentJob;
         
-        [SerializeField] ulong _jobSiteID;
-        
-        JobSite_Component _jobSite;
-        
-        [SerializeField] Job _currentJob;
-
-        public ulong JobSiteID
-        {
-            get => _jobSiteID;
-            set
-            {
-                _jobSiteID = value;
-                _jobSite = _jobSiteID is not 0 
-                    ? JobSite_Manager.GetJobSite_Component(value) 
-                    : null;
-            }
-        }
-        
-        public JobSite_Component JobSite => JobSiteID != 0
-            ? _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID)
-            : null;
-        
-        public Job CurrentJob => _currentJob ??= JobSite.GetActorJob(ActorReference.ActorID);
-        
-        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong jobSiteID) : base(actorID, ComponentType.Actor)
+        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong jobSiteID = 0) : base(actorID, ComponentType.Actor)
         {
             CareerName = careerName;
-            JobSiteID = jobSiteID;
+            CurrentJob = jobSiteID == 0 
+                ? JobSite_Manager.GetJobSite_Component(jobSiteID).GetActorJob(actorID)
+                : null;
         }
 
         public Actor_Data_Career(Actor_Data_Career actorDataCareer) : base(actorDataCareer.ActorReference.ActorID, ComponentType.Actor)
         {
             CareerName = actorDataCareer.CareerName;
-            JobSiteID = actorDataCareer.JobSiteID;
+            CurrentJob = actorDataCareer.CurrentJob;
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -61,6 +38,11 @@ namespace Actors
                 title: "Career Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
+            
+            _updateDataDisplay(DataToDisplay,
+                title: "Job Data",
+                toggleMissingDataDebugs: toggleMissingDataDebugs,
+                allSubData: CurrentJob.GetDataToDisplay(toggleMissingDataDebugs));
 
             return DataToDisplay;
         }
@@ -69,9 +51,7 @@ namespace Actors
         {
             return new Dictionary<string, string>
             {
-                { "Career Name", $"{CareerName}" },
-                { "JobSiteID", $"{JobSiteID}" },
-                { "Current Job", $"{CurrentJob?.JobName}" }
+                { "Career Name", $"{CareerName}" }
             };
         }
 

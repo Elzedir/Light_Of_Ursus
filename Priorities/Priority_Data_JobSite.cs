@@ -10,7 +10,6 @@ using UnityEngine;
 
 namespace Priorities
 {
-    [Serializable]
     public class Priority_Data_JobSite : Priority_Data
     {
         public Priority_Data_JobSite(ulong jobSiteID)

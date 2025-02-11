@@ -5,6 +5,7 @@ using ActorActions;
 using Actors;
 using Initialisation;
 using Jobs;
+using Priorities;
 using Station;
 using TickRates;
 using UnityEngine;
@@ -56,17 +57,6 @@ namespace JobSites
         public void RegisterAllTickers()
         {
             _setTickRate(TickRateName.TenSeconds, false);
-            
-            _registerStations();
-        }
-
-        void _registerStations()
-        {
-            foreach (var station in JobSite_Data.AllStations.Values)
-            {
-                station.Station_Data.CurrentTickRateName = TickRateName.OneSecond;
-                Manager_TickRate.RegisterTicker(TickerTypeName.Station, TickRateName.OneSecond, station.StationID, station.OnTick);
-            }
         }
 
         TickRateName _currentTickRateName;
@@ -90,6 +80,11 @@ namespace JobSites
             _compareProductionOutput();
             
             JobSite_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
+            
+            foreach (var job in JobSite_Data.AllJobs.Values)
+            {
+                job.OnTick();
+            }
         }
 
         protected abstract bool _compareProductionOutput();
@@ -100,7 +95,7 @@ namespace JobSites
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
-            JobSite_Data.RemoveAllWorkersFromAllStations();
+            JobSite_Data.RemoveAllWorkersFromAllJobs();
 
             var tempEmployees = allEmployees.Select(employee => employee.Value).ToList();
 
@@ -142,74 +137,89 @@ namespace JobSites
             return result;
         }
         
-        public HashSet<StationName> GetStationNames() => JobSite_Data.AllStations.Values.Select(station => station.StationName).ToHashSet();
+        public HashSet<StationName> GetStationNames() => JobSite_Data.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
 
-        public (List<Station_Component> StationSources, List<Station_Component> StationTargets) GetRelevantStations(ActorActionName actorActionName)
+        public void GetRelevantStations(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            return RelevantStations.TryGetValue(actorActionName, out var relevantStations)
-                ? relevantStations()
-                : throw new ArgumentException(
-                    $"ActorActionName: {actorActionName} not recognised for Station_Source.");
+            if (!RelevantStations.TryGetValue(actorActionName, out var relevantStations))
+                throw new ArgumentException($"ActorActionName: {actorActionName} not recognised.");
+            
+            relevantStations(priority_Parameters);
         }
 
-        Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> _relevantStations;
-        public Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> RelevantStations => _getRelevantStations();
+        Dictionary<ActorActionName, Action<Priority_Parameters>> _relevantStations;
+        public Dictionary<ActorActionName, Action<Priority_Parameters>> RelevantStations => _getRelevantStations();
 
-        Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>> _getRelevantStations()
+        Dictionary<ActorActionName, Action<Priority_Parameters>> _getRelevantStations()
         {
-            return new Dictionary<ActorActionName, Func<(List<Station_Component> stationSources, List<Station_Component> stationTargets)>>
+            return new Dictionary<ActorActionName, Action<Priority_Parameters>>
             {
                 { ActorActionName.Idle, _relevantStations_Idle },
                 { ActorActionName.Haul, _relevantStations_Haul },
                 { ActorActionName.Chop_Wood, _relevantStations_Chop_Wood },
                 { ActorActionName.Process_Logs, _relevantStations_Process_Logs },
-                { ActorActionName.Wander, () => (new List<Station_Component>(), new List<Station_Component>()) }
+                { ActorActionName.Wander, _relevantStations_Wander }
             };
         }
+        
+        void _relevantStations_Idle(Priority_Parameters priority_Parameters)
+        {
+            //* Later, replace with recreational stations    
+        }
 
-        //* Later, replace with recreational stations 
-        (List<Station_Component> stationSources, List<Station_Component> stationTargets) _relevantStations_Idle() => new();
+        void _relevantStations_Wander(Priority_Parameters priority_Parameters)
+        {
+            //* This wouldn't make sense, I think, you do not wander between stations, that would be idling?
+        }
 
-        (List<Station_Component> stationSources, List<Station_Component> stationTargets) _relevantStations_Haul()
+
+        void _relevantStations_Haul(Priority_Parameters priority_Parameters)
         {
             var allFetchStations = new Dictionary<ulong, Station_Component>();
             var allFetchItems = new Dictionary<ulong, ulong>();
             var allDeliverStations = new Dictionary<ulong, Station_Component>();
 
-            foreach (var station in JobSite_Data.AllStations.Values)
+            foreach (var job in JobSite_Data.AllJobs.Values)
             {
-                foreach (var itemToFetch in station.GetItemsToFetchFromThisStation())
+                foreach (var itemToFetch in job.Station.GetItemsToFetchFromThisStation())
                 {
-                    allFetchStations.TryAdd(station.StationID, station);
+                    allFetchStations.TryAdd(job.StationID, job.Station);
 
                     if (!allFetchItems.TryAdd(itemToFetch.Key, itemToFetch.Value))
                         allFetchItems[itemToFetch.Key] += itemToFetch.Value;
                 }
             }
 
-            foreach (var station in JobSite_Data.AllStations.Values)
+            foreach (var job in JobSite_Data.AllJobs.Values)
             {
                 foreach (var itemToFetch in allFetchItems)
                 {
-                    if (!station.DesiredStoredItemIDs.Contains(itemToFetch.Key)) continue;
+                    if (!job.Station.DesiredStoredItemIDs.Contains(itemToFetch.Key)) continue;
                     
-                    allDeliverStations.TryAdd(station.StationID, station);
+                    allDeliverStations.TryAdd(job.StationID, job.Station);
                 }
             }
             
-            return (allFetchStations.Values.ToList(), allDeliverStations.Values.ToList());
+            priority_Parameters.AllStation_Sources = allFetchStations.Values.ToList();
+            priority_Parameters.AllStation_Targets = allDeliverStations.Values.ToList();
+        }
+        
+        //* Fix these
+
+        void _relevantStations_Chop_Wood(Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.AllStation_Sources = JobSite_Data.AllJobs.Values
+                .Where(job => job.Station.StationName == StationName.Tree &&
+                                  job.Station.Station_Data.GetOpenWorkPost() is not null)
+                .Select(job => job.Station).ToList();
         }
 
-        (List<Station_Component> stationSources, List<Station_Component> stationTargets) _relevantStations_Chop_Wood() =>
-            (JobSite_Data.AllStations.Values
-                    .Where(station => station.StationName == StationName.Tree &&
-                                      station.Station_Data.GetOpenWorkPost() is not null).ToList(), 
-                new List<Station_Component>());
-
-        (List<Station_Component> stationSources, List<Station_Component> stationTargets) _relevantStations_Process_Logs() =>
-            (JobSite_Data.AllStations.Values
-                .Where(station => station.StationName == StationName.Sawmill &&
-                                  station.Station_Data.GetOpenWorkPost() is not null).ToList(), 
-                new List<Station_Component>());
+        void _relevantStations_Process_Logs(Priority_Parameters priority_Parameters)
+        {
+            priority_Parameters.AllStation_Sources = JobSite_Data.AllJobs.Values
+                .Where(job => job.Station.StationName == StationName.Sawmill &&
+                                  job.Station.Station_Data.GetOpenWorkPost() is not null)
+                .Select(job => job.Station).ToList();
+        }
     }
 }

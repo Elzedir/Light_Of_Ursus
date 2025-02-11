@@ -11,7 +11,7 @@ using Region;
 using Station;
 using UnityEngine;
 
-namespace IDs
+namespace Tools
 {
     public abstract class ID_Manager
     {

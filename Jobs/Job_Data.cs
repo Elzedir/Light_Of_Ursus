@@ -1,34 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Actors;
 using Station;
+using TickRates;
 using Tools;
 using UnityEngine;
+using WorkPosts;
 
 namespace Jobs
 {
-    [Serializable]
     public class Job_Data : Data_Class
     {
-        public JobName              JobName;
-        public string               JobDescription;
-        public List<ActorActionName> JobActions;
+        public readonly JobName              JobName;
+        public readonly string               JobDescription;
+        public readonly List<ActorActionName> JobActions;
 
         public Job_Data(JobName jobName, string jobDescription, List<ActorActionName> jobActions)
         {
             JobName        = jobName;
             JobDescription = jobDescription;
             JobActions       = jobActions;
-        }
-
-        public Job_Data(Job_Data jobData)
-        {
-            JobName        = jobData.JobName;
-            JobDescription = jobData.JobDescription;
-            JobActions       = jobData.JobActions;
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -93,11 +86,12 @@ namespace Jobs
         public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
         Station_Component _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
+        WorkPost_Component _workPost;
+        public WorkPost_Component WorkPost => _workPost ??= Station.Station_Data.GetWorkPost(WorkPostID);
         public List<ActorActionName> JobActions => Job_Data.JobActions;
         
         public Job(JobName jobName, ulong jobSiteID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)
         {
-            JobName    = jobName;
             JobSiteID = jobSiteID;
             ActorID = actorID;
             StationID  = stationID;
@@ -112,12 +106,18 @@ namespace Jobs
             StationID  = job.StationID;
             WorkPostID = job.WorkPostID;
         }
+
+        public TickRateName CurrentTickRateName;
+        public void OnTick()
+        {
+            Station.Station_Data.OnTick();
+        }
         
         public override Dictionary<string, string> GetStringData()
         {
             return new Dictionary<string, string>
             {
-                { "Job ID", $"{(ulong)JobName}" },
+                { "Job ID", $"{JobName}" },
                 { "Job Name", $"{JobName}" },
                 { "Job Site ID", $"{JobSiteID}" },
                 { "Station ID", $"{StationID}" },

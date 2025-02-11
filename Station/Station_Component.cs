@@ -5,7 +5,6 @@ using ActorActions;
 using Actors;
 using Initialisation;
 using Inventory;
-using Jobs;
 using JobSites;
 using Recipes;
 using UnityEngine;
@@ -28,10 +27,8 @@ namespace Station
 
         //* Remove this, and instead add all allowedJobs to be determined by workPosts, not stations, since there could be different
         //* jobs on different workPosts.
-        public abstract JobName           DefaultJobName           { get; }
         public abstract RecipeName        DefaultProduct        { get; }
         public abstract HashSet<RecipeName>  DefaultAllowedRecipes { get; }
-        public HashSet<ActorActionName> AllowedActions => Station_Data.AllWorkPosts.Values.SelectMany(workPost => workPost.Job.JobActions).ToHashSet();
         public abstract HashSet<ulong>        AllowedStoredItemIDs  { get; }
         public abstract HashSet<ulong>        DesiredStoredItemIDs  { get; }
         
@@ -59,11 +56,6 @@ namespace Station
 
             SetInteractRange();
             _initialiseStartingInventory();
-        }
-
-        public void OnTick()
-        {
-            Station_Data.OnTick();
         }
 
         protected abstract void _initialiseStartingInventory();

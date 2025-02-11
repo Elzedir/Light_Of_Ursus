@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Jobs;
 using Managers;
 using Priorities;
 
@@ -14,17 +15,13 @@ namespace JobSites
             return new Dictionary<ulong, JobSite_Data>
             {
                 {
+                    //* Find another way to initialise Jobs. 
                     1, new JobSite_Data(
                         jobSiteID: 1,
                         jobSiteFactionID: 0,
                         cityID: 1,
                         ownerID: 0,
                         jobSiteName: JobSiteName.Lumber_Yard,
-                        allEmployeeIDs: new List<ulong>(),
-                        allStationIDs:new List<ulong>
-                        {
-                            1, 2, 3
-                        },
                         productionData: new ProductionData(1),
                         prosperityData: new ProsperityData(
                             currentProsperity: 50,

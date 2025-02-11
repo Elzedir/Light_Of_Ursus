@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
@@ -104,18 +102,7 @@ namespace Priorities
 
         protected void _setAllStationIDs(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            var allRelevantStations =
-                priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName);
-            
-            if (allRelevantStations.StationTargets.Count is 0 && allRelevantStations.StationSources.Count is 0)
-            {
-                priority_Parameters.AllStation_Sources ??= new List<Station_Component>();
-                priority_Parameters.AllStation_Targets ??= new List<Station_Component>();
-                return;
-            }
-            
-            priority_Parameters.AllStation_Sources ??= allRelevantStations.StationSources;
-            priority_Parameters.AllStation_Targets ??= allRelevantStations.StationTargets;
+            priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName, priority_Parameters);
         }
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)
@@ -176,17 +163,10 @@ namespace Priorities
             return new Dictionary<DataChangedName, List<ActorActionName>>
             {
                 {
-                    DataChangedName.ChangedState, new List<ActorActionName>
-                    {
-                        //ActorActionName.Wander,
-                        ActorActionName.Idle
-                    }
+                    DataChangedName.ChangedState, new List<ActorActionName>()
                 },
                 {
-                    DataChangedName.ChangedInventory, new List<ActorActionName>
-                    {
-                        
-                    }
+                    DataChangedName.ChangedInventory, new List<ActorActionName>()
                 }
             };
         }
