@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
+using JobSites;
 using Station;
 using TickRates;
 using Tools;
@@ -75,15 +76,18 @@ namespace Jobs
         }
 
         Actor_Component _actor;
-        public Actor_Component Actor => _actor ??=
-            _actorID != 0
-                ? Actor_Manager.GetActor_Component(_actorID)
-                : null;
+        public Actor_Component Actor => _actor ??= ActorID != 0
+            ? Actor_Manager.GetActor_Component(_actorID)
+            : null;
 
         public ActivityPeriod ActivityPeriod;
         
         Job_Data                    _job_Data;
-        public Job_Data                    Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);
+        JobSite_Component _jobSite;
+        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+
+        public Job_Data Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);   
+        
         Station_Component _station;
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
         WorkPost_Component _workPost;
@@ -92,6 +96,7 @@ namespace Jobs
         
         public Job(JobName jobName, ulong jobSiteID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)
         {
+            JobName    = jobName;
             JobSiteID = jobSiteID;
             ActorID = actorID;
             StationID  = stationID;

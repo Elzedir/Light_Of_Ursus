@@ -166,8 +166,6 @@ namespace Managers
             yield return null;
             
             Manager_DateAndTime.Initialise();
-            
-            _createManager("Manager_Order",   _manager_Parent).AddComponent<Manager_Order>().OnSceneLoaded();
 
             DataPersistence_Manager.LoadGame("");
             

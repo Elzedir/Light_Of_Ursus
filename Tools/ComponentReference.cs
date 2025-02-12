@@ -28,7 +28,7 @@ namespace Tools
     public class ComponentReference_Station : ComponentReference
     {
         public ulong StationID => ComponentID;
-        public ComponentReference_Station(ulong stationID) : base(stationID) { }
+        public ComponentReference_Station(ulong stationID) : base(stationID) {  }
         Station_Component                    _station;
         protected override object            _component => _station ??= Station_Manager.GetStation_Component(StationID);
         public             Station_Component Station    => _component as Station_Component;
@@ -36,12 +36,12 @@ namespace Tools
         public override GameObject           GameObject                => Station.gameObject;
         public override Priority_Data GetPriorityComponent() => Station.JobSite.JobSite_Data.PriorityData;
     }
-    public class ComponentReference_Jobsite : ComponentReference
+    public class ComponentReference_JobSite : ComponentReference
     {
-        public ulong JobsiteID => ComponentID;
-        public ComponentReference_Jobsite(ulong jobsiteID) : base(jobsiteID) { }
+        public ulong JobSiteID => ComponentID;
+        public ComponentReference_JobSite(ulong jobSiteID) : base(jobSiteID) { }
         JobSite_Component                    _jobSite;
-        protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobsiteID);
+        protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
         public             JobSite_Component JobSite    => _component as JobSite_Component;
         public JobSite_Data JobSiteData => JobSite.JobSite_Data;
         public override GameObject           GameObject                => JobSite.gameObject;

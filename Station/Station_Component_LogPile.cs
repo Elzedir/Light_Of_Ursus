@@ -1,9 +1,6 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
-using Items;
-using Jobs;
 using Recipes;
 using UnityEngine;
 using WorkPosts;
@@ -50,7 +47,8 @@ namespace Station
 
         public override float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
         {
-            JobSite.JobSite_Data.Haul(workPost.Job);
+            //* Don't have them move to the workPost, have them go to each WorkPost they need to haul from.
+            //JobSite.JobSite_Data.Haul(workPost.Job);
             
             return 0;
         }

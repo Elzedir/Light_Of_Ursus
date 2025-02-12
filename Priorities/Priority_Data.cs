@@ -38,9 +38,7 @@ namespace Priorities
         public Priority_Element PeekHighestPriority(ulong priorityID = 1) => PriorityQueue.Peek(priorityID);
         public Priority_Element PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
-            var permittedPriorities = _getPermittedPriorities(priorityIDs);
-
-            if (permittedPriorities.Count is 0)
+            if (priorityIDs.Count is 0)
             {
                 Debug.Log("No permitted priorities found.");
                 return null;
@@ -48,7 +46,7 @@ namespace Priorities
 
             var highestPriority = new Priority_Element(0, 0, new Priority_Parameters());
 
-            foreach (var priority in permittedPriorities)
+            foreach (var priority in priorityIDs)
             {
                 var priorityElement = PriorityQueue.Peek(priority);
 
@@ -63,10 +61,8 @@ namespace Priorities
             return PriorityQueue.Peek(highestPriority.PriorityID);
         }
         public Priority_Element DequeueHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
-        public Priority_Element GetHighestPriorityFromGroup(List<ulong> priorityIDs, ulong priorityObjectParameterID = 0)
+        public Priority_Element GetHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
-            priorityIDs = _getRelevantPriorityIDs(priorityIDs, priorityObjectParameterID);
-
             var highestPriority = PeekHighestPriorityFromGroup(priorityIDs);
 
             if (highestPriority is not null) return PriorityQueue.Dequeue(highestPriority.PriorityID);
@@ -74,9 +70,6 @@ namespace Priorities
             Debug.Log("No highest priority found.");
             return null;
         }
-
-        protected abstract List<ulong> _getPermittedPriorities(List<ulong> priorityIDs);
-        protected abstract List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID);
 
         protected Priority_Parameters _getPriorityParameters(ActorActionName actorActionName)
         {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ActorActions;
+using Careers;
 
 namespace Jobs
 {

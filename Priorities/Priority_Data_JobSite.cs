@@ -14,32 +14,13 @@ namespace Priorities
     {
         public Priority_Data_JobSite(ulong jobSiteID)
         {
-            _jobSiteReferences = new ComponentReference_Jobsite(jobSiteID);
+            _jobSiteReferences = new ComponentReference_JobSite(jobSiteID);
         }
 
-        readonly ComponentReference_Jobsite _jobSiteReferences;
+        readonly ComponentReference_JobSite _jobSiteReferences;
 
-        public ulong                     JobSiteID     => _jobSiteReferences.JobsiteID;
+        public ulong                     JobSiteID     => _jobSiteReferences.JobSiteID;
         JobSite_Component                _jobSite      => _jobSiteReferences.JobSite;
-
-        protected override List<ulong> _getPermittedPriorities(List<ulong> priorityIDs)
-        {
-            var allowedPriorities = new List<ulong>();
-
-            foreach (var priorityID in priorityIDs)
-            {
-                if (priorityID is (ulong)ActorActionName.Idle)
-                {
-                    Debug.LogError(
-                        $"ActorActionName: {(ActorActionName)priorityID} not allowed in PeekHighestSpecificPriority.");
-                    continue;
-                }
-
-                allowedPriorities.Add(priorityID);
-            }
-
-            return allowedPriorities;
-        }
         
         public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
@@ -85,15 +66,6 @@ namespace Priorities
         protected override void _setJobSiteID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
-        }
-
-        protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)
-        {
-            if (limiterID != 0)
-                return priorityIDs.Where(priorityID =>
-                    Station_Manager.GetStation_Component(limiterID).AllowedActions.Contains((ActorActionName)priorityID)).ToList();
-            
-            return priorityIDs;
         }
 
         protected override HashSet<ActorActionName> _getAllowedActions() => _jobSite.JobSite_Data.AllowedActions;

@@ -17,6 +17,18 @@ namespace ActorPresets
             return new Dictionary<ulong, ActorPreset_Data>
             {
                 {
+                    (ulong)ActorDataPresetName.Wanderer_Beginner, new ActorPreset_Data
+                    (
+                        actorDataPresetName: ActorDataPresetName.Wanderer_Beginner,
+                        actorDataCareer: new Actor_Data_Career
+                        (
+                            actorID: 0,
+                            careerName: CareerName.Wanderer,
+                            jobSiteID: 0
+                        )
+                    )
+                },
+                {
                     (ulong)ActorDataPresetName.Wanderer_Journeyman, new ActorPreset_Data
                     (
                         actorDataPresetName: ActorDataPresetName.Wanderer_Journeyman,
@@ -114,7 +126,9 @@ namespace ActorPresets
                 { JobName.Wanderer, ActorDataPresetName.Wanderer_Journeyman },
                 { JobName.Logger, ActorDataPresetName.Logger_Journeyman },
                 { JobName.Sawyer, ActorDataPresetName.Logger_Journeyman },
-                { JobName.Smith, ActorDataPresetName.Smith_Journeyman }
+                { JobName.Smith, ActorDataPresetName.Smith_Journeyman },
+                { JobName.Hauler, ActorDataPresetName.Wanderer_Beginner },
+                { JobName.Idle, ActorDataPresetName.Wanderer_Beginner }
             };
         }
     }

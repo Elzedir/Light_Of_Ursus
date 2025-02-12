@@ -22,21 +22,22 @@ namespace Station
         
         public float BaseProgressRatePerHour = 5;
         
-        Station_Component _station_Component;
-        JobSite_Component _jobSite_Component;
+        Station_Component _station;
+        JobSite_Component _jobSite;
         
         public SerializableDictionary<ulong, WorkPost_Component> AllWorkPosts;
         
         public InventoryData_Station InventoryData;
         public StationProgressData StationProgressData;
 
-        public StationName StationName    => Station_Component.StationName;
-        public RecipeName  DefaultProduct => Station_Component.DefaultProduct;
-
-        public Station_Component Station_Component => _station_Component ??= Station_Manager.GetStation_Component(StationID);
-        public JobSite_Component JobSite_Component => _jobSite_Component ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        public StationName StationName    => Station.StationName;
+        public RecipeName  DefaultProduct => Station.DefaultProduct;
         
-        public Station_Data(ulong stationID, ulong jobSiteID, StationName stationName, StationProgressData stationProgressData = null, InventoryData_Station inventoryData = null)
+        public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
+        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        
+        public Station_Data(ulong stationID, ulong jobSiteID, StationName stationName, 
+            StationProgressData stationProgressData = null, InventoryData_Station inventoryData = null)
         {
             //* stationName; When loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             //* But if the station does exist, then we generate a new station with the required stationName type.
@@ -62,7 +63,7 @@ namespace Station
             //* without closing the editor. So find common ground for the two. The City_Component and Station_Component are null.
             //* For now we'll use this GetStation Fix to assign the null value.
 
-            if (Station_Component is null)
+            if (Station is null)
             {
                 Debug.LogError($"Station with ID {StationID} not found in Station_SO.");
                 return;
@@ -72,14 +73,15 @@ namespace Station
                 StationProgressData.CurrentProduct ??= Recipe_Manager.GetRecipe_Data(DefaultProduct);
             
             _initialised = true;
+            
+            _populateAllWorkPosts();
         }
 
-        public SerializableDictionary<ulong, WorkPost_Component> PopulateAllWorkPosts()
+        void _populateAllWorkPosts()
         {
-            if (!Application.isPlaying)
-                return null;
+            if (!Application.isPlaying) return;
             
-            foreach (Transform child in Station_Component.transform)
+            foreach (Transform child in Station.transform)
             {
                 if (child.GetComponent<WorkPost_Component>() is null) continue;
 
@@ -100,7 +102,7 @@ namespace Station
 
                 var workPost_Component = new GameObject($"WorkPost_{job.WorkPostID}").AddComponent<WorkPost_Component>();
                 
-                workPost_Component.transform.SetParent(Station_Component.transform);
+                workPost_Component.transform.SetParent(Station.transform);
             
                 workPost_Component.transform.localPosition = defaultValue.Position;
                 workPost_Component.transform.localRotation = defaultValue.Rotation;
@@ -112,8 +114,6 @@ namespace Station
                 
                 AllWorkPosts[job.WorkPostID] = workPost_Component;
             }
-
-            return AllWorkPosts;
         }
 
         public WorkPost_Component GetWorkPost(ulong workPostID)
@@ -125,11 +125,16 @@ namespace Station
             return null;
         }
 
-        public WorkPost_Component GetOpenWorkPost(JobName jobName = JobName.None) => 
-            jobName == JobName.None
-                ? AllWorkPosts.Values.FirstOrDefault(workPost => workPost.Job.Actor is null)
-                : AllWorkPosts.Values.Where(workPost => workPost.Job.JobName == jobName)
-                    .FirstOrDefault(workPost => workPost.Job.Actor is null);
+        public WorkPost_Component GetOpenWorkPost(JobName jobName = JobName.None)
+        {
+            foreach(var workPost in AllWorkPosts.Values)
+            {
+                if ((jobName == JobName.None || workPost.Job.JobName == jobName) && workPost.Job.ActorID == 0)
+                    return GetWorkPost(workPost.WorkPostID);
+            }
+            
+            return null;
+        }
         
         public void OnTick()
         {
@@ -151,7 +156,7 @@ namespace Station
 
                 if (!StationProgressData.ItemCrafted(progressMade)) continue;
                 
-                if (Station_Component.CanCraftItem(
+                if (Station.CanCraftItem(
                         StationProgressData.CurrentProduct.RecipeName, workPost.Job.Actor))
                     StationProgressData.ResetProgress();
             }

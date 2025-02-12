@@ -20,7 +20,7 @@ namespace JobSites
         {
             if (jobSiteID == 0)
             {
-                Debug.LogError("StationID cannot be 0.");
+                Debug.LogError("JobSiteID cannot be 0.");
                 return null;
             }
             

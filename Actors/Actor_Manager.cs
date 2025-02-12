@@ -188,13 +188,13 @@ namespace Actors
 
             var careerData = new Actor_Data_Career(
                 actorID: fullIdentification.ActorID,
-                careerName: actorDataPreset?.ActorDataCareer.CareerName     ?? CareerName.Wanderer,
-                jobSiteID: actorDataPreset?.ActorDataCareer.JobSiteID       ?? 0
+                careerName: actorDataPreset?.ActorDataCareer?.CareerName     ?? CareerName.Wanderer,
+                jobSiteID: actorDataPreset?.ActorDataCareer?.CurrentJob?.JobSiteID       ?? 0
             );
             
             var craftingData = new Actor_Data_Crafting(
                 actorID: fullIdentification.ActorID,
-                knownRecipes: actorDataPreset?.ActorDataCrafting.KnownRecipes ?? new List<RecipeName>()
+                knownRecipes: actorDataPreset?.ActorDataCrafting?.KnownRecipes ?? new List<RecipeName>()
             );
             
             var priorityData = new Priority_Data_Actor(
@@ -203,7 +203,7 @@ namespace Actors
 
             var vocationData = new Actor_Data_Vocation(
                 actorID: fullIdentification.ActorID,
-                actorVocations: actorDataPreset?.ActorDataVocation.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
+                actorVocations: actorDataPreset?.ActorDataVocation?.ActorVocations ?? new Dictionary<VocationName, ActorVocation>()
                 );
             
             var species = new Actor_Data_Species(

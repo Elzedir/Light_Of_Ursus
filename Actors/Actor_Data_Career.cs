@@ -21,7 +21,7 @@ namespace Actors
         public Actor_Data_Career(ulong actorID, CareerName careerName, ulong jobSiteID = 0) : base(actorID, ComponentType.Actor)
         {
             CareerName = careerName;
-            CurrentJob = jobSiteID == 0 
+            CurrentJob = jobSiteID != 0 
                 ? JobSite_Manager.GetJobSite_Component(jobSiteID).GetActorJob(actorID)
                 : null;
         }

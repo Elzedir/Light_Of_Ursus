@@ -33,6 +33,8 @@ namespace Careers
     {
         None,
         
+        All,
+        
         Wanderer,
         
         Lumberjack,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
+using Careers;
 using Initialisation;
 using Jobs;
 using Priorities;
@@ -18,6 +19,7 @@ namespace JobSites
         public JobSite_Data JobSite_Data;
         
         public abstract JobSiteName JobSiteName { get; }
+        public abstract CareerName DefaultCareer { get; }
         public ulong JobSiteID => JobSite_Data.JobSiteID;
 
         public Job GetActorJob(ulong actorID)
@@ -48,30 +50,29 @@ namespace JobSites
 
             JobSite_Data = jobSiteData;
             JobSite_Data.InitialiseJobSiteData();
-            
-            RegisterAllTickers();
+
+            _setTickers();
             
             _initialised = true;
         }
 
-        public void RegisterAllTickers()
+        void _setTickers()
         {
-            _setTickRate(TickRateName.TenSeconds, false);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, JobSiteID, OnTickOneSecond);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, JobSiteID, OnTickTenSeconds);
         }
 
-        TickRateName _currentTickRateName;
-
-        void _setTickRate(TickRateName tickRateName, bool unregister = true)
+        public void OnTickOneSecond()
         {
-            if (_currentTickRateName == tickRateName) return;
-
-            if (unregister) Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, _currentTickRateName, JobSiteID);
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, tickRateName, JobSiteID, OnTick);
-            // Register prosperity tick here. Do it for everything that has a ticker. A top down ticker.
-            _currentTickRateName = tickRateName;
+            if (!_initialised || JobSite_Data?.AllJobs?.Count is null or 0) return;
+            
+            foreach (var job in JobSite_Data.AllJobs.Values)
+            {
+                job.OnTick();
+            }
         }
 
-        public void OnTick()
+        public void OnTickTenSeconds()
         {
             if (!_initialised) return;
 
@@ -80,18 +81,13 @@ namespace JobSites
             _compareProductionOutput();
             
             JobSite_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
-            
-            foreach (var job in JobSite_Data.AllJobs.Values)
-            {
-                job.OnTick();
-            }
         }
 
         protected abstract bool _compareProductionOutput();
 
         protected abstract void _adjustProduction(float idealRatio);
         protected abstract VocationName _getRelevantVocation(JobName positionName);
-        public void AssignActorToNewCurrentJob(Actor_Component actor) => JobSite_Data.AssignActorToNewCurrentJob(actor);
+        public bool AssignActorToNewCurrentJob(Actor_Component actor) => JobSite_Data.AssignActorToNewCurrentJob(actor);
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
@@ -109,7 +105,12 @@ namespace JobSites
 
             foreach (var employee in employeesForStation)
             {
-                AssignActorToNewCurrentJob(employee);
+                if (!AssignActorToNewCurrentJob(employee))
+                {
+                    Debug.LogError($"Could not assign actor {employee.ActorID} to a job.");
+                    continue;
+                }
+                    
                 tempEmployees.Remove(employee);
             }
 

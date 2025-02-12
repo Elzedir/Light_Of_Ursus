@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Actors;
+using Careers;
 using Items;
 using Jobs;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace JobSites
     public class JobSite_Component_LumberYard : JobSite_Component
     {
         public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
+        public override CareerName DefaultCareer => CareerName.Lumberjack;
         
         protected override bool _compareProductionOutput()
         {

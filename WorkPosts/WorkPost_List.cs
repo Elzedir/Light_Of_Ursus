@@ -139,6 +139,39 @@ namespace WorkPosts
                             scale: new Vector3(0.5f, 1f, 0.5f))
 
                     }
+                },
+                {
+                    StationName.IdleTemp, new List<WorkPost_DefaultValue>
+                    {
+                        new(
+                            1,
+                            jobName: JobName.Idle,
+                            position: new Vector3(0.75f, 0, 0),
+                            rotation: new Quaternion(0, 0, 0, 0),
+                            scale: new Vector3(0.5f, 1f, 0.5f)),
+
+                        new(
+                            2,
+                            jobName: JobName.Idle,
+                            position: new Vector3(0, 0, 0.75f),
+                            rotation: new Quaternion(0, 0, 0, 0),
+                            scale: new Vector3(0.5f, 1f, 0.5f)),
+
+                        new(
+                            3,
+                            jobName: JobName.Idle,
+                            position: new Vector3(-0.75f, 0, 0),
+                            rotation: new Quaternion(0, 0, 0, 0),
+                            scale: new Vector3(0.5f, 1f, 0.5f)),
+
+                        new(
+                            4,
+                            jobName: JobName.Idle,
+                            position: new Vector3(0, 0, -0.75f),
+                            rotation: new Quaternion(0, 0, 0, 0),
+                            scale: new Vector3(0.5f, 1f, 0.5f))
+
+                    }
                 }
             };
         }

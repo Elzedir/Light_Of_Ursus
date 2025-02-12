@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ActorActions;
 using Actors;
 using Station;
@@ -74,16 +73,15 @@ namespace Priorities
 
         protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.JobSiteID;
+            priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.CurrentJob?.JobSiteID ?? 0;
         }
 
         protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
         {
-            var stationID = _actor.ActorData.Career.JobSite?.JobSite_Data.GetActorJob(ActorID)?.StationID;
-            var actorStation = stationID.HasValue ? Station_Manager.GetStation_Component(stationID.Value) : null;
+            var station = _actor.ActorData.Career.CurrentJob?.Station;
 
-            priority_Parameters.AllStation_Sources = actorStation is not null 
-                ? new List<Station_Component> { actorStation } 
+            priority_Parameters.AllStation_Sources = station is not null 
+                ? new List<Station_Component> { station } 
                 : null;
         }
 
@@ -107,30 +105,6 @@ namespace Priorities
             _actorReferences = new ComponentReference_Actor(actorID);
 
             //AllPriorities.DictionaryChanged += SetCurrentAction;
-        }
-
-        protected override List<ulong> _getPermittedPriorities(List<ulong> priorityIDs)
-        {
-            var allowedPriorities = new List<ulong>();
-
-            foreach (var priorityID in priorityIDs)
-            {
-                if (priorityID is (ulong)ActorActionName.All or (ulong)ActorActionName.Idle)
-                {
-                    Debug.LogError(
-                        $"ActorActionName: {(ActorActionName)priorityID} not allowed in PeekHighestSpecificPriority.");
-                    continue;
-                }
-
-                allowedPriorities.Add(priorityID);
-            }
-
-            return allowedPriorities;
-        }
-
-        protected override List<ulong> _getRelevantPriorityIDs(List<ulong> priorityIDs, ulong limiterID)
-        {
-            return priorityIDs;
         }
 
         public void MakeDecision()

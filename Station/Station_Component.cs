@@ -1,7 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using ActorActions;
 using Actors;
 using Initialisation;
 using Inventory;
@@ -18,7 +16,7 @@ namespace Station
         public Station_Data Station_Data;
         
         public ulong              StationID => Station_Data.StationID;
-        public JobSite_Component JobSite   => Station_Data.JobSite_Component;
+        public JobSite_Component JobSite   => Station_Data.JobSite;
         
         public abstract StationName  StationName { get; }
         public abstract StationType  StationType { get; }
@@ -34,24 +32,23 @@ namespace Station
         
         BoxCollider        _boxCollider;
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
-
+        
         void Awake()
         {
             Manager_Initialisation.OnInitialiseStations += _initialise;
         }
-
+        
         void _initialise()
         {
             var stationData = Station_Manager.GetStation_DataFromName(this);
-            
+
             if (stationData is null)
             {
                 Debug.LogWarning($"Station with name {name} not found in Station_SO.");
                 return;
             }
-            
-            Station_Data = stationData;
 
+            Station_Data = stationData;
             Station_Data.InitialiseStationData();
 
             SetInteractRange();
