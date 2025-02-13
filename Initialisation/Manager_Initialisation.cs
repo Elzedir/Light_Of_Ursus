@@ -21,6 +21,8 @@ namespace Initialisation
         public static event Action OnInitialiseJobSites;
         public static event Action OnInitialiseStations;
 
+        public static event Action OnInitialiseJobSiteData;
+
         public static void InitialiseManagers() 
         {
             OnInitialiseManagerFaction?.Invoke();
@@ -61,6 +63,11 @@ namespace Initialisation
         public static void InitialiseStations()
         {
             OnInitialiseStations?.Invoke();
+        }
+
+        public static void InitialiseJobSiteData()
+        {
+            OnInitialiseJobSiteData?.Invoke();
         }
     }
 }

@@ -41,11 +41,9 @@ namespace Station
             return new Dictionary<ulong, ulong>();
         }
 
-        public override float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        protected override float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
         {
-            //* Do nothing.
-            
-            return 0;
+            return _isAtWorkPost(workPost) ? 0 : 0;
         }
     }
 }

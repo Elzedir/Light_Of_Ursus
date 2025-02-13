@@ -17,25 +17,18 @@ namespace Priorities
     {
         public float DefaultPriorityValue = 0;
         
-        public ulong ActorID_Source;
-        public ulong ActorID_Target;
-        public ulong JobSiteID_Source;
-        public ulong JobSiteID_Target;
+        public ulong ActorID_Source, ActorID_Target, JobSiteID_Source, JobSiteID_Target;
         
-        public Station_Component HighestPriorityStation_Source;
-        public Station_Component HighestPriorityStation_Target;
+        public Station_Component HighestPriorityStation_Source, HighestPriorityStation_Target;
         
-        [FormerlySerializedAs("AllStationID_Sources")] public List<Station_Component> AllStation_Sources;
-        [FormerlySerializedAs("AllStationID_Targets")] public List<Station_Component> AllStation_Targets;
+        public List<Station_Component> AllStation_Sources, AllStation_Targets;
         
         public List<Item> Items;
         
-        public Vector3 Position_Source;
-        public Vector3 Position_Destination;
+        public Vector3 Position_Source, Position_Destination;
         
-        public float DefaultMaxPriority;
-        public float TotalDistance;
-        public long TotalItems;
+        public float DefaultMaxPriority, TotalDistance;
+        public long TotalItems; 
         
         public Actor_Component Actor_Component_Source => ActorID_Source != 0
         ? Actor_Manager.GetActor_Component(ActorID_Source)

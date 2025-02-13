@@ -1,63 +1,64 @@
+using System;
 using System.Collections.Generic;
 using Priorities.Priority_Queues;
 using UnityEngine;
 
 namespace Pathfinding
 {
-    public class AStar
+    public class Dijkstra
     {
         readonly long[,] _grid;
         readonly long _gridWidth, _gridHeight;
-
-        public AStar(long[,] grid)
+        
+        public Dijkstra(long[,] grid)
         {
             _grid = grid;
             _gridWidth = grid.GetLength(0);
             _gridHeight = grid.GetLength(1);
         }
-
-        public List<Vector2Int> RunAStar(Vector2Int start, Vector2Int end)
+        
+        public List<Vector2Int> RunDijkstra(Vector2Int start, Vector2Int end)
         {
             var startNode = new Node(start);
             var endNode = new Node(end);
-
+            
             var openList = new Priority_Queue_MinHeap<Node>();
             var closedList = new HashSet<long>();
-            
-            openList.Update(startNode.NodeID, 0);
 
+            openList.Update(startNode.NodeID, 0);
+            
             while (openList.Count() > 0)
             {
                 var currentNode = openList.Dequeue().PriorityObject;
-
+                
                 if (currentNode.NodeID == endNode.NodeID) return GetShortestPath(startNode, currentNode);
                 
                 closedList.Add(currentNode.NodeID);
-
+                
                 foreach (var neighbor in _getNeighbors(currentNode))
                 {
                     if (closedList.Contains(neighbor.NodeID) || _isUnwalkable(neighbor.Position)) continue;
 
                     var newMovementCostToNeighbor = currentNode.GCost + _getDistance(currentNode, neighbor);
-                    var isBetterPath = newMovementCostToNeighbor < neighbor.GCost || !openList.Contains(neighbor.NodeID);
+                    var isBetterPath = newMovementCostToNeighbor < neighbor.GCost;
 
                     if (!isBetterPath) continue;
                     
                     neighbor.GCost = newMovementCostToNeighbor;
-                    neighbor.HeuristicCost = _getDistance(neighbor, endNode);
                     neighbor.Parent = currentNode;
 
                     if (!openList.Contains(neighbor.NodeID))
-                        openList.Update(neighbor.NodeID, neighbor.TotalCost);
+                        openList.Update(neighbor.NodeID, neighbor.GCost);
                 }
             }
 
             return null;
         }
-
+        
         List<Node> _getNeighbors(Node node)
         {
             var neighbors = new List<Node>();
+            
             Vector2Int[] directions = { new(0, 1), new(0, -1), new(1, 0), new(-1, 0) };
 
             foreach (var direction in directions)
@@ -71,13 +72,11 @@ namespace Pathfinding
             return neighbors;
         }
         
-        bool _isWithinGrid(Vector2Int position)
-        {
-            return position.x >= 0 && position.x < (int)_gridWidth && position.y >= 0 && position.y < (int)_gridHeight;
-        }
-
+        bool _isWithinGrid(Vector2Int position) => 
+            position.x >= 0 && position.x < (int)_gridWidth && position.y >= 0 && position.y < (int)_gridHeight;
+        
         bool _isUnwalkable(Vector2Int position) => _grid[position.x, position.y] != 0;
-
+        
         static float _getDistance(Node a, Node b)
         {
             var x_Distance = Mathf.Abs(a.Position.x - b.Position.x);
@@ -85,10 +84,10 @@ namespace Pathfinding
             
             return _getManhattanDistance(x_Distance, y_Distance);
         }
-
+        
         static float _getManhattanDistance(int a, int b) => a + b;
-
-        static List<Vector2Int> GetShortestPath(Node startNode, Node endNode)
+        
+        public static List<Vector2Int> GetShortestPath(Node startNode, Node endNode)
         {
             var path = new List<Vector2Int>();
             var currentNode = endNode;
@@ -101,6 +100,29 @@ namespace Pathfinding
 
             path.Reverse();
             return path;
+        }
+    }
+
+    internal class Program
+    {
+        static void Main()
+        {
+            var graph = new Dijkstra(new long[,]
+            {
+                {0, 1, 0, 0, 0},
+                {1, 0, 1, 0, 0},
+                {0, 1, 0, 1, 0},
+                {0, 0, 1, 0, 1},
+                {0, 0, 0, 1, 0}
+            });
+            
+            var shortestPath = graph.RunDijkstra(new Vector2Int(0, 0), new Vector2Int(4, 4));
+            
+            Console.WriteLine("Distances from node 1:");
+            foreach (var node in shortestPath)
+            {
+                Console.WriteLine($"Node {node}");
+            }
         }
     }
 }

@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using Managers;
+using Pathfinding;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Tilemaps;
+using z_Abandoned;
 
 public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 {

@@ -45,7 +45,7 @@ namespace Priorities
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
+            PriorityQueueMaxHeap.Update(priorityID, priorityValue);
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
@@ -94,7 +94,7 @@ namespace Priorities
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertUlongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertUlongIDToStringID(PriorityQueueMaxHeap?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }

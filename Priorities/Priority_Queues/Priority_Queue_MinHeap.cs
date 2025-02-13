@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Tools;
-using UnityEngine;
-
 namespace Priorities.Priority_Queues
 {
-    public class Priority_Queue_MaxHeap<T> : Priority_Queue<T> where T : class
+    public class Priority_Queue_MinHeap<T> : Priority_Queue<T> where T : class
     {
-        public Priority_Queue_MaxHeap(int maxSize = 10) : base(maxSize) { }
+        public Priority_Queue_MinHeap(int maxSize = 10) : base(maxSize) { }
         
         protected override void _moveDown(int index)
         {
@@ -20,25 +14,25 @@ namespace Priorities.Priority_Queues
                     if (childL > _currentPosition) return;
 
                     var childR = index * 2 + 1;
-                    int largerChild;
+                    int smallerChild;
 
                     if (childR > _currentPosition)
                     {
-                        largerChild = childL;
+                        smallerChild = childL;
                     }
-                    else if (_priorityArray[childL].PriorityValue >= _priorityArray[childR].PriorityValue)
+                    else if (_priorityArray[childL].PriorityValue <= _priorityArray[childR].PriorityValue)
                     {
-                        largerChild = childL;
+                        smallerChild = childL;
                     }
                     else
                     {
-                        largerChild = childR;
+                        smallerChild = childR;
                     }
 
-                    if (_priorityArray[index].PriorityValue >= _priorityArray[largerChild].PriorityValue) return;
+                    if (_priorityArray[index].PriorityValue <= _priorityArray[smallerChild].PriorityValue) return;
 
-                    _swap(index, largerChild);
-                    index = largerChild;
+                    _swap(index, smallerChild);
+                    index = smallerChild;
                 }
             }
         }
@@ -51,7 +45,7 @@ namespace Priorities.Priority_Queues
 
                 var parent = index / 2;
 
-                if (_priorityArray[parent].PriorityValue >= _priorityArray[index].PriorityValue) return;
+                if (_priorityArray[parent].PriorityValue <= _priorityArray[index].PriorityValue) return;
 
                 _swap(parent, index);
                 index = parent;

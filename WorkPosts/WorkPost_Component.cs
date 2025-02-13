@@ -29,24 +29,7 @@ namespace WorkPosts
             WorkPostCollider.isTrigger = true;
         }
 
-        public float Operate(float baseProgressRate, Recipe_Data recipe)
-        {
-            if (CurrentWorker.ActorID is 0)
-            {
-                Debug.LogWarning("No worker assigned to work post.");
-                return 0;
-            }
-
-            if (WorkPostCollider.bounds.Contains(Job.Actor.transform.position)) return Job.Station.Produce(this, baseProgressRate, recipe);
-
-            if (!Job.IsWorkerMovingToWorkPost)
-                StartCoroutine(_moveWorkerToWorkPost(Actor_Manager.GetActor_Component(actorID: CurrentWorker.ActorID),
-                    transform.position));
-
-            return 0;
-        }
-
-        IEnumerator _moveWorkerToWorkPost(Actor_Component actor, Vector3 position)
+        public IEnumerator MoveWorkerToWorkPost(Actor_Component actor, Vector3 position)
         {
             Job.IsWorkerMovingToWorkPost = true;
 

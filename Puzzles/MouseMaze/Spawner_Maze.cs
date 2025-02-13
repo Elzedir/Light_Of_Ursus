@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Pathfinding;
 using UnityEngine;
 using UnityEngine.UIElements;
 public enum MazeType { None, Standard, Chase, Collect, Doors }

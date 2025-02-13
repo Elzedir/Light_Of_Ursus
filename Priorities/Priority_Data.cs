@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ActorActions;
 using Actors;
+using Priorities.Priority_Queues;
 using Station;
 using Tools;
 using UnityEngine;
@@ -13,30 +14,30 @@ namespace Priorities
     [Serializable]
     public abstract class Priority_Data : Data_Class
     {
-        Priority_Queue        _priorityQueue;
-        public Priority_Queue PriorityQueue => _priorityQueue ??= _createNewPriorityQueue();
+        Priority_Queue_MaxHeap<ActorAction_Data>        _priorityQueueMaxHeap;
+        public Priority_Queue_MaxHeap<ActorAction_Data> PriorityQueueMaxHeap => _priorityQueueMaxHeap ??= _createNewPriorityQueue();
         
         HashSet<ActorActionName> _allowedActions;
         public HashSet<ActorActionName> AllowedActions => _allowedActions ??= _getAllowedActions();
         protected abstract HashSet<ActorActionName> _getAllowedActions();
 
-        Priority_Queue _createNewPriorityQueue()
+        Priority_Queue_MaxHeap<ActorAction_Data> _createNewPriorityQueue()
         {
-            var priorityQueue = new Priority_Queue(1);
+            var priorityQueue = new Priority_Queue_MaxHeap<ActorAction_Data>(1);
             priorityQueue.OnPriorityRemoved += _regeneratePriority;
             return priorityQueue;
         }
 
         public void OnDestroy()
         {
-            PriorityQueue.OnPriorityRemoved -= _regeneratePriority;
+            PriorityQueueMaxHeap.OnPriorityRemoved -= _regeneratePriority;
         }
         public abstract    void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false);
         protected abstract void _regeneratePriority(ulong priorityID);
         
         //* Isn't rearranging the highest priority, Chop_Tree is staying the highest even with 0 priority.
-        public Priority_Element PeekHighestPriority(ulong priorityID = 1) => PriorityQueue.Peek(priorityID);
-        public Priority_Element PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
+        public Priority_Element<ActorAction_Data> PeekHighestPriority(ulong priorityID = 1) => PriorityQueueMaxHeap.Peek(priorityID);
+        public Priority_Element<ActorAction_Data> PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
             if (priorityIDs.Count is 0)
             {
@@ -44,11 +45,11 @@ namespace Priorities
                 return null;
             }
 
-            var highestPriority = new Priority_Element(0, 0, new Priority_Parameters());
+            var highestPriority = new Priority_Element<ActorAction_Data>(0, 0);
 
             foreach (var priority in priorityIDs)
             {
-                var priorityElement = PriorityQueue.Peek(priority);
+                var priorityElement = PriorityQueueMaxHeap.Peek(priority);
 
                 if (priorityElement is null) continue;
 
@@ -58,14 +59,14 @@ namespace Priorities
                 }
             }
 
-            return PriorityQueue.Peek(highestPriority.PriorityID);
+            return PriorityQueueMaxHeap.Peek(highestPriority.PriorityID);
         }
-        public Priority_Element DequeueHighestPriority(ulong priorityID = 1) => PriorityQueue.Dequeue(priorityID);
-        public Priority_Element GetHighestPriorityFromGroup(List<ulong> priorityIDs)
+        public Priority_Element<ActorAction_Data> DequeueHighestPriority(ulong priorityID = 1) => PriorityQueueMaxHeap.Dequeue(priorityID);
+        public Priority_Element<ActorAction_Data> GetHighestPriorityFromGroup(List<ulong> priorityIDs)
         {
             var highestPriority = PeekHighestPriorityFromGroup(priorityIDs);
 
-            if (highestPriority is not null) return PriorityQueue.Dequeue(highestPriority.PriorityID);
+            if (highestPriority is not null) return PriorityQueueMaxHeap.Dequeue(highestPriority.PriorityID);
 
             Debug.Log("No highest priority found.");
             return null;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Managers;
+using Pathfinding;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -26,7 +27,7 @@ public class Manager_Grid : MonoBehaviour
         Rows = Floor.cellBounds.xMax - Floor.cellBounds.xMin;
         Columns = Floor.cellBounds.xMax - Floor.cellBounds.xMin;
 
-        NodeArray_2D.Nodes = NodeArray_2D.InitializeArray(Floor.cellBounds.xMax - Floor.cellBounds.xMin, Floor.cellBounds.yMax - Floor.cellBounds.yMin);
+        NodeArray_2D.S_Nodes = NodeArray_2D.InitializeArray(Floor.cellBounds.xMax - Floor.cellBounds.xMin, Floor.cellBounds.yMax - Floor.cellBounds.yMin);
 
         XOffset = 0 - Floor.cellBounds.xMin;
         YOffset = 0 - Floor.cellBounds.yMin;

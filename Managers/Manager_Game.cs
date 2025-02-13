@@ -183,6 +183,8 @@ namespace Managers
             Manager_Initialisation.InitialiseJobSites();
             Manager_Initialisation.InitialiseStations();
 
+            Manager_Initialisation.InitialiseJobSiteData();
+
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));
 

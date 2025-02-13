@@ -12,7 +12,8 @@ namespace Station
         public override StationName      StationName          => StationName.Log_Pile;
         public override StationType      StationType          => StationType.Storage;
 
-        public override RecipeName       DefaultProduct       => RecipeName.No_Recipe; // Fix hauling so that it doesn't need a recipe.
+        public override RecipeName       DefaultProduct       => RecipeName.No_Recipe;
+        
         public override HashSet<RecipeName> DefaultAllowedRecipes       { get; } = new();
         public override HashSet<ulong>       AllowedStoredItemIDs { get; } = new() { 1100, 2300 };
         public override HashSet<ulong>       DesiredStoredItemIDs { get; } = new() { 1100, 2300 };
@@ -45,11 +46,8 @@ namespace Station
             // Base resource yield on actor relevant skill
         }
 
-        public override float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        protected override float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
         {
-            //* Don't have them move to the workPost, have them go to each WorkPost they need to haul from.
-            //JobSite.JobSite_Data.Haul(workPost.Job);
-            
             return 0;
         }
     }

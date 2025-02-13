@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Actors;
 using Initialisation;
 using Inventory;
+using Jobs;
 using JobSites;
 using Recipes;
 using UnityEngine;
@@ -79,7 +80,43 @@ namespace Station
             return Vector3.Distance(interactor.transform.position, transform.position) < InteractRange;
         }
 
-        public abstract float Produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe);
+        public void Operate()
+        {
+            var haulers = new List<Job>();
+            
+            foreach (var workPost in Station_Data.AllWorkPosts.Values)
+            {
+                if (workPost.Job.ActorID == 0) continue;
+
+                if (workPost.Job.Station.StationType == StationType.Storage)
+                {
+                    haulers.Add(workPost.Job);
+                    continue;
+                }
+                
+                var progressMade = _produce(workPost, Station_Data.BaseProgressRatePerHour,
+                    Station_Data.StationProgressData.CurrentProduct);
+
+                if (!Station_Data.StationProgressData.ItemCrafted(progressMade)) continue;
+                
+                if (CanCraftItem(
+                        Station_Data.StationProgressData.CurrentProduct.RecipeName, workPost.Job.Actor))
+                    Station_Data.StationProgressData.ResetProgress();
+            }
+            
+            JobSite.JobSite_Data.Haul(haulers);
+        }
+
+        protected bool _isAtWorkPost(WorkPost_Component workPost)
+        {
+            if (workPost.WorkPostCollider.bounds.Contains(workPost.Job.Actor.transform.position)) return true;
+            
+            if (!workPost.Job.IsWorkerMovingToWorkPost)
+                StartCoroutine(workPost.MoveWorkerToWorkPost(workPost.CurrentWorker, workPost.transform.position));
+
+            return false;
+        }
+        protected abstract float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe);
 
         public abstract IEnumerator Interact(Actor_Component actor);
 

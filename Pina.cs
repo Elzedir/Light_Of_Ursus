@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Managers;
+using Pathfinding;
 using UnityEngine;
 
 public class Pina : MonoBehaviour

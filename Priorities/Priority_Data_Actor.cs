@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ActorActions;
 using Actors;
+using Priorities.Priority_Queues;
 using Station;
 using Tools;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace Priorities
     [Serializable]
     public class Priority_Data_Actor : Priority_Data
     {
-        public Priority_Element CurrentAction;
+        public Priority_Element<ActorAction_Data> CurrentAction;
         
         public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
@@ -55,7 +56,7 @@ namespace Priorities
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in _regeneratePriority.");
                     return;
                 case (ulong)ActorActionName.Idle:
-                    PriorityQueue.Update(priorityID, 1, new Priority_Parameters { DefaultPriorityValue = 1});
+                    PriorityQueueMaxHeap.Update(priorityID, 1);
                     return;
             }
 
@@ -63,7 +64,7 @@ namespace Priorities
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueue.Update(priorityID, priorityValue, priorityParameters);
+            PriorityQueueMaxHeap.Update(priorityID, priorityValue);
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)
@@ -155,7 +156,7 @@ namespace Priorities
             _updateDataDisplay(DataToDisplay,
                 title: "Priority Queue",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: _convertUlongIDToStringID(PriorityQueue?.GetDataToDisplay(toggleMissingDataDebugs)));
+                allSubData: _convertUlongIDToStringID(PriorityQueueMaxHeap?.GetDataToDisplay(toggleMissingDataDebugs)));
 
             return DataToDisplay;
         }

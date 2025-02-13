@@ -26,8 +26,6 @@ namespace JobSites
         {
             return JobSite_Data.GetActorJob(actorID);
         }
-        
-        bool _initialised;
 
         public float IdealRatio;
         public void SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
@@ -36,6 +34,16 @@ namespace JobSites
         void Awake()
         {
             Manager_Initialisation.OnInitialiseJobSites += _initialise;
+            Manager_Initialisation.OnInitialiseJobSiteData += _initialiseJobSiteData;
+        }
+
+        void OnDestroy()
+        {
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, JobSiteID);
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, JobSiteID);
+            
+            Manager_Initialisation.OnInitialiseJobSites -= _initialise;
+            Manager_Initialisation.OnInitialiseJobSiteData -= _initialiseJobSiteData;
         }
 
         void _initialise()
@@ -49,11 +57,13 @@ namespace JobSites
             }
 
             JobSite_Data = jobSiteData;
-            JobSite_Data.InitialiseJobSiteData();
 
             _setTickers();
-            
-            _initialised = true;
+        }
+
+        void _initialiseJobSiteData()
+        {
+            JobSite_Data.InitialiseJobSiteData();
         }
 
         void _setTickers()
@@ -63,9 +73,7 @@ namespace JobSites
         }
 
         public void OnTickOneSecond()
-        {
-            if (!_initialised || JobSite_Data?.AllJobs?.Count is null or 0) return;
-            
+        {   
             foreach (var job in JobSite_Data.AllJobs.Values)
             {
                 job.OnTick();
@@ -74,20 +82,27 @@ namespace JobSites
 
         public void OnTickTenSeconds()
         {
-            if (!_initialised) return;
-
             JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             _compareProductionOutput();
             
             JobSite_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
+
+            //* Temporary fix to move people from recreation to another job.
+            foreach (var worker in JobSite_Data.AllJobs.Values
+                         .Where(job => job.Station.StationType == StationType.Recreation && job.ActorID != 0))
+            {
+                JobSite_Data.AssignActorToNewCurrentJob(worker.Actor);
+            }
+            
+            //* Eventually change to once per day.
+            JobSite_Data.FillEmptyJobSitePositions();
         }
 
         protected abstract bool _compareProductionOutput();
 
         protected abstract void _adjustProduction(float idealRatio);
         protected abstract VocationName _getRelevantVocation(JobName positionName);
-        public bool AssignActorToNewCurrentJob(Actor_Component actor) => JobSite_Data.AssignActorToNewCurrentJob(actor);
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
@@ -105,7 +120,7 @@ namespace JobSites
 
             foreach (var employee in employeesForStation)
             {
-                if (!AssignActorToNewCurrentJob(employee))
+                if (!JobSite_Data.AssignActorToNewCurrentJob(employee))
                 {
                     Debug.LogError($"Could not assign actor {employee.ActorID} to a job.");
                     continue;

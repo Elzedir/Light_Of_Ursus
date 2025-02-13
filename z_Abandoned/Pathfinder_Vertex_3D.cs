@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Managers;
+using Pathfinding;
 using UnityEngine;
 
-namespace Pathfinding
+namespace z_Abandoned
 {
     public class Pathfinder_Vertex_3D
     {

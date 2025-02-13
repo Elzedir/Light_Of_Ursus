@@ -15,6 +15,11 @@ namespace Station
     [Serializable]
     public class Station_Data : Data_Class
     {
+        //* Later, test the possibility of using an ID system similar to WorkPost. Will we ever have a Station without a JobSite?
+        //* Therefore, do Stations need their own ID, or can we just give them an incremental ID like WorkPost.Obviously, a station has
+        //* a fixed and default number of WorkPosts, whereas a JobSite can have varying stations, but maybe each ID can be specific to
+        //* each JobSite, rather than being a global ID. Or maybe it is safer since workPosts will always have the same position relative
+        //* to the station, whereas station will always different depending on the map.
         public ulong StationID;
         public ulong JobSiteID;
 
@@ -146,20 +151,8 @@ namespace Station
         void _operateStation()
         {
             if (!_passesStationChecks()) return;
-            
-            foreach (var workPost in AllWorkPosts.Values)
-            {
-                if (workPost.Job.Actor is null) continue;
-                
-                var progressMade = workPost.Operate(BaseProgressRatePerHour,
-                    StationProgressData.CurrentProduct);
 
-                if (!StationProgressData.ItemCrafted(progressMade)) continue;
-                
-                if (Station.CanCraftItem(
-                        StationProgressData.CurrentProduct.RecipeName, workPost.Job.Actor))
-                    StationProgressData.ResetProgress();
-            }
+            Station.Operate();
         }
 
         bool _passesStationChecks()

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
@@ -15,6 +14,7 @@ using Recipes;
 using Station;
 using Tools;
 using UnityEngine;
+using WorkPosts;
 
 namespace JobSites
 {
@@ -83,16 +83,7 @@ namespace JobSites
 
         public void InitialiseJobSiteData()
         {
-            _populate();
-        }
-
-        void _populate()
-        {
-            //Usually this will only happen a few seconds after game start since things won't hire immediately after game start. Instead it will be assigned to
-            // TickRate manager to onTick();
-
-            //* Temporarily for now
-            JobSite.StartCoroutine(FillEmptyJobSitePositions());
+            FillEmptyJobSitePositions();
         }
         
         public Job GetActorJob(ulong actorID)
@@ -124,11 +115,7 @@ namespace JobSites
             // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
             var actorPresetName = ActorPreset_List.S_ActorDataPresetNameByJobName[jobName];
 
-            var actor = Actor_Manager.SpawnNewActor(City.CitySpawnZone.transform.position, actorPresetName);
-
-            AssignActorToNewCurrentJob(actor);
-
-            return actor;
+            return Actor_Manager.SpawnNewActor(City.CitySpawnZone.transform.position, actorPresetName);
         }
 
         protected bool _hasMinimumVocationRequired(ulong citizenID, List<VocationRequirement> vocationRequirements)
@@ -177,6 +164,12 @@ namespace JobSites
         
         public bool AssignActorToNewCurrentJob(Actor_Component actor)
         {
+            if (actor is null)
+            {
+                Debug.LogError("Actor is null.");
+                return false;
+            }
+            
             PriorityData.RegenerateAllPriorities(DataChangedName.None);
 
             var highestPriorityAction = PriorityData.GetHighestPriorityFromGroup(
@@ -195,17 +188,18 @@ namespace JobSites
             return false;
         }
         
-        List<Station_Component> _getOrderedRelevantStationsForJob(ActorActionName actorActionName,
-            Actor_Component actor)
+        List<Station_Component> _getOrderedRelevantStationsForJob(ActorActionName actorActionName, Actor_Component actor)
         {
-            var relevantStations = AllJobs.Values
+            var relevantJobs = AllJobs.Values
+                .Where(job => job.ActorID == 0)
                 .Where(job => job.JobActions.Contains(actorActionName))
                 .ToList();
 
-            if (relevantStations.Count != 0)
-                return relevantStations
+            if (relevantJobs.Count != 0)
+                return relevantJobs
                     .OrderBy(job => Vector3.Distance(actor.transform.position, job.Station.transform.position))
-                    .Select(job => job.Station).ToList();
+                    .Select(job => job.Station)
+                    .ToList();
 
             Debug.LogError($"No relevant stations found for actorAction: {actorActionName}.");
             return null;
@@ -348,16 +342,14 @@ namespace JobSites
                 .Select(station => station.Value.Station)
                 .FirstOrDefault();
         
-        public IEnumerator FillEmptyJobSitePositions()
+        public void FillEmptyJobSitePositions()
         {
-            yield return new WaitForSeconds(1);
+            if (AllJobs?.Count is null or 0) _populateAllJobs();
             
-            _populateAllJobs();
-            
-            if (AllJobs.Count == 0)
+            if (AllJobs?.Count is null or 0)
             {
-                Debug.LogWarning("No stations found in JobSite.");
-                yield break;
+                Debug.LogError($"AllJobs {AllJobs?.Count} is null or 0.");
+                return;
             }
 
             var relevantStations = AllJobs.Values
@@ -381,7 +373,7 @@ namespace JobSites
                     _findEmployeeFromCity(openWorkPost.WorkPost_DefaultValues.JobName)
                     ?? _generateNewEmployee(openWorkPost.WorkPost_DefaultValues.JobName);
                 
-                if (!JobSite.AssignActorToNewCurrentJob(newEmployee))
+                if (!AssignActorToNewCurrentJob(newEmployee))
                 {
                     Debug.LogError($"Could not assign actor {newEmployee.ActorID} to a job.");
                     continue;
@@ -396,8 +388,85 @@ namespace JobSites
                 if (iteration <= 99) continue;
 
                 Debug.LogError($"Iteration limit reached. Desired: {desiredEmployeeCount}, Current: {AllJobs.Count}");
-                yield break;
+                return;
             }
+        }
+
+        public class HaulingData
+        {
+            
+        }
+        
+        public Dictionary<ulong, HaulingData> AllHaulers; 
+
+        public void Haul(List<Job> haulers)
+        {
+            var itemsToFetch = GetItemsToFetchFromStations();
+            var haulerQueue = new Queue<Job>(haulers);
+            
+            while (itemsToFetch.Count > 0)
+            {
+                if (haulerQueue.Count == 0) break;
+                
+                var hauler = haulerQueue.Dequeue();
+                
+                var bestTask = AssignBestTask(hauler, itemsToFetch);
+        
+                if (bestTask != null)
+                {
+                    ExecuteTask(hauler, bestTask);
+                }
+                else
+                {
+                    haulerQueue.Enqueue(hauler);
+                }
+            }
+        }
+        
+        Task AssignBestTask(Job hauler, Dictionary<ulong, Dictionary<ulong, ulong>> itemsToFetch)
+        {
+            Task bestTask = null;
+            float bestScore = float.MaxValue;
+
+            foreach (var (stationID, items) in itemsToFetch)
+            {
+                foreach (var (itemID, amount) in items)
+                {
+                    float distance = GetDistance(hauler.Position, GetStationPosition(stationID));
+                    float congestion = GetCongestionFactor(stationID);
+                    float priority = distance + congestion;
+
+                    if (priority < bestScore)
+                    {
+                        bestScore = priority;
+                        bestTask = new Task(stationID, itemID, amount);
+                    }
+                }
+            }
+
+            return bestTask;
+        }
+
+        public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToFetchFromStations()
+        {
+            var itemsPerStation = new Dictionary<ulong, Dictionary<ulong, ulong>>();
+
+            foreach (var job in AllJobs.Values)
+            {
+                var itemsToFetchFromThisStation = job.Station.Station_Data.InventoryData
+                    .GetItemsToFetchFromThisInventory();
+                
+                if (itemsToFetchFromThisStation.Count == 0) continue;
+                
+                itemsPerStation[job.StationID] = itemsToFetchFromThisStation;
+            }
+
+            return itemsPerStation;
+        }
+
+        public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToEachStation(Dictionary<ulong, ulong> allItemsToFetch)
+        {
+            
         }
 
         public override Dictionary<string, string> GetStringData()
@@ -427,7 +496,7 @@ namespace JobSites
                     .ToDictionary(
                         job => $"{job.Value.ActorID}",
                         job => $"{job.Value.Actor.ActorName}({job.Value.ActorID})"));
-
+            
             _updateDataDisplay(DataToDisplay,
                 title: "All WorkPosts",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
