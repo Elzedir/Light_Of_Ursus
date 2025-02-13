@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ActorActions;
 using Tools;
 using UnityEngine;
 
 namespace Priorities
 {
-    public class Priority_Queue : Data_Class
+    public class Priority_Queue_MaxHeap : Data_Class
     {
         int                            _currentPosition;
         Priority_Element[]              _priorityArray;
@@ -15,7 +14,7 @@ namespace Priorities
 
         public Action<ulong> OnPriorityRemoved;
 
-        public Priority_Queue(int maxPriorities)
+        public Priority_Queue_MaxHeap(int maxPriorities)
         {
             _currentPosition = 0;
             _priorityArray   = new Priority_Element[maxPriorities];
@@ -114,6 +113,8 @@ namespace Priorities
             
             return true;
         }
+
+        public bool Contains(ulong priorityID) => _lookupTable.ContainsKey(priorityID);
 
         public bool Remove(ulong priorityID)
         {
