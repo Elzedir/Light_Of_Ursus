@@ -19,10 +19,10 @@ namespace Pathfinding
         
         public List<Vector2Int> RunDijkstra(Vector2Int start, Vector2Int end)
         {
-            var startNode = new Node(start);
-            var endNode = new Node(end);
+            var startNode = new Node_Base(start);
+            var endNode = new Node_Base(end);
             
-            var openList = new Priority_Queue_MinHeap<Node>();
+            var openList = new Priority_Queue_MinHeap<Node_Base>();
             var closedList = new HashSet<long>();
 
             openList.Update(startNode.NodeID, 0);
@@ -55,18 +55,18 @@ namespace Pathfinding
             return null;
         }
         
-        List<Node> _getNeighbors(Node node)
+        List<Node_Base> _getNeighbors(Node_Base nodeBase)
         {
-            var neighbors = new List<Node>();
+            var neighbors = new List<Node_Base>();
             
             Vector2Int[] directions = { new(0, 1), new(0, -1), new(1, 0), new(-1, 0) };
 
             foreach (var direction in directions)
             {
-                var neighborPosition = node.Position + direction;
+                var neighborPosition = nodeBase.Position + direction;
                 
                 if (_isWithinGrid(neighborPosition))
-                    neighbors.Add(new Node(neighborPosition));
+                    neighbors.Add(new Node_Base(neighborPosition));
             }
 
             return neighbors;
@@ -77,7 +77,7 @@ namespace Pathfinding
         
         bool _isUnwalkable(Vector2Int position) => _grid[position.x, position.y] != 0;
         
-        static float _getDistance(Node a, Node b)
+        static float _getDistance(Node_Base a, Node_Base b)
         {
             var x_Distance = Mathf.Abs(a.Position.x - b.Position.x);
             var y_Distance = Mathf.Abs(a.Position.y - b.Position.y);
@@ -87,12 +87,12 @@ namespace Pathfinding
         
         static float _getManhattanDistance(int a, int b) => a + b;
         
-        public static List<Vector2Int> GetShortestPath(Node startNode, Node endNode)
+        public static List<Vector2Int> GetShortestPath(Node_Base startNodeBase, Node_Base endNodeBase)
         {
             var path = new List<Vector2Int>();
-            var currentNode = endNode;
+            var currentNode = endNodeBase;
 
-            while (currentNode.NodeID != startNode.NodeID)
+            while (currentNode.NodeID != startNodeBase.NodeID)
             {
                 path.Add(currentNode.Position);
                 currentNode = currentNode.Parent;
