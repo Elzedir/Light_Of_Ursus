@@ -2,35 +2,43 @@ using FMOD.Studio;
 using FMODUnity;
 using System;
 using System.Collections.Generic;
+using FMOD;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
+using STOP_MODE = FMOD.Studio.STOP_MODE;
 
 public class Manager_Audio : MonoBehaviour
 {
-    [SerializeField] FMODUnity.EventReference _currentSongReference;
-    FMOD.Studio.EventInstance _currentSongInstance;
+    [SerializeField] EventReference _currentSongReference;
+    EventInstance _currentSongInstance;
 
     [SerializeField] public List<LocalParameter> LocalParameters;
     [SerializeField] public List<GlobalParameter> GlobalParameters;
 
-    public void PlaySong(FMODUnity.EventReference audio)
+    public void Play(AudioSource audioSource)
+    {
+        audioSource.Play();
+    }
+    
+    public void PlaySong(EventReference audio)
     {
         _currentSongReference = audio;
-        _currentSongInstance = FMODUnity.RuntimeManager.CreateInstance(audio);
+        _currentSongInstance = RuntimeManager.CreateInstance(audio);
 
-        _currentSongInstance.getDescription(out FMOD.Studio.EventDescription eventDescription);
+        _currentSongInstance.getDescription(out EventDescription eventDescription);
         eventDescription.getParameterDescriptionCount(out int parameterCount);
 
         for (int i = 0; i < parameterCount; i++)
         {
-            FMOD.RESULT result = eventDescription.getParameterDescriptionByIndex(i, out FMOD.Studio.PARAMETER_DESCRIPTION parameterDescription);
-            if (result != FMOD.RESULT.OK) Debug.LogError($"Failed to get parameter description for index {i}: {result}");
+            RESULT result = eventDescription.getParameterDescriptionByIndex(i, out PARAMETER_DESCRIPTION parameterDescription);
+            if (result != RESULT.OK) Debug.LogError($"Failed to get parameter description for index {i}: {result}");
 
             // Find a way to split local and global parameters
 
             LocalParameters.Add(new LocalParameter().SetParameterID(parameterDescription.name, parameterDescription.id, this));
         }
 
-        _currentSongInstance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(gameObject));
+        _currentSongInstance.set3DAttributes(gameObject.To3DAttributes());
         _currentSongInstance.start();
     }
 
@@ -40,7 +48,7 @@ public class Manager_Audio : MonoBehaviour
         foreach (LocalParameter parameter in LocalParameters) UpdateLocalParameter(parameter);
         foreach (GlobalParameter parameter in GlobalParameters) UpdateGlobalParameter(parameter);
 
-        _currentSongInstance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(gameObject));
+        _currentSongInstance.set3DAttributes(gameObject.To3DAttributes());
     }
 
     public void UpdateLocalParameter(LocalParameter parameter)
@@ -50,12 +58,12 @@ public class Manager_Audio : MonoBehaviour
 
     public void UpdateGlobalParameter(GlobalParameter parameter)
     {
-        FMODUnity.RuntimeManager.StudioSystem.setParameterByID(parameter.ParameterID, parameter.Value);
+        RuntimeManager.StudioSystem.setParameterByID(parameter.ParameterID, parameter.Value);
     }
 
     void OnDestroy()
     {
-        _currentSongInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
+        _currentSongInstance.stop(STOP_MODE.IMMEDIATE);
     }
 }
 

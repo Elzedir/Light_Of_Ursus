@@ -7,10 +7,10 @@ using UnityEngine.AI;
 using UnityEngine.Tilemaps;
 using z_Abandoned;
 
-public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
+public class Controller_Agent : MonoBehaviour, PathfinderMover_3D_Deprecated
 {
     public Pathfinder_Vertex_3D Pathfinder { get; set; }
-    public Pathfinder_Base_3D Pathfinder_3D { get; set; }
+    public Pathfinder_Base_3D_Deprecated Pathfinder_3DDeprecated { get; set; }
     Coroutine _pathfindingCoroutine;
     Coroutine _followCoroutine;
     Coroutine _moveCoroutine;
@@ -30,7 +30,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     WanderData _wanderData;
     bool _canMove = false;
     public bool CanGetNewPath { get; set; }
-    public List<MoverType> MoverTypes { get; set; } = new();
+    public List<MoverType_Deprecated> MoverTypes { get; set; } = new();
 
     Collider _collider;
 
@@ -39,7 +39,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
     protected virtual void Awake()
     {
         _animator = GetComponent<Animator>();
-        Pathfinder_3D = new Pathfinder_Base_3D();
+        Pathfinder_3DDeprecated = new Pathfinder_Base_3D_Deprecated();
         _collider = gameObject.GetComponent<Collider>();
         Pathfinder = new Pathfinder_Vertex_3D();
     }
@@ -54,7 +54,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
 
     }
 
-    public void SetAgentDetails(List<MoverType> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, 
+    public void SetAgentDetails(List<MoverType_Deprecated> moverTypes, Vector3? targetPosition = null, GameObject targetGO = null, float speed = 5, float followDistance = 0.5f, 
         WanderData wanderData = null, float pathfinderTickRate = 0.5f, Lux lux = null)
     {
         _targetPosition = targetPosition ?? transform.position;
@@ -65,7 +65,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         _canMove = true;
         if (_canMove) _canMove = true;
         _pathfinderTickRate = pathfinderTickRate;
-        MoverTypes = new List<MoverType> (moverTypes);
+        MoverTypes = new List<MoverType_Deprecated> (moverTypes);
 
         _lux = lux;
     }
@@ -202,18 +202,18 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D
         //}
     }
 
-    public Voxel_Base GetStartVoxel()
+    public Voxel_Base_Deprecated GetStartVoxel()
     {
-        return VoxelGrid.GetVoxelAtPosition(transform.localPosition);
+        return VoxelGrid_Deprecated.GetVoxelAtPosition(transform.localPosition);
     }
 
-    public void MoveTo(Voxel_Base target)
+    public void MoveTo(Voxel_Base_Deprecated target)
     {
         if (_followCoroutine != null) StopMoving();
 
         _hidePath();
 
-        _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3D.RetrievePath(GetStartVoxel(), target)));
+        _followCoroutine = StartCoroutine(FollowPath(Pathfinder_3DDeprecated.RetrievePath(GetStartVoxel(), target)));
     }
 
     public IEnumerator MoveToTest(List<(Vector3 position, Collider)> path, float distance, int pathID = -1)

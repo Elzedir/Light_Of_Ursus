@@ -1,23 +1,27 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Pathfinding.FlowPath
+namespace Pathfinding
 {
     public class Voxel_Base
     {
-        public long NodeID => 
-            ((long)Position.x << 42) | 
-            ((long)Position.y << 21) | 
+        public long VoxelID =>
+            ((long)Position.x << 42) |
+            ((long)Position.y << 21) |
             (long)Position.z;
+
         public Vector3 Position;
         public readonly int Size;
-        public bool IsWalkable;
+
+        public Dictionary<MoverType, float> MoverTypeCosts;
+
         public Voxel_Base[] Children;
 
-        public Voxel_Base(Vector3 pos, int s, bool walkable)
+        public Voxel_Base(Vector3 position, int size, Dictionary<MoverType, float> moverTypeCosts)
         {
-            Position = pos;
-            Size = s;
-            IsWalkable = walkable;
+            Position = position;
+            Size = size;
+            MoverTypeCosts = moverTypeCosts;
             Children = null;
         }
 
@@ -34,30 +38,54 @@ namespace Pathfinding.FlowPath
                     (i & 1) * newSize,
                     ((i >> 1) & 1) * newSize,
                     ((i >> 2) & 1) * newSize);
-                Children[i] = new Voxel_Base(newPos, newSize, IsWalkable);
+                Children[i] = new Voxel_Base(newPos, newSize, MoverTypeCosts);
             }
+        }
+
+        public bool IsWalkable(List<MoverType> movers)
+        {
+            foreach (var mover in movers)
+            {
+                if (MoverTypeCosts[mover] >= float.PositiveInfinity)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void Merge()
         {
-            if (Children == null) return; // Already merged
-            bool allSame = true;
-            bool firstState = Children[0].IsWalkable;
+            if (Children == null) return;
+
+            var firstChildCosts = Children[0].MoverTypeCosts;
+            var allSame = true;
 
             foreach (var child in Children)
             {
-                if (child.IsWalkable != firstState)
+                foreach (var mover in firstChildCosts.Keys)
                 {
+                    if (!child.MoverTypeCosts.TryGetValue(mover, out var cost))
+                    {
+                        Debug.LogError($"Child is missing a mover type {mover}");
+                        allSame = false;
+                        break;
+                    }
+
+                    if (Mathf.Approximately(cost, firstChildCosts[mover])) continue;
+                    
                     allSame = false;
                     break;
                 }
+
+                if (!allSame) break;
             }
 
-            if (allSame)
-            {
-                IsWalkable = firstState;
-                Children = null; // Merge back into a single voxel
-            }
+            if (!allSame) return;
+
+            MoverTypeCosts = new Dictionary<MoverType, float>(firstChildCosts);
+            Children = null;
         }
     }
 }

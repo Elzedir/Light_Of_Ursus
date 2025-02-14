@@ -1,57 +1,108 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Pathfinding.FlowPath
+namespace Pathfinding
 {
     public class Octree_Map
     {
-        public readonly Voxel_Base Root;
+        public static Voxel_Base S_RootMapVoxel;
+        public Dictionary<int, Octree_Path> AllPaths;
+        
+        a
+            //* Reform this class around the having the different paths to access, check the last 
+            //* chat with ChatGPT
 
         public Octree_Map(int worldSize)
         {
-            Root = new Voxel_Base(Vector3.zero, worldSize, true);
+            //* Find a way to correct initialise DefaultMoverTypeCosts. Currently, all just 1.
+            
+            AllPaths = new Dictionary<int, Octree_Path>();
+            
+            S_RootMapVoxel = new Voxel_Base(Vector3.zero, worldSize, DefaultMoverTypeCosts);
+        }
+        
+        public Octree_Path GetOrCreatePath(List<MoverType> moverTypes)
+        {
+            int key = _generateKey(moverTypes);
+
+            if (AllPaths.TryGetValue(key, out var octreePath)) return octreePath;
+            
+            octreePath = new Octree_Path(moverTypes);
+            AllPaths[key] = octreePath;
+
+            return octreePath;
         }
 
-        public void InsertObstacle(Vector3 pos)
+        static int _generateKey(List<MoverType> moverTypes)
         {
-            _setIsWalkable(Root, pos, Root.Size, false);
-        }
-
-        public void RemoveObstacle(Vector3 pos)
-        {
-            _setIsWalkable(Root, pos, Root.Size, true);
-            Root.Merge();
-        }
-
-        void _setIsWalkable(Voxel_Base baseVoxel, Vector3 pos, int size, bool walkable)
-        {
-            if (size == 1 || baseVoxel.Children == null)
+            var key = 0;
+            
+            foreach (var mover in moverTypes)
             {
-                baseVoxel.IsWalkable = walkable;
-                return;
+                key |= 1 << (int)mover;
             }
-
-            var index = (pos.x >= baseVoxel.Position.x + size / 2 ? 1 : 0) +
-                        (pos.y >= baseVoxel.Position.y + size / 2 ? 2 : 0) +
-                        (pos.z >= baseVoxel.Position.z + size / 2 ? 4 : 0);
-
-            baseVoxel.Children[index].Subdivide();
-            _setIsWalkable(baseVoxel.Children[index], pos, size / 2, walkable);
+            
+            return key;
         }
 
-        public bool IsWalkable(Vector3 pos)
+        static void _setIsWalkable(Voxel_Base voxel_Base, Vector3 position, int size, MoverType moverType, bool walkable, float cost = 1f)
         {
-            return _getNode(Root, pos, Root.Size).IsWalkable;
+            while (true)
+            {
+                if (size == 1 || voxel_Base.Children == null)
+                {
+                    //* Change not walkable cost to Positive.Infinity.
+                    voxel_Base.MoverTypeCosts[moverType] = walkable ? cost : float.PositiveInfinity;
+                    return;
+                }
+                
+                var index = _getChildIndex(position, voxel_Base, size);
+
+                voxel_Base.Children[index].Subdivide();
+                voxel_Base = voxel_Base.Children[index];
+                size /= 2;
+            }
+        }
+        
+        static int _getChildIndex(Vector3 position, Voxel_Base voxel_Base, int size)
+        {
+            var halfSize = size >> 1;
+            
+            return (position.x >= voxel_Base.Position.x + halfSize ? 1 : 0) |
+                   (position.y >= voxel_Base.Position.y + halfSize ? 2 : 0) |
+                   (position.z >= voxel_Base.Position.z + halfSize ? 4 : 0);
         }
 
-        Voxel_Base _getNode(Voxel_Base voxelBase, Vector3 pos, int size)
+        public bool IsWalkable(Vector3 pos, List<MoverType> movers) => 
+            GetVoxel(S_RootMapVoxel, pos, S_RootMapVoxel.Size).IsWalkable(movers);
+
+        public Voxel_Base GetVoxel(Voxel_Base rootVoxel, Vector3 pos, int size)
         {
-            if (voxelBase.Children == null) return voxelBase;
+            while (true)
+            {
+                if (rootVoxel.Children == null) return rootVoxel;
 
-            var index = (pos.x >= voxelBase.Position.x + size / 2 ? 1 : 0) +
-                        (pos.y >= voxelBase.Position.y + size / 2 ? 2 : 0) +
-                        (pos.z >= voxelBase.Position.z + size / 2 ? 4 : 0);
+                var index = _getChildIndex(pos, rootVoxel, size);
 
-            return _getNode(voxelBase.Children[index], pos, size / 2);
+                rootVoxel = rootVoxel.Children[index];
+                size /= 2;
+            }
+        }
+
+        Dictionary<MoverType, float> _defaultMoverTypeCosts;
+        public Dictionary<MoverType, float> DefaultMoverTypeCosts => _defaultMoverTypeCosts ??= _getDefaultMoverTypeCosts();
+
+        static Dictionary<MoverType, float> _getDefaultMoverTypeCosts()
+        {
+            return new Dictionary<MoverType, float>
+            {
+                { MoverType.Land, 1 },
+                { MoverType.Air, 1 },
+                { MoverType.Water, 1 },
+                { MoverType.Ice, 1 },
+                { MoverType.Lava, -1 },
+                { MoverType.Dig, 1 },
+            };
         }
     }
 }

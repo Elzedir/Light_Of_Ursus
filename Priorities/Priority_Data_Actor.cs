@@ -27,7 +27,7 @@ namespace Priorities
                     
                     foreach (var actorAction in AllowedActions)
                     {
-                        _regeneratePriority((ulong)actorAction);
+                        _regeneratePriority((long)actorAction);
                     }
 
                     return;
@@ -35,7 +35,7 @@ namespace Priorities
                 
                 foreach (var actorAction in actionsToRegenerate)
                 {
-                    _regeneratePriority((ulong)actorAction);
+                    _regeneratePriority((long)actorAction);
                 }
 
                 return;
@@ -43,19 +43,19 @@ namespace Priorities
             
             foreach (ActorActionName actorAction in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((ulong)actorAction);
+                _regeneratePriority((long)actorAction);
             }
         }
 
-        protected override void _regeneratePriority(ulong priorityID)
+        protected override void _regeneratePriority(long priorityID)
         {
             switch (priorityID)
             {
-                case (ulong)ActorActionName.All:
+                case (long)ActorActionName.All:
                     Debug.LogError(
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in _regeneratePriority.");
                     return;
-                case (ulong)ActorActionName.Idle:
+                case (long)ActorActionName.Idle:
                     PriorityQueueMaxHeap.Update(priorityID, 1);
                     return;
             }

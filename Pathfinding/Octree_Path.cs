@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
 using UnityEngine;
 
 namespace Pathfinding
 {
-    public class Octree_Paths
+    public class Octree_Path
     {
         public readonly Dictionary<Vector3, Voxel_Walkable> AllWalkableVoxels;
 
-        public Octree_Paths(List<MoverType> moverTypes)
+        public Octree_Path(List<MoverType> moverTypes)
         {
             AllWalkableVoxels = new Dictionary<Vector3, Voxel_Walkable>();
             _convertToGraph(moverTypes);

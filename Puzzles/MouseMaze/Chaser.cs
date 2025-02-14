@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using Pathfinding;
 using UnityEngine;
+using z_Abandoned;
 
-public class Chaser : MonoBehaviour, PathfinderMover_3D
+public class Chaser : MonoBehaviour, PathfinderMover_3D_Deprecated
 {
-    public Pathfinder_Base_3D Pathfinder { get; set; }
+    public Pathfinder_Base_3D_Deprecated Pathfinder { get; set; }
     public Cell_MouseMaze CurrentCell;
     float _chaserSpeed;
 
@@ -21,9 +22,9 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
     public bool CanGetNewPath { get; set; }
     float _getPathCooldown = 2f;
     float _getPathTime = 0f;
-    public List<MoverType> MoverTypes { get; set; } = new();
+    public List<MoverType_Deprecated> MoverTypes { get; set; } = new();
 
-    Voxel_Base _target;
+    Voxel_Base_Deprecated _target;
 
     List<GameObject> _shownPath = new();
 
@@ -50,7 +51,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
 
         gameObject.layer = LayerMask.NameToLayer("Chaser");
 
-        Pathfinder = new Pathfinder_Base_3D();
+        Pathfinder = new Pathfinder_Base_3D_Deprecated();
         _chaserSpeed = chaserSpeed;
     }
 
@@ -68,9 +69,9 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         }
     }
 
-    public Voxel_Base GetStartVoxel()
+    public Voxel_Base_Deprecated GetStartVoxel()
     {
-        return VoxelGrid.GetVoxelAtPosition(CurrentCell.Position);
+        return VoxelGrid_Deprecated.GetVoxelAtPosition(CurrentCell.Position);
     }
 
     public void BlowUp()
@@ -78,7 +79,7 @@ public class Chaser : MonoBehaviour, PathfinderMover_3D
         Destroy(gameObject);
     }
 
-    public void MoveTo(Voxel_Base target)
+    public void MoveTo(Voxel_Base_Deprecated target)
     {
         if (_chasingCoroutine != null) StopChasing();
 

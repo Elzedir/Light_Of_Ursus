@@ -4,6 +4,8 @@ using System.Linq;
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.UIElements;
+using z_Abandoned;
+
 public enum MazeType { None, Standard, Chase, Collect, Doors }
 public class Spawner_Maze : MonoBehaviour
 {
@@ -104,7 +106,7 @@ public class Spawner_Maze : MonoBehaviour
 
         _startPosition = Cells[0, 0, 0].Position;
 
-        VoxelGrid.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
+        VoxelGrid_Deprecated.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
 
         yield return StartCoroutine(CreateMaze(null, Cells[0, 1, 0], 0));
 
@@ -260,29 +262,29 @@ public class Spawner_Maze : MonoBehaviour
 
         if (currentCell.transform.position.x < nextCell.transform.position.x)
         {
-            VoxelGrid.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Right, initialisation));
-            VoxelGrid.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Left, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Right, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Left, initialisation));
             return (true, Wall.Left);
         }
 
         if (currentCell.transform.position.x > nextCell.transform.position.x)
         {
-            VoxelGrid.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Left, initialisation));
-            VoxelGrid.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Right, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Left, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Right, initialisation));
             return (true, Wall.Right);
         }
 
         if (currentCell.transform.position.z < nextCell.transform.position.z)
         {
-            VoxelGrid.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Top, initialisation));
-            VoxelGrid.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Bottom, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Top, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Bottom, initialisation));
             return (true, Wall.Bottom);
         }
 
         if (currentCell.transform.position.z > nextCell.transform.position.z)
         {
-            VoxelGrid.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Bottom, initialisation));
-            VoxelGrid.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Top, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(currentCell.ClearWall(Wall.Bottom, initialisation));
+            VoxelGrid_Deprecated.RemoveVoxelAtPosition(nextCell.ClearWall(Wall.Top, initialisation));
             return (true, Wall.Top);
         }
 

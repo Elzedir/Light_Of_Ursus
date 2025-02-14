@@ -504,7 +504,7 @@ namespace z_Abandoned
         {
             Vector3 characterCanMoveInY = _characterSize;
             // Need to put in what type of obstacle it is, and therefore whether the different types of movers can move over, under or through it.
-            if (!_agent.MoverTypes.Contains(MoverType.Fly) || !_agent.MoverTypes.Contains(MoverType.Dig))
+            if (!_agent.MoverTypes.Contains(MoverType_Deprecated.Fly) || !_agent.MoverTypes.Contains(MoverType_Deprecated.Dig))
             {
                 characterCanMoveInY.y = 0;
             }

@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Pathfinding.FlowPath;
 using Priorities.Priority_Queues;
 using UnityEngine;
 
@@ -9,38 +9,74 @@ namespace Pathfinding
     public class DStarLite
     {
         readonly Dictionary<long, Voxel_Decision> _nodes;
-        Priority_Queue_MaxHeap<Voxel_Decision> _openList;
-        readonly Voxel_Path _start, _end;
+        readonly Priority_Queue_MaxHeap<Voxel_Decision> _openList;
+        readonly Voxel_Walkable _start, _end;
 
-        public DStarLite(Octree_Paths allPaths, Vector3 startPosition, Vector3 endPosition)
+        public DStarLite(Octree_Path allPath, Vector3 startPosition, Vector3 endPosition)
         {
             _nodes = new Dictionary<long, Voxel_Decision>();
             _openList = new Priority_Queue_MaxHeap<Voxel_Decision>();
 
-            _start = allPaths.GetClosestNode(startPosition);
-            _end = allPaths.GetClosestNode(endPosition);
+            _start = allPath.GetClosestVoxel(startPosition);
+            _end = allPath.GetClosestVoxel(endPosition);
 
-            Initialize(allPaths);
+            Initialize(allPath);
         }
 
-        void Initialize(Octree_Paths paths)
+        void Initialize(Octree_Path path)
         {
-            foreach (var voxel in paths.PathNodes.Values)
+            foreach (var voxel in path.AllWalkableVoxels.Values)
             {
-                _nodes[voxel.NodeID] = new Voxel_Decision(
-                        voxelPath: voxel, 
+                _nodes[voxel.VoxelID] = new Voxel_Decision(
+                        voxelWalkable: voxel, 
                         gCost: float.MaxValue, 
                         rhsCost: float.MaxValue, 
                         heuristic: _getHeuristic(voxel, _end));
             }
 
-            var endNode = _nodes[_end.NodeID];
+            var endNode = _nodes[_end.VoxelID];
             endNode.RHSCost = 0;
-            _openList.Update(endNode.NodeID, ?);
+            UpdateVertex(endNode);
         }
 
-        static float _getHeuristic(Voxel_Path a, Voxel_Path b) => Vector3.Distance(a.Position, b.Position);
+        static float _getHeuristic(Voxel_Walkable a, Voxel_Walkable b) => Vector3.Distance(a.Position, b.Position);
+        
+        void UpdateVertex(Voxel_Decision node)
+        {
+            if (node.VoxelID != _end.VoxelID)
+            {
+                node.RHSCost = node.Voxel_Walkable.Neighbors
+                    .Where(n => _nodes.ContainsKey(n.VoxelID))
+                    .Min(n => _nodes[n.VoxelID].GCost + Vector3.Distance(node.Voxel_Walkable.Position, n.Position));
+            }
 
+            _openList.Remove(node.VoxelID);
+
+            if (Mathf.Approximately(node.GCost, node.RHSCost)) return;
+            
+            var key1 = Math.Min(node.GCost, node.RHSCost) + _getHeuristic(_start, node.Voxel_Walkable);
+            var key2 = Math.Min(node.GCost, node.RHSCost);
+            //_openList.Update(node.VoxelID, (key1, key2));
+        }
+        
+        public void PathChanged(Vector3 changedNodePosition)
+        {
+            // if (!_nodes.TryGetValue(GetNodeID(changedNodePosition), out var changedNode)) return;
+            //
+            // UpdateVertex(changedNode);
+
+            RunDStarLite();
+        }
+        
+        public void UpdatePath(Vector3 start, Vector3 end)
+        {
+            
+            // _start = _nodes[GetNodeID(start)].Voxel_Walkable;
+            // _end = _nodes[GetNodeID(end)].Voxel_Walkable;
+
+            RunDStarLite();
+        }
+        
         public List<Vector3> RunDStarLite()
         {
             while (_openList.Count() > 0)
@@ -51,15 +87,11 @@ namespace Pathfinding
 
                 currentNode.GCost = currentNode.RHSCost;
 
-                foreach (var neighbor in currentNode.Voxel_Path.Neighbors)
+                foreach (var neighbor in currentNode.Voxel_Walkable.Neighbors)
                 {
-                    var neighborNode = _nodes[neighbor.Position];
-                    var newRHS = currentNode.GCost + Vector3.Distance(currentNode.Voxel_Path.Position, neighbor.Position);
+                    if (!_nodes.TryGetValue(neighbor.VoxelID, out var node)) continue;
 
-                    if (!(newRHS < neighborNode.RHSCost)) continue;
-
-                    neighborNode.RHSCost = newRHS;
-                    _openList.Update(neighborNode);
+                    UpdateVertex(node);
                 }
             }
 
@@ -71,10 +103,21 @@ namespace Pathfinding
             var path = new List<Vector3>();
             var current = _start;
 
-            while (current.NodeID != _end.NodeID)
+            while (current.VoxelID != _end.VoxelID)
             {
                 path.Add(current.Position);
-                current = current.Neighbors.OrderBy(n => _nodes[n.Position].GCost).First();
+
+                if (!current.Neighbors.Any(n => _nodes.ContainsKey(n.VoxelID))) 
+                    break;
+
+                current = current.Neighbors
+                    .Where(n => _nodes.ContainsKey(n.VoxelID))
+                    .OrderBy(n => _nodes[n.VoxelID].GCost)
+                    .FirstOrDefault();
+                
+                if (current == null) break;
+
+                if (Mathf.Approximately(_nodes[current.VoxelID].GCost, float.MaxValue)) break;
             }
 
             path.Add(_end.Position);
@@ -84,20 +127,19 @@ namespace Pathfinding
 
     public class ExampleUseClassFlowPath
     {
-        Octree_Map _tempOctreeMap;
-        Octree_Paths _tempOctreePaths;
-        DStarLite _dStarLite;
-        List<Vector3> _haulerPath;
-        Vector3 _haulerPos, _logPilePos;
+        Octree_Map _map;
+        Octree_Path _path;
+        DStarLite _pathfinder;
+        List<Vector3> _shortestPath;
+        Vector3 _startPos, _endPos;
 
         public void OnActionPerformed(Vector3 treePos)
         {
-            _tempOctreeMap ??= new Octree_Map(100);
-
-            _tempOctreeMap.RemoveObstacle(treePos);
-            _tempOctreePaths = new Octree_Paths(_tempOctreeMap);
-            _dStarLite = new DStarLite(_tempOctreePaths, _haulerPos, _logPilePos);
-            _haulerPath = _dStarLite.RunDStarLite();
+            _map ??= new Octree_Map(100);
+            
+            //_path = new Octree_Path(_map);
+            _pathfinder = new DStarLite(_path, _startPos, _endPos);
+            _shortestPath = _pathfinder.RunDStarLite();
         }
     }
 }

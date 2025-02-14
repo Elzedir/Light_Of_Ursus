@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using z_Abandoned;
 
 public enum IceWallDirection { None, Up, Down, Left, Right }
 
 
-public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
+public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D_Deprecated
 {
     (bool, IceWallDirection) Direction;
     Vector3 _centrePosition;
@@ -17,10 +18,10 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     int _playerStaminaMax;
     float _playerExtraStamina;
     Cell_IceWall _lastCell;
-    public Pathfinder_Base_3D Pathfinder { get; private set; }
+    public Pathfinder_Base_3D_Deprecated Pathfinder { get; private set; }
     public Cell_IceWall CurrentCell { get; private set; }
     public bool CanGetNewPath { get; set; }
-    public List<MoverType> MoverTypes { get; set; } = new();
+    public List<MoverType_Deprecated> MoverTypes { get; set; } = new();
 
     Vector2 _move;
 
@@ -86,7 +87,7 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
     {
         _spawner = spawner;
         _playerExtraStamina = playerExtraStamina;
-        Pathfinder = new Pathfinder_Base_3D();
+        Pathfinder = new Pathfinder_Base_3D_Deprecated();
     }
 
     protected override void FixedUpdate()
@@ -172,13 +173,13 @@ public class Controller_Puzzle_IceWall : Controller, PathfinderMover_3D
         Manager_Puzzle.Instance.UseStamina(_playerStaminaCurrent.ToString());
     }
 
-    public void MoveTo(Voxel_Base target)
+    public void MoveTo(Voxel_Base_Deprecated target)
     {
-        List<Vector3> path = Pathfinder.RetrievePath(VoxelGrid.GetVoxelAtPosition(CurrentCell.Position), target);
+        List<Vector3> path = Pathfinder.RetrievePath(VoxelGrid_Deprecated.GetVoxelAtPosition(CurrentCell.Position), target);
 
         foreach (Vector3 position in path)
         {
-            _playerStaminaMax += (int)VoxelGrid.GetVoxelAtPosition(position).MovementCost;
+            _playerStaminaMax += (int)VoxelGrid_Deprecated.GetVoxelAtPosition(position).MovementCost;
         }
 
         _playerStaminaMax += (int)(_playerStaminaMax * (_playerExtraStamina / 100));

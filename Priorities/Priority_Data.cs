@@ -33,11 +33,11 @@ namespace Priorities
             PriorityQueueMaxHeap.OnPriorityRemoved -= _regeneratePriority;
         }
         public abstract    void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false);
-        protected abstract void _regeneratePriority(ulong priorityID);
+        protected abstract void _regeneratePriority(long priorityID);
         
         //* Isn't rearranging the highest priority, Chop_Tree is staying the highest even with 0 priority.
-        public Priority_Element<ActorAction_Data> PeekHighestPriority(ulong priorityID = 1) => PriorityQueueMaxHeap.Peek(priorityID);
-        public Priority_Element<ActorAction_Data> PeekHighestPriorityFromGroup(List<ulong> priorityIDs)
+        public Priority_Element<ActorAction_Data> PeekHighestPriority(long priorityID = 1) => PriorityQueueMaxHeap.Peek(priorityID);
+        public Priority_Element<ActorAction_Data> PeekHighestPriorityFromGroup(List<long> priorityIDs)
         {
             if (priorityIDs.Count is 0)
             {
@@ -61,8 +61,8 @@ namespace Priorities
 
             return PriorityQueueMaxHeap.Peek(highestPriority.PriorityID);
         }
-        public Priority_Element<ActorAction_Data> DequeueHighestPriority(ulong priorityID = 1) => PriorityQueueMaxHeap.Dequeue(priorityID);
-        public Priority_Element<ActorAction_Data> GetHighestPriorityFromGroup(List<ulong> priorityIDs)
+        public Priority_Element<ActorAction_Data> DequeueHighestPriority(long priorityID = 1) => PriorityQueueMaxHeap.Dequeue(priorityID);
+        public Priority_Element<ActorAction_Data> GetHighestPriorityFromGroup(List<long> priorityIDs)
         {
             var highestPriority = PeekHighestPriorityFromGroup(priorityIDs);
 

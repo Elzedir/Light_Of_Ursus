@@ -3,13 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Managers;
-using Priorities;
-using Priorities.Priority_Queues;
 using UnityEngine;
 
-namespace Pathfinding
+namespace z_Abandoned
 {
-    public class Pathfinder_Base_3D
+    public class Pathfinder_Base_3D_Deprecated
     {
         //Priority_Queue_MaxHeap _mainPriorityQueueMaxHeap;
         double _priorityModifier;

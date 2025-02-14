@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Pathfinding;
 using UnityEngine;
+using z_Abandoned;
 
 public class Lux : MonoBehaviour
 {
@@ -74,7 +75,7 @@ public class Lux : MonoBehaviour
         //Debug.Log("Wander around Ursus called");
         //_agent.SetAgentDetails(targetGO: Manager_Game.Instance.Player.gameObject, speed: 5);
 
-        VoxelGrid.InitialiseVoxelGridTest();
+        VoxelGrid_Deprecated.InitialiseVoxelGridTest();
         //_agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.Instance.Player.gameObject, speed: 1f, lux: this);
     }
 

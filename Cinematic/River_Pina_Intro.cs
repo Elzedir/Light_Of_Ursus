@@ -4,6 +4,7 @@ using Managers;
 using Pathfinding;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using z_Abandoned;
 
 public class River_Pina_Intro : Cinematic
 {
@@ -43,7 +44,7 @@ public class River_Pina_Intro : Cinematic
 
         foreach (CinematicWaitPoint point in _points)
         {
-            playerAgent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetPosition: point.Position, speed: 0.5f);
+            playerAgent.SetAgentDetails(new List<MoverType_Deprecated> { MoverType_Deprecated.Ground }, targetPosition: point.Position, speed: 0.5f);
 
             yield return new WaitUntil(() => Vector2.Distance(playerAgent.transform.position, point.Position) < 0.1f);
 

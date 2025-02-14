@@ -4,11 +4,11 @@ using Priorities.Priority_Queues;
 using UnityEngine;
 using static System.Double;
 
-namespace Pathfinding
+namespace z_Abandoned
 {
     public abstract class Pathfinder_Base_2D
     {
-        Priority_Queue_MaxHeap _mainPriorityQueueMaxHeap;
+        //Priority_Queue_MaxHeap _mainPriorityQueueMaxHeap;
         double _priorityModifier;
         Node_Base_2D _targetNode;
         Node_Base_2D _startNode;
@@ -71,12 +71,12 @@ namespace Pathfinding
         void _initialise(int rows, int columns)
         {
             foreach (Node_Base_2D node in NodeArray_2D.S_Nodes){ node.RHSCost = PositiveInfinity; node.GCost = PositiveInfinity; }
-            _mainPriorityQueueMaxHeap = new Priority_Queue_MaxHeap(rows * columns);
+            //_mainPriorityQueueMaxHeap = new Priority_Queue_MaxHeap(rows * columns);
             _priorityModifier = 0;
             _targetNode = NodeArray_2D.S_Nodes[_targetNode.X, _targetNode.Y];
             _startNode = NodeArray_2D.S_Nodes[_startNode.X, _startNode.Y];
             _targetNode.RHSCost = 0;
-            _mainPriorityQueueMaxHeap.Update(_targetNode, _calculatePriority(_targetNode));
+            //_mainPriorityQueueMaxHeap.Update(_targetNode, _calculatePriority(_targetNode));
         }
 
         Priority_2D _calculatePriority(Node_Base_2D node)
@@ -94,14 +94,14 @@ namespace Pathfinding
             {
                 node.RHSCost = _minimumSuccessorCost(node);
             }
-            if (_mainPriorityQueueMaxHeap.Contains(node))
-            {
-                _mainPriorityQueueMaxHeap.Remove(node);
-            }
-            if (node.GCost != node.RHSCost)
-            {
-                _mainPriorityQueueMaxHeap.Update(node, _calculatePriority(node));
-            }
+            // if (_mainPriorityQueueMaxHeap.Contains(node))
+            // {
+            //     _mainPriorityQueueMaxHeap.Remove(node);
+            // }
+            // if (node.GCost != node.RHSCost)
+            // {
+            //     _mainPriorityQueueMaxHeap.Update(node, _calculatePriority(node));
+            // }
         }
         Node_Base_2D _minimumSuccessorNode(Node_Base_2D node)
         {
@@ -134,34 +134,34 @@ namespace Pathfinding
         }
         void _computeShortestPath()
         {
-            while (_mainPriorityQueueMaxHeap.Peek().CompareTo(_calculatePriority(_startNode)) < 0 || _startNode.RHSCost != _startNode.GCost)
-            {
-                Priority_2D highestPriority = _mainPriorityQueueMaxHeap.Peek();
-                Node_Base_2D node = _mainPriorityQueueMaxHeap.Dequeue();
-                if (node == null) break;
-
-                if (highestPriority.CompareTo(_calculatePriority(node)) < 0)
-                {
-                    _mainPriorityQueueMaxHeap.Update(node, _calculatePriority(node));
-                }
-                else if (node.GCost > node.RHSCost)
-                {
-                    node.GCost = node.RHSCost;
-                    foreach (Node_Base_2D neighbour in node.GetPredecessors(NodeArray_2D.S_Nodes))
-                    {
-                        _updateVertex(neighbour);
-                    }
-                }
-                else
-                {
-                    node.GCost = PositiveInfinity;
-                    _updateVertex(node);
-                    foreach (Node_Base_2D neighbour in node.GetPredecessors(NodeArray_2D.S_Nodes))
-                    {
-                        _updateVertex(neighbour);
-                    }
-                }
-            }
+            // while (_mainPriorityQueueMaxHeap.Peek().CompareTo(_calculatePriority(_startNode)) < 0 || _startNode.RHSCost != _startNode.GCost)
+            // {
+            //     Priority_2D highestPriority = _mainPriorityQueueMaxHeap.Peek();
+            //     Node_Base_2D node = _mainPriorityQueueMaxHeap.Dequeue();
+            //     if (node == null) break;
+            //
+            //     if (highestPriority.CompareTo(_calculatePriority(node)) < 0)
+            //     {
+            //         _mainPriorityQueueMaxHeap.Update(node, _calculatePriority(node));
+            //     }
+            //     else if (node.GCost > node.RHSCost)
+            //     {
+            //         node.GCost = node.RHSCost;
+            //         foreach (Node_Base_2D neighbour in node.GetPredecessors(NodeArray_2D.S_Nodes))
+            //         {
+            //             _updateVertex(neighbour);
+            //         }
+            //     }
+            //     else
+            //     {
+            //         node.GCost = PositiveInfinity;
+            //         _updateVertex(node);
+            //         foreach (Node_Base_2D neighbour in node.GetPredecessors(NodeArray_2D.S_Nodes))
+            //         {
+            //             _updateVertex(neighbour);
+            //         }
+            //     }
+            // }
         }
 
         public void UpdateWallState(Node_Base_2D node, Direction direction, bool wallExists)

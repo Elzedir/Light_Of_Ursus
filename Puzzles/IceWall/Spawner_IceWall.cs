@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Pathfinding;
 using UnityEngine;
+using z_Abandoned;
 
 public enum IceWallType { None, Mirror, Stamina, Shatter }
 public class Spawner_IceWall : MonoBehaviour
@@ -63,7 +64,7 @@ public class Spawner_IceWall : MonoBehaviour
         _player = GameObject.Find("Focus").GetComponent<Controller_Puzzle_IceWall>();
         _player.Initialise(this, _playerExtraStamina);
 
-        VoxelGrid.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
+        //VoxelGrid.InitializeVoxelGrid(width: _width, height: _height, depth: _depth, offset: new Vector3(0.5f, 0, 0.5f));
 
         _icewallTypes = new List<IceWallType>(gameModes);
         if (Manager_Puzzle.Instance.Puzzle.PuzzleData.PuzzleState.PuzzleType == PuzzleType.Fixed) SpawnFixedPuzzle();
@@ -124,7 +125,7 @@ public class Spawner_IceWall : MonoBehaviour
         Cell_IceWall cell = cellGO.AddComponent<Cell_IceWall>();
         int cellHealth = Random.Range(_cellHealthRange.Item1, _cellHealthRange.Item2);
         if (cellHealth > _maxCellHealth) _maxCellHealth = cellHealth;
-        VoxelGrid.GetVoxelAtPosition(new Vector3(width, height, depth)).UpdateMovementCost(cellHealth);
+        VoxelGrid_Deprecated.GetVoxelAtPosition(new Vector3(width, height, depth)).UpdateMovementCost(cellHealth);
         cell.InitialiseCell(new Vector3(width, height, depth), this, cellHealth);
 
         return cell;

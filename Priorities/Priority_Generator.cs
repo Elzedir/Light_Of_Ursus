@@ -138,7 +138,7 @@ namespace Priorities
                 maxPriority);
         }
 
-        public static float GeneratePriority(ulong priorityID, Priority_Parameters priority_Parameters)
+        public static float GeneratePriority(long priorityID, Priority_Parameters priority_Parameters)
         {
             if (priority_Parameters == null)
                 throw new Exception("Priority_Parameters should not be null.");
@@ -148,15 +148,15 @@ namespace Priorities
 
             switch (priorityID)
             {
-                case (ulong)ActorActionName.Idle:
+                case (long)ActorActionName.Idle:
                     return 1;
-                case (ulong)ActorActionName.Haul:
+                case (long)ActorActionName.Haul:
                     return _generateHaulPriority(priority_Parameters);
-                case (ulong)ActorActionName.Chop_Wood:
+                case (long)ActorActionName.Chop_Wood:
                     return _generateChop_WoodPriority(priority_Parameters);
-                case (ulong)ActorActionName.Process_Logs:
+                case (long)ActorActionName.Process_Logs:
                     return _generateProcess_LogsPriority(priority_Parameters);
-                case (ulong)ActorActionName.Wander:
+                case (long)ActorActionName.Wander:
                     return 0;
                 default:
                     Debug.LogError($"ActorAction: {(ActorActionName)priorityID} not found.");

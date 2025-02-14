@@ -28,7 +28,7 @@ namespace Priorities
             {
                 foreach (var actorAction in AllowedActions)
                 {
-                    _regeneratePriority((ulong)actorAction);
+                    _regeneratePriority((long)actorAction);
                 }
                 
                 return;
@@ -36,11 +36,11 @@ namespace Priorities
             
             foreach (ActorActionName jobTask in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((ulong)jobTask);
+                _regeneratePriority((long)jobTask);
             }
         }
 
-        protected override void _regeneratePriority(ulong priorityID)
+        protected override void _regeneratePriority(long priorityID)
         {
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);

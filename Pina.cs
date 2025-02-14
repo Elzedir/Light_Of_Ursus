@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Managers;
 using Pathfinding;
 using UnityEngine;
+using z_Abandoned;
 
 public class Pina : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class Pina : MonoBehaviour
 
     void FollowUrsus()
     {
-        _agent.SetAgentDetails(new List<MoverType> { MoverType.Ground }, targetGO: Manager_Game.S_Instance.Player.gameObject, followDistance: 1.5f);
+        _agent.SetAgentDetails(new List<MoverType_Deprecated> { MoverType_Deprecated.Ground }, targetGO: Manager_Game.S_Instance.Player.gameObject, followDistance: 1.5f);
     }
 
     void OnDestroy()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
@@ -14,6 +15,7 @@ using Recipes;
 using Station;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 
 namespace JobSites
@@ -173,7 +175,7 @@ namespace JobSites
             PriorityData.RegenerateAllPriorities(DataChangedName.None);
 
             var highestPriorityAction = PriorityData.GetHighestPriorityFromGroup(
-                AllowedActions.Select(actorActionName => (ulong)actorActionName).ToList())?.PriorityID;
+                AllowedActions.Select(actorActionName => (long)actorActionName).ToList())?.PriorityID;
 
             if (highestPriorityAction is null) return false;
 
@@ -397,37 +399,45 @@ namespace JobSites
             
         }
         
-        public Dictionary<ulong, HaulingData> AllHaulers; 
+        public Dictionary<ulong, HaulingData> AllHaulers;
+
+        bool _tested;
 
         public void Haul(List<Job> haulers)
         {
-            var itemsToFetch = GetItemsToFetchFromStations();
-            var haulerQueue = new Queue<Job>(haulers);
+            //* Move somewhere
+            // if (_tested) return;
+            // _tested = true;
+            //
+            // JobSite.StartCoroutine(TemporaryTextWriter.RunTest(0.1f));
+
+             var itemsToFetch = GetItemsToFetchFromStations();
+             var haulerQueue = new Queue<Job>(haulers);
             
-            while (itemsToFetch.Count > 0)
-            {
-                if (haulerQueue.Count == 0) break;
-                
-                var hauler = haulerQueue.Dequeue();
-                
-                var bestTask = AssignBestTask(hauler, itemsToFetch);
-        
-                if (bestTask != null)
-                {
-                    ExecuteTask(hauler, bestTask);
-                }
-                else
-                {
-                    haulerQueue.Enqueue(hauler);
-                }
+             while (itemsToFetch.Count > 0)
+             {
+                 if (haulerQueue.Count == 0) break;
+                 
+                 var hauler = haulerQueue.Dequeue();
+                 
+                 var bestTask = AssignBestTask(hauler, itemsToFetch);
+            
+                 if (bestTask != null)
+                 {
+                     ExecuteTask(hauler, bestTask);
+                 }
+                 else
+                 {
+                     haulerQueue.Enqueue(hauler);
+                 }
             }
         }
-        
+
         Task AssignBestTask(Job hauler, Dictionary<ulong, Dictionary<ulong, ulong>> itemsToFetch)
         {
             Task bestTask = null;
             float bestScore = float.MaxValue;
-
+        
             foreach (var (stationID, items) in itemsToFetch)
             {
                 foreach (var (itemID, amount) in items)
@@ -435,7 +445,7 @@ namespace JobSites
                     float distance = GetDistance(hauler.Position, GetStationPosition(stationID));
                     float congestion = GetCongestionFactor(stationID);
                     float priority = distance + congestion;
-
+        
                     if (priority < bestScore)
                     {
                         bestScore = priority;
@@ -443,14 +453,14 @@ namespace JobSites
                     }
                 }
             }
-
+        
             return bestTask;
         }
-
+        
         public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToFetchFromStations()
         {
             var itemsPerStation = new Dictionary<ulong, Dictionary<ulong, ulong>>();
-
+        
             foreach (var job in AllJobs.Values)
             {
                 var itemsToFetchFromThisStation = job.Station.Station_Data.InventoryData
@@ -460,14 +470,14 @@ namespace JobSites
                 
                 itemsPerStation[job.StationID] = itemsToFetchFromThisStation;
             }
-
+        
             return itemsPerStation;
         }
-
-        public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToEachStation(Dictionary<ulong, ulong> allItemsToFetch)
-        {
-            
-        }
+        
+        // public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToEachStation(Dictionary<ulong, ulong> allItemsToFetch)
+        // {
+        //     
+        // }
 
         public override Dictionary<string, string> GetStringData()
         {
