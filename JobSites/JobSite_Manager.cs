@@ -49,7 +49,7 @@ namespace JobSites
             
             JobSite_Component nearestJobSite = null;
 
-            var nearestDistance = float.MaxValue;
+            var nearestDistance = float.PositiveInfinity;
 
             foreach (var jobSite in S_JobSite_SO.JobSite_Components.Values.Where(j => j.JobSiteName == jobSiteName))
             {

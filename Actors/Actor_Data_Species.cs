@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using ActorActions;
 using Inventory;
+using Pathfinding;
 using Priorities;
-using Priority;
+using Species;
 using Tools;
 
 namespace Actors
@@ -11,6 +12,10 @@ namespace Actors
     [Serializable]
     public class Actor_Data_Species : Priority_Class
     {
+        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+
+        public SpeciesName ActorSpecies;
+        
         public Actor_Data_Species(ulong actorID, SpeciesName actorSpecies) : base(
             actorID, ComponentType.Actor)
         {
@@ -29,6 +34,8 @@ namespace Actors
             return new List<ActorActionName>();
         }
         
+        public List<MoverType> GetMoverTypes() => Species_List.GetSpeciesData(ActorSpecies).MoverTypes;
+        
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,
@@ -46,20 +53,5 @@ namespace Actors
                 { "Actor Species", $"{ActorSpecies}" }
             };
         }
-
-        public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
-
-        public SpeciesName ActorSpecies;
-        public void SetSpecies(SpeciesName speciesName) => ActorSpecies = speciesName;
-    }
-    
-    public enum SpeciesName
-    {
-        None,
-        
-        Default,
-        Demon,
-        Human,
-        Orc
     }
 }

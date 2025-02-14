@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
 using Equipment;
 using Initialisation;
+using Pathfinding;
 using TickRates;
 using UnityEngine;
 
@@ -36,6 +36,8 @@ namespace Actors
         EquipmentComponent _equipmentComponent;
         public EquipmentComponent EquipmentComponent => _equipmentComponent ??= new EquipmentComponent(this);
         public GroundedCheckComponent GroundCheckComponent;
+        
+        public DStarLite DStarLite;
 
         void Awake()
         {
@@ -118,15 +120,28 @@ namespace Actors
 
         public IEnumerator BasicMove(Vector3 targetPosition, float speed = 4)
         {
+            DStarLite ??= new DStarLite(ActorData.GetMoverTypes(), transform.position, targetPosition);
+            DStarLite.UpdatePath(transform.position, targetPosition);
+                
+            foreach(var position in DStarLite.ShortestPath)
+            {
+                yield return StartCoroutine(_move(position, speed));
+            }
+            
+            RigidBody.linearVelocity = Vector3.zero;
+            transform.position       = targetPosition;
+        }
+        
+        IEnumerator _move(Vector3 targetPosition, float speed = 4)
+        {
             while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
             {
-                Vector3 direction = (targetPosition - transform.position).normalized;
+                var direction = (targetPosition - transform.position).normalized;
                 RigidBody.linearVelocity = direction * speed;
                 yield return null;
             }
-
+            
             RigidBody.linearVelocity = Vector3.zero;
-            transform.position       = targetPosition;
         }
     }
 }

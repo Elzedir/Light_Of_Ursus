@@ -10,8 +10,8 @@ using Items;
 using Managers;
 using Personality;
 using Priorities;
-using Priority;
 using Recipes;
+using Species;
 using StateAndCondition;
 using Tools;
 

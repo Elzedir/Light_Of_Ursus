@@ -6,6 +6,7 @@ using Inventory;
 using Personality;
 using Priorities;
 using Priority;
+using Species;
 using Tools;
 
 namespace Actors

@@ -28,7 +28,7 @@ public class Manager_Grid : MonoBehaviour
         Rows = Floor.cellBounds.xMax - Floor.cellBounds.xMin;
         Columns = Floor.cellBounds.xMax - Floor.cellBounds.xMin;
 
-        NodeArray_2D.S_Nodes = NodeArray_2D.InitializeArray(Floor.cellBounds.xMax - Floor.cellBounds.xMin, Floor.cellBounds.yMax - Floor.cellBounds.yMin);
+        NodeArray_2D_Deprecated.S_Nodes = NodeArray_2D_Deprecated.InitializeArray(Floor.cellBounds.xMax - Floor.cellBounds.xMin, Floor.cellBounds.yMax - Floor.cellBounds.yMin);
 
         XOffset = 0 - Floor.cellBounds.xMin;
         YOffset = 0 - Floor.cellBounds.yMin;
@@ -37,7 +37,7 @@ public class Manager_Grid : MonoBehaviour
         {
             for (int col = Floor.cellBounds.yMin; col < Floor.cellBounds.yMax; col++)
             {
-                Pathfinder_Base_2D.GetNodeAtPosition(row + XOffset, col + YOffset).UpdateMovementCost(Direction.None, 1);
+                Pathfinder_Base_2D_Deprecated.GetNodeAtPosition(row + XOffset, col + YOffset).UpdateMovementCost(Direction_Deprecated.None, 1);
             }
         }
 
@@ -48,7 +48,7 @@ public class Manager_Grid : MonoBehaviour
                 if (Walls.GetTile(new Vector3Int(row, col, 0)) == null) continue;
 
                 Vector3Int nodePos = new Vector3Int(row + XOffset, col + YOffset, 0);
-                Pathfinder_Base_2D.GetNodeAtPosition(nodePos.x, nodePos.y).UpdateMovementCost(Direction.None, double.PositiveInfinity);
+                Pathfinder_Base_2D_Deprecated.GetNodeAtPosition(nodePos.x, nodePos.y).UpdateMovementCost(Direction_Deprecated.None, double.PositiveInfinity);
             }
         }
     }

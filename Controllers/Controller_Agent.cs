@@ -9,7 +9,7 @@ using z_Abandoned;
 
 public class Controller_Agent : MonoBehaviour, PathfinderMover_3D_Deprecated
 {
-    public Pathfinder_Vertex_3D Pathfinder { get; set; }
+    public Pathfinder_Vertex_3D_Deprecated Pathfinder { get; set; }
     public Pathfinder_Base_3D_Deprecated Pathfinder_3DDeprecated { get; set; }
     Coroutine _pathfindingCoroutine;
     Coroutine _followCoroutine;
@@ -41,7 +41,7 @@ public class Controller_Agent : MonoBehaviour, PathfinderMover_3D_Deprecated
         _animator = GetComponent<Animator>();
         Pathfinder_3DDeprecated = new Pathfinder_Base_3D_Deprecated();
         _collider = gameObject.GetComponent<Collider>();
-        Pathfinder = new Pathfinder_Vertex_3D();
+        Pathfinder = new Pathfinder_Vertex_3D_Deprecated();
     }
 
     protected virtual void Start()

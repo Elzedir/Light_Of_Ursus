@@ -4,6 +4,7 @@ using System.Linq;
 using ActorActions;
 using Actors;
 using Inventory;
+using Pathfinding;
 using Priorities;
 using Priority;
 using TickRates;
@@ -139,6 +140,19 @@ namespace StateAndCondition
         {
             //* Restrict or allow actions depending on conditions that you have. For example, frozen or burning.
             return new List<ActorActionName>();
+        }
+        
+        public (List<MoverType> EnabledMoverTypes, List<MoverType> DisabledMoverTypes) GetMoverTypes()
+        {
+            var enableMoverTypes = new List<MoverType>();
+            var disableMoverTypes = new List<MoverType>();
+
+            foreach (var state in CurrentConditions)
+            {
+                //* Add in a dictionary somewhere of what each condition will enable or disable.
+            }
+
+            return (enableMoverTypes, disableMoverTypes);
         }
     }
 }

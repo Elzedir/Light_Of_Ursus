@@ -5,8 +5,8 @@ namespace StateAndCondition
 {
     public abstract class State_List
     {
-        static Dictionary<ulong, State_Data> _defaultStates;
-        public static Dictionary<ulong, State_Data> DefaultStates => _defaultStates ??= _initialiseDefaultStates();
+        static Dictionary<ulong, State_Data> s_defaultStates;
+        public static Dictionary<ulong, State_Data> DefaultStates => s_defaultStates ??= _initialiseDefaultStates();
 
         public State_Data GetState_Data(StateName stateName)
         {

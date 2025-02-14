@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace z_Abandoned
 {
-    public class Pathfinder_Vertex_3D
+    public class Pathfinder_Vertex_3D_Deprecated
     {
         Dictionary<(Vector3Int targetPosInt, int pathID), (List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget)> _allPaths = new();
         ((Vector3Int targetPosInt, int pathID) key, (List<(Vector3 position, Collider previousCollider)> pointPath, float distance, bool reachedTarget) value)? _bestPath;

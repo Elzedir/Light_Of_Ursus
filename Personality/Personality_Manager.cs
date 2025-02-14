@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
+using Species;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -14,7 +15,7 @@ namespace Personality
     public abstract class Personality_Manager
     {
         public static List<PersonalityTraitName> GetRandomPersonalityTraits(
-            List<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1, SpeciesName speciesName = SpeciesName.Default)
+            List<PersonalityTraitName> existingPersonalityTraits, int numberOfTraitsDesired = 1, SpeciesName speciesName = SpeciesName.None)
         {
             existingPersonalityTraits ??= new List<PersonalityTraitName>();
             

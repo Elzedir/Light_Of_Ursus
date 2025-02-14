@@ -1,10 +1,13 @@
 using System;
+using UnityEngine;
 
 namespace Pathfinding
 {
     public class Voxel_Decision : IComparable<Voxel_Decision>
     {
-        public long VoxelID => Voxel_Walkable.VoxelID;
+        public ulong ID => Voxel_Walkable.ID;
+
+        public bool IsApproximatelyEqualCost => Mathf.Abs(GCost - RHSCost) < 1f * Voxel_Base.MinimumVoxelSize;
         public readonly Voxel_Walkable Voxel_Walkable;
         public float GCost, RHSCost, Heuristic;
 

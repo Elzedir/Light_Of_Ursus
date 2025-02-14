@@ -4,6 +4,7 @@ using System.Linq;
 using ActorActions;
 using Actors;
 using JobSites;
+using Priorities.Priority_Queues;
 using Station;
 using Tools;
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace Priorities
             {
                 foreach (var actorAction in AllowedActions)
                 {
-                    _regeneratePriority((long)actorAction);
+                    _regeneratePriority((ulong)actorAction);
                 }
                 
                 return;
@@ -36,16 +37,16 @@ namespace Priorities
             
             foreach (ActorActionName jobTask in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((long)jobTask);
+                _regeneratePriority((ulong)jobTask);
             }
         }
 
-        protected override void _regeneratePriority(long priorityID)
+        protected override void _regeneratePriority(ulong priorityID)
         {
             var priorityParameters = _getPriorityParameters((ActorActionName)priorityID);
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueueMaxHeap.Update(priorityID, priorityValue);
+            PriorityQueueMaxHeap.Update(new Priority_Element<ActorAction_Data>(priorityID, priorityValue, null));
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)

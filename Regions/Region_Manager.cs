@@ -44,7 +44,7 @@ namespace Region
         {
             Region_Component nearestRegion = null;
 
-            var nearestDistance = float.MaxValue;
+            var nearestDistance = float.PositiveInfinity;
 
             foreach (var region in AllRegions.RegionComponents.Values)
             {

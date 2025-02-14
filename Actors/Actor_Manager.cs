@@ -12,6 +12,7 @@ using Managers;
 using Personality;
 using Priorities;
 using Recipes;
+using Species;
 using StateAndCondition;
 using Tools;
 using UnityEngine;
@@ -71,7 +72,7 @@ namespace Actors
         {
             Actor_Component nearestActor = null;
 
-            //var nearestDistance = float.MaxValue;
+            //var nearestDistance = float.PositiveInfinity;
             
             //* Flash a collider at increasing distances until it hits something.
 

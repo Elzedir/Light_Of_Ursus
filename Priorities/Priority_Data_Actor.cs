@@ -27,7 +27,7 @@ namespace Priorities
                     
                     foreach (var actorAction in AllowedActions)
                     {
-                        _regeneratePriority((long)actorAction);
+                        _regeneratePriority((ulong)actorAction);
                     }
 
                     return;
@@ -35,7 +35,7 @@ namespace Priorities
                 
                 foreach (var actorAction in actionsToRegenerate)
                 {
-                    _regeneratePriority((long)actorAction);
+                    _regeneratePriority((ulong)actorAction);
                 }
 
                 return;
@@ -43,20 +43,21 @@ namespace Priorities
             
             foreach (ActorActionName actorAction in Enum.GetValues(typeof(ActorActionName)))
             {
-                _regeneratePriority((long)actorAction);
+                _regeneratePriority((ulong)actorAction);
             }
         }
 
-        protected override void _regeneratePriority(long priorityID)
+        protected override void _regeneratePriority(ulong priorityID)
         {
             switch (priorityID)
             {
-                case (long)ActorActionName.All:
+                case (ulong)ActorActionName.All:
                     Debug.LogError(
                         $"ActorActionName: {(ActorActionName)priorityID} not allowed in _regeneratePriority.");
                     return;
-                case (long)ActorActionName.Idle:
-                    PriorityQueueMaxHeap.Update(priorityID, 1);
+                case (ulong)ActorActionName.Idle:
+                    PriorityQueueMaxHeap.Update(new Priority_Element<ActorAction_Data>(
+                        (ulong)ActorActionName.Idle, 1 , null));
                     return;
             }
 
@@ -64,7 +65,7 @@ namespace Priorities
 
             var priorityValue = Priority_Generator.GeneratePriority(priorityID, priorityParameters);
 
-            PriorityQueueMaxHeap.Update(priorityID, priorityValue);
+            PriorityQueueMaxHeap.Update(new Priority_Element<ActorAction_Data>(priorityID, priorityValue, null));
         }
 
         protected override void _setActorID_Source(Priority_Parameters priority_Parameters)

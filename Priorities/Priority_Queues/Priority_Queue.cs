@@ -10,18 +10,18 @@ namespace Priorities.Priority_Queues
     {
         protected int                            _currentPosition;
         protected Priority_Element<T>[]              _priorityArray;
-        protected readonly Dictionary<long, int> _lookupTable;
+        protected readonly Dictionary<ulong, int> _lookupTable;
 
-        public Action<long> OnPriorityRemoved;
+        public Action<ulong> OnPriorityRemoved;
 
         public Priority_Queue(int maxPriorities)
         {
             _currentPosition = 0;
             _priorityArray   = new Priority_Element<T>[maxPriorities];
-            _lookupTable   = new Dictionary<long, int>();
+            _lookupTable   = new Dictionary<ulong, int>();
         }
 
-        public Priority_Element<T> Peek(long priorityID = 1)
+        public Priority_Element<T> Peek(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
                 return null;
@@ -42,7 +42,7 @@ namespace Priorities.Priority_Queues
                 .ToArray();
         }
 
-        public Priority_Element<T> Dequeue(long priorityID = 1)
+        public Priority_Element<T> Dequeue(ulong priorityID = 1)
         {
             if (_currentPosition == 0)
             {
@@ -70,23 +70,23 @@ namespace Priorities.Priority_Queues
             return priorityValue;
         }
 
-        bool _enqueue(long priorityID, float priorityValue)
+        bool _enqueue(Priority_Element<T> priority_Element)
         {
-            if (_lookupTable.TryGetValue(priorityID, out var index) && index != 0)
+            if (_lookupTable.TryGetValue(priority_Element.PriorityID, out var index) && index != 0)
             {
-                Debug.Log($"PriorityID: {priorityID} already exists in PriorityQueue.");
+                Debug.Log($"PriorityID: {priority_Element.PriorityID} already exists in PriorityQueue.");
 
-                if (Update(priorityID, priorityValue))
+                if (Update(priority_Element))
                     return true;
 
-                Debug.LogError($"PriorityID: {priorityID} unable to be updated.");
+                Debug.LogError($"PriorityID: {priority_Element.PriorityID} unable to be updated.");
                 return false;
 
             }
 
-            var priorityElement = new Priority_Element<T>(priorityID, priorityValue);
+            var priorityElement = new Priority_Element<T>(priority_Element);
             _currentPosition++;
-            _lookupTable[priorityID] = _currentPosition;
+            _lookupTable[priority_Element.PriorityID] = _currentPosition;
             
             if (_currentPosition == _priorityArray.Length)
                 Array.Resize(ref _priorityArray, _priorityArray.Length * 2);
@@ -97,12 +97,12 @@ namespace Priorities.Priority_Queues
             return true;
         }
 
-        public bool Update(long priorityID, float newPriority)
+        public bool Update(Priority_Element<T> priority_Element)
         {
-            if (!_lookupTable.TryGetValue(priorityID, out var index) || index == 0)
-                return _enqueue(priorityID, newPriority);
+            if (!_lookupTable.TryGetValue(priority_Element.PriorityID, out var index) || index == 0)
+                return _enqueue(priority_Element);
 
-            _priorityArray[index].UpdatePriorityValue(newPriority);
+            _priorityArray[index].UpdatePriorityValue(priority_Element.PriorityValue);
 
             if (index == _currentPosition || index == 1) return true;
             
@@ -114,10 +114,10 @@ namespace Priorities.Priority_Queues
             return true;
         }
 
-        public bool Contains(long priorityID) => _lookupTable.ContainsKey(priorityID);
+        public bool Contains(ulong priorityID) => _lookupTable.ContainsKey(priorityID);
         public int Count() => _currentPosition;
 
-        public bool Remove(long priorityID)
+        public bool Remove(ulong priorityID)
         {
             if (!_lookupTable.TryGetValue(priorityID, out var index) || index == 0)
                 return false;

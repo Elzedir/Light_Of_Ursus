@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using ActorActions;
 using Actors;
 using Inventory;
+using Pathfinding;
 using Priorities;
-using Priority;
 using Tools;
 using UnityEngine;
 
@@ -125,6 +124,19 @@ namespace StateAndCondition
                     //Debug.LogError($"State: {state.Key} has no actions.");
                     return Enumerable.Empty<ActorActionName>();
                 }).ToList();
+        }
+        
+        public (List<MoverType> EnabledMoverTypes, List<MoverType> DisabledMoverTypes) GetMoverTypes()
+        {
+            var enableMoverTypes = new List<MoverType>();
+            var disableMoverTypes = new List<MoverType>();
+
+            foreach (var state in CurrentStates)
+            {
+                //* Add in a dictionary somewhere of what each state will enable or disable.
+            }
+
+            return (enableMoverTypes, disableMoverTypes);
         }
     }
 }

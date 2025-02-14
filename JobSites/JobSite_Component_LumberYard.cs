@@ -67,7 +67,7 @@ namespace JobSites
             }
             
             var   bestCombination     = new Dictionary<ulong, Actor_Component>();
-            var bestRatioDifference = float.MaxValue;
+            var bestRatioDifference = float.PositiveInfinity;
 
             var allCombinations = _getAllCombinations(allEmployees);
             var i               = 0;

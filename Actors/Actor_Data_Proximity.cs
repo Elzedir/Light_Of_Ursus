@@ -35,8 +35,8 @@ namespace Actors
         {
             var encounteredFactions = new Dictionary<ulong, Faction_Data>();
             
-            var closestAllyDistance = float.MaxValue;
-            var closestEnemyDistance = float.MaxValue;
+            var closestAllyDistance = float.PositiveInfinity;
+            var closestEnemyDistance = float.PositiveInfinity;
             
             foreach (var actor in ProximityActors)
             {

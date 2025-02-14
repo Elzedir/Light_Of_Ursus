@@ -39,7 +39,7 @@ namespace Station
         {
             Station_Component nearestStation = null;
 
-            var nearestDistance = float.MaxValue;
+            var nearestDistance = float.PositiveInfinity;
 
             foreach (var station in AllStations.Station_Components.Values.Where(s => s.StationName == stationName))
             {

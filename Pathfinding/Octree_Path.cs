@@ -11,41 +11,43 @@ namespace Pathfinding
         public Octree_Path(List<MoverType> moverTypes)
         {
             AllWalkableVoxels = new Dictionary<Vector3, Voxel_Walkable>();
+            
             _convertToGraph(moverTypes);
         }
 
         void _convertToGraph(List<MoverType> moverTypes, Voxel_Base voxelBase = null)
         {
             voxelBase ??= Octree_Map.S_RootMapVoxel;
-            
-            if (!voxelBase.IsWalkable(moverTypes)) return;
 
-            var voxelPath = new Voxel_Walkable(voxelBase.Position, voxelBase.Size);
-            AllWalkableVoxels[voxelBase.Position] = voxelPath;
-
-            if (voxelBase.Children == null)
-            {
-                AddNeighbors(voxelPath, voxelBase.Size, moverTypes);
-            }
-            else
+            if (voxelBase.Children != null)
             {
                 foreach (var child in voxelBase.Children)
                 {
                     _convertToGraph(moverTypes, child);
                 }
             }
+            else
+            {
+                if (!voxelBase.IsWalkable(moverTypes)) return;
+                
+                var voxel = new Voxel_Walkable(voxelBase.Position, voxelBase.Size);
+                AllWalkableVoxels[voxelBase.Position] = voxel;
+
+                AddNeighbors(voxel, voxelBase.Size, moverTypes);
+            }
         }
 
-        void AddNeighbors(Voxel_Walkable voxelWalkable, int size, List<MoverType> moverTypes)
+        void AddNeighbors(Voxel_Walkable voxel_Walkable, int size, List<MoverType> moverTypes)
         {
             var directions = _getMovementDirections(moverTypes);
 
-            foreach (var dir in directions)
+            foreach (var direction in directions)
             {
-                var neighborPos = voxelWalkable.Position + dir * size;
-                if (AllWalkableVoxels.TryGetValue(neighborPos, out var neighbor))
+                var neighborPosition = voxel_Walkable.Position + direction * size;
+                
+                if (AllWalkableVoxels.TryGetValue(neighborPosition, out var neighbor))
                 {
-                    voxelWalkable.Neighbors.Add(neighbor);
+                    voxel_Walkable.Neighbors.Add(neighbor);
                 }
             }
         }

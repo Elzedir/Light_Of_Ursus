@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using ActorActions;
 using Inventory;
+using Pathfinding;
 using Priorities;
-using Priority;
 using StateAndCondition;
 using Tools;
 
@@ -11,6 +11,9 @@ namespace Actors
     public class Actor_Data_StatesAndConditions : Priority_Class
     {
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
+        
+        public Actor_Data_States     States;
+        public Actor_Data_Conditions Conditions;
         
         public Actor_Data_StatesAndConditions(ulong actorID, Actor_Data_States states, Actor_Data_Conditions conditions) : base (actorID, ComponentType.Actor)
         {
@@ -26,15 +29,25 @@ namespace Actors
         
         public void SetActorStatesAndConditions (Actor_Data_StatesAndConditions actorDataStatesAndConditions)
         {
-            SetActorStates(actorDataStatesAndConditions.States);
-            SetActorConditions(actorDataStatesAndConditions.Conditions);
+            States = actorDataStatesAndConditions.States;
+            Conditions = actorDataStatesAndConditions.Conditions;
         }
         
-        public Actor_Data_States     States;
-        public void SetActorStates(Actor_Data_States actorStates) => States = actorStates;
-        
-        public Actor_Data_Conditions Conditions;
-        public void SetActorConditions(Actor_Data_Conditions actorDataConditions) => Conditions = actorDataConditions;
+        public (List<MoverType> enabledMoverTypes, List<MoverType> DisabledMoverTypes) GetMoverTypes()
+        {
+            var enabledMoverTypes = new List<MoverType>();
+            var disabledMoverTypes = new List<MoverType>();
+            
+            var (enabledStates, disabledStates) = States.GetMoverTypes();
+            enabledMoverTypes.AddRange(enabledStates);
+            disabledMoverTypes.AddRange(disabledStates);
+            
+            var (enabledConditions, disabledConditions) = Conditions.GetMoverTypes();
+            enabledMoverTypes.AddRange(enabledConditions);
+            disabledMoverTypes.AddRange(disabledConditions);
+
+            return (enabledMoverTypes, disabledMoverTypes);
+        }
         
         public override Dictionary<string, string> GetStringData()
         {

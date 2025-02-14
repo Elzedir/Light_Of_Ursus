@@ -7,11 +7,10 @@ using ActorPresets;
 using Equipment;
 using Faction;
 using Inventory;
+using Pathfinding;
 using Priorities;
-using Priority;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Actors
 {
@@ -287,6 +286,18 @@ namespace Actors
             return relation;
         }
 
+        public List<MoverType> GetMoverTypes()
+        {
+            var moverTypes = new List<MoverType>();
+
+            moverTypes.AddRange(Species.GetMoverTypes());
+            
+                //* Temporary enable or disable mover types from inventory or states and conditions.
+            //InventoryData.GetMoverTypes(moverTypes);
+            //StatesAndConditions.GetMoverTypes(moverTypes);
+
+            return moverTypes;
+        }
     }
 
     public enum DataChangedName

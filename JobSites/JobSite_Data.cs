@@ -175,7 +175,7 @@ namespace JobSites
             PriorityData.RegenerateAllPriorities(DataChangedName.None);
 
             var highestPriorityAction = PriorityData.GetHighestPriorityFromGroup(
-                AllowedActions.Select(actorActionName => (long)actorActionName).ToList())?.PriorityID;
+                AllowedActions.Select(actorActionName => (ulong)actorActionName).ToList())?.PriorityID;
 
             if (highestPriorityAction is null) return false;
 
@@ -322,7 +322,7 @@ namespace JobSites
         {
             Station_Component nearestStation = null;
 
-            var nearestDistance = float.MaxValue;
+            var nearestDistance = float.PositiveInfinity;
 
             foreach (var job in AllJobs.Values.Where(job => job.Station.StationName == stationName))
             {
@@ -414,48 +414,48 @@ namespace JobSites
              var itemsToFetch = GetItemsToFetchFromStations();
              var haulerQueue = new Queue<Job>(haulers);
             
-             while (itemsToFetch.Count > 0)
-             {
-                 if (haulerQueue.Count == 0) break;
-                 
-                 var hauler = haulerQueue.Dequeue();
-                 
-                 var bestTask = AssignBestTask(hauler, itemsToFetch);
-            
-                 if (bestTask != null)
-                 {
-                     ExecuteTask(hauler, bestTask);
-                 }
-                 else
-                 {
-                     haulerQueue.Enqueue(hauler);
-                 }
-            }
+            //  while (itemsToFetch.Count > 0)
+            //  {
+            //      if (haulerQueue.Count == 0) break;
+            //      
+            //      var hauler = haulerQueue.Dequeue();
+            //      
+            //      var bestTask = AssignBestTask(hauler, itemsToFetch);
+            //
+            //      if (bestTask != null)
+            //      {
+            //          ExecuteTask(hauler, bestTask);
+            //      }
+            //      else
+            //      {
+            //          haulerQueue.Enqueue(hauler);
+            //      }
+            // }
         }
 
-        Task AssignBestTask(Job hauler, Dictionary<ulong, Dictionary<ulong, ulong>> itemsToFetch)
-        {
-            Task bestTask = null;
-            float bestScore = float.MaxValue;
-        
-            foreach (var (stationID, items) in itemsToFetch)
-            {
-                foreach (var (itemID, amount) in items)
-                {
-                    float distance = GetDistance(hauler.Position, GetStationPosition(stationID));
-                    float congestion = GetCongestionFactor(stationID);
-                    float priority = distance + congestion;
-        
-                    if (priority < bestScore)
-                    {
-                        bestScore = priority;
-                        bestTask = new Task(stationID, itemID, amount);
-                    }
-                }
-            }
-        
-            return bestTask;
-        }
+        // Task AssignBestTask(Job hauler, Dictionary<ulong, Dictionary<ulong, ulong>> itemsToFetch)
+        // {
+        //     Task bestTask = null;
+        //     float bestScore = float.PositiveInfinity;
+        //
+        //     foreach (var (stationID, items) in itemsToFetch)
+        //     {
+        //         foreach (var (itemID, amount) in items)
+        //         {
+        //             float distance = GetDistance(hauler.Position, GetStationPosition(stationID));
+        //             float congestion = GetCongestionFactor(stationID);
+        //             float priority = distance + congestion;
+        //
+        //             if (priority < bestScore)
+        //             {
+        //                 bestScore = priority;
+        //                 bestTask = new Task(stationID, itemID, amount);
+        //             }
+        //         }
+        //     }
+        //
+        //     return bestTask;
+        // }
         
         public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToFetchFromStations()
         {

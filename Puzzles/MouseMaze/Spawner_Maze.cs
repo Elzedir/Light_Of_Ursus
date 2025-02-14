@@ -428,7 +428,7 @@ public class Spawner_Maze : MonoBehaviour
     {
         if (_wallBreaks <= 0) { return; }
 
-        Cell_MouseMaze closestCell = null; float minDistance = float.MaxValue;
+        Cell_MouseMaze closestCell = null; float minDistance = float.PositiveInfinity;
 
         CheckNeighbor((int)_playerLastCell.Position.x + 1, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z);
         CheckNeighbor((int)_playerLastCell.Position.x - 1, (int)_playerLastCell.Position.y, (int)_playerLastCell.Position.z);

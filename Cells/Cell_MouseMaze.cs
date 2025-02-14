@@ -13,7 +13,7 @@ public enum Wall { None, Top, Bottom, Left, Right }
 
 public class Cell_MouseMaze : Cell_Base
 {
-    public Node_Base_2D Node { get; private set; }
+    public Node_Base_2D_Deprecated Node { get; private set; }
 
     public bool Visited;
     //bool _initialised = false;
