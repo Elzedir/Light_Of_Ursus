@@ -11,14 +11,13 @@ namespace Pathfinding
 {
     public class Pathfinder_Base_3D
     {
-        Priority_Queue_MaxHeap _mainPriorityQueueMaxHeap;
+        //Priority_Queue_MaxHeap _mainPriorityQueueMaxHeap;
         double _priorityModifier;
-        Voxel_Base _targetVoxel;
-        Voxel_Base _startVoxel;
+        Voxel_Base_Deprecated _targetVoxel;
+        Voxel_Base_Deprecated _startVoxel;
         PuzzleSet _puzzleSet;
-        PathfinderMover_3D _mover;
-
-        #region Initialisation
+        PathfinderMover_3D_Deprecated _mover;
+        
         static int s_gridWidth;
         static int s_gridHeight;
         static int s_gridDepth;
@@ -30,23 +29,23 @@ namespace Pathfinding
             s_gridDepth = gridDepth;
         }
 
-        public void SetPath(Vector3 start, Vector3 target, PathfinderMover_3D mover, PuzzleSet puzzleSet)
+        public void SetPath(Vector3 start, Vector3 target, PathfinderMover_3D_Deprecated mover, PuzzleSet puzzleSet)
         {
-            if (!VoxelGrid.Initialised) VoxelGrid.InitializeVoxelGrid();
+            if (!VoxelGrid_Deprecated.Initialised) VoxelGrid_Deprecated.InitializeVoxelGrid();
 
             _puzzleSet = puzzleSet;
             _mover = mover;
 
-            _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
-            _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
+            _startVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(start);
+            _targetVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(target);
 
             mover.StartPathfindingCoroutine(_runPathfinder(mover));
         }
 
-        public void UpdatePath(PathfinderMover_3D mover, Vector3 start, Vector3 target)
+        public void UpdatePath(PathfinderMover_3D_Deprecated mover, Vector3 start, Vector3 target)
         {
-            _startVoxel = VoxelGrid.GetVoxelAtPosition(start);
-            _targetVoxel = VoxelGrid.GetVoxelAtPosition(target);
+            _startVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(start);
+            _targetVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(target);
 
             if (mover.CanGetNewPath)
             {
@@ -55,7 +54,7 @@ namespace Pathfinding
             }
         }
 
-        IEnumerator _runPathfinder(PathfinderMover_3D mover)
+        IEnumerator _runPathfinder(PathfinderMover_3D_Deprecated mover)
         {
             if (_startVoxel == null) yield break;
             if (_startVoxel != null) yield break;
@@ -67,8 +66,8 @@ namespace Pathfinding
             }
 
             var currentVoxel = _startVoxel;
-            List<Voxel_Base> currentPath = new();
-            List<Voxel_Base> previousPath = null;
+            List<Voxel_Base_Deprecated> currentPath = new();
+            List<Voxel_Base_Deprecated> previousPath = null;
             List<Vector3> currentObstacles = new();
             List<Vector3> previousObstacles = null;
             var pathIsComplete = false;
@@ -88,13 +87,13 @@ namespace Pathfinding
 
                     foreach (var position in currentObstacles)
                     {
-                        var obstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
+                        var obstacleVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(position);
 
                         if (obstacleVoxel.IsObstacle) continue;
 
-                        obstacleVoxel = VoxelGrid.AddSubvoxelToVoxelGrid(position, true);
+                        obstacleVoxel = VoxelGrid_Deprecated.AddSubvoxelToVoxelGrid(position, true);
 
-                        foreach (Voxel_Base predecessor in obstacleVoxel.GetPredecessors())
+                        foreach (Voxel_Base_Deprecated predecessor in obstacleVoxel.GetPredecessors())
                         {
                             _updateVertex(predecessor);
                         }
@@ -112,7 +111,7 @@ namespace Pathfinding
                             continue;
                         }
 
-                        var removedObstacleVoxel = VoxelGrid.GetVoxelAtPosition(position);
+                        var removedObstacleVoxel = VoxelGrid_Deprecated.GetVoxelAtPosition(position);
 
                         if (removedObstacleVoxel == null)
                         {
@@ -127,7 +126,7 @@ namespace Pathfinding
                             _updateVertex(predecessor);
                         }
 
-                        VoxelGrid.RemoveVoxelAtPosition(position);
+                        VoxelGrid_Deprecated.RemoveVoxelAtPosition(position);
                     }
 
                     previousObstacles = new List<Vector3>(currentObstacles);
@@ -159,15 +158,15 @@ namespace Pathfinding
 
                 if (pathIsComplete && (previousPath == null || !_isPathEqual(previousPath, currentPath)))
                 {
-                    if (!VoxelGrid.VoxelsTestShown)
+                    if (!VoxelGrid_Deprecated.VoxelsTestShown)
                     {
-                        VoxelGrid.TestShowAllVoxels();
+                        VoxelGrid_Deprecated.TestShowAllVoxels();
                     }
                 
                     _mover.MoveTo(_targetVoxel);
                     currentVoxel = _startVoxel;
 
-                    previousPath = new List<Voxel_Base>(currentPath);
+                    previousPath = new List<Voxel_Base_Deprecated>(currentPath);
                     currentPath.Clear();
                     pathIsComplete = false;
 
@@ -209,7 +208,7 @@ namespace Pathfinding
             return true;
         }
 
-        bool _isPathEqual(List<Voxel_Base> path1, List<Voxel_Base> path2)
+        bool _isPathEqual(List<Voxel_Base_Deprecated> path1, List<Voxel_Base_Deprecated> path2)
         {
             if (path1.Count != path2.Count)
             {
@@ -230,46 +229,46 @@ namespace Pathfinding
 
         void _initialise()
         {
-            foreach (Voxel_Base voxel in VoxelGrid.Voxels) { if (voxel != null) { voxel.RHS = double.PositiveInfinity; voxel.G = double.PositiveInfinity; } }
-            _mainPriorityQueueMaxHeap = new Priority_Queue_MaxHeap(s_gridWidth * s_gridHeight * s_gridDepth);
+            foreach (Voxel_Base_Deprecated voxel in VoxelGrid_Deprecated.Voxels) { if (voxel != null) { voxel.RHS = double.PositiveInfinity; voxel.G = double.PositiveInfinity; } }
+            //_mainPriorityQueueMaxHeap = new Priority_Queue_MaxHeap(s_gridWidth * s_gridHeight * s_gridDepth);
             _priorityModifier = 0;
             _targetVoxel.RHS = 0;
-            _mainPriorityQueueMaxHeap.Update(_targetVoxel, _calculatePriority(_targetVoxel));
+            //_mainPriorityQueueMaxHeap.Update(_targetVoxel, _calculatePriority(_targetVoxel));
         }
 
-        Priority_Old _calculatePriority(Voxel_Base node)
+        Priority_Old_Deprecated _calculatePriority(Voxel_Base_Deprecated node)
         {
-            return new Priority_Old(Math.Min(node.G, node.RHS) + _manhattanDistance(node, _startVoxel) + _priorityModifier, Math.Min(node.G, node.RHS));
+            return new Priority_Old_Deprecated(Math.Min(node.G, node.RHS) + _manhattanDistance(node, _startVoxel) + _priorityModifier, Math.Min(node.G, node.RHS));
         }
-        double _manhattanDistance(Voxel_Base a, Voxel_Base b)
+        double _manhattanDistance(Voxel_Base_Deprecated a, Voxel_Base_Deprecated b)
         {
             Vector3 distance = a.WorldPosition - b.WorldPosition;
             return Math.Abs(distance.x) + Math.Abs(distance.y) + Math.Abs(distance.z);
         }
 
-        void _updateVertex(Voxel_Base voxel)
+        void _updateVertex(Voxel_Base_Deprecated voxel)
         {
             if (!voxel.Equals(_targetVoxel))
             {
                 voxel.RHS = _minimumSuccessorCost(voxel);
             }
-            if (_mainPriorityQueueMaxHeap.Contains(voxel))
-            {
-                _mainPriorityQueueMaxHeap.Remove(voxel);
-            }
+            // if (_mainPriorityQueueMaxHeap.Contains(voxel))
+            // {
+            //     _mainPriorityQueueMaxHeap.Remove(voxel);
+            // }
             if (voxel.G != voxel.RHS)
             {
-                _mainPriorityQueueMaxHeap.Update(voxel, _calculatePriority(voxel));
+                //_mainPriorityQueueMaxHeap.Update(voxel, _calculatePriority(voxel));
             }
         }
-        Voxel_Base _minimumSuccessorVoxel(Voxel_Base voxel)
+        Voxel_Base_Deprecated _minimumSuccessorVoxel(Voxel_Base_Deprecated voxel)
         {
             double minimumCostToMove = Double.PositiveInfinity;
-            Voxel_Base bestSucessor = null;
+            Voxel_Base_Deprecated bestSucessor = null;
 
             //Debug.Log($"Original: WorldPos: {voxel.WorldPosition} Cost: {voxel.MovementCost}");
 
-            foreach (Voxel_Base successor in voxel.GetSuccessors())
+            foreach (Voxel_Base_Deprecated successor in voxel.GetSuccessors())
             {
                 //Debug.Log($"WorldPos: {successor.WorldPosition} Cost: {successor.MovementCost} G: {successor.G}");
 
@@ -290,10 +289,10 @@ namespace Pathfinding
 
             return bestSucessor;
         }
-        double _minimumSuccessorCost(Voxel_Base node)
+        double _minimumSuccessorCost(Voxel_Base_Deprecated node)
         {
             double minimumCost = Double.PositiveInfinity;
-            foreach (Voxel_Base successor in node.GetSuccessors())
+            foreach (Voxel_Base_Deprecated successor in node.GetSuccessors())
             {
                 double costToMove = node.GetMovementCostTo(successor, _puzzleSet) + successor.G;
                 if (costToMove < minimumCost && !successor.IsObstacle) minimumCost = costToMove;
@@ -302,41 +301,40 @@ namespace Pathfinding
         }
         void _computeShortestPath()
         {
-            while (_mainPriorityQueueMaxHeap.Peek().CompareTo(_calculatePriority(_startVoxel)) < 0 || _startVoxel.RHS != _startVoxel.G)
-            {
-                Priority_Old highestPriority = _mainPriorityQueueMaxHeap.Peek();
-                Voxel_Base node = _mainPriorityQueueMaxHeap.Dequeue();
-                if (node == null) break;
-
-                if (highestPriority.CompareTo(_calculatePriority(node)) < 0)
-                {
-                    _mainPriorityQueueMaxHeap.Enqueue(node, _calculatePriority(node));
-                }
-                else if (node.G > node.RHS)
-                {
-                    node.G = node.RHS;
-                    foreach (Voxel_Base neighbour in node.GetPredecessors())
-                    {
-                        _updateVertex(neighbour);
-                    }
-                }
-                else
-                {
-                    node.G = Double.PositiveInfinity;
-                    _updateVertex(node);
-                    foreach (Voxel_Base neighbour in node.GetPredecessors())
-                    {
-                        _updateVertex(neighbour);
-                    }
-                }
-            }
+            // while (_mainPriorityQueueMaxHeap.Peek().CompareTo(_calculatePriority(_startVoxel)) < 0 || _startVoxel.RHS != _startVoxel.G)
+            // {
+            //     Priority_Old highestPriority = _mainPriorityQueueMaxHeap.Peek();
+            //     Voxel_Base node = _mainPriorityQueueMaxHeap.Dequeue();
+            //     if (node == null) break;
+            //
+            //     if (highestPriority.CompareTo(_calculatePriority(node)) < 0)
+            //     {
+            //         _mainPriorityQueueMaxHeap.Enqueue(node, _calculatePriority(node));
+            //     }
+            //     else if (node.G > node.RHS)
+            //     {
+            //         node.G = node.RHS;
+            //         foreach (Voxel_Base neighbour in node.GetPredecessors())
+            //         {
+            //             _updateVertex(neighbour);
+            //         }
+            //     }
+            //     else
+            //     {
+            //         node.G = Double.PositiveInfinity;
+            //         _updateVertex(node);
+            //         foreach (Voxel_Base neighbour in node.GetPredecessors())
+            //         {
+            //             _updateVertex(neighbour);
+            //         }
+            //     }
+            // }
         }
-        #endregion
 
-        public List<Vector3> RetrievePath(Voxel_Base startVoxel, Voxel_Base targetVoxel)
+        public List<Vector3> RetrievePath(Voxel_Base_Deprecated startVoxel, Voxel_Base_Deprecated targetVoxel)
         {
             List<Vector3> path = new List<Vector3>();
-            Voxel_Base currentVoxel = targetVoxel;
+            Voxel_Base_Deprecated currentVoxel = targetVoxel;
 
             int iterationCount = 0;
 
@@ -358,7 +356,7 @@ namespace Pathfinding
             return path;
         }
 
-        public static void FindAllPredecessors(Voxel_Base node, int infiniteEnd, int infinityStart = 0)
+        public static void FindAllPredecessors(Voxel_Base_Deprecated node, int infiniteEnd, int infinityStart = 0)
         {
             infinityStart++;
             if (infinityStart > infiniteEnd) return;
@@ -369,19 +367,19 @@ namespace Pathfinding
         }
     }
 
-    public class VoxelGrid
+    public class VoxelGrid_Deprecated
     {
         public static bool Initialised { get; private set; }
-        public static Voxel_Base[,,] Voxels;
+        public static Voxel_Base_Deprecated[,,] Voxels;
         public static int Scale { get; private set; }
         //static Vector3 _offset;
         public static bool VoxelsTestShown { get; private set; } = false;
-        static List<Voxel_Base> _testShowPathfinding = new();
+        static List<Voxel_Base_Deprecated> _testShowPathfinding = new();
         static List<GameObject> _testShowVoxels = new();
         static List<GameObject> _testShowSubVoxels = new();
         static Vector3 _defaultOffset = new Vector3(0.5f, 0, 0.5f);
 
-        public static List<Voxel_Base> VoxelsTest = new();
+        public static List<Voxel_Base_Deprecated> VoxelsTest = new();
         public static List<Vector3> NavigationList = new();
 
         public static void InitialiseVoxelGridTest(float width = 100, float height = 4, float depth = 100)
@@ -397,7 +395,7 @@ namespace Pathfinding
                 for (int i = 0; i < obstacles.Count; i++)
                 {
                     Collider collider = obstacles[i];
-                    Voxel_Base newVoxel = new Voxel_Base();
+                    Voxel_Base_Deprecated newVoxel = new Voxel_Base_Deprecated();
 
                     newVoxel.SetVoxelProperties(
                         worldPosition: collider.transform.position,
@@ -425,21 +423,21 @@ namespace Pathfinding
             Material blue = Resources.Load<Material>("Materials/Material_Blue");
             Material white = Resources.Load<Material>("Materials/Material_White");
 
-            foreach (Voxel_Base voxel in VoxelsTest)
+            foreach (Voxel_Base_Deprecated voxel in VoxelsTest)
             {
                 if (voxel == null) continue;
 
-                if (voxel.VoxelType == VoxelType.Open && showOpen)
+                if (voxel.VoxelTypeDeprecated == VoxelType_Deprecated.Open && showOpen)
                 {
                     GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("OpenTest").transform, mesh, white);
                     _testShowVoxels.Add(voxelGO);
                 }
-                else if (voxel.VoxelType == VoxelType.Obstacle && showObstacles)
+                else if (voxel.VoxelTypeDeprecated == VoxelType_Deprecated.Obstacle && showObstacles)
                 {
                     GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("ObstacleTest").transform, mesh, green);
                     _testShowVoxels.Add(voxelGO);
                 }
-                else if (voxel.VoxelType == VoxelType.Ground && showGround)
+                else if (voxel.VoxelTypeDeprecated == VoxelType_Deprecated.Ground && showGround)
                 {
                     GameObject voxelGO = voxel.TestShowVoxel(GameObject.Find("GroundTest").transform, mesh, red);
                     _testShowSubVoxels.Add(voxelGO);
@@ -449,27 +447,27 @@ namespace Pathfinding
             VoxelsTestShown = true;
         }
 
-        static VoxelType _getVoxelType(GameObject voxelGO)
+        static VoxelType_Deprecated _getVoxelType(GameObject voxelGO)
         {
             if (voxelGO.name.Contains("Water"))
             {
-                return VoxelType.Water;
+                return VoxelType_Deprecated.Water;
             }
             if (voxelGO.name.Contains("Air"))
             {
-                return VoxelType.Air;
+                return VoxelType_Deprecated.Air;
             }
             if (voxelGO.name.Contains("Ground"))
             {
-                return VoxelType.Ground;
+                return VoxelType_Deprecated.Ground;
             }
             if (voxelGO.name.Contains("Obstacle"))
             {
-                return VoxelType.Obstacle;
+                return VoxelType_Deprecated.Obstacle;
             }
             else
             {
-                return VoxelType.Open;
+                return VoxelType_Deprecated.Open;
             }
         }
 
@@ -539,7 +537,7 @@ namespace Pathfinding
             //Initialised = true;
         }
 
-        public static Voxel_Base AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle = false)
+        public static Voxel_Base_Deprecated AddSubvoxelToVoxelGrid(Vector3 position, bool isObstacle = false)
         {
             Collider collider = Physics.OverlapSphere(position, 0.1f).FirstOrDefault(); // hitCollider => hitCollider.gameObject.layer == "Wall");
 
@@ -565,7 +563,7 @@ namespace Pathfinding
                     for (int z = (int)minBounds.z; z < maxBounds.z; z += Scale)
                     {
                         Vector3Int positionToRemove = Vector3Int.zero; //= new Vector3Int(WorldToGridPosition(x, y, z));
-                        Voxel_Base voxelToRemove = Voxels[positionToRemove.x, positionToRemove.y, positionToRemove.z];
+                        Voxel_Base_Deprecated voxelToRemove = Voxels[positionToRemove.x, positionToRemove.y, positionToRemove.z];
 
                         Debug.Log($"Trying to remove Voxel: {voxelToRemove} WorldPos: {position} GridPos: {positionToRemove}");
 
@@ -595,7 +593,7 @@ namespace Pathfinding
             Vector3 subVoxelCenter = position + (minExtents + maxExtents) / 2;
 
             Vector3Int gridPosition = WorldToGridPosition(subVoxelCenter);
-            Voxel_Base existingVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
+            Voxel_Base_Deprecated existingVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z];
 
             if (existingVoxel != null && existingVoxel.Size == subVoxelSize)
             {
@@ -603,7 +601,7 @@ namespace Pathfinding
                 return null;
             }
 
-            Voxel_Base newVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base();
+            Voxel_Base_Deprecated newVoxel = Voxels[gridPosition.x, gridPosition.y, gridPosition.z] = new Voxel_Base_Deprecated();
 
             newVoxel.SetVoxelProperties(gridPosition: gridPosition, worldPosition: subVoxelCenter, size: subVoxelSize, g: double.PositiveInfinity, rhs: double.PositiveInfinity, isObstacle: isObstacle);
 
@@ -618,14 +616,14 @@ namespace Pathfinding
         {
             if (!position.HasValue) return;
 
-            Voxel_Base voxel = GetVoxelAtPosition(position.Value);
+            Voxel_Base_Deprecated voxel = GetVoxelAtPosition(position.Value);
 
             if (voxel != null)
             {
                 voxel.UpdateMovementCost(1);
                 _testShowPathfinding.Remove(voxel);
-                VoxelGrid.Voxels[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] = null;
-                if (VoxelGrid.Voxels?[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] == null) Debug.Log($"Voxel removed at {position}");
+                VoxelGrid_Deprecated.Voxels[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] = null;
+                if (VoxelGrid_Deprecated.Voxels?[voxel.GridPosition.x, voxel.GridPosition.y, voxel.GridPosition.z] == null) Debug.Log($"Voxel removed at {position}");
                 return;
             }
 
@@ -635,7 +633,7 @@ namespace Pathfinding
             return;
         }
 
-        public static Voxel_Base GetVoxelAtPosition(Vector3 position)
+        public static Voxel_Base_Deprecated GetVoxelAtPosition(Vector3 position)
         {
             //Vector3Int gridPosition = WorldToGridPosition(position);
 
@@ -692,7 +690,7 @@ namespace Pathfinding
             Material red = Resources.Load<Material>("Materials/Material_Red");
             Material blue = Resources.Load<Material>("Materials/Material_Blue");
 
-            foreach (Voxel_Base voxel in Voxels)
+            foreach (Voxel_Base_Deprecated voxel in Voxels)
             {
                 if (voxel == null) continue;
 
@@ -722,28 +720,28 @@ namespace Pathfinding
         }
     }
 
-    public enum VoxelType { None, Open, Ground, Obstacle, Air, Water }
+    public enum VoxelType_Deprecated { None, Open, Ground, Obstacle, Air, Water }
 
-    public class Voxel_Base
+    public class Voxel_Base_Deprecated
     {
         public Vector3Int GridPosition { get; private set; }
         public Vector3 WorldPosition { get; private set; }
         public Vector3 Size { get; private set; }
-        public VoxelType VoxelType { get; private set; }
+        public VoxelType_Deprecated VoxelTypeDeprecated { get; private set; }
         public double G;
         public double RHS;
-        public Voxel_Base Predecessor { get; private set; }
+        public Voxel_Base_Deprecated Predecessor { get; private set; }
 
         public double MovementCost;
 
         public bool IsObstacle { get; private set; }
         GameObject _pathfindingVoxelGO;
 
-        public Voxel_Base SetVoxelProperties(
+        public Voxel_Base_Deprecated SetVoxelProperties(
             Vector3Int? gridPosition = null, 
             Vector3? worldPosition = null, 
             Vector3? size = null, 
-            VoxelType? voxelType = null, 
+            VoxelType_Deprecated? voxelType = null, 
             double? g = null, 
             double? rhs = null, 
             bool? isObstacle = null
@@ -752,7 +750,7 @@ namespace Pathfinding
             if (gridPosition != null) GridPosition = gridPosition.Value;
             if (worldPosition != null) WorldPosition = worldPosition.Value;
             if (size != null) Size = size.Value;
-            if (voxelType != null) VoxelType = voxelType.Value;
+            if (voxelType != null) VoxelTypeDeprecated = voxelType.Value;
             if (g != null) G = g.Value;
             if (rhs != null) rhs = rhs.Value;
             if (isObstacle != null) IsObstacle = isObstacle.Value;
@@ -776,28 +774,28 @@ namespace Pathfinding
             _pathfindingVoxelGO.SetActive(false);
         }
 
-        public void SetPredecessor(Voxel_Base predecessor)
+        public void SetPredecessor(Voxel_Base_Deprecated predecessor)
         {
             Predecessor = predecessor;
         }
 
         public void UpdateMovementCostTest()
         {
-            switch(VoxelType)
+            switch(VoxelTypeDeprecated)
             {
-                case VoxelType.Open:
+                case VoxelType_Deprecated.Open:
                     MovementCost = 1;
                     break;
-                case VoxelType.Ground:
+                case VoxelType_Deprecated.Ground:
                     MovementCost = 1.5;
                     break;
-                case VoxelType.Obstacle:
+                case VoxelType_Deprecated.Obstacle:
                     MovementCost = double.PositiveInfinity;
                     break;
-                case VoxelType.Air:
+                case VoxelType_Deprecated.Air:
                     MovementCost = 0.75;
                     break;
-                case VoxelType.Water:
+                case VoxelType_Deprecated.Water:
                     MovementCost = 1.5;
                     break;
                 default:
@@ -813,23 +811,23 @@ namespace Pathfinding
             MovementCost = cost;
         }
 
-        public double GetMovementCostTo(Voxel_Base successor, PuzzleSet puzzleSet)
+        public double GetMovementCostTo(Voxel_Base_Deprecated successor, PuzzleSet puzzleSet)
         {
             return successor.MovementCost;
 
             throw new InvalidOperationException($"{puzzleSet} not valid.");
         }
 
-        public bool Equals(Voxel_Base that)
+        public bool Equals(Voxel_Base_Deprecated that)
         {
             if (GridPosition == that.GridPosition) return true;
             return false;
         }
 
-        public LinkedList<Voxel_Base> GetSuccessors()
+        public LinkedList<Voxel_Base_Deprecated> GetSuccessors()
         {
-            LinkedList<Voxel_Base> successors = new LinkedList<Voxel_Base>();
-            int scale = (int)VoxelGrid.Scale;
+            LinkedList<Voxel_Base_Deprecated> successors = new LinkedList<Voxel_Base_Deprecated>();
+            int scale = (int)VoxelGrid_Deprecated.Scale;
 
             TryAddDirectionalSuccessors(1, 0, 0);
             TryAddDirectionalSuccessors(-1, 0, 0);
@@ -854,11 +852,11 @@ namespace Pathfinding
 
             (bool subVoxelExists, bool subVoxelIsObstacle) TryAddSuccessor(int x, int y, int z)
             {
-                if (x >= 0 && x < VoxelGrid.Voxels.GetLength(0) &&
-                    y >= 0 && y < VoxelGrid.Voxels.GetLength(1) &&
-                    z >= 0 && z < VoxelGrid.Voxels.GetLength(2))
+                if (x >= 0 && x < VoxelGrid_Deprecated.Voxels.GetLength(0) &&
+                    y >= 0 && y < VoxelGrid_Deprecated.Voxels.GetLength(1) &&
+                    z >= 0 && z < VoxelGrid_Deprecated.Voxels.GetLength(2))
                 {
-                    Voxel_Base voxel = VoxelGrid.Voxels[x, y, z];
+                    Voxel_Base_Deprecated voxel = VoxelGrid_Deprecated.Voxels[x, y, z];
 
                     if (voxel == null) return (false, false);
 
@@ -875,10 +873,10 @@ namespace Pathfinding
             return successors;
         }
 
-        public LinkedList<Voxel_Base> GetPredecessors()
+        public LinkedList<Voxel_Base_Deprecated> GetPredecessors()
         {
-            LinkedList<Voxel_Base> predecessors = new();
-            int scale = (int)VoxelGrid.Scale;
+            LinkedList<Voxel_Base_Deprecated> predecessors = new();
+            int scale = (int)VoxelGrid_Deprecated.Scale;
 
             if (!TryAddPredecessor(GridPosition.x + 1, GridPosition.y, GridPosition.z))
                 TryAddPredecessor(GridPosition.x + scale, GridPosition.y, GridPosition.z);
@@ -900,11 +898,11 @@ namespace Pathfinding
 
             bool TryAddPredecessor(int x, int y, int z)
             {
-                if (x >= 0 && x < VoxelGrid.Voxels.GetLength(0) &&
-                    y >= 0 && y < VoxelGrid.Voxels.GetLength(1) &&
-                    z >= 0 && z < VoxelGrid.Voxels.GetLength(2))
+                if (x >= 0 && x < VoxelGrid_Deprecated.Voxels.GetLength(0) &&
+                    y >= 0 && y < VoxelGrid_Deprecated.Voxels.GetLength(1) &&
+                    z >= 0 && z < VoxelGrid_Deprecated.Voxels.GetLength(2))
                 {
-                    Voxel_Base voxel = VoxelGrid.Voxels[x, y, z];
+                    Voxel_Base_Deprecated voxel = VoxelGrid_Deprecated.Voxels[x, y, z];
 
                     if (voxel != null && !voxel.IsObstacle)
                     {
@@ -920,17 +918,17 @@ namespace Pathfinding
         }
     }
 
-    public class Priority_Old
+    public class Priority_Old_Deprecated
     {
         public double PrimaryPriority;
         public double SecondaryPriority;
 
-        public Priority_Old(double primaryPriority, double secondaryPriority)
+        public Priority_Old_Deprecated(double primaryPriority, double secondaryPriority)
         {
             PrimaryPriority = primaryPriority;
             SecondaryPriority = secondaryPriority;
         }
-        public int CompareTo(Priority_Old that)
+        public int CompareTo(Priority_Old_Deprecated that)
         {
             if (PrimaryPriority < that.PrimaryPriority) return -1;
             else if (PrimaryPriority > that.PrimaryPriority) return 1;
@@ -940,25 +938,25 @@ namespace Pathfinding
         }
     }
 
-    public class Queue_Voxel
+    public class Queue_Voxel_Deprecated
     {
-        public Voxel_Base Voxel;
-        public Priority_Old Priority;
+        public Voxel_Base_Deprecated Voxel;
+        public Priority_Old_Deprecated Priority;
 
-        public Queue_Voxel(Voxel_Base voxel, Priority_Old priority)
+        public Queue_Voxel_Deprecated(Voxel_Base_Deprecated voxel, Priority_Old_Deprecated priority)
         {
             Voxel = voxel;
             Priority = priority;
         }
     }
     
-    public enum MoverType { None, Ground, Fly, Dig, Swim }
+    public enum MoverType_Deprecated { None, Ground, Fly, Dig, Swim }
 
-    public interface PathfinderMover_3D
+    public interface PathfinderMover_3D_Deprecated
     {
-        List<MoverType> MoverTypes { get; set; }
+        List<MoverType_Deprecated> MoverTypes { get; set; }
         bool CanGetNewPath { get; set; }
-        void MoveTo(Voxel_Base target);
+        void MoveTo(Voxel_Base_Deprecated target);
         void StartPathfindingCoroutine(IEnumerator coroutine);
         void StopPathfindingCoroutine();
         List<Vector3> GetObstaclesInVision();

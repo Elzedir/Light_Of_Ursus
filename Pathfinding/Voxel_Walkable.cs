@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Pathfinding.FlowPath
+namespace Pathfinding
 {
     public class Voxel_Path
     {
