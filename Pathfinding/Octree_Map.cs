@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Terrains;
 using UnityEngine;
 
 namespace Pathfinding
@@ -22,12 +23,12 @@ namespace Pathfinding
 
             s_rootMapVoxel = new Voxel_Base(Vector3.zero, (int)worldSize, DefaultMoverTypeCosts);
 
-            SetTerrainWalkability();
+            _setUpdateVoxelCosts();
 
             return s_rootMapVoxel;
         }
         
-        a
+        
             //* Root voxel is subdividing adn then remerging beceause there are no obstacles. Try and get the terrain
             //* height from the terrain componnent and set the voxel walkability based on that.
 
@@ -51,37 +52,43 @@ namespace Pathfinding
             
             return key;
         }
-        
-        public static void SetTerrainWalkability()
+
+        static void _setUpdateVoxelCosts()
         {
             var queue = new Queue<Voxel_Base>();
             queue.Enqueue(S_RootMapVoxel);
 
-            var iteration = 0;
-            
-            while (queue.Count > 0 && iteration < 100)
+            while (queue.Count > 0)
             {
-                iteration++;
-                
                 var voxel = queue.Dequeue();
-        
                 var position = voxel.Position;
-                var size = voxel.Size;
-        
-                // float terrainHeight = GetTerrainHeight(position);
-                // bool isWalkable = IsWalkableBasedOnTerrain(terrainHeight);
-                //
-                // if (isWalkable) continue;
-                
+                var terrainHeight = TerrainManager.GetTerrainHeight(position);
+                var textureIndex = TerrainManager.GetTextureIndexAtPosition(position);
+
+                var movementCost = GetMovementCost(textureIndex);
+
+                voxel.MoverTypeCosts[MoverType.Land] = movementCost;
+                voxel.MoverTypeCosts[MoverType.Air] = 1;
+
                 if (!voxel.Subdivide()) continue;
-            
+
                 foreach (var child in voxel.Children)
-                {
                     queue.Enqueue(child);
-                }
             }
         }
 
+        static float GetMovementCost(int textureIndex)
+        {
+            switch (textureIndex)
+            {
+                case 0: return 1f;  // Grass
+                case 1: return 1.5f; // Sand
+                case 2: return 2f;  // Mud
+                case 3: return float.PositiveInfinity; // Lava (unwalkable)
+                default: return 1f;
+            }
+        }
+        
         //* Call in a foreach on first terrain generation to allocate all voxel movement costs.
         //* Then, also call whenever the terrain changes.
         static void _setIsWalkable(Voxel_Base voxel_Base, Vector3 position, int size, MoverType moverType, bool walkable, float cost = 1f)

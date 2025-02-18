@@ -21,25 +21,24 @@ namespace Pathfinding
             Position = position;
             Size = size;
             MoverTypeCosts = moverTypeCosts;
-            Children = null;
         }
 
         public bool Subdivide()
         {
             if (Size <= MinimumVoxelSize || Children != null) return false;
 
-            var newSize = Size / 2;
+            var halfSize = Size / 2;
             Children = new Voxel_Base[8];
 
             for (var i = 0; i < 8; i++)
             {
-                var newPos = Position + newSize * new Vector3(
+                var offset = Position + halfSize * new Vector3(
                     (i & 1) == 0 ? -0.5f : 0.5f,
                     (i & 2) == 0 ? -0.5f : 0.5f,
                     (i & 4) == 0 ? -0.5f : 0.5f 
                 );
                 
-                Children[i] = new Voxel_Base(newPos, newSize, MoverTypeCosts);
+                Children[i] = new Voxel_Base(offset, halfSize, MoverTypeCosts);
             }
             
             Debug.Log($"Subdivided {Position} {Size} into {Children[0].Position} {Children[0].Size}");
