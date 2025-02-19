@@ -101,6 +101,8 @@ namespace Pathfinding
             var hash = _fnv1aHashComponent(position.x);
             hash = _fnv1aHashComponent(position.y) ^ hash;
             hash = _fnv1aHashComponent(position.z) ^ hash;
+            
+            Debug.Log($"Hash: {hash}");
 
             return hash;
         }

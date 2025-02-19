@@ -58,11 +58,11 @@ namespace Pathfinding
             var queue = new Queue<Voxel_Base>();
             queue.Enqueue(S_RootMapVoxel);
 
-            while (queue.Count > 0)
+            var iteration = 0;
+            while (queue.Count > 0 && iteration++ < 1000)
             {
                 var voxel = queue.Dequeue();
                 var position = voxel.Position;
-                var terrainHeight = TerrainManager.GetTerrainHeight(position);
                 var textureIndex = TerrainManager.GetTextureIndexAtPosition(position);
 
                 var movementCost = GetMovementCost(textureIndex);
@@ -75,18 +75,20 @@ namespace Pathfinding
                 foreach (var child in voxel.Children)
                     queue.Enqueue(child);
             }
+
+            Debug.Log(iteration);
         }
 
         static float GetMovementCost(int textureIndex)
         {
-            switch (textureIndex)
+            return textureIndex switch
             {
-                case 0: return 1f;  // Grass
-                case 1: return 1.5f; // Sand
-                case 2: return 2f;  // Mud
-                case 3: return float.PositiveInfinity; // Lava (unwalkable)
-                default: return 1f;
-            }
+                0 => 1f, // Grass
+                1 => 1.5f, // Sand
+                2 => 2f, // Mud
+                3 => float.PositiveInfinity, // Lava (unwalkable)
+                _ => 1f
+            };
         }
         
         //* Call in a foreach on first terrain generation to allocate all voxel movement costs.

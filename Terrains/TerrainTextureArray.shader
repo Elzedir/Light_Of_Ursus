@@ -3,15 +3,10 @@ Shader "Custom/TerrainTextureArray"
     Properties
     {
         _TextureArray("Texture Array", 2DArray) = "" { }
-        _SplatMap("Splat Map", 2D) = "" { }
-        _TerrainCompatible("Terrain Compatible", Float) = 1.0
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
-
-        a
-        //* ChatGPt hallucinated up this texture. Somehow, turn it into a real texture.
         
         Pass
         {
@@ -20,11 +15,8 @@ Shader "Custom/TerrainTextureArray"
             #pragma fragment frag
 
             #include "UnityCG.cginc"
-
-            // Texture array and splatmap
+            
             UNITY_DECLARE_TEX2DARRAY(_TextureArray);
-            uniform sampler2D _SplatMap;
-            uniform float _TerrainCompatible;
 
             struct appdata
             {
@@ -33,52 +25,56 @@ Shader "Custom/TerrainTextureArray"
                 float2 uv : TEXCOORD0;
             };
 
-            struct v2f
+            struct v2_f
             {
                 float4 pos : POSITION;
                 float3 normal : TEXCOORD0;
-                float2 uv : TEXCOORD1;
+                float3 world_pos : TEXCOORD1;
+                float2 uv : TEXCOORD2;
             };
 
-            v2f vert(appdata v)
+            v2_f vert(appdata v)
             {
-                v2f o;
+                v2_f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
-                o.normal = v.normal;
+                o.world_pos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                o.normal = mul((float3x3)unity_ObjectToWorld, v.normal);
                 o.uv = v.uv;
                 return o;
             }
 
-            half4 frag(v2f i) : SV_Target
+            half4 frag(v2_f i) : SV_Target
             {
-                // Sample the splat map at the given UV coordinates
-                float3 splat_weights = tex2D(_SplatMap, i.uv).rgb;
-                
                 half4 tex_colour = half4(0, 0, 0, 1);
                 
-                //* Starting with 4 layers, but can be adjusted later.
-                for (int layer = 0; layer < 4; layer++)
+                float sand_Level = 2.0;
+                float grass_Level = 3.0;
+                float rock_Level = 4.0;
+                float snow_Level = 5.0;
+                
+                float slope = dot(i.normal, float3(0.0, 1.0, 0.0));
+                
+                int dominant_Layer = 0;
+                if (i.world_pos.y >= snow_Level) dominant_Layer = 3;
+                else if (i.world_pos.y >= rock_Level) dominant_Layer = 2;
+                else if (i.world_pos.y >= grass_Level) dominant_Layer = 1;
+                else dominant_Layer = 0;
+                
+                tex_colour.rgb = UNITY_SAMPLE_TEX2DARRAY(_TextureArray, float3(i.uv, dominant_Layer)).rgb;
+                
+                if (slope < 0.2)
                 {
-                    if (splat_weights[layer] == 0) break;
-                    
-                    tex_colour.rgb += UNITY_SAMPLE_TEX2DARRAY(_TextureArray, float3(i.uv, layer)).rgb * splat_weights[layer];
+                    tex_colour.rgb += UNITY_SAMPLE_TEX2DARRAY(_TextureArray, float3(i.uv, 1)).rgb * 0.2;
                 }
-
-                // Add variation to the texture by adjusting color based on terrain compatibility
-                if (_TerrainCompatible > 0.5)
+                else if (slope >= 0.2 && slope < 0.5)
                 {
-                    tex_colour.rgb += float3(0.1, 0.2, 0.3); // Adding color variation for terrain compatibility
+                    tex_colour.rgb += UNITY_SAMPLE_TEX2DARRAY(_TextureArray, float3(i.uv, 2)).rgb * 0.3;
                 }
                 else
                 {
-                    tex_colour.rgb *= 0.8; // Darken the texture for non-compatible terrain
+                    tex_colour.rgb += UNITY_SAMPLE_TEX2DARRAY(_TextureArray, float3(i.uv, 3)).rgb * 0.4;
                 }
-
-                if (splat_weights[0] > 0.5) tex_colour.rgb += float3(0.2, 0.6, 0.3); // Grass
-                if (splat_weights[1] > 0.5) tex_colour.rgb += float3(0.9, 0.8, 0.4); // Sand
-                if (splat_weights[2] > 0.5) tex_colour.rgb += float3(0.5, 0.5, 0.5); // Rock
-                if (splat_weights[3] > 0.5) tex_colour.rgb += float3(1.0, 1.0, 1.0); // Snow
-
+                
                 return tex_colour;
             }
 
