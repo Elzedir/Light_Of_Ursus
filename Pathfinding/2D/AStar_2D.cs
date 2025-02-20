@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace Pathfinding.Simple
 {
-    public class AStar
+    public class AStar_2D
     {
         readonly long[,] _grid;
         readonly long _gridWidth, _gridHeight;
         readonly Dictionary<ulong, Node_Base> _nodes = new();
         
-        public AStar(long[,] grid)
+        public AStar_2D(long[,] grid)
         {
             _grid = grid;
             _gridWidth = grid.GetLength(0);

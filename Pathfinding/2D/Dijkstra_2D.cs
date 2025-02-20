@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace Pathfinding.Simple
 {
-    public class Dijkstra
+    public class Dijkstra_2D
     {
         readonly long[,] _grid;
         readonly long _gridWidth, _gridHeight;
-        readonly Dictionary<ulong, Node_Base> _nodes = new();
+        readonly Dictionary<ulong, Node_2D> _nodes = new();
         
-        public Dijkstra(long[,] grid)
+        public Dijkstra_2D(long[,] grid)
         {
             _grid = grid;
             _gridWidth = grid.GetLength(0);
@@ -19,14 +19,14 @@ namespace Pathfinding.Simple
         
         public List<Vector2Int> RunDijkstra(Vector2Int start, Vector2Int end)
         {
-            var openList = new Priority_Queue_MinHeap<Node_Base>();
+            var openList = new Priority_Queue_MinHeap<Node_2D>();
             var closedList = new HashSet<ulong>();
             
             var startNode = _getOrCreateNode(start);
             var endNode = _getOrCreateNode(end);
 
             startNode.GCost = 0;
-            openList.Update(new Priority_Element<Node_Base>(startNode.NodeID, startNode.GCost, startNode));
+            openList.Update(new Priority_Element<Node_2D>(startNode.NodeID, startNode.GCost, startNode));
             
             while (openList.Count() > 0)
             {
@@ -46,32 +46,32 @@ namespace Pathfinding.Simple
                     
                     neighbor.GCost = newCost;
                     neighbor.Parent = currentNode;
-                    openList.Update(new Priority_Element<Node_Base>(neighbor.NodeID, neighbor.GCost, neighbor));
+                    openList.Update(new Priority_Element<Node_2D>(neighbor.NodeID, neighbor.GCost, neighbor));
                 }
             }
 
             return null;
         }
         
-        Node_Base _getOrCreateNode(Vector2Int position)
+        Node_2D _getOrCreateNode(Vector2Int position)
         {
-            var nodeId = Node_Base.GetNodeIDFromPosition(position);
+            var nodeId = Node_2D.GetNodeIDFromPosition(position);
 
             if (_nodes.TryGetValue(nodeId, out var node)) return node;
             
-            node = new Node_Base(position);
+            node = new Node_2D(position);
             _nodes[nodeId] = node;
             return node;
         }
         
-        List<Node_Base> _getNeighbors(Node_Base nodeBase)
+        List<Node_2D> _getNeighbors(Node_2D node2D)
         {
-            List<Node_Base> neighbors = new();
+            List<Node_2D> neighbors = new();
             Vector2Int[] directions = { new(0, 1), new(0, -1), new(1, 0), new(-1, 0) };
 
             foreach (var direction in directions)
             {
-                var neighborPosition = nodeBase.Position + direction;
+                var neighborPosition = node2D.Position + direction;
                 
                 if (_isWithinGrid(neighborPosition))
                     neighbors.Add(_getOrCreateNode(neighborPosition));
@@ -85,7 +85,7 @@ namespace Pathfinding.Simple
         
         bool _isUnwalkable(Vector2Int position) => _grid[position.x, position.y] != 0;
         
-        static float _getDistance(Node_Base a, Node_Base b)
+        static float _getDistance(Node_2D a, Node_2D b)
         {
             var x_Distance = Mathf.Abs(a.Position.x - b.Position.x);
             var y_Distance = Mathf.Abs(a.Position.y - b.Position.y);
@@ -95,12 +95,12 @@ namespace Pathfinding.Simple
         
         static float _getManhattanDistance(int a, int b) => a + b;
 
-        static List<Vector2Int> _getShortestPath(Node_Base startNodeBase, Node_Base endNodeBase)
+        static List<Vector2Int> _getShortestPath(Node_2D startNode2D, Node_2D endNode2D)
         {
             var path = new List<Vector2Int>();
-            var currentNode = endNodeBase;
+            var currentNode = endNode2D;
 
-            while (currentNode.NodeID != startNodeBase.NodeID)
+            while (currentNode.NodeID != startNode2D.NodeID)
             {
                 path.Add(currentNode.Position);
                 currentNode = currentNode.Parent;
