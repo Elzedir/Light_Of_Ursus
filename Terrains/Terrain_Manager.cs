@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Managers;
 using UnityEngine;
 
 namespace Terrains
@@ -11,80 +10,69 @@ namespace Terrains
         Texture2D[] _terrainTextures;
         Texture2DArray _textureArray;
         
-        static TerrainData _terrainData;
-        static int _alphamapWidth, _alphamapHeight;
-        static float[,,] _alphamaps;
-        
-        public static Terrain S_Terrain => s_terrain ??= 
-            Manager_Game.FindTransformRecursively(GameObject.Find("GameObjects").transform, "Terrain")
-                .GetComponent<Terrain>();
+        static TerrainData s_terrainData;
+        static int s_alphamapWidth, s_alphamapHeight;
+        static float[,,] s_alphamapWeights;
+
+        public static Terrain S_Terrain => s_terrain ??= _initializeTerrain();
         public Texture2D[] TerrainTextures => _terrainTextures ??= _getTerrainTextures();
         Texture2D[] _getTerrainTextures() => Resources.LoadAll<Texture2D>("Textures/Terrain").ToArray();
 
-        static void _initializeTextureArray()
+        static Terrain _initializeTerrain()
         {
-            s_terrain = Terrain.activeTerrain;
-            if (s_terrain == null) throw new Exception("No terrain found.");
+            var terrain = Terrain.activeTerrain;
+            if (terrain is null) throw new Exception("No terrain found.");
 
-            _terrainData = s_terrain.terrainData;
-            _alphamapWidth = _terrainData.alphamapWidth;
-            _alphamapHeight = _terrainData.alphamapHeight;
-            _alphamaps = _terrainData.GetAlphamaps(0, 0, _alphamapWidth, _alphamapHeight);
+            s_terrainData = terrain.terrainData;
+            s_alphamapWidth = s_terrainData.alphamapWidth;
+            s_alphamapHeight = s_terrainData.alphamapHeight;
+            s_alphamapWeights = s_terrainData.GetAlphamaps(0, 0, s_alphamapWidth, s_alphamapHeight);
             
-            // var textureSize = TerrainTextures[0].width;
-            // _textureArray = new Texture2DArray(textureSize, textureSize, TerrainTextures.Length, TextureFormat.RGBA32, false);
-            //
-            // for (var i = 0; i < TerrainTextures.Length; i++)
-            //     Graphics.CopyTexture(TerrainTextures[i], 0, 0, _textureArray, i, 0);
+            return terrain;
         }
 
-        public static float GetTerrainHeight(Vector3 worldPosition)
-        {
-            return S_Terrain.SampleHeight(worldPosition);
-        }
+        public static float GetTerrainHeight(Vector3 worldPosition) => S_Terrain.SampleHeight(worldPosition);
 
+        //* For now, the assumption is that terrainData will not change, but later, put in a check for this to update
+        //* Height, Width and Weights if terrainData changes.
         public static int GetTextureIndexAtPosition(Vector3 worldPosition)
         {
-            if (s_terrain == null) _initializeTextureArray();
+            var terrainPosition = worldPosition - S_Terrain.transform.position; ;
             
-            var terrainPos = worldPosition - s_terrain.transform.position;
+            var normalisedWidth = terrainPosition.x / s_terrainData.size.x;
+            var normalisedHeight = terrainPosition.z / s_terrainData.size.z;
 
-            var normX = terrainPos.x / _terrainData.size.x;
-            var normZ = terrainPos.z / _terrainData.size.z;
+            if (normalisedWidth < 0 || normalisedWidth > 1 || normalisedHeight < 0 || normalisedHeight > 1) return -1;
+            
+            var textureWidth = 
+                Mathf.Clamp(Mathf.RoundToInt(normalisedWidth * s_alphamapWidth), 0, s_alphamapWidth - 1);
+            var textureHeight = 
+                Mathf.Clamp(Mathf.RoundToInt(normalisedHeight * s_alphamapHeight), 0, s_alphamapHeight - 1);
 
-            var x = Mathf.Clamp(Mathf.RoundToInt(normX * _alphamapWidth), 0, _alphamapWidth - 1);
-            var z = Mathf.Clamp(Mathf.RoundToInt(normZ * _alphamapHeight), 0, _alphamapHeight - 1);
+            var highestWeight = float.NegativeInfinity;
+            var bestIndex = -1;
 
-            var maxWeight = 0f;
-            var bestIndex = 0;
-
-            for (var i = 0; i < _alphamaps.GetLength(2); i++)
+            for (var index = 0; index < s_alphamapWeights.GetLength(2); index++)
             {
-                if (!(_alphamaps[z, x, i] > maxWeight)) continue;
+                var alphamapWeight = s_alphamapWeights[textureHeight, textureWidth, index];
                 
-                maxWeight = _alphamaps[z, x, i];
-                bestIndex = i;
+                if (alphamapWeight < highestWeight) continue;
+                
+                highestWeight = alphamapWeight;
+                bestIndex = index;
             }
 
             return bestIndex;
-            
-            // var terrainSize = S_Terrain.terrainData.size;
-            // var x = Mathf.RoundToInt((worldPosition.x / terrainSize.x) * S_Terrain.terrainData.alphamapWidth);
-            // var y = Mathf.RoundToInt((worldPosition.z / terrainSize.z) * S_Terrain.terrainData.alphamapHeight);
-            //
-            // var splatMap = S_Terrain.terrainData.GetAlphamaps(x, y, 1, 1);
-            // var bestIndex = 0;
-            // float maxWeight = 0;
-            //
-            // for (var i = 0; i < S_Terrain.terrainData.alphamapLayers; i++)
-            // {
-            //     if (!(splatMap[0, 0, i] > maxWeight)) continue;
-            //     
-            //     maxWeight = splatMap[0, 0, i];
-            //     bestIndex = i;
-            // }
-            //
-            // return bestIndex;
         }
+    }
+    
+    public enum TerrainType
+    {
+        Grass,
+        Water,
+        Mud,
+        Sand,
+        Rock,
+        Snow
     }
 }

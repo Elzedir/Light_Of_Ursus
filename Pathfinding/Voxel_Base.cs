@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Terrains;
 using UnityEngine;
 
 namespace Pathfinding
@@ -14,13 +15,15 @@ namespace Pathfinding
 
         public Voxel_Base[] Children;
         
-        public const float MinimumVoxelSize = 0.01f;
+        //* Eventually allow down to 0.01f
+        public const float MinimumVoxelSize = 5f;
+        public int DominantTerrainType;
 
         public Voxel_Base(Vector3 position, int size, Dictionary<MoverType, float> moverTypeCosts)
         {
             Position = position;
             Size = size;
-            MoverTypeCosts = moverTypeCosts;
+            MoverTypeCosts = moverTypeCosts ??= _getDefaultMoverTypeCosts();
         }
 
         public bool Subdivide()
@@ -38,12 +41,60 @@ namespace Pathfinding
                     (i & 4) == 0 ? -0.5f : 0.5f 
                 );
                 
-                Children[i] = new Voxel_Base(offset, halfSize, MoverTypeCosts);
+                var moverTypeCosts = _getMovementCostsFromTerrain(offset);
+                
+                Children[i] = new Voxel_Base(offset, halfSize, moverTypeCosts);
             }
             
-            Debug.Log($"Subdivided {Position} {Size} into {Children[0].Position} {Children[0].Size}");
-            
             return true;
+        }
+
+        Dictionary<MoverType, float> _getMovementCostsFromTerrain(Vector3 position)
+        {
+            var moverTypeCosts = new Dictionary<MoverType, float>();
+            
+            var terrainIndex = TerrainManager.GetTextureIndexAtPosition(position);
+            DominantTerrainType = terrainIndex;
+            
+            switch (terrainIndex)
+            {
+                case (int)TerrainType.Grass: // Grass
+                    moverTypeCosts[MoverType.Land] = 1f;
+                    moverTypeCosts[MoverType.Air] = 1.5f;
+                    moverTypeCosts[MoverType.Water] = float.PositiveInfinity;
+                    break;
+                case (int)TerrainType.Water: // Water
+                    moverTypeCosts[MoverType.Land] = float.PositiveInfinity;
+                    moverTypeCosts[MoverType.Air] = 1.5f; 
+                    moverTypeCosts[MoverType.Water] = 1f;
+                    break;
+                case (int)TerrainType.Mud: // Mud
+                    moverTypeCosts[MoverType.Land] = 3f;
+                    moverTypeCosts[MoverType.Air] = 1.5f;
+                    moverTypeCosts[MoverType.Water] = 2f;
+                    break;
+                default:
+                    moverTypeCosts[MoverType.Land] = 1f;
+                    moverTypeCosts[MoverType.Air] = 1.5f;
+                    moverTypeCosts[MoverType.Water] = 1f;
+                    break;
+            }
+
+            return moverTypeCosts;
+        }
+
+        static Dictionary<MoverType, float> _getDefaultMoverTypeCosts()
+        {
+            
+            return new Dictionary<MoverType, float>
+            {
+                { MoverType.Land, 1 },
+                { MoverType.Air, 1 },
+                { MoverType.Water, 1 },
+                { MoverType.Ice, 1 },
+                { MoverType.Lava, -1 },
+                { MoverType.Dig, 1 },
+            };
         }
 
         public bool IsWalkable(List<MoverType> movers)
@@ -87,9 +138,11 @@ namespace Pathfinding
             }
 
             if (!allSame) return;
-
+            
             MoverTypeCosts = new Dictionary<MoverType, float>(firstChildCosts);
             Children = null;
+            
+            Debug.Log("Merged");
         }
         
         public static ulong GetVoxelIDFromPosition(Vector3 position)
@@ -101,8 +154,6 @@ namespace Pathfinding
             var hash = _fnv1aHashComponent(position.x);
             hash = _fnv1aHashComponent(position.y) ^ hash;
             hash = _fnv1aHashComponent(position.z) ^ hash;
-            
-            Debug.Log($"Hash: {hash}");
 
             return hash;
         }

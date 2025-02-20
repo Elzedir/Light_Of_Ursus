@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Pathfinding.Simple
+namespace Pathfinding._2D
 {
     public class Node_2D
     {

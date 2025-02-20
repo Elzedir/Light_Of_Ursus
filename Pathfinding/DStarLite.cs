@@ -13,7 +13,7 @@ namespace Pathfinding
     {
         Dictionary<ulong, GameObject> _visibleVoxels;
         
-        readonly Dictionary<ulong, Voxel_Decision> _nodes;
+        readonly Dictionary<ulong, Voxel_Decision> _voxels;
         readonly Priority_Queue_MaxHeap<Voxel_Decision> _openList;
         readonly Octree_Path _path;
 
@@ -24,7 +24,7 @@ namespace Pathfinding
 
         public DStarLite(List<MoverType> moverTypes, Vector3 startPosition, Vector3 endPosition)
         {
-            _nodes = new Dictionary<ulong, Voxel_Decision>();
+            _voxels = new Dictionary<ulong, Voxel_Decision>();
             _openList = new Priority_Queue_MaxHeap<Voxel_Decision>();
             _path = Octree_Map.GetOrCreatePath(moverTypes);
 
@@ -38,42 +38,42 @@ namespace Pathfinding
         {
             foreach (var voxel in _path.AllWalkableVoxels.Values)
             {
-                _nodes[voxel.ID] = new Voxel_Decision(
+                _voxels[voxel.ID] = new Voxel_Decision(
                         voxelWalkable: voxel, 
                         gCost: float.PositiveInfinity, 
                         rhsCost: float.PositiveInfinity, 
                         heuristic: _getHeuristic(voxel, _end));
             }
 
-            var endNode = _nodes[_end.ID];
-            endNode.RHSCost = 0;
-            UpdateVertex(endNode);
+            var endVoxel = _voxels[_end.ID];
+            endVoxel.RHSCost = 0;
+            UpdateVertex(endVoxel);
         }
 
         static float _getHeuristic(Voxel_Walkable a, Voxel_Walkable b) => Vector3.Distance(a.Position, b.Position);
         
-        void UpdateVertex(Voxel_Decision node)
+        void UpdateVertex(Voxel_Decision voxel)
         {
-            if (node.ID != _end.ID)
+            if (voxel.ID != _end.ID)
             {
-                node.RHSCost = node.Voxel_Walkable.Neighbors
-                    .Where(n => _nodes.ContainsKey(n.ID))
-                    .Min(n => _nodes[n.ID].GCost + Vector3.Distance(node.Voxel_Walkable.Position, n.Position));
+                voxel.RHSCost = voxel.Voxel_Walkable.Neighbors
+                    .Where(n => _voxels.ContainsKey(n.ID))
+                    .Min(n => _voxels[n.ID].GCost + Vector3.Distance(voxel.Voxel_Walkable.Position, n.Position));
             }
 
-            _openList.Remove(node.ID);
+            _openList.Remove(voxel.ID);
             
-            if (node.IsApproximatelyEqualCost) return;
+            if (voxel.IsApproximatelyEqualCost) return;
 
             _openList.Update(new Priority_Element<Voxel_Decision>(
-                node.ID, Math.Min(node.GCost, node.RHSCost) + _getHeuristic(_start, node.Voxel_Walkable), node));
+                voxel.ID, Math.Min(voxel.GCost, voxel.RHSCost) + _getHeuristic(_start, voxel.Voxel_Walkable), voxel));
         }
         
-        public void PathChanged(Vector3 changedNodePosition)
+        public void PathChanged(Vector3 changedVoxelPosition)
         {
-            if (!_nodes.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(changedNodePosition), out var changedNode)) return;
+            if (!_voxels.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(changedVoxelPosition), out var changedVoxel)) return;
             
-            UpdateVertex(changedNode);
+            UpdateVertex(changedVoxel);
 
             _shortestPath = _runDStarLite();
         }
@@ -82,20 +82,20 @@ namespace Pathfinding
         {
             _visibleVoxels ??= _initialiseVisibleVoxels();
             
-            if (!_nodes.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(start), out var startNode))
+            if (!_voxels.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(start), out var startVoxel))
             {
-                Debug.LogError($"Start node not found at {start}");
+                Debug.LogError($"Start voxel not found at {start}");
                 return;
             }
 
-            if (!_nodes.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(end), out var endNode))
+            if (!_voxels.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(end), out var endVoxel))
             {
-                Debug.LogError($"End node not found at {end}");
+                Debug.LogError($"End voxel not found at {end}");
                 return;
             }
             
-            _start = startNode.Voxel_Walkable;
-            _end = endNode.Voxel_Walkable;
+            _start = startVoxel.Voxel_Walkable;
+            _end = endVoxel.Voxel_Walkable;
             
             _shortestPath = _runDStarLite();
         }
@@ -155,7 +155,7 @@ namespace Pathfinding
         
         List<Vector3> _runDStarLite()
         {
-            if (_start == null || _end == null || _start == _end || _nodes.Count == 0)
+            if (_start == null || _end == null || _start == _end || _voxels.Count == 0)
             {
                 Debug.Log("Hit some problem here");
                 return null;
@@ -163,17 +163,17 @@ namespace Pathfinding
             
             while (_openList.Count() > 0)
             {
-                var currentNode = _openList.Dequeue().PriorityObject;
+                var currentVoxel = _openList.Dequeue().PriorityObject;
                 
-                if (currentNode.GCost <= currentNode.RHSCost) continue;
+                if (currentVoxel.GCost <= currentVoxel.RHSCost) continue;
 
-                currentNode.GCost = currentNode.RHSCost;
+                currentVoxel.GCost = currentVoxel.RHSCost;
 
-                foreach (var neighbor in currentNode.Voxel_Walkable.Neighbors)
+                foreach (var neighbor in currentVoxel.Voxel_Walkable.Neighbors)
                 {
-                    if (!_nodes.TryGetValue(neighbor.ID, out var node)) continue;
+                    if (!_voxels.TryGetValue(neighbor.ID, out var voxel_Decision)) continue;
 
-                    UpdateVertex(node);
+                    UpdateVertex(voxel_Decision);
                 }
             }
 
@@ -189,17 +189,17 @@ namespace Pathfinding
             {
                 path.Add(current.Position);
 
-                if (!current.Neighbors.Any(n => _nodes.ContainsKey(n.ID))) 
+                if (!current.Neighbors.Any(n => _voxels.ContainsKey(n.ID))) 
                     break;
 
                 current = current.Neighbors
-                    .Where(n => _nodes.ContainsKey(n.ID))
-                    .OrderBy(n => _nodes[n.ID].GCost)
+                    .Where(n => _voxels.ContainsKey(n.ID))
+                    .OrderBy(n => _voxels[n.ID].GCost)
                     .FirstOrDefault();
                 
                 if (current == null) break;
 
-                if (Mathf.Approximately(_nodes[current.ID].GCost, float.PositiveInfinity)) break;
+                if (Mathf.Approximately(_voxels[current.ID].GCost, float.PositiveInfinity)) break;
             }
 
             path.Add(_end.Position);

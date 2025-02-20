@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Priorities.Priority_Queues;
 using UnityEngine;
 
-namespace Pathfinding.Simple
+namespace Pathfinding._2D
 {
     public class Dijkstra_2D
     {

@@ -47,7 +47,7 @@ Shader "Custom/TerrainTextureArray"
             {
                 half4 tex_colour = half4(0, 0, 0, 1);
                 
-                float sand_Level = 2.0;
+                float sand_Level = 1.0;
                 float grass_Level = 3.0;
                 float rock_Level = 4.0;
                 float snow_Level = 5.0;
