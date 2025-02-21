@@ -5,7 +5,10 @@ namespace Pathfinding
 {
     public class Voxel_Walkable
     {
-        public ulong ID => _getVoxelIDFromPosition(Position);
+        ulong _id;
+        public ulong ID => _id != 0 
+            ? _id
+            : _id = _getVoxelIDFromPosition(Position);
         
         public Vector3 Position;
         public float Cost;

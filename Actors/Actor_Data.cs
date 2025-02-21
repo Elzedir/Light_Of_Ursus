@@ -286,11 +286,14 @@ namespace Actors
             return relation;
         }
 
-        public List<MoverType> GetMoverTypes()
+        public HashSet<MoverType> GetMoverTypes()
         {
-            var moverTypes = new List<MoverType>();
+            var moverTypes = new HashSet<MoverType>();
 
-            moverTypes.AddRange(Species.GetMoverTypes());
+            foreach (var moverType in Species.GetMoverTypes())
+            {
+                moverTypes.Add(moverType);
+            }
             
                 //* Temporary enable or disable mover types from inventory or states and conditions.
             //InventoryData.GetMoverTypes(moverTypes);

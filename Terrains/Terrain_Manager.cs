@@ -66,10 +66,11 @@ namespace Terrains
         }
     }
     
-    public enum TerrainType
+    public enum TerrainName
     {
         Grass,
         Water,
+        Air,
         Mud,
         Sand,
         Rock,

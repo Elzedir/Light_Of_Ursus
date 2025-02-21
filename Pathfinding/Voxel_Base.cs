@@ -6,7 +6,10 @@ namespace Pathfinding
 {
     public class Voxel_Base
     {
-        public ulong ID => GetVoxelIDFromPosition(Position);
+        ulong _id;
+        public ulong ID => _id != 0
+            ? _id
+            : _id = GetVoxelIDFromPosition(Position);
 
         public Vector3 Position;
         public readonly int Size;
@@ -58,17 +61,17 @@ namespace Pathfinding
             
             switch (terrainIndex)
             {
-                case (int)TerrainType.Grass: // Grass
+                case (int)TerrainName.Grass: // Grass
                     moverTypeCosts[MoverType.Land] = 1f;
                     moverTypeCosts[MoverType.Air] = 1.5f;
                     moverTypeCosts[MoverType.Water] = float.PositiveInfinity;
                     break;
-                case (int)TerrainType.Water: // Water
+                case (int)TerrainName.Water: // Water
                     moverTypeCosts[MoverType.Land] = float.PositiveInfinity;
                     moverTypeCosts[MoverType.Air] = 1.5f; 
                     moverTypeCosts[MoverType.Water] = 1f;
                     break;
-                case (int)TerrainType.Mud: // Mud
+                case (int)TerrainName.Mud: // Mud
                     moverTypeCosts[MoverType.Land] = 3f;
                     moverTypeCosts[MoverType.Air] = 1.5f;
                     moverTypeCosts[MoverType.Water] = 2f;

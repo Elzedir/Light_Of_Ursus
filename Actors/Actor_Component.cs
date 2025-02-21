@@ -120,10 +120,13 @@ namespace Actors
 
         public IEnumerator BasicMove(Vector3 targetPosition, float speed = 4)
         {
-            DStarLite ??= new DStarLite(ActorData.GetMoverTypes(), transform.position, targetPosition);
-            DStarLite.UpdatePath(transform.position, targetPosition);
+            // DStarLite ??= new DStarLite(ActorData.GetMoverTypes(), transform.position, targetPosition);
+            // DStarLite.UpdatePath(transform.position, targetPosition);
+
+            var shortestPath = Pathfinding_Manager.GetPath(transform.position, targetPosition, ActorData.GetMoverTypes()); 
                 
-            foreach(var position in DStarLite.ShortestPath)
+            //foreach(var position in DStarLite.ShortestPath)
+            foreach(var position in shortestPath)
             {
                 yield return StartCoroutine(_move(position, speed));
             }

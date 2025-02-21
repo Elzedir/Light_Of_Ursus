@@ -11,8 +11,6 @@ namespace Pathfinding
     
     public class DStarLite
     {
-        Dictionary<ulong, GameObject> _visibleVoxels;
-        
         readonly Dictionary<ulong, Voxel_Decision> _voxels;
         readonly Priority_Queue_MaxHeap<Voxel_Decision> _openList;
         readonly Octree_Path _path;
@@ -80,8 +78,6 @@ namespace Pathfinding
         
         public void UpdatePath(Vector3 start, Vector3 end)
         {
-            _visibleVoxels ??= _initialiseVisibleVoxels();
-            
             if (!_voxels.TryGetValue(Voxel_Base.GetVoxelIDFromPosition(start), out var startVoxel))
             {
                 Debug.LogError($"Start voxel not found at {start}");
@@ -98,59 +94,6 @@ namespace Pathfinding
             _end = endVoxel.Voxel_Walkable;
             
             _shortestPath = _runDStarLite();
-        }
-        
-        Dictionary<ulong, GameObject> _initialiseVisibleVoxels()
-        {
-            var mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            var green = Resources.Load<Material>("Materials/Material_Green");
-            var red = Resources.Load<Material>("Materials/Material_Red");
-            var blue = Resources.Load<Material>("Materials/Material_Blue");
-            
-            var materials = new List<Material> { green, red };
-            
-            var visibleVoxels = new Dictionary<ulong, GameObject>();
-            
-            Debug.Log(_path.AllWalkableVoxels.Count);
-            
-            // foreach (var voxel in _path.AllWalkableVoxels.Values)
-            // {
-            //     visibleVoxels.Add(voxel.ID, _testShowVoxel(GameObject.Find("VisibleVoxels").transform, voxel.Position, mesh, blue, Vector3.one));
-            // }
-
-            Debug.Log(Octree_Map.S_RootMapVoxel.Children.Length);
-            
-            // foreach (var voxel in Octree_Map.S_RootMapVoxel.Children) // Assuming S_RootMapVoxel is your root voxel
-            // {
-            //     _showVoxelRecursive(GameObject.Find("VisibleVoxels").transform, voxel, mesh, materials, Vector3.one * voxel.Size, 0);
-            // }
-
-            return visibleVoxels;
-        }
-
-        static void _showVoxelRecursive(Transform parentTransform, Voxel_Base voxel, Mesh mesh, List<Material> materials, Vector3 size, int colorIndex)
-        {
-            var material = materials[colorIndex % materials.Count]; 
-            
-            var voxelGO = _testShowVoxel(parentTransform, voxel.Position, mesh, material, size);
-
-            if (voxel.Children == null) return;
-            
-            foreach (var childVoxel in voxel.Children)
-            {
-                _showVoxelRecursive(parentTransform, childVoxel, mesh, materials, Vector3.one * childVoxel.Size, colorIndex + 1);
-            }
-        }
-
-        static GameObject _testShowVoxel(Transform transform, Vector3 position ,Mesh mesh, Material material, Vector3 size)
-        {
-            var voxelGO = new GameObject($"{position}");
-            voxelGO.AddComponent<MeshFilter>().mesh = mesh;
-            voxelGO.AddComponent<MeshRenderer>().material = material;
-            voxelGO.transform.SetParent(transform);
-            voxelGO.transform.localPosition = position;
-            voxelGO.transform.localScale = size;
-            return voxelGO;
         }
         
         List<Vector3> _runDStarLite()
