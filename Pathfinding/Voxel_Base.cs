@@ -56,7 +56,7 @@ namespace Pathfinding
         {
             var moverTypeCosts = new Dictionary<MoverType, float>();
             
-            var terrainIndex = TerrainManager.GetTextureIndexAtPosition(position);
+            var terrainIndex = Terrain_Manager.GetTextureIndexAtPosition(position);
             DominantTerrainType = terrainIndex;
             
             switch (terrainIndex)

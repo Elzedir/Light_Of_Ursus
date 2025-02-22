@@ -143,7 +143,7 @@ namespace Pathfinding
             {
                 for (var z = minPos.z; z <= minPos.z + voxel.Size; z += stepSize)
                 {
-                    var terrainIndex = TerrainManager.GetTextureIndexAtPosition(new Vector3(x, 0, z));
+                    var terrainIndex = Terrain_Manager.GetTextureIndexAtPosition(new Vector3(x, 0, z));
                     if (terrainIndex != -1) terrainTypes.Add(terrainIndex);
 
                     if (terrainTypes.Count > 1) return true;

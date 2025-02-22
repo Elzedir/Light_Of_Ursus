@@ -48,11 +48,7 @@ namespace Pathfinding
                 closestDistance = distance;
             }
 
-            if (closestNode != null)
-            {
-                Debug.LogWarning($"Node not found at {position}. Using closest node at {closestNode.Position}.");
-                return closestNode;
-            }
+            if (closestNode != null) return closestNode;
             
             Debug.LogWarning($"Node not found at {position}. Creating new node.");
 

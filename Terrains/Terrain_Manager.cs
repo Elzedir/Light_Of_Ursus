@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Terrains
 {
-    public abstract class TerrainManager
+    public abstract class Terrain_Manager
     {
         static Terrain s_terrain;
         Texture2D[] _terrainTextures;
@@ -30,8 +30,6 @@ namespace Terrains
             
             return terrain;
         }
-
-        public static float GetTerrainHeight(Vector3 worldPosition) => S_Terrain.SampleHeight(worldPosition);
 
         //* For now, the assumption is that terrainData will not change, but later, put in a check for this to update
         //* Height, Width and Weights if terrainData changes.
