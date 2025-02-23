@@ -58,12 +58,6 @@ namespace Pathfinding
 
         static void _setUpdateVoxelCosts()
         {
-            var parentTransform = GameObject.Find("VisibleVoxels").transform;
-            var mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-            var green = Resources.Load<Material>("Materials/Material_Green");
-            var red = Resources.Load<Material>("Materials/Material_Red");
-            var blue = Resources.Load<Material>("Materials/Material_Blue");
-            
             var queue = new Queue<Voxel_Base>();
             queue.Enqueue(S_RootMapVoxel);
 
@@ -81,32 +75,9 @@ namespace Pathfinding
             }
             
             _attemptMerge(S_RootMapVoxel);
-            
-            var materials = new List<Material> { blue, green, red };
-
-            _showMergedVoxels(parentTransform, S_RootMapVoxel, mesh, materials,  Vector3.one * S_RootMapVoxel.Size);
         }
         
         //* See if you can combine into custom shapes instead of purely octree based shaped. Maybe a matrix?
-
-        static void _showMergedVoxels(Transform transform, Voxel_Base voxel, Mesh mesh, List<Material> materials, Vector3 size)
-        {
-            if (voxel.DominantTerrainType == -1) return;
-            
-            var material = materials[voxel.DominantTerrainType % materials.Count];
-            
-            Debug.Log(material);
-            
-            if (voxel.Children == null)
-            {
-                var mergedVoxel = _testShowVoxel(transform, voxel.Position, mesh, material, size);
-                mergedVoxel.name = $"Merged: {voxel.Position} - {voxel.Size}";
-                return;
-            }
-
-            foreach (var child in voxel.Children)
-                _showMergedVoxels(transform, child, mesh, materials, Vector3.one * child.Size);
-        }
         
         static void _mergeVoxels(Voxel_Base voxel)
         {
@@ -116,17 +87,6 @@ namespace Pathfinding
                 _mergeVoxels(child);
 
             voxel.Merge();
-        }
-        
-        static GameObject _testShowVoxel(Transform transform, Vector3 position, Mesh mesh, Material material, Vector3 size)
-        {
-            var voxelGO = new GameObject($"{position}");
-            voxelGO.AddComponent<MeshFilter>().mesh = mesh;
-            voxelGO.AddComponent<MeshRenderer>().material = material;
-            voxelGO.transform.SetParent(transform);
-            voxelGO.transform.localPosition = position;
-            voxelGO.transform.localScale = size;
-            return voxelGO;
         }
         
         static bool _hasMultipleTerrainsInVoxel(Voxel_Base voxel)

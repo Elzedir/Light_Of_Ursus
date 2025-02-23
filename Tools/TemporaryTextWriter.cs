@@ -82,7 +82,7 @@ namespace Tools
             "Every smile.", 
             "Every laugh.", 
             "Every child.", 
-            "And every moment in an unending string of endless joy.",
+            "And every moment in an endless string of unending joy.",
             "I love you, and all you are.", 
             "For now and for always.",
             "Happy First Anniversary."
