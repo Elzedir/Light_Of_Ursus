@@ -41,6 +41,8 @@ namespace Pathfinding
         public float Circumradius => _circumradius != 0
             ? _circumradius
             : _circumradius = _calculateCircumradius();
+        
+        public HashSet<(Vector3, Vector3)> Edges => new() { (_a, _b),(_b, _c), (_c, _a) };
 
         public Node_Triangle(Vector3 a, Vector3 b, Vector3 c)
         {
@@ -53,6 +55,16 @@ namespace Pathfinding
         {
             var distanceToPoint = Vector3.SqrMagnitude(Circumcentre - point);
             var radiusMagnitude = Vector3.SqrMagnitude(Circumcentre - _a);
+            var insideCircumcircle = distanceToPoint < radiusMagnitude;
+
+            return insideCircumcircle;
+        }
+        
+        public static bool IsPointInsideCircumcircle(Vector3 a, Vector3 b, Vector3 c, Vector3 point)
+        {
+            var circumcentre = _calculateCircumcentre(a.x, a.z, b.x, b.z, c.x, c.z);
+            var distanceToPoint = Vector3.SqrMagnitude(circumcentre - point);
+            var radiusMagnitude = Vector3.SqrMagnitude(circumcentre - a);
             var insideCircumcircle = distanceToPoint < radiusMagnitude;
 
             return insideCircumcircle;
@@ -81,14 +93,24 @@ namespace Pathfinding
         }
         
         float _calculateCircumradius() => Vector3.Distance(Circumcentre, _a);
-
-        public HashSet<(Vector3, Vector3)> Edges => new() { (_a, _b),(_b, _c), (_c, _a) };
         
-        public List<Node_Triangle> GetAdjacentTriangles(Dictionary<ulong, Node_Triangle> allTriangles)
+        public Vector3 GetThirdVertex(Vector3 v1, Vector3 v2)
+        {
+            foreach (var vertex in Vertices)
+            {
+                if (vertex != v1 && vertex != v2)
+                {
+                    return vertex;
+                }
+            }
+            throw new Exception("Third vertex not found in triangle.");
+        }
+        
+        public List<Node_Triangle> GetAdjacentTriangles(List<Node_Triangle> allTriangles)
         {
             var adjacentTriangles = new List<Node_Triangle>();
             
-            foreach (var triangle in allTriangles.Values)
+            foreach (var triangle in allTriangles)
             {
                 if (triangle.ID_Vectors == ID_Vectors || GetSharedEdges(triangle).Count == 0) continue;
 

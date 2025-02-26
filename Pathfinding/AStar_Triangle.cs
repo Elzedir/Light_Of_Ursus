@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Priorities.Priority_Queues;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ namespace Pathfinding
 
                 closedSet.Add(currentNode.ID);
 
-                foreach (var neighbor in currentNode.GetAdjacentTriangles(allTriangles))
+                foreach (var neighbor in currentNode.GetAdjacentTriangles(allTriangles.Values.ToList()))
                 {
                     if (closedSet.Contains(neighbor.ID)) continue;
 
