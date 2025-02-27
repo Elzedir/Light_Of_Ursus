@@ -62,12 +62,26 @@ namespace Pathfinding
         
         public static bool IsPointInsideCircumcircle(Vector3 a, Vector3 b, Vector3 c, Vector3 point)
         {
+            if (ArePointsColinear(a, b, c))
+            {
+                return false; // Ignore colinear points
+            }
+            
             var circumcentre = _calculateCircumcentre(a.x, a.z, b.x, b.z, c.x, c.z);
             var distanceToPoint = Vector3.SqrMagnitude(circumcentre - point);
             var radiusMagnitude = Vector3.SqrMagnitude(circumcentre - a);
             var insideCircumcircle = distanceToPoint < radiusMagnitude;
 
             return insideCircumcircle;
+        }
+        
+        public static bool ArePointsColinear(Vector3 a, Vector3 b, Vector3 c)
+        {
+            // Calculate the area using the 2D cross product
+            var area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+    
+            // If area is close to zero, points are colinear
+            return Mathf.Abs(area) < Mathf.Epsilon;
         }
 
         static Vector3 _calculateCircumcentre(float ax, float az, float bx, float bz, float cx, float cz)

@@ -31,12 +31,13 @@ namespace Pathfinding
             foreach (var navMeshObject in navRelevantObjects)
             {
                 var position = navMeshObject.transform.position;
+                position.y = 0;
                 //position.y = terrain.SampleHeight(position);
 
                 _nodes.Add(position);
 
-                var voxel = Visualise_Voxel.Show_Voxel(position, Vector3.one * 0.1f);
-                voxel.name = $"Object Node: {position}";
+                // var voxel = Visualise_Voxel.Show_Voxel(position + Vector3.up * 15, Vector3.one * 2);
+                // voxel.name = $"Object Node: {position}";
             }
 
             for (var x = 0f; x <= worldSize; x += 50)
@@ -48,8 +49,8 @@ namespace Pathfinding
 
                     _nodes.Add(position);
 
-                    var voxel = Visualise_Voxel.Show_Voxel(position, Vector3.one * 0.1f);
-                    voxel.name = $"Grid Node: {position}";
+                    // var voxel = Visualise_Voxel.Show_Voxel(position + Vector3.up * 15, Vector3.one * 2);
+                    // voxel.name = $"Grid Node: {position}";
                 }
             }
 
@@ -84,17 +85,23 @@ namespace Pathfinding
          IEnumerator DelaunayTriangulation(HashSet<Vector3> pointsToProcess,
              Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles, Node_Triangle superNodeTriangle)
          {
-             yield return null;
-        
              foreach (var point in pointsToProcess)
              {
+                 var voxel = Visualise_Voxel.Show_Voxel(point + Vector3.up * 15, Vector3.one * 2,0);
+                 voxel.name = $"Grid Node: {point}";
+                 
                  var badTriangles = new HashSet<Node_Triangle>();
         
                  foreach (var triangle in triangles.Values)
                  {
+                     yield return ShowTriangle(triangle);
+                     
                      if (!triangle.IsPointInsideCircumcircle(point)) continue;
                      
                      badTriangles.Add(triangle);
+                     
+                     yield return HideTriangle(triangle);
+                     yield return ShowTriangle(triangle, 1);
                  }
                  
                  var polygon = new HashSet<(Vector3, Vector3)>();
@@ -105,6 +112,8 @@ namespace Pathfinding
                      {
                          if (badTriangles.Count == 1)
                          {
+                             Visualise_Voxel.Show_Voxel(edge.Item1 + Vector3.up * 15,
+                                 new Vector3(0.1f, 0.1f, Vector3.Distance(edge.Item1, edge.Item2), 2);
                              polygon.Add(edge);
                              continue;
                          }
@@ -125,77 +134,142 @@ namespace Pathfinding
         
                  foreach (var edge in polygon)
                  {
+                     if (ArePointsColinear(edge.Item1, edge.Item2, point))
+                     {
+                         continue;
+                     }
+                     
                      var triangle = new Node_Triangle(edge.Item1, edge.Item2, point);
-        
-                     triangles.Add(triangle.ID_Vectors, triangle);
+                     
+                     if (Vector3.Dot(Vector3.Cross(triangle.Vertices[1] - triangle.Vertices[0], 
+                             triangle.Vertices[2] - triangle.Vertices[0]).normalized, Vector3.up) < 0)
+                     {
+                         triangle = new Node_Triangle(edge.Item2, edge.Item1, point);
+                     }
+
+                     triangles.TryAdd(triangle.ID_Vectors, triangle);
                  }
              }
              
              foreach (var triangle in triangles.Values.ToList())
              {
+                 yield return ShowTriangle(triangle);
+                 
+                 yield return new WaitForSeconds(0.1f);
+                    
                  foreach (var vertex in triangle.Vertices)
                  {
                      if (!superNodeTriangle.Vertices.Contains(vertex)) continue;
         
                      triangles.Remove(triangle.ID_Vectors);
+                     
+                     HideTriangle(triangle);
+                     
+                     yield return new WaitForSeconds(0.1f);
                  }
              }
-             a
-                 
-             // Somehow I;'m still getting elevation for some of my triangles.
              
-             _performEdgeFlipping(triangles);
+             //Manager_Game.S_Instance.StartCoroutine(_performEdgeFlipping(triangles));
         
              _returnUpdatedTriangles(triangles);
-             
-             foreach (var triangle in triangles.Values)
-             {
-                 if (ShownTriangles.TryGetValue(triangle.ID_Vectors, out var shownTriangle))
-                 {
-                     Object.Destroy(shownTriangle);
-                     ShownTriangles.Remove(triangle.ID_Vectors);
-                 }
-                 
-                 var triangleGO = Visualise_Triangle.Show_Triangle(new[]
-                     { triangle.Vertices[0], triangle.Vertices[1], triangle.Vertices[2] });
-        
-                 for (var i = 0; i < triangle.Vertices.Length; i++)
-                 {
-                     var start = triangle.Vertices[i];
-                     var end = triangle.Vertices[(i + 1) % triangle.Vertices.Length];
-        
-                     var center = (start + end) * 0.5f;
-                     var size = new Vector3(0.1f, 0.1f, Vector3.Distance(start, end));
-        
-                     var line = Visualise_Voxel.Show_Voxel(center + Vector3.up * 15, size, 2,
-                         rotation: Quaternion.LookRotation(end - start));
-                     line.transform.SetParent(triangleGO.transform);
-                     line.name = $"Boundary Edge: {start} - {end}";
-                 }
-        
-                 ShownTriangles.Add(triangle.ID_Vectors, triangleGO);
-             }
         }
+         
+         public static bool ArePointsColinear(Vector3 a, Vector3 b, Vector3 c)
+         {
+             var area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
+             return Mathf.Abs(area) < Mathf.Epsilon;
+         }
 
-         static void _flipEdge(Vector3 a, Vector3 b, Node_Triangle t1, Node_Triangle t2, 
+         IEnumerator _flipEdge(Vector3 a, Vector3 b, Node_Triangle t1, Node_Triangle t2,
              Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles)
          {
              var c = t1.GetThirdVertex(a, b);
              var d = t2.GetThirdVertex(a, b);
-             
-             if (!Node_Triangle.IsPointInsideCircumcircle(c, a, b, d)) return;
-             
+
+             if (!Node_Triangle.IsPointInsideCircumcircle(c, a, b, d)) yield break;
+
              triangles.Remove(t1.ID_Vectors);
              triangles.Remove(t2.ID_Vectors);
              
+             yield return ShowMessage($"Flipping Edge: {a} - {b}", (a + b) * 0.5f, 1);
+             
+             HideTriangle(t1);
+             yield return ShowMessage($"Removing Triangle: {t1.ID_Vectors}", t1.Centroid, 1);
+             HideTriangle(t2);
+             yield return ShowMessage($"Removing Triangle: {t2.ID_Vectors}", t2.Centroid, 1);
+             
+
              var newTriangle1 = new Node_Triangle(c, d, a);
              var newTriangle2 = new Node_Triangle(c, d, b);
+
+             yield return ShowTriangle(newTriangle1);
+             yield return ShowMessage($"Adding Triangle: {newTriangle1.ID_Vectors}", newTriangle1.Centroid, 1);
+             yield return ShowTriangle(newTriangle2);
+             yield return ShowMessage($"Adding Triangle: {newTriangle2.ID_Vectors}", newTriangle2.Centroid, 1);
 
              triangles[newTriangle1.ID_Vectors] = newTriangle1;
              triangles[newTriangle2.ID_Vectors] = newTriangle2;
          }
 
-         void _performEdgeFlipping(Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles)
+         public IEnumerator ShowTriangle(Node_Triangle triangle, int colour = -1)
+         {
+             var triangleGO = Visualise_Triangle.Show_Triangle(new[]
+             {
+                 triangle.Vertices[0] + Vector3.up * 15,
+                 triangle.Vertices[1] + Vector3.up * 15,
+                 triangle.Vertices[2] + Vector3.up * 15
+             }, 
+                 (int)colour);
+        
+             for (var i = 0; i < triangle.Vertices.Length; i++)
+             {
+                 var start = triangle.Vertices[i];
+                 var end = triangle.Vertices[(i + 1) % triangle.Vertices.Length];
+        
+                 var center = (start + end) * 0.5f;
+                 var size = new Vector3(0.1f, 0.1f, Vector3.Distance(start, end));
+        
+                 var line = Visualise_Voxel.Show_Voxel(center + Vector3.up * (15), size, (int)colour + 1,
+                     rotation: Quaternion.LookRotation(end - start));
+                 line.transform.SetParent(triangleGO.transform);
+                 line.name = $"Boundary Edge: {start} - {end}";
+
+                 yield return new WaitForSeconds(1);
+             }
+        
+             ShownTriangles.TryAdd(triangle.ID_Vectors, triangleGO);
+         }
+         
+         a
+             //* Use ShowEdge to show how the edges are formed and which are checked and in which order to see why we are
+             //* creating edges that extend across other edges.
+
+         public IEnumerator HideTriangle(Node_Triangle triangle)
+         {
+             if (!ShownTriangles.TryGetValue(triangle.ID_Vectors, out var shownTriangle)) yield break;
+             
+             Object.Destroy(shownTriangle);
+             ShownTriangles.Remove(triangle.ID_Vectors);
+
+             yield return new WaitForSeconds(0.5f);
+         }
+
+         public IEnumerator ShowEdge((Vector3, Vector3) edge)
+         {
+             
+         }
+         
+         public IEnumerator ShowMessage(string message, Vector3 position, float duration)
+         {
+             var messageGO = Visualise_Message.Show_Message(
+                 new Vector3(position.x, 12, position.z), message);
+             
+                yield return new WaitForSeconds(duration);
+                
+                Object.Destroy(messageGO);
+         }
+
+         IEnumerator _performEdgeFlipping(Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles)
          {
              var edgesToCheck = new HashSet<(Vector3, Vector3)>();
 
@@ -215,7 +289,7 @@ namespace Pathfinding
 
                  if (adjacentTriangles.Count != 2) continue;
 
-                 _flipEdge(edge.Item1, edge.Item2, adjacentTriangles[0], adjacentTriangles[1], triangles);
+                 yield return _flipEdge(edge.Item1, edge.Item2, adjacentTriangles[0], adjacentTriangles[1], triangles);
              }
          }
 
@@ -238,11 +312,6 @@ namespace Pathfinding
         {
             var startTriangle = _getNearestTriangle(start);
             var endTriangle = _getNearestTriangle(end);
-
-            foreach (var triangle in Triangles.Values)
-            {
-                Visualise_Triangle.Show_Triangle(triangle.Vertices);
-            }
 
             return startTriangle != endTriangle
                 ? AStar_Triangle.RunAStar(startTriangle, endTriangle, Triangles)

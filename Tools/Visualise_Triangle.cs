@@ -38,10 +38,10 @@ namespace Tools
             };
             
             mesh.RecalculateNormals();
-            
-            var material = colourIndex != -1 
-                ? Materials[colourIndex % Materials.Count]
-                : Materials[0];
+                
+            var material = colourIndex == -1 || colourIndex >= Materials.Count 
+                ? Materials[Random.Range(0, Materials.Count - 1) % Materials.Count]
+                : Materials[colourIndex];
 
             var triangleGO = _create_Object(centroid, mesh, material);
             triangleGO.name = $"Triangle: {centroid}";

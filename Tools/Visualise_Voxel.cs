@@ -19,9 +19,9 @@ namespace Tools
         
         public static GameObject Show_Voxel(Vector3 position, Vector3 size, int colourIndex = -1, Quaternion rotation = default)
         {
-            var material = colourIndex != -1 
-                ? Materials[colourIndex % Materials.Count]
-                : Materials[0];
+            var material = colourIndex == -1 || colourIndex >= Materials.Count 
+                ? Materials[Random.Range(0, Materials.Count - 1) % Materials.Count]
+                : Materials[colourIndex];
 
             Mesh mesh = new();
             

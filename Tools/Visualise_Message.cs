@@ -13,6 +13,8 @@ namespace Tools
         public static GameObject Show_Message(Vector3 position, string text, float delay = 0)
         {
             var messageGO = _create_Object(position);
+            var rectTransform = messageGO.GetComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(100, rectTransform.sizeDelta.y);
             messageGO.name = $"Message: {position} - Message";
             var textBox = messageGO.GetComponent<TextMeshPro>();
             textBox.text = "";
