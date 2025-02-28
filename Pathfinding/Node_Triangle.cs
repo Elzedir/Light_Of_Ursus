@@ -8,6 +8,8 @@ namespace Pathfinding
     public class Node_Triangle
     {
         ulong _id;
+
+        public Transform Transform; 
         
         (Vector3, Vector3, Vector3) _id_Vector = (Vector3.zero, Vector3.zero, Vector3.zero);
 
