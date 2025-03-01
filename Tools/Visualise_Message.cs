@@ -19,6 +19,7 @@ namespace Tools
             var textBox = messageGO.GetComponent<TextMeshPro>();
             textBox.text = "";
             textBox.fontSize = 20f;
+            textBox.alignment = TextAlignmentOptions.Center;
 
             Manager_Dialogue.Instance.StartCoroutine(_typeMessage(textBox, text, delay));
             

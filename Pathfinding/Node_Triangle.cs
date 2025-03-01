@@ -13,50 +13,70 @@ namespace Pathfinding
         
         (Vector3, Vector3, Vector3) _id_Vector = (Vector3.zero, Vector3.zero, Vector3.zero);
 
-        readonly Vector3 _a, _b, _c;
+        public readonly Vertex A, B, C;
 
         Vector3 _centroid, _circumcentre;
         float _circumradius;
         
         public Dictionary<MoverType, float> MoverCosts;
         
-        public Vector3[] Vertices => new[] { _a, _b, _c };
+        public Vertex[] Vertices => new[] { A, B, C };
+        
+        public Edge_Half EdgeHalf;
         
         public ulong ID => _id != 0
         ? _id
-        : _id = GetTriangleID(_a, _b, _c);
+        : _id = GetTriangleID(A.Position, B.Position, C.Position);
         
         public (Vector3, Vector3, Vector3) ID_Vectors => _id_Vector != (Vector3.zero, Vector3.zero, Vector3.zero)
             ? _id_Vector
-            : _id_Vector = GetTriangleID_Vector(_a, _b, _c);
+            : _id_Vector = GetTriangleID_Vector(A.Position, B.Position, C.Position);
         
         public Vector3 Centroid => _centroid != Vector3.zero
             ? _centroid
             : _centroid = new Vector3(
-                (_a.x + _b.x + _c.x) / 3,
-                (_a.y + _b.y + _c.y) / 3,
-                (_a.z + _b.z + _c.z) / 3
+                (A.Position.x + B.Position.x + C.Position.x) / 3,
+                (A.Position.y + B.Position.y + C.Position.y) / 3,
+                (A.Position.z + B.Position.z + C.Position.z) / 3
             );
+
+        public static Vector3 GetCentroid(Vector3[] vertices)
+        {
+            return new Vector3(
+                (vertices[0].x + vertices[1].x + vertices[2].x) / 3,
+                (vertices[0].y + vertices[1].y + vertices[2].y) / 3,
+                (vertices[0].z + vertices[1].z + vertices[2].z) / 3
+            );
+        }
+
         public Vector3 Circumcentre => _circumcentre != Vector3.zero
             ? _circumcentre
-            : _circumcentre = _calculateCircumcentre(_a.x, _a.z, _b.x, _b.z, _c.x, _c.z);
+            : _circumcentre = _calculateCircumcentre(
+                A.Position.x, A.Position.z, 
+                B.Position.x, B.Position.z,
+                C.Position.x, C.Position.z);
         public float Circumradius => _circumradius != 0
             ? _circumradius
             : _circumradius = _calculateCircumradius();
         
-        public HashSet<(Vector3, Vector3)> Edges => new() { (_a, _b),(_b, _c), (_c, _a) };
+        public HashSet<Edge> Edges => new() { new Edge(A, B), new Edge(B, C), new Edge(C, A) };
 
         public Node_Triangle(Vector3 a, Vector3 b, Vector3 c)
         {
-            _a = a;
-            _b = b;
-            _c = c;
+            A = new Vertex(a);
+            B = new Vertex(b);
+            C = new Vertex(c);
+            
+            if (Vector3.Dot(Vector3.Cross(B.Position - A.Position, C.Position - A.Position).normalized, Vector3.up) < 0)
+            {
+                (B, C) = (C, B);
+            }
         }
         
         public bool IsPointInsideCircumcircle(Vector3 point)
         {
             var distanceToPoint = Vector3.SqrMagnitude(Circumcentre - point);
-            var radiusMagnitude = Vector3.SqrMagnitude(Circumcentre - _a);
+            var radiusMagnitude = Vector3.SqrMagnitude(Circumcentre - A.Position);
             var insideCircumcircle = distanceToPoint < radiusMagnitude;
 
             return insideCircumcircle;
@@ -108,17 +128,18 @@ namespace Pathfinding
             return new Vector3(x, 0, z);
         }
         
-        float _calculateCircumradius() => Vector3.Distance(Circumcentre, _a);
+        float _calculateCircumradius() => Vector3.Distance(Circumcentre, A.Position);
         
-        public Vector3 GetThirdVertex(Vector3 v1, Vector3 v2)
+        public Vertex GetThirdVertex(Vector3 point_1,Vector3 point_2)
         {
             foreach (var vertex in Vertices)
             {
-                if (vertex != v1 && vertex != v2)
+                if (vertex.Position != point_1 && vertex.Position != point_2)
                 {
                     return vertex;
                 }
             }
+            
             throw new Exception("Third vertex not found in triangle.");
         }
         
@@ -136,9 +157,9 @@ namespace Pathfinding
             return adjacentTriangles;
         }
         
-        public HashSet<(Vector3, Vector3)> GetSharedEdges(Node_Triangle otherTriangle)
+        public HashSet<Edge> GetSharedEdges(Node_Triangle otherTriangle)
         {
-            var sharedEdges = new HashSet<(Vector3, Vector3)>();
+            var sharedEdges = new HashSet<Edge>();
                 
             foreach (var edge in Edges)
             {
