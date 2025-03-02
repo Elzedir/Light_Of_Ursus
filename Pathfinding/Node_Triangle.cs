@@ -22,7 +22,7 @@ namespace Pathfinding
         
         public Vertex[] Vertices => new[] { A, B, C };
         
-        public Edge_Half EdgeHalf;
+        public Edge_Half Half_Edge;
         
         public ulong ID => _id != 0
         ? _id
