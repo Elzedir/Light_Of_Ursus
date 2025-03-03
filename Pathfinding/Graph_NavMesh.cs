@@ -134,7 +134,10 @@ namespace Pathfinding
                     {
                         if (currentEdge.Opposite == null ||
                             currentEdge.Opposite != null && !badTriangles.Contains(currentEdge.Opposite.Triangle))
-                            boundaryHalfEdges.Add(currentEdge);
+                        {
+                            yield return _showMessage("Adding vertex", currentEdge.Vertex.Position, 0.5f, 2);
+                            boundaryHalfEdges.Add(currentEdge);   
+                        }
                         
                         currentEdge = currentEdge.Next;
                     } 
@@ -145,39 +148,11 @@ namespace Pathfinding
                     yield return _hideTriangle(badTriangle);
                 }
                 
-                var orderedBoundaryVertices = _organizeBoundaries(boundaryHalfEdges).ToList();
                 var newTriangles = new List<Node_Triangle>();
 
-                foreach (var boundaryVertex in orderedBoundaryVertices)
-                {
-                    yield return _showMessage("Boundary Vertex", boundaryVertex, 0.5f, 2);
-                }
+                yield return _createNewTriangles(0, point, boundaryHalfEdges, triangles, newTriangles);
                 
-                for (var i = 0; i < orderedBoundaryVertices.Count; i++)
-                {
-                    var a = orderedBoundaryVertices[i];
-                    var b = orderedBoundaryVertices[(i + 1) % orderedBoundaryVertices.Count];
-               
-                    a
-                        //* FIX
-                    
-                    if (ArePointsColinear(a, b, point))
-                        continue;
-                
-                    if (WillTriangleIntersectAnyBoundaryHalfEdge(a, b, point, boundaryHalfEdges)) continue;
-                
-                    yield return _showMessage($"Creating new triangle A {a}", a, 0.5f, 2);
-                    yield return _showMessage($"Creating new triangle B {b}", b, 0.5f, 2);
-                    yield return _showMessage($"Creating new triangle Point {point}", point, 0.5f, 2);
-                
-                    var triangle = new Node_Triangle(a, b, point);
-                    triangles[triangle.ID_Vectors] = triangle;
-                    newTriangles.Add(triangle);
-                
-                    yield return _showTriangle(triangle, 1);
-                }
-                
-                _connectAdjacentTriangles(newTriangles);
+                yield return _connectAdjacentTriangles(newTriangles);
                 
                 yield return _performEdgeFlipping(triangles);
                 
@@ -199,18 +174,16 @@ namespace Pathfinding
             _returnUpdatedTriangles(triangles);
         }
 
-        HashSet<Vector3> _organizeBoundaries(List<Half_Edge> boundaryHalfEdges)
+        List<Vector3> _organizeBoundaries(List<Half_Edge> boundaryHalfEdges)
         {
-            if (boundaryHalfEdges.Count == 0)
-                return new HashSet<Vector3>();
+            if (boundaryHalfEdges.Count == 0) return new List<Vector3>();
         
-            var polygons = new HashSet<Vector3>();
+            var polygons = new List<Vector3>();
             var visitedHalfEdges = new HashSet<Half_Edge>();
         
             foreach (var startHalfEdge in boundaryHalfEdges)
             {
-                if (visitedHalfEdges.Contains(startHalfEdge))
-                    continue;
+                if (visitedHalfEdges.Contains(startHalfEdge)) continue;
 
                 var orderedVertices = new List<Vector3>();
                 var currentHalfEdge = startHalfEdge;
@@ -218,6 +191,8 @@ namespace Pathfinding
                 do
                 {
                     orderedVertices.Add(currentHalfEdge.Vertex.Position);
+                    
+                    Debug.Log($"Adding vertex {currentHalfEdge.Vertex.Position}");
                     
                     visitedHalfEdges.Add(currentHalfEdge);
                     visitedHalfEdges.Add(currentHalfEdge.Opposite);
@@ -240,7 +215,29 @@ namespace Pathfinding
             return polygons;
         }
         
-            //* Check this intersecting and edge flipping
+        IEnumerator _createNewTriangles(int j, Vector3 point, List<Half_Edge> boundaryHalfEdges,
+            Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles, List<Node_Triangle> newTriangles)
+        {
+            foreach(var edge in boundaryHalfEdges)
+            {
+                var a = edge.Vertex.Position;
+                var b = edge.Next.Vertex.Position;
+                
+                if (ArePointsColinear(a, b, point)) continue;
+                
+                yield return _showMessage($"Creating new triangle A {a}", a, 0.5f, 2);
+                yield return _showMessage($"Creating new triangle B {b}", b, 0.5f, 2);
+                yield return _showMessage($"Creating new triangle Point {point}", point, 0.5f, 2);
+                
+                if (WillTriangleIntersectAnyBoundaryHalfEdge(a, b, point, boundaryHalfEdges)) continue;
+                
+                var triangle = new Node_Triangle(a, b, point);
+                triangles[triangle.ID_Vectors] = triangle;
+                newTriangles.Add(triangle);
+                    
+                yield return _showTriangle(triangle, 1);
+            }
+        }
         
         bool WillTriangleIntersectAnyBoundaryHalfEdge(Vector3 a, Vector3 b, Vector3 c, List<Half_Edge> boundaryHalfEdges)
         {
@@ -314,7 +311,7 @@ namespace Pathfinding
             return Mathf.Abs(area) < Mathf.Epsilon;
         }
 
-        static void _connectAdjacentTriangles(List<Node_Triangle> triangles)
+        static IEnumerator _connectAdjacentTriangles(List<Node_Triangle> triangles)
         {
             var edgeMap = new Dictionary<(Vector3, Vector3), Half_Edge>();
     
@@ -334,6 +331,9 @@ namespace Pathfinding
                     {
                         currentEdge.Opposite = existingEdge;
                         existingEdge.Opposite = currentEdge;
+                        
+                        yield return _showMessage("Connecting adjacent triangles", a, 0.5f, 2);
+                        
                         edgeMap.Remove(edgeKey);
                     }
                     else

@@ -15,7 +15,7 @@ namespace Tools
             var messageGO = _create_Object(position);
             var rectTransform = messageGO.GetComponent<RectTransform>();
             rectTransform.sizeDelta = new Vector2(100, rectTransform.sizeDelta.y);
-            messageGO.name = $"Message: {position} - Message";
+            messageGO.name = $"{text}";
             var textBox = messageGO.GetComponent<TextMeshPro>();
             textBox.text = "";
             textBox.fontSize = 20f;
