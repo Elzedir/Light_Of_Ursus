@@ -8,8 +8,6 @@ namespace Pathfinding
     public class Node_Triangle
     {
         ulong _id;
-
-        public Transform Transform; 
         
         (Vector3, Vector3, Vector3) _id_Vector = (Vector3.zero, Vector3.zero, Vector3.zero);
 
@@ -22,7 +20,7 @@ namespace Pathfinding
         
         public Vertex[] Vertices => new[] { A, B, C };
         
-        public Edge_Half Half_Edge;
+        public Half_Edge Half_Edge;
         
         public ulong ID => _id != 0
         ? _id
@@ -58,8 +56,6 @@ namespace Pathfinding
         public float Circumradius => _circumradius != 0
             ? _circumradius
             : _circumradius = _calculateCircumradius();
-        
-        public HashSet<Edge> Edges => new() { new Edge(A, B), new Edge(B, C), new Edge(C, A) };
 
         public Node_Triangle(Vector3 a, Vector3 b, Vector3 c)
         {
@@ -71,6 +67,23 @@ namespace Pathfinding
             {
                 (B, C) = (C, B);
             }
+            
+            var firstHalfEdge = new Half_Edge(A);
+            var secondHalfEdge = new Half_Edge(B);
+            var thirdHalfEdge = new Half_Edge(C);
+            
+            firstHalfEdge.Next = secondHalfEdge;
+            secondHalfEdge.Next = thirdHalfEdge;
+            thirdHalfEdge.Next = firstHalfEdge;
+    
+            firstHalfEdge.Previous = thirdHalfEdge;
+            secondHalfEdge.Previous = firstHalfEdge;
+            thirdHalfEdge.Previous = secondHalfEdge;
+            
+            firstHalfEdge.Triangle = secondHalfEdge.Triangle = thirdHalfEdge.Triangle = this;
+            
+            A.HalfEdge = B.HalfEdge = C.HalfEdge = thirdHalfEdge;
+            Half_Edge = firstHalfEdge;
         }
         
         public bool IsPointInsideCircumcircle(Vector3 point)
@@ -143,31 +156,22 @@ namespace Pathfinding
             throw new Exception("Third vertex not found in triangle.");
         }
         
-        public List<Node_Triangle> GetAdjacentTriangles(List<Node_Triangle> allTriangles)
+        public List<Node_Triangle> GetAdjacentTriangles()
         {
             var adjacentTriangles = new List<Node_Triangle>();
-            
-            foreach (var triangle in allTriangles)
-            {
-                if (triangle.ID_Vectors == ID_Vectors || GetSharedEdges(triangle).Count == 0) continue;
 
-                adjacentTriangles.Add(triangle);
-            }
+            addOppositeTriangle(Half_Edge);
+            addOppositeTriangle(Half_Edge.Next);
+            addOppositeTriangle(Half_Edge.Previous);
 
             return adjacentTriangles;
-        }
-        
-        public HashSet<Edge> GetSharedEdges(Node_Triangle otherTriangle)
-        {
-            var sharedEdges = new HashSet<Edge>();
-                
-            foreach (var edge in Edges)
-            {
-                if (otherTriangle.Edges.Contains(edge))
-                    sharedEdges.Add(edge);
-            }
 
-            return sharedEdges;
+            void addOppositeTriangle(Half_Edge edge)
+            {
+                var oppositeTriangle = edge.Opposite?.Triangle;
+                
+                if (oppositeTriangle != null) adjacentTriangles.Add(oppositeTriangle);
+            }
         }
 
         public (Vector3, Vector3, Vector3) GetTriangleID_Vector(Vector3 a, Vector3 b, Vector3 c) => (a, b, c);

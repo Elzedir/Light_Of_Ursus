@@ -6,15 +6,7 @@ namespace Pathfinding
     {
         public Vector3 Position;
         
-        public Edge_Half EdgeHalf;
-        
-        public Node_Triangle Triangle;
-        
-        public Vertex PreviousVertex;
-        public Vertex NextVertex;
-
-        public bool IsReflex; 
-        public bool IsConvex;
+        public Half_Edge HalfEdge;
 
         public Vertex(Vector3 position)
         {

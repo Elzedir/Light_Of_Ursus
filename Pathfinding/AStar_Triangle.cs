@@ -29,7 +29,7 @@ namespace Pathfinding
 
                 closedSet.Add(currentNode.ID);
 
-                foreach (var neighbor in currentNode.GetAdjacentTriangles(allTriangles.Values.ToList()))
+                foreach (var neighbor in currentNode.GetAdjacentTriangles())
                 {
                     if (closedSet.Contains(neighbor.ID)) continue;
 

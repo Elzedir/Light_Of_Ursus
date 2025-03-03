@@ -2,24 +2,20 @@ using UnityEngine;
 
 namespace Pathfinding
 {
-    public class Edge_Half
+    public class Half_Edge
     {
         public Vertex Vertex;
 
         public Node_Triangle Triangle;
+        
+        public Half_Edge Opposite, Next, Previous;
 
-        public Edge_Half Next;
-        public Edge_Half Previous;
-        public Edge_Half Opposite;
-
-        public Edge_Half SharedEdge;
-
-        public Edge_Half(Vertex vertex)
+        public Half_Edge(Vertex vertex)
         {
             Vertex = vertex;
         }
 
-        public int CompareTo(Edge_Half other)
+        public int CompareTo(Half_Edge other)
         {
             if (other == null) return 1;
 
@@ -50,7 +46,7 @@ namespace Pathfinding
 
         public override bool Equals(object obj)
         {
-            if (obj is not Edge_Half other) return false;
+            if (obj is not Half_Edge other) return false;
 
             return CompareTo(other) == 0;
         }
