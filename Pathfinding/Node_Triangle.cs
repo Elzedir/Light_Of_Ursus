@@ -49,10 +49,7 @@ namespace Pathfinding
 
         public Vector3 Circumcentre => _circumcentre != Vector3.zero
             ? _circumcentre
-            : _circumcentre = _calculateCircumcentre(
-                A.Position.x, A.Position.z, 
-                B.Position.x, B.Position.z,
-                C.Position.x, C.Position.z);
+            : _circumcentre = _calculateCircumcentre(A.Position, B.Position, C.Position);
         public float Circumradius => _circumradius != 0
             ? _circumradius
             : _circumradius = _calculateCircumradius();
@@ -102,7 +99,7 @@ namespace Pathfinding
                 return false; // Ignore colinear points
             }
             
-            var circumcentre = _calculateCircumcentre(a.x, a.z, b.x, b.z, c.x, c.z);
+            var circumcentre = _calculateCircumcentre(a, b, c);
             var distanceToPoint = Vector3.SqrMagnitude(circumcentre - point);
             var radiusMagnitude = Vector3.SqrMagnitude(circumcentre - a);
             var insideCircumcircle = distanceToPoint < radiusMagnitude;
@@ -119,28 +116,27 @@ namespace Pathfinding
             return Mathf.Abs(area) < Mathf.Epsilon;
         }
 
-        static Vector3 _calculateCircumcentre(float ax, float az, float bx, float bz, float cx, float cz)
+        static Vector3 _calculateCircumcentre(Vector3 a, Vector3 b, Vector3 c)
         {
-            var mx_Ab = (ax + bx) / 2;
-            var mz_Ab = (az + bz) / 2;
-            var mx_BC = (bx + cx) / 2;
-            var mz_BC = (bz + cz) / 2;
-            
-            if (bx - ax == 0 || cx - bx == 0) return Vector3.zero;
-            
-            var slope_Ab = (bx - ax) == 0 
-                ? float.MaxValue 
-                : -(ax - bx) / (az - bz);
-            var slope_BC = (cx - bx) == 0 
-                ? float.MaxValue 
-                : -(bx - cx) / (bz - cz);
-            
-            var x = (slope_Ab * mx_Ab - slope_BC * mx_BC + mz_BC - mz_Ab) / (slope_Ab - slope_BC);
-            var z = slope_Ab * (x - mx_Ab) + mz_Ab;
+            float ax = a.x, az = a.z;
+            float bx = b.x, bz = b.z;
+            float cx = c.x, cz = c.z;
+
+            var d = 2 * (ax * (bz - cz) + bx * (cz - az) + cx * (az - bz));
+
+            if (Mathf.Abs(d) < Mathf.Epsilon)
+                return Vector3.zero;
+
+            var x =
+                ((ax * ax + az * az) * (bz - cz) + (bx * bx + bz * bz) * (cz - az) + (cx * cx + cz * cz) * (az - bz)) /
+                d;
+            var z =
+                ((ax * ax + az * az) * (cx - bx) + (bx * bx + bz * bz) * (ax - cx) + (cx * cx + cz * cz) * (bx - ax)) /
+                d;
 
             return new Vector3(x, 0, z);
         }
-        
+
         float _calculateCircumradius() => Vector3.Distance(Circumcentre, A.Position);
         
         public Vertex GetThirdVertex(Vector3 point_1,Vector3 point_2)

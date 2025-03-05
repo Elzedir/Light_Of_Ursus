@@ -117,8 +117,6 @@ namespace Pathfinding
                     
                     yield return _showVoxel(point, 2, 1, altitude: 2);
                     
-                    yield return _hideTriangle(triangle);
-                    
                     yield return _showTriangle(triangle, 1, true, 1);
 
                     badTriangles.Add(triangle);
@@ -135,7 +133,6 @@ namespace Pathfinding
                         if (currentEdge.Opposite == null ||
                             currentEdge.Opposite != null && !badTriangles.Contains(currentEdge.Opposite.Triangle))
                         {
-                            yield return _showMessage("Adding vertex", currentEdge.Vertex.Position, 0.5f, 2);
                             boundaryHalfEdges.Add(currentEdge);   
                         }
                         
@@ -149,7 +146,7 @@ namespace Pathfinding
                 }
                 
                 var newTriangles = new List<Node_Triangle>();
-
+                
                 yield return _createNewTriangles(0, point, boundaryHalfEdges, triangles, newTriangles);
                 
                 yield return _connectAdjacentTriangles(newTriangles);
@@ -173,47 +170,8 @@ namespace Pathfinding
 
             _returnUpdatedTriangles(triangles);
         }
-
-        List<Vector3> _organizeBoundaries(List<Half_Edge> boundaryHalfEdges)
-        {
-            if (boundaryHalfEdges.Count == 0) return new List<Vector3>();
         
-            var polygons = new List<Vector3>();
-            var visitedHalfEdges = new HashSet<Half_Edge>();
-        
-            foreach (var startHalfEdge in boundaryHalfEdges)
-            {
-                if (visitedHalfEdges.Contains(startHalfEdge)) continue;
-
-                var orderedVertices = new List<Vector3>();
-                var currentHalfEdge = startHalfEdge;
-
-                do
-                {
-                    orderedVertices.Add(currentHalfEdge.Vertex.Position);
-                    
-                    Debug.Log($"Adding vertex {currentHalfEdge.Vertex.Position}");
-                    
-                    visitedHalfEdges.Add(currentHalfEdge);
-                    visitedHalfEdges.Add(currentHalfEdge.Opposite);
-                    
-                    currentHalfEdge = currentHalfEdge.Next;
-                }
-                while (!Equals(currentHalfEdge, startHalfEdge));
-                
-                if (orderedVertices.Count > 1 && !_vector3Equals(orderedVertices[0], orderedVertices[^1]))
-                {
-                    orderedVertices.Add(orderedVertices[0]);
-                }
-                
-                foreach (var vertex in orderedVertices)
-                {
-                    polygons.Add(vertex);
-                }
-            }
-
-            return polygons;
-        }
+        Dictionary<Half_Edge, List<Half_Edge>> edgeIntersections = new();
         
         IEnumerator _createNewTriangles(int j, Vector3 point, List<Half_Edge> boundaryHalfEdges,
             Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles, List<Node_Triangle> newTriangles)
@@ -224,12 +182,8 @@ namespace Pathfinding
                 var b = edge.Next.Vertex.Position;
                 
                 if (ArePointsColinear(a, b, point)) continue;
-                
-                yield return _showMessage($"Creating new triangle A {a}", a, 0.5f, 2);
-                yield return _showMessage($"Creating new triangle B {b}", b, 0.5f, 2);
-                yield return _showMessage($"Creating new triangle Point {point}", point, 0.5f, 2);
-                
-                if (WillTriangleIntersectAnyBoundaryHalfEdge(a, b, point, boundaryHalfEdges)) continue;
+
+                AddTriangleIntersections(a, b, point, boundaryHalfEdges);
                 
                 var triangle = new Node_Triangle(a, b, point);
                 triangles[triangle.ID_Vectors] = triangle;
@@ -239,7 +193,7 @@ namespace Pathfinding
             }
         }
         
-        bool WillTriangleIntersectAnyBoundaryHalfEdge(Vector3 a, Vector3 b, Vector3 c, List<Half_Edge> boundaryHalfEdges)
+        void AddTriangleIntersections(Vector3 a, Vector3 b, Vector3 c, List<Half_Edge> boundaryHalfEdges)
         {
             var triangleEdges = new List<(Vector3, Vector3)>
             {
@@ -274,15 +228,18 @@ namespace Pathfinding
                     {
                         continue;
                     }
+
+                    if (!_doEdgesIntersect(triangleEdge.Item1, triangleEdge.Item2, boundaryStart, boundaryEnd))
+                        continue;
                     
-                    if (_doEdgesIntersect(triangleEdge.Item1, triangleEdge.Item2, boundaryStart, boundaryEnd))
+                    if (!edgeIntersections.ContainsKey(boundaryHalfEdge))
                     {
-                        return true;
+                        edgeIntersections[boundaryHalfEdge] = new List<Half_Edge>();
                     }
+                        
+                    edgeIntersections[boundaryHalfEdge].Add(boundaryHalfEdge);
                 }
             }
-            
-            return false;
         }
 
         static bool _vector3Equals(Vector3 a, Vector3 b)
@@ -313,6 +270,7 @@ namespace Pathfinding
 
         static IEnumerator _connectAdjacentTriangles(List<Node_Triangle> triangles)
         {
+            yield return null;
             var edgeMap = new Dictionary<(Vector3, Vector3), Half_Edge>();
     
             foreach (var triangle in triangles)
@@ -332,8 +290,6 @@ namespace Pathfinding
                         currentEdge.Opposite = existingEdge;
                         existingEdge.Opposite = currentEdge;
                         
-                        yield return _showMessage("Connecting adjacent triangles", a, 0.5f, 2);
-                        
                         edgeMap.Remove(edgeKey);
                     }
                     else
@@ -342,60 +298,201 @@ namespace Pathfinding
                     }
             
                     currentEdge = currentEdge.Next;
+                    
                 } while (!Equals(currentEdge, startEdge));
             }
+        }
+        
+        a
+            //* Fix edge flipping
+        
+        IEnumerator _performEdgeFlipping(Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles)
+        {
+            bool flippedEdge;
+            var iteration = 0;
+            
+            do
+            {
+                flippedEdge = false;
+                
+                foreach (var triangle in Triangles.Values.ToList())
+                {
+                    var startEdge = triangle.Half_Edge;
+                    var currentEdge = startEdge;
+            
+                    do
+                    {
+                        if (currentEdge.Opposite != null)
+                        {
+                            var nonSharedVertex = currentEdge.Opposite.Previous.Vertex;
+                            
+                            if (_isDelaunayViolation(currentEdge, nonSharedVertex) || _trianglesIntersect(currentEdge))
+                            {
+                                var a = currentEdge.Vertex.Position;
+                                var b = currentEdge.Next.Vertex.Position;
+                                var c = currentEdge.Previous.Vertex.Position;
+                                var d = nonSharedVertex.Position;
+                                
+                                yield return _showTriangle(triangle, 2, true);
+                                yield return _showMessage("Delaunay violation detected.", triangle.Centroid, 0.5f, 1);
+                                yield return _showTriangle(triangle, 1);
+                                yield return _showMessage("Delaunay violation detected.", a, 0.5f, 1);
+                                yield return _showMessage("Delaunay violation detected.", b, 0.5f, 1);
+                                yield return _showMessage("Delaunay violation detected.", c, 0.5f, 1);
+                                yield return _showMessage("Delaunay violation detected.", d, 0.5f, 1);
+
+                                if (IsQuadrilateralConvex(a, b, c, d))
+                                {
+                                    yield return _showMessage("Flipping edges to resolve intersection.", (a + b + c + d) * 0.25f, 0.5f, 1);
+                                    yield return _flipEdge(currentEdge);
+                                    flippedEdge = true;
+                                }
+                                else
+                                {
+                                    var area1 = _triangleArea(a, b, c);
+                                    var area2 = _triangleArea(b, c, d);
+                            
+                                    if (area1 < area2)
+                                    {
+                                        yield return _showMessage("Discarding smaller intersecting triangle.", triangle.Centroid, 0.5f, 1);
+                                        triangles.Remove((a, b, c));
+                                    }
+                                    else
+                                    {
+                                        yield return _showMessage("Discarding smaller intersecting triangle.", (a + b + c) * 0.333f, 0.5f, 1);
+                                        triangles.Remove((b, c, d));
+                                    }
+                                }
+                            }
+                        }
+                
+                        currentEdge = currentEdge.Next;
+                    } 
+                    while (!Equals(currentEdge, startEdge));
+            
+                    if (flippedEdge) break;
+                }
+            } 
+            while (flippedEdge && iteration++ < 10);
+
+            foreach (var intersectingEdges in edgeIntersections)
+            {
+                var badTriangles = new List<Node_Triangle>();
+                    
+                foreach (var edge in intersectingEdges.Value)
+                {
+                    if (edge.Opposite == null) continue;
+                    
+                    badTriangles.Add(IsWorseTriangle(edge.Triangle, edge.Opposite.Triangle)
+                        ? edge.Triangle
+                        : edge.Opposite.Triangle);
+                }
+                
+                foreach (var badTriangle in badTriangles)
+                {
+                    triangles.Remove(badTriangle.ID_Vectors);
+                    
+                    yield return _hideTriangle(badTriangle);
+                }
+            }
+            
+            edgeIntersections.Clear();
+        }
+        
+        bool IsWorseTriangle(Node_Triangle triangle, Node_Triangle triangle2)
+        {
+            var area = _triangleArea(triangle.A.Position, triangle.B.Position, triangle.C.Position);
+            var area2 = _triangleArea(triangle2.A.Position, triangle2.B.Position, triangle2.C.Position);
+            return area < area2;
+        }
+        
+        bool _trianglesIntersect(Half_Edge edge)
+        {
+            var a = edge.Vertex.Position;
+            var b = edge.Next.Vertex.Position;
+            var c = edge.Previous.Vertex.Position;
+
+            var d = edge.Opposite.Previous.Vertex.Position;
+
+            return _diagonalsIntersect(a, c, b, d);
+        }
+
+        bool _isDelaunayViolation(Half_Edge edge, Vertex nonSharedVertex)
+        {
+            return edge.Triangle.IsPointInsideCircumcircle(nonSharedVertex.Position);
+        }
+
+        bool IsQuadrilateralConvex(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        {
+            return _isTriangleClockwise(a, b, c)
+                   && _isTriangleClockwise(a, c, d);
+        }
+
+        bool _isTriangleClockwise(Vector3 a, Vector3 b, Vector3 c)
+        {
+            return (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z) < 0;
+        }
+
+        bool _diagonalsIntersect(Vector3 a1, Vector3 a2, Vector3 b1, Vector3 b2)
+        {
+            var o1 = _orientation(a1, a2, b1);
+            var o2 = _orientation(a1, a2, b2);
+            var o3 = _orientation(b1, b2, a1);
+            var o4 = _orientation(b1, b2, a2);
+            
+            return !Mathf.Approximately(o1, o2) && !Mathf.Approximately(o3, o4);
+        }
+        
+        float _triangleArea(Vector3 a, Vector3 b, Vector3 c)
+        {
+            return 0.5f * Mathf.Abs((b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z));
+        }
+
+
+        float _orientation(Vector3 a, Vector3 b, Vector3 c)
+        {
+            return (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
         }
 
         IEnumerator _flipEdge(Half_Edge one)
         {   
             var two = one.Next;
-            var three = two.Next;
+            var three = one.Previous;
 
             var four = one.Opposite;
             var five = four.Next;
-            var six = five.Next;
+            var six = four.Previous;
 
             var a = one.Vertex;
             var b = two.Vertex;
             var c = three.Vertex;
             var d = five.Vertex;
 
-            a.HalfEdge = two;
-            c.HalfEdge = five;
+            one.Vertex = b;
+            four.Vertex = d;
             
             one.Next = three;
+            three.Previous = one;
+            three.Next = five;
+            five.Previous = three;
+            five.Next = one;
             one.Previous = five;
 
-            two.Next = four;
-            two.Previous = six;
-
-            three.Next = five;
-            three.Previous = one;
-
             four.Next = six;
-            four.Previous = two;
-
-            five.Next = one;
-            five.Previous = three;
-
-            six.Next = two;
             six.Previous = four;
+            six.Next = two;
+            two.Previous = six;
+            two.Next = four;
+            four.Previous = two;
             
-            one.Vertex = b;
-            two.Vertex = b;
-            three.Vertex = c;
-            four.Vertex = d;
-            five.Vertex = d;
-            six.Vertex = a;
+            one.Opposite = four;
+            four.Opposite = one;
             
             var triangle_1 = one.Triangle;
             var triangle_2 = four.Triangle;
             
-            yield return _showTriangle(triangle_1,  0, true);
-            yield return _showTriangle(triangle_2,  1, true);
-            
-            yield return _hideTriangle(triangle_1);
-            yield return _hideTriangle(triangle_2);
+            yield return _hideTriangle(triangle_1, 0);
+            yield return _hideTriangle(triangle_2, 0);
 
             one.Triangle = triangle_1;
             three.Triangle = triangle_1;
@@ -415,12 +512,6 @@ namespace Pathfinding
 
             triangle_1.Half_Edge = three;
             triangle_2.Half_Edge = four;
-            
-            yield return _showTriangle(triangle_1, 2, true);
-            yield return _showTriangle(triangle_2, 2, true);
-
-            yield return _hideTriangle(triangle_1);
-            yield return _hideTriangle(triangle_2);
 
             yield return _showTriangle(triangle_1, 0);
             yield return _showTriangle(triangle_2, 0);
@@ -441,7 +532,7 @@ namespace Pathfinding
         IEnumerator _showTriangle(Node_Triangle triangle, int colour = -1,
             bool showTriangle = false, int altitude = 0)
         {
-            if (_shownTriangles.TryGetValue(triangle.ID_Vectors, out var shownTriangle)) Object.Destroy(shownTriangle);
+            if (_shownTriangles.TryGetValue(triangle.ID_Vectors, out var shownTriangle)) yield return _hideTriangle(triangle, 0);
 
             var triangleGO = Visualise_Triangle.Show_Triangle(new[]
                 {
@@ -518,6 +609,16 @@ namespace Pathfinding
 
             yield return new WaitForSeconds(Speed);
         }
+        
+        static IEnumerator _showCircle(Vector3 position, float radius, int altitude = 0)
+        {
+            var circle = Visualise_Circle.Show_Circle(position + Vector3.up * altitude, radius, 32, 0);
+            circle.name = "Circle";
+
+            yield return new WaitForSeconds(0.5f);
+
+            Object.Destroy(circle);
+        }
 
         static IEnumerator _showMessage(string message, Vector3 position, float duration, int altitude = 0)
         {
@@ -526,41 +627,6 @@ namespace Pathfinding
             yield return new WaitForSeconds(duration);
 
             Object.Destroy(messageGO);
-        }
-
-        IEnumerator _performEdgeFlipping(Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> triangles)
-        {
-            bool flippedEdge;
-            do
-            {
-                flippedEdge = false;
-                
-                foreach (var triangle in triangles.Values)
-                {
-                    var startEdge = triangle.Half_Edge;
-                    var currentEdge = startEdge;
-            
-                    do
-                    {
-                        if (currentEdge.Opposite != null)
-                        {
-                            var notSharedVertex = currentEdge.Opposite.Next.Next.Vertex;
-                            
-                            if (triangle.IsPointInsideCircumcircle(notSharedVertex.Position))
-                            {
-                                yield return _flipEdge(currentEdge);
-                                flippedEdge = true;
-                                
-                                break;
-                            }
-                        }
-                
-                        currentEdge = currentEdge.Next;
-                    } while (currentEdge != startEdge && !flippedEdge);
-            
-                    if (flippedEdge) break;
-                }
-            } while (flippedEdge);
         }
 
         void _returnUpdatedTriangles(Dictionary<(Vector3, Vector3, Vector3), Node_Triangle> updatedTriangles)
