@@ -38,15 +38,6 @@ namespace Pathfinding
                 (A.Position.z + B.Position.z + C.Position.z) / 3
             );
 
-        public static Vector3 GetCentroid(Vector3[] vertices)
-        {
-            return new Vector3(
-                (vertices[0].x + vertices[1].x + vertices[2].x) / 3,
-                (vertices[0].y + vertices[1].y + vertices[2].y) / 3,
-                (vertices[0].z + vertices[1].z + vertices[2].z) / 3
-            );
-        }
-
         public Vector3 Circumcentre => _circumcentre != Vector3.zero
             ? _circumcentre
             : _circumcentre = _calculateCircumcentre(A.Position, B.Position, C.Position);
@@ -56,9 +47,15 @@ namespace Pathfinding
 
         public Node_Triangle(Vector3 a, Vector3 b, Vector3 c)
         {
-            A = new Vertex(a);
-            B = new Vertex(b);
-            C = new Vertex(c);
+            var vertices = new[] { new Vertex(a), new Vertex(b), new Vertex(c) };
+            Array.Sort(vertices,
+                (v1, v2) => !Mathf.Approximately(v1.Position.x, v2.Position.x)
+                    ? v1.Position.x.CompareTo(v2.Position.x)
+                    : v1.Position.z.CompareTo(v2.Position.z));
+
+            A = vertices[0];
+            B = vertices[1];
+            C = vertices[2];
             
             if (Vector3.Dot(Vector3.Cross(B.Position - A.Position, C.Position - A.Position).normalized, Vector3.up) < 0)
             {
@@ -96,7 +93,7 @@ namespace Pathfinding
         {
             if (ArePointsColinear(a, b, c))
             {
-                return false; // Ignore colinear points
+                return false;
             }
             
             var circumcentre = _calculateCircumcentre(a, b, c);
@@ -107,14 +104,8 @@ namespace Pathfinding
             return insideCircumcircle;
         }
         
-        public static bool ArePointsColinear(Vector3 a, Vector3 b, Vector3 c)
-        {
-            // Calculate the area using the 2D cross product
-            var area = (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
-    
-            // If area is close to zero, points are colinear
-            return Mathf.Abs(area) < Mathf.Epsilon;
-        }
+        public static bool ArePointsColinear(Vector3 a, Vector3 b, Vector3 c) => 
+            Mathf.Abs((b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z)) < Mathf.Epsilon;
 
         static Vector3 _calculateCircumcentre(Vector3 a, Vector3 b, Vector3 c)
         {
@@ -138,19 +129,6 @@ namespace Pathfinding
         }
 
         float _calculateCircumradius() => Vector3.Distance(Circumcentre, A.Position);
-        
-        public Vertex GetThirdVertex(Vector3 point_1,Vector3 point_2)
-        {
-            foreach (var vertex in Vertices)
-            {
-                if (vertex.Position != point_1 && vertex.Position != point_2)
-                {
-                    return vertex;
-                }
-            }
-            
-            throw new Exception("Third vertex not found in triangle.");
-        }
         
         public List<Node_Triangle> GetAdjacentTriangles()
         {
