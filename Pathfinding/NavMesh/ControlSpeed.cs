@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Pathfinding
+namespace Pathfinding.NavMesh
 {
     public class ControlSpeed : MonoBehaviour
     {

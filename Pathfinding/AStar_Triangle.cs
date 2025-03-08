@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Pathfinding.NavMesh;
 using Priorities.Priority_Queues;
 using UnityEngine;
 

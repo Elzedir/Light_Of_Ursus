@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
 
-namespace Pathfinding
+namespace Pathfinding.NavMesh
 {
     public class Node_Triangle
     {
@@ -93,6 +93,7 @@ namespace Pathfinding
         {
             if (ArePointsColinear(a, b, c))
             {
+                Debug.Log($"Points {a}, {b}, {c} are colinear, no circumcircle exists!");
                 return false;
             }
             
@@ -104,31 +105,122 @@ namespace Pathfinding
             return insideCircumcircle;
         }
         
+        public static bool IsPointInsideTriangle(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+        {
+            var v0 = c - a;
+            var v1 = b - a;
+            var v2 = p - a;
+
+            var dot00 = Vector3.Dot(v0, v0);
+            var dot01 = Vector3.Dot(v0, v1);
+            var dot02 = Vector3.Dot(v0, v2);
+            var dot11 = Vector3.Dot(v1, v1);
+            var dot12 = Vector3.Dot(v1, v2);
+
+            var inverseDenominator = 1 / (dot00 * dot11 - dot01 * dot01);
+            
+            var u = (dot11 * dot02 - dot01 * dot12) * inverseDenominator;
+            var v = (dot00 * dot12 - dot01 * dot02) * inverseDenominator;
+
+            return u >= 0 && v >= 0 && u + v <= 1;
+        }
+
         public static bool ArePointsColinear(Vector3 a, Vector3 b, Vector3 c) => 
-            Mathf.Abs((b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z)) < Mathf.Epsilon;
+            Vector3.Cross(b - a, c - a).sqrMagnitude < 1e-6f;
 
         static Vector3 _calculateCircumcentre(Vector3 a, Vector3 b, Vector3 c)
         {
-            float ax = a.x, az = a.z;
-            float bx = b.x, bz = b.z;
-            float cx = c.x, cz = c.z;
-
-            var d = 2 * (ax * (bz - cz) + bx * (cz - az) + cx * (az - bz));
-
-            if (Mathf.Abs(d) < Mathf.Epsilon)
+            var ab = b - a;
+            var ac = c - a;
+            
+            if (Vector3.Cross(ab, ac).sqrMagnitude < 1e-6f)
+            {
+                Debug.LogError("Points are colinear or nearly colinear — no valid circumcircle!");
                 return Vector3.zero;
+            }
+            
+            var abMid = (a + b) * 0.5f;
+            var acMid = (a + c) * 0.5f;
+            
+            var triangleNormal = Vector3.Cross(ab, ac).normalized;
+            var abNormal = Vector3.Cross(ab, triangleNormal).normalized;
+            var acNormal = Vector3.Cross(ac, triangleNormal).normalized;
+            
+            var circumcentre = _lineIntersection(abMid, abMid + abNormal, acMid, acMid + acNormal);
+            return circumcentre;
+        }
+        
+        static Vector3 _lineIntersection(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+        {
+            var p13 = p1 - p3;
+            var p43 = p4 - p3;
+            var p21 = p2 - p1;
 
-            var x =
-                ((ax * ax + az * az) * (bz - cz) + (bx * bx + bz * bz) * (cz - az) + (cx * cx + cz * cz) * (az - bz)) /
-                d;
-            var z =
-                ((ax * ax + az * az) * (cx - bx) + (bx * bx + bz * bz) * (ax - cx) + (cx * cx + cz * cz) * (bx - ax)) /
-                d;
+            var d1343 = Vector3.Dot(p13, p43);
+            var d4321 = Vector3.Dot(p43, p21);
+            var d1321 = Vector3.Dot(p13, p21);
+            var d4343 = Vector3.Dot(p43, p43);
+            var d2121 = Vector3.Dot(p21, p21);
 
-            return new Vector3(x, 0, z);
+            var denominator = d2121 * d4343 - d4321 * d4321;
+            if (Mathf.Abs(denominator) < 1e-6f) return Vector3.zero;
+
+            var numerator = d1343 * d4321 - d1321 * d4343;
+            var mua = numerator / denominator;
+            return p1 + mua * p21;
+        }
+        
+        float _calculateCircumradius() => Vector3.Distance(Circumcentre, A.Position);
+        
+        public bool SharesVertex(Node_Triangle other)
+        {
+            return Vector3.SqrMagnitude(A.Position - other.A.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(A.Position - other.B.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(A.Position - other.C.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(B.Position - other.A.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(B.Position - other.B.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(B.Position - other.C.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(C.Position - other.A.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(C.Position - other.B.Position) < 0.0000001f ||
+                   Vector3.SqrMagnitude(C.Position - other.C.Position) < 0.0000001f;
         }
 
-        float _calculateCircumradius() => Vector3.Distance(Circumcentre, A.Position);
+        public static bool SharesEdge(Node_Triangle triangle, Half_Edge edge)
+        {
+            var triangleVertices = (triangle.A.Position, triangle.B.Position, triangle.C.Position);
+            var edgeVertices = (edge.Vertex.Position, edge.Next.Vertex.Position);
+            
+            return SharesEdge(triangleVertices, edgeVertices);
+        }
+        
+        public static bool SharesEdge((Vector3, Vector3, Vector3) triangle, (Vector3, Vector3) edge)
+        {
+            return Vector3.SqrMagnitude(triangle.Item1 - edge.Item1) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item2 - edge.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item1 - edge.Item2) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item2 - edge.Item1) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item2 - edge.Item1) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item3 - edge.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item2 - edge.Item2) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item3 - edge.Item1) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item3 - edge.Item1) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item1 - edge.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item3 - edge.Item2) < 0.0000001f &&
+                   Vector3.SqrMagnitude(triangle.Item1 - edge.Item1) < 0.0000001f;
+        }
+        
+        public static bool SharesVertexPosition((Vector3, Vector3, Vector3) triangle, (Vector3, Vector3, Vector3) other)
+        {
+            return Vector3.SqrMagnitude(triangle.Item1 - other.Item1) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item1 - other.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item1 - other.Item3) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item2 - other.Item1) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item2 - other.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item2 - other.Item3) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item3 - other.Item1) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item3 - other.Item2) < 0.0000001f ||
+                   Vector3.SqrMagnitude(triangle.Item3 - other.Item3) < 0.0000001f;
+        }
         
         public List<Node_Triangle> GetAdjacentTriangles()
         {
