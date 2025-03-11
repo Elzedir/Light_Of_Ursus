@@ -29,31 +29,143 @@ namespace Pathfinding.NavMesh
 
             var navRelevantObjects = GameObject.FindGameObjectsWithTag("NavRelevant");
 
-            //* Also, the epsilon value for generating triangles might be wrong since when the step is small enough for the grid, it connects trinangles
-            //* together that it shouldn't. Check the minimum values.
-            
             foreach (var navMeshObject in navRelevantObjects)
             {
                 var position = navMeshObject.transform.position;
-                position.y = 0; //terrain.SampleHeight(position);
+                position.y = 0;
 
                 _nodes.Add(position);
             }
+            
+            BuildAdaptiveQuadTreeSampling(new Rect(0, 0, worldSize, worldSize), 0, 0);
+            
+            AddTerrainBoundaryPoints();
 
-            for (var x = 0f; x <= worldSize; x += 50)
-            {
-                for (var z = 0f; z <= worldSize; z += 50)
-                {
-                    var position = new Vector3(x, 0, z);
-                    //position.y = terrain.SampleHeight(position);
-
-                    _nodes.Add(position);
-                }
-            }
+            // for (var x = 0f; x <= worldSize; x += 3)
+            // {
+            //     for (var z = 0f; z <= worldSize; z += 3)
+            //     {
+            //         var position = new Vector3(x, 0, z);
+            //
+            //         _nodes.Add(position);
+            //     }
+            // }
 
             _performTriangulationUpdate(_nodes);
 
             return new Dictionary<ulong, Node_Triangle>();
+        }
+
+        void BuildAdaptiveQuadTreeSampling(Rect area, int depth, int iteration)
+        {
+            if (iteration++ > 4) return;
+            
+            var center = new Vector3(area.center.x, 0, area.center.y);
+            var corners = new[]
+            {
+                new Vector3(area.xMin, 0, area.yMin),
+                new Vector3(area.xMax, 0, area.yMin),
+                new Vector3(area.xMin, 0, area.yMax),
+                new Vector3(area.xMax, 0, area.yMax)
+            };
+            
+            var centerType = Terrains.Terrain_Manager.GetTextureIndexAtPosition(center);
+            var cornerTypes = corners.Select(Terrains.Terrain_Manager.GetTextureIndexAtPosition).ToArray();
+            
+            var hasTypeTransition = cornerTypes.Any(t => t != centerType);
+            var isWalkable = centerType != (int)Terrains.TerrainName.Water;
+            
+            var heightVariation = GetHeightVariation(corners, center);
+            
+            if (area.width <= 4 || (!hasTypeTransition && heightVariation < 0.5f) || depth >= 7)
+            {
+                if (!isWalkable) return;
+                
+                center.y = Terrain.activeTerrain.SampleHeight(center);
+                corners = corners.Select(c =>
+                {
+                    c.y = Terrain.activeTerrain.SampleHeight(c);
+                    return c;
+                }).ToArray();
+                
+                _nodes.Add(center);
+                if (depth <= 3 && !hasTypeTransition && !(heightVariation > 0.2f)) return;
+                
+                foreach (var corner in corners)
+                {
+                    _nodes.Add(corner);
+                }
+            }
+            else
+            {
+                var halfWidth = area.width / 2;
+                var halfHeight = area.height / 2;
+
+                BuildAdaptiveQuadTreeSampling(new Rect(area.x, area.y, halfWidth, halfHeight), depth + 1, iteration);
+                BuildAdaptiveQuadTreeSampling(new Rect(area.x + halfWidth, area.y, halfWidth, halfHeight), depth + 1, iteration);
+                BuildAdaptiveQuadTreeSampling(new Rect(area.x, area.y + halfHeight, halfWidth, halfHeight), depth + 1, iteration);
+                BuildAdaptiveQuadTreeSampling(new Rect(area.x + halfWidth, area.y + halfHeight, halfWidth, halfHeight),
+                    depth + 1, iteration);
+            }
+        }
+
+        float GetHeightVariation(Vector3[] corners, Vector3 center)
+        {
+            var terrain = Terrain.activeTerrain;
+            var centerHeight = terrain.SampleHeight(center);
+
+            var maxDiff = 0f;
+            foreach (var corner in corners)
+            {
+                var cornerHeight = terrain.SampleHeight(corner);
+                maxDiff = Mathf.Max(maxDiff, Mathf.Abs(cornerHeight - centerHeight));
+            }
+
+            return maxDiff;
+        }
+
+        void AddTerrainBoundaryPoints()
+        {
+            var terrain = Terrain.activeTerrain;
+            var terrainData = terrain.terrainData;
+            
+            // var resolution = 2;
+            // var stepSize = Mathf.Max(terrainData.size.x, terrainData.size.z) / resolution;
+
+            var stepSize = 5f;
+            
+            for (float x = 0; x < terrainData.size.x; x += stepSize)
+            {
+                for (float z = 0; z < terrainData.size.z; z += stepSize)
+                {
+                    var pos = new Vector3(x, 0, z);
+                    var typeHere = Terrains.Terrain_Manager.GetTextureIndexAtPosition(pos);
+                    
+                    var isBoundary = false;
+
+                    var secondStep = 5;
+                    
+                    for (var dx = -1; dx <= 1; dx += 2)
+                    {
+                        for (var dz = -1; dz <= 1; dz += 2)
+                        {
+                            var neighborPos = new Vector3(x + dx * stepSize / 2, 0, z + dz * stepSize / 2);
+                            var neighborType = Terrains.Terrain_Manager.GetTextureIndexAtPosition(neighborPos);
+
+                            if (neighborType == typeHere) continue;
+                            
+                            isBoundary = true;
+                            break;
+                        }
+
+                        if (isBoundary) break;
+                    }
+
+                    if (!isBoundary) continue;
+                    
+                    _nodes.Add(pos);
+                }
+            }
         }
 
         public static Node_Triangle CreateSuperTriangle(HashSet<Vector3> vertices)
@@ -80,10 +192,10 @@ namespace Pathfinding.NavMesh
             //     new Vector3(minX - maxDelta, minY, minZ - maxDelta), 
             //     new Vector3(maxX + maxDelta, minY, minZ - maxDelta), 
             //     new Vector3(minX + dx / 2, minY, maxZ + maxDelta));
-            
+
             var superTriangle = new Node_Triangle(
-                new Vector3(minX - maxDelta, 0, minZ - maxDelta), 
-                new Vector3(maxX + maxDelta, 0, minZ - maxDelta), 
+                new Vector3(minX - maxDelta, 0, minZ - maxDelta),
+                new Vector3(maxX + maxDelta, 0, minZ - maxDelta),
                 new Vector3(minX + dx / 2, 0, maxZ + maxDelta));
 
             return superTriangle;
@@ -109,27 +221,18 @@ namespace Pathfinding.NavMesh
             var superNodeTriangle = CreateSuperTriangle(pointsToProcess);
             triangles.Add(superNodeTriangle.ID, superNodeTriangle);
 
-            _showTriangle(superNodeTriangle, colour: 0, altitude: 1);
-
             foreach (var point in pointsToProcess)
             {
                 var badTriangles = new HashSet<Node_Triangle>();
-
-                //yield return _showVoxel(point, 1, altitude: 2);
 
                 foreach (var triangle in triangles.Values)
                 {
                     if (!triangle.IsPointInsideCircumcircle(point)) continue;
 
-                    //yield return _showVoxel(point, 1, 1, altitude: 2);
-
-                    //_showTriangle(triangle, 1, true, 1);
-
                     badTriangles.Add(triangle);
                 }
-                
-                a
-                    //* Check constrained vs this
+
+                //* Check constrained Delaunay vs this
 
                 var polygon = new Dictionary<(Vector3, Vector3), Half_Edge>();
 
@@ -147,33 +250,31 @@ namespace Pathfinding.NavMesh
                         }
 
                         currentEdge = currentEdge.Next;
-                    } 
-                    while (!Equals(currentEdge, badTriangle.Half_Edge));
+                    } while (!Equals(currentEdge, badTriangle.Half_Edge));
 
                     triangles.Remove(badTriangle.ID);
-
-                    //yield return _hideTriangle(badTriangle, 0);
                 }
 
                 var newTriangles = new List<Node_Triangle>();
 
                 _createNewTriangles(point, polygon, triangles, newTriangles);
-
-                _showVoxel(point, 0.5f, 2);
             }
+
+            var terrain = Terrain.activeTerrain;
 
             foreach (var triangle in triangles.Values.ToList())
             {
-                //yield return _hideTriangle(triangle, 0.1f);
-                
                 if (superNodeTriangle.SharesVertex(triangle))
                 {
                     triangles.Remove(triangle.ID);
-
-                    //yield return _hideTriangle(triangle, 0.1f);   
                     continue;
                 }
-                
+
+                foreach (var vertex in triangle.Vertices.ToList())
+                {
+                    vertex.Position.y = terrain.SampleHeight(vertex.Position);
+                }
+
                 _showTriangle(triangle, 0);
             }
         }
@@ -189,7 +290,7 @@ namespace Pathfinding.NavMesh
             for (var i = 0; i < 3; i++)
             {
                 newTriangles.Clear();
-                
+
                 foreach (var edge in edgesToReplace.Values)
                 {
                     var a = edge.Vertex.Position;
@@ -200,24 +301,23 @@ namespace Pathfinding.NavMesh
                     var triangle = new Node_Triangle(a, b, point);
                     triangles[triangle.ID] = triangle;
                     newTriangles.Add(triangle);
-
-                    //_showTriangle(triangle, 1);
                 }
-                
+
                 edgesToReplace.Clear();
-            
+
                 _connectAdjacentTriangles(newTriangles);
-                
+
                 //var intersectionEdges = _getTriangleIntersections(newTriangles);
-                
-                //yield return _performEdgeFlipping(edgesToReplace, triangles, intersectionEdges);   
+
+                //_performEdgeFlipping(edgesToReplace, triangles, intersectionEdges);   
             }
         }
 
-        static Dictionary<((Vector3, Vector3), (Vector3, Vector3)), (Half_Edge, Half_Edge)> _getTriangleIntersections(List<Node_Triangle> newTriangles)
+        static Dictionary<((Vector3, Vector3), (Vector3, Vector3)), (Half_Edge, Half_Edge)> _getTriangleIntersections(
+            List<Node_Triangle> newTriangles)
         {
             var intersectingEdges = new Dictionary<((Vector3, Vector3), (Vector3, Vector3)), (Half_Edge, Half_Edge)>();
-            
+
             foreach (var newTriangle in newTriangles)
             {
                 var newEdges = new List<Half_Edge>
@@ -233,12 +333,12 @@ namespace Pathfinding.NavMesh
                     {
                         var otherEdge = triangle.Half_Edge;
                         var iteration = 0;
-                        
+
                         do
                         {
                             var newEdgeStart = newEdge.Vertex.Position;
                             var newEdgeEnd = newEdge.Next.Vertex.Position;
-                    
+
                             var otherEdgeStart = otherEdge.Vertex.Position;
                             var otherEdgeEnd = otherEdge.Next.Vertex.Position;
 
@@ -258,23 +358,22 @@ namespace Pathfinding.NavMesh
                                 otherEdge = otherEdge.Next;
                                 continue;
                             }
-                            
+
                             var newEdgeKey = _getEdgeKey(newEdgeStart, newEdgeEnd);
                             var otherEdgeKey = _getEdgeKey(otherEdgeStart, otherEdgeEnd);
-                            
+
                             intersectingEdges.TryAdd((newEdgeKey, otherEdgeKey), (newEdge, otherEdge));
 
                             otherEdge = otherEdge.Next;
-                        } 
-                        while (!Equals(otherEdge, triangle.Half_Edge) && iteration++ < 50);
+                        } while (!Equals(otherEdge, triangle.Half_Edge) && iteration++ < 50);
 
                         if (iteration < 50) continue;
                         Debug.LogError("Infinite loop detected.");
                         break;
                     }
-                }   
+                }
             }
-            
+
             return intersectingEdges;
         }
 
@@ -325,17 +424,16 @@ namespace Pathfinding.NavMesh
                     else edgeMap[edgeKey] = currentEdge;
 
                     currentEdge = currentEdge.Next;
-                } 
-                while (!Equals(currentEdge, startEdge) && iteration++ < 50);
-                
+                } while (!Equals(currentEdge, startEdge) && iteration++ < 50);
+
                 if (iteration < 50) continue;
-                
+
                 Debug.LogError("Infinite loop detected.");
                 break;
             }
         }
 
-        IEnumerator _performEdgeFlipping(Dictionary<(Vector3, Vector3), Half_Edge> edgesToReplace,
+        void _performEdgeFlipping(Dictionary<(Vector3, Vector3), Half_Edge> edgesToReplace,
             Dictionary<ulong, Node_Triangle> triangles,
             Dictionary<((Vector3, Vector3), (Vector3, Vector3)), (Half_Edge, Half_Edge)> intersectingEdges)
         {
@@ -367,9 +465,7 @@ namespace Pathfinding.NavMesh
 
                                 if (_isQuadrilateralConvex(a, b, c, d))
                                 {
-                                    yield return _showMessage("Flipping edges to resolve intersection.",
-                                        (a + b + c + d) * 0.25f, 0.5f, 1);
-                                    yield return _flipEdge(currentEdge);
+                                    _flipEdge(currentEdge);
                                     flippedEdge = true;
 
                                     break;
@@ -378,11 +474,10 @@ namespace Pathfinding.NavMesh
                         }
 
                         currentEdge = currentEdge.Next;
-                    } 
-                    while (!Equals(currentEdge, startEdge) && iterationA++ < 50);
-                    
+                    } while (!Equals(currentEdge, startEdge) && iterationA++ < 50);
+
                     if (flippedEdge) break;
-                    
+
                     if (iterationA < 50) continue;
                     Debug.LogError("Infinite loop detected.");
                     break;
@@ -390,7 +485,7 @@ namespace Pathfinding.NavMesh
             } while (flippedEdge && iteration++ < 5);
 
             var trianglesToRemove = new HashSet<Node_Triangle>();
-            
+
             foreach (var (edge1, edge2) in intersectingEdges.Values)
             {
                 var triangle1 = edge1.Triangle;
@@ -408,24 +503,18 @@ namespace Pathfinding.NavMesh
 
                 var vertices = vertexPositions.ToArray();
 
-                yield return _showMessage($"Processing intersection with {vertices.Length} unique vertices.",
-                    vertices.Aggregate(Vector3.zero, (sum, v) => sum + v) / vertices.Length, 0.5f, 1);
-
                 if (vertices.Length != 4)
                 {
-                    Debug.Log($"Intersection with {vertices.Length} vertices.");
-                    continue;
-                    
                     var delaunayTriangles =
                         ConstrainedDelaunayTriangulation.TriangulateIntersection(triangle1, triangle2, vertices);
-                    
+
                     foreach (var triangleVertices in delaunayTriangles)
                     {
                         var triangle = new Node_Triangle(
-                            triangleVertices.Item1, 
+                            triangleVertices.Item1,
                             triangleVertices.Item2,
                             triangleVertices.Item3);
-                        
+
                         var vertexA = triangle.A;
                         var vertexB = triangle.B;
                         var vertexC = triangle.C;
@@ -444,19 +533,10 @@ namespace Pathfinding.NavMesh
                         edgesToReplace[edgeKey1] = edgeA;
                         edgesToReplace[edgeKey2] = edgeB;
                         edgesToReplace[edgeKey3] = edgeC;
-                        
-                        _showTriangle(triangle, 2, true);
                     }
-                    
-                    yield return new WaitForSeconds(20);
 
                     continue;
                 }
-
-                _showTriangle(triangle1, 2, true);
-                _showTriangle(triangle2, 2, true);
-                yield return _showMessage("Classic quadrilateral intersection case.",
-                    vertices.Aggregate(Vector3.zero, (sum, v) => sum + v) * 0.25f, 0.5f, 1);
 
                 var a = vertices[0];
                 var b = vertices[1];
@@ -516,58 +596,45 @@ namespace Pathfinding.NavMesh
                         edgesToReplace[edgeKey2] = edgeB;
                         edgesToReplace[edgeKey3] = edgeC;
                     }
-
-                    yield return _showMessage("Created optimal triangulation.",
-                        vertices.Aggregate(Vector3.zero, (sum, v) => sum + v) * 0.25f, 0.5f, 1);
                 }
                 else
                 {
-                    if (_evaluateTriangle(triangle1) < _evaluateTriangle(triangle2))
-                    {
-                        trianglesToRemove.Add(triangle1);
-                        yield return _showMessage("Removing lower quality triangle.", triangle1.Centroid, 0.5f, 1);
-                        _showTriangle(triangle2, 2);
-                    }
-                    else
-                    {
-                        trianglesToRemove.Add(triangle2);
-                        yield return _showMessage("Removing lower quality triangle.", triangle2.Centroid, 0.5f, 1);
-                        _showTriangle(triangle1, 2);
-                    }
+                    trianglesToRemove.Add(_evaluateTriangle(triangle1) < _evaluateTriangle(triangle2)
+                        ? triangle1
+                        : triangle2);
                 }
             }
 
             foreach (var triangleToRemove in trianglesToRemove)
             {
                 triangles.Remove(triangleToRemove.ID);
-                yield return _hideTriangle(triangleToRemove);
             }
         }
 
         static float _evaluateTriangulation(List<(Vector3, Vector3, Vector3)> triangles)
         {
             float totalQuality = 0;
-    
+
             foreach (var triangle in triangles)
             {
                 var area = _triangleArea(triangle.Item1, triangle.Item2, triangle.Item3);
                 var minAngle = _calculateMinAngle(triangle.Item1, triangle.Item2, triangle.Item3);
-                
+
                 totalQuality += area * minAngle;
             }
-    
+
             return totalQuality / triangles.Count;
         }
-        
+
         float _evaluateTriangle(Node_Triangle triangle)
         {
             var a = triangle.Vertices[0].Position;
             var b = triangle.Vertices[1].Position;
             var c = triangle.Vertices[2].Position;
-    
+
             var area = _triangleArea(a, b, c);
             var minAngle = _calculateMinAngle(a, b, c);
-    
+
             return area * minAngle;
         }
 
@@ -576,15 +643,15 @@ namespace Pathfinding.NavMesh
             var ab = b - a;
             var bc = c - b;
             var ca = a - c;
-            
+
             ab.Normalize();
             bc.Normalize();
             ca.Normalize();
-            
+
             var angleA = Mathf.Acos(Vector3.Dot(-ca, ab));
             var angleB = Mathf.Acos(Vector3.Dot(-ab, bc));
             var angleC = Mathf.Acos(Vector3.Dot(-bc, ca));
-            
+
             return Mathf.Min(angleA, angleB, angleC);
         }
 
@@ -619,7 +686,7 @@ namespace Pathfinding.NavMesh
         static float _orientation(Vector3 a, Vector3 b, Vector3 c) =>
             (b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z);
 
-        IEnumerator _flipEdge(Half_Edge one)
+        void _flipEdge(Half_Edge one)
         {
             var two = one.Next;
             var three = one.Previous;
@@ -656,9 +723,6 @@ namespace Pathfinding.NavMesh
             var triangle_1 = one.Triangle;
             var triangle_2 = four.Triangle;
 
-            yield return _hideTriangle(triangle_1, 0);
-            yield return _hideTriangle(triangle_2, 0);
-
             one.Triangle = triangle_1;
             three.Triangle = triangle_1;
             five.Triangle = triangle_1;
@@ -677,9 +741,6 @@ namespace Pathfinding.NavMesh
 
             triangle_1.Half_Edge = three;
             triangle_2.Half_Edge = four;
-
-            _showTriangle(triangle_1, 0);
-            _showTriangle(triangle_2, 0);
         }
 
         void _showVoxel(Vector3 position, float sizeMultiplier = 1f, int colourIndex = 0, int altitude = 0)
@@ -691,8 +752,6 @@ namespace Pathfinding.NavMesh
             voxel.name = $"Voxel: {position}";
 
             _shownVoxels[position] = voxel;
-
-            //yield return new WaitForSeconds(0);
         }
 
         void _showTriangle(Node_Triangle triangle, int colour = -1,
@@ -718,7 +777,8 @@ namespace Pathfinding.NavMesh
                 var start = triangle.Vertices[i];
                 var end = triangle.Vertices[(i + 1) % triangle.Vertices.Length];
 
-                Manager_Game.S_Instance.StartCoroutine(_showEdge(start.Position, end.Position, colour, triangleGO.transform, altitude));
+                Manager_Game.S_Instance.StartCoroutine(_showEdge(start.Position, end.Position, colour,
+                    triangleGO.transform, altitude));
             }
 
             _shownTriangles[triangle.ID_Vectors] = triangleGO;
@@ -727,7 +787,7 @@ namespace Pathfinding.NavMesh
         IEnumerator _hideTriangle(Node_Triangle triangle, float duration = 0.5f)
         {
             if (!_shownTriangles.TryGetValue(triangle.ID_Vectors, out var shownTriangle)) yield break;
-            
+
             Object.Destroy(shownTriangle);
             _shownTriangles.Remove(triangle.ID_Vectors);
 
