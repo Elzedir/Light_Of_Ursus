@@ -36,6 +36,7 @@ namespace Pathfinding.NavMesh
 
                 _nodes.Add(position);
             }
+            // Use flowpath at a larger space, less triangles
             
             BuildAdaptiveQuadTreeSampling(new Rect(0, 0, worldSize, worldSize), 0, 0);
             
