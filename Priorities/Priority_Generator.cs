@@ -167,7 +167,7 @@ namespace Priorities
         static float _generateHaulPriority(Priority_Parameters priority_Parameters)
         {
             float highestPriority = 0;
-            var allStationNames = priority_Parameters.JobSite_Component_Source.GetStationNames();
+            var allStationNames = priority_Parameters.Building_Component_Source.GetStationNames();
             
             if (priority_Parameters.Inventory_Hauler is null)
             {

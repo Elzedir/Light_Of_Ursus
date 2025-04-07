@@ -1,5 +1,5 @@
 using Actors;
-using JobSites;
+using Buildings;
 using Priorities;
 using Station;
 using UnityEngine;
@@ -34,18 +34,18 @@ namespace Tools
         public             Station_Component Station    => _component as Station_Component;
         public Station_Data StationData => Station.Station_Data;
         public override GameObject           GameObject                => Station.gameObject;
-        public override Priority_Data GetPriorityComponent() => Station.JobSite.JobSite_Data.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Station.Building.Building_Data.PriorityData;
     }
-    public class ComponentReference_JobSite : ComponentReference
+    public class ComponentReference_Building : ComponentReference
     {
-        public ulong JobSiteID => ComponentID;
-        public ComponentReference_JobSite(ulong jobSiteID) : base(jobSiteID) { }
-        JobSite_Component                    _jobSite;
-        protected override object           _component => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
-        public             JobSite_Component JobSite    => _component as JobSite_Component;
-        public JobSite_Data JobSiteData => JobSite.JobSite_Data;
-        public override GameObject           GameObject                => JobSite.gameObject;
+        public ulong BuildingID => ComponentID;
+        public ComponentReference_Building(ulong buildingID) : base(buildingID) { }
+        Building_Component                    _building;
+        protected override object           _component => _building ??= Building_Manager.GetBuilding_Component(BuildingID);
+        public             Building_Component Building    => _component as Building_Component;
+        public Building_Data BuildingData => Building.Building_Data;
+        public override GameObject           GameObject                => Building.gameObject;
         
-        public override Priority_Data GetPriorityComponent() => JobSite.JobSite_Data.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Building.Building_Data.PriorityData;
     }
 }

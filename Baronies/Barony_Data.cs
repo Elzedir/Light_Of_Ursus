@@ -12,7 +12,7 @@ using UnityEngine.Serialization;
 namespace Cities
 {
     [Serializable]
-    public class City_Data : Data_Class
+    public class Barony_Data : Data_Class
     {
         public BaronyName BaronyName;
         public bool IsCapital;
@@ -31,27 +31,27 @@ namespace Cities
 
         Barony_Component _barony;
         public Barony_BuildingData Buildings;
-        public City_PopulationData Population;
-        public City_ProsperityData Prosperity;
+        public Barony_PopulationData Population;
+        public Barony_ProsperityData Prosperity;
 
-        const int c_maxCitySize = 5;
+        const int c_maxBaronySize = 5;
         
-        public Barony_Component Barony => _barony ??= City_Manager.GetCity_Component(ID);
+        public Barony_Component Barony => _barony ??= Barony_Manager.GetBarony_Component(ID);
 
-        Dictionary<ulong, Building_Component> _allJobSitesInCity;
+        Dictionary<ulong, Building_Component> _allJobSitesInBarony;
 
-        public Dictionary<ulong, Building_Component> AllJobSitesInCity
+        public Dictionary<ulong, Building_Component> AllJobSitesInBarony
         {
             get
             {
-                if (_allJobSitesInCity is not null && _allJobSitesInCity.Count != 0) return _allJobSitesInCity;
+                if (_allJobSitesInBarony is not null && _allJobSitesInBarony.Count != 0) return _allJobSitesInBarony;
 
-                return Barony.GetAllBuildingsInCity();
+                return Barony.GetAllBuildingsInBarony();
             }
         }
 
-        public City_Data(ulong id, string name, string description, ulong factionID, ulong regionID,
-            List<ulong> allBuildingIDs, City_PopulationData population, City_ProsperityData cityProsperityData = null)
+        public Barony_Data(ulong id, string name, string description, ulong factionID, ulong regionID,
+            List<ulong> allBuildingIDs, Barony_PopulationData population, Barony_ProsperityData baronyProsperityData = null)
         {
             ID = id;
             Name = name;
@@ -61,22 +61,22 @@ namespace Cities
             _allBuildingIDs = allBuildingIDs;
             Population = population;
 
-            Prosperity = new City_ProsperityData(cityProsperityData);
+            Prosperity = new Barony_ProsperityData(baronyProsperityData);
         }
 
-        public void InitialiseCityData()
+        public void InitialiseBaronyData()
         {
-            _barony = City_Manager.GetCity_Component(ID);
+            _barony = Barony_Manager.GetBarony_Component(ID);
 
             if (_barony is not null) return;
 
-            Debug.LogWarning($"City with ID {ID} not found in City_SO.");
+            Debug.LogWarning($"Barony with ID {ID} not found in Barony_SO.");
         }
 
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,
-                title: "City Data",
+                title: "Barony Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
@@ -86,9 +86,9 @@ namespace Cities
                 allSubData: Population.GetDataToDisplay(toggleMissingDataDebugs));
 
             _updateDataDisplay(DataToDisplay,
-                title: "City JobSites",
+                title: "Barony JobSites",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllJobSitesInCity.ToDictionary(
+                allStringData: AllJobSitesInBarony.ToDictionary(
                     building => building.Key.ToString(),
                     building => building.Value.name));
 
@@ -99,23 +99,23 @@ namespace Cities
         {
             return new Dictionary<string, string>
             {
-                { "City ID", $"{ID}" },
-                { "City Name", Name },
-                { "City Faction ID", $"{FactionID}" },
+                { "Barony ID", $"{ID}" },
+                { "Barony Name", Name },
+                { "Barony Faction ID", $"{FactionID}" },
                 { "Region ID", $"{RegionID}" },
-                { "City Description", Description }
+                { "Barony Description", Description }
             };
         }
     }
 
 
-    [CustomPropertyDrawer(typeof(City_Data))]
-    public class CityData_Drawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(Barony_Data))]
+    public class BaronyData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var cityName = property.FindPropertyRelative("CityName");
-            label.text = !string.IsNullOrEmpty(cityName?.stringValue) ? cityName?.stringValue : "Unnamed City";
+            var BaronyName = property.FindPropertyRelative("BaronyName");
+            label.text = !string.IsNullOrEmpty(BaronyName?.stringValue) ? BaronyName?.stringValue : "Unnamed Barony";
 
             EditorGUI.PropertyField(position, property, label, true);
         }

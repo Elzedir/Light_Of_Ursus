@@ -1,15 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor;
 using Actors;
-using Buildings;
 using Careers;
 using Items;
 using Jobs;
 using UnityEngine;
 
-namespace JobSites
+namespace Buildings
 {
     public class Building_Component_LumberYard : Building_Component
     {

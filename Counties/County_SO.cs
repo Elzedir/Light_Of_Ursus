@@ -10,7 +10,7 @@ namespace Counties
 {
     [CreateAssetMenu(fileName = "Region_SO", menuName = "SOList/Region_SO")]
     [Serializable]
-    public class Region_SO : Data_Component_SO<County_Data, County_Component>
+    public class County_SO : Data_Component_SO<County_Data, County_Component>
     {
         public Data<County_Data>[]         Regions                            => Data;
         public Data<County_Data>           GetRegion_Data(ulong      regionID) => GetData(regionID);
@@ -39,8 +39,8 @@ namespace Counties
 
             try
             {
-                savedData = DataPersistence_Manager.CurrentSaveData.SavedRegionData.AllRegionData
-                    .ToDictionary(region => region.RegionID, region => region);
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedCountyData.AllCountyData
+                    .ToDictionary(region => region.ID, region => region);
             }
             catch
             {
@@ -50,11 +50,11 @@ namespace Counties
                 {
                     Debug.LogWarning(saveData == null
                         ? "LoadData Error: CurrentSaveData is null."
-                        : saveData.SavedRegionData == null
+                        : saveData.SavedCountyData == null
                             ? $"LoadData Error: SavedRegionData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                            : saveData.SavedRegionData.AllRegionData == null
+                            : saveData.SavedCountyData.AllCountyData == null
                                 ? $"LoadData Error: AllRegionData is null in SavedRegionData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                                : !saveData.SavedRegionData.AllRegionData.Any()
+                                : !saveData.SavedCountyData.AllCountyData.Any()
                                     ? $"LoadData Warning: AllRegionData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
                                     : string.Empty);
                 }
@@ -69,19 +69,19 @@ namespace Counties
         protected override Data<County_Data> _convertToData(County_Data data)
         {
             return new Data<County_Data>(
-                dataID: data.RegionID, 
+                dataID: data.ID, 
                 data_Object: data,
-                dataTitle: $"{data.RegionID}: {data.RegionName}",
+                dataTitle: $"{data.ID}: {data.Name}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
         public override void SaveData(Save_Data saveData) =>
-            saveData.SavedRegionData = new SavedRegionData(Regions.Select(region => region.Data_Object).ToArray());
+            saveData.SavedCountyData = new SavedCountyData(Regions.Select(region => region.Data_Object).ToArray());
     }
 
-    [CustomEditor(typeof(Region_SO))]
+    [CustomEditor(typeof(County_SO))]
     public class Region_SOEditor : Data_SOEditor<County_Data>
     {
-        public override Data_SO<County_Data> SO => _so ??= (Region_SO)target;
+        public override Data_SO<County_Data> SO => _so ??= (County_SO)target;
     }
 }

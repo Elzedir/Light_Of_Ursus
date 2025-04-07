@@ -3,40 +3,36 @@ using System.Collections.Generic;
 using System.Linq;
 using Cities;
 using Faction;
-using Managers;
-using Region;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Regions
+namespace Counties
 {
     [Serializable]
-    public class Region_Data : Data_Class
+    public class County_Data : Data_Class
     {
-        public ulong   RegionID;
-        public string RegionName;
-        public int    RegionFactionID;
-        public string RegionDescription;
+        public ulong   ID;
+        public string Name;
+        public int    FactionID;
+        public string Description;
 
-        County_Component        _county_Component;
-        public County_Component County_Component => _county_Component ??= Region_Manager.GetRegion_Component(RegionID);
+        County_Component        _county;
 
         public           FactionName     Faction;
         [SerializeField] List<ulong>      _allCityIDs;
-        int                              _currentLength;
-        Dictionary<ulong, City_Component> _allCitiesInRegion;
+        Dictionary<ulong, Barony_Component> _allCitiesInRegion;
         
-        public Dictionary<ulong, City_Component> AllCitiesInRegion
+        public County_Component County => _county ??= County_Manager.GetRegion_Component(ID);
+        
+        public Dictionary<ulong, Barony_Component> AllCitiesInRegion
         {
             get
             {
-                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0 &&
-                    _allCitiesInRegion.Count == _currentLength) return _allCitiesInRegion;
-
-                _currentLength = _allCitiesInRegion?.Count ?? 0;
-                return County_Component.GetAllCitiesInRegion().ToDictionary(city => city.ID);
+                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0) return _allCitiesInRegion;
+                
+                return County.GetAllCitiesInRegion().ToDictionary(city => city.ID);
             }
         }
 
@@ -47,36 +43,33 @@ namespace Regions
                    .FirstOrDefault().Key;
         }
 
-        // Call when a new city is formed.
-        public void RefreshAllCities() => _currentLength = 0;
-
-        public Region_Data(ulong       regionID,   string regionName, string regionDescription, int regionFactionID,
-                           List<ulong> allCityIDs, City_ProsperityData cityProsperityData = null)
+        public County_Data(ulong       id,   string name, string description, int factionID,
+                           List<ulong> allCityIDs, Barony_ProsperityData baronyProsperityData = null)
         {
-            RegionID          = regionID;
-            RegionName        = regionName;
-            RegionDescription = regionDescription;
-            RegionFactionID   = regionFactionID;
+            ID          = id;
+            Name        = name;
+            Description = description;
+            FactionID   = factionID;
             _allCityIDs       = allCityIDs;
         }
         
         public void InitialiseRegionData()
         {
-            _county_Component = Region_Manager.GetRegion_Component(RegionID);
+            _county = County_Manager.GetRegion_Component(ID);
 
-            if (_county_Component is not null) return;
+            if (_county is not null) return;
             
-            Debug.LogWarning($"Region with ID {RegionID} not found in Region_SO.");
+            Debug.LogWarning($"Region with ID {ID} not found in Region_SO.");
         }
 
         public override Dictionary<string, string> GetStringData()
         {
             return new Dictionary<string, string>
             {
-                { "Region ID", $"{RegionID}" },
-                { "Region Name", RegionName },
-                { "Region Faction ID", $"{RegionFactionID}" },
-                { "Region Description", RegionDescription },
+                { "Region ID", $"{ID}" },
+                { "Region Name", Name },
+                { "Region Faction ID", $"{FactionID}" },
+                { "Region Description", Description },
                 { "Faction", $"{Faction}" },
                 { "All City IDs", string.Join(", ", _allCityIDs) }
             };
@@ -100,7 +93,7 @@ namespace Regions
         }
     }
 
-    [CustomPropertyDrawer(typeof(Region_Data))]
+    [CustomPropertyDrawer(typeof(County_Data))]
     public class RegionData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

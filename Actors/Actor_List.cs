@@ -52,7 +52,7 @@ namespace Actors
                         (
                             actorID: 1,
                             careerName: CareerName.Lumberjack,
-                            jobSiteID: 0
+                            buildingID: 0
                         ),
                         priority: new Priority_Data_Actor
                         (

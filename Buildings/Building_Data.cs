@@ -1,22 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using ActorPresets;
 using Actors;
-using Buildings;
 using Cities;
 using Items;
 using Jobs;
-using Managers;
 using Priorities;
 using Recipes;
 using Station;
 using Tools;
 using UnityEngine;
 
-namespace JobSites
+namespace Buildings
 {
     [Serializable]
     public class Building_Data : Data_Class
@@ -25,34 +22,33 @@ namespace JobSites
         public ulong FactionID;
         public ulong CityID;
         public ulong OwnerID;
-
-        public BuildingName BuildingName;
         
         Building_Component _building;
-        City_Component _city;
+        Barony_Component _barony;
         
         public SerializableDictionary<(ulong, ulong), Job> AllJobs;
         Dictionary<ulong, (ulong, ulong)> _actorToJobMap;
         
         public ProductionData ProductionData;
-        public Priority_Data_JobSite PriorityData;
+        public Priority_Data_Building PriorityData;
         public Building_ProsperityData ProsperityData;
+        
+        public string Name => Building.BuildingName.ToString() ?? _lastSavedName;
+        string _lastSavedName = "No name saved";
 
         public HashSet<ActorActionName> AllowedActions => AllJobs.Values.SelectMany(job => job.JobActions).ToHashSet();
         
         public Building_Component Building =>
-            _building ??= Building_Manager.GetJobSite_Component(ID) 
+            _building ??= Building_Manager.GetBuilding_Component(ID) 
                          ?? throw new NullReferenceException($"JobSite with ID {ID} not found in JobSite_SO.");
-        public City_Component City =>
-            _city ??= City_Manager.GetCity_Component(CityID) 
+        public Barony_Component Barony =>
+            _barony ??= Barony_Manager.GetBarony_Component(CityID) 
                       ?? throw new NullReferenceException($"City with ID {CityID} not found in City_SO.");
 
-        public Building_Data(ulong id, ulong factionID, ulong cityID, ulong ownerID, 
-            BuildingName buildingName,
-            ProductionData productionData, Building_ProsperityData prosperityData, Priority_Data_JobSite priorityData)
+        public Building_Data(ulong id, ulong factionID, ulong cityID, ulong ownerID,
+            ProductionData productionData, Building_ProsperityData prosperityData, Priority_Data_Building priorityData)
         {
             ID = id;
-            BuildingName = buildingName;
             FactionID = factionID;
             CityID = cityID;
             OwnerID = ownerID;
@@ -60,7 +56,7 @@ namespace JobSites
             if (!Application.isPlaying) return;
             
             ProductionData = new ProductionData(productionData);
-            PriorityData = new Priority_Data_JobSite(ID);
+            PriorityData = new Priority_Data_Building(ID);
             ProsperityData = new Building_ProsperityData(prosperityData);
         }
         
@@ -81,7 +77,7 @@ namespace JobSites
             }
         }
 
-        public void InitialiseJobSiteData()
+        public void InitialiseBuildingData()
         {
             FillEmptyJobSitePositions();
         }
@@ -95,7 +91,7 @@ namespace JobSites
 
         protected Actor_Component _findEmployeeFromCity(JobName positionName)
         {
-            var allCitizenIDs = City.CityData.Population.AllCitizenIDs;
+            var allCitizenIDs = Barony.BaronyData.Population.AllCitizenIDs;
 
             if (allCitizenIDs == null || !allCitizenIDs.Any()) return null;
 
@@ -115,7 +111,7 @@ namespace JobSites
             // For now, set to journeyman of whatever the job is. Later, find a way to hire based on prosperity and needs.
             var actorPresetName = ActorPreset_List.S_ActorDataPresetNameByJobName[jobName];
 
-            return Actor_Manager.SpawnNewActor(City.CitySpawnZone.transform.position, actorPresetName);
+            return Actor_Manager.SpawnNewActor(Barony.BaronySpawnZone.transform.position, actorPresetName);
         }
 
         protected bool _hasMinimumVocationRequired(ulong citizenID, List<VocationRequirement> vocationRequirements)
@@ -482,8 +478,8 @@ namespace JobSites
             return new Dictionary<string, string>
             {
                 { "JobSite ID", $"{ID}" },
-                { "JobSite Name", $"{BuildingName}" },
-                { "JobSite Faction ID", $"{FactionID}" },
+                { "Name", $"{Name}" },
+                { "Faction ID", $"{FactionID}" },
                 { "City ID", $"{CityID}" },
                 { "Owner ID", $"{OwnerID}" }
             };
@@ -550,20 +546,20 @@ namespace JobSites
     {
         public List<Item> AllProducedItems;
         public HashSet<Item> EstimatedProductionRatePerHour;
-        public ulong JobSiteID;
+        public ulong BuildingID;
 
         Building_Component _building;
-        public Building_Component Building => _building ??= Building_Manager.GetJobSite_Component(JobSiteID);
+        public Building_Component Building => _building ??= Building_Manager.GetBuilding_Component(BuildingID);
         
-        public ProductionData(ulong jobSiteID)
+        public ProductionData(ulong buildingID)
         {
-            JobSiteID = jobSiteID;
+            BuildingID = buildingID;
             AllProducedItems = new List<Item>();
         }
 
         public ProductionData(ProductionData productionData)
         {
-            JobSiteID = productionData.JobSiteID;
+            BuildingID = productionData.BuildingID;
             AllProducedItems = productionData.AllProducedItems;
         }
 
@@ -571,7 +567,7 @@ namespace JobSites
         {
             var productionData = new Dictionary<string, string>
             {
-                { "Station ID", $"{JobSiteID}" }
+                { "Station ID", $"{BuildingID}" }
             };
 
             var allProducedItems = AllProducedItems?.ToDictionary(item => item.ItemID.ToString(),

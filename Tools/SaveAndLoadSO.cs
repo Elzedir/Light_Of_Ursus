@@ -8,7 +8,7 @@
 // using Faction;
 // using Items;
 // using Jobs;
-// using JobSite;
+// using Buildings;
 // using Recipes;
 // using Region;
 // using Station;
@@ -63,7 +63,7 @@
 //             Faction_Manager.ClearSOData();
 //             Item_Manager.ClearSOData();
 //             Job_Manager.ClearSOData();
-//             JobSite_Manager.ClearSOData();
+//             Building_Manager.ClearSOData();
 //             Recipe_Manager.ClearSOData();
 //             Region_Manager.ClearSOData();
 //             Station_Manager.ClearSOData();
@@ -99,7 +99,7 @@
 //             _saveScriptableObject<Faction_SO>("Faction_SO", folderPath);
 //             _saveScriptableObject<Item_SO>("Item_SO", folderPath);
 //             _saveScriptableObject<Job_SO>("Job_SO", folderPath);
-//             _saveScriptableObject<JobSite_SO>("JobSite_SO", folderPath);
+//             _saveScriptableObject<Building_SO>("Building_SO", folderPath);
 //             _saveScriptableObject<Recipe_SO>("Recipe_SO", folderPath);
 //             _saveScriptableObject<Region_SO>("Region_SO", folderPath);
 //             _saveScriptableObject<Station_SO>("Station_SO", folderPath);

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
-using JobSites;
+using Buildings;
 using Station;
 using TickRates;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 
 namespace Jobs
@@ -55,7 +56,7 @@ namespace Jobs
     public class Job : Data_Class
     {
         public JobName JobName;
-        public ulong JobSiteID;
+        public ulong BuildingID;
         public ulong StationID;
         public ulong WorkPostID;
         [SerializeField] ulong _actorID;
@@ -83,8 +84,8 @@ namespace Jobs
         public ActivityPeriod ActivityPeriod;
         
         Job_Data                    _job_Data;
-        JobSite_Component _jobSite;
-        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        Building_Component _building;
+        public Building_Component Building => _building ??= Building_Manager.GetBuilding_Component(BuildingID);
 
         public Job_Data Job_Data => _job_Data ??= Job_Manager.GetJob_Data(JobName);   
         
@@ -94,10 +95,10 @@ namespace Jobs
         public WorkPost_Component WorkPost => _workPost ??= Station.Station_Data.GetWorkPost(WorkPostID);
         public List<ActorActionName> JobActions => Job_Data.JobActions;
         
-        public Job(JobName jobName, ulong jobSiteID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)
+        public Job(JobName jobName, ulong buildingID, ulong actorID, ulong stationID = 0, ulong workPostID = 0)
         {
             JobName    = jobName;
-            JobSiteID = jobSiteID;
+            BuildingID = buildingID;
             ActorID = actorID;
             StationID  = stationID;
             WorkPostID = workPostID;
@@ -106,7 +107,7 @@ namespace Jobs
         public Job(Job job)
         {
             JobName    = job.JobName;
-            JobSiteID = job.JobSiteID;
+            BuildingID = job.BuildingID;
             ActorID = job.ActorID;
             StationID  = job.StationID;
             WorkPostID = job.WorkPostID;
@@ -124,7 +125,7 @@ namespace Jobs
             {
                 { "Job ID", $"{JobName}" },
                 { "Job Name", $"{JobName}" },
-                { "Job Site ID", $"{JobSiteID}" },
+                { "Job Site ID", $"{BuildingID}" },
                 { "Station ID", $"{StationID}" },
                 { "Actor ID", $"{ActorID}" },
                 { "Is Worker Moving To WorkPost", $"{IsWorkerMovingToWorkPost}" }

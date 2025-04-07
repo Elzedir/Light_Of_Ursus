@@ -15,25 +15,25 @@ namespace Station
                     1, new Station_Data(
                         stationID: 1,
                         stationName: StationName.Tree,
-                        jobSiteID: 1)
+                        buildingID: 1)
                 },
                 {
                     2, new Station_Data(
                         stationID: 2,
                         stationName: StationName.Sawmill,
-                        jobSiteID: 1)
+                        buildingID: 1)
                 },
                 {
                     3, new Station_Data(
                         stationID: 3,
                         stationName: StationName.Log_Pile,
-                        jobSiteID: 1)
+                        buildingID: 1)
                 },
                 {
                     4, new Station_Data(
                         stationID: 4,
                         stationName: StationName.IdleTemp,
-                        jobSiteID: 1)
+                        buildingID: 1)
                 }
             };
         }

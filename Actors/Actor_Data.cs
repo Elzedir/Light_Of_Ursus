@@ -326,7 +326,6 @@ namespace Actors
         ChangedMesh,
         ChangedMaterial,
         ToggledDoJobs,
-        ChangedJobSite,
         ChangedStation,
         ChangedOperatingArea,
         ChangedEmployeePosition,

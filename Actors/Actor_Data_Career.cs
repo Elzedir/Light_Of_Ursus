@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using ActorActions;
+using Buildings;
 using Careers;
 using Inventory;
 using Jobs;
-using JobSites;
 using Priorities;
 using Tools;
 
@@ -18,11 +18,11 @@ namespace Actors
         public CareerName CareerName;
         public Job CurrentJob;
         
-        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong jobSiteID = 0) : base(actorID, ComponentType.Actor)
+        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong buildingID = 0) : base(actorID, ComponentType.Actor)
         {
             CareerName = careerName;
-            CurrentJob = jobSiteID != 0 
-                ? JobSite_Manager.GetJobSite_Component(jobSiteID).GetActorJob(actorID)
+            CurrentJob = buildingID != 0 
+                ? Building_Manager.GetBuilding_Component(buildingID).GetActorJob(actorID)
                 : null;
         }
 

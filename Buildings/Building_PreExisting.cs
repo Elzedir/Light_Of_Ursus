@@ -3,7 +3,7 @@ using Priorities;
 
 namespace Buildings
 {
-    public abstract class Building_PrePlacedBuildings
+    public abstract class Building_PreExisting
     {
         static Dictionary<ulong, Building_Data> s_defaultBuildings;
         public static Dictionary<ulong, Building_Data> S_DefaultBuildings => s_defaultBuildings ??= _initialiseDefaultBuildings();

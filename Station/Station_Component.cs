@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using Buildings;
 using Initialisation;
 using Inventory;
 using Jobs;
-using JobSites;
 using Recipes;
 using UnityEngine;
 using WorkPosts;
@@ -17,7 +17,7 @@ namespace Station
         public Station_Data Station_Data;
         
         public ulong              StationID => Station_Data.StationID;
-        public JobSite_Component JobSite   => Station_Data.JobSite;
+        public Building_Component Building   => Station_Data.Building;
         
         public abstract StationName  StationName { get; }
         public abstract StationType  StationType { get; }
@@ -104,7 +104,7 @@ namespace Station
                     Station_Data.StationProgressData.ResetProgress();
             }
             
-            JobSite.JobSite_Data.Haul(haulers);
+            Building.Building_Data.Haul(haulers);
         }
 
         protected bool _isAtWorkPost(WorkPost_Component workPost)

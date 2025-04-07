@@ -6,38 +6,38 @@ using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace JobSites
+namespace Buildings
 {
     [CreateAssetMenu(fileName = "Building_SO", menuName = "SOList/Building_SO")]
     [Serializable]
     public class Building_SO : Data_Component_SO<Building_Data, Building_Component>
     {
-        public Data<Building_Data>[] JobSites => Data;
-        public Data<Building_Data>        GetJobSite_Data(ulong      jobSiteID) => GetData(jobSiteID);
-        public Dictionary<ulong, Building_Component> JobSite_Components => _getSceneComponents();
+        public Data<Building_Data>[] Buildings => Data;
+        public Data<Building_Data>        GetBuilding_Data(ulong      building) => GetData(building);
+        public Dictionary<ulong, Building_Component> Building_Components => _getSceneComponents();
 
-        public Building_Component GetJobSite_Component(ulong jobSiteID)
+        public Building_Component GetBuilding_Component(ulong buildingID)
         {
-            if (jobSiteID == 0)
+            if (buildingID == 0)
             {
-                Debug.LogError("JobSiteID cannot be 0.");
+                Debug.LogError("BuildingID cannot be 0.");
                 return null;
             }
             
-            if (JobSite_Components.TryGetValue(jobSiteID, out var component))
+            if (Building_Components.TryGetValue(buildingID, out var component))
             {
                 return component;
             }   
             
-            Debug.LogError($"JobSite with ID {jobSiteID} not found in JobSite_SO.");
+            Debug.LogError($"Building with ID {buildingID} not found in Building_SO.");
             return null;
         }
 
-        public void UpdateJobSite(ulong jobSiteID, Building_Data building_Component) => UpdateData(jobSiteID, building_Component);
-        public void UpdateAllJobSites(Dictionary<ulong, Building_Data> allJobSites) => UpdateAllData(allJobSites);
+        public void UpdateBuilding(ulong buildingID, Building_Data building_Component) => UpdateData(buildingID, building_Component);
+        public void UpdateAllBuildings(Dictionary<ulong, Building_Data> allBuildings) => UpdateAllData(allBuildings);
 
         protected override Dictionary<ulong, Data<Building_Data>> _getDefaultData() =>
-            _convertDictionaryToData(Building_List.S_DefaultJobSites);
+            _convertDictionaryToData(Building_PreExisting.S_DefaultBuildings);
 
         protected override Dictionary<ulong, Data<Building_Data>> _getSavedData()
         {
@@ -45,8 +45,8 @@ namespace JobSites
 
             try
             {
-                savedData = DataPersistence_Manager.CurrentSaveData.SavedJobSiteData.AllJobSiteData
-                    .ToDictionary(jobSite => jobSite.ID, jobSite => jobSite);
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedBuildingData.AllBuildingData
+                    .ToDictionary(building => building.ID, building => building);
             }
             catch
             {
@@ -56,12 +56,12 @@ namespace JobSites
                 {
                     Debug.LogWarning(saveData == null
                         ? "LoadData Error: CurrentSaveData is null."
-                        : saveData.SavedJobSiteData == null
-                            ? $"LoadData Error: SavedJobSiteData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                            : saveData.SavedJobSiteData.AllJobSiteData == null
-                                ? $"LoadData Error: AllJobSiteData is null in SavedJobSiteData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                                : !saveData.SavedJobSiteData.AllJobSiteData.Any()
-                                    ? $"LoadData Warning: AllJobSiteData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                        : saveData.SavedBuildingData == null
+                            ? $"LoadData Error: SavedBuildingData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedBuildingData.AllBuildingData == null
+                                ? $"LoadData Error: AllBuildingData is null in SavedBuildingData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedBuildingData.AllBuildingData.Any()
+                                    ? $"LoadData Warning: AllBuildingData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
                                     : string.Empty);
                 }
             }
@@ -77,12 +77,12 @@ namespace JobSites
             return new Data<Building_Data>(
                 dataID: data.ID, 
                 data_Object: data,
-                dataTitle: $"{data.ID}: {data.BuildingName}",
+                dataTitle: $"{data.ID}: {data.Name}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
         public override void SaveData(Save_Data saveData) =>
-            saveData.SavedJobSiteData = new SavedJobSiteData(JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
+            saveData.SavedBuildingData = new SavedBuildingData(Buildings.Select(building => building.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Building_SO))]

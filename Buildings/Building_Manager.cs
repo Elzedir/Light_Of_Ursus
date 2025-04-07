@@ -1,48 +1,47 @@
 using System.Collections.Generic;
 using System.Linq;
-using Buildings;
 using Jobs;
 using UnityEngine;
 
-namespace JobSites
+namespace Buildings
 {
     public abstract class Building_Manager
     {
-        const  string     _jobSite_SOPath = "ScriptableObjects/Building_SO";
+        const  string     _building_SOPath = "ScriptableObjects/Building_SO";
         
         static Building_SO s_building_SO;
-        static Building_SO BuildingSO => s_building_SO ??= _getJobSite_SO();
+        static Building_SO BuildingSO => s_building_SO ??= _getBuilding_SO();
         
-        public static Building_Data GetJobSite_Data(ulong jobSiteID)
+        public static Building_Data GetBuilding_Data(ulong buildingID)
         {
-            return BuildingSO.GetJobSite_Data(jobSiteID).Data_Object;
+            return BuildingSO.GetBuilding_Data(buildingID).Data_Object;
         }
         
-        public static Building_Data GetJobSite_DataFromName(Building_Component building_Component)
+        public static Building_Data GetBuilding_DataFromName(Building_Component building_Component)
         {
             return BuildingSO.GetDataFromName(building_Component.name)?.Data_Object;
         }
         
-        public static Building_Component GetJobSite_Component(ulong jobSiteID)
+        public static Building_Component GetBuilding_Component(ulong buildingID)
         {
-            return BuildingSO.GetJobSite_Component(jobSiteID);
+            return BuildingSO.GetBuilding_Component(buildingID);
         }
         
-        public static List<ulong> GetAllJobSiteIDs() => BuildingSO.GetAllDataIDs();
+        public static List<ulong> GetAllBuildingIDs() => BuildingSO.GetAllDataIDs();
         
-        static Building_SO _getJobSite_SO()
+        static Building_SO _getBuilding_SO()
         {
-            var jobSite_SO = Resources.Load<Building_SO>(_jobSite_SOPath);
+            var building_SO = Resources.Load<Building_SO>(_building_SOPath);
             
-            if (jobSite_SO is not null) return jobSite_SO;
+            if (building_SO is not null) return building_SO;
             
-            Debug.LogError("JobSite_SO not found. Creating temporary JobSite_SO.");
-            jobSite_SO = ScriptableObject.CreateInstance<Building_SO>();
+            Debug.LogError("Building_SO not found. Creating temporary Building_SO.");
+            building_SO = ScriptableObject.CreateInstance<Building_SO>();
             
-            return jobSite_SO;
+            return building_SO;
         }
 
-        public static Building_Component GetNearestJobSite(Vector3 position, BuildingName buildingName)
+        public static Building_Component GetNearestBuilding(Vector3 position, BuildingName buildingName)
         {
             // Change so that you either pass through a city, or if not, then it will check nearest region, and give you nearest 
             // Region => City => Jobsite. Maybe flash a BoxCollider at increasing distances and check if it hits a city or region and
@@ -52,13 +51,13 @@ namespace JobSites
 
             var nearestDistance = float.PositiveInfinity;
 
-            foreach (var jobSite in BuildingSO.JobSite_Components.Values.Where(j => j.BuildingName == buildingName))
+            foreach (var building in BuildingSO.Building_Components.Values.Where(j => j.BuildingName == buildingName))
             {
-                var distance = Vector3.Distance(position, jobSite.transform.position);
+                var distance = Vector3.Distance(position, building.transform.position);
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestBuilding  = jobSite;
+                nearestBuilding  = building;
                 nearestDistance = distance;
             }
 
@@ -91,6 +90,15 @@ namespace JobSites
         None,
 
         Lumber_Yard,
-        Smithy
+        
+        Smithy,
+        
+        Grand_Cathedral, Cathedral, Abbey, Monastery, Church, Chapel, Shrine,
+        
+        Grand_Exchange, Merchant_District, Trade_Hub, Market, Fairground,
+        
+        Guild_Headquarters, Guild_Hall, Artisan_Hall, Workshop,
+        
+        Extermination_Camp, Hunting_Lodge, Hunting_Cabin, Hunting_Hut,
     }
 }

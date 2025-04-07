@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using Actors;
-using City;
+using Baronies;
+using Buildings;
+using Cities;
+using Counties;
 using Faction;
-using JobSites;
-using Region;
-using Regions;
 using Station;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DataPersistence
 {
@@ -20,10 +21,11 @@ namespace DataPersistence
         public SavedProfileData SavedProfileData;
 
         // All Game Info
-        public SavedRegionData SavedRegionData;
+        public SavedCountyData SavedCountyData;
+        public SavedBaronyData SavedBaronyData;
         public SavedCityData SavedCityData;
         
-        public SavedJobSiteData SavedJobSiteData;
+        public SavedBuildingData SavedBuildingData;
 
         public SavedStationData SavedStationData;
         public SavedFactionData SavedFactionData;
@@ -66,27 +68,35 @@ namespace DataPersistence
     }
 
     [Serializable]
-    public class SavedRegionData
+    public class SavedCountyData
     {
-        public readonly Region_Data[] AllRegionData;
+        public readonly County_Data[] AllCountyData;
 
-        public SavedRegionData(Region_Data[] allRegionData) => AllRegionData = allRegionData;
+        public SavedCountyData(County_Data[] allCountyData) => AllCountyData = allCountyData;
+    }
+    
+    [Serializable]
+    public class SavedBaronyData
+    {
+        public readonly Barony_Data[] AllBaronyData;
+
+        public SavedBaronyData(Barony_Data[] allBaronyData) => AllBaronyData = allBaronyData;
     }
 
     [Serializable]
     public class SavedCityData
     {
-        public readonly City_Data[] AllCityData;
+        public readonly Barony_Data[] AllCityData;
 
-        public SavedCityData(City_Data[] allCityData) => AllCityData = allCityData;
+        public SavedCityData(Barony_Data[] allCityData) => AllCityData = allCityData;
     }
 
     [Serializable]
-    public class SavedJobSiteData
+    public class SavedBuildingData
     {
-        public readonly JobSite_Data[] AllJobSiteData;
+        public readonly Building_Data[] AllBuildingData;
 
-        public SavedJobSiteData(JobSite_Data[] allJobSiteData) => AllJobSiteData = allJobSiteData;
+        public SavedBuildingData(Building_Data[] allBuildingData) => AllBuildingData = allBuildingData;
     }
 
     [Serializable]

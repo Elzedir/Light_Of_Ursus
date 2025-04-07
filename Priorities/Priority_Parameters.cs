@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Actors;
+using Buildings;
 using Inventory;
 using Items;
-using JobSites;
 using Station;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -16,8 +16,10 @@ namespace Priorities
     public class Priority_Parameters
     {
         public float DefaultPriorityValue = 0;
-        
-        public ulong ActorID_Source, ActorID_Target, JobSiteID_Source, JobSiteID_Target;
+
+        public ulong ActorID_Source, ActorID_Target;
+        public ulong BuildingID_Source;
+        public ulong BuildingID_Target;
         
         public Station_Component HighestPriorityStation_Source, HighestPriorityStation_Target;
         
@@ -38,12 +40,12 @@ namespace Priorities
             ? Actor_Manager.GetActor_Component(ActorID_Target)
             : null;
         
-        public JobSite_Component JobSite_Component_Source =>  JobSiteID_Source != 0
-            ? JobSite_Manager.GetJobSite_Component(JobSiteID_Source)
+        public Building_Component Building_Component_Source =>  BuildingID_Source != 0
+            ? Building_Manager.GetBuilding_Component(BuildingID_Source)
             : null;
         
-        public JobSite_Component JobSite_Component_Target =>  JobSiteID_Target != 0
-            ? JobSite_Manager.GetJobSite_Component(JobSiteID_Target)
+        public Building_Component Building_Component_Target =>  BuildingID_Target != 0
+            ? Building_Manager.GetBuilding_Component(BuildingID_Target)
             : null;
         
         public InventoryData Inventory_Hauler => ActorID_Source != 0 

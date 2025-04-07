@@ -3,55 +3,55 @@ using UnityEngine;
 
 namespace Cities
 {
-    public abstract class City_Manager
+    public abstract class Barony_Manager
     {
-        const string _city_SOPath = "ScriptableObjects/City_SO";
+        const string _Barony_SOPath = "ScriptableObjects/Barony_SO";
         
-        static City_SO _allCities;
-        static City_SO AllCities => _allCities ??= _getCity_SO();
+        static Barony_SO s_allBaronies;
+        static Barony_SO AllBaronies => s_allBaronies ??= _getBarony_SO();
         
-        public static Barony_Data GetCity_Data(ulong cityID)
+        public static Barony_Data GetBarony_Data(ulong baronyID)
         {
-            return AllCities.GetCity_Data(cityID).Data_Object;
+            return AllBaronies.GetBarony_Data(baronyID).Data_Object;
         }
         
-        public static Barony_Data GetCity_DataFromName(Barony_Component barony_Component)
+        public static Barony_Data GetBarony_DataFromName(Barony_Component barony_Component)
         {
-            return AllCities.GetDataFromName(barony_Component.name)?.Data_Object;
+            return AllBaronies.GetDataFromName(barony_Component.name)?.Data_Object;
         }
         
-        public static Barony_Component GetCity_Component(ulong cityID)
+        public static Barony_Component GetBarony_Component(ulong baronyID)
         {
-            return AllCities.GetCity_Component(cityID);
+            return AllBaronies.GetBarony_Component(baronyID);
         }
         
-        public static List<ulong> GetAllCityIDs() => AllCities.GetAllDataIDs();
+        public static List<ulong> GetAllBaronyIDs() => AllBaronies.GetAllDataIDs();
         
-        static City_SO _getCity_SO()
+        static Barony_SO _getBarony_SO()
         {
-            var city_SO = Resources.Load<City_SO>(_city_SOPath);
+            var Barony_SO = Resources.Load<Barony_SO>(_Barony_SOPath);
             
-            if (city_SO is not null) return city_SO;
+            if (Barony_SO is not null) return Barony_SO;
             
-            Debug.LogError("City_SO not found. Creating temporary City_SO.");
-            city_SO = ScriptableObject.CreateInstance<City_SO>();
+            Debug.LogError("Barony_SO not found. Creating temporary Barony_SO.");
+            Barony_SO = ScriptableObject.CreateInstance<Barony_SO>();
             
-            return city_SO;
+            return Barony_SO;
         }
 
-        public static Barony_Component GetNearestCity(Vector3 position)
+        public static Barony_Component GetNearestBarony(Vector3 position)
         {
             Barony_Component nearestBarony = null;
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var city in AllCities.City_Components.Values)
+            foreach (var Barony in AllBaronies.Barony_Components.Values)
             {
-                var distance = Vector3.Distance(position, city.transform.position);
+                var distance = Vector3.Distance(position, Barony.transform.position);
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestBarony  = city;
+                nearestBarony  = Barony;
                 nearestDistance = distance;
             }
 
@@ -60,7 +60,7 @@ namespace Cities
         
         public static void ClearSOData()
         {
-            AllCities.ClearSOData();
+            AllBaronies.ClearSOData();
         }
     }
     
@@ -68,7 +68,7 @@ namespace Cities
     {
         None,
         
-        Metropolis, City, Town, Village, Hamlet, // Economic (Trade)
+        Metropolis, Barony, Town, Village, Hamlet, // Economic (Trade)
         
         Citadel, Fortress, Castle, Outpost, Watchtower, // Military defensive
         

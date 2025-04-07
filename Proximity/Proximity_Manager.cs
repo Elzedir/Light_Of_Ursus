@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using Actor;
 using Actors;
-using City;
-using JobSites;
+using Buildings;
 using Managers;
 using Station;
 using Tools;
@@ -21,8 +20,8 @@ namespace Proximity
         
         static Dictionary<ulong, Station_Component> s_proximity_Stations;
         public static Dictionary<ulong, Station_Component> S_Proximity_Stations => s_proximity_Stations ??= _populateProximity_Stations();
-        static Dictionary<ulong, JobSite_Component> s_proximity_JobSites;
-        public static Dictionary<ulong, JobSite_Component> S_Proximity_JobSites => s_proximity_JobSites ??= _populateProximity_JobSites();
+        static Dictionary<ulong, Building_Component> s_proximity_JobSites;
+        public static Dictionary<ulong, Building_Component> S_Proximity_JobSites => s_proximity_JobSites ??= _populateProximity_JobSites();
         
         static SphereCollider s_proximity_Collider_5M;
         static SphereCollider S_Proximity_Collider_5M => s_proximity_Collider_5M ??= _getPriority_Collider();
@@ -63,7 +62,7 @@ namespace Proximity
             return s_proximity_Stations;
         }
         
-        static Dictionary<ulong, JobSite_Component> _populateProximity_JobSites()
+        static Dictionary<ulong, Building_Component> _populateProximity_JobSites()
         {
             PopulateProximity_GameObjects();
 
@@ -75,7 +74,7 @@ namespace Proximity
             s_proximity_GameObjects ??= new Dictionary<ulong, GameObject>();
             s_proximity_Actors ??= new Dictionary<ulong, Actor_Component>();
             s_proximity_Stations ??= new Dictionary<ulong, Station_Component>();
-            s_proximity_JobSites ??= new Dictionary<ulong, JobSite_Component>();
+            s_proximity_JobSites ??= new Dictionary<ulong, Building_Component>();
 
             if (refresh)
             {
@@ -106,8 +105,8 @@ namespace Proximity
                     case IDType.Station:
                         s_proximity_Stations[key] = collider.gameObject.GetComponent<Station_Component>();
                         break;
-                    case IDType.JobSite:
-                        s_proximity_JobSites[key] = collider.gameObject.GetComponent<JobSite_Component>();
+                    case IDType.Building:
+                        s_proximity_JobSites[key] = collider.gameObject.GetComponent<Building_Component>();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException($"IDType not found for GameObject: {collider.gameObject.name}");

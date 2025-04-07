@@ -77,11 +77,11 @@ namespace Priorities
             var priorityParameters = new Priority_Parameters();
 
             _setActorID_Source(priorityParameters);
-            _setJobSiteID_Source(priorityParameters);
+            _setBuildingID_Source(priorityParameters);
             _setStationID_Source(priorityParameters);
             
             _setActorID_Target(priorityParameters);
-            _setJobSiteID_Target(priorityParameters);
+            _setBuildingID_Target(priorityParameters);
             
             _setAllStationIDs(actorActionName, priorityParameters);
 
@@ -90,13 +90,13 @@ namespace Priorities
         
         protected abstract void _setActorID_Source(Priority_Parameters priority_Parameters);
         protected abstract void _setActorID_Target(Priority_Parameters priority_Parameters);
-        protected abstract void _setJobSiteID_Source(Priority_Parameters priority_Parameters);
-        protected abstract void _setJobSiteID_Target(Priority_Parameters priority_Parameters);
+        protected abstract void _setBuildingID_Source(Priority_Parameters priority_Parameters);
+        protected abstract void _setBuildingID_Target(Priority_Parameters priority_Parameters);
         protected virtual void _setStationID_Source(Priority_Parameters priority_Parameters) { }
 
         protected void _setAllStationIDs(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.JobSite_Component_Source.GetRelevantStations(actorActionName, priority_Parameters);
+            priority_Parameters.Building_Component_Source.GetRelevantStations(actorActionName, priority_Parameters);
         }
         
         protected DataToDisplay _convertUlongIDToStringID(DataToDisplay dataToDisplay)

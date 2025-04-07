@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Counties
 {
-    public abstract class County_PreExisting
+    public abstract class County_List
     {
         static Dictionary<ulong, County_Data> s_defaultCounties;
         public static Dictionary<ulong, County_Data> DefaultCounties => s_defaultCounties ??= _initialiseDefaultCounties();
@@ -13,10 +13,10 @@ namespace Counties
             {
                 {
                     1, new County_Data(
-                        regionID: 1,
-                        regionName: "The Heartlands",
-                        regionDescription: "The land of hearts",
-                        regionFactionID: 0,
+                        id: 1,
+                        name: "The Heartlands",
+                        description: "The land of hearts",
+                        factionID: 0,
                         allCityIDs: new List<ulong>
                         {
                             1

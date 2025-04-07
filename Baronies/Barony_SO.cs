@@ -8,32 +8,32 @@ using UnityEngine;
 
 namespace Cities
 {
-    [CreateAssetMenu(fileName = "City_SO", menuName = "SOList/City_SO")]
+    [CreateAssetMenu(fileName = "Barony_SO", menuName = "SOList/Barony_SO")]
     [Serializable]
-    public class City_SO : Data_Component_SO<Barony_Data, Barony_Component>
+    public class Barony_SO : Data_Component_SO<Barony_Data, Barony_Component>
     {
         public Data<Barony_Data>[]                         Cities                         => Data;
-        public Data<Barony_Data>                           GetCity_Data(ulong      cityID) => GetData(cityID);
-        public Dictionary<ulong, Barony_Component> City_Components => _getSceneComponents();
+        public Data<Barony_Data>                           GetBarony_Data(ulong      BaronyID) => GetData(BaronyID);
+        public Dictionary<ulong, Barony_Component> Barony_Components => _getSceneComponents();
 
-        public Barony_Component GetCity_Component(ulong cityID)
+        public Barony_Component GetBarony_Component(ulong BaronyID)
         {
-            if (cityID == 0)
+            if (BaronyID == 0)
             {
-                Debug.LogError("CityID cannot be 0.");
+                Debug.LogError("BaronyID cannot be 0.");
                 return null;
             }
             
-            if (City_Components.TryGetValue(cityID, out var component))
+            if (Barony_Components.TryGetValue(BaronyID, out var component))
             {
                 return component;
             }   
             
-            Debug.LogError($"City with ID {cityID} not found in City_SO.");
+            Debug.LogError($"Barony with ID {BaronyID} not found in Barony_SO.");
             return null;
         }
         
-        public void UpdateCity(ulong cityID, Barony_Data barony_Data) => UpdateData(cityID, barony_Data);
+        public void UpdateBarony(ulong BaronyID, Barony_Data barony_Data) => UpdateData(BaronyID, barony_Data);
         public void UpdateAllCities(Dictionary<ulong, Barony_Data> allCities) => UpdateAllData(allCities);
 
         protected override Dictionary<ulong, Data<Barony_Data>> _getDefaultData() => 
@@ -45,8 +45,8 @@ namespace Cities
                 
             try
             {
-                savedData = DataPersistence_Manager.CurrentSaveData.SavedCityData.AllCityData
-                    .ToDictionary(city => city.ID, city => city);
+                savedData = DataPersistence_Manager.CurrentSaveData.SavedBaronyData.AllBaronyData
+                    .ToDictionary(Barony => Barony.ID, Barony => Barony);
             }
             catch
             {
@@ -56,12 +56,12 @@ namespace Cities
                 {
                     Debug.LogWarning(saveData == null
                         ? "LoadData Error: CurrentSaveData is null."
-                        : saveData.SavedCityData == null
-                            ? $"LoadData Error: SavedCityData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                            : saveData.SavedCityData.AllCityData == null
-                                ? $"LoadData Error: AllCityData is null in SavedCityData (SaveID: {saveData.SavedProfileData.SaveDataID})."
-                                : !saveData.SavedCityData.AllCityData.Any()
-                                    ? $"LoadData Warning: AllCityData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                        : saveData.SavedBaronyData == null
+                            ? $"LoadData Error: SavedBaronyData is null in CurrentSaveData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                            : saveData.SavedBaronyData.AllBaronyData == null
+                                ? $"LoadData Error: AllBaronyData is null in SavedBaronyData (SaveID: {saveData.SavedProfileData.SaveDataID})."
+                                : !saveData.SavedBaronyData.AllBaronyData.Any()
+                                    ? $"LoadData Warning: AllBaronyData is empty (SaveID: {saveData.SavedProfileData.SaveDataID})."
                                     : string.Empty);
                 }
             }
@@ -82,12 +82,12 @@ namespace Cities
         }
 
         public override void SaveData(Save_Data saveData) =>
-            saveData.SavedCityData = new SavedCityData(Cities.Select(city => city.Data_Object).ToArray());
+            saveData.SavedBaronyData = new SavedBaronyData(Cities.Select(Barony => Barony.Data_Object).ToArray());
     }
 
-    [CustomEditor(typeof(City_SO))]
-    public class City_SOEditor : Data_SOEditor<Barony_Data>
+    [CustomEditor(typeof(Barony_SO))]
+    public class Barony_SOEditor : Data_SOEditor<Barony_Data>
     {
-        public override Data_SO<Barony_Data> SO => _so ??= (City_SO)target;
+        public override Data_SO<Barony_Data> SO => _so ??= (Barony_SO)target;
     }
 }

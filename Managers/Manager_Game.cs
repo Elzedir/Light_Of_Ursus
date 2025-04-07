@@ -5,8 +5,10 @@ using System.Linq;
 using Abilities;
 using ActorPresets;
 using Actors;
+using Buildings;
 using Careers;
-using City;
+using Cities;
+using Counties;
 using DataPersistence;
 using DateAndTime;
 using Faction;
@@ -14,9 +16,7 @@ using FMODUnity;
 using Initialisation;
 using Items;
 using Jobs;
-using JobSites;
 using Recipes;
-using Region;
 using StateAndCondition;
 using Station;
 using TickRates;
@@ -130,14 +130,14 @@ namespace Managers
                 Actor_Manager.ClearSOData();
                 ActorPreset_Manager.ClearSOData();
                 Career_Manager.ClearSOData();
-                City_Manager.ClearSOData();
+                Barony_Manager.ClearSOData();
                 Condition_Manager.ClearSOData();
                 Faction_Manager.ClearSOData();
                 Item_Manager.ClearSOData();
                 Job_Manager.ClearSOData();
-                JobSite_Manager.ClearSOData();
+                Building_Manager.ClearSOData();
                 Recipe_Manager.ClearSOData();
-                Region_Manager.ClearSOData();
+                County_Manager.ClearSOData();
                 State_Manager.ClearSOData();
                 Station_Manager.ClearSOData();
             }
@@ -180,10 +180,10 @@ namespace Managers
             
             Manager_Initialisation.InitialiseRegions();
             Manager_Initialisation.InitialiseCities();
-            Manager_Initialisation.InitialiseJobSites();
+            Manager_Initialisation.InitialiseBuildings();
             Manager_Initialisation.InitialiseStations();
 
-            Manager_Initialisation.InitialiseJobSiteData();
+            Manager_Initialisation.InitialiseBuildingData();
 
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));

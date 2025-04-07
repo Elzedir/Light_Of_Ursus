@@ -9,7 +9,7 @@ namespace Initialisation
         
         public static event Action OnInitialiseManagerRegion;
         public static event Action OnInitialiseManagerCity;
-        public static event Action OnInitialiseManagerJobSite;
+        public static event Action OnInitialiseManagerBuilding;
         public static event Action OnInitialiseManagerStation;
         public static event Action OnInitialiseManagerOrder;
 
@@ -18,10 +18,10 @@ namespace Initialisation
 
         public static event Action OnInitialiseRegions;
         public static event Action OnInitialiseCities;
-        public static event Action OnInitialiseJobSites;
+        public static event Action OnInitialiseBuildings;
         public static event Action OnInitialiseStations;
 
-        public static event Action OnInitialiseJobSiteData;
+        public static event Action OnInitialiseBuildingData;
 
         public static void InitialiseManagers() 
         {
@@ -30,7 +30,7 @@ namespace Initialisation
             
             OnInitialiseManagerRegion?.Invoke();
             OnInitialiseManagerCity?.Invoke();
-            OnInitialiseManagerJobSite?.Invoke();
+            OnInitialiseManagerBuilding?.Invoke();
             OnInitialiseManagerStation?.Invoke();
             OnInitialiseManagerOrder?.Invoke();
         }
@@ -55,9 +55,9 @@ namespace Initialisation
             OnInitialiseCities?.Invoke();
         }
 
-        public static void InitialiseJobSites()
+        public static void InitialiseBuildings()
         {
-            OnInitialiseJobSites?.Invoke();
+            OnInitialiseBuildings?.Invoke();
         }
 
         public static void InitialiseStations()
@@ -65,9 +65,9 @@ namespace Initialisation
             OnInitialiseStations?.Invoke();
         }
 
-        public static void InitialiseJobSiteData()
+        public static void InitialiseBuildingData()
         {
-            OnInitialiseJobSiteData?.Invoke();
+            OnInitialiseBuildingData?.Invoke();
         }
     }
 }

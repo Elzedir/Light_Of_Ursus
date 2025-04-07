@@ -4,21 +4,22 @@ using Buildings;
 using Initialisation;
 using Managers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Cities
 {
-    public class City_Component : MonoBehaviour
+    public class Barony_Component : MonoBehaviour
     {
-        public ulong               ID    => CityData.ID;
-        public City_Data          CityData;
+        public ulong               ID    => BaronyData.ID;
+        public Barony_Data          BaronyData;
 
-        public GameObject _citySpawnZone;
+        public GameObject _baronySpawnZone;
         
-        public GameObject CitySpawnZone => _citySpawnZone ??= Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
+        public GameObject BaronySpawnZone => _baronySpawnZone ??= Manager_Game.FindTransformRecursively(transform, "BaronyEntranceSpawnZone").gameObject;
 
-        public void SetCityData(City_Data cityData)
+        public void SetBaronyData(Barony_Data baronyData)
         {
-            CityData = cityData;   
+            BaronyData = baronyData;   
         }
 
         void Awake()
@@ -28,20 +29,20 @@ namespace Cities
 
         void _initialise()
         {
-            var cityData = City_Manager.GetCity_DataFromName(this);
+            var BaronyData = Barony_Manager.GetBarony_DataFromName(this);
             
-            if (cityData is null)
+            if (BaronyData is null)
             {
-                Debug.LogWarning($"City with name {name} not found in City_SO.");
+                Debug.LogWarning($"Barony with name {name} not found in Barony_SO.");
                 return;
             }
             
-            SetCityData(cityData);
+            SetBaronyData(BaronyData);
             
-            CityData.InitialiseCityData();
+            BaronyData.InitialiseBaronyData();
         }
 
-        public Dictionary<ulong, Building_Component> GetAllBuildingsInCity() =>
+        public Dictionary<ulong, Building_Component> GetAllBuildingsInBarony() =>
             GetComponentsInChildren<Building_Component>().ToDictionary(building => building.ID);
     }
 }

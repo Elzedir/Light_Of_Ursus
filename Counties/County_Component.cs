@@ -2,15 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Cities;
 using Initialisation;
-using Region;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Regions
+namespace Counties
 {
     public class County_Component : MonoBehaviour
     {
-        public ulong CountyID => CountyData.RegionID;
+        public ulong CountyID => CountyData.ID;
         
         public County_Data               CountyData;
 
@@ -26,7 +24,7 @@ namespace Regions
 
         void _initialise()
         {
-            var regionData = Region_Manager.GetRegion_DataFromName(this);
+            var regionData = County_Manager.GetRegion_DataFromName(this);
             
             if (regionData is null)
             {
@@ -39,6 +37,6 @@ namespace Regions
             CountyData.InitialiseRegionData();
         }
 
-        public List<City_Component> GetAllCitiesInRegion() => GetComponentsInChildren<City_Component>().ToList();
+        public List<Barony_Component> GetAllCitiesInRegion() => GetComponentsInChildren<Barony_Component>().ToList();
     }
 }

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Actors;
-using City;
+using Buildings;
+using Cities;
+using Counties;
 using Faction;
 using Items;
-using JobSites;
-using Region;
 using Station;
 using UnityEngine;
 
@@ -103,9 +103,9 @@ namespace Tools
                 IDType.Actor => Actor_Manager.GetAllActorIDs(),
                 IDType.Item => Item_Manager.GetAllItemIDs(),
                 IDType.Station => Station_Manager.GetAllStationIDs(),
-                IDType.JobSite => JobSite_Manager.GetAllJobSiteIDs(),
-                IDType.City => City_Manager.GetAllCityIDs(),
-                IDType.Region => Region_Manager.GetAllRegionIDs(),
+                IDType.Building => Building_Manager.GetAllBuildingIDs(),
+                IDType.Barony => Barony_Manager.GetAllBaronyIDs(),
+                IDType.County => County_Manager.GetAllCountyIDs(),
                 IDType.Faction => Faction_Manager.GetAllFactionIDs(),
                 _ => throw new ArgumentOutOfRangeException(nameof(idType), $"Unhandled IDType: {idType}")
             };
@@ -130,9 +130,9 @@ namespace Tools
                 { IDType.Actor, (1, 99999) },
                 { IDType.Item, (100000, 199999) },
                 { IDType.Station, (200000, 299999) },
-                { IDType.JobSite, (300000, 399999) },
-                { IDType.City, (400000, 499999) },
-                { IDType.Region, (500000, 599999) },
+                { IDType.Building, (300000, 399999) },
+                { IDType.Barony, (400000, 499999) },
+                { IDType.County, (500000, 599999) },
                 { IDType.Faction, (600000, 699999) },
                 { IDType.Profile, (700000, 799999) }
             };
@@ -177,9 +177,9 @@ namespace Tools
         Actor,
         Item,
         Station,
-        JobSite,
-        City,
-        Region,
+        Building,
+        Barony,
+        County,
         Faction,
         Profile,
     }

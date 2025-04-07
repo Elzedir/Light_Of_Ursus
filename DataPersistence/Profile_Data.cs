@@ -106,19 +106,19 @@ namespace DataPersistence
         void _loadNestedRegionData(string savePath, Save_Data saveData)
         {
             var regionPath = Path.Combine(savePath, "Regions");
-            var regionDataJson = JsonUtility.FromJson<SavedRegionData>(_fromJSON(regionPath, "RegionSaveData.json"));
-            saveData.SavedRegionData = new SavedRegionData(regionDataJson?.AllRegionData);
+            var regionDataJson = JsonUtility.FromJson<SavedCountyData>(_fromJSON(regionPath, "RegionSaveData.json"));
+            saveData.SavedCountyData = new SavedCountyData(regionDataJson?.AllCountyData);
 
             var cityPath = Path.Combine(regionPath, "Cities");
             var cityDataJson = JsonUtility.FromJson<SavedCityData>(_fromJSON(cityPath, "CitySaveData.json"));
             saveData.SavedCityData = new SavedCityData(cityDataJson?.AllCityData);
 
-            var jobsitePath = Path.Combine(cityPath, "Jobsites");
-            var jobsiteDataJson =
-                JsonUtility.FromJson<SavedJobSiteData>(_fromJSON(jobsitePath, "JobsiteSaveData.json"));
-            saveData.SavedJobSiteData = new SavedJobSiteData(jobsiteDataJson?.AllJobSiteData);
+            var buildingPath = Path.Combine(cityPath, "Jobsites");
+            var buildingDataJson =
+                JsonUtility.FromJson<SavedBuildingData>(_fromJSON(buildingPath, "BuildingSaveData.json"));
+            saveData.SavedBuildingData = new SavedBuildingData(buildingDataJson?.AllBuildingData);
 
-            var stationPath = Path.Combine(jobsitePath, "Stations");
+            var stationPath = Path.Combine(buildingPath, "Stations");
             var stationDataJson =
                 JsonUtility.FromJson<SavedStationData>(_fromJSON(stationPath, "StationSaveData.json"));
             saveData.SavedStationData = new SavedStationData(stationDataJson?.AllStationData);
@@ -252,10 +252,10 @@ namespace DataPersistence
 
         void _saveNestedRegionData(string savePath, Save_Data saveData)
         {
-            var regionPath = _toJSON(savePath, "Regions", "RegionSaveData.json", saveData.SavedRegionData);
+            var regionPath = _toJSON(savePath, "Regions", "RegionSaveData.json", saveData.SavedCountyData);
             var cityPath = _toJSON(regionPath, "Cities", "CitySaveData.json", saveData.SavedCityData);
-            var jobSitePath = _toJSON(cityPath, "JobSites", "JobSiteSaveData.json", saveData.SavedJobSiteData);
-            _toJSON(jobSitePath, "Stations", "StationSaveData.json", saveData.SavedStationData);
+            var buildingPath = _toJSON(cityPath, "Buildings", "BuildingSaveData.json", saveData.SavedBuildingData);
+            _toJSON(buildingPath, "Stations", "StationSaveData.json", saveData.SavedStationData);
         }
 
         void _saveNestedFactionData(string savePath, Save_Data saveData)

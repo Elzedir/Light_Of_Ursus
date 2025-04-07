@@ -90,7 +90,7 @@ namespace Inventory
             
             var stationsAndItemsToFetchFrom = new Dictionary<ulong, Dictionary<ulong, ulong>>();
 
-            foreach (var stationToFetchFrom in StationReference.Station.JobSite.JobSite_Data.AllJobs.Select(job => job.Value.Station))
+            foreach (var stationToFetchFrom in StationReference.Station.Building.Building_Data.AllJobs.Select(job => job.Value.Station))
             {
                 if (stationToFetchFrom.StationID == StationReference.StationID) continue;
                 

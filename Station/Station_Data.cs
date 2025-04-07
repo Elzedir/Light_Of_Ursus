@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Buildings;
 using Inventory;
 using Jobs;
-using JobSites;
 using Recipes;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 using WorkPosts;
 using Object = UnityEngine.Object;
 
@@ -15,20 +16,20 @@ namespace Station
     [Serializable]
     public class Station_Data : Data_Class
     {
-        //* Later, test the possibility of using an ID system similar to WorkPost. Will we ever have a Station without a JobSite?
+        //* Later, test the possibility of using an ID system similar to WorkPost. Will we ever have a Station without a Building?
         //* Therefore, do Stations need their own ID, or can we just give them an incremental ID like WorkPost.Obviously, a station has
-        //* a fixed and default number of WorkPosts, whereas a JobSite can have varying stations, but maybe each ID can be specific to
-        //* each JobSite, rather than being a global ID. Or maybe it is safer since workPosts will always have the same position relative
+        //* a fixed and default number of WorkPosts, whereas a Building can have varying stations, but maybe each ID can be specific to
+        //* each Building, rather than being a global ID. Or maybe it is safer since workPosts will always have the same position relative
         //* to the station, whereas station will always different depending on the map.
         public ulong StationID;
-        public ulong JobSiteID;
+        public ulong BuildingID;
 
         bool _initialised;
         
         public float BaseProgressRatePerHour = 5;
         
         Station_Component _station;
-        JobSite_Component _jobSite;
+        Building_Component _building;
         
         public SerializableDictionary<ulong, WorkPost_Component> AllWorkPosts;
         
@@ -39,15 +40,15 @@ namespace Station
         public RecipeName  DefaultProduct => Station.DefaultProduct;
         
         public Station_Component Station => _station ??= Station_Manager.GetStation_Component(StationID);
-        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        public Building_Component Building => _building ??= Building_Manager.GetBuilding_Component(BuildingID);
         
-        public Station_Data(ulong stationID, ulong jobSiteID, StationName stationName, 
+        public Station_Data(ulong stationID, ulong buildingID, StationName stationName, 
             StationProgressData stationProgressData = null, InventoryData_Station inventoryData = null)
         {
             //* stationName; When loading from data, if a station exists, then it doesn't do anything, it just helps display what type of station it is.
             //* But if the station does exist, then we generate a new station with the required stationName type.
             StationID = stationID;
-            JobSiteID = jobSiteID;
+            BuildingID = buildingID;
             StationProgressData = stationProgressData ?? new StationProgressData();
             InventoryData = inventoryData ?? new InventoryData_Station(StationID, null);
         }
@@ -55,7 +56,7 @@ namespace Station
         public Station_Data(Station_Data stationData)
         {
             StationID = stationData.StationID;
-            JobSiteID = stationData.JobSiteID;
+            BuildingID = stationData.BuildingID;
             InventoryData = stationData.InventoryData;
             StationProgressData = stationData.StationProgressData;
         }
@@ -100,7 +101,7 @@ namespace Station
             {
                 var job = new Job(
                     jobName: defaultValue.JobName,
-                    jobSiteID: JobSiteID,
+                    buildingID: BuildingID,
                     actorID: 0,
                     stationID: StationID,
                     workPostID: defaultValue.WorkPostID);
@@ -186,7 +187,7 @@ namespace Station
             {
                 { "Station ID", $"{StationID}" },
                 { "Station Name", $"{StationName}" },
-                { "JobSite ID", $"{JobSiteID}" },
+                { "Building ID", $"{BuildingID}" },
                 { "Default Product", $"{DefaultProduct}" },
                 { "Base Progress Rate Per Hour", $"{BaseProgressRatePerHour}" }
             };

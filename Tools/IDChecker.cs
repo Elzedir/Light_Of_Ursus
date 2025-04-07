@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using Actor;
 using Actors;
+using Buildings;
 using Cities;
-using City;
+using Counties;
 using Faction;
-using JobSites;
-using Region;
-using Regions;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -113,34 +111,34 @@ namespace Tools
 
         private void CheckAndFixJobsiteIDs()
         {
-            var jobsites          = FindObjectsByType<JobSite_Component>(FindObjectsSortMode.None);
+            var buildings          = FindObjectsByType<Building_Component>(FindObjectsSortMode.None);
             var existingIDs       = new HashSet<ulong>();
-            var duplicateJobsites = new List<JobSite_Component>();
+            var duplicateBuildings = new List<Building_Component>();
 
-            foreach (var jobsite in jobsites)
+            foreach (var building in buildings)
             {
-                if (jobsite.JobSite_Data == null)
+                if (building.Building_Data == null)
                 {
-                    Debug.LogWarning($"Jobsite: {jobsite.name} does not have JobsiteData.");
+                    Debug.LogWarning($"Jobsite: {building.name} does not have JobsiteData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(jobsite.JobSite_Data.JobSiteID))
+                if (!existingIDs.Add(building.Building_Data.ID))
                 {
-                    duplicateJobsites.Add(jobsite);
+                    duplicateBuildings.Add(building);
                 }
             }
 
-            foreach (var jobsite in duplicateJobsites)
+            foreach (var building in duplicateBuildings)
             {
                 ulong newJobsiteID = GetNewID(existingIDs);
-                jobsite.JobSite_Data.JobSiteID = newJobsiteID;
+                building.Building_Data.ID = newJobsiteID;
                 existingIDs.Add(newJobsiteID);
 
-                EditorUtility.SetDirty(jobsite);
-                EditorSceneManager.MarkSceneDirty(jobsite.gameObject.scene);
+                EditorUtility.SetDirty(building);
+                EditorSceneManager.MarkSceneDirty(building.gameObject.scene);
 
-                Debug.Log($"Assigned new JobsiteID {newJobsiteID} to jobsite {jobsite.name}");
+                Debug.Log($"Assigned new JobsiteID {newJobsiteID} to building {building.name}");
             }
 
             Debug.Log("Jobsite ID check and fix completed.");
@@ -148,19 +146,19 @@ namespace Tools
 
         private void CheckAndFixCityIDs()
         {
-            var cities          = FindObjectsByType<City_Component>(FindObjectsSortMode.None);
+            var cities          = FindObjectsByType<Barony_Component>(FindObjectsSortMode.None);
             var existingIDs     = new HashSet<ulong>();
-            var duplicateCities = new List<City_Component>();
+            var duplicateCities = new List<Barony_Component>();
 
             foreach (var city in cities)
             {
-                if (city.CityData == null)
+                if (city.BaronyData == null)
                 {
                     Debug.LogWarning($"City: {city.name} does not have CityData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(city.CityData.CityID))
+                if (!existingIDs.Add(city.BaronyData.ID))
                 {
                     duplicateCities.Add(city);
                 }
@@ -169,7 +167,7 @@ namespace Tools
             foreach (var city in duplicateCities)
             {
                 ulong newCityID = GetNewID(existingIDs);
-                city.CityData.CityID = newCityID;
+                city.BaronyData.ID = newCityID;
                 existingIDs.Add(newCityID);
 
                 EditorUtility.SetDirty(city);
@@ -183,19 +181,19 @@ namespace Tools
 
         private void CheckAndFixRegionIDs()
         {
-            var regions          = FindObjectsByType<Region_Component>(FindObjectsSortMode.None);
+            var regions          = FindObjectsByType<County_Component>(FindObjectsSortMode.None);
             var existingIDs      = new HashSet<ulong>();
-            var duplicateRegions = new List<Region_Component>();
+            var duplicateRegions = new List<County_Component>();
 
             foreach (var region in regions)
             {
-                if (region.RegionData == null)
+                if (region.CountyData == null)
                 {
                     Debug.LogWarning($"Region: {region.name} does not have RegionData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(region.RegionData.RegionID))
+                if (!existingIDs.Add(region.CountyData.ID))
                 {
                     duplicateRegions.Add(region);
                 }
@@ -204,7 +202,7 @@ namespace Tools
             foreach (var region in duplicateRegions)
             {
                 ulong newRegionID = GetNewID(existingIDs);
-                region.RegionData.RegionID = newRegionID;
+                region.CountyData.ID = newRegionID;
                 existingIDs.Add(newRegionID);
 
                 EditorUtility.SetDirty(region);

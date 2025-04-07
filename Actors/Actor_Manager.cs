@@ -190,7 +190,7 @@ namespace Actors
             var careerData = new Actor_Data_Career(
                 actorID: fullIdentification.ActorID,
                 careerName: actorDataPreset?.ActorDataCareer?.CareerName     ?? CareerName.Wanderer,
-                jobSiteID: actorDataPreset?.ActorDataCareer?.CurrentJob?.JobSiteID       ?? 0
+                buildingID: actorDataPreset?.ActorDataCareer?.CurrentJob?.BuildingID       ?? 0
             );
             
             var craftingData = new Actor_Data_Crafting(

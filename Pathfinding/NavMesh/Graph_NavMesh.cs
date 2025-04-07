@@ -27,20 +27,37 @@ namespace Pathfinding.NavMesh
             var worldSize = Mathf.Max(terrainSize.x, terrainSize.z);
             _nodes = new HashSet<Vector3>();
 
-            var navRelevantObjects = GameObject.FindGameObjectsWithTag("NavRelevant");
-
-            foreach (var navMeshObject in navRelevantObjects)
+            foreach(var navMeshObject in Object.FindObjectsByType<NavRelevant>(FindObjectsSortMode.None))
             {
-                var position = navMeshObject.transform.position;
-                position.y = 0;
+                var position = navMeshObject.GetNavRelevantPoints();
 
-                _nodes.Add(position);
+                foreach (var pos in position.ToList())
+                {
+                    _nodes.Add(new Vector3(pos.x, 0, pos.z));
+                }
             }
+
+            var area = new Rect(0, 0, worldSize, worldSize);
+            var center = new Vector3(area.center.x, 0, area.center.y);
+            var corners = new[]
+            {
+                new Vector3(area.xMin, 0, area.yMin),
+                new Vector3(area.xMax, 0, area.yMin),
+                new Vector3(area.xMin, 0, area.yMax),
+                new Vector3(area.xMax, 0, area.yMax)
+            };
+            
+            _nodes.Add(center);
+            foreach (var corner in corners)
+            {
+                _nodes.Add(corner);
+            }
+            
             // Use flowpath at a larger space, less triangles
             
-            BuildAdaptiveQuadTreeSampling(new Rect(0, 0, worldSize, worldSize), 0, 0);
+            //BuildAdaptiveQuadTreeSampling(new Rect(0, 0, worldSize, worldSize), 0, 0);
             
-            AddTerrainBoundaryPoints();
+            //AddTerrainBoundaryPoints();
 
             // for (var x = 0f; x <= worldSize; x += 3)
             // {
@@ -133,7 +150,7 @@ namespace Pathfinding.NavMesh
             // var resolution = 2;
             // var stepSize = Mathf.Max(terrainData.size.x, terrainData.size.z) / resolution;
 
-            var stepSize = 5f;
+            var stepSize = 20f;
             
             for (float x = 0; x < terrainData.size.x; x += stepSize)
             {
@@ -143,7 +160,7 @@ namespace Pathfinding.NavMesh
                     var typeHere = Terrains.Terrain_Manager.GetTextureIndexAtPosition(pos);
                     
                     var isBoundary = false;
-
+                    
                     var secondStep = 5;
                     
                     for (var dx = -1; dx <= 1; dx += 2)
@@ -152,16 +169,16 @@ namespace Pathfinding.NavMesh
                         {
                             var neighborPos = new Vector3(x + dx * stepSize / 2, 0, z + dz * stepSize / 2);
                             var neighborType = Terrains.Terrain_Manager.GetTextureIndexAtPosition(neighborPos);
-
+                    
                             if (neighborType == typeHere) continue;
                             
                             isBoundary = true;
                             break;
                         }
-
+                    
                         if (isBoundary) break;
                     }
-
+                    
                     if (!isBoundary) continue;
                     
                     _nodes.Add(pos);

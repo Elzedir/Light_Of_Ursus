@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
-using Buildings;
 using Careers;
 using Initialisation;
 using Jobs;
@@ -11,12 +10,11 @@ using Priorities;
 using Station;
 using TickRates;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Station_Component = Station.Station_Component;
 
-namespace JobSites
+namespace Buildings
 {
-    public abstract class Building_Component : Buildings.Building_Component
+    public abstract class Building_Component : MonoBehaviour
     {
         public Building_Data Building_Data;
         
@@ -36,8 +34,8 @@ namespace JobSites
 
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseJobSites += _initialise;
-            Manager_Initialisation.OnInitialiseJobSiteData += _initialiseJobSiteData;
+            Manager_Initialisation.OnInitialiseBuildings += _initialise;
+            Manager_Initialisation.OnInitialiseBuildingData += InitialiseBuildingData;
         }
 
         void OnDestroy()
@@ -45,28 +43,28 @@ namespace JobSites
             Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, ID);
             Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, ID);
             
-            Manager_Initialisation.OnInitialiseJobSites -= _initialise;
-            Manager_Initialisation.OnInitialiseJobSiteData -= _initialiseJobSiteData;
+            Manager_Initialisation.OnInitialiseBuildings -= _initialise;
+            Manager_Initialisation.OnInitialiseBuildingData -= InitialiseBuildingData;
         }
 
         void _initialise()
         {
-            var jobSiteData = Building_Manager.GetJobSite_DataFromName(this);
+            var buildingData = Building_Manager.GetBuilding_DataFromName(this);
 
-            if (jobSiteData is null)
+            if (buildingData is null)
             {
                 Debug.LogWarning($"JobSite with name {name} not found in JobSite_SO.");
                 return;
             }
 
-            Building_Data = jobSiteData;
+            Building_Data = buildingData;
 
             _setTickers();
         }
 
-        void _initialiseJobSiteData()
+        void InitialiseBuildingData()
         {
-            Building_Data.InitialiseJobSiteData();
+            Building_Data.InitialiseBuildingData();
         }
 
         void _setTickers()

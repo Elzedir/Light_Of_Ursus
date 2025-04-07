@@ -73,9 +73,9 @@ namespace Priorities
             priority_Parameters.ActorID_Source = ActorID;
         }
 
-        protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
+        protected override void _setBuildingID_Source(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.JobSiteID_Source = _actor.ActorData.Career.CurrentJob?.JobSiteID ?? 0;
+            priority_Parameters.BuildingID_Source = _actor.ActorData.Career.CurrentJob?.BuildingID ?? 0;
         }
 
         protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
@@ -92,9 +92,9 @@ namespace Priorities
             priority_Parameters.ActorID_Target = 0;
         }
 
-        protected override void _setJobSiteID_Target(Priority_Parameters priority_Parameters)
+        protected override void _setBuildingID_Target(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.JobSiteID_Target = 0;
+            priority_Parameters.BuildingID_Target = 0;
         }
 
         readonly ComponentReference_Actor _actorReferences;
