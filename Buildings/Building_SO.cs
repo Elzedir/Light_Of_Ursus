@@ -8,15 +8,15 @@ using UnityEngine;
 
 namespace JobSites
 {
-    [CreateAssetMenu(fileName = "JobSite_SO", menuName = "SOList/JobSite_SO")]
+    [CreateAssetMenu(fileName = "Building_SO", menuName = "SOList/Building_SO")]
     [Serializable]
-    public class JobSite_SO : Data_Component_SO<JobSite_Data, JobSite_Component>
+    public class Building_SO : Data_Component_SO<Building_Data, Building_Component>
     {
-        public Data<JobSite_Data>[] JobSites => Data;
-        public Data<JobSite_Data>        GetJobSite_Data(ulong      jobSiteID) => GetData(jobSiteID);
-        public Dictionary<ulong, JobSite_Component> JobSite_Components => _getSceneComponents();
+        public Data<Building_Data>[] JobSites => Data;
+        public Data<Building_Data>        GetJobSite_Data(ulong      jobSiteID) => GetData(jobSiteID);
+        public Dictionary<ulong, Building_Component> JobSite_Components => _getSceneComponents();
 
-        public JobSite_Component GetJobSite_Component(ulong jobSiteID)
+        public Building_Component GetJobSite_Component(ulong jobSiteID)
         {
             if (jobSiteID == 0)
             {
@@ -33,20 +33,20 @@ namespace JobSites
             return null;
         }
 
-        public void UpdateJobSite(ulong jobSiteID, JobSite_Data jobSite_Component) => UpdateData(jobSiteID, jobSite_Component);
-        public void UpdateAllJobSites(Dictionary<ulong, JobSite_Data> allJobSites) => UpdateAllData(allJobSites);
+        public void UpdateJobSite(ulong jobSiteID, Building_Data building_Component) => UpdateData(jobSiteID, building_Component);
+        public void UpdateAllJobSites(Dictionary<ulong, Building_Data> allJobSites) => UpdateAllData(allJobSites);
 
-        protected override Dictionary<ulong, Data<JobSite_Data>> _getDefaultData() =>
-            _convertDictionaryToData(JobSite_List.S_DefaultJobSites);
+        protected override Dictionary<ulong, Data<Building_Data>> _getDefaultData() =>
+            _convertDictionaryToData(Building_List.S_DefaultJobSites);
 
-        protected override Dictionary<ulong, Data<JobSite_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Building_Data>> _getSavedData()
         {
-            Dictionary<ulong, JobSite_Data> savedData = new();
+            Dictionary<ulong, Building_Data> savedData = new();
 
             try
             {
                 savedData = DataPersistence_Manager.CurrentSaveData.SavedJobSiteData.AllJobSiteData
-                    .ToDictionary(jobSite => jobSite.JobSiteID, jobSite => jobSite);
+                    .ToDictionary(jobSite => jobSite.ID, jobSite => jobSite);
             }
             catch
             {
@@ -69,15 +69,15 @@ namespace JobSites
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<ulong, Data<JobSite_Data>> _getSceneData() =>
-            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.JobSite_Data));
+        protected override Dictionary<ulong, Data<Building_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Building_Data));
         
-        protected override Data<JobSite_Data> _convertToData(JobSite_Data data)
+        protected override Data<Building_Data> _convertToData(Building_Data data)
         {
-            return new Data<JobSite_Data>(
-                dataID: data.JobSiteID, 
+            return new Data<Building_Data>(
+                dataID: data.ID, 
                 data_Object: data,
-                dataTitle: $"{data.JobSiteID}: {data.JobSiteName}",
+                dataTitle: $"{data.ID}: {data.BuildingName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
         
@@ -85,9 +85,9 @@ namespace JobSites
             saveData.SavedJobSiteData = new SavedJobSiteData(JobSites.Select(jobSite => jobSite.Data_Object).ToArray());
     }
 
-    [CustomEditor(typeof(JobSite_SO))]
-    public class JobSites_SOEditor : Data_SOEditor<JobSite_Data>
+    [CustomEditor(typeof(Building_SO))]
+    public class JobSites_SOEditor : Data_SOEditor<Building_Data>
     {
-        public override Data_SO<JobSite_Data> SO => _so ??= (JobSite_SO)target;
+        public override Data_SO<Building_Data> SO => _so ??= (Building_SO)target;
     }
 }

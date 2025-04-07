@@ -4,18 +4,19 @@ using Cities;
 using Initialisation;
 using Region;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Regions
 {
-    public class Region_Component : MonoBehaviour
+    public class County_Component : MonoBehaviour
     {
-        public ulong RegionID => RegionData.RegionID;
+        public ulong CountyID => CountyData.RegionID;
         
-        public Region_Data               RegionData;
+        public County_Data               CountyData;
 
-        public void SetRegionData(Region_Data regionData)
+        public void SetCountyData(County_Data countyData)
         {
-            RegionData = regionData;
+            CountyData = countyData;
         }
 
         void Awake()
@@ -33,9 +34,9 @@ namespace Regions
                 return;
             }
             
-            SetRegionData(regionData);
+            SetCountyData(regionData);
             
-            RegionData.InitialiseRegionData();
+            CountyData.InitialiseRegionData();
         }
 
         public List<City_Component> GetAllCitiesInRegion() => GetComponentsInChildren<City_Component>().ToList();

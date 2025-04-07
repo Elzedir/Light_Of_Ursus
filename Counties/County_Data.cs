@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cities;
-using City;
 using Faction;
 using Managers;
 using Region;
 using Tools;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Regions
 {
@@ -20,10 +20,8 @@ namespace Regions
         public int    RegionFactionID;
         public string RegionDescription;
 
-        Region_Component        _region_Component;
-        public Region_Component Region_Component => _region_Component ??= Region_Manager.GetRegion_Component(RegionID);
-
-        public ProsperityData ProsperityData;
+        County_Component        _county_Component;
+        public County_Component County_Component => _county_Component ??= Region_Manager.GetRegion_Component(RegionID);
 
         public           FactionName     Faction;
         [SerializeField] List<ulong>      _allCityIDs;
@@ -38,7 +36,7 @@ namespace Regions
                     _allCitiesInRegion.Count == _currentLength) return _allCitiesInRegion;
 
                 _currentLength = _allCitiesInRegion?.Count ?? 0;
-                return Region_Component.GetAllCitiesInRegion().ToDictionary(city => city.CityID);
+                return County_Component.GetAllCitiesInRegion().ToDictionary(city => city.ID);
             }
         }
 
@@ -53,22 +51,20 @@ namespace Regions
         public void RefreshAllCities() => _currentLength = 0;
 
         public Region_Data(ulong       regionID,   string regionName, string regionDescription, int regionFactionID,
-                           List<ulong> allCityIDs, ProsperityData prosperityData = null)
+                           List<ulong> allCityIDs, City_ProsperityData cityProsperityData = null)
         {
             RegionID          = regionID;
             RegionName        = regionName;
             RegionDescription = regionDescription;
             RegionFactionID   = regionFactionID;
             _allCityIDs       = allCityIDs;
-
-            ProsperityData = new ProsperityData(prosperityData);
         }
         
         public void InitialiseRegionData()
         {
-            _region_Component = Region_Manager.GetRegion_Component(RegionID);
+            _county_Component = Region_Manager.GetRegion_Component(RegionID);
 
-            if (_region_Component is not null) return;
+            if (_county_Component is not null) return;
             
             Debug.LogWarning($"Region with ID {RegionID} not found in Region_SO.");
         }
@@ -81,7 +77,6 @@ namespace Regions
                 { "Region Name", RegionName },
                 { "Region Faction ID", $"{RegionFactionID}" },
                 { "Region Description", RegionDescription },
-                { "Prosperity Data", ProsperityData.ToString() },
                 { "Faction", $"{Faction}" },
                 { "All City IDs", string.Join(", ", _allCityIDs) }
             };
@@ -100,11 +95,6 @@ namespace Regions
                 allStringData: AllCitiesInRegion.ToDictionary(
                     city => city.Key.ToString(),
                     city => city.Value.name));
-            
-            _updateDataDisplay(DataToDisplay,
-                title: "Prosperity Data",
-                toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: ProsperityData.GetDataToDisplay(toggleMissingDataDebugs));
 
             return DataToDisplay;
         }

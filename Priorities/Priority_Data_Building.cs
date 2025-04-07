@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
-using JobSites;
+using Buildings;
 using Priorities.Priority_Queues;
 using Station;
 using Tools;
@@ -11,17 +11,17 @@ using UnityEngine;
 
 namespace Priorities
 {
-    public class Priority_Data_JobSite : Priority_Data
+    public class Priority_Data_Building : Priority_Data
     {
-        public Priority_Data_JobSite(ulong jobSiteID)
+        public Priority_Data_Building(ulong buildingID)
         {
-            _jobSiteReferences = new ComponentReference_JobSite(jobSiteID);
+            _buildingReferences = new ComponentReference_JobSite(buildingID);
         }
 
-        readonly ComponentReference_JobSite _jobSiteReferences;
+        readonly ComponentReference_JobSite _buildingReferences;
 
-        public ulong                     JobSiteID     => _jobSiteReferences.JobSiteID;
-        JobSite_Component                _jobSite      => _jobSiteReferences.JobSite;
+        public ulong                     JobSiteID     => _buildingReferences.JobSiteID;
+        Building_Component                Building      => _buildingReferences.Building;
         
         public override void RegenerateAllPriorities(DataChangedName dataChangedName, bool forceRegenerateAll = false)
         {
@@ -54,7 +54,7 @@ namespace Priorities
             priority_Parameters.ActorID_Source = 0;
         }
 
-        protected override void _setJobSiteID_Source(Priority_Parameters priority_Parameters)
+        protected override void _setBuildingID_Source(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Source = JobSiteID;
         }
@@ -64,12 +64,12 @@ namespace Priorities
             priority_Parameters.ActorID_Target = 0;
         }
 
-        protected override void _setJobSiteID_Target(Priority_Parameters priority_Parameters)
+        protected override void _setBuildingID_Target(Priority_Parameters priority_Parameters)
         {
             priority_Parameters.JobSiteID_Target = 0;
         }
 
-        protected override HashSet<ActorActionName> _getAllowedActions() => _jobSite.JobSite_Data.AllowedActions;
+        protected override HashSet<ActorActionName> _getAllowedActions() => Building.Building_Data.AllowedActions;
 
         public override Dictionary<string, string> GetStringData()
         {
@@ -78,7 +78,7 @@ namespace Priorities
             return new Dictionary<string, string>
             {
                 { "JobSiteID", $"{JobSiteID}" },
-                { "JobSite", $"{_jobSite.JobSite_Data.JobSiteName}" },
+                { "JobSite", $"{Building.Building_Data.BuildingName}" },
                 { "Next Highest Priority", highestPriority?.PriorityID != null 
                     ? $"{(ActorActionName)highestPriority.PriorityID}({highestPriority.PriorityID}) - {highestPriority.PriorityValue}" 
                     : "No Highest Priority" }

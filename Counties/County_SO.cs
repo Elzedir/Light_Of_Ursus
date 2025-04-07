@@ -2,22 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DataPersistence;
-using Regions;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace Region
+namespace Counties
 {
     [CreateAssetMenu(fileName = "Region_SO", menuName = "SOList/Region_SO")]
     [Serializable]
-    public class Region_SO : Data_Component_SO<Region_Data, Region_Component>
+    public class Region_SO : Data_Component_SO<County_Data, County_Component>
     {
-        public Data<Region_Data>[]         Regions                            => Data;
-        public Data<Region_Data>           GetRegion_Data(ulong      regionID) => GetData(regionID);
-        public Dictionary<ulong, Region_Component> RegionComponents => _getSceneComponents();
+        public Data<County_Data>[]         Regions                            => Data;
+        public Data<County_Data>           GetRegion_Data(ulong      regionID) => GetData(regionID);
+        public Dictionary<ulong, County_Component> RegionComponents => _getSceneComponents();
         
-        public Region_Component GetRegion_Component(ulong regionID)
+        public County_Component GetRegion_Component(ulong regionID)
         {
             if (RegionComponents.TryGetValue(regionID, out var component))
             {
@@ -28,15 +27,15 @@ namespace Region
             return null;
         }
 
-        public void UpdateRegion(ulong regionID, Region_Data region_Data) => UpdateData(regionID, region_Data);
-        public void UpdateAllRegions(Dictionary<ulong, Region_Data> allRegions) => UpdateAllData(allRegions);
+        public void UpdateRegion(ulong regionID, County_Data county_Data) => UpdateData(regionID, county_Data);
+        public void UpdateAllRegions(Dictionary<ulong, County_Data> allRegions) => UpdateAllData(allRegions);
 
-        protected override Dictionary<ulong, Data<Region_Data>> _getDefaultData() =>
-            _convertDictionaryToData(Region_List.DefaultRegions);
+        protected override Dictionary<ulong, Data<County_Data>> _getDefaultData() =>
+            _convertDictionaryToData(County_List.DefaultCounties);
 
-        protected override Dictionary<ulong, Data<Region_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<County_Data>> _getSavedData()
         {
-            Dictionary<ulong, Region_Data> savedData = new();
+            Dictionary<ulong, County_Data> savedData = new();
 
             try
             {
@@ -64,12 +63,12 @@ namespace Region
             return _convertDictionaryToData(savedData);
         }
 
-        protected override Dictionary<ulong, Data<Region_Data>> _getSceneData() =>
-            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.RegionData));
+        protected override Dictionary<ulong, Data<County_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.CountyData));
          
-        protected override Data<Region_Data> _convertToData(Region_Data data)
+        protected override Data<County_Data> _convertToData(County_Data data)
         {
-            return new Data<Region_Data>(
+            return new Data<County_Data>(
                 dataID: data.RegionID, 
                 data_Object: data,
                 dataTitle: $"{data.RegionID}: {data.RegionName}",
@@ -81,8 +80,8 @@ namespace Region
     }
 
     [CustomEditor(typeof(Region_SO))]
-    public class Region_SOEditor : Data_SOEditor<Region_Data>
+    public class Region_SOEditor : Data_SOEditor<County_Data>
     {
-        public override Data_SO<Region_Data> SO => _so ??= (Region_SO)target;
+        public override Data_SO<County_Data> SO => _so ??= (Region_SO)target;
     }
 }

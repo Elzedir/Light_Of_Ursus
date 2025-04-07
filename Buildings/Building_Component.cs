@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ActorActions;
 using Actors;
+using Buildings;
 using Careers;
 using Initialisation;
 using Jobs;
@@ -10,21 +11,23 @@ using Priorities;
 using Station;
 using TickRates;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Station_Component = Station.Station_Component;
 
 namespace JobSites
 {
-    public abstract class JobSite_Component : MonoBehaviour
+    public abstract class Building_Component : Buildings.Building_Component
     {
-        public JobSite_Data JobSite_Data;
+        public Building_Data Building_Data;
         
-        public abstract JobSiteName JobSiteName { get; }
+        public abstract BuildingName BuildingName { get; }
+        
         public abstract CareerName DefaultCareer { get; }
-        public ulong JobSiteID => JobSite_Data.JobSiteID;
+        public ulong ID => Building_Data.ID;
 
         public Job GetActorJob(ulong actorID)
         {
-            return JobSite_Data.GetActorJob(actorID);
+            return Building_Data.GetActorJob(actorID);
         }
 
         public float IdealRatio;
@@ -39,8 +42,8 @@ namespace JobSites
 
         void OnDestroy()
         {
-            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, JobSiteID);
-            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, JobSiteID);
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, ID);
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, ID);
             
             Manager_Initialisation.OnInitialiseJobSites -= _initialise;
             Manager_Initialisation.OnInitialiseJobSiteData -= _initialiseJobSiteData;
@@ -48,7 +51,7 @@ namespace JobSites
 
         void _initialise()
         {
-            var jobSiteData = JobSite_Manager.GetJobSite_DataFromName(this);
+            var jobSiteData = Building_Manager.GetJobSite_DataFromName(this);
 
             if (jobSiteData is null)
             {
@@ -56,25 +59,25 @@ namespace JobSites
                 return;
             }
 
-            JobSite_Data = jobSiteData;
+            Building_Data = jobSiteData;
 
             _setTickers();
         }
 
         void _initialiseJobSiteData()
         {
-            JobSite_Data.InitialiseJobSiteData();
+            Building_Data.InitialiseJobSiteData();
         }
 
         void _setTickers()
         {
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, JobSiteID, OnTickOneSecond);
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, JobSiteID, OnTickTenSeconds);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, ID, OnTickOneSecond);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, ID, OnTickTenSeconds);
         }
 
         public void OnTickOneSecond()
         {   
-            foreach (var job in JobSite_Data.AllJobs.Values)
+            foreach (var job in Building_Data.AllJobs.Values)
             {
                 job.OnTick();
             }
@@ -82,21 +85,21 @@ namespace JobSites
 
         public void OnTickTenSeconds()
         {
-            JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
+            Building_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             _compareProductionOutput();
             
-            JobSite_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
+            Building_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
 
             //* Temporary fix to move people from recreation to another job.
-            foreach (var worker in JobSite_Data.AllJobs.Values
+            foreach (var worker in Building_Data.AllJobs.Values
                          .Where(job => job.Station.StationType == StationType.Recreation && job.ActorID != 0))
             {
-                JobSite_Data.AssignActorToNewCurrentJob(worker.Actor);
+                Building_Data.AssignActorToNewCurrentJob(worker.Actor);
             }
             
             //* Eventually change to once per day.
-            JobSite_Data.FillEmptyJobSitePositions();
+            Building_Data.FillEmptyJobSitePositions();
         }
 
         protected abstract bool _compareProductionOutput();
@@ -106,7 +109,7 @@ namespace JobSites
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
-            JobSite_Data.RemoveAllWorkersFromAllJobs();
+            Building_Data.RemoveAllWorkersFromAllJobs();
 
             var tempEmployees = allEmployees.Select(employee => employee.Value).ToList();
 
@@ -120,7 +123,7 @@ namespace JobSites
 
             foreach (var employee in employeesForStation)
             {
-                if (!JobSite_Data.AssignActorToNewCurrentJob(employee))
+                if (!Building_Data.AssignActorToNewCurrentJob(employee))
                 {
                     Debug.LogError($"Could not assign actor {employee.ActorID} to a job.");
                     continue;
@@ -153,7 +156,7 @@ namespace JobSites
             return result;
         }
         
-        public HashSet<StationName> GetStationNames() => JobSite_Data.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
+        public HashSet<StationName> GetStationNames() => Building_Data.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
 
         public void GetRelevantStations(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
@@ -195,7 +198,7 @@ namespace JobSites
             var allFetchItems = new Dictionary<ulong, ulong>();
             var allDeliverStations = new Dictionary<ulong, Station_Component>();
 
-            foreach (var job in JobSite_Data.AllJobs.Values)
+            foreach (var job in Building_Data.AllJobs.Values)
             {
                 foreach (var itemToFetch in job.Station.GetItemsToFetchFromThisStation())
                 {
@@ -206,7 +209,7 @@ namespace JobSites
                 }
             }
 
-            foreach (var job in JobSite_Data.AllJobs.Values)
+            foreach (var job in Building_Data.AllJobs.Values)
             {
                 foreach (var itemToFetch in allFetchItems)
                 {
@@ -224,7 +227,7 @@ namespace JobSites
 
         void _relevantStations_Chop_Wood(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = JobSite_Data.AllJobs.Values
+            priority_Parameters.AllStation_Sources = Building_Data.AllJobs.Values
                 .Where(job => job.Station.StationName == StationName.Tree &&
                                   job.Station.Station_Data.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();
@@ -232,7 +235,7 @@ namespace JobSites
 
         void _relevantStations_Process_Logs(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = JobSite_Data.AllJobs.Values
+            priority_Parameters.AllStation_Sources = Building_Data.AllJobs.Values
                 .Where(job => job.Station.StationName == StationName.Sawmill &&
                                   job.Station.Station_Data.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();

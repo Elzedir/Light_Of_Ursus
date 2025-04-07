@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actor;
 using Actors;
+using Buildings;
 using Careers;
 using Items;
 using Jobs;
@@ -10,9 +11,9 @@ using UnityEngine;
 
 namespace JobSites
 {
-    public class JobSite_Component_LumberYard : JobSite_Component
+    public class Building_Component_LumberYard : Building_Component
     {
-        public override JobSiteName JobSiteName => JobSiteName.Lumber_Yard;
+        public override BuildingName BuildingName => BuildingName.Lumber_Yard;
         public override CareerName DefaultCareer => CareerName.Lumberjack;
         
         protected override bool _compareProductionOutput()
@@ -20,7 +21,7 @@ namespace JobSites
             // Temporary, maybe change to cost of items over product of items
             SetIdealRatio(3f);
 
-            var producedItems = JobSite_Data.ProductionData.GetEstimatedProductionRatePerHour();
+            var producedItems = Building_Data.ProductionData.GetEstimatedProductionRatePerHour();
 
             //* Later, add a general application of this, rather than typing it out every time.
             float logProduction = producedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
@@ -59,7 +60,7 @@ namespace JobSites
             
             //* Improve this
 
-            foreach (var job in JobSite_Data.AllJobs.Values)
+            foreach (var job in Building_Data.AllJobs.Values)
             {
                 if (job.Actor is null) continue;
                 
@@ -76,7 +77,7 @@ namespace JobSites
             {
                 _assignAllEmployeesToStations(combination);
 
-                var estimatedProduction = JobSite_Data.GetEstimatedProductionRatePerHour();
+                var estimatedProduction = Building_Data.GetEstimatedProductionRatePerHour();
 
                 var mergedEstimatedProduction = estimatedProduction
                                                 .GroupBy(item => item.ItemID)

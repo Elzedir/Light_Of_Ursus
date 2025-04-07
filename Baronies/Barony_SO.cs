@@ -1,24 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using Cities;
 using DataPersistence;
 using Tools;
 using UnityEditor;
 using UnityEngine;
 
-namespace City
+namespace Cities
 {
     [CreateAssetMenu(fileName = "City_SO", menuName = "SOList/City_SO")]
     [Serializable]
-    public class City_SO : Data_Component_SO<City_Data, City_Component>
+    public class City_SO : Data_Component_SO<Barony_Data, Barony_Component>
     {
-        public Data<City_Data>[]                         Cities                         => Data;
-        public Data<City_Data>                           GetCity_Data(ulong      cityID) => GetData(cityID);
-        public Dictionary<ulong, City_Component> City_Components => _getSceneComponents();
+        public Data<Barony_Data>[]                         Cities                         => Data;
+        public Data<Barony_Data>                           GetCity_Data(ulong      cityID) => GetData(cityID);
+        public Dictionary<ulong, Barony_Component> City_Components => _getSceneComponents();
 
-        public City_Component GetCity_Component(ulong cityID)
+        public Barony_Component GetCity_Component(ulong cityID)
         {
             if (cityID == 0)
             {
@@ -35,20 +33,20 @@ namespace City
             return null;
         }
         
-        public void UpdateCity(ulong cityID, City_Data city_Data) => UpdateData(cityID, city_Data);
-        public void UpdateAllCities(Dictionary<ulong, City_Data> allCities) => UpdateAllData(allCities);
+        public void UpdateCity(ulong cityID, Barony_Data barony_Data) => UpdateData(cityID, barony_Data);
+        public void UpdateAllCities(Dictionary<ulong, Barony_Data> allCities) => UpdateAllData(allCities);
 
-        protected override Dictionary<ulong, Data<City_Data>> _getDefaultData() => 
-            _convertDictionaryToData(City_List.DefaultCities);
+        protected override Dictionary<ulong, Data<Barony_Data>> _getDefaultData() => 
+            _convertDictionaryToData(Barony_List.DefaultCities);
 
-        protected override Dictionary<ulong, Data<City_Data>> _getSavedData()
+        protected override Dictionary<ulong, Data<Barony_Data>> _getSavedData()
         {
-            Dictionary<ulong, City_Data> savedData = new();
+            Dictionary<ulong, Barony_Data> savedData = new();
                 
             try
             {
                 savedData = DataPersistence_Manager.CurrentSaveData.SavedCityData.AllCityData
-                    .ToDictionary(city => city.CityID, city => city);
+                    .ToDictionary(city => city.ID, city => city);
             }
             catch
             {
@@ -71,15 +69,15 @@ namespace City
             return _convertDictionaryToData(savedData);
         }
         
-        protected override Dictionary<ulong, Data<City_Data>> _getSceneData() =>
-            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.CityData));
+        protected override Dictionary<ulong, Data<Barony_Data>> _getSceneData() =>
+            _convertDictionaryToData(_getSceneComponents().ToDictionary(kvp => kvp.Key, kvp => kvp.Value.BaronyData));
         
-        protected override Data<City_Data> _convertToData(City_Data data)
+        protected override Data<Barony_Data> _convertToData(Barony_Data data)
         {
-            return new Data<City_Data>(
-                dataID: data.CityID, 
+            return new Data<Barony_Data>(
+                dataID: data.ID, 
                 data_Object: data,
-                dataTitle: $"{data.CityID}: {data.CityName}",
+                dataTitle: $"{data.ID}: {data.Name}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
@@ -88,8 +86,8 @@ namespace City
     }
 
     [CustomEditor(typeof(City_SO))]
-    public class City_SOEditor : Data_SOEditor<City_Data>
+    public class City_SOEditor : Data_SOEditor<Barony_Data>
     {
-        public override Data_SO<City_Data> SO => _so ??= (City_SO)target;
+        public override Data_SO<Barony_Data> SO => _so ??= (City_SO)target;
     }
 }

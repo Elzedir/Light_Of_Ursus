@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Cities;
 using UnityEngine;
 
-namespace City
+namespace Cities
 {
     public abstract class City_Manager
     {
@@ -11,17 +10,17 @@ namespace City
         static City_SO _allCities;
         static City_SO AllCities => _allCities ??= _getCity_SO();
         
-        public static City_Data GetCity_Data(ulong cityID)
+        public static Barony_Data GetCity_Data(ulong cityID)
         {
             return AllCities.GetCity_Data(cityID).Data_Object;
         }
         
-        public static City_Data GetCity_DataFromName(City_Component city_Component)
+        public static Barony_Data GetCity_DataFromName(Barony_Component barony_Component)
         {
-            return AllCities.GetDataFromName(city_Component.name)?.Data_Object;
+            return AllCities.GetDataFromName(barony_Component.name)?.Data_Object;
         }
         
-        public static City_Component GetCity_Component(ulong cityID)
+        public static Barony_Component GetCity_Component(ulong cityID)
         {
             return AllCities.GetCity_Component(cityID);
         }
@@ -40,9 +39,9 @@ namespace City
             return city_SO;
         }
 
-        public static City_Component GetNearestCity(Vector3 position)
+        public static Barony_Component GetNearestCity(Vector3 position)
         {
-            City_Component nearestCity = null;
+            Barony_Component nearestBarony = null;
 
             var nearestDistance = float.MaxValue;
 
@@ -52,16 +51,33 @@ namespace City
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestCity  = city;
+                nearestBarony  = city;
                 nearestDistance = distance;
             }
 
-            return nearestCity;
+            return nearestBarony;
         }
         
         public static void ClearSOData()
         {
             AllCities.ClearSOData();
         }
+    }
+    
+    public enum BaronyName
+    {
+        None,
+        
+        Metropolis, City, Town, Village, Hamlet, // Economic (Trade)
+        
+        Citadel, Fortress, Castle, Outpost, Watchtower, // Military defensive
+        
+        Fort, Encampment, Garrison, Barracks, Camp, // Military offensive
+        
+        Grand_Estate, Estate, Manor, Farmstead, // Production (food)
+        
+        Ore_Camp, Mine, Quarry, Dig_Site, // Production (Mineral)
+        
+        Grand_Port, Port, Harbour, Dock,  // Economic and production (Trade and food)
     }
 }

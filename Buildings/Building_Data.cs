@@ -5,8 +5,8 @@ using System.Linq;
 using ActorActions;
 using ActorPresets;
 using Actors;
+using Buildings;
 using Cities;
-using City;
 using Items;
 using Jobs;
 using Managers;
@@ -15,55 +15,53 @@ using Recipes;
 using Station;
 using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
-using WorkPosts;
 
 namespace JobSites
 {
     [Serializable]
-    public class JobSite_Data : Data_Class
+    public class Building_Data : Data_Class
     {
-        public ulong JobSiteID;
-        public ulong JobSiteFactionID;
+        public ulong ID;
+        public ulong FactionID;
         public ulong CityID;
         public ulong OwnerID;
 
-        public JobSiteName JobSiteName;
+        public BuildingName BuildingName;
         
-        JobSite_Component _jobSite;
+        Building_Component _building;
         City_Component _city;
         
         public SerializableDictionary<(ulong, ulong), Job> AllJobs;
         Dictionary<ulong, (ulong, ulong)> _actorToJobMap;
         
         public ProductionData ProductionData;
-        public ProsperityData ProsperityData;
         public Priority_Data_JobSite PriorityData;
+        public Building_ProsperityData ProsperityData;
 
         public HashSet<ActorActionName> AllowedActions => AllJobs.Values.SelectMany(job => job.JobActions).ToHashSet();
         
-        public JobSite_Component JobSite =>
-            _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID) 
-                         ?? throw new NullReferenceException($"JobSite with ID {JobSiteID} not found in JobSite_SO.");
+        public Building_Component Building =>
+            _building ??= Building_Manager.GetJobSite_Component(ID) 
+                         ?? throw new NullReferenceException($"JobSite with ID {ID} not found in JobSite_SO.");
         public City_Component City =>
             _city ??= City_Manager.GetCity_Component(CityID) 
                       ?? throw new NullReferenceException($"City with ID {CityID} not found in City_SO.");
 
-        public JobSite_Data(ulong jobSiteID, ulong jobSiteFactionID, ulong cityID, ulong ownerID, 
-            JobSiteName jobSiteName,
-            ProductionData productionData, ProsperityData prosperityData, Priority_Data_JobSite priorityData)
+        public Building_Data(ulong id, ulong factionID, ulong cityID, ulong ownerID, 
+            BuildingName buildingName,
+            ProductionData productionData, Building_ProsperityData prosperityData, Priority_Data_JobSite priorityData)
         {
-            JobSiteID = jobSiteID;
-            JobSiteName = jobSiteName;
-            JobSiteFactionID = jobSiteFactionID;
+            ID = id;
+            BuildingName = buildingName;
+            FactionID = factionID;
             CityID = cityID;
             OwnerID = ownerID;
             
             if (!Application.isPlaying) return;
             
             ProductionData = new ProductionData(productionData);
-            ProsperityData = new ProsperityData(prosperityData);
-            PriorityData = new Priority_Data_JobSite(JobSiteID);
+            PriorityData = new Priority_Data_JobSite(ID);
+            ProsperityData = new Building_ProsperityData(prosperityData);
         }
         
         void _populateAllJobs()
@@ -71,7 +69,7 @@ namespace JobSites
             AllJobs = new SerializableDictionary<(ulong, ulong), Job>();
             _actorToJobMap = new Dictionary<ulong, (ulong, ulong)>();
             
-            foreach (var station in JobSite.GetComponentsInChildren<Station_Component>())
+            foreach (var station in Building.GetComponentsInChildren<Station_Component>())
             {
                 foreach(var workPost in station.Station_Data.AllWorkPosts.Values)
                 {
@@ -218,7 +216,7 @@ namespace JobSites
         {
             if (GetActorJob(actor.ActorID) is not { } job)
             {
-                Debug.LogError($"Actor with ID {actor.ActorID} not found in JobSite with ID {JobSiteID}.");
+                Debug.LogError($"Actor with ID {actor.ActorID} not found in JobSite with ID {ID}.");
                 return;
             }
             
@@ -240,7 +238,7 @@ namespace JobSites
             RemoveWorkerFromCurrentStation(actor);
             
             actor.ActorData.Career.CurrentJob = openWorkPost.Job;
-            actor.ActorData.Career.CareerName = JobSite.DefaultCareer;
+            actor.ActorData.Career.CareerName = Building.DefaultCareer;
             
             openWorkPost.Job.ActorID = actor.ActorID;
             _actorToJobMap[actor.ActorID] = (station.StationID, openWorkPost.WorkPostID);
@@ -483,9 +481,9 @@ namespace JobSites
         {
             return new Dictionary<string, string>
             {
-                { "JobSite ID", $"{JobSiteID}" },
-                { "JobSite Name", $"{JobSiteName}" },
-                { "JobSite Faction ID", $"{JobSiteFactionID}" },
+                { "JobSite ID", $"{ID}" },
+                { "JobSite Name", $"{BuildingName}" },
+                { "JobSite Faction ID", $"{FactionID}" },
                 { "City ID", $"{CityID}" },
                 { "Owner ID", $"{OwnerID}" }
             };
@@ -554,8 +552,8 @@ namespace JobSites
         public HashSet<Item> EstimatedProductionRatePerHour;
         public ulong JobSiteID;
 
-        JobSite_Component _jobSite;
-        public JobSite_Component JobSite => _jobSite ??= JobSite_Manager.GetJobSite_Component(JobSiteID);
+        Building_Component _building;
+        public Building_Component Building => _building ??= Building_Manager.GetJobSite_Component(JobSiteID);
         
         public ProductionData(ulong jobSiteID)
         {
@@ -598,7 +596,7 @@ namespace JobSites
 
         public HashSet<Item> GetEstimatedProductionRatePerHour()
         {
-            return EstimatedProductionRatePerHour = JobSite.JobSite_Data.GetEstimatedProductionRatePerHour();
+            return EstimatedProductionRatePerHour = Building.Building_Data.GetEstimatedProductionRatePerHour();
         }
     }
 }

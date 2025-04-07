@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using City;
+using Buildings;
 using Initialisation;
-using JobSites;
 using Managers;
 using UnityEngine;
 
@@ -11,10 +9,12 @@ namespace Cities
 {
     public class City_Component : MonoBehaviour
     {
-        public ulong               CityID    => CityData.CityID;
+        public ulong               ID    => CityData.ID;
         public City_Data          CityData;
 
-        public GameObject CitySpawnZone;
+        public GameObject _citySpawnZone;
+        
+        public GameObject CitySpawnZone => _citySpawnZone ??= Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
 
         public void SetCityData(City_Data cityData)
         {
@@ -38,12 +38,10 @@ namespace Cities
             
             SetCityData(cityData);
             
-            CitySpawnZone = Manager_Game.FindTransformRecursively(transform, "CityEntranceSpawnZone").gameObject;
-            
             CityData.InitialiseCityData();
         }
 
-        public Dictionary<ulong, JobSite_Component> GetAllJobSitesInCity() =>
-            GetComponentsInChildren<JobSite_Component>().ToDictionary(jobsite => jobsite.JobSiteID);
+        public Dictionary<ulong, Building_Component> GetAllBuildingsInCity() =>
+            GetComponentsInChildren<Building_Component>().ToDictionary(building => building.ID);
     }
 }

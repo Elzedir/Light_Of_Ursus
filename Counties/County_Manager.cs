@@ -4,24 +4,24 @@ using UnityEngine;
 
 namespace Region
 {
-    public class Region_Manager : MonoBehaviour
+    public class County_Manager : MonoBehaviour
     {
         const string _region_SOPath = "ScriptableObjects/Region_SO";
 
         static Region_SO _allRegions;
         static Region_SO AllRegions => _allRegions ??= _getRegion_SO();
         
-        public static Region_Data GetRegion_Data(ulong regionID)
+        public static County_Data GetRegion_Data(ulong regionID)
         {
             return AllRegions.GetRegion_Data(regionID).Data_Object;
         }
 
-        public static Region_Data GetRegion_DataFromName(Region_Component region_Component)
+        public static County_Data GetRegion_DataFromName(County_Component county_Component)
         {
-            return AllRegions.GetDataFromName(region_Component.name)?.Data_Object;
+            return AllRegions.GetDataFromName(county_Component.name)?.Data_Object;
         }
         
-        public static Region_Component GetRegion_Component(ulong regionID)
+        public static County_Component GetRegion_Component(ulong regionID)
         {
             return AllRegions.GetRegion_Component(regionID);
         }
@@ -40,9 +40,9 @@ namespace Region
             return region_SO;
         }
 
-        public static Region_Component GetNearestRegion(Vector3 position)
+        public static County_Component GetNearestRegion(Vector3 position)
         {
-            Region_Component nearestRegion = null;
+            County_Component nearestCounty = null;
 
             var nearestDistance = float.PositiveInfinity;
 
@@ -52,11 +52,11 @@ namespace Region
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestRegion  = region;
+                nearestCounty  = region;
                 nearestDistance = distance;
             }
 
-            return nearestRegion;
+            return nearestCounty;
         }
         
         public static void ClearSOData()
