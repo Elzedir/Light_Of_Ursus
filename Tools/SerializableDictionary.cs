@@ -72,4 +72,27 @@ namespace Tools
         public IEnumerable<TResult> Select<TResult>(Func<KeyValuePair<TKey, TValue>, TResult> selector)
             => _dictionary.Select(selector);
     }
+    
+    public static class SerializableDictionaryExtensions
+    {
+        public static SerializableDictionary<TKey, TValue> ToSerializedDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> source)
+        {
+            var result = new SerializableDictionary<TKey, TValue>();
+            foreach (var kvp in source)
+                result.Add(kvp.Key, kvp.Value);
+            return result;
+        }
+
+        public static SerializableDictionary<TKey, TValue> ToSerializedDictionary<TSource, TKey, TValue>(
+            this IEnumerable<TSource> source,
+            Func<TSource, TKey> keySelector,
+            Func<TSource, TValue> valueSelector)
+        {
+            var result = new SerializableDictionary<TKey, TValue>();
+            foreach (var item in source)
+                result.Add(keySelector(item), valueSelector(item));
+            return result;
+        }
+    }
 }

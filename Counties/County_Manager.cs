@@ -1,57 +1,59 @@
+using System;
 using System.Collections.Generic;
+using DateAndTime;
 using UnityEngine;
 
 namespace Counties
 {
     public class County_Manager : MonoBehaviour
     {
-        const string _region_SOPath = "ScriptableObjects/Region_SO";
+        const string c_county_SOPath = "ScriptableObjects/County_SO";
 
         static County_SO s_allCounties;
-        static County_SO AllCounties => s_allCounties ??= _getRegion_SO();
+        static County_SO AllCounties => s_allCounties ??= _getCounty_SO();
         
-        public static County_Data GetRegion_Data(ulong regionID)
+        public static County_Data GetCounty_Data(ulong countyID)
         {
-            return AllCounties.GetRegion_Data(regionID).Data_Object;
+            return AllCounties.GetCounty_Data(countyID).Data_Object;
         }
 
-        public static County_Data GetRegion_DataFromName(County_Component county_Component)
+        public static County_Data GetCounty_DataFromName(County_Component county_Component)
         {
             return AllCounties.GetDataFromName(county_Component.name)?.Data_Object;
         }
         
-        public static County_Component GetRegion_Component(ulong regionID)
+        public static County_Component GetCounty_Component(ulong countyID)
         {
-            return AllCounties.GetRegion_Component(regionID);
+            return AllCounties.GetCounty_Component(countyID);
         }
         
         public static List<ulong> GetAllCountyIDs() => AllCounties.GetAllDataIDs(); 
         
-        static County_SO _getRegion_SO()
+        static County_SO _getCounty_SO()
         {
-            var region_SO = Resources.Load<County_SO>(_region_SOPath);
+            var county_SO = Resources.Load<County_SO>(c_county_SOPath);
             
-            if (region_SO is not null) return region_SO;
+            if (county_SO is not null) return county_SO;
             
-            Debug.LogError("Region_SO not found. Creating temporary Region_SO.");
-            region_SO = ScriptableObject.CreateInstance<County_SO>();
+            Debug.LogError("County_SO not found. Creating temporary County_SO.");
+            county_SO = ScriptableObject.CreateInstance<County_SO>();
             
-            return region_SO;
+            return county_SO;
         }
 
-        public static County_Component GetNearestRegion(Vector3 position)
+        public static County_Component GetNearestCounty(Vector3 position)
         {
             County_Component nearestCounty = null;
 
             var nearestDistance = float.PositiveInfinity;
 
-            foreach (var region in AllCounties.RegionComponents.Values)
+            foreach (var county in AllCounties.CountyComponents.Values)
             {
-                var distance = Vector3.Distance(position, region.transform.position);
+                var distance = Vector3.Distance(position, county.transform.position);
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestCounty  = region;
+                nearestCounty  = county;
                 nearestDistance = distance;
             }
 
@@ -61,6 +63,24 @@ namespace Counties
         public static void ClearSOData()
         {
             AllCounties.ClearSOData();
+        }
+
+        public static void RegisterOnProgressDay()
+        {
+            Manager_DateAndTime.OnProgressDay += _onProgressDay;
+        }
+
+        public void OnDestroy()
+        {
+            Manager_DateAndTime.OnProgressDay -= _onProgressDay;
+        }
+
+        static void _onProgressDay()
+        {
+            foreach (var county in AllCounties.CountyComponents.Values)
+            {
+                county.County_Data.OnProgressDay();
+            }
         }
     }
 }

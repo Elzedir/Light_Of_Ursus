@@ -1,76 +1,91 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Baronies;
+using Actors;
 using Buildings;
-using Managers;
+using Cities;
 using Tools;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Cities
+namespace Baronies
 {
     [Serializable]
     public class Barony_Data : Data_Class
     {
-        public BaronyName BaronyName;
-        public bool IsCapital;
-        public Dictionary<int, int> BuildingSlotsPerLevel;
-        
         public ulong ID;
-        public ulong FactionID;
-        public ulong RegionID;
-        
+        public ulong RulerID;
+        public ulong CountyID;
+
+        public BaronyType Type;
+
         public string Name;
         public string Description;
 
-        public int Size;
-
-        [FormerlySerializedAs("_allJobSiteIDs")] [SerializeField] List<ulong> _allBuildingIDs;
-
         Barony_Component _barony;
+
+        Actor_Data _ruler;
+
         public Barony_BuildingData Buildings;
         public Barony_PopulationData Population;
         public Barony_ProsperityData Prosperity;
-
-        const int c_maxBaronySize = 5;
         
+        SerializableDictionary<ulong, Building_Data> _allBuildings;
+
+        const int c_maxBaronyLevel = 5;
+        const int c_maxBaronyBuildings = 10;
+
         public Barony_Component Barony => _barony ??= Barony_Manager.GetBarony_Component(ID);
-
-        Dictionary<ulong, Building_Component> _allJobSitesInBarony;
-
-        public Dictionary<ulong, Building_Component> AllJobSitesInBarony
+        public Actor_Data Ruler => _ruler ??= Actor_Manager.GetActor_Data(RulerID);
+        public SerializableDictionary<ulong, Building_Data> AllBuildings
         {
             get
             {
-                if (_allJobSitesInBarony is not null && _allJobSitesInBarony.Count != 0) return _allJobSitesInBarony;
+                if (_allBuildings is not null && _allBuildings.Count != 0) return _allBuildings;
 
-                return Barony.GetAllBuildingsInBarony();
+                return _allBuildings = Barony.GetAllBuildingsInBarony();
             }
         }
 
-        public Barony_Data(ulong id, string name, string description, ulong factionID, ulong regionID,
-            List<ulong> allBuildingIDs, Barony_PopulationData population, Barony_ProsperityData baronyProsperityData = null)
+        public Barony_Data(ulong id, BaronyType type, string name, string description, ulong countyID,
+            Barony_PopulationData population, Barony_BuildingData buildings,
+            Barony_ProsperityData baronyProsperityData = null)
         {
             ID = id;
             Name = name;
+            Type = type;
             Description = description;
-            FactionID = factionID;
-            RegionID = regionID;
-            _allBuildingIDs = allBuildingIDs;
-            Population = population;
+            CountyID = countyID;
 
+            Population = new Barony_PopulationData(population);
+            Buildings = new Barony_BuildingData(buildings);
             Prosperity = new Barony_ProsperityData(baronyProsperityData);
         }
 
         public void InitialiseBaronyData()
         {
-            _barony = Barony_Manager.GetBarony_Component(ID);
-
-            if (_barony is not null) return;
+            if (Barony?.ID is not null and not 0) return;
 
             Debug.LogWarning($"Barony with ID {ID} not found in Barony_SO.");
+        }
+
+        public void OnProgressDay() 
+        {
+            Buildings.OnProgressDay();
+            Population.OnProgressDay();
+            Prosperity.OnProgressDay();
+        }
+        
+        public override Dictionary<string, string> GetStringData()
+        {
+            return new Dictionary<string, string>
+            {
+                { "Barony ID", $"{ID}" },
+                { "Barony Name", Name },
+                { "Barony Type", $"{Type}" },
+                { "Region ID", $"{CountyID}" },
+                { "Barony Description", Description }
+            };
         }
 
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -88,23 +103,11 @@ namespace Cities
             _updateDataDisplay(DataToDisplay,
                 title: "Barony JobSites",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllJobSitesInBarony.ToDictionary(
+                allStringData: AllBuildings.ToDictionary(
                     building => building.Key.ToString(),
-                    building => building.Value.name));
+                    building => building.Value.Name));
 
             return DataToDisplay;
-        }
-
-        public override Dictionary<string, string> GetStringData()
-        {
-            return new Dictionary<string, string>
-            {
-                { "Barony ID", $"{ID}" },
-                { "Barony Name", Name },
-                { "Barony Faction ID", $"{FactionID}" },
-                { "Region ID", $"{RegionID}" },
-                { "Barony Description", Description }
-            };
         }
     }
 
@@ -114,8 +117,8 @@ namespace Cities
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var BaronyName = property.FindPropertyRelative("BaronyName");
-            label.text = !string.IsNullOrEmpty(BaronyName?.stringValue) ? BaronyName?.stringValue : "Unnamed Barony";
+            var baronyName = property.FindPropertyRelative("BaronyName");
+            label.text = !string.IsNullOrEmpty(baronyName?.stringValue) ? baronyName?.stringValue : "Unnamed Barony";
 
             EditorGUI.PropertyField(position, property, label, true);
         }

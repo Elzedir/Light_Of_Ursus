@@ -28,10 +28,7 @@ namespace DataPersistence
         public void SetCurrentSaveData(Save_Data saveData) => CurrentSaveData = saveData;
         public bool HasSaveData() => CurrentSaveData != null;
 
-        List<IDataPersistence> _allDataPersistenceObjects =>
-            FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                .OfType<IDataPersistence>()
-                .ToList();
+        HashSet<IDataPersistence> _allDataPersistenceObjects = new();
 
         [SerializeField] Profile_Data _currentProfile;
 
@@ -45,6 +42,8 @@ namespace DataPersistence
         public Dictionary<ulong, Profile_Data> AllProfiles =>_allProfiles ??= LoadAllProfiles();
 
         ulong _lastUnusedProfileID = 2;
+        
+        public static Action RegisterDataPersistenceObject;
 
         public ulong GetRandomProfileID()
         {
@@ -207,7 +206,7 @@ namespace DataPersistence
                 return;
             }
 
-            foreach (IDataPersistence data in _allDataPersistenceObjects) data.SaveData(CurrentSaveData);
+            foreach (var data in _allDataPersistenceObjects) data.SaveData(CurrentSaveData);
 
             CurrentSaveData.SavedProfileData.LastUpdated = DateTime.Now.ToBinary();
 

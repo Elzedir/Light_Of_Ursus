@@ -10,7 +10,7 @@ namespace Buildings
 {
     public class Building_Component_LumberYard : Building_Component
     {
-        public override BuildingName BuildingName => BuildingName.Lumber_Yard;
+        public override BuildingType BuildingType => BuildingType.Lumber_Yard;
         public override CareerName DefaultCareer => CareerName.Lumberjack;
         
         protected override bool _compareProductionOutput()

@@ -161,8 +161,6 @@ namespace Pathfinding.NavMesh
                     
                     var isBoundary = false;
                     
-                    var secondStep = 5;
-                    
                     for (var dx = -1; dx <= 1; dx += 2)
                     {
                         for (var dz = -1; dz <= 1; dz += 2)

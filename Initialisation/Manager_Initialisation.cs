@@ -7,8 +7,8 @@ namespace Initialisation
         public static event Action OnInitialiseManagerFaction;
         public static event Action OnInitialiseManagerActor;
         
-        public static event Action OnInitialiseManagerRegion;
-        public static event Action OnInitialiseManagerCity;
+        public static event Action OnInitialiseManagerCounty;
+        public static event Action OnInitialiseManagerBarony;
         public static event Action OnInitialiseManagerBuilding;
         public static event Action OnInitialiseManagerStation;
         public static event Action OnInitialiseManagerOrder;
@@ -16,8 +16,8 @@ namespace Initialisation
         public static event Action OnInitialiseFactions;
         public static event Action OnInitialiseActors;
 
-        public static event Action OnInitialiseRegions;
-        public static event Action OnInitialiseCities;
+        public static event Action OnInitialiseCounties;
+        public static event Action OnInitialiseBaronies;
         public static event Action OnInitialiseBuildings;
         public static event Action OnInitialiseStations;
 
@@ -28,8 +28,8 @@ namespace Initialisation
             OnInitialiseManagerFaction?.Invoke();
             OnInitialiseManagerActor?.Invoke();
             
-            OnInitialiseManagerRegion?.Invoke();
-            OnInitialiseManagerCity?.Invoke();
+            OnInitialiseManagerCounty?.Invoke();
+            OnInitialiseManagerBarony?.Invoke();
             OnInitialiseManagerBuilding?.Invoke();
             OnInitialiseManagerStation?.Invoke();
             OnInitialiseManagerOrder?.Invoke();
@@ -45,14 +45,14 @@ namespace Initialisation
             OnInitialiseActors?.Invoke();
         }
 
-        public static void InitialiseRegions()
+        public static void InitialiseCounties()
         {
-            OnInitialiseRegions?.Invoke();   
+            OnInitialiseCounties?.Invoke();   
         }
         
-        public static void InitialiseCities()
+        public static void InitialiseBaronies()
         {
-            OnInitialiseCities?.Invoke();
+            OnInitialiseBaronies?.Invoke();
         }
 
         public static void InitialiseBuildings()

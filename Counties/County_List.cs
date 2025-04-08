@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Baronies;
+using Tools;
 
 namespace Counties
 {
@@ -14,12 +16,14 @@ namespace Counties
                 {
                     1, new County_Data(
                         id: 1,
+                        rulerID: 0,
                         name: "The Heartlands",
                         description: "The land of hearts",
-                        factionID: 0,
-                        allCityIDs: new List<ulong>
+                        allBaronies: new SerializableDictionary<ulong, Barony_Data>()
                         {
-                            1
+                            {
+                                1, null
+                            }
                         })
                 }
             };

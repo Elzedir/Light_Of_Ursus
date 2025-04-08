@@ -1,42 +1,38 @@
 using System.Collections.Generic;
 using System.Linq;
-using Cities;
+using Baronies;
 using Initialisation;
+using Tools;
 using UnityEngine;
 
 namespace Counties
 {
     public class County_Component : MonoBehaviour
     {
-        public ulong CountyID => CountyData.ID;
-        
-        public County_Data               CountyData;
+        public ulong ID => County_Data.ID;
 
-        public void SetCountyData(County_Data countyData)
-        {
-            CountyData = countyData;
-        }
+        County_Data _county_Data;
+        public County_Data County_Data => _county_Data ??= County_Manager.GetCounty_DataFromName(this);
 
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseRegions += _initialise;
+            Manager_Initialisation.OnInitialiseCounties += _initialise;
         }
 
         void _initialise()
         {
-            var regionData = County_Manager.GetRegion_DataFromName(this);
-            
-            if (regionData is null)
+            if (County_Data is null)
             {
-                Debug.LogWarning($"Region with name {name} not found in Region_SO.");
+                Debug.LogWarning($"County with name {name} not found in County_SO.");
                 return;
             }
             
-            SetCountyData(regionData);
-            
-            CountyData.InitialiseRegionData();
+            County_Data.InitialiseCountyData();
         }
 
-        public List<Barony_Component> GetAllCitiesInRegion() => GetComponentsInChildren<Barony_Component>().ToList();
+        public SerializableDictionary<ulong, Barony_Data> GetAllBaroniesInCounty() =>
+            GetComponentsInChildren<Barony_Component>().ToSerializedDictionary(
+                barony => barony.ID,
+                barony => barony.Barony_Data);
     }
 }

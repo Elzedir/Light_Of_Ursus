@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Tools;
+using UnityEngine;
 
-namespace Cities
+namespace Baronies
 {
     [Serializable]
     public class Barony_ProsperityData : Data_Class
@@ -49,7 +50,7 @@ namespace Cities
         public float _getProsperityGrowth()
         {
             if (CurrentProsperity > MaxProsperity) return Math.Max(MaxProsperity * 0.05f, 1);
-            if (CurrentProsperity == MaxProsperity) return 0;
+            if (Mathf.Approximately(CurrentProsperity, MaxProsperity)) return 0;
 
             return BaseProsperityGrowthPerDay; // Add modifiers afterwards.
         }

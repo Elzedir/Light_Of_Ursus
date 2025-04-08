@@ -16,7 +16,7 @@ namespace Buildings
                     1, new Building_Data(
                         id: 1,
                         factionID: 0,
-                        cityID: 1,
+                        baronyID: 1,
                         ownerID: 0,
                         productionData: new ProductionData(1),
                         prosperityData: new Building_ProsperityData(),

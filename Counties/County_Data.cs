@@ -1,105 +1,104 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cities;
-using Faction;
+using Actors;
+using Baronies;
 using Tools;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Counties
 {
     [Serializable]
     public class County_Data : Data_Class
     {
-        public ulong   ID;
+        public ulong ID;
+        public ulong RulerID;
+        public ulong DuchyID;
+        public ulong Capital_BaronyID;
+
         public string Name;
-        public int    FactionID;
         public string Description;
-
-        County_Component        _county;
-
-        public           FactionName     Faction;
-        [SerializeField] List<ulong>      _allCityIDs;
-        Dictionary<ulong, Barony_Component> _allCitiesInRegion;
         
-        public County_Component County => _county ??= County_Manager.GetRegion_Component(ID);
+        County_Component _county;
+
+        Actor_Data _ruler;
+
+        SerializableDictionary<ulong, Barony_Data> _allBaronies;
         
-        public Dictionary<ulong, Barony_Component> AllCitiesInRegion
+        public County_Component County => _county ??= County_Manager.GetCounty_Component(ID);
+        public Actor_Data Ruler => _ruler ??= Actor_Manager.GetActor_Data(RulerID);
+        public SerializableDictionary<ulong, Barony_Data> AllBaronies
         {
             get
             {
-                if (_allCitiesInRegion is not null && _allCitiesInRegion.Count != 0) return _allCitiesInRegion;
-                
-                return County.GetAllCitiesInRegion().ToDictionary(city => city.ID);
+                if (_allBaronies is not null && _allBaronies.Count != 0) return _allBaronies;
+
+                return _allBaronies = County.GetAllBaroniesInCounty();
             }
         }
-
-        public ulong GetNearestCityInRegion(Vector3 position)
-        {
-            return AllCitiesInRegion
-                   .OrderBy(city => Vector3.Distance(position, city.Value.transform.position))
-                   .FirstOrDefault().Key;
-        }
-
-        public County_Data(ulong       id,   string name, string description, int factionID,
-                           List<ulong> allCityIDs, Barony_ProsperityData baronyProsperityData = null)
-        {
-            ID          = id;
-            Name        = name;
-            Description = description;
-            FactionID   = factionID;
-            _allCityIDs       = allCityIDs;
-        }
         
-        public void InitialiseRegionData()
+        public County_Data(ulong id, ulong rulerID, string name, string description,
+            SerializableDictionary<ulong, Barony_Data> allBaronies)
         {
-            _county = County_Manager.GetRegion_Component(ID);
+            ID = id;
+            RulerID = rulerID;
+            Name = name;
+            Description = description;
+            _allBaronies = allBaronies;
+        }
 
-            if (_county is not null) return;
-            
-            Debug.LogWarning($"Region with ID {ID} not found in Region_SO.");
+        public void InitialiseCountyData()
+        {
+            if (County?.ID is not null and not 0) return;
+
+            Debug.LogWarning($"County with ID {ID} not found in County_SO.");
+        }
+
+        public void OnProgressDay()
+        {
+            foreach (var barony in AllBaronies)
+            {
+                barony.Value.OnProgressDay();
+            }
         }
 
         public override Dictionary<string, string> GetStringData()
         {
             return new Dictionary<string, string>
             {
-                { "Region ID", $"{ID}" },
-                { "Region Name", Name },
-                { "Region Faction ID", $"{FactionID}" },
-                { "Region Description", Description },
-                { "Faction", $"{Faction}" },
-                { "All City IDs", string.Join(", ", _allCityIDs) }
+                { "County ID", $"{ID}" },
+                { "County Name", Name },
+                { "County Description", Description },
+                { "All Barony IDs", string.Join(", ", _allBaronies) }
             };
         }
 
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
         {
             _updateDataDisplay(DataToDisplay,
-                title: "Base Region Data",
+                title: "Base County Data",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
 
             _updateDataDisplay(DataToDisplay,
-                title: "Region Cities",
+                title: "County Baronies",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllCitiesInRegion.ToDictionary(
-                    city => city.Key.ToString(),
-                    city => city.Value.name));
+                allStringData: _allBaronies.ToDictionary(
+                    barony => barony.Key.ToString(),
+                    barony => barony.Value.Name));
 
             return DataToDisplay;
         }
     }
 
     [CustomPropertyDrawer(typeof(County_Data))]
-    public class RegionData_Drawer : PropertyDrawer
+    public class CountyData_Drawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            var regionName = property.FindPropertyRelative("RegionName");
-            label.text = !string.IsNullOrEmpty(regionName.stringValue) ? regionName.stringValue : "Unnamed Region";
+            var countyName = property.FindPropertyRelative("CountyName");
+            label.text = !string.IsNullOrEmpty(countyName.stringValue) ? countyName.stringValue : "Unnamed County";
 
             EditorGUI.PropertyField(position, property, label, true);
         }

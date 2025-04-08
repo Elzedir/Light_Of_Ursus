@@ -1,38 +1,40 @@
 using System;
 using System.Collections;
-using Managers;
+using System.Collections.Generic;
+using Counties;
 using TickRates;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 
 namespace DateAndTime
 {
     public abstract class Manager_DateAndTime
     {
-        const string          _dateAndTime_SOPath = "ScriptableObjects/DateAndTime_SO";
+        const string          c_dateAndTime_SOPath = "ScriptableObjects/DateAndTime_SO";
         
-        static DateAndTime_SO        _dateAndTime;
-        public static DateAndTime_SO DateAndTime => _dateAndTime ??= _getDateAndTime_SO();
+        static DateAndTime_SO        s_dateAndTime;
+        public static DateAndTime_SO S_DateAndTime => s_dateAndTime ??= _getDateAndTime_SO();
         
-        static TextMeshProUGUI _dateText;
-        public static TextMeshProUGUI DateText => _dateText ??= GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
-        static TextMeshProUGUI _timeText;
-        public static TextMeshProUGUI TimeText => _timeText ??= GameObject.Find("Time").GetComponent<TextMeshProUGUI>();
-        static TextMeshProUGUI _timeScaleText;
-        public static TextMeshProUGUI TimeScaleText => _timeScaleText ??= GameObject.Find("TimeScale").GetComponent<TextMeshProUGUI>();
+        static TextMeshProUGUI s_dateText;
+        public static TextMeshProUGUI DateText => s_dateText ??= GameObject.Find("Date").GetComponent<TextMeshProUGUI>();
+        static TextMeshProUGUI s_timeText;
+        public static TextMeshProUGUI TimeText => s_timeText ??= GameObject.Find("Time").GetComponent<TextMeshProUGUI>();
+        static TextMeshProUGUI s_timeScaleText;
+        public static TextMeshProUGUI TimeScaleText => s_timeScaleText ??= GameObject.Find("TimeScale").GetComponent<TextMeshProUGUI>();
 
-        static float _currentTimeScale = 1f;
+        static float s_currentTimeScale = 1f;
+
+        public static event Action OnProgressDay;
 
         public static void Initialise()
         {
-            var totalMinutes = DateAndTime.GetTime();
+            var totalMinutes = S_DateAndTime.GetTime();
             CurrentTime.Initialise(totalMinutes);
         }
         
         static DateAndTime_SO _getDateAndTime_SO()
         {
-            var dateAndTime_SO = Resources.Load<DateAndTime_SO>(_dateAndTime_SOPath);
+            var dateAndTime_SO = Resources.Load<DateAndTime_SO>(c_dateAndTime_SOPath);
             
             if (dateAndTime_SO is not null) return dateAndTime_SO;
             
@@ -44,7 +46,7 @@ namespace DateAndTime
         
         public static uint GetCurrentTotalDays()
         {
-            return DateAndTime.CurrentTotalDays;
+            return S_DateAndTime.CurrentTotalDays;
         }
         
         static (uint day, uint month, uint year) _convertFromTotalDays(uint totalDays)
@@ -65,17 +67,17 @@ namespace DateAndTime
 
         public static void ProgressDay()
         {
-            DateAndTime.CurrentTotalDays++;
+            S_DateAndTime.CurrentTotalDays++;
             DateText.text = GetCurrentDateAsString();
-            DateAndTime.SetDate();
+            S_DateAndTime.SetDate();
             
-            // Tick all the Prosperity Items
+            OnProgressDay?.Invoke();
         }
 
         public static void ProgressTime()
         {
             TimeText.text = CurrentTime.GetCurrentTimeAsString();
-            DateAndTime.SetDate();
+            S_DateAndTime.SetDate();
         }
 
         static void _setCurrentTimeScale(string timeScale)
@@ -85,15 +87,15 @@ namespace DateAndTime
 
         public float GetTimeScale()
         {
-            return _currentTimeScale;
+            return s_currentTimeScale;
         }
 
         static void _setTimeScale(float timeScale)
         {
             if (timeScale < 0) return;
             
-            _currentTimeScale               = timeScale;
-            UnityEngine.Time.timeScale      = _currentTimeScale;
+            s_currentTimeScale               = timeScale;
+            UnityEngine.Time.timeScale      = s_currentTimeScale;
             UnityEngine.Time.fixedDeltaTime = 0.02f * UnityEngine.Time.timeScale;
             
             _setCurrentTimeScale($"Time Scale: {timeScale}x");
@@ -101,7 +103,7 @@ namespace DateAndTime
 
         public static IEnumerator SetTimeScaleGradual(float targetTimeScale, float duration)
         {
-            var start   = _currentTimeScale;
+            var start   = s_currentTimeScale;
             var elapsed = 0f;
 
             while (elapsed < duration)
@@ -114,25 +116,25 @@ namespace DateAndTime
             _setTimeScale(targetTimeScale);
         }
         
-        const float _maxTimeScale = 10;
+        const float c_maxTimeScale = 10;
         
         public static void DecreaseTimeScale()
         {
-            if (_currentTimeScale <= 0.1f) return;
+            if (s_currentTimeScale <= 0.1f) return;
             
-            _setTimeScale(_currentTimeScale - 0.1f);
+            _setTimeScale(s_currentTimeScale - 0.1f);
         }
 
         public static void IncreaseTimeScale()
         {
-            if (_currentTimeScale >= _maxTimeScale) return;
+            if (s_currentTimeScale >= c_maxTimeScale) return;
             
-            _setTimeScale(_currentTimeScale + 0.1f);
+            _setTimeScale(s_currentTimeScale + 0.1f);
         }
 
         public static void ToggleTimeScale()
         {
-            _setTimeScale(_currentTimeScale == 0 ? 1f : 0f);
+            _setTimeScale(s_currentTimeScale == 0 ? 1f : 0f);
         }
     }
 

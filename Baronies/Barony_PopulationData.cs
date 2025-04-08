@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Tools;
 
-namespace Cities
+namespace Baronies
 {
     [Serializable]
     public class Barony_PopulationData : Data_Class
@@ -11,9 +11,19 @@ namespace Cities
         public float CurrentPopulation;
         public float MaxPopulation;
         public float ExpectedPopulation;
-        public List<ulong> AllCitizenIDList;
+        public SerializableHashSet<ulong> AllCitizenIDs = new();
 
-        public HashSet<ulong> AllCitizenIDs = new();
+        public Barony_PopulationData(Barony_PopulationData data)
+        {
+            CurrentPopulation = data.CurrentPopulation;
+            MaxPopulation = data.MaxPopulation;
+            ExpectedPopulation = data.ExpectedPopulation;
+            
+            foreach (var citizenID in data.AllCitizenIDs)
+            {
+                AllCitizenIDs.Add(citizenID);
+            }
+        }
 
         public Barony_PopulationData(List<ulong> allCitizenIDList, float maxPopulation, float expectedPopulation)
         {

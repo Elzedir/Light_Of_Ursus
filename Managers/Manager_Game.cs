@@ -178,8 +178,8 @@ namespace Managers
             
             yield return null;
             
-            Manager_Initialisation.InitialiseRegions();
-            Manager_Initialisation.InitialiseCities();
+            Manager_Initialisation.InitialiseCounties();
+            Manager_Initialisation.InitialiseBaronies();
             Manager_Initialisation.InitialiseBuildings();
             Manager_Initialisation.InitialiseStations();
 

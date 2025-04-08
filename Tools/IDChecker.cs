@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Actor;
 using Actors;
+using Baronies;
 using Buildings;
-using Cities;
 using Counties;
 using Faction;
 using UnityEditor;
@@ -26,8 +25,8 @@ namespace Tools
             if (GUILayout.Button("Check and Fix All IDs"))
             {
                 //CheckAndFixStationIDs();
-                CheckAndFixJobsiteIDs();
-                CheckAndFixCityIDs();
+                CheckAndFixBuildingIDs();
+                CheckAndFixBaronyIDs();
                 CheckAndFixRegionIDs();
                 CheckAndFixActorIDs();
                 CheckAndFixFactionIDs();
@@ -38,14 +37,14 @@ namespace Tools
             //     CheckAndFixStationIDs();
             // }
 
-            if (GUILayout.Button("Check and Fix Jobsite IDs"))
+            if (GUILayout.Button("Check and Fix Building IDs"))
             {
-                CheckAndFixJobsiteIDs();
+                CheckAndFixBuildingIDs();
             }
 
-            if (GUILayout.Button("Check and Fix City IDs"))
+            if (GUILayout.Button("Check and Fix Barony IDs"))
             {
-                CheckAndFixCityIDs();
+                CheckAndFixBaronyIDs();
             }
 
             if (GUILayout.Button("Check and Fix Region IDs"))
@@ -109,7 +108,7 @@ namespace Tools
         //     Debug.Log("Station ID check and fix completed.");
         // }
 
-        private void CheckAndFixJobsiteIDs()
+        private void CheckAndFixBuildingIDs()
         {
             var buildings          = FindObjectsByType<Building_Component>(FindObjectsSortMode.None);
             var existingIDs       = new HashSet<ulong>();
@@ -119,7 +118,7 @@ namespace Tools
             {
                 if (building.Building_Data == null)
                 {
-                    Debug.LogWarning($"Jobsite: {building.name} does not have JobsiteData.");
+                    Debug.LogWarning($"Building: {building.name} does not have BuildingData.");
                     continue;
                 }
 
@@ -131,52 +130,52 @@ namespace Tools
 
             foreach (var building in duplicateBuildings)
             {
-                ulong newJobsiteID = GetNewID(existingIDs);
-                building.Building_Data.ID = newJobsiteID;
-                existingIDs.Add(newJobsiteID);
+                ulong newBuildingID = GetNewID(existingIDs);
+                building.Building_Data.ID = newBuildingID;
+                existingIDs.Add(newBuildingID);
 
                 EditorUtility.SetDirty(building);
                 EditorSceneManager.MarkSceneDirty(building.gameObject.scene);
 
-                Debug.Log($"Assigned new JobsiteID {newJobsiteID} to building {building.name}");
+                Debug.Log($"Assigned new BuildingID {newBuildingID} to building {building.name}");
             }
 
-            Debug.Log("Jobsite ID check and fix completed.");
+            Debug.Log("Building ID check and fix completed.");
         }
 
-        private void CheckAndFixCityIDs()
+        void CheckAndFixBaronyIDs()
         {
-            var cities          = FindObjectsByType<Barony_Component>(FindObjectsSortMode.None);
+            var baronies          = FindObjectsByType<Barony_Component>(FindObjectsSortMode.None);
             var existingIDs     = new HashSet<ulong>();
             var duplicateCities = new List<Barony_Component>();
 
-            foreach (var city in cities)
+            foreach (var barony in baronies)
             {
-                if (city.BaronyData == null)
+                if (barony.Barony_Data == null)
                 {
-                    Debug.LogWarning($"City: {city.name} does not have CityData.");
+                    Debug.LogWarning($"Barony: {barony.name} does not have BaronyData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(city.BaronyData.ID))
+                if (!existingIDs.Add(barony.Barony_Data.ID))
                 {
-                    duplicateCities.Add(city);
+                    duplicateCities.Add(barony);
                 }
             }
 
-            foreach (var city in duplicateCities)
+            foreach (var barony in duplicateCities)
             {
-                ulong newCityID = GetNewID(existingIDs);
-                city.BaronyData.ID = newCityID;
-                existingIDs.Add(newCityID);
+                var newBaronyID = GetNewID(existingIDs);
+                barony.Barony_Data.ID = newBaronyID;
+                existingIDs.Add(newBaronyID);
 
-                EditorUtility.SetDirty(city);
-                EditorSceneManager.MarkSceneDirty(city.gameObject.scene);
+                EditorUtility.SetDirty(barony);
+                EditorSceneManager.MarkSceneDirty(barony.gameObject.scene);
 
-                Debug.Log($"Assigned new CityID {newCityID} to city {city.name}");
+                Debug.Log($"Assigned new BaronyID {newBaronyID} to Barony {barony.name}");
             }
 
-            Debug.Log("City ID check and fix completed.");
+            Debug.Log("Barony ID check and fix completed.");
         }
 
         private void CheckAndFixRegionIDs()
@@ -187,13 +186,13 @@ namespace Tools
 
             foreach (var region in regions)
             {
-                if (region.CountyData == null)
+                if (region.County_Data == null)
                 {
                     Debug.LogWarning($"Region: {region.name} does not have RegionData.");
                     continue;
                 }
 
-                if (!existingIDs.Add(region.CountyData.ID))
+                if (!existingIDs.Add(region.County_Data.ID))
                 {
                     duplicateRegions.Add(region);
                 }
@@ -202,7 +201,7 @@ namespace Tools
             foreach (var region in duplicateRegions)
             {
                 ulong newRegionID = GetNewID(existingIDs);
-                region.CountyData.ID = newRegionID;
+                region.County_Data.ID = newRegionID;
                 existingIDs.Add(newRegionID);
 
                 EditorUtility.SetDirty(region);

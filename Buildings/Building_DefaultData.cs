@@ -2,7 +2,7 @@ namespace Buildings
 {
     public class Building_DefaultData
     {
-        public BuildingName BuildingName = BuildingName.Lumber_Yard;
+        public BuildingType BuildingType = BuildingType.Lumber_Yard;
         public int MaxBuildingLevel;
         
         public int Income;

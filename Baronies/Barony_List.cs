@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using Managers;
+using Cities;
 
-namespace Cities
+namespace Baronies
 {
     public abstract class Barony_List
     {
-        static Dictionary<ulong, Barony_Data> s_defaultCities;
-        public static Dictionary<ulong, Barony_Data> DefaultCities => s_defaultCities ??= _initialiseDefaultCities();
-        
-        static Dictionary<ulong, Barony_Data> _initialiseDefaultCities()
+        static Dictionary<ulong, Barony_Data> s_preExistingBaronies;
+        public static Dictionary<ulong, Barony_Data> S_PreExistingBaronies => s_preExistingBaronies ??= _initialisePreExistingBaronies();
+
+        static Dictionary<ulong, Barony_Data> _initialisePreExistingBaronies()
         {
             return new Dictionary<ulong, Barony_Data>
             {
@@ -16,14 +16,11 @@ namespace Cities
                     1, new Barony_Data
                     (
                         id: 1,
+                        type: BaronyType.City,
                         name: "The Heartlands",
                         description: "The land of hearts",
-                        factionID: 1,
-                        regionID: 1,
-                        allBuildingIDs: new List<ulong>
-                        {
-                            1
-                        },
+                        countyID: 1,
+                        buildings: new Barony_BuildingData(),
                         population: new Barony_PopulationData(
                             allCitizenIDList: new List<ulong>(),
                             maxPopulation: 100,

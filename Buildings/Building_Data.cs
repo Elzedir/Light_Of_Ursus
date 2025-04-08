@@ -4,6 +4,7 @@ using System.Linq;
 using ActorActions;
 using ActorPresets;
 using Actors;
+using Baronies;
 using Cities;
 using Items;
 using Jobs;
@@ -12,6 +13,7 @@ using Recipes;
 using Station;
 using Tools;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Buildings
 {
@@ -20,7 +22,7 @@ namespace Buildings
     {
         public ulong ID;
         public ulong FactionID;
-        public ulong CityID;
+        public ulong BaronyID;
         public ulong OwnerID;
         
         Building_Component _building;
@@ -32,9 +34,10 @@ namespace Buildings
         public ProductionData ProductionData;
         public Priority_Data_Building PriorityData;
         public Building_ProsperityData ProsperityData;
+
+        public BuildingType BuildingType;
         
-        public string Name => Building.BuildingName.ToString() ?? _lastSavedName;
-        string _lastSavedName = "No name saved";
+        public string Name;
 
         public HashSet<ActorActionName> AllowedActions => AllJobs.Values.SelectMany(job => job.JobActions).ToHashSet();
         
@@ -42,15 +45,15 @@ namespace Buildings
             _building ??= Building_Manager.GetBuilding_Component(ID) 
                          ?? throw new NullReferenceException($"JobSite with ID {ID} not found in JobSite_SO.");
         public Barony_Component Barony =>
-            _barony ??= Barony_Manager.GetBarony_Component(CityID) 
-                      ?? throw new NullReferenceException($"City with ID {CityID} not found in City_SO.");
+            _barony ??= Barony_Manager.GetBarony_Component(BaronyID) 
+                      ?? throw new NullReferenceException($"City with ID {BaronyID} not found in City_SO.");
 
-        public Building_Data(ulong id, ulong factionID, ulong cityID, ulong ownerID,
+        public Building_Data(ulong id, ulong factionID, ulong baronyID, ulong ownerID,
             ProductionData productionData, Building_ProsperityData prosperityData, Priority_Data_Building priorityData)
         {
             ID = id;
             FactionID = factionID;
-            CityID = cityID;
+            BaronyID = baronyID;
             OwnerID = ownerID;
             
             if (!Application.isPlaying) return;
@@ -91,7 +94,7 @@ namespace Buildings
 
         protected Actor_Component _findEmployeeFromCity(JobName positionName)
         {
-            var allCitizenIDs = Barony.BaronyData.Population.AllCitizenIDs;
+            var allCitizenIDs = Barony.Barony_Data.Population.AllCitizenIDs;
 
             if (allCitizenIDs == null || !allCitizenIDs.Any()) return null;
 
@@ -480,7 +483,7 @@ namespace Buildings
                 { "JobSite ID", $"{ID}" },
                 { "Name", $"{Name}" },
                 { "Faction ID", $"{FactionID}" },
-                { "City ID", $"{CityID}" },
+                { "City ID", $"{BaronyID}" },
                 { "Owner ID", $"{OwnerID}" }
             };
         }

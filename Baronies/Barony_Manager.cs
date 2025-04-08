@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using Baronies;
 using UnityEngine;
 
 namespace Cities
 {
     public abstract class Barony_Manager
     {
-        const string _Barony_SOPath = "ScriptableObjects/Barony_SO";
+        const string c_barony_SOPath = "ScriptableObjects/Barony_SO";
         
         static Barony_SO s_allBaronies;
         static Barony_SO AllBaronies => s_allBaronies ??= _getBarony_SO();
@@ -29,14 +30,14 @@ namespace Cities
         
         static Barony_SO _getBarony_SO()
         {
-            var Barony_SO = Resources.Load<Barony_SO>(_Barony_SOPath);
+            var barony_SO = Resources.Load<Barony_SO>(c_barony_SOPath);
             
-            if (Barony_SO is not null) return Barony_SO;
+            if (barony_SO is not null) return barony_SO;
             
             Debug.LogError("Barony_SO not found. Creating temporary Barony_SO.");
-            Barony_SO = ScriptableObject.CreateInstance<Barony_SO>();
+            barony_SO = ScriptableObject.CreateInstance<Barony_SO>();
             
-            return Barony_SO;
+            return barony_SO;
         }
 
         public static Barony_Component GetNearestBarony(Vector3 position)
@@ -45,13 +46,13 @@ namespace Cities
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var Barony in AllBaronies.Barony_Components.Values)
+            foreach (var barony in AllBaronies.Barony_Components.Values)
             {
-                var distance = Vector3.Distance(position, Barony.transform.position);
+                var distance = Vector3.Distance(position, barony.transform.position);
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestBarony  = Barony;
+                nearestBarony  = barony;
                 nearestDistance = distance;
             }
 
@@ -64,11 +65,11 @@ namespace Cities
         }
     }
     
-    public enum BaronyName
+    public enum BaronyType
     {
         None,
         
-        Metropolis, Barony, Town, Village, Hamlet, // Economic (Trade)
+        Metropolis, City, Town, Village, Hamlet, // Economic (Trade)
         
         Citadel, Fortress, Castle, Outpost, Watchtower, // Military defensive
         

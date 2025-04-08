@@ -18,7 +18,7 @@ namespace Buildings
     {
         public Building_Data Building_Data;
         
-        public abstract BuildingName BuildingName { get; }
+        public abstract BuildingType BuildingType { get; }
         
         public abstract CareerName DefaultCareer { get; }
         public ulong ID => Building_Data.ID;

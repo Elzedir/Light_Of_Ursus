@@ -41,7 +41,7 @@ namespace Buildings
             return building_SO;
         }
 
-        public static Building_Component GetNearestBuilding(Vector3 position, BuildingName buildingName)
+        public static Building_Component GetNearestBuilding(Vector3 position, BuildingType buildingType)
         {
             // Change so that you either pass through a city, or if not, then it will check nearest region, and give you nearest 
             // Region => City => Jobsite. Maybe flash a BoxCollider at increasing distances and check if it hits a city or region and
@@ -51,7 +51,7 @@ namespace Buildings
 
             var nearestDistance = float.PositiveInfinity;
 
-            foreach (var building in BuildingSO.Building_Components.Values.Where(j => j.BuildingName == buildingName))
+            foreach (var building in BuildingSO.Building_Components.Values.Where(j => j.BuildingType == buildingType))
             {
                 var distance = Vector3.Distance(position, building.transform.position);
 
@@ -64,15 +64,15 @@ namespace Buildings
             return nearestBuilding;
         }
         
-        public static Dictionary<BuildingName, List<JobName>> EmployeeCanUseList = new()
+        public static Dictionary<BuildingType, List<JobName>> EmployeeCanUseList = new()
         {
-            {BuildingName.Lumber_Yard, new List<JobName>
+            {BuildingType.Lumber_Yard, new List<JobName>
             {
                 JobName.Logger,
                 JobName.Sawyer,
                 
             }},
-            {BuildingName.Smithy, new List<JobName>
+            {BuildingType.Smithy, new List<JobName>
             {
                 JobName.Miner,
                 JobName.Smith,
@@ -85,13 +85,13 @@ namespace Buildings
         }
     }
     
-    public enum BuildingName
+    public enum BuildingType
     {
         None,
 
-        Lumber_Yard,
+        Grand_Timber_Consortium, Timber_Depot, Lumber_Yard, Logging_Cabin, Woodcutters_Hut,
         
-        Smithy,
+        Grand_Metalworks, Smithing_Hall, Smithy, Blacksmith_Hut, Forge,
         
         Grand_Cathedral, Cathedral, Abbey, Monastery, Church, Chapel, Shrine,
         

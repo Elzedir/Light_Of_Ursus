@@ -1,48 +1,51 @@
-using System.Collections.Generic;
-using System.Linq;
 using Buildings;
+using Cities;
 using Initialisation;
 using Managers;
+using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Cities
+namespace Baronies
 {
     public class Barony_Component : MonoBehaviour
     {
-        public ulong               ID    => BaronyData.ID;
-        public Barony_Data          BaronyData;
+        public ulong ID => Barony_Data.ID;
+        [FormerlySerializedAs("BaronyData")] public Barony_Data Barony_Data;
 
-        public GameObject _baronySpawnZone;
-        
-        public GameObject BaronySpawnZone => _baronySpawnZone ??= Manager_Game.FindTransformRecursively(transform, "BaronyEntranceSpawnZone").gameObject;
+        GameObject _baronySpawnZone;
+
+        public GameObject BaronySpawnZone => _baronySpawnZone ??=
+            Manager_Game.FindTransformRecursively(transform, "BaronySpawnZone").gameObject;
 
         public void SetBaronyData(Barony_Data baronyData)
         {
-            BaronyData = baronyData;   
+            Barony_Data = baronyData;
         }
 
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseCities += _initialise;
+            Manager_Initialisation.OnInitialiseBaronies += _initialise;
         }
 
         void _initialise()
         {
             var BaronyData = Barony_Manager.GetBarony_DataFromName(this);
-            
+
             if (BaronyData is null)
             {
                 Debug.LogWarning($"Barony with name {name} not found in Barony_SO.");
                 return;
             }
-            
+
             SetBaronyData(BaronyData);
-            
+
             BaronyData.InitialiseBaronyData();
         }
 
-        public Dictionary<ulong, Building_Component> GetAllBuildingsInBarony() =>
-            GetComponentsInChildren<Building_Component>().ToDictionary(building => building.ID);
+        public SerializableDictionary<ulong, Building_Data> GetAllBuildingsInBarony() =>
+            GetComponentsInChildren<Building_Component>().ToSerializedDictionary(
+                building => building.ID,
+                building => building.Building_Data);
     }
 }
