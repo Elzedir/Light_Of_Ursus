@@ -5,14 +5,14 @@ using Tools;
 namespace Buildings
 {
     [Serializable]
-    public class Building_ProsperityData : Data_Class
+    public class Building_Prosperity : Data_Class
     {
-        public Building_ProsperityData()
+        public Building_Prosperity()
         {
             
         }
 
-        public Building_ProsperityData(Building_ProsperityData prosperityData)
+        public Building_Prosperity(Building_Prosperity prosperity)
         {
             
         }

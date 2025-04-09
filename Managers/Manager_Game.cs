@@ -65,7 +65,6 @@ namespace Managers
 
         public Player   Player;
         Vector3         _playerLastPosition;
-        public Collider GroundCollider { get; private set; }
 
         public string LastScene;
         public string SceneName;
@@ -92,8 +91,6 @@ namespace Managers
             if (string.IsNullOrEmpty(LastScene)) LastScene = currentScene;
 
             if (currentScene == "Main_Menu") CurrentState = GameState.MainMenu;
-
-            if (currentScene != "Main_Menu" || currentScene != "Puzzle") GroundCollider = GameObject.Find("Ground").GetComponent<Collider>();
 
             Manager_Spawner.OnPuzzleStatesRestored += OnPuzzleStatesRestored;
 
@@ -406,10 +403,13 @@ namespace Managers
 
         static void _getObstacles(Vector3 moverPosition, string layerName, List<Vector3> obstaclePositions)
         {
-            var        layerMask = 1 << LayerMask.NameToLayer(layerName);
-            var colliders = Physics.OverlapSphere(moverPosition, Mathf.Max(S_Instance.GroundCollider.bounds.size.x, S_Instance.GroundCollider.bounds.size.z), layerMask);
-
-            obstaclePositions.AddRange(colliders.Select(collider => collider.transform.position));
+            // var        layerMask = 1 << LayerMask.NameToLayer(layerName);
+            
+            // Use terrain intead
+            // var colliders = Physics.OverlapSphere(moverPosition, Mathf.Max(S_Instance.GroundCollider.bounds.size.x, S_Instance.GroundCollider.bounds.size.z), layerMask);
+            
+            
+            // obstaclePositions.AddRange(colliders.Select(collider => collider.transform.position));
         }
 
         void OnApplicationQuit()

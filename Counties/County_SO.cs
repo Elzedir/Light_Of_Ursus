@@ -12,23 +12,26 @@ namespace Counties
     [Serializable]
     public class County_SO : Data_Component_SO<County_Data, County_Component>
     {
-        public Data<County_Data>[]         Countys                            => Data;
-        public Data<County_Data>           GetCounty_Data(ulong      CountyID) => GetData(CountyID);
+        public Data<County_Data>[]         Counties                            => Data;
+        public Data<County_Data>           GetCounty_Data(ulong      countyID) => GetData(countyID);
         public Dictionary<ulong, County_Component> CountyComponents => _getSceneComponents();
         
-        public County_Component GetCounty_Component(ulong CountyID)
+        public County_Component GetCounty_Component(ulong countyID)
         {
-            if (CountyComponents.TryGetValue(CountyID, out var component))
+            if (CountyComponents.TryGetValue(countyID, out var component))
             {
                 return component;
             }   
             
-            Debug.LogError($"County with ID {CountyID} not found in County_SO.");
+            Debug.LogError($"County with ID {countyID} not found in County_SO.");
             return null;
         }
+        
+        a
+            // This is causing serialisation dpeth issues
 
-        public void UpdateCounty(ulong CountyID, County_Data county_Data) => UpdateData(CountyID, county_Data);
-        public void UpdateAllCountys(Dictionary<ulong, County_Data> allCountys) => UpdateAllData(allCountys);
+        public void UpdateCounty(ulong countyID, County_Data county_Data) => UpdateData(countyID, county_Data);
+        public void UpdateAllCounties(Dictionary<ulong, County_Data> allCounties) => UpdateAllData(allCounties);
 
         protected override Dictionary<ulong, Data<County_Data>> _getDefaultData() =>
             _convertDictionaryToData(County_List.DefaultCounties);
@@ -76,7 +79,7 @@ namespace Counties
         }
         
         public override void SaveData(Save_Data saveData) =>
-            saveData.SavedCountyData = new SavedCountyData(Countys.Select(County => County.Data_Object).ToArray());
+            saveData.SavedCountyData = new SavedCountyData(Counties.Select(county => county.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(County_SO))]

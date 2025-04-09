@@ -7,6 +7,7 @@ using Buildings;
 using Cities;
 using Counties;
 using Faction;
+using Settlements;
 using Station;
 using Tools;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace DataPersistence
         // All Game Info
         public SavedCountyData SavedCountyData;
         public SavedBaronyData SavedBaronyData;
-        public SavedCityData SavedCityData;
+        public SavedSettlementData SavedSettlementData;
         
         public SavedBuildingData SavedBuildingData;
 
@@ -84,11 +85,11 @@ namespace DataPersistence
     }
 
     [Serializable]
-    public class SavedCityData
+    public class SavedSettlementData
     {
-        public readonly Barony_Data[] AllCityData;
+        public readonly Settlement_Data[] AllSettlementData;
 
-        public SavedCityData(Barony_Data[] allCityData) => AllCityData = allCityData;
+        public SavedSettlementData(Settlement_Data[] allSettlementData) => AllSettlementData = allSettlementData;
     }
 
     [Serializable]

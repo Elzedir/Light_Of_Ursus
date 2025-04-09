@@ -1,7 +1,7 @@
-using Buildings;
 using Cities;
 using Initialisation;
 using Managers;
+using Settlements;
 using Tools;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -10,42 +10,34 @@ namespace Baronies
 {
     public class Barony_Component : MonoBehaviour
     {
-        public ulong ID => Barony_Data.ID;
-        [FormerlySerializedAs("BaronyData")] public Barony_Data Barony_Data;
+        public ulong ID => _barony_Data.ID;
+        Barony_Data _barony_Data;
 
         GameObject _baronySpawnZone;
 
+        public Barony_Data Barony_Data => _barony_Data ??= Barony_Manager.GetBarony_DataFromName(this);
         public GameObject BaronySpawnZone => _baronySpawnZone ??=
             Manager_Game.FindTransformRecursively(transform, "BaronySpawnZone").gameObject;
 
-        public void SetBaronyData(Barony_Data baronyData)
-        {
-            Barony_Data = baronyData;
-        }
-
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseBaronies += _initialise;
+            Manager_Initialisation.OnInitialiseSettlements += _initialise;
         }
 
         void _initialise()
         {
-            var BaronyData = Barony_Manager.GetBarony_DataFromName(this);
-
-            if (BaronyData is null)
+            if (Barony_Data?.ID is null or 0)
             {
-                Debug.LogWarning($"Barony with name {name} not found in Barony_SO.");
+                Debug.LogWarning($"Barony {Barony_Data?.ID}: {name} not found in Barony_SO.");
                 return;
             }
 
-            SetBaronyData(BaronyData);
-
-            BaronyData.InitialiseBaronyData();
+            Barony_Data.InitialiseBaronyData();
         }
 
-        public SerializableDictionary<ulong, Building_Data> GetAllBuildingsInBarony() =>
-            GetComponentsInChildren<Building_Component>().ToSerializedDictionary(
+        public SerializableDictionary<ulong, Settlement_Data> GetAllSettlementsInBarony() =>
+            GetComponentsInChildren<Settlement_Component>().ToSerializedDictionary(
                 building => building.ID,
-                building => building.Building_Data);
+                building => building.Settlement_Data);
     }
 }

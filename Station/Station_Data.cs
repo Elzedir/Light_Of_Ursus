@@ -142,7 +142,7 @@ namespace Station
             return null;
         }
         
-        public void OnTick()
+        public void OnTickOneSecond()
         {
             if (!_initialised) return;
             

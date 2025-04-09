@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Baronies;
 using Initialisation;
 using Tools;
@@ -21,9 +19,9 @@ namespace Counties
 
         void _initialise()
         {
-            if (County_Data is null)
+            if (County_Data?.ID is null or 0)
             {
-                Debug.LogWarning($"County with name {name} not found in County_SO.");
+                Debug.LogWarning($"County {County_Data?.ID}: {name} not found in County_SO.");
                 return;
             }
             

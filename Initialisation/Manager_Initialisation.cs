@@ -17,7 +17,7 @@ namespace Initialisation
         public static event Action OnInitialiseActors;
 
         public static event Action OnInitialiseCounties;
-        public static event Action OnInitialiseBaronies;
+        public static event Action OnInitialiseSettlements;
         public static event Action OnInitialiseBuildings;
         public static event Action OnInitialiseStations;
 
@@ -52,7 +52,7 @@ namespace Initialisation
         
         public static void InitialiseBaronies()
         {
-            OnInitialiseBaronies?.Invoke();
+            OnInitialiseSettlements?.Invoke();
         }
 
         public static void InitialiseBuildings()

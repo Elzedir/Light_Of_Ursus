@@ -106,7 +106,7 @@ namespace Jobs
         
         public Job(Job job)
         {
-            JobName    = job.JobName;
+            JobName = job.JobName;
             BuildingID = job.BuildingID;
             ActorID = job.ActorID;
             StationID  = job.StationID;
@@ -114,9 +114,9 @@ namespace Jobs
         }
 
         public TickRateName CurrentTickRateName;
-        public void OnTick()
+        public void OnTickOneSecond()
         {
-            Station.Station_Data.OnTick();
+            Station.Station_Data.OnTickOneSecond();
         }
         
         public override Dictionary<string, string> GetStringData()

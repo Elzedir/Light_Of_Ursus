@@ -65,7 +65,7 @@ namespace Cities
         }
     }
     
-    public enum BaronyType
+    public enum SettlementType
     {
         None,
         

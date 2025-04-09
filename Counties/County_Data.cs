@@ -17,6 +17,10 @@ namespace Counties
         public ulong DuchyID;
         public ulong Capital_BaronyID;
 
+        public float Gold;
+
+        public float TaxRate = 0.1f; 
+
         public string Name;
         public string Description;
         
@@ -57,9 +61,19 @@ namespace Counties
 
         public void OnProgressDay()
         {
-            foreach (var barony in AllBaronies)
+            foreach (var barony in AllBaronies.Values)
             {
-                barony.Value.OnProgressDay();
+                barony.OnProgressDay();
+            }
+
+            _generateIncome();
+        }
+
+        void _generateIncome()
+        {
+            foreach(var barony in AllBaronies.Values)
+            {
+                Gold += barony.GenerateIncome(TaxRate);
             }
         }
 
@@ -70,7 +84,7 @@ namespace Counties
                 { "County ID", $"{ID}" },
                 { "County Name", Name },
                 { "County Description", Description },
-                { "All Barony IDs", string.Join(", ", _allBaronies) }
+                { "All Barony IDs", string.Join(", ", AllBaronies.Keys) }
             };
         }
 
@@ -84,7 +98,7 @@ namespace Counties
             _updateDataDisplay(DataToDisplay,
                 title: "County Baronies",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: _allBaronies.ToDictionary(
+                allStringData: AllBaronies.ToDictionary(
                     barony => barony.Key.ToString(),
                     barony => barony.Value.Name));
 

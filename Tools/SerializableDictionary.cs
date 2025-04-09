@@ -10,7 +10,7 @@ namespace Tools
     [Serializable]
     public class SerializableDictionary<TKey, TValue> : ISerializationCallbackReceiver, IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        Dictionary<TKey, TValue> _dictionary = new();
+        Dictionary<TKey, TValue> _dictionary;
         public int Count => _dictionary.Count;
         
         [SerializeField] List<TKey> _keys = new();
@@ -29,6 +29,16 @@ namespace Tools
         {
             get => _dictionary[key];
             set => _dictionary[key] = value;
+        }
+        
+        public SerializableDictionary(SerializableDictionary<TKey, TValue> otherDictionary)
+        {
+            _dictionary = new Dictionary<TKey, TValue>(otherDictionary);
+        }
+        
+        public SerializableDictionary()
+        {
+            _dictionary = new Dictionary<TKey, TValue>();
         }
 
         public Dictionary<TKey, TValue>.KeyCollection Keys => _dictionary.Keys;

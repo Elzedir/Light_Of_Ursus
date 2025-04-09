@@ -382,7 +382,8 @@ namespace z_Abandoned
 
         public static void InitialiseVoxelGridTest(float width = 100, float height = 4, float depth = 100)
         {
-            Collider groundCollider = Manager_Game.S_Instance.GroundCollider;
+            //Collider groundCollider = Manager_Game.S_Instance.GroundCollider;
+            Collider groundCollider = GameObject.Find("Ground").GetComponent<Collider>(); // There is no ground collider
             bool hasGroundCollider = groundCollider != null;
 
             if (hasGroundCollider)

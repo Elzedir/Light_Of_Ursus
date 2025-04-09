@@ -42,7 +42,7 @@ namespace Inventory
 
         public abstract ComponentType ComponentType { get; }
 
-        public int Gold;
+        public ulong Gold;
         bool _skipNextPriorityCheck;
         public void SkipNextPriorityCheck() => _skipNextPriorityCheck = true;
         public List<Item> AllInventoryItems_DataPersistence() => AllInventoryItems.Values.ToList();

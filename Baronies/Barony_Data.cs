@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Actors;
-using Buildings;
 using Cities;
+using Counties;
+using Settlements;
 using Tools;
 using UnityEditor;
 using UnityEngine;
+using SettlementType = Cities.SettlementType;
 
 namespace Baronies
 {
@@ -17,49 +19,45 @@ namespace Baronies
         public ulong RulerID;
         public ulong CountyID;
 
-        public BaronyType Type;
+        public float Gold;
+        public float TaxRate = 0.1f;
 
         public string Name;
         public string Description;
 
         Barony_Component _barony;
+        County_Component _county;
 
         Actor_Data _ruler;
 
-        public Barony_BuildingData Buildings;
-        public Barony_PopulationData Population;
-        public Barony_ProsperityData Prosperity;
-        
-        SerializableDictionary<ulong, Building_Data> _allBuildings;
+        SerializableDictionary<ulong, Settlement_Data> _allSettlements;
 
         const int c_maxBaronyLevel = 5;
         const int c_maxBaronyBuildings = 10;
 
         public Barony_Component Barony => _barony ??= Barony_Manager.GetBarony_Component(ID);
+        public County_Component County => _county ??= County_Manager.GetCounty_Component(CountyID);
         public Actor_Data Ruler => _ruler ??= Actor_Manager.GetActor_Data(RulerID);
-        public SerializableDictionary<ulong, Building_Data> AllBuildings
+        
+        public SerializableDictionary<ulong, Settlement_Data> AllSettlements
         {
             get
             {
-                if (_allBuildings is not null && _allBuildings.Count != 0) return _allBuildings;
+                if (_allSettlements is not null && _allSettlements.Count != 0) return _allSettlements;
 
-                return _allBuildings = Barony.GetAllBuildingsInBarony();
+                return _allSettlements = Barony.GetAllSettlementsInBarony();
             }
         }
 
-        public Barony_Data(ulong id, BaronyType type, string name, string description, ulong countyID,
-            Barony_PopulationData population, Barony_BuildingData buildings,
-            Barony_ProsperityData baronyProsperityData = null)
+        public Barony_Data(ulong id, string name, string description, ulong countyID,
+            SerializableDictionary<ulong, Settlement_Data> allSettlements)
         {
             ID = id;
             Name = name;
-            Type = type;
             Description = description;
             CountyID = countyID;
-
-            Population = new Barony_PopulationData(population);
-            Buildings = new Barony_BuildingData(buildings);
-            Prosperity = new Barony_ProsperityData(baronyProsperityData);
+            
+            _allSettlements = allSettlements;
         }
 
         public void InitialiseBaronyData()
@@ -71,9 +69,26 @@ namespace Baronies
 
         public void OnProgressDay() 
         {
-            Buildings.OnProgressDay();
-            Population.OnProgressDay();
-            Prosperity.OnProgressDay();
+            foreach (var settlement in AllSettlements.Values)
+            {
+                settlement.OnProgressDay();
+            }
+        }
+
+        public float GenerateIncome(float liegeTaxRate)
+        {
+            float income = 0;
+            
+            foreach (var settlement in AllSettlements.Values)
+            {
+                income += settlement.GenerateIncome(TaxRate);
+            }
+            
+            var tax = income * liegeTaxRate;
+            
+            Gold += income - tax;
+            
+            return tax;
         }
         
         public override Dictionary<string, string> GetStringData()
@@ -82,7 +97,6 @@ namespace Baronies
             {
                 { "Barony ID", $"{ID}" },
                 { "Barony Name", Name },
-                { "Barony Type", $"{Type}" },
                 { "Region ID", $"{CountyID}" },
                 { "Barony Description", Description }
             };
@@ -96,16 +110,11 @@ namespace Baronies
                 allStringData: GetStringData());
 
             _updateDataDisplay(DataToDisplay,
-                title: "Population Data",
+                title: "Barony Settlements",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: Population.GetDataToDisplay(toggleMissingDataDebugs));
-
-            _updateDataDisplay(DataToDisplay,
-                title: "Barony JobSites",
-                toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: AllBuildings.ToDictionary(
-                    building => building.Key.ToString(),
-                    building => building.Value.Name));
+                allStringData: AllSettlements.ToDictionary(
+                    barony => barony.Key.ToString(),
+                    barony => barony.Value.Name));
 
             return DataToDisplay;
         }
@@ -118,7 +127,7 @@ namespace Baronies
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var baronyName = property.FindPropertyRelative("BaronyName");
-            label.text = !string.IsNullOrEmpty(baronyName?.stringValue) ? baronyName?.stringValue : "Unnamed Barony";
+            label.text = !string.IsNullOrEmpty(baronyName?.stringValue) ? baronyName.stringValue : "Unnamed Barony";
 
             EditorGUI.PropertyField(position, property, label, true);
         }

@@ -30,7 +30,7 @@ namespace TickRates
         Actor_State,
         Actor_Condition,
         Station,
-        Jobsite,
+        Building,
     }
 
     public class Manager_TickRate : MonoBehaviour

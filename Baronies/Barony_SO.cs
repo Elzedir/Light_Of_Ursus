@@ -12,7 +12,7 @@ namespace Baronies
     [Serializable]
     public class Barony_SO : Data_Component_SO<Barony_Data, Barony_Component>
     {
-        public Data<Barony_Data>[]                         Cities                         => Data;
+        public Data<Barony_Data>[]                         Baronies                         => Data;
         public Data<Barony_Data>                           GetBarony_Data(ulong      baronyID) => GetData(baronyID);
         public Dictionary<ulong, Barony_Component> Barony_Components => _getSceneComponents();
 
@@ -34,7 +34,7 @@ namespace Baronies
         }
         
         public void UpdateBarony(ulong baronyID, Barony_Data barony_Data) => UpdateData(baronyID, barony_Data);
-        public void UpdateAllCities(Dictionary<ulong, Barony_Data> allCities) => UpdateAllData(allCities);
+        public void UpdateAllBaronies(Dictionary<ulong, Barony_Data> allCities) => UpdateAllData(allCities);
 
         protected override Dictionary<ulong, Data<Barony_Data>> _getDefaultData() => 
             _convertDictionaryToData(Barony_List.S_PreExistingBaronies);
@@ -77,12 +77,12 @@ namespace Baronies
             return new Data<Barony_Data>(
                 dataID: data.ID, 
                 data_Object: data,
-                dataTitle: $"{data.ID}: {data.Type}",
+                dataTitle: $"{data.ID}: {data.Name}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
 
         public override void SaveData(Save_Data saveData) =>
-            saveData.SavedBaronyData = new SavedBaronyData(Cities.Select(barony => barony.Data_Object).ToArray());
+            saveData.SavedBaronyData = new SavedBaronyData(Baronies.Select(barony => barony.Data_Object).ToArray());
     }
 
     [CustomEditor(typeof(Barony_SO))]

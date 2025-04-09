@@ -18,7 +18,7 @@ namespace Buildings
             // Temporary, maybe change to cost of items over product of items
             SetIdealRatio(3f);
 
-            var producedItems = Building_Data.ProductionData.GetEstimatedProductionRatePerHour();
+            var producedItems = Building_Data.Production.GetEstimatedProductionRatePerHour();
 
             //* Later, add a general application of this, rather than typing it out every time.
             float logProduction = producedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
@@ -57,7 +57,7 @@ namespace Buildings
             
             //* Improve this
 
-            foreach (var job in Building_Data.AllJobs.Values)
+            foreach (var job in Building_Data.Jobs.AllJobs.Values)
             {
                 if (job.Actor is null) continue;
                 

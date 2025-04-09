@@ -34,7 +34,7 @@ namespace Tools
         public             Station_Component Station    => _component as Station_Component;
         public Station_Data StationData => Station.Station_Data;
         public override GameObject           GameObject                => Station.gameObject;
-        public override Priority_Data GetPriorityComponent() => Station.Building.Building_Data.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Station.Building.Building_Data.Priorities;
     }
     public class ComponentReference_Building : ComponentReference
     {
@@ -46,6 +46,6 @@ namespace Tools
         public Building_Data BuildingData => Building.Building_Data;
         public override GameObject           GameObject                => Building.gameObject;
         
-        public override Priority_Data GetPriorityComponent() => Building.Building_Data.PriorityData;
+        public override Priority_Data GetPriorityComponent() => Building.Building_Data.Priorities;
     }
 }

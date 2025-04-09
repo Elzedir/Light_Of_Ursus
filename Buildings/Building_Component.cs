@@ -40,8 +40,8 @@ namespace Buildings
 
         void OnDestroy()
         {
-            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, ID);
-            Manager_TickRate.UnregisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, ID);
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Building, TickRateName.OneSecond, ID);
+            Manager_TickRate.UnregisterTicker(TickerTypeName.Building, TickRateName.TenSeconds, ID);
             
             Manager_Initialisation.OnInitialiseBuildings -= _initialise;
             Manager_Initialisation.OnInitialiseBuildingData -= InitialiseBuildingData;
@@ -53,7 +53,7 @@ namespace Buildings
 
             if (buildingData is null)
             {
-                Debug.LogWarning($"JobSite with name {name} not found in JobSite_SO.");
+                Debug.LogWarning($"Building with name {name} not found in Building_SO.");
                 return;
             }
 
@@ -69,35 +69,32 @@ namespace Buildings
 
         void _setTickers()
         {
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.OneSecond, ID, OnTickOneSecond);
-            Manager_TickRate.RegisterTicker(TickerTypeName.Jobsite, TickRateName.TenSeconds, ID, OnTickTenSeconds);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Building, TickRateName.OneSecond, ID, OnTickOneSecond);
+            Manager_TickRate.RegisterTicker(TickerTypeName.Building, TickRateName.TenSeconds, ID, OnTickTenSeconds);
         }
 
         public void OnTickOneSecond()
-        {   
-            foreach (var job in Building_Data.AllJobs.Values)
-            {
-                job.OnTick();
-            }
+        {
+            Building_Data.OnTickOneSecond();
         }
 
         public void OnTickTenSeconds()
         {
-            Building_Data.ProductionData.GetEstimatedProductionRatePerHour();
+            Building_Data.Production.GetEstimatedProductionRatePerHour();
 
             _compareProductionOutput();
             
-            Building_Data.PriorityData.RegenerateAllPriorities(DataChangedName.None);
+            Building_Data.Priorities.RegenerateAllPriorities(DataChangedName.None);
 
             //* Temporary fix to move people from recreation to another job.
-            foreach (var worker in Building_Data.AllJobs.Values
+            foreach (var worker in Building_Data.Jobs.AllJobs.Values
                          .Where(job => job.Station.StationType == StationType.Recreation && job.ActorID != 0))
             {
                 Building_Data.AssignActorToNewCurrentJob(worker.Actor);
             }
             
             //* Eventually change to once per day.
-            Building_Data.FillEmptyJobSitePositions();
+            Building_Data.Jobs.FillEmptyBuildingPositions();
         }
 
         protected abstract bool _compareProductionOutput();
@@ -154,7 +151,7 @@ namespace Buildings
             return result;
         }
         
-        public HashSet<StationName> GetStationNames() => Building_Data.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
+        public HashSet<StationName> GetStationNames() => Building_Data.Jobs.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
 
         public void GetRelevantStations(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
@@ -196,7 +193,7 @@ namespace Buildings
             var allFetchItems = new Dictionary<ulong, ulong>();
             var allDeliverStations = new Dictionary<ulong, Station_Component>();
 
-            foreach (var job in Building_Data.AllJobs.Values)
+            foreach (var job in Building_Data.Jobs.AllJobs.Values)
             {
                 foreach (var itemToFetch in job.Station.GetItemsToFetchFromThisStation())
                 {
@@ -207,7 +204,7 @@ namespace Buildings
                 }
             }
 
-            foreach (var job in Building_Data.AllJobs.Values)
+            foreach (var job in Building_Data.Jobs.AllJobs.Values)
             {
                 foreach (var itemToFetch in allFetchItems)
                 {
@@ -225,7 +222,7 @@ namespace Buildings
 
         void _relevantStations_Chop_Wood(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = Building_Data.AllJobs.Values
+            priority_Parameters.AllStation_Sources = Building_Data.Jobs.AllJobs.Values
                 .Where(job => job.Station.StationName == StationName.Tree &&
                                   job.Station.Station_Data.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();
@@ -233,7 +230,7 @@ namespace Buildings
 
         void _relevantStations_Process_Logs(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = Building_Data.AllJobs.Values
+            priority_Parameters.AllStation_Sources = Building_Data.Jobs.AllJobs.Values
                 .Where(job => job.Station.StationName == StationName.Sawmill &&
                                   job.Station.Station_Data.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();

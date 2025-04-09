@@ -46,7 +46,7 @@ namespace Tools
             if (_selectedBaseIndex < 0 || _selectedBaseIndex >= _nonNullDataObjects.Length) return;
 
             var selectedDataObject = _nonNullDataObjects[_selectedBaseIndex];
-            _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 50, false );
+            _drawDataToDisplay(selectedDataObject.GetDataToDisplay(SO.ToggleMissingDataDebugs), 5, false );
         }
 
         static string[] _getBaseObjectNames(Data<T>[] baseObjects)
@@ -58,7 +58,7 @@ namespace Tools
         {
             if (iteration-- <= 0)
             {
-                Debug.LogWarning("DataToDisplay iteration limit reached.");
+                Debug.LogError("DataToDisplay iteration limit reached.");
                 return;
             }
 
