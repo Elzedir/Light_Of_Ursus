@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Tools;
 
 namespace Buildings
 {
+    [Serializable]
     public class Building_ProsperityData : Data_Class
     {
         public Building_ProsperityData()
