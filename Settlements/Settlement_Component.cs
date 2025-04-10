@@ -1,12 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
-using Actors;
 using Buildings;
 using Initialisation;
-using Jobs;
 using Managers;
-using Tools;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Settlements
 {
@@ -15,15 +12,12 @@ namespace Settlements
         public ulong ID => Settlement_Data.ID;
         public Settlement_Data Settlement_Data;
 
-        GameObject _SettlementSpawnZone;
+        GameObject _settlementSpawnZone;
 
-        public GameObject SettlementSpawnZone => _SettlementSpawnZone ??=
+        // public Settlement_Data Settlement_Data => _settlement_Data ??= 
+        //     Settlement_Manager.GetSettlement_DataFromName(this);
+        public GameObject SettlementSpawnZone => _settlementSpawnZone ??=
             Manager_Game.FindTransformRecursively(transform, "SettlementSpawnZone").gameObject;
-
-        public void SetSettlementData(Settlement_Data SettlementData)
-        {
-            Settlement_Data = SettlementData;
-        }
 
         void Awake()
         {
@@ -32,22 +26,20 @@ namespace Settlements
 
         void _initialise()
         {
-            var settlementData = Settlement_Manager.GetSettlement_DataFromName(this);
-
-            if (settlementData is null)
+            Settlement_Data = Settlement_Manager.GetSettlement_DataFromName(this);
+            
+            if (Settlement_Data?.ID is null or 0)
             {
                 Debug.LogWarning($"Settlement with name {name} not found in Settlement_SO.");
                 return;
             }
 
-            SetSettlementData(settlementData);
-
-            settlementData.InitialiseSettlementData();
+            Settlement_Data.InitialiseSettlementData();
         }
 
-        public SerializableDictionary<ulong, Building_Data> GetAllBuildingsInSettlement() =>
-            GetComponentsInChildren<Building_Component>().ToSerializedDictionary(
+        public Dictionary<ulong, Building_Plot> GetAllBuildingPlotsInSettlement() =>
+            GetComponentsInChildren<Building_Plot>().ToDictionary(
                 building => building.ID,
-                building => building.Building_Data);
+                building => building);
     }
 }

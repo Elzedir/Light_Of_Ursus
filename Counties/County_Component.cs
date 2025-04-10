@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Baronies;
 using Initialisation;
 using Tools;
@@ -28,8 +30,8 @@ namespace Counties
             County_Data.InitialiseCountyData();
         }
 
-        public SerializableDictionary<ulong, Barony_Data> GetAllBaroniesInCounty() =>
-            GetComponentsInChildren<Barony_Component>().ToSerializedDictionary(
+        public Dictionary<ulong, Barony_Data> GetAllBaroniesInCounty() =>
+            GetComponentsInChildren<Barony_Component>().ToDictionary(
                 barony => barony.ID,
                 barony => barony.Barony_Data);
     }

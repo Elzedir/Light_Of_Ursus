@@ -7,6 +7,7 @@ using Careers;
 using Initialisation;
 using Jobs;
 using Priorities;
+using Settlements;
 using Station;
 using TickRates;
 using UnityEngine;
@@ -14,23 +15,17 @@ using Station_Component = Station.Station_Component;
 
 namespace Buildings
 {
-    public abstract class Building_Component : MonoBehaviour
+    public class Building_Component : MonoBehaviour
     {
+        //* Change this to be a plot of land rather.
+        
         public Building_Data Building_Data;
-        
-        public abstract BuildingType BuildingType { get; }
-        
-        public abstract CareerName DefaultCareer { get; }
-        public ulong ID => Building_Data.ID;
 
-        public Job GetActorJob(ulong actorID)
-        {
-            return Building_Data.GetActorJob(actorID);
-        }
+        public ulong ID;
 
-        public float IdealRatio;
-        public void SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
-        public int PermittedProductionInequality = 10;
+        Settlement_Component _settlement;
+        
+        public Settlement_Component Settlement => _settlement ??= GetComponentInParent<Settlement_Component>();
 
         void Awake()
         {
@@ -49,16 +44,6 @@ namespace Buildings
 
         void _initialise()
         {
-            var buildingData = Building_Manager.GetBuilding_DataFromName(this);
-
-            if (buildingData is null)
-            {
-                Debug.LogWarning($"Building with name {name} not found in Building_SO.");
-                return;
-            }
-
-            Building_Data = buildingData;
-
             _setTickers();
         }
 
@@ -71,6 +56,16 @@ namespace Buildings
         {
             Manager_TickRate.RegisterTicker(TickerTypeName.Building, TickRateName.OneSecond, ID, OnTickOneSecond);
             Manager_TickRate.RegisterTicker(TickerTypeName.Building, TickRateName.TenSeconds, ID, OnTickTenSeconds);
+        }
+
+        public void BuildNewBuilding(BuildingType buildingType)
+        {
+            
+        }
+
+        public void BuildCustomBuilding(Building_Data building_Data)
+        {
+            
         }
 
         public void OnTickOneSecond()
@@ -97,10 +92,10 @@ namespace Buildings
             Building_Data.Jobs.FillEmptyBuildingPositions();
         }
 
-        protected abstract bool _compareProductionOutput();
-
-        protected abstract void _adjustProduction(float idealRatio);
-        protected abstract VocationName _getRelevantVocation(JobName positionName);
+        // To make more efficient search for best combinations:
+        // Implement a heuristic algorithm to guide the search towards the best combination.
+        // Implement a percentage threshold to the ideal ratio to end the search early if a combination within the threshold is found.
+        // Implement a minimum skill cap either determined by the crafted item skill requirement or a mean average of all employee skills to ensure that the employees assigned to the stations are skilled enough to operate them.
 
         protected void _assignAllEmployeesToStations(Dictionary<ulong, Actor_Component> allEmployees)
         {
@@ -235,5 +230,125 @@ namespace Buildings
                                   job.Station.Station_Data.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();
         }
+        
+        public float IdealRatio;
+        public void SetIdealRatio(float idealRatio) => IdealRatio = idealRatio;
+        public int PermittedProductionInequality = 10;
+        
+        bool _compareProductionOutput()
+        {
+            //* Also, this is designed for a Lumber_Yard, so change that.
+            
+            // Temporary, maybe change to cost of items over product of items
+            SetIdealRatio(3f);
+
+            var producedItems = Building_Data.Production.GetEstimatedProductionRatePerHour();
+
+            //* Later, add a general application of this, rather than typing it out every time.
+            float logProduction = producedItems.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
+            float plankProduction = producedItems.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
+
+            if (plankProduction == 0)
+            {
+                Debug.Log("Plank production is 0.");
+                return false;
+            }
+            
+            var currentRatio = logProduction / plankProduction;
+
+            var percentageDifference = Mathf.Abs(((currentRatio / IdealRatio) * 100) - 100);
+
+            Debug.Log($"Log Average: {logProduction}, Plank Average: {plankProduction}, Percentage Difference: {percentageDifference}%");
+
+            var isBalanced = percentageDifference <= PermittedProductionInequality;
+
+            if (!isBalanced)
+            {
+                _adjustProduction(IdealRatio);
+            }
+
+            return isBalanced;
+        }
+
+        void _adjustProduction(float idealRatio)
+        {
+            var   allEmployees        = new Dictionary<ulong, Actor_Component>();
+            
+            //* Improve this
+            //* Also, this is designed for a Lumber_Yard, so change that.
+
+            foreach (var job in Building_Data.Jobs.AllJobs.Values)
+            {
+                if (job.Actor is null) continue;
+                
+                allEmployees.Add(job.Actor.ActorID, job.Actor);
+            }
+            
+            var   bestCombination     = new Dictionary<ulong, Actor_Component>();
+            var bestRatioDifference = float.PositiveInfinity;
+
+            var allCombinations = _getAllCombinations(allEmployees);
+            var i               = 0;
+
+            foreach (var combination in allCombinations)
+            {
+                _assignAllEmployeesToStations(combination);
+
+                var estimatedProduction = Building_Data.GetEstimatedProductionRatePerHour();
+
+                var mergedEstimatedProduction = estimatedProduction
+                                                .GroupBy(item => item.ItemID)
+                                                .Select(group => new Item(group.Key, (ulong)group.Sum(item => (int)item.ItemAmount)))
+                                                .ToList();
+
+                float estimatedLogProduction   = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 1100)?.ItemAmount ?? 0;
+                float estimatedPlankProduction = mergedEstimatedProduction.FirstOrDefault(item => item.ItemID == 2300)?.ItemAmount ?? 0;
+
+                var estimatedRatio  = estimatedLogProduction / estimatedPlankProduction;
+                var ratioDifference = Mathf.Abs(estimatedRatio - idealRatio);
+
+                i++;
+
+                Debug.Log($"Combination {i} has eL: {estimatedLogProduction} eP: {estimatedPlankProduction} eR: {estimatedRatio} and rDif: {ratioDifference}");
+
+                if (!(ratioDifference < bestRatioDifference)) continue;
+                
+                Debug.Log($"Combination {i} the is best ratio");
+
+                bestRatioDifference = ratioDifference;
+                bestCombination     = new Dictionary<ulong, Actor_Component>(combination);
+            }
+
+            _assignAllEmployeesToStations(bestCombination);
+
+            Debug.Log("Adjusted production to balance the ratio.");
+        }
+
+        static VocationName _getRelevantVocation(JobName positionName)
+        {
+            switch (positionName)
+            {
+                case JobName.Logger:
+                    return VocationName.Logging;
+                case JobName.Sawyer:
+                    return VocationName.Sawying;
+                default:
+                    Debug.Log($"EmployeePosition: {positionName} does not have a relevant vocation.");
+                    return VocationName.None;
+            }
+        }
+
+        Dictionary<BuildingType, CareerName> _defaultCareers;
+        public Dictionary<BuildingType, CareerName> DefaultCareers => _defaultCareers ??= new Dictionary<BuildingType, CareerName>
+        {
+            {
+                BuildingType.Lumber_Yard,
+                CareerName.Lumberjack
+            },
+            {
+                BuildingType.Smithy,
+                CareerName.Smith
+            }
+        };
     }
 }

@@ -19,7 +19,7 @@ namespace Counties
                         rulerID: 0,
                         name: "The Westlands",
                         description: "The land of west",
-                        allBaronies: new SerializableDictionary<ulong, Barony_Data>())
+                        allBaronies: new Dictionary<ulong, Barony_Data>())
                 },
                 {
                     2, new County_Data(
@@ -27,7 +27,7 @@ namespace Counties
                         rulerID: 0,
                         name: "The Northlands",
                         description: "The land of the north",
-                        allBaronies: new SerializableDictionary<ulong, Barony_Data>())
+                        allBaronies: new Dictionary<ulong, Barony_Data>())
                 },
                 {
                     3, new County_Data(
@@ -35,7 +35,7 @@ namespace Counties
                         rulerID: 0,
                         name: "The Southlands",
                         description: "The land of the south",
-                        allBaronies: new SerializableDictionary<ulong, Barony_Data>())
+                        allBaronies: new Dictionary<ulong, Barony_Data>())
                 },
                 {
                     4, new County_Data(
@@ -43,7 +43,7 @@ namespace Counties
                         rulerID: 0,
                         name: "The Eastlands",
                         description: "The land of the east",
-                        allBaronies: new SerializableDictionary<ulong, Barony_Data>())
+                        allBaronies: new Dictionary<ulong, Barony_Data>())
                 },
             };
         }

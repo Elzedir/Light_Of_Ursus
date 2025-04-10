@@ -17,6 +17,7 @@ using Initialisation;
 using Items;
 using Jobs;
 using Recipes;
+using Settlements;
 using StateAndCondition;
 using Station;
 using TickRates;
@@ -126,15 +127,16 @@ namespace Managers
                 Ability_Manager.ClearSOData();
                 Actor_Manager.ClearSOData();
                 ActorPreset_Manager.ClearSOData();
-                Career_Manager.ClearSOData();
+                Building_Manager.ClearSOData();
                 Barony_Manager.ClearSOData();
+                Career_Manager.ClearSOData();
                 Condition_Manager.ClearSOData();
+                County_Manager.ClearSOData();
                 Faction_Manager.ClearSOData();
                 Item_Manager.ClearSOData();
                 Job_Manager.ClearSOData();
-                Building_Manager.ClearSOData();
                 Recipe_Manager.ClearSOData();
-                County_Manager.ClearSOData();
+                Settlement_Manager.ClearSOData();
                 State_Manager.ClearSOData();
                 Station_Manager.ClearSOData();
             }
@@ -177,6 +179,7 @@ namespace Managers
             
             Manager_Initialisation.InitialiseCounties();
             Manager_Initialisation.InitialiseBaronies();
+            Manager_Initialisation.InitialiseSettlements();
             Manager_Initialisation.InitialiseBuildings();
             Manager_Initialisation.InitialiseStations();
 

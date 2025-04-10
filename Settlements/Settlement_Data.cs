@@ -49,7 +49,7 @@ namespace Settlements
             BaronyID = baronyID;
 
             Population = new Settlement_Population(population);
-            Buildings = new Settlement_Buildings(buildings);
+            Buildings = new Settlement_Buildings(buildings, this);
             Prosperity = new Settlement_Prosperity(settlementProsperity);
         }
 
@@ -105,7 +105,7 @@ namespace Settlements
             _updateDataDisplay(DataToDisplay,
                 title: "Settlement JobSites",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: Buildings.AllBuildings.ToDictionary(
+                allStringData: Buildings.AllBuildingPlots.ToDictionary(
                     building => building.Key.ToString(),
                     building => building.Value.Name));
 

@@ -9,6 +9,7 @@ namespace Initialisation
         
         public static event Action OnInitialiseManagerCounty;
         public static event Action OnInitialiseManagerBarony;
+        public static event Action OnInitialiseManagerSettlement;
         public static event Action OnInitialiseManagerBuilding;
         public static event Action OnInitialiseManagerStation;
         public static event Action OnInitialiseManagerOrder;
@@ -17,6 +18,7 @@ namespace Initialisation
         public static event Action OnInitialiseActors;
 
         public static event Action OnInitialiseCounties;
+        public static event Action OnInitialiseBaronies;
         public static event Action OnInitialiseSettlements;
         public static event Action OnInitialiseBuildings;
         public static event Action OnInitialiseStations;
@@ -30,6 +32,7 @@ namespace Initialisation
             
             OnInitialiseManagerCounty?.Invoke();
             OnInitialiseManagerBarony?.Invoke();
+            OnInitialiseManagerSettlement?.Invoke();
             OnInitialiseManagerBuilding?.Invoke();
             OnInitialiseManagerStation?.Invoke();
             OnInitialiseManagerOrder?.Invoke();
@@ -51,6 +54,11 @@ namespace Initialisation
         }
         
         public static void InitialiseBaronies()
+        {
+            OnInitialiseBaronies?.Invoke();
+        }
+        
+        public static void InitialiseSettlements()
         {
             OnInitialiseSettlements?.Invoke();
         }

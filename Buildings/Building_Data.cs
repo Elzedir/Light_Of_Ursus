@@ -25,6 +25,10 @@ namespace Buildings
 
         public float Gold;
         
+        public string Name;
+
+        public BuildingType BuildingType;
+        
         Building_Component _building;
         Settlement_Component _settlement;
 
@@ -34,10 +38,6 @@ namespace Buildings
         public Building_Production Production;
         public Building_Prosperity Prosperity;
         public Priority_Data_Building Priorities;
-
-        public BuildingType BuildingType;
-        
-        public string Name;
 
         public HashSet<ActorActionName> AllowedActions => Jobs.AllJobs.Values.SelectMany(job => job.JobActions).ToHashSet();
         
@@ -247,7 +247,7 @@ namespace Buildings
             RemoveWorkerFromCurrentStation(actor);
             
             actor.ActorData.Career.CurrentJob = openWorkPost.Job;
-            actor.ActorData.Career.CareerName = Building.DefaultCareer;
+            actor.ActorData.Career.CareerName = Building.DefaultCareers;
             
             openWorkPost.Job.ActorID = actor.ActorID;
             Jobs.ActorToJobMap[actor.ActorID] = (station.StationID, openWorkPost.WorkPostID);

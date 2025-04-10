@@ -36,8 +36,9 @@ namespace Settlements
         public void UpdateSettlement(ulong settlementID, Settlement_Data settlement_Data) => UpdateData(settlementID, settlement_Data);
         public void UpdateAllCities(Dictionary<ulong, Settlement_Data> allCities) => UpdateAllData(allCities);
 
-        protected override Dictionary<ulong, Data<Settlement_Data>> _getDefaultData() => 
-            _convertDictionaryToData(Settlement_List.S_PreExistingSettlements);
+        protected override Dictionary<ulong, Data<Settlement_Data>> _getDefaultData() 
+            => _convertDictionaryToData(Settlement_List.S_PreExistingSettlements);
+            
 
         protected override Dictionary<ulong, Data<Settlement_Data>> _getSavedData()
         {

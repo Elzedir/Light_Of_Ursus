@@ -30,7 +30,7 @@ namespace Baronies
 
         Actor_Data _ruler;
 
-        SerializableDictionary<ulong, Settlement_Data> _allSettlements;
+        Dictionary<ulong, Settlement_Data> _allSettlements;
 
         const int c_maxBaronyLevel = 5;
         const int c_maxBaronyBuildings = 10;
@@ -39,7 +39,7 @@ namespace Baronies
         public County_Component County => _county ??= County_Manager.GetCounty_Component(CountyID);
         public Actor_Data Ruler => _ruler ??= Actor_Manager.GetActor_Data(RulerID);
         
-        public SerializableDictionary<ulong, Settlement_Data> AllSettlements
+        public Dictionary<ulong, Settlement_Data> AllSettlements
         {
             get
             {
@@ -50,7 +50,7 @@ namespace Baronies
         }
 
         public Barony_Data(ulong id, string name, string description, ulong countyID,
-            SerializableDictionary<ulong, Settlement_Data> allSettlements)
+            Dictionary<ulong, Settlement_Data> allSettlements)
         {
             ID = id;
             Name = name;

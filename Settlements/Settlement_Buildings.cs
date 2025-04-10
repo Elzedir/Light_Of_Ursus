@@ -10,21 +10,22 @@ namespace Settlements
         public int MaxLevel;
         public Dictionary<int, int> BuildingSlotsPerLevel;
         
-        SerializableDictionary<ulong, Building_Data> _allBuildings;
+        Dictionary<ulong, Building_Plot> _allBuildings;
         
-        public SerializableDictionary<ulong, Building_Data> AllBuildings
+        public Dictionary<Building_Plot> AllBuildingPlots
         {
             get
             {
                 if (_allBuildings is not null && _allBuildings.Count != 0) return _allBuildings;
 
-                return _allBuildings = Settlement_Data.Settlement.GetAllBuildingsInSettlement();
+                return _allBuildings = Settlement_Data.Settlement.GetAllBuildingPlotsInSettlement();
             }
         }
 
-        public Settlement_Buildings(Settlement_Buildings data)
+        public Settlement_Buildings(Settlement_Buildings data, Settlement_Data settlement_Data)
         {
-            
+            Settlement_Data = settlement_Data;
+            MaxLevel = data.MaxLevel;
         }
 
         public Settlement_Buildings()
@@ -34,9 +35,9 @@ namespace Settlements
 
         public void OnProgressDay()
         {
-            foreach (var building in AllBuildings.Values)
+            foreach (var buildingPlot in AllBuildingPlots)
             {
-                building.OnProgressDay();
+                buildingPlot.Building.OnProgressDay();
             }
         }
 
@@ -44,9 +45,9 @@ namespace Settlements
         {
             var income = 0f;
             
-            foreach (var building in AllBuildings.Values)
+            foreach (var buildingPlot in AllBuildingPlots)
             {
-                income += building.GenerateIncome(liegeTaxRate);
+                income += buildingPlot.GenerateIncome(liegeTaxRate);
             }
             
             return income;

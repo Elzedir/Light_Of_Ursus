@@ -20,7 +20,7 @@ namespace Baronies
                         name: "The Heartlands",
                         description: "The land of hearts",
                         countyID: 1,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -30,7 +30,7 @@ namespace Baronies
                         name: "The Southlands",
                         description: "The land of south",
                         countyID: 1,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -40,7 +40,7 @@ namespace Baronies
                         name: "The Wherelands",
                         description: "The land of where",
                         countyID: 1,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -50,7 +50,7 @@ namespace Baronies
                         name: "The A",
                         description: "The land of A",
                         countyID: 1,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -60,7 +60,7 @@ namespace Baronies
                         name: "The B",
                         description: "The land of B",
                         countyID: 2,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -70,7 +70,7 @@ namespace Baronies
                         name: "The C",
                         description: "The land of C",
                         countyID: 2,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -80,7 +80,7 @@ namespace Baronies
                         name: "The D",
                         description: "The land of D",
                         countyID: 2,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -90,7 +90,7 @@ namespace Baronies
                         name: "The E",
                         description: "The land of E",
                         countyID: 2,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -100,7 +100,7 @@ namespace Baronies
                         name: "The F",
                         description: "The land of F",
                         countyID: 3,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -110,7 +110,7 @@ namespace Baronies
                         name: "The G",
                         description: "The land of G",
                         countyID: 3,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -120,7 +120,7 @@ namespace Baronies
                         name: "The H",
                         description: "The land of H",
                         countyID: 3,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -130,7 +130,7 @@ namespace Baronies
                         name: "The I",
                         description: "The land of I",
                         countyID: 3,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -140,7 +140,7 @@ namespace Baronies
                         name: "The J",
                         description: "The land of J",
                         countyID: 4,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -150,7 +150,7 @@ namespace Baronies
                         name: "The K",
                         description: "The land of K",
                         countyID: 4,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -160,7 +160,7 @@ namespace Baronies
                         name: "The L",
                         description: "The land of L",
                         countyID: 4,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
                 {
@@ -170,7 +170,7 @@ namespace Baronies
                         name: "The M",
                         description: "The land of M",
                         countyID: 4,
-                        allSettlements: new SerializableDictionary<ulong, Settlement_Data>()
+                        allSettlements: new Dictionary<ulong, Settlement_Data>()
                     )
                 },
             };

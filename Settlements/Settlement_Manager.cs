@@ -21,23 +21,23 @@ namespace Settlements
             return AllSettlements.GetDataFromName(settlement_Component.name)?.Data_Object;
         }
         
-        public static Settlement_Component GetSettlement_Component(ulong SettlementID)
+        public static Settlement_Component GetSettlement_Component(ulong settlementID)
         {
-            return AllSettlements.GetSettlement_Component(SettlementID);
+            return AllSettlements.GetSettlement_Component(settlementID);
         }
         
         public static List<ulong> GetAllSettlementIDs() => AllSettlements.GetAllDataIDs();
         
         static Settlement_SO _getSettlement_SO()
         {
-            var Settlement_SO = Resources.Load<Settlement_SO>(c_settlement_SOPath);
+            var settlement_SO = Resources.Load<Settlement_SO>(c_settlement_SOPath);
             
-            if (Settlement_SO is not null) return Settlement_SO;
+            if (settlement_SO is not null) return settlement_SO;
             
             Debug.LogError("Settlement_SO not found. Creating temporary Settlement_SO.");
-            Settlement_SO = ScriptableObject.CreateInstance<Settlement_SO>();
+            settlement_SO = ScriptableObject.CreateInstance<Settlement_SO>();
             
-            return Settlement_SO;
+            return settlement_SO;
         }
 
         public static Settlement_Component GetNearestSettlement(Vector3 position)
@@ -46,13 +46,13 @@ namespace Settlements
 
             var nearestDistance = float.MaxValue;
 
-            foreach (var Settlement in AllSettlements.Settlement_Components.Values)
+            foreach (var settlement in AllSettlements.Settlement_Components.Values)
             {
-                var distance = Vector3.Distance(position, Settlement.transform.position);
+                var distance = Vector3.Distance(position, settlement.transform.position);
 
                 if (!(distance < nearestDistance)) continue;
 
-                nearestSettlement  = Settlement;
+                nearestSettlement  = settlement;
                 nearestDistance = distance;
             }
 

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Cities;
 using Initialisation;
 using Managers;
@@ -13,15 +15,11 @@ namespace Baronies
         public ulong ID => _barony_Data.ID;
         Barony_Data _barony_Data;
 
-        GameObject _baronySpawnZone;
-
         public Barony_Data Barony_Data => _barony_Data ??= Barony_Manager.GetBarony_DataFromName(this);
-        public GameObject BaronySpawnZone => _baronySpawnZone ??=
-            Manager_Game.FindTransformRecursively(transform, "BaronySpawnZone").gameObject;
 
         void Awake()
         {
-            Manager_Initialisation.OnInitialiseSettlements += _initialise;
+            Manager_Initialisation.OnInitialiseBaronies += _initialise;
         }
 
         void _initialise()
@@ -35,8 +33,8 @@ namespace Baronies
             Barony_Data.InitialiseBaronyData();
         }
 
-        public SerializableDictionary<ulong, Settlement_Data> GetAllSettlementsInBarony() =>
-            GetComponentsInChildren<Settlement_Component>().ToSerializedDictionary(
+        public Dictionary<ulong, Settlement_Data> GetAllSettlementsInBarony() =>
+            GetComponentsInChildren<Settlement_Component>().ToDictionary(
                 building => building.ID,
                 building => building.Settlement_Data);
     }

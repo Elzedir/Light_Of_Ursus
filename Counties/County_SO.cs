@@ -18,6 +18,12 @@ namespace Counties
         
         public County_Component GetCounty_Component(ulong countyID)
         {
+            if (countyID == 0)
+            {
+                Debug.LogError("CountyID cannot be 0.");
+                return null;
+            }
+            
             if (CountyComponents.TryGetValue(countyID, out var component))
             {
                 return component;
@@ -26,9 +32,6 @@ namespace Counties
             Debug.LogError($"County with ID {countyID} not found in County_SO.");
             return null;
         }
-        
-        a
-            // This is causing serialisation dpeth issues
 
         public void UpdateCounty(ulong countyID, County_Data county_Data) => UpdateData(countyID, county_Data);
         public void UpdateAllCounties(Dictionary<ulong, County_Data> allCounties) => UpdateAllData(allCounties);
@@ -43,7 +46,7 @@ namespace Counties
             try
             {
                 savedData = DataPersistence_Manager.CurrentSaveData.SavedCountyData.AllCountyData
-                    .ToDictionary(County => County.ID, County => County);
+                    .ToDictionary(county => county.ID, county => county);
             }
             catch
             {

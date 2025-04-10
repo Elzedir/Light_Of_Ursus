@@ -28,11 +28,11 @@ namespace Counties
 
         Actor_Data _ruler;
 
-        SerializableDictionary<ulong, Barony_Data> _allBaronies;
+        Dictionary<ulong, Barony_Data> _allBaronies;
         
         public County_Component County => _county ??= County_Manager.GetCounty_Component(ID);
         public Actor_Data Ruler => _ruler ??= Actor_Manager.GetActor_Data(RulerID);
-        public SerializableDictionary<ulong, Barony_Data> AllBaronies
+        public Dictionary<ulong, Barony_Data> AllBaronies
         {
             get
             {
@@ -43,7 +43,7 @@ namespace Counties
         }
         
         public County_Data(ulong id, ulong rulerID, string name, string description,
-            SerializableDictionary<ulong, Barony_Data> allBaronies)
+            Dictionary<ulong, Barony_Data> allBaronies)
         {
             ID = id;
             RulerID = rulerID;
