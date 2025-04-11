@@ -13,7 +13,7 @@ namespace Baronies
     public class Barony_Component : MonoBehaviour
     {
         public ulong ID => _barony_Data.ID;
-        Barony_Data _barony_Data;
+        [SerializeField] Barony_Data _barony_Data;
 
         public Barony_Data Barony_Data => _barony_Data ??= Barony_Manager.GetBarony_DataFromName(this);
 

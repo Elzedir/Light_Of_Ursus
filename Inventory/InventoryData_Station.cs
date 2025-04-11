@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ActorActions;
 using Items;
 using Station;
@@ -90,15 +91,15 @@ namespace Inventory
             
             var stationsAndItemsToFetchFrom = new Dictionary<ulong, Dictionary<ulong, ulong>>();
 
-            foreach (var stationToFetchFrom in StationReference.Station.Building.Building_Data.Jobs.AllJobs.Select(job => job.Value.Station))
+            foreach (var stationToFetchFrom in StationReference.Station.Station_Data.Building.Building_Data.Stations.AllStations.Select(job => job.Value.Station))
             {
-                if (stationToFetchFrom.StationID == StationReference.StationID) continue;
+                if (stationToFetchFrom.ID == StationReference.StationID) continue;
                 
                 var itemsToFetch = stationToFetchFrom.Station_Data.InventoryData.GetItemsToFetchFromThisInventory();
                 
                 if (itemsToFetch.Count == 0) continue;
                 
-                stationsAndItemsToFetchFrom.TryAdd(stationToFetchFrom.StationID, new Dictionary<ulong, ulong>());
+                stationsAndItemsToFetchFrom.TryAdd(stationToFetchFrom.ID, new Dictionary<ulong, ulong>());
 
                 foreach (var desiredItemID in StationReference.Station.DesiredStoredItemIDs)
                 {
@@ -108,8 +109,8 @@ namespace Inventory
                     
                     if (!limitToAvailableInventoryCapacity)
                     {
-                        if (!stationsAndItemsToFetchFrom[stationToFetchFrom.StationID].TryAdd(desiredItemID, amountToFetch))
-                            stationsAndItemsToFetchFrom[stationToFetchFrom.StationID][desiredItemID] += amountToFetch;
+                        if (!stationsAndItemsToFetchFrom[stationToFetchFrom.ID].TryAdd(desiredItemID, amountToFetch))
+                            stationsAndItemsToFetchFrom[stationToFetchFrom.ID][desiredItemID] += amountToFetch;
                     
                         continue;
                     }
@@ -118,8 +119,8 @@ namespace Inventory
                     
                     if (addedItem?.ItemID is null or 0 || addedItem.ItemAmount == 0) continue;
                     
-                    if (!stationsAndItemsToFetchFrom[stationToFetchFrom.StationID].TryAdd(addedItem.ItemID, addedItem.ItemAmount)) 
-                        stationsAndItemsToFetchFrom[stationToFetchFrom.StationID][addedItem.ItemID] += addedItem.ItemAmount;
+                    if (!stationsAndItemsToFetchFrom[stationToFetchFrom.ID].TryAdd(addedItem.ItemID, addedItem.ItemAmount)) 
+                        stationsAndItemsToFetchFrom[stationToFetchFrom.ID][addedItem.ItemID] += addedItem.ItemAmount;
                 }
             }
             

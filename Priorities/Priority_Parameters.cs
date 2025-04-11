@@ -18,8 +18,7 @@ namespace Priorities
         public float DefaultPriorityValue = 0;
 
         public ulong ActorID_Source, ActorID_Target;
-        public ulong BuildingID_Source;
-        public ulong BuildingID_Target;
+        public ulong BuildingID_Source, BuildingID_Target;
         
         public Station_Component HighestPriorityStation_Source, HighestPriorityStation_Target;
         

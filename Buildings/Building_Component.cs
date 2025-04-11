@@ -5,6 +5,7 @@ using ActorActions;
 using Actors;
 using Careers;
 using Initialisation;
+using Items;
 using Jobs;
 using Priorities;
 using Settlements;
@@ -17,39 +18,34 @@ namespace Buildings
 {
     public class Building_Component : MonoBehaviour
     {
-        //* Change this to be a plot of land rather.
-        
-        public Building_Data Building_Data;
+        [SerializeField] Building_Data _building_Data;
 
         public ulong ID;
 
-        Settlement_Component _settlement;
-        
-        public Settlement_Component Settlement => _settlement ??= GetComponentInParent<Settlement_Component>();
+        public MeshRenderer Mesh;
+        public Material Material;
 
-        void Awake()
-        {
-            Manager_Initialisation.OnInitialiseBuildings += _initialise;
-            Manager_Initialisation.OnInitialiseBuildingData += InitialiseBuildingData;
-        }
+        Settlement_Component _settlement;
+
+        public Building_Data Building_Data => _building_Data ??= Building_Manager.GetBuilding_DataFromName(this);
+        public Settlement_Component Settlement => _settlement ??= GetComponentInParent<Settlement_Component>();
 
         void OnDestroy()
         {
             Manager_TickRate.UnregisterTicker(TickerTypeName.Building, TickRateName.OneSecond, ID);
             Manager_TickRate.UnregisterTicker(TickerTypeName.Building, TickRateName.TenSeconds, ID);
+        }
+
+        public void Initialise()
+        {
+            if (Building_Data?.ID is null or 0)
+            {
+                Debug.LogWarning($"Building {Building_Data?.ID}: {name} not found in Building_SO.");
+                return;
+            }
             
-            Manager_Initialisation.OnInitialiseBuildings -= _initialise;
-            Manager_Initialisation.OnInitialiseBuildingData -= InitialiseBuildingData;
-        }
-
-        void _initialise()
-        {
             _setTickers();
-        }
-
-        void InitialiseBuildingData()
-        {
-            Building_Data.InitialiseBuildingData();
+            Building_Data.InitialiseBuildingData(ID);
         }
 
         void _setTickers()
@@ -82,14 +78,14 @@ namespace Buildings
             Building_Data.Priorities.RegenerateAllPriorities(DataChangedName.None);
 
             //* Temporary fix to move people from recreation to another job.
-            foreach (var worker in Building_Data.Jobs.AllJobs.Values
-                         .Where(job => job.Station.StationType == StationType.Recreation && job.ActorID != 0))
+            foreach (var station in Building_Data.Stations.AllStations.Values
+                         .Where(station_Data => station_Data.StationType == StationType.Recreation && station_Data.ActorID != 0))
             {
-                Building_Data.AssignActorToNewCurrentJob(worker.Actor);
+                Building_Data.AssignActorToNewCurrentJob(station.Actor);
             }
             
             //* Eventually change to once per day.
-            Building_Data.Jobs.FillEmptyBuildingPositions();
+            Building_Data.Stations.FillEmptyBuildingPositions();
         }
 
         // To make more efficient search for best combinations:
@@ -105,9 +101,9 @@ namespace Buildings
 
             var employeesForStation = tempEmployees
                 .OrderByDescending(actor =>
-                    actor.ActorData.Career.CurrentJob != null
+                    actor.ActorData.Career.Job != null
                         ? actor.ActorData.Vocation.GetVocationExperience(
-                            _getRelevantVocation(actor.ActorData.Career.CurrentJob.JobName))
+                            _getRelevantVocation(actor.ActorData.Career.Job.JobName))
                         : 0)
                 .ToList();
 
@@ -146,7 +142,7 @@ namespace Buildings
             return result;
         }
         
-        public HashSet<StationName> GetStationNames() => Building_Data.Jobs.AllJobs.Values.Select(job => job.Station.StationName).ToHashSet();
+        public HashSet<StationName> GetStationNames() => Building_Data.Stations.AllStations.Values.Select(station_Data => station_Data.StationName).ToHashSet();
 
         public void GetRelevantStations(ActorActionName actorActionName, Priority_Parameters priority_Parameters)
         {
@@ -188,24 +184,24 @@ namespace Buildings
             var allFetchItems = new Dictionary<ulong, ulong>();
             var allDeliverStations = new Dictionary<ulong, Station_Component>();
 
-            foreach (var job in Building_Data.Jobs.AllJobs.Values)
+            foreach (var job in Building_Data.Stations.AllStations.Values)
             {
                 foreach (var itemToFetch in job.Station.GetItemsToFetchFromThisStation())
                 {
-                    allFetchStations.TryAdd(job.StationID, job.Station);
+                    allFetchStations.TryAdd(job.ID, job.Station);
 
                     if (!allFetchItems.TryAdd(itemToFetch.Key, itemToFetch.Value))
                         allFetchItems[itemToFetch.Key] += itemToFetch.Value;
                 }
             }
 
-            foreach (var job in Building_Data.Jobs.AllJobs.Values)
+            foreach (var job in Building_Data.Stations.AllStations.Values)
             {
                 foreach (var itemToFetch in allFetchItems)
                 {
                     if (!job.Station.DesiredStoredItemIDs.Contains(itemToFetch.Key)) continue;
                     
-                    allDeliverStations.TryAdd(job.StationID, job.Station);
+                    allDeliverStations.TryAdd(job.ID, job.Station);
                 }
             }
             
@@ -217,18 +213,18 @@ namespace Buildings
 
         void _relevantStations_Chop_Wood(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = Building_Data.Jobs.AllJobs.Values
-                .Where(job => job.Station.StationName == StationName.Tree &&
-                                  job.Station.Station_Data.GetOpenWorkPost() is not null)
+            priority_Parameters.AllStation_Sources = Building_Data.Stations.AllStations.Values
+                .Where(station => station.StationName == StationName.Tree &&
+                                  station.GetOpenWorkPost() is not null)
                 .Select(job => job.Station).ToList();
         }
 
         void _relevantStations_Process_Logs(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.AllStation_Sources = Building_Data.Jobs.AllJobs.Values
-                .Where(job => job.Station.StationName == StationName.Sawmill &&
-                                  job.Station.Station_Data.GetOpenWorkPost() is not null)
-                .Select(job => job.Station).ToList();
+            priority_Parameters.AllStation_Sources = Building_Data.Stations.AllStations.Values
+                .Where(station_Data => station_Data.StationName == StationName.Sawmill &&
+                                  station_Data.Station.Station_Data.GetOpenWorkPost() is not null)
+                .Select(station => station.Station).ToList();
         }
         
         public float IdealRatio;
@@ -277,11 +273,11 @@ namespace Buildings
             //* Improve this
             //* Also, this is designed for a Lumber_Yard, so change that.
 
-            foreach (var job in Building_Data.Jobs.AllJobs.Values)
+            foreach (var station in Building_Data.Stations.AllStations.Values)
             {
-                if (job.Actor is null) continue;
+                if (station.Actor is null) continue;
                 
-                allEmployees.Add(job.Actor.ActorID, job.Actor);
+                allEmployees.Add(station.Actor.ActorID, station.Actor);
             }
             
             var   bestCombination     = new Dictionary<ulong, Actor_Component>();

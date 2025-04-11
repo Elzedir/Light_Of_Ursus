@@ -23,8 +23,7 @@ namespace ActorPresets
                         actorDataCareer: new Actor_Data_Career
                         (
                             actorID: 0,
-                            careerName: CareerName.Wanderer,
-                            buildingID: 0
+                            careerName: CareerName.Wanderer
                         )
                     )
                 },
@@ -35,8 +34,7 @@ namespace ActorPresets
                         actorDataCareer: new Actor_Data_Career
                         (
                             actorID: 0,
-                            careerName: CareerName.Wanderer,
-                            buildingID: 0
+                            careerName: CareerName.Wanderer
                         )
                     )
                 },
@@ -47,8 +45,7 @@ namespace ActorPresets
                         actorDataCareer: new Actor_Data_Career
                         (
                             actorID: 0,
-                            careerName: CareerName.Lumberjack,
-                            buildingID: 0
+                            careerName: CareerName.Lumberjack
                         ),
 
                         actorDataCrafting: new Actor_Data_Crafting
@@ -85,8 +82,7 @@ namespace ActorPresets
                         actorDataCareer: new Actor_Data_Career
                         (
                             actorID: 0,
-                            careerName: CareerName.Smith,
-                            buildingID: 0
+                            careerName: CareerName.Smith
                         ),
 
                         actorDataCrafting: new Actor_Data_Crafting

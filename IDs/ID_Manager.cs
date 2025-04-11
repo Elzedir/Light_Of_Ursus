@@ -8,10 +8,12 @@ using Cities;
 using Counties;
 using Faction;
 using Items;
+using Jobs;
+using Settlements;
 using Station;
 using UnityEngine;
 
-namespace Tools
+namespace IDs
 {
     public abstract class ID_Manager
     {
@@ -21,8 +23,18 @@ namespace Tools
         static readonly Dictionary<IDType, ulong> s_lastUnusedIDs = new();
         static readonly Dictionary<IDType, List<ulong>> s_preExistingIDLists = new();
         
+        public static void AddNewID(ulong id, IDType idType)
+        {
+            if (!s_ids.Add(id))
+                throw new Exception($"Error: ID {id} already exists in IDType {idType}.");
+
+            s_lastUnusedIDs[idType] = id;
+        }
+        
         public static ulong GetNewID(IDType idType)
         {
+            s_ids.Add(0);
+            
             var iteration = 100000;
 
             if (!s_lastUnusedIDs.ContainsKey(idType))
@@ -101,6 +113,8 @@ namespace Tools
                 IDType.None => new List<ulong> { 0 },
                 IDType.Actor => Actor_Manager.GetAllActorIDs(),
                 IDType.Item => Item_Manager.GetAllItemIDs(),
+                IDType.Job => Job_Manager.GetAllJobIDs(),
+                IDType.Settlement => Settlement_Manager.GetAllSettlementIDs(),
                 IDType.Station => Station_Manager.GetAllStationIDs(),
                 IDType.Building => Building_Manager.GetAllBuildingIDs(),
                 IDType.Barony => Barony_Manager.GetAllBaronyIDs(),
@@ -127,13 +141,15 @@ namespace Tools
             {
                 { IDType.None, (0, 0) },
                 { IDType.Actor, (1, 99999) },
-                { IDType.Item, (100000, 199999) },
-                { IDType.Station, (200000, 299999) },
-                { IDType.Building, (300000, 399999) },
+                { IDType.Station, (100000, 199999) },
+                { IDType.Building, (200000, 299999) },
+                { IDType.Settlement, (300000, 399999) },
                 { IDType.Barony, (400000, 499999) },
                 { IDType.County, (500000, 599999) },
                 { IDType.Faction, (600000, 699999) },
-                { IDType.Profile, (700000, 799999) }
+                { IDType.Profile, (700000, 799999) },
+                { IDType.Item, (800000, 899999) },
+                { IDType.Job, (900000, 999999) },
             };
 
             _validateIDRanges(idRanges);
@@ -174,12 +190,14 @@ namespace Tools
         None,
         
         Actor,
-        Item,
         Station,
         Building,
+        Settlement,
         Barony,
         County,
         Faction,
         Profile,
+        Item,
+        Job
     }
 }

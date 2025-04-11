@@ -10,7 +10,7 @@ namespace Priorities
 {
     public abstract class Priority_Generator
     {
-        const float _defaultMaxPriority = 10;
+        const float c_defaultMaxPriority = 10;
 
         static float _addPriorityIfAboveTarget(float current, float target, float maxPriority)
             => Math.Clamp(current - target, 0, maxPriority);
@@ -144,7 +144,7 @@ namespace Priorities
                 throw new Exception("Priority_Parameters should not be null.");
 
             if (priority_Parameters.DefaultMaxPriority == 0)
-                priority_Parameters.DefaultMaxPriority = _defaultMaxPriority;
+                priority_Parameters.DefaultMaxPriority = c_defaultMaxPriority;
 
             switch (priorityID)
             {
@@ -181,7 +181,7 @@ namespace Priorities
                         var correctItemsToDeliver = itemsToDeliver
                             .Where(item => new Item(item.Key, item.Value)
                                 .Item_Data.ItemPriorityStats
-                                .IsHighestPriorityStation(stationToDeliverTo.StationName, allStationNames))
+                                .IsHighestPriorityStation(stationToDeliverTo.Station_Data.StationName, allStationNames))
                             .ToDictionary(x => x.Key, x => x.Value);
                         
                         if (correctItemsToDeliver.Count == 0) continue;
@@ -224,7 +224,7 @@ namespace Priorities
                     var correctItemsToDeliver = itemsToDeliver
                         .Where(item => new Item(item.Key, item.Value)
                             .Item_Data.ItemPriorityStats
-                            .IsHighestPriorityStation(stationToDeliverTo.StationName, allStationNames))
+                            .IsHighestPriorityStation(stationToDeliverTo.Station_Data.StationName, allStationNames))
                         .ToDictionary(x => x.Key, x => x.Value);
                         
                     if (correctItemsToDeliver.Count == 0) continue;
@@ -251,9 +251,9 @@ namespace Priorities
             
             foreach(var station in priority_Parameters.AllStation_Sources)
             {
-                if (station.StationName != StationName.Tree)
+                if (station.Station_Data.StationName != StationName.Tree)
                 {
-                    Debug.LogError($"Station {station.StationName} is not a tree.");
+                    Debug.LogError($"Station {station.Station_Data.StationName} is not a tree.");
                     continue;
                 }
                 
@@ -288,9 +288,9 @@ namespace Priorities
             {
                 //* Log_Pile should be hauling, not Sawmill. And people in Log_Pile shouldn't have Process Logs action.
                 
-                if (station.StationName != StationName.Sawmill)
+                if (station.Station_Data.StationName != StationName.Sawmill)
                 {
-                    Debug.LogError($"Station {station.StationName} is not a sawmill.");
+                    Debug.LogError($"Station {station.Station_Data.StationName} is not a sawmill.");
                     continue;
                 }
                 

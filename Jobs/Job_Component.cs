@@ -6,21 +6,19 @@ using UnityEngine.Serialization;
 
 namespace Jobs
 {
-    public class Jo_Component : MonoBehaviour
+    public class Job_Component : MonoBehaviour
     {
-        [FormerlySerializedAs("Job")] public Job_Old JobOld;
+        public Job_Data Job_Data;
         
-        public Job_DefaultValue Job_DefaultValues => Job_List.GetJob_DefaultValue(JobOld.Station.StationName, JobOld.JobID);
-        public ulong JobID                 => JobOld.JobID;
-        public Actor_Component CurrentWorker            => JobOld.Actor;
+        public ulong JobID;
         public bool IsCurrentlyBeingOperated() => false; // If the actor is actually at the operating area, operating.
         
-        BoxCollider          _JobCollider;
-        public BoxCollider   JobCollider => _JobCollider ??= GetComponent<BoxCollider>();
+        BoxCollider          _jobCollider;
+        public BoxCollider   JobCollider => _jobCollider ??= GetComponent<BoxCollider>();
 
-        public void Initialise(Job_Old jobOld)
+        public void Initialise(Job_Data job_Data)
         {
-            JobOld = jobOld;
+            Job_Data = job_Data;
             
             if (JobCollider.isTrigger) return;
             
@@ -29,14 +27,14 @@ namespace Jobs
 
         public IEnumerator MoveWorkerToJob(Actor_Component actor, Vector3 position)
         {
-            JobOld.IsWorkerMovingToJob = true;
+            Job_Data.IsWorkerMovingToJob = true;
 
             yield return actor.StartCoroutine(actor.BasicMove(position));
 
             if (actor.ActorData.SceneObject.ActorTransform.position != position)
                 actor.ActorData.SceneObject.ActorTransform.position = position;
 
-            JobOld.IsWorkerMovingToJob = false;
+            Job_Data.IsWorkerMovingToJob = false;
         }
     }
 }

@@ -34,27 +34,7 @@ namespace Station
             
             return station_SO;
         }
-
-        public static Station_Component GetNearestStation(Vector3 position, StationName stationName)
-        {
-            Station_Component nearestStation = null;
-
-            var nearestDistance = float.PositiveInfinity;
-
-            foreach (var station in AllStations.Station_Components.Values.Where(s => s.StationName == stationName))
-            {
-                var distance = Vector3.Distance(position, station.transform.position);
-
-                if (!(distance < nearestDistance)) continue;
-
-                nearestStation  = station;
-                nearestDistance = distance;
-            }
-
-            return nearestStation;
-        }
-
-
+        
         public static Dictionary<StationName, List<JobName>> WorkerCanUseList = new()
         {
             {StationName.Iron_Node, new List<JobName> { JobName.Miner} },

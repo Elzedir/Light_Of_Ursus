@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Actors;
 using Baronies;
+using IDs;
 using Tools;
 using UnityEditor;
 using UnityEngine;
@@ -112,7 +113,7 @@ namespace Counties
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var countyName = property.FindPropertyRelative("CountyName");
-            label.text = !string.IsNullOrEmpty(countyName.stringValue) ? countyName.stringValue : "Unnamed County";
+            label.text = !string.IsNullOrEmpty(countyName?.stringValue) ? countyName.stringValue : "Unnamed County";
 
             EditorGUI.PropertyField(position, property, label, true);
         }

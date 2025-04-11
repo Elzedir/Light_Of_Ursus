@@ -7,7 +7,7 @@ namespace Buildings
 {
     public abstract class Building_Manager
     {
-        const  string     _building_SOPath = "ScriptableObjects/Building_SO";
+        const  string     c_building_SOPath = "ScriptableObjects/Building_SO";
         
         static Building_SO s_building_SO;
         static Building_SO BuildingSO => s_building_SO ??= _getBuilding_SO();
@@ -31,7 +31,7 @@ namespace Buildings
         
         static Building_SO _getBuilding_SO()
         {
-            var building_SO = Resources.Load<Building_SO>(_building_SOPath);
+            var building_SO = Resources.Load<Building_SO>(c_building_SOPath);
             
             if (building_SO is not null) return building_SO;
             
@@ -51,7 +51,7 @@ namespace Buildings
 
             var nearestDistance = float.PositiveInfinity;
 
-            foreach (var building in BuildingSO.Building_Components.Values.Where(j => j.BuildingType == buildingType))
+            foreach (var building in BuildingSO.Building_Components.Values.Where(j => j.Building_Data.BuildingType == buildingType))
             {
                 var distance = Vector3.Distance(position, building.transform.position);
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Actor;
 using Actors;
 using Managers;
 using UnityEngine;
@@ -11,8 +10,8 @@ namespace Abilities
 {
     public abstract class Ability_List
     {
-        static Dictionary<ulong, Ability_Data> _defaultAbilities;
-        public static Dictionary<ulong, Ability_Data> DefaultAbilities => _defaultAbilities ??= _initialiseDefaultAbilities();
+        static Dictionary<ulong, Ability_Data> s_defaultAbilities;
+        public static Dictionary<ulong, Ability_Data> DefaultAbilities => s_defaultAbilities ??= _initialiseDefaultAbilities();
         
         static Dictionary<ulong, Ability_Data> _initialiseDefaultAbilities()
         {

@@ -180,10 +180,6 @@ namespace Managers
             Manager_Initialisation.InitialiseCounties();
             Manager_Initialisation.InitialiseBaronies();
             Manager_Initialisation.InitialiseSettlements();
-            Manager_Initialisation.InitialiseBuildings();
-            Manager_Initialisation.InitialiseStations();
-
-            Manager_Initialisation.InitialiseBuildingData();
 
             if (_autoSaveCoroutine != null) StopCoroutine(_autoSaveCoroutine);
             _autoSaveCoroutine = StartCoroutine(DataPersistence_Manager.AutoSave(_autoSaveTimeSeconds, _numberOfAutoSaves, _autoSaveEnabled));

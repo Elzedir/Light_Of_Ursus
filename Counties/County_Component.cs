@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Baronies;
 using Initialisation;
-using Tools;
 using UnityEngine;
 
 namespace Counties
@@ -11,7 +10,7 @@ namespace Counties
     {
         public ulong ID => County_Data.ID;
 
-        County_Data _county_Data;
+        [SerializeField] County_Data _county_Data;
         public County_Data County_Data => _county_Data ??= County_Manager.GetCounty_DataFromName(this);
 
         void Awake()

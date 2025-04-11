@@ -12,10 +12,10 @@ namespace Abilities
 {
     public abstract class Ability_Manager
     {
-        const string _ability_SOPath = "ScriptableObjects/Ability_SO";
+        const string c_ability_SOPath = "ScriptableObjects/Ability_SO";
 
-        static Ability_SO _allAbilities;
-        static Ability_SO AllAbilities => _allAbilities ??= _getAbility_SO();
+        static Ability_SO s_allAbilities;
+        static Ability_SO AllAbilities => s_allAbilities ??= _getAbility_SO();
 
         public static Ability_Data GetAbility_Master(AbilityName abilityName)
         {
@@ -29,7 +29,7 @@ namespace Abilities
 
         static Ability_SO _getAbility_SO()
         {
-            var ability_SO = Resources.Load<Ability_SO>(_ability_SOPath);
+            var ability_SO = Resources.Load<Ability_SO>(c_ability_SOPath);
 
             if (ability_SO is not null) return ability_SO;
 

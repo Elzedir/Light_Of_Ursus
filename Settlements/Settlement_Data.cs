@@ -53,11 +53,12 @@ namespace Settlements
             Prosperity = new Settlement_Prosperity(settlementProsperity);
         }
 
-        public void InitialiseSettlementData()
+        public void InitialiseSettlementData(ulong settlementID)
         {
-            if (Settlement?.ID is not null and not 0) return;
+            if (ID != settlementID) throw new Exception($"Settlement ID {settlementID} does not match " +
+                $"Settlement_Data ID {ID}.");
 
-            Debug.LogWarning($"Settlement with ID {ID} not found in Settlement_SO.");
+            Buildings.InitialiseBuildings();
         }
 
         public void OnProgressDay() 
@@ -105,7 +106,7 @@ namespace Settlements
             _updateDataDisplay(DataToDisplay,
                 title: "Settlement JobSites",
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allStringData: Buildings.AllBuildingPlots.ToDictionary(
+                allStringData: Buildings.AllBuildings.ToDictionary(
                     building => building.Key.ToString(),
                     building => building.Value.Name));
 

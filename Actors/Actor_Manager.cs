@@ -6,6 +6,7 @@ using Careers;
 using DateAndTime;
 using Equipment;
 using Faction;
+using IDs;
 using Inventory;
 using Items;
 using Managers;
@@ -189,8 +190,8 @@ namespace Actors
 
             var careerData = new Actor_Data_Career(
                 actorID: fullIdentification.ActorID,
-                careerName: actorDataPreset?.ActorDataCareer?.CareerName     ?? CareerName.Wanderer,
-                buildingID: actorDataPreset?.ActorDataCareer?.CurrentJob?.BuildingID       ?? 0
+                careerName: actorDataPreset?.ActorDataCareer?.CareerName ?? CareerName.Wanderer,
+                job: actorDataPreset?.ActorDataCareer?.Job
             );
             
             var craftingData = new Actor_Data_Crafting(

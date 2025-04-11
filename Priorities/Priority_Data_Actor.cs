@@ -75,12 +75,12 @@ namespace Priorities
 
         protected override void _setBuildingID_Source(Priority_Parameters priority_Parameters)
         {
-            priority_Parameters.BuildingID_Source = _actor.ActorData.Career.CurrentJob?.BuildingID ?? 0;
+            priority_Parameters.BuildingID_Source = _actor.ActorData.Career.Job?.Station.Station_Data.Building.ID ?? 0;
         }
 
         protected override void _setStationID_Source(Priority_Parameters priority_Parameters)
         {
-            var station = _actor.ActorData.Career.CurrentJob?.Station;
+            var station = _actor.ActorData.Career.Job?.Station;
 
             priority_Parameters.AllStation_Sources = station is not null 
                 ? new List<Station_Component> { station } 

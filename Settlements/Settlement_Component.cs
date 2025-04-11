@@ -9,13 +9,13 @@ namespace Settlements
 {
     public class Settlement_Component : MonoBehaviour
     {
-        public ulong ID => Settlement_Data.ID;
-        public Settlement_Data Settlement_Data;
+        public ulong ID;
+        [SerializeField] Settlement_Data _settlement_Data;
 
         GameObject _settlementSpawnZone;
 
-        // public Settlement_Data Settlement_Data => _settlement_Data ??= 
-        //     Settlement_Manager.GetSettlement_DataFromName(this);
+        public Settlement_Data Settlement_Data => _settlement_Data ??= 
+            Settlement_Manager.GetSettlement_DataFromName(this);
         public GameObject SettlementSpawnZone => _settlementSpawnZone ??=
             Manager_Game.FindTransformRecursively(transform, "SettlementSpawnZone").gameObject;
 
@@ -26,20 +26,18 @@ namespace Settlements
 
         void _initialise()
         {
-            Settlement_Data = Settlement_Manager.GetSettlement_DataFromName(this);
-            
             if (Settlement_Data?.ID is null or 0)
             {
                 Debug.LogWarning($"Settlement with name {name} not found in Settlement_SO.");
                 return;
             }
 
-            Settlement_Data.InitialiseSettlementData();
+            Settlement_Data.InitialiseSettlementData(ID);
         }
 
-        public Dictionary<ulong, Building_Plot> GetAllBuildingPlotsInSettlement() =>
-            GetComponentsInChildren<Building_Plot>().ToDictionary(
+        public Dictionary<ulong, Building_Data> GetAllBuildingsInSettlement() =>
+            GetComponentsInChildren<Building_Component>().ToDictionary(
                 building => building.ID,
-                building => building);
+                building => building.Building_Data);
     }
 }

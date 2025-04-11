@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using Jobs;
 using Recipes;
 using UnityEngine;
 using WorkPosts;
@@ -46,7 +47,7 @@ namespace Station
             // Base resource yield on actor relevant skill
         }
 
-        protected override float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        protected override float _produce(Job_Component job, float baseProgressRate, Recipe_Data recipe)
         {
             return 0;
         }

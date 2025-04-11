@@ -20,10 +20,6 @@ namespace Initialisation
         public static event Action OnInitialiseCounties;
         public static event Action OnInitialiseBaronies;
         public static event Action OnInitialiseSettlements;
-        public static event Action OnInitialiseBuildings;
-        public static event Action OnInitialiseStations;
-
-        public static event Action OnInitialiseBuildingData;
 
         public static void InitialiseManagers() 
         {
@@ -61,21 +57,6 @@ namespace Initialisation
         public static void InitialiseSettlements()
         {
             OnInitialiseSettlements?.Invoke();
-        }
-
-        public static void InitialiseBuildings()
-        {
-            OnInitialiseBuildings?.Invoke();
-        }
-
-        public static void InitialiseStations()
-        {
-            OnInitialiseStations?.Invoke();
-        }
-
-        public static void InitialiseBuildingData()
-        {
-            OnInitialiseBuildingData?.Invoke();
         }
     }
 }

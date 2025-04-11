@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
+using Jobs;
 using Recipes;
 using UnityEngine;
-using WorkPosts;
 
 namespace Station
 {
@@ -41,9 +41,9 @@ namespace Station
             return new Dictionary<ulong, ulong>();
         }
 
-        protected override float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        protected override float _produce(Job_Component job, float baseProgressRate, Recipe_Data recipe)
         {
-            return _isAtWorkPost(workPost) ? 0 : 0;
+            return _isAtWorkPost(job) ? 0 : 0;
         }
     }
 }

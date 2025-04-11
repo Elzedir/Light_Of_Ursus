@@ -73,9 +73,9 @@ namespace Station
             // Base resource yield on actor relevant skill
         }
         
-        protected override float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe)
+        protected override float _produce(Job_Component job, float baseProgressRate, Recipe_Data recipe)
         {
-            if (_isAtWorkPost(workPost)) return 0;
+            if (_isAtWorkPost(job)) return 0;
             
             var productionRate = baseProgressRate;
             // Then modify production rate by any area modifiers (Land type, events, etc.)
@@ -84,7 +84,7 @@ namespace Station
 
             foreach (var vocation in recipe.RequiredVocations)
             {
-                productionRate *= workPost.CurrentWorker.ActorData.Vocation.GetProgress(vocation.Value);
+                productionRate *= job.CurrentWorker.ActorData.Vocation.GetProgress(vocation.Value);
             }
 
             return productionRate;

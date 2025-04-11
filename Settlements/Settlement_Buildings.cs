@@ -1,24 +1,28 @@
+using System;
 using System.Collections.Generic;
 using Buildings;
 using Tools;
+using UnityEngine;
 
 namespace Settlements
 {
+    [Serializable]
     public class Settlement_Buildings
     {
         public Settlement_Data Settlement_Data;
+        
         public int MaxLevel;
         public Dictionary<int, int> BuildingSlotsPerLevel;
         
-        Dictionary<ulong, Building_Plot> _allBuildings;
+        Dictionary<ulong, Building_Data> _allBuildings;
         
-        public Dictionary<Building_Plot> AllBuildingPlots
+        public Dictionary<ulong, Building_Data> AllBuildings
         {
             get
             {
                 if (_allBuildings is not null && _allBuildings.Count != 0) return _allBuildings;
 
-                return _allBuildings = Settlement_Data.Settlement.GetAllBuildingPlotsInSettlement();
+                return _allBuildings = Settlement_Data.Settlement.GetAllBuildingsInSettlement();
             }
         }
 
@@ -33,11 +37,28 @@ namespace Settlements
             
         }
 
+        public void InitialiseBuildings()
+        {
+            foreach (var building in AllBuildings.Values)
+            {
+                _spawnBuilding(building);
+            }
+        }
+
+        void _spawnBuilding(Building_Data building_Data)
+        {
+            var buildingGO = new GameObject($"{building_Data.BuildingType}_{building_Data.ID}");
+            buildingGO.transform.SetParent(Settlement_Data.Settlement.transform);
+            
+            var building = buildingGO.AddComponent<Building_Component>();
+            building.Initialise();
+        }
+
         public void OnProgressDay()
         {
-            foreach (var buildingPlot in AllBuildingPlots)
+            foreach (var building in AllBuildings.Values)
             {
-                buildingPlot.Building.OnProgressDay();
+                building.OnProgressDay();
             }
         }
 
@@ -45,9 +66,9 @@ namespace Settlements
         {
             var income = 0f;
             
-            foreach (var buildingPlot in AllBuildingPlots)
+            foreach (var building in AllBuildings.Values)
             {
-                income += buildingPlot.GenerateIncome(liegeTaxRate);
+                income += building.GenerateIncome(liegeTaxRate);
             }
             
             return income;

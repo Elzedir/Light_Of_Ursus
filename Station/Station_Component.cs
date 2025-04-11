@@ -1,26 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using Actors;
-using Buildings;
-using Initialisation;
 using Inventory;
 using Jobs;
 using Recipes;
 using UnityEngine;
-using WorkPosts;
 
 namespace Station
 {
     [RequireComponent(typeof(BoxCollider))]
     public abstract class Station_Component : MonoBehaviour, IInteractable
     {
-        public Station_Data Station_Data;
+        [SerializeField] Station_Data _station_Data;
         
-        public ulong              StationID => Station_Data.StationID;
-        public Building_Component Building   => Station_Data.Building;
-        
-        public abstract StationName  StationName { get; }
-        public abstract StationType  StationType { get; }
+        public ulong              ID;
 
         public float InteractRange { get; private set; }
 
@@ -32,42 +25,33 @@ namespace Station
         public abstract HashSet<ulong>        DesiredStoredItemIDs  { get; }
         
         BoxCollider        _boxCollider;
+        
+        public Station_Data Station_Data => _station_Data ??= Station_Manager.GetStation_DataFromName(this);
         public BoxCollider BoxCollider => _boxCollider ??= gameObject.GetComponent<BoxCollider>();
         
-        void Awake()
+        public void Initialise()
         {
-            Manager_Initialisation.OnInitialiseStations += _initialise;
-        }
-        
-        void _initialise()
-        {
-            var stationData = Station_Manager.GetStation_DataFromName(this);
-
-            if (stationData is null)
+            if (Station_Data is null)
             {
                 Debug.LogWarning($"Station with name {name} not found in Station_SO.");
                 return;
             }
 
-            Station_Data = stationData;
-            Station_Data.InitialiseStationData();
+            Station_Data.InitialiseStationData(ID);
 
             SetInteractRange();
-            _initialiseStartingInventory();
         }
 
-        protected abstract void _initialiseStartingInventory();
-
         public Dictionary<ulong, ulong> GetItemsToFetchFromThisStation() => 
-            Station_Data.InventoryData.GetItemsToFetchFromThisInventory();
+            _station_Data.InventoryData.GetItemsToFetchFromThisInventory();
 
         public Dictionary<ulong, Dictionary<ulong, ulong>> GetItemsToDeliverToThisStationFromAllStations() =>
-            Station_Data.InventoryData.GetItemsToDeliverToThisInventoryFromAllStations();
+            _station_Data.InventoryData.GetItemsToDeliverToThisInventoryFromAllStations();
 
         public Dictionary<ulong, ulong> GetItemsToDeliverToThisStation(InventoryData otherInventory)
         {
             return otherInventory != null
-                ? Station_Data.InventoryData.GetItemsToDeliverToThisInventory(otherInventory)
+                ? _station_Data.InventoryData.GetItemsToDeliverToThisInventory(otherInventory)
                 : new Dictionary<ulong, ulong>();
         }
         public void SetInteractRange(float interactRange = 2)
@@ -82,45 +66,45 @@ namespace Station
 
         public void Operate()
         {
-            var haulers = new List<Job>();
+            var haulers = new List<Job_Data>();
             
-            foreach (var workPost in Station_Data.AllWorkPosts.Values)
+            foreach (var job_Data in _station_Data.Jobs.Values)
             {
-                if (workPost.Job.ActorID == 0) continue;
+                if (job_Data.Actor_Data == null) continue;
 
-                if (workPost.Job.Station.StationType == StationType.Storage)
+                if (job_Data.Station.Station_Data.StationType == StationType.Storage)
                 {
-                    haulers.Add(workPost.Job);
+                    haulers.Add(job_Data);
                     continue;
                 }
                 
-                var progressMade = _produce(workPost, Station_Data.BaseProgressRatePerHour,
-                    Station_Data.StationProgressData.CurrentProduct);
+                var progressMade = _produce(job_Data, _station_Data.BaseProgressRatePerHour,
+                    _station_Data.StationProgressData.CurrentProduct);
 
-                if (!Station_Data.StationProgressData.ItemCrafted(progressMade)) continue;
+                if (!_station_Data.StationProgressData.ItemCrafted(progressMade)) continue;
                 
                 if (CanCraftItem(
-                        Station_Data.StationProgressData.CurrentProduct.RecipeName, workPost.Job.Actor))
-                    Station_Data.StationProgressData.ResetProgress();
+                        _station_Data.StationProgressData.CurrentProduct.RecipeName, job_Data.Actor_Data))
+                    _station_Data.StationProgressData.ResetProgress();
             }
             
-            Building.Building_Data.Haul(haulers);
+            Station_Data.Building.Building_Data.Haul(haulers);
         }
 
-        protected bool _isAtWorkPost(WorkPost_Component workPost)
+        protected bool _isAtWorkPost(Job_Component job)
         {
-            if (workPost.WorkPostCollider.bounds.Contains(workPost.Job.Actor.transform.position)) return true;
+            if (job.JobCollider.bounds.Contains(job.Job_Data.Actor_Data.Actor.transform.position)) return true;
             
-            if (!workPost.Job.IsWorkerMovingToWorkPost)
-                StartCoroutine(workPost.MoveWorkerToWorkPost(workPost.CurrentWorker, workPost.transform.position));
+            if (!job.Job_Data.IsWorkerMovingToJob)
+                StartCoroutine(job.MoveWorkerToJob(job.Job_Data.Actor_Data.Actor, job.transform.position));
 
             return false;
         }
-        protected abstract float _produce(WorkPost_Component workPost, float baseProgressRate, Recipe_Data recipe);
+        protected abstract float _produce(Job_Data job, float baseProgressRate, Recipe_Data recipe);
 
         public abstract IEnumerator Interact(Actor_Component actor);
 
-        public abstract bool CanCraftItem(RecipeName recipeName, Actor_Component actor);
+        public abstract bool CanCraftItem(RecipeName recipeName, Actor_Data actor);
 
         public abstract Dictionary<ulong, ulong> GetCost(Dictionary<ulong, ulong> ingredients, Actor_Component actor);
 

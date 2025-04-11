@@ -42,7 +42,7 @@ namespace Station
             try
             {
                 savedData = DataPersistence_Manager.CurrentSaveData.SavedStationData.AllStationData
-                    .ToDictionary(station => station.StationID, station => station);
+                    .ToDictionary(station => station.ID, station => station);
             }
             catch
             {
@@ -71,9 +71,9 @@ namespace Station
         protected override Data<Station_Data> _convertToData(Station_Data data)
         {
             return new Data<Station_Data>(
-                dataID: data.StationID,
+                dataID: data.ID,
                 data_Object: data,
-                dataTitle: $"{data.StationID}: {data.StationName}",
+                dataTitle: $"{data.ID}: {data.StationName}",
                 getDataToDisplay: data.GetDataToDisplay);
         }
 

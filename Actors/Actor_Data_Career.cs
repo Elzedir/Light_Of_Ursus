@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ActorActions;
-using Buildings;
 using Careers;
 using Inventory;
 using Jobs;
@@ -16,20 +15,18 @@ namespace Actors
         public ComponentReference_Actor ActorReference => Reference as ComponentReference_Actor;
         
         public CareerName CareerName;
-        public Job CurrentJob;
+        public Job_Data Job;
         
-        public Actor_Data_Career(ulong actorID, CareerName careerName, ulong buildingID = 0) : base(actorID, ComponentType.Actor)
+        public Actor_Data_Career(ulong actorID, CareerName careerName, Job_Data job = null) : base(actorID, ComponentType.Actor)
         {
             CareerName = careerName;
-            CurrentJob = buildingID != 0 
-                ? Building_Manager.GetBuilding_Component(buildingID).GetActorJob(actorID)
-                : null;
+            Job = job;
         }
 
         public Actor_Data_Career(Actor_Data_Career actorDataCareer) : base(actorDataCareer.ActorReference.ActorID, ComponentType.Actor)
         {
             CareerName = actorDataCareer.CareerName;
-            CurrentJob = actorDataCareer.CurrentJob;
+            Job = actorDataCareer.Job;
         }
         
         public override DataToDisplay GetDataToDisplay(bool toggleMissingDataDebugs)
@@ -39,10 +36,10 @@ namespace Actors
                 toggleMissingDataDebugs: toggleMissingDataDebugs,
                 allStringData: GetStringData());
             
-            _updateDataDisplay(DataToDisplay,
-                title: "Job Data",
-                toggleMissingDataDebugs: toggleMissingDataDebugs,
-                allSubData: CurrentJob.GetDataToDisplay(toggleMissingDataDebugs));
+            // _updateDataDisplay(DataToDisplay,
+            //     title: "Job Data",
+            //     toggleMissingDataDebugs: toggleMissingDataDebugs,
+            //     allSubData: JobID.GetDataToDisplay(toggleMissingDataDebugs));
 
             return DataToDisplay;
         }
@@ -57,8 +54,8 @@ namespace Actors
 
         public override List<ActorActionName> GetAllowedActions()
         {
-            return CurrentJob is not null && CurrentJob.JobName != JobName.None 
-                ? CurrentJob.JobActions
+            return Job is not null && Job.JobName != JobName.None 
+                ? Job.JobActions
                 : new List<ActorActionName> { ActorActionName.Idle };
         }
     }
