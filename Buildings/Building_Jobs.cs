@@ -1,38 +1,52 @@
 using System.Collections.Generic;
 using System.Linq;
-using Actors;
 using Jobs;
 using Station;
-using Tools;
 using UnityEngine;
 
 namespace Buildings
 {
-    public class Building_Jobs
+    public class Building_Stations
     {
-        public Building_Data Building_Data;
+        readonly Building_Data _building_Data;
+        public readonly Dictionary<ulong, Station_Data> AllStations;
         
-        public SerializableDictionary<(ulong, ulong), Job> AllJobs;
-        public Dictionary<ulong, (ulong, ulong)> ActorToJobMap;
+        public readonly Dictionary<ulong, ulong> ActorToJobMap = new();
+        public readonly Dictionary<ulong, ulong> JobToActorMap = new();
 
-        public Building_Jobs(Building_Jobs data, Building_Data building_Data)
+        public Building_Stations(Building_Stations data, Building_Data building_Data)
         {
-            Building_Data = building_Data;
-            AllJobs = new SerializableDictionary<(ulong, ulong), Job>(data.AllJobs);
-            ActorToJobMap = new Dictionary<ulong, (ulong, ulong)>(data.ActorToJobMap);
+            _building_Data = building_Data;
+            AllStations = new Dictionary<ulong, Station_Data>(data.AllStations);
         }
         
-        public Building_Jobs()
+        public Building_Stations(Dictionary<ulong, Station_Data> allStations = null)
         {
-            AllJobs = new SerializableDictionary<(ulong, ulong), Job>();
-            ActorToJobMap = new Dictionary<ulong, (ulong, ulong)>();
+            AllStations = allStations ?? new Dictionary<ulong, Station_Data>();
+        }
+
+        public void InitialiseStations()
+        {
+            foreach (var station in AllStations.Values)
+            {
+                _spawnStation(station);
+            }
+        }
+        
+        void _spawnStation(Station_Data station_Data)
+        {
+            var stationGO = new GameObject($"{station_Data.StationType}_{station_Data.ID}");
+            stationGO.transform.SetParent(_building_Data.Building.transform);
+            
+            var station = stationGO.AddComponent<Station_Component>();
+            station.Initialise();
         }
 
         public void OnTickOneSecond()
         {
-            foreach (var job in AllJobs.Values)
+            foreach (var station in AllStations.Values)
             {
-                job.OnTickOneSecond();
+                station.OnTickOneSecond();
             }
         }
 
@@ -43,19 +57,17 @@ namespace Buildings
         
         public void FillEmptyBuildingPositions()
         {
-            if (AllJobs?.Count is null or 0) _populateAllJobs();
-            
-            if (AllJobs?.Count is null or 0)
+            if (AllStations?.Count is null or 0)
             {
-                Debug.LogError($"AllJobs {AllJobs?.Count} is null or 0.");
+                Debug.LogError($"AllStations {AllStations?.Count} is null or 0.");
                 return;
             }
 
-            var relevantStations = AllJobs.Values
-                .Where(job => job.Station.StationType != StationType.Recreation)
+            var relevantStations = AllStations.Values
+                .Where(station => station.StationType != StationType.Recreation)
                 .ToList().Count;
-            var desiredEmployeeCount = Mathf.RoundToInt(relevantStations * Building_Data.Prosperity.GetProsperityPercentage());
-            var jobQueue = new Queue<Job>(AllJobs.Values);
+            var desiredEmployeeCount = Mathf.RoundToInt(relevantStations * _building_Data.Prosperity.GetProsperityPercentage());
+            var jobQueue = new Queue<Job_Data>(AllStations.Values);
             var iteration = 0;
             
             while (ActorToJobMap.Count < desiredEmployeeCount)
@@ -70,7 +82,7 @@ namespace Buildings
 
                 var newEmployee = Building_Data.FindEmployeeFromSettlement
                                       (openWorkPost.WorkPost_DefaultValues.JobName)
-                    ?? Building_Data.GenerateNewEmployee(openWorkPost.WorkPost_DefaultValues.JobName);
+                                  ?? Building_Data.GenerateNewEmployee(openWorkPost.WorkPost_DefaultValues.JobName);
                 
                 if (!Building_Data.AssignActorToNewCurrentJob(newEmployee))
                 {
@@ -86,25 +98,8 @@ namespace Buildings
 
                 if (iteration <= 99) continue;
 
-                Debug.LogError($"Iteration limit reached. Desired: {desiredEmployeeCount}, Current: {AllJobs.Count}");
+                Debug.LogError($"Iteration limit reached. Desired: {desiredEmployeeCount}, Current: {AllStations.Count}");
                 return;
-            }
-        }
-        
-        void _populateAllJobs()
-        {
-            AllJobs = new SerializableDictionary<(ulong, ulong), Job>();
-            ActorToJobMap = new Dictionary<ulong, (ulong, ulong)>();
-            
-            foreach (var station in Building_Data.Building.GetComponentsInChildren<Station_Component>())
-            {
-                foreach(var workPost in station.Station_Data.AllWorkPosts.Values)
-                {
-                    AllJobs.Add((station.StationID, workPost.WorkPostID), workPost.Job);
-                    
-                    if (workPost.Job.ActorID != 0)
-                        ActorToJobMap.Add(workPost.Job.ActorID, (station.StationID, workPost.WorkPostID));
-                }
             }
         }
     }

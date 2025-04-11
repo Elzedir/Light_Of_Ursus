@@ -34,11 +34,10 @@ namespace Tools
                 iteration--;
             }
             
-            //* Later, if we start hitting the limit, make the ranges expandable. So for items and actors, just add 1 000 000 to them. So from 1 - 99 999,
-            //* it becomes 1 - 99999, and 1 000 001 - 1 099 999. Then we can just keep adding 1 000 000 to the end of each range we need to.
-            //* Later we can use a better solution to expand it exponentially rather than linearly.
-            
             if (iteration == 0)
+                //* Later, if we start hitting the limit, make the ranges expandable. So for items and actors, just add 1 000 000 to them. So from 1 - 99 999,
+                //* it becomes 1 - 99999, and 1 000 001 - 1 099 999. Then we can just keep adding 1 000 000 to the end of each range we need to.
+                //* Later we can use a better solution to expand it exponentially rather than linearly.
                 throw new Exception($"Error: Infinite loop detected while trying to find new ID for IDType {idType}.");
             
             return s_lastUnusedIDs[idType];
